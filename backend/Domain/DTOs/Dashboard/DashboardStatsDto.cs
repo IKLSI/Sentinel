@@ -1,0 +1,16 @@
+namespace TMAflow.Domain.DTOs.Dashboard;
+
+public class DashboardStatsDto
+{
+    public int OpenTickets { get; set; }
+    public int OpenTicketsDelta { get; set; }
+    public int SlaRespected { get; set; }
+    public int SlaRespectedDelta { get; set; }
+    public int HoursThisMonth { get; set; }
+    public decimal BillableRevenue { get; set; }
+    public decimal UnbilledRevenue { get; set; }
+    public int CriticalVulnerabilities { get; set; }
+    public Dictionary<string, int> TicketsByStatus { get; set; } = [];
+    public List<UrgentTicketDto> UrgentTickets { get; set; } = [];
+    public List<ActivityItemDto> RecentActivity { get; set; } = [];
+}
