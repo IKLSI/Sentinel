@@ -1,0 +1,172 @@
+# ------------------------------
+
+# OS files
+
+# ------------------------------
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+.claude/
+
+# ------------------------------
+
+# Logs
+
+# ------------------------------
+
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ------------------------------
+
+# Environment variables
+
+# ------------------------------
+
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+
+# ------------------------------
+
+# Node / React / Vite
+
+# Inspired by github.com/github/gitignore Node template
+
+# ------------------------------
+
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# Vite
+
+.vite/
+vite.config.ts.timestamp-*
+
+# Cache
+
+.cache/
+.eslintcache
+
+# Typescript
+
+*.tsbuildinfo
+
+# pnpm
+
+.pnpm-store/
+.pnpm-debug.log
+node_modules/.pnpm
+
+# Package manager lock files (keep ONE depending on your project)
+
+package-lock.json
+yarn.lock
+
+# ------------------------------
+
+# IDE / Editor
+
+# ------------------------------
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.ide
+*.sw?
+
+# ------------------------------
+
+# .NET / Visual Studio
+
+# Inspired by github.com/github/gitignore VisualStudio template
+
+# ------------------------------
+
+bin/
+obj/
+out/
+
+# User-specific files
+
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache
+
+.vs/
+
+# Rider
+
+.idea/
+
+# NuGet
+
+*.nupkg
+*.snupkg
+packages/
+.nuget/packages/
+
+# MSBuild
+
+*.cache
+*.props.user
+*.targets.user
+
+# Test results
+
+TestResults/
+*.trx
+*.coverage
+
+# ------------------------------
+
+# Publish / Build
+
+# ------------------------------
+
+publish/
+artifacts/
+
+# ------------------------------
+
+# Coverage
+
+# ------------------------------
+
+coverage/
+coverage-final.json
+
+# ------------------------------
+
+# Temporary files
+
+# ------------------------------
+
+tmp/
+temp/
+*.tmp
+
+# ------------------------------
+
+# Misc
+
+# ------------------------------
+
+*.pid
+*.seed
+*.pid.lock
