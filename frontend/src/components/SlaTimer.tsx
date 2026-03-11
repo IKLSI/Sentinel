@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Box from '@mui/material/Box'
 
 interface SlaTimerProps {
   deadline?: string
@@ -48,22 +49,18 @@ export const SlaTimer: React.FC<SlaTimerProps> = ({ deadline, breached }) => {
   const color = colorMap[state.status]
 
   return (
-    <span style={{ display: 'inline-block', whiteSpace: 'nowrap', flexShrink: 0 }}>
+    <Box component="span" className="d-inline-block text-nowrap flex-shrink-0">
       <svg viewBox="0 0 24 24" width="11" height="11" style={{ display: 'inline-block', verticalAlign: 'middle', marginBottom: '2px', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
         <circle cx="12" cy="12" r="9" />
         <polyline points="12 7 12 12 15.5 14" />
       </svg>
-      <span style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        marginLeft: '4px',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '11px',
-        fontWeight: 700,
-        color,
-      }}>
+      <Box
+        component="span"
+        className="d-inline-block align-middle ms-1"
+        sx={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}
+      >
         {state.text}
-      </span>
-    </span>
+      </Box>
+    </Box>
   )
 }

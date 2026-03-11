@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import { Topbar } from '../../../layouts/Topbar'
 import { StatusChip } from '../../../components/StatusChip'
 import { SlaTimer } from '../../../components/SlaTimer'
+import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
 import { getTicket, addComment, changeStatus, updateTicket, deleteTicket } from '../api/tickets'
@@ -39,26 +40,41 @@ const typeLabels: Record<string, string> = {
   performance: 'Performance', maintenance: 'Maintenance', question: 'Question',
 }
 
-const inputStyle: React.CSSProperties = {
+const fieldSx = {
   background: 'var(--s1)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--r)',
-  padding: '8px 12px',
+  px: '12px',
+  py: '8px',
   fontSize: '13px',
   color: 'var(--text)',
   width: '100%',
   outline: 'none',
   fontFamily: 'inherit',
-}
+} as const
 
-const labelStyle: React.CSSProperties = {
+const labelSx = {
   display: 'block',
   fontSize: '11px',
   fontWeight: 600,
-  marginBottom: '5px',
+  mb: '5px',
   color: 'var(--muted2)',
   letterSpacing: '0.04em',
-}
+} as const
+
+const cardSx = {
+  background: 'var(--s1)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--r)',
+  overflow: 'hidden',
+} as const
+
+const cardHeaderSx = {
+  p: '14px 18px',
+  borderBottom: '1px solid var(--border)',
+  fontWeight: 700,
+  fontSize: '12px',
+} as const
 
 export const TicketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -190,9 +206,9 @@ export const TicketDetailPage: React.FC = () => {
     return (
       <>
         <Topbar title="Ticket" />
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
+        <Box className="d-flex justify-content-center" sx={{ p: '60px' }}>
           <CircularProgress />
-        </div>
+        </Box>
       </>
     )
   }
@@ -201,11 +217,11 @@ export const TicketDetailPage: React.FC = () => {
     return (
       <>
         <Topbar title="Ticket introuvable" />
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px', color: 'var(--muted)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>404</div>
-          <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: 'var(--text)' }}>Ticket introuvable</div>
-          <div style={{ fontSize: '13px' }}>Ce ticket n'existe pas ou vous n'y avez pas accès.</div>
-        </div>
+        <Box className="d-flex flex-column align-items-center justify-content-center" sx={{ p: '80px', color: 'var(--muted)' }}>
+          <Box sx={{ fontSize: '48px', mb: 2 }}>404</Box>
+          <Box sx={{ fontSize: '15px', fontWeight: 600, mb: 1, color: 'var(--text)' }}>Ticket introuvable</Box>
+          <Box sx={{ fontSize: '13px' }}>Ce ticket n'existe pas ou vous n'y avez pas accès.</Box>
+        </Box>
       </>
     )
   }
@@ -214,226 +230,205 @@ export const TicketDetailPage: React.FC = () => {
     <>
       <Topbar title={ticket.reference} subtitle={ticket.projectName ?? ticket.reference} />
 
-      <div style={{ padding: '24px 28px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'stretch' }}>
+      <Box sx={{ p: '24px 28px' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'stretch' }}>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Box className="d-flex flex-column">
             {editMode ? (
-              <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', marginBottom: '16px', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 700, fontSize: '12px' }}>Modifier le ticket</span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+              <Box sx={{ ...cardSx, mb: 2 }}>
+                <Box className="d-flex align-items-center justify-content-between" sx={{ p: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <Box component="span" sx={{ fontWeight: 700, fontSize: '12px' }}>Modifier le ticket</Box>
+                  <Box className="d-flex gap-2">
                     <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setEditMode(false)}>
                       Annuler
                     </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{ textTransform: 'none' }}
-                      onClick={handleSave}
-                      disabled={editSaving || !editForm.title.trim()}
-                    >
+                    <Button variant="contained" size="small" sx={{ textTransform: 'none' }} onClick={handleSave} disabled={editSaving || !editForm.title.trim()}>
                       {editSaving ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Enregistrer'}
                     </Button>
-                  </div>
-                </div>
-                <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <label style={labelStyle}>Titre *</label>
-                    <input style={inputStyle} value={editForm.title} onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))} />
-                  </div>
+                  </Box>
+                </Box>
+                <Box className="d-flex flex-column gap-3 p-3">
+                  <Box>
+                    <Box component="label" sx={labelSx}>Titre *</Box>
+                    <Box component="input" sx={fieldSx} value={editForm.title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, title: e.target.value }))} />
+                  </Box>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                    <div>
-                      <label style={labelStyle}>Priorité</label>
-                      <select style={inputStyle} value={editForm.priority} onChange={(e) => setEditForm((f) => ({ ...f, priority: e.target.value }))}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <Box>
+                      <Box component="label" sx={labelSx}>Priorité</Box>
+                      <Box component="select" sx={fieldSx} value={editForm.priority} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, priority: e.target.value }))}>
                         <option value="critical">Critique</option>
                         <option value="high">Haute</option>
                         <option value="medium">Moyenne</option>
                         <option value="low">Basse</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Type</label>
-                      <select style={inputStyle} value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
+                      </Box>
+                    </Box>
+                    <Box>
+                      <Box component="label" sx={labelSx}>Type</Box>
+                      <Box component="select" sx={fieldSx} value={editForm.type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
                         <option value="bug">Bug</option>
                         <option value="feature">Évolution</option>
                         <option value="security">Sécurité</option>
                         <option value="performance">Performance</option>
                         <option value="maintenance">Maintenance</option>
                         <option value="question">Question</option>
-                      </select>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                    <div>
-                      <label style={labelStyle}>Projet</label>
-                      <select style={inputStyle} value={editForm.techProjectId} onChange={(e) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <Box>
+                      <Box component="label" sx={labelSx}>Projet</Box>
+                      <Box component="select" sx={fieldSx} value={editForm.techProjectId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}>
                         <option value="">— Aucun projet —</option>
                         {projects.map((p) => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Assigné à</label>
-                      <select style={inputStyle} value={editForm.assignedToId} onChange={(e) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}>
+                      </Box>
+                    </Box>
+                    <Box>
+                      <Box component="label" sx={labelSx}>Assigné à</Box>
+                      <Box component="select" sx={fieldSx} value={editForm.assignedToId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}>
                         <option value="">— Non assigné —</option>
                         {users.map((u) => (
                           <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
                         ))}
-                      </select>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
 
-                  <div>
-                    <label style={{ ...labelStyle, marginBottom: '8px' }}>Estimation</label>
-                    <DurationPicker
-                      value={editForm.estimatedMinutes}
-                      onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))}
-                    />
-                  </div>
+                  <Box>
+                    <Box component="label" sx={{ ...labelSx, mb: '8px' }}>Estimation</Box>
+                    <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} />
+                  </Box>
 
-                  <div>
-                    <label style={labelStyle}>Description (Markdown supporté)</label>
-                    <textarea
-                      rows={8}
-                      style={{ ...inputStyle, resize: 'vertical' }}
-                      value={editForm.description}
-                      onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                      placeholder="Décrivez le problème..."
-                    />
-                  </div>
-                </div>
-              </div>
+                  <Box>
+                    <Box component="label" sx={labelSx}>Description (Markdown supporté)</Box>
+                    <Box component="textarea" rows={8} sx={{ ...fieldSx, resize: 'vertical' }} value={editForm.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm((f) => ({ ...f, description: e.target.value }))} placeholder="Décrivez le problème..." />
+                  </Box>
+                </Box>
+              </Box>
             ) : (
               <>
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
-                    <h1 style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.4, margin: 0 }}>
+                <Box className="mb-3">
+                  <Box className="d-flex align-items-start justify-content-between gap-3 mb-2">
+                    <Box component="h1" sx={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.4, m: 0 }}>
                       {ticket.title}
-                    </h1>
-                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                      <button
+                    </Box>
+                    <Box className="d-flex gap-1 flex-shrink-0">
+                      <Box
+                        component="button"
+                        className="d-flex align-items-center justify-content-center"
                         onClick={openEdit}
                         title="Modifier"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', color: 'var(--muted2)', cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted2)' }}
+                        sx={{
+                          width: 32, height: 32,
+                          background: 'var(--s1)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--r)',
+                          color: 'var(--muted2)',
+                          cursor: 'pointer',
+                          transition: 'border-color 0.15s, color 0.15s',
+                          '&:hover': { borderColor: 'var(--accent)', color: 'var(--accent)' },
+                        }}
                       >
                         <EditOutlined sx={{ fontSize: 14 }} />
-                      </button>
-                      <button
+                      </Box>
+                      <Box
+                        component="button"
+                        className="d-flex align-items-center justify-content-center"
                         onClick={() => setDeleteConfirm(true)}
                         title="Supprimer"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', color: 'var(--muted2)', cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted2)' }}
+                        sx={{
+                          width: 32, height: 32,
+                          background: 'var(--s1)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--r)',
+                          color: 'var(--muted2)',
+                          cursor: 'pointer',
+                          transition: 'border-color 0.15s, color 0.15s',
+                          '&:hover': { borderColor: '#ef4444', color: '#ef4444' },
+                        }}
                       >
                         <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box className="d-flex gap-2 flex-wrap align-items-center">
                     <StatusChip variant={priorityVariant[ticket.priority] ?? 'gray'}>{priorityLabels[ticket.priority] ?? ticket.priority}</StatusChip>
                     <StatusChip variant="gray">{typeLabels[ticket.type] ?? ticket.type}</StatusChip>
                     {ticket.jiraKey && <StatusChip variant="blue">JIRA: {ticket.jiraKey}</StatusChip>}
                     <SlaTimer deadline={ticket.slaDeadline} breached={ticket.slaBreached} />
-                  </div>
-                </div>
+                  </Box>
+                </Box>
 
-                <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', marginBottom: '16px', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Description</div>
-                  <div style={{ padding: '16px 20px', color: 'var(--muted2)', lineHeight: 1.7, fontSize: '13px' }}>
+                <Box sx={{ ...cardSx, mb: 2 }}>
+                  <Box sx={cardHeaderSx}>Description</Box>
+                  <Box sx={{ p: '16px 20px', color: 'var(--muted2)', lineHeight: 1.7, fontSize: '13px' }}>
                     <ReactMarkdown>{ticket.description || '*Aucune description*'}</ReactMarkdown>
-                  </div>
-                </div>
+                  </Box>
+                </Box>
               </>
             )}
 
-            <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+            <Box className="d-flex flex-column flex-grow-1" sx={cardSx}>
+              <Box sx={{ ...cardHeaderSx, flexShrink: 0 }}>
                 Commentaires ({ticket.comments.length})
-              </div>
-              <div style={{ padding: '16px 20px' }}>
+              </Box>
+              <Box sx={{ p: '16px 20px' }}>
                 {ticket.comments.map((c) => (
-                  <div
-                    key={c.id}
-                    style={{
-                      marginBottom: '16px',
-                      padding: '12px 16px',
-                      background: 'var(--s2)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--r)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700 }}>
+                  <Box key={c.id} className="mb-3" sx={{ p: '12px 16px', background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}>
+                    <Box className="d-flex align-items-center gap-2 mb-2">
+                      <Box component="span" sx={{ fontSize: '12px', fontWeight: 700 }}>
                         {c.author.firstName} {c.author.lastName}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>
+                      </Box>
+                      <Box component="span" className="ms-auto" sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
                         {format(new Date(c.createdAt), 'dd MMM yyyy HH:mm', { locale: fr })}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: 'var(--muted2)', lineHeight: 1.6 }}>
+                      </Box>
+                    </Box>
+                    <Box sx={{ fontSize: '13px', color: 'var(--muted2)', lineHeight: 1.6 }}>
                       <ReactMarkdown>{c.content}</ReactMarkdown>
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                 ))}
 
-                <div style={{ marginTop: '16px' }}>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <Button
-                      variant={!commentPreview ? 'contained' : 'outlined'}
-                      size="small"
-                      sx={{ textTransform: 'none' }}
-                      onClick={() => setCommentPreview(false)}
-                    >
+                <Box className="mt-3">
+                  <Box className="d-flex gap-2 mb-2">
+                    <Button variant={!commentPreview ? 'contained' : 'outlined'} size="small" sx={{ textTransform: 'none' }} onClick={() => setCommentPreview(false)}>
                       Éditer
                     </Button>
-                    <Button
-                      variant={commentPreview ? 'contained' : 'outlined'}
-                      size="small"
-                      sx={{ textTransform: 'none' }}
-                      onClick={() => setCommentPreview(true)}
-                    >
+                    <Button variant={commentPreview ? 'contained' : 'outlined'} size="small" sx={{ textTransform: 'none' }} onClick={() => setCommentPreview(true)}>
                       Aperçu
                     </Button>
-                  </div>
+                  </Box>
                   {commentPreview ? (
-                    <div style={{ background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '12px', minHeight: '100px', fontSize: '13px', color: 'var(--muted2)', lineHeight: 1.6 }}>
+                    <Box sx={{ background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', p: '12px', minHeight: '100px', fontSize: '13px', color: 'var(--muted2)', lineHeight: 1.6 }}>
                       <ReactMarkdown>{comment || '*Aucun contenu*'}</ReactMarkdown>
-                    </div>
+                    </Box>
                   ) : (
-                    <textarea
+                    <Box
+                      component="textarea"
                       value={comment}
-                      onChange={(e) => setComment(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
                       placeholder="Ajouter un commentaire (Markdown supporté)..."
                       rows={4}
-                      style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '8px 12px', fontSize: '13px', color: 'var(--text)', width: '100%', outline: 'none', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+                      sx={{ ...fieldSx, resize: 'vertical', boxSizing: 'border-box' }}
                     />
                   )}
-                  <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{ textTransform: 'none' }}
-                      onClick={handleAddComment}
-                      disabled={submitting || !comment.trim()}
-                    >
+                  <Box className="d-flex justify-content-end mt-2">
+                    <Button variant="contained" size="small" sx={{ textTransform: 'none' }} onClick={handleAddComment} disabled={submitting || !comment.trim()}>
                       {submitting ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Publier'}
                     </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-            <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Informations</div>
-              <div style={{ padding: '16px 20px' }}>
+          <Box className="d-flex flex-column gap-3 h-100">
+            <Box sx={cardSx}>
+              <Box sx={cardHeaderSx}>Informations</Box>
+              <Box sx={{ p: '16px 20px' }}>
                 {[
                   { label: 'Projet', value: ticket.projectName ?? '—' },
                   { label: 'Assigné', value: ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : 'Non assigné' },
@@ -441,78 +436,84 @@ export const TicketDetailPage: React.FC = () => {
                   { label: 'Temps passé', value: ticket.timeSpentMinutes ? (() => { const h = Math.floor(ticket.timeSpentMinutes / 60); const m = ticket.timeSpentMinutes % 60; return m > 0 ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h` })() : '—' },
                   { label: 'Créé le', value: format(new Date(ticket.createdAt), 'dd MMM yyyy', { locale: fr }) },
                 ].map((item) => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--muted)' }}>{item.label}</span>
-                    <span style={{ fontWeight: 600 }}>{item.value}</span>
-                  </div>
+                  <Box key={item.label} className="d-flex justify-content-between mb-2" sx={{ fontSize: '12px' }}>
+                    <Box component="span" sx={{ color: 'var(--muted)' }}>{item.label}</Box>
+                    <Box component="span" sx={{ fontWeight: 600 }}>{item.value}</Box>
+                  </Box>
                 ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                  <span style={{ color: 'var(--muted)' }}>Statut</span>
-                  <select
-                    style={{ background: 'transparent', border: 'none', fontSize: '12px', color: 'var(--text)', fontWeight: 600, outline: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'right', textAlignLast: 'right' }}
+                <Box className="d-flex justify-content-between align-items-center" sx={{ fontSize: '12px' }}>
+                  <Box component="span" sx={{ color: 'var(--muted)' }}>Statut</Box>
+                  <Box
+                    component="select"
                     value={ticket.status}
-                    onChange={(e) => handleStatusChange(e.target.value as TicketStatus)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(e.target.value as TicketStatus)}
+                    sx={{ background: 'transparent', border: 'none', fontSize: '12px', color: 'var(--text)', fontWeight: 600, outline: 'none', cursor: 'pointer', fontFamily: 'inherit', p: 0, textAlign: 'right', textAlignLast: 'right' }}
                   >
                     {(Object.keys(statusLabels) as TicketStatus[]).map((s) => (
                       <option key={s} value={s}>{statusLabels[s]}</option>
                     ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
 
-            <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>Historique</div>
-              <div style={{ padding: '16px 20px', overflowY: 'auto', flex: 1 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Box className="d-flex flex-column flex-grow-1" sx={cardSx}>
+              <Box sx={{ ...cardHeaderSx, flexShrink: 0 }}>Historique</Box>
+              <Box className="overflow-auto flex-grow-1" sx={{ p: '16px 20px' }}>
+                <Box className="d-flex flex-column gap-2">
                   {ticket.history.length === 0 ? (
-                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Aucune modification</div>
+                    <Box sx={{ fontSize: '12px', color: 'var(--muted)' }}>Aucune modification</Box>
                   ) : [...ticket.history].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5).map((h) => (
-                    <div key={h.id} style={{ fontSize: '11px' }}>
-                      <div style={{ color: 'var(--muted2)' }}>
-                        <strong style={{ color: 'var(--text)' }}>{h.author.firstName}</strong>{' '}
+                    <Box key={h.id} sx={{ fontSize: '11px' }}>
+                      <Box sx={{ color: 'var(--muted2)' }}>
+                        <Box component="strong" sx={{ color: 'var(--text)' }}>{h.author.firstName}</Box>{' '}
                         a modifié <strong>{h.field}</strong>
-                      </div>
-                      <div style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: '10px', marginTop: '2px' }}>
+                      </Box>
+                      <Box sx={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: '10px', mt: '2px' }}>
                         {h.oldValue} → {h.newValue}
-                      </div>
-                      <div style={{ color: 'var(--muted)', fontSize: '10px', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                      </Box>
+                      <Box sx={{ color: 'var(--muted)', fontSize: '10px', mt: '2px', fontFamily: 'var(--font-mono)' }}>
                         {format(new Date(h.createdAt), 'dd MMM HH:mm', { locale: fr })}
-                      </div>
-                    </div>
+                      </Box>
+                    </Box>
                   ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
       {deleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '28px 32px', width: '380px', maxWidth: '90vw' }}>
-            <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '10px' }}>Supprimer ce ticket ?</div>
-            <div style={{ fontSize: '13px', color: 'var(--muted2)', marginBottom: '24px' }}>
+        <Box
+          className="d-flex align-items-center justify-content-center"
+          sx={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000 }}
+        >
+          <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', p: '28px 32px', width: '380px', maxWidth: '90vw' }}>
+            <Box sx={{ fontWeight: 700, fontSize: '15px', mb: '10px' }}>Supprimer ce ticket ?</Box>
+            <Box className="mb-4" sx={{ fontSize: '13px', color: 'var(--muted2)' }}>
               Cette action est irréversible. Le ticket <strong>{ticket.reference}</strong> et toutes ses données associées seront définitivement supprimés.
-            </div>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
+            </Box>
+            <Box className="d-flex gap-2 justify-content-end">
+              <Box
+                component="button"
                 onClick={() => setDeleteConfirm(false)}
                 disabled={deleting}
-                style={{ background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '7px 16px', fontSize: '12px', fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                sx={{ background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', p: '7px 16px', fontSize: '12px', fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Annuler
-              </button>
-              <button
+              </Box>
+              <Box
+                component="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                style={{ background: '#ef4444', border: 'none', borderRadius: 'var(--r)', padding: '7px 16px', fontSize: '12px', fontWeight: 600, color: '#fff', cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: deleting ? 0.7 : 1 }}
+                sx={{ background: '#ef4444', border: 'none', borderRadius: 'var(--r)', p: '7px 16px', fontSize: '12px', fontWeight: 600, color: '#fff', cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: deleting ? 0.7 : 1 }}
               >
                 {deleting ? 'Suppression...' : 'Supprimer définitivement'}
-              </button>
-            </div>
-          </div>
-        </div>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       )}
     </>
   )

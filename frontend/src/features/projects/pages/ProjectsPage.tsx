@@ -23,18 +23,6 @@ import {
   ProjectDto,
 } from "../../techHealth/api/projects";
 
-const inputStyle: React.CSSProperties = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r)",
-  padding: "8px 12px",
-  fontSize: "13px",
-  color: "var(--text)",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
-};
-
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
@@ -170,19 +158,15 @@ export const ProjectsPage: React.FC = () => {
         }
       />
       {loading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "calc(100vh - 56px)",
-          }}
+        <Box
+          className="d-flex justify-content-center align-items-center"
+          sx={{ height: "calc(100vh - 56px)" }}
         >
           <CircularProgress size={28} />
-        </div>
+        </Box>
       ) : (
         <Box sx={{ p: "24px 28px" }}>
-          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+          <Box className="d-flex gap-2 flex-wrap mb-3">
             <KpiCard label="Projets" value={projects.length} suffix="" />
             <KpiCard
               label="Vulnérabilités critiques"
@@ -193,18 +177,11 @@ export const ProjectsPage: React.FC = () => {
             <KpiCard label="Score santé moyen" value={avgScore} suffix="%" />
           </Box>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginBottom: "20px",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ position: "relative", flex: 1, maxWidth: "320px" }}>
+          <Box className="d-flex align-items-center gap-2" sx={{ mb: "20px" }}>
+            <Box sx={{ position: "relative", flex: 1, maxWidth: "320px" }}>
               <SearchOutlined
-                sx={{ fontSize: 14 }}
-                style={{
+                sx={{
+                  fontSize: 14,
                   position: "absolute",
                   left: "12px",
                   top: "50%",
@@ -212,19 +189,32 @@ export const ProjectsPage: React.FC = () => {
                   color: "var(--muted)",
                 }}
               />
-              <input
+              <Box
+                component="input"
                 type="text"
                 placeholder="Rechercher un projet..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ ...inputStyle, paddingLeft: "36px" }}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  pl: "36px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
 
           {filtered.length === 0 ? (
-            <div
-              style={{
+            <Box
+              sx={{
                 background: "var(--s1)",
                 border: "1px solid var(--border)",
                 borderRadius: "var(--r)",
@@ -232,21 +222,21 @@ export const ProjectsPage: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              <div className="empty-state">
-                <div className="empty-state-icon">
+              <Box className="empty-state">
+                <Box className="empty-state-icon">
                   <AccountTreeOutlined sx={{ fontSize: 40 }} />
-                </div>
-                <div className="empty-state-title">Aucun projet trouvé</div>
-                <div className="empty-state-subtitle">
+                </Box>
+                <Box className="empty-state-title">Aucun projet trouvé</Box>
+                <Box className="empty-state-subtitle">
                   {projects.length === 0
                     ? "Créez votre premier projet"
                     : "Modifiez votre recherche"}
-                </div>
-              </div>
-            </div>
+                </Box>
+              </Box>
+            </Box>
           ) : (
-            <div
-              style={{
+            <Box
+              sx={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
                 gap: "14px",
@@ -260,7 +250,7 @@ export const ProjectsPage: React.FC = () => {
                   onDelete={() => setDeleteTarget(project)}
                 />
               ))}
-            </div>
+            </Box>
           )}
         </Box>
       )}
@@ -282,52 +272,76 @@ export const ProjectsPage: React.FC = () => {
           Nouveau projet
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div>
-              <label
-                style={{
+          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Nom du projet *
-              </label>
-              <input
-                style={inputStyle}
+              </Box>
+              <Box
+                component="input"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 type="text"
                 placeholder="Ex : API Paiement v2"
                 value={formName}
-                onChange={(e) => setFormName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormName(e.target.value)}
               />
-            </div>
-            <div>
-              <label
-                style={{
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 URL dépôt (optionnel)
-              </label>
-              <input
-                style={inputStyle}
+              </Box>
+              <Box
+                component="input"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 type="text"
                 placeholder="https://github.com/org/repo"
                 value={formRepoUrl}
-                onChange={(e) => setFormRepoUrl(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormRepoUrl(e.target.value)}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -367,51 +381,75 @@ export const ProjectsPage: React.FC = () => {
           Modifier le projet
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div>
-              <label
-                style={{
+          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Nom du projet *
-              </label>
-              <input
-                style={inputStyle}
+              </Box>
+              <Box
+                component="input"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 type="text"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value)}
               />
-            </div>
-            <div>
-              <label
-                style={{
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 URL dépôt (optionnel)
-              </label>
-              <input
-                style={inputStyle}
+              </Box>
+              <Box
+                component="input"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 type="text"
                 placeholder="https://github.com/org/repo"
                 value={editRepoUrl}
-                onChange={(e) => setEditRepoUrl(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditRepoUrl(e.target.value)}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -451,11 +489,11 @@ export const ProjectsPage: React.FC = () => {
           Supprimer le projet
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <p style={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
+          <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
             Supprimer <strong>{deleteTarget?.name}</strong> ? Cette action
             supprimera aussi toutes les dépendances et vulnérabilités associées.
             Elle est irréversible.
-          </p>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -489,124 +527,110 @@ const ProjectCard: React.FC<{
 }> = ({ project, onEdit, onDelete }) => {
   const navigate = useNavigate();
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         background: "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",
         cursor: "pointer",
         transition: "border-color 0.15s, box-shadow 0.15s",
+        "&:hover": {
+          borderColor: "var(--accent-border)",
+          boxShadow: "var(--shadow-md)",
+        },
       }}
       onClick={() => navigate(`/projects/${project.id}`)}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--accent-border)";
-        e.currentTarget.style.boxShadow = "var(--shadow-md)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
     >
-      <div style={{ padding: "20px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            marginBottom: "12px",
-          }}
+      <Box sx={{ p: "20px" }}>
+        <Box
+          className="d-flex align-items-start justify-content-between"
+          sx={{ mb: "12px" }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text)",
                 letterSpacing: "-0.01em",
-                marginBottom: "4px",
+                mb: "4px",
               }}
             >
               {project.name}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            </Box>
+          </Box>
+          <Box className="d-flex align-items-center gap-2">
             <HealthScoreCircle
               score={project.healthScore}
               grade={project.healthGrade as "A" | "B" | "C" | "D" | "F"}
               size={44}
             />
-            <button
-              onClick={(e) => {
+            <Box
+              component="button"
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onEdit();
               }}
               title="Modifier"
-              style={{
+              sx={{
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 color: "var(--muted)",
-                padding: "4px",
+                p: "4px",
                 borderRadius: "var(--r-sm)",
                 display: "flex",
                 alignItems: "center",
+                "&:hover": { color: "var(--accent)" },
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--accent)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--muted)")
-              }
             >
               <EditOutlined sx={{ fontSize: 14 }} />
-            </button>
-            <button
-              onClick={(e) => {
+            </Box>
+            <Box
+              component="button"
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onDelete();
               }}
               title="Supprimer"
-              style={{
+              sx={{
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 color: "var(--muted)",
-                padding: "4px",
+                p: "4px",
                 borderRadius: "var(--r-sm)",
                 display: "flex",
                 alignItems: "center",
+                "&:hover": { color: "var(--red)" },
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--muted)")
-              }
             >
               <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
-            </button>
-          </div>
-        </div>
+            </Box>
+          </Box>
+        </Box>
 
         {project.repositoryUrl && (
-          <div
-            style={{
+          <Box
+            sx={{
               fontSize: "11px",
               color: "var(--muted)",
               fontFamily: "var(--font-mono)",
-              marginBottom: "12px",
+              mb: "12px",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
           >
             {project.repositoryUrl}
-          </div>
+          </Box>
         )}
 
-        <div
-          style={{
-            display: "flex",
+        <Box
+          className="d-flex"
+          sx={{
             gap: "16px",
-            paddingTop: "14px",
+            pt: "14px",
             borderTop: "1px solid var(--border)",
           }}
         >
@@ -621,9 +645,9 @@ const ProjectCard: React.FC<{
             value={project.criticalVulnerabilities}
             warn={project.criticalVulnerabilities > 0}
           />
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
@@ -632,21 +656,21 @@ const Stat: React.FC<{ label: string; value: number; warn?: boolean }> = ({
   value,
   warn,
 }) => (
-  <div>
-    <div
-      style={{
+  <Box>
+    <Box
+      sx={{
         fontFamily: "var(--font-mono)",
         fontSize: "9px",
         color: "var(--muted)",
         textTransform: "uppercase",
         letterSpacing: "0.1em",
-        marginBottom: "3px",
+        mb: "3px",
       }}
     >
       {label}
-    </div>
-    <div
-      style={{
+    </Box>
+    <Box
+      sx={{
         fontSize: "18px",
         fontWeight: 700,
         color: warn ? "var(--orange)" : "var(--text)",
@@ -654,8 +678,8 @@ const Stat: React.FC<{ label: string; value: number; warn?: boolean }> = ({
       }}
     >
       {value}
-    </div>
-  </div>
+    </Box>
+  </Box>
 );
 
 const KpiCard: React.FC<{
@@ -664,8 +688,8 @@ const KpiCard: React.FC<{
   suffix: string;
   color?: string;
 }> = ({ label, value, suffix, color }) => (
-  <div
-    style={{
+  <Box
+    sx={{
       background: "var(--s1)",
       border: "1px solid var(--border)",
       borderRadius: "var(--r)",
@@ -674,20 +698,20 @@ const KpiCard: React.FC<{
       flex: 1,
     }}
   >
-    <div
-      style={{
+    <Box
+      sx={{
         fontFamily: "var(--font-mono)",
         fontSize: "9px",
         letterSpacing: "0.15em",
         textTransform: "uppercase",
         color: "var(--muted)",
-        marginBottom: "12px",
+        mb: "12px",
       }}
     >
       {label}
-    </div>
-    <div
-      style={{
+    </Box>
+    <Box
+      sx={{
         fontSize: "30px",
         fontWeight: 800,
         color: color ?? "var(--text)",
@@ -695,11 +719,12 @@ const KpiCard: React.FC<{
       }}
     >
       {value}
-      <span
-        style={{ fontSize: "16px", color: "var(--muted)", fontWeight: 400 }}
+      <Box
+        component="span"
+        sx={{ fontSize: "16px", color: "var(--muted)", fontWeight: 400 }}
       >
         {suffix}
-      </span>
-    </div>
-  </div>
+      </Box>
+    </Box>
+  </Box>
 );

@@ -13,17 +13,27 @@ interface OrgData {
   timezone: string
 }
 
-const inputStyle: React.CSSProperties = {
+const fieldSx = {
   background: 'var(--s1)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--r)',
-  padding: '8px 12px',
+  px: '12px',
+  py: '8px',
   fontSize: '13px',
   color: 'var(--text)',
   width: '100%',
   outline: 'none',
   fontFamily: 'inherit',
-}
+} as const
+
+const labelSx = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: 600,
+  mb: '5px',
+  color: 'var(--muted2)',
+  letterSpacing: '0.04em',
+} as const
 
 export const OrganizationPage: React.FC = () => {
   const { showToast } = useToast()
@@ -82,7 +92,7 @@ export const OrganizationPage: React.FC = () => {
     return (
       <>
         <Topbar title="Organisation" subtitle="Configuration" />
-        <Box sx={{ p: '24px 28px', display: 'flex', justifyContent: 'center' }}>
+        <Box className="d-flex justify-content-center" sx={{ p: '24px 28px' }}>
           <CircularProgress size={24} />
         </Box>
       </>
@@ -98,22 +108,22 @@ export const OrganizationPage: React.FC = () => {
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Informations générales</Box>
           <Box sx={{ p: '16px 20px' }}>
             <form onSubmit={handleSave}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Nom de l'organisation</label>
-                <input type="text" style={inputStyle} value={orgForm.name} onChange={(e) => setOrgForm((f) => ({ ...f, name: e.target.value }))} />
-              </div>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Identifiant (slug)</label>
-                <input type="text" style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }} value={orgForm.slug} readOnly />
-              </div>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Fuseau horaire</label>
-                <select style={inputStyle} value={orgForm.timezone} onChange={(e) => setOrgForm((f) => ({ ...f, timezone: e.target.value }))}>
+              <Box className="mb-3">
+                <Box component="label" sx={labelSx}>Nom de l'organisation</Box>
+                <Box component="input" type="text" sx={fieldSx} value={orgForm.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgForm((f) => ({ ...f, name: e.target.value }))} />
+              </Box>
+              <Box className="mb-3">
+                <Box component="label" sx={labelSx}>Identifiant (slug)</Box>
+                <Box component="input" type="text" sx={{ ...fieldSx, opacity: 0.6, cursor: 'not-allowed' }} value={orgForm.slug} readOnly />
+              </Box>
+              <Box className="mb-3">
+                <Box component="label" sx={labelSx}>Fuseau horaire</Box>
+                <Box component="select" sx={fieldSx} value={orgForm.timezone} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOrgForm((f) => ({ ...f, timezone: e.target.value }))}>
                   <option value="Europe/Paris">Europe/Paris (UTC+1/+2)</option>
                   <option value="Europe/London">Europe/London (UTC+0/+1)</option>
                   <option value="UTC">UTC</option>
-                </select>
-              </div>
+                </Box>
+              </Box>
               <Button type="submit" variant="contained" size="small" sx={{ textTransform: 'none' }} disabled={saving}>
                 {saving ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Sauvegarder'}
               </Button>
@@ -124,21 +134,21 @@ export const OrganizationPage: React.FC = () => {
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Intégration Jira</Box>
           <Box sx={{ p: '16px 20px' }}>
-            <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--accent-subtle)', borderRadius: 'var(--r)', fontSize: '12px', color: 'var(--muted2)', border: '1px solid var(--accent-border)' }}>
+            <Box className="mb-3" sx={{ p: '12px', background: 'var(--accent-subtle)', borderRadius: 'var(--r)', fontSize: '12px', color: 'var(--muted2)', border: '1px solid var(--accent-border)' }}>
               ℹ Connectez votre instance Jira pour synchroniser les tickets automatiquement.
-            </div>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>URL Jira</label>
-              <input type="url" style={inputStyle} value={jiraForm.url} onChange={(e) => setJiraForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://votre-org.atlassian.net" />
-            </div>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Nom d'utilisateur</label>
-              <input type="text" style={inputStyle} value={jiraForm.username} onChange={(e) => setJiraForm((f) => ({ ...f, username: e.target.value }))} />
-            </div>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Token API</label>
-              <input type="password" style={inputStyle} value={jiraForm.apiToken} onChange={(e) => setJiraForm((f) => ({ ...f, apiToken: e.target.value }))} placeholder="••••••••••••••••" />
-            </div>
+            </Box>
+            <Box className="mb-3">
+              <Box component="label" sx={labelSx}>URL Jira</Box>
+              <Box component="input" type="url" sx={fieldSx} value={jiraForm.url} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://votre-org.atlassian.net" />
+            </Box>
+            <Box className="mb-3">
+              <Box component="label" sx={labelSx}>Nom d'utilisateur</Box>
+              <Box component="input" type="text" sx={fieldSx} value={jiraForm.username} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, username: e.target.value }))} />
+            </Box>
+            <Box className="mb-3">
+              <Box component="label" sx={labelSx}>Token API</Box>
+              <Box component="input" type="password" sx={fieldSx} value={jiraForm.apiToken} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, apiToken: e.target.value }))} placeholder="••••••••••••••••" />
+            </Box>
             <Button variant="contained" size="small" sx={{ textTransform: 'none' }} onClick={handleSaveJira} disabled={savingJira}>
               {savingJira ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Tester & Sauvegarder'}
             </Button>
@@ -148,19 +158,19 @@ export const OrganizationPage: React.FC = () => {
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Paramètres SLA par défaut</Box>
           <Box sx={{ p: '16px 20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               {[
                 { label: 'Critique (heures)', value: 4 },
                 { label: 'Haute (heures)', value: 8 },
                 { label: 'Moyenne (heures)', value: 24 },
                 { label: 'Basse (heures)', value: 72 },
               ].map((item) => (
-                <div key={item.label} style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>{item.label}</label>
-                  <input type="number" style={inputStyle} defaultValue={item.value} min={1} />
-                </div>
+                <Box key={item.label} className="mb-3">
+                  <Box component="label" sx={labelSx}>{item.label}</Box>
+                  <Box component="input" type="number" sx={fieldSx} defaultValue={item.value} min={1} />
+                </Box>
               ))}
-            </div>
+            </Box>
             <Button variant="contained" size="small" sx={{ textTransform: 'none' }}>Sauvegarder les SLA</Button>
           </Box>
         </Paper>

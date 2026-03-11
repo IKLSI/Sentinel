@@ -109,9 +109,9 @@ export const InvoiceDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box className="d-flex justify-content-center align-items-center" sx={{ height: '100vh' }}>
         <CircularProgress size={28} />
-      </div>
+      </Box>
     )
   }
 
@@ -127,7 +127,7 @@ export const InvoiceDetailPage: React.FC = () => {
         title={invoice.reference}
         subtitle={`${invoice.label} · ${invoice.period}`}
         actions={
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <Box className="d-flex gap-2">
             <Button variant="outlined" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => navigate('/invoices')}>
               <ArrowBackOutlined sx={{ fontSize: 14 }} />Factures
             </Button>
@@ -151,7 +151,7 @@ export const InvoiceDetailPage: React.FC = () => {
                 <CheckCircleOutlined sx={{ fontSize: 14 }} />Marquer payée
               </Button>
             )}
-          </div>
+          </Box>
         }
       />
 
@@ -159,7 +159,7 @@ export const InvoiceDetailPage: React.FC = () => {
 
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '20px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+            <Box className="d-flex align-items-center" sx={{ gap: '0' }}>
               {STEPS.map((step, idx) => {
                 const done = idx < currentStep
                 const active = idx === currentStep
@@ -167,8 +167,8 @@ export const InvoiceDetailPage: React.FC = () => {
 
                 return (
                   <React.Fragment key={step.key}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
-                      <div style={{
+                    <Box className="d-flex flex-column align-items-center" sx={{ gap: '6px', flex: 1 }}>
+                      <Box sx={{
                         width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: done ? 'var(--green)' : active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : 'var(--s3)',
                         border: `2px solid ${done ? 'var(--green)' : active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : 'var(--border)'}`,
@@ -176,42 +176,42 @@ export const InvoiceDetailPage: React.FC = () => {
                         fontSize: '12px', fontWeight: 700, transition: 'all 0.2s',
                       }}>
                         {done ? <CheckCircleOutlined sx={{ fontSize: 16 }} /> : idx + 1}
-                      </div>
-                      <span style={{ fontSize: '11px', fontWeight: active ? 700 : 400, color: active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : done ? 'var(--green)' : 'var(--muted)' }}>
+                      </Box>
+                      <Box component="span" sx={{ fontSize: '11px', fontWeight: active ? 700 : 400, color: active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : done ? 'var(--green)' : 'var(--muted)' }}>
                         {isOverdueStep ? 'En retard' : step.label}
-                      </span>
+                      </Box>
                       {active && invoice.paidAt && (
-                        <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{fmtDate(invoice.paidAt)}</span>
+                        <Box component="span" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{fmtDate(invoice.paidAt)}</Box>
                       )}
-                    </div>
+                    </Box>
                     {idx < STEPS.length - 1 && (
-                      <div style={{ flex: 2, height: '2px', background: done ? 'var(--green)' : 'var(--border)', margin: '0 4px', marginBottom: '22px', transition: 'background 0.2s' }} />
+                      <Box sx={{ flex: 2, height: '2px', background: done ? 'var(--green)' : 'var(--border)', margin: '0 4px', marginBottom: '22px', transition: 'background 0.2s' }} />
                     )}
                   </React.Fragment>
                 )
               })}
-            </div>
+            </Box>
           </Box>
         </Paper>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', mb: '24px' }}>
 
           <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
             <Box sx={{ p: '20px 22px' }}>
               <SectionLabel icon={<ApartmentOutlined sx={{ fontSize: 13 }} />} label="Libellé" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Box className="d-flex flex-column" sx={{ gap: '10px' }}>
                 <InfoRow label="Libellé" value={invoice.label} bold />
                 {invoice.techProjectName && <InfoRow label="Projet" value={invoice.techProjectName} />}
                 <InfoRow label="Taux journalier" value={fmtEur(invoice.dailyRate)} />
                 <InfoRow label="Taux horaire" value={fmtEur(hourlyRate)} />
-              </div>
+              </Box>
             </Box>
           </Paper>
 
           <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
             <Box sx={{ p: '20px 22px' }}>
               <SectionLabel icon={<CalendarTodayOutlined sx={{ fontSize: 13 }} />} label="Dates" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Box className="d-flex flex-column" sx={{ gap: '10px' }}>
                 <InfoRow label="Période facturée" value={invoice.period} bold />
                 <InfoRow label="Date d'émission" value={fmtDate(invoice.issuedAt)} />
                 <InfoRow
@@ -221,69 +221,69 @@ export const InvoiceDetailPage: React.FC = () => {
                   suffix={overdue ? ' · DÉPASSÉE' : undefined}
                 />
                 {invoice.paidAt && <InfoRow label="Date de paiement" value={fmtDate(invoice.paidAt)} valueColor="var(--green)" />}
-              </div>
+              </Box>
             </Box>
           </Paper>
-        </div>
+        </Box>
 
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>
             <SectionLabel icon={<DescriptionOutlined sx={{ fontSize: 13 }} />} label="Détail de facturation" />
           </Box>
           <Box sx={{ p: '0' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   {['Description', 'Quantité', 'Prix unitaire', 'Montant HT'].map((h) => (
-                    <th key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', textAlign: 'left', padding: '10px 20px', background: 'var(--s2)', fontWeight: 500 }}>
+                    <Box component="th" key={h} sx={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', textAlign: 'left', padding: '10px 20px', background: 'var(--s2)', fontWeight: 500 }}>
                       {h}
-                    </th>
+                    </Box>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ padding: '16px 20px', fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>
+                  <Box component="td" sx={{ padding: '16px 20px', fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>
                     {invoice.techProjectName ? `${invoice.techProjectName} — ` : ''}{invoice.period}
-                  </td>
-                  <td style={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
+                  </Box>
+                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
                     {invoice.totalHours}h
-                  </td>
-                  <td style={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  </Box>
+                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     {hourlyRate > 0 ? fmtEur(hourlyRate) + '/h' : '—'}
-                  </td>
-                  <td style={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
+                  </Box>
+                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
                     {fmtEur(invoice.totalAmount)}
-                  </td>
+                  </Box>
                 </tr>
               </tbody>
-            </table>
+            </Box>
 
-            <div style={{ borderTop: '1px solid var(--border)', padding: '16px 20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Box sx={{ borderTop: '1px solid var(--border)', padding: '16px 20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <Box sx={{ minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <TotalRow label="Total HT" value={fmtEur(invoice.totalAmount)} />
                 <TotalRow label={`TVA (${invoice.taxRate}%)`} value={fmtEur(invoice.taxAmount)} />
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
+                <Box sx={{ borderTop: '1px solid var(--border)', pt: '8px' }}>
                   <TotalRow label="Total TTC" value={fmtEur(invoice.totalWithTax)} accent />
-                </div>
-              </div>
-            </div>
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Paper>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
           <FinCard icon={<AccessTimeOutlined sx={{ fontSize: 16 }} />} label="Heures prestées" value={`${invoice.totalHours}h`} />
           <FinCard icon={<EuroOutlined sx={{ fontSize: 16 }} />} label="Montant HT" value={fmtEur(invoice.totalAmount)} />
           <FinCard icon={<EuroOutlined sx={{ fontSize: 16 }} />} label="Montant TTC" value={fmtEur(invoice.totalWithTax)} accent />
-        </div>
+        </Box>
       </Box>
 
       <Dialog open={showSendModal} onClose={() => setShowSendModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
         <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Envoyer la facture</DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
             Marquer la facture <strong>{invoice.reference}</strong> ({fmtEur(invoice.totalWithTax)}) comme envoyée à <strong>{invoice.label}</strong> ?
-          </p>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: '16px', pt: 0 }}>
           <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowSendModal(false)}>Annuler</Button>
@@ -297,10 +297,10 @@ export const InvoiceDetailPage: React.FC = () => {
       <Dialog open={showPayModal} onClose={() => setShowPayModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
         <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Confirmer le paiement</DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
             Enregistrer le paiement de <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture <strong>{invoice.reference}</strong> ?
             La date de paiement sera enregistrée à aujourd'hui.
-          </p>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: '16px', pt: 0 }}>
           <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowPayModal(false)}>Annuler</Button>
@@ -314,10 +314,10 @@ export const InvoiceDetailPage: React.FC = () => {
       <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
         <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Supprimer le brouillon</DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
             Supprimer définitivement le brouillon <strong>{invoice.reference}</strong> ?
             Cette action est irréversible.
-          </p>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: '16px', pt: 0 }}>
           <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
@@ -331,42 +331,42 @@ export const InvoiceDetailPage: React.FC = () => {
 }
 
 const SectionLabel: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '14px' }}>
-    <span style={{ color: 'var(--muted)', display: 'flex' }}>{icon}</span>
-    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600 }}>{label}</span>
-  </div>
+  <Box className="d-flex align-items-center" sx={{ gap: '7px', mb: '14px' }}>
+    <Box component="span" sx={{ color: 'var(--muted)', display: 'flex' }}>{icon}</Box>
+    <Box component="span" sx={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600 }}>{label}</Box>
+  </Box>
 )
 
 const InfoRow: React.FC<{ label: string; value: string; bold?: boolean; valueColor?: string; suffix?: string }> = ({ label, value, bold, valueColor, suffix }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{label}</span>
-    <span style={{ fontSize: '13px', fontWeight: bold ? 700 : 500, color: valueColor ?? 'var(--text)', fontFamily: bold ? undefined : 'var(--font-mono)' }}>
-      {value}{suffix && <span style={{ fontSize: '10px', fontWeight: 700, marginLeft: '6px' }}>{suffix}</span>}
-    </span>
-  </div>
+  <Box className="d-flex justify-content-between align-items-center">
+    <Box component="span" sx={{ fontSize: '12px', color: 'var(--muted)' }}>{label}</Box>
+    <Box component="span" sx={{ fontSize: '13px', fontWeight: bold ? 700 : 500, color: valueColor ?? 'var(--text)', fontFamily: bold ? undefined : 'var(--font-mono)' }}>
+      {value}{suffix && <Box component="span" sx={{ fontSize: '10px', fontWeight: 700, ml: '6px' }}>{suffix}</Box>}
+    </Box>
+  </Box>
 )
 
 const TotalRow: React.FC<{ label: string; value: string; accent?: boolean }> = ({ label, value, accent }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-    <span style={{ fontSize: accent ? '14px' : '13px', fontWeight: accent ? 700 : 400, color: accent ? 'var(--text)' : 'var(--text-secondary)' }}>
+  <Box className="d-flex justify-content-between align-items-center">
+    <Box component="span" sx={{ fontSize: accent ? '14px' : '13px', fontWeight: accent ? 700 : 400, color: accent ? 'var(--text)' : 'var(--text-secondary)' }}>
       {label}
-    </span>
-    <span style={{ fontFamily: 'var(--font-mono)', fontSize: accent ? '18px' : '13px', fontWeight: accent ? 800 : 600, color: accent ? 'var(--green)' : 'var(--text)' }}>
+    </Box>
+    <Box component="span" sx={{ fontFamily: 'var(--font-mono)', fontSize: accent ? '18px' : '13px', fontWeight: accent ? 800 : 600, color: accent ? 'var(--green)' : 'var(--text)' }}>
       {value}
-    </span>
-  </div>
+    </Box>
+  </Box>
 )
 
 const FinCard: React.FC<{ icon: React.ReactNode; label: string; value: string; accent?: boolean }> = ({ icon, label, value, accent }) => (
   <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
     <Box sx={{ p: '18px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', color: 'var(--muted)' }}>
+      <Box className="d-flex align-items-center" sx={{ gap: '8px', mb: '10px', color: 'var(--muted)' }}>
         {icon}
-        <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>{label}</span>
-      </div>
-      <div style={{ fontSize: '22px', fontWeight: 800, color: accent ? 'var(--green)' : 'var(--text)', letterSpacing: '-0.02em' }}>
+        <Box component="span" sx={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>{label}</Box>
+      </Box>
+      <Box sx={{ fontSize: '22px', fontWeight: 800, color: accent ? 'var(--green)' : 'var(--text)', letterSpacing: '-0.02em' }}>
         {value}
-      </div>
+      </Box>
     </Box>
   </Paper>
 )

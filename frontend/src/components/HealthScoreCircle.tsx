@@ -1,4 +1,5 @@
 import React from 'react'
+import Box from '@mui/material/Box'
 import { HealthGrade } from '../types'
 
 interface HealthScoreCircleProps {
@@ -22,14 +23,17 @@ export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({ score, gra
   const color = gradeColor[grade]
 
   return (
-    <div style={{ width: size, height: size, position: 'relative' }}>
+    <Box className="position-relative" sx={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--s3)" strokeWidth={3} />
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={3} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: size > 44 ? '14px' : '12px', fontWeight: 700, color }}>
+      <Box
+        className="position-absolute d-flex align-items-center justify-content-center"
+        sx={{ inset: 0, fontFamily: 'var(--font-mono)', fontSize: size > 44 ? '14px' : '12px', fontWeight: 700, color }}
+      >
         {grade}
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 }

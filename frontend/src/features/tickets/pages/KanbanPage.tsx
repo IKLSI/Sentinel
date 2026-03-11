@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import { getTickets, changeStatus } from "../api/tickets";
 import { TicketStatus, TicketPriority, Ticket } from "../../../types";
@@ -180,24 +181,29 @@ function SlaChip({ deadline, breached }: { deadline?: string; breached?: boolean
     ? { label: "Dépassé", color: "var(--red)", bg: "var(--red-subtle)" }
     : fmtSlaCompact(deadline);
 
+  const hasBorder = breached || (deadline && new Date(deadline) < new Date());
+
   return (
-    <span style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "3px",
-      fontFamily: "var(--font-mono)",
-      fontSize: "9px",
-      fontWeight: 700,
-      color,
-      background: bg,
-      border: breached || (deadline && new Date(deadline) < new Date()) ? "1px solid rgba(239,68,68,0.25)" : "none",
-      borderRadius: "var(--r-sm)",
-      padding: "2px 5px",
-      flexShrink: 0,
-    }}>
+    <Box
+      component="span"
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "3px",
+        fontFamily: "var(--font-mono)",
+        fontSize: "9px",
+        fontWeight: 700,
+        color,
+        background: bg,
+        border: hasBorder ? "1px solid rgba(239,68,68,0.25)" : "none",
+        borderRadius: "var(--r-sm)",
+        padding: "2px 5px",
+        flexShrink: 0,
+      }}
+    >
       <AccessTimeOutlined sx={{ fontSize: 9 }} />
       {label}
-    </span>
+    </Box>
   );
 }
 
@@ -214,82 +220,143 @@ function TicketCard({
 }) {
   const navigate = useNavigate();
   const isUpdating = updatingId === ticket.id;
-  const [hovered, setHovered] = useState(false);
   const typeColor = typeColors[ticket.type];
   const priorityColor = priorityColors[ticket.priority];
 
   return (
-    <div
+    <Box
       onClick={() => !isDragging && navigate(`/tickets/${ticket.id}`)}
-      onMouseEnter={() => { if (!isDragging) setHovered(true); }}
-      onMouseLeave={() => setHovered(false)}
-      style={{
+      sx={{
         background: isUpdating ? "var(--accent-subtle)" : "var(--s1)",
         border: `1px solid ${
           isDragging
             ? "var(--accent-border)"
             : isUpdating
               ? "var(--accent-border)"
-              : hovered
-                ? "var(--border2)"
-                : "var(--border)"
+              : "var(--border)"
         }`,
         borderRadius: "var(--r)",
         padding: "10px 12px",
         cursor: isDragging ? "grabbing" : "pointer",
-        boxShadow: isDragging
-          ? "var(--shadow-lg)"
-          : hovered
-            ? "var(--shadow-md)"
-            : "var(--shadow)",
+        boxShadow: isDragging ? "var(--shadow-lg)" : "var(--shadow)",
         userSelect: "none",
         opacity: isUpdating ? 0.65 : 1,
-        transform: hovered && !isDragging ? "translateY(-2px)" : "none",
         transition:
           "border-color 0.15s, opacity 0.2s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s",
         animation: justDropped
           ? "kanbanLand 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
           : undefined,
         willChange: "transform",
+        "&:hover": !isDragging ? {
+          borderColor: "var(--border2)",
+          boxShadow: "var(--shadow-md)",
+          transform: "translateY(-2px)",
+        } : {},
       }}
     >
-      {/* Ligne 1 : référence + type */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px", gap: "6px" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>
+      <Box className="d-flex align-items-center justify-content-between" sx={{ mb: "6px", gap: "6px" }}>
+        <Box
+          component="span"
+          sx={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "var(--accent)",
+            letterSpacing: "0.04em",
+          }}
+        >
           {ticket.reference}
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "10px", fontWeight: 600, color: typeColor, background: `${typeColor}15`, border: `1px solid ${typeColor}30`, borderRadius: "4px", padding: "1px 6px", flexShrink: 0 }}>
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "3px",
+            fontSize: "10px",
+            fontWeight: 600,
+            color: typeColor,
+            background: `${typeColor}15`,
+            border: `1px solid ${typeColor}30`,
+            borderRadius: "4px",
+            padding: "1px 6px",
+            flexShrink: 0,
+          }}
+        >
           {typeIcons[ticket.type]}
           {typeLabels[ticket.type]}
-        </span>
-      </div>
+        </Box>
+      </Box>
 
-      {/* Titre */}
-      <div style={{ fontSize: "13px", fontWeight: 600, lineHeight: 1.4, color: "var(--text)", marginBottom: "8px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <Box
+        sx={{
+          fontSize: "13px",
+          fontWeight: 600,
+          lineHeight: 1.4,
+          color: "var(--text)",
+          mb: "8px",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
         {ticket.title}
-      </div>
+      </Box>
 
-      {/* Footer : priorité + projet + SLA + assigné */}
-      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "10px", fontWeight: 700, color: priorityColor, flexShrink: 0 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: priorityColor, display: "inline-block" }} />
+      <Box className="d-flex align-items-center" sx={{ gap: "5px" }}>
+        <Box
+          component="span"
+          className="d-inline-flex align-items-center flex-shrink-0"
+          sx={{ gap: "3px", fontSize: "10px", fontWeight: 700, color: priorityColor }}
+        >
+          <Box
+            component="span"
+            sx={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: priorityColor,
+              display: "inline-block",
+            }}
+          />
           {priorityLabels[ticket.priority]}
-        </span>
+        </Box>
         {ticket.project && (
-          <span style={{ fontSize: "10px", color: "var(--muted2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+          <Box
+            component="span"
+            className="text-truncate"
+            sx={{ fontSize: "10px", color: "var(--muted2)", flex: 1 }}
+          >
             · {ticket.project}
-          </span>
+          </Box>
         )}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
+        <Box className="d-flex align-items-center flex-shrink-0" sx={{ ml: "auto", gap: "5px" }}>
           <SlaChip deadline={ticket.slaDeadline} breached={ticket.slaBreached} />
           {ticket.assigneeInitials && (
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--accent-subtle)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
+            <Box
+              sx={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                background: "var(--accent-subtle)",
+                border: "1px solid var(--accent-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "8px",
+                fontWeight: 700,
+                color: "var(--accent)",
+                fontFamily: "var(--font-mono)",
+                flexShrink: 0,
+              }}
+            >
               {ticket.assigneeInitials}
-            </div>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
@@ -311,7 +378,7 @@ function SortableCard({
   } = useSortable({ id: ticket.id });
 
   return (
-    <div
+    <Box
       ref={setNodeRef}
       {...attributes}
       {...listeners}
@@ -327,7 +394,7 @@ function SortableCard({
         updatingId={updatingId}
         justDropped={justDroppedId === ticket.id}
       />
-    </div>
+    </Box>
   );
 }
 
@@ -345,9 +412,9 @@ function DroppableColumn({
   const { setNodeRef } = useDroppable({ id: colId });
 
   return (
-    <div
+    <Box
       ref={setNodeRef}
-      style={{
+      sx={{
         flex: 1,
         minHeight: "120px",
         background: isOver ? `${color}0d` : "var(--s2)",
@@ -362,7 +429,7 @@ function DroppableColumn({
       }}
     >
       {children}
-    </div>
+    </Box>
   );
 }
 
@@ -505,21 +572,17 @@ export const KanbanPage: React.FC = () => {
       />
 
       {loading && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "calc(100vh - 56px)",
-          }}
+        <Box
+          className="d-flex justify-content-center align-items-center"
+          sx={{ height: "calc(100vh - 56px)" }}
         >
           <CircularProgress size={28} />
-        </div>
+        </Box>
       )}
 
       {!loading && (
-        <div
-          style={{
+        <Box
+          sx={{
             padding: "20px 24px",
             overflowX: "auto",
             height: "calc(100vh - 56px)",
@@ -533,42 +596,34 @@ export const KanbanPage: React.FC = () => {
             onDragOver={onDragOver}
             onDragEnd={onDragEnd}
           >
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                minWidth: "fit-content",
-                height: "100%",
-              }}
+            <Box
+              className="d-flex"
+              sx={{ gap: "12px", minWidth: "fit-content", height: "100%" }}
             >
               {columnOrder.map((colId) => {
                 const meta = columnMeta[colId];
                 const colTickets = columns[colId];
 
                 return (
-                  <div
+                  <Box
                     key={colId}
-                    style={{
-                      width: "280px",
-                      flexShrink: 0,
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
+                    className="d-flex flex-column flex-shrink-0"
+                    sx={{ width: "280px" }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
+                    <Box
+                      className="d-flex align-items-center"
+                      sx={{
                         gap: "8px",
-                        marginBottom: "10px",
+                        mb: "10px",
                         padding: "8px 12px",
                         background: `${meta.color}10`,
                         border: `1px solid ${meta.color}25`,
                         borderRadius: "var(--r-sm)",
                       }}
                     >
-                      <span
-                        style={{
+                      <Box
+                        component="span"
+                        sx={{
                           fontSize: "11px",
                           fontWeight: 700,
                           color: meta.color,
@@ -578,9 +633,10 @@ export const KanbanPage: React.FC = () => {
                         }}
                       >
                         {meta.label}
-                      </span>
-                      <span
-                        style={{
+                      </Box>
+                      <Box
+                        component="span"
+                        sx={{
                           fontFamily: "var(--font-mono)",
                           fontSize: "11px",
                           fontWeight: 700,
@@ -593,8 +649,8 @@ export const KanbanPage: React.FC = () => {
                         }}
                       >
                         {colTickets.length}
-                      </span>
-                    </div>
+                      </Box>
+                    </Box>
 
                     <SortableContext
                       items={colTickets.map((t) => t.id)}
@@ -614,33 +670,26 @@ export const KanbanPage: React.FC = () => {
                           />
                         ))}
                         {colTickets.length === 0 && (
-                          <div
-                            style={{
-                              flex: 1,
-                              minHeight: "80px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              opacity: 0.25,
-                              color: "var(--muted)",
-                            }}
+                          <Box
+                            className="d-flex align-items-center justify-content-center flex-grow-1"
+                            sx={{ minHeight: "80px", opacity: 0.25, color: "var(--muted)" }}
                           >
                             <ConfirmationNumberOutlined sx={{ fontSize: 22 }} />
-                          </div>
+                          </Box>
                         )}
                       </DroppableColumn>
                     </SortableContext>
-                  </div>
+                  </Box>
                 );
               })}
-            </div>
+            </Box>
 
             <DragOverlay
               dropAnimation={null}
             >
               {activeTicket && (
-                <div
-                  style={{
+                <Box
+                  sx={{
                     transform: "rotate(1.5deg) scale(1.04)",
                     filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.5))",
                   }}
@@ -650,11 +699,11 @@ export const KanbanPage: React.FC = () => {
                     isDragging
                     updatingId={null}
                   />
-                </div>
+                </Box>
               )}
             </DragOverlay>
           </DndContext>
-        </div>
+        </Box>
       )}
     </>
   );

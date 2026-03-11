@@ -39,53 +39,105 @@ export const AuditPage: React.FC = () => {
       <Topbar title="Audit log" subtitle="Historique des actions" />
       <Box sx={{ p: '24px 28px' }}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
             <CircularProgress />
-          </div>
+          </Box>
         ) : (
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
+          <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
+            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+              <Box component="thead">
+                <Box component="tr">
                   {['Date', 'Utilisateur', 'Action', 'Entité', 'Détails'].map((h) => (
-                    <th key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', textAlign: 'left', padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--s2)' }}>
+                    <Box
+                      component="th"
+                      key={h}
+                      sx={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '9px',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'var(--muted)',
+                        textAlign: 'left',
+                        padding: '10px 16px',
+                        borderBottom: '1px solid var(--border)',
+                        background: 'var(--s2)',
+                      }}
+                    >
                       {h}
-                    </th>
+                    </Box>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </Box>
+              </Box>
+              <Box component="tbody">
                 {logs.map((log) => (
-                  <tr
+                  <Box
+                    component="tr"
                     key={log.id}
-                    onMouseEnter={(e) => Array.from(e.currentTarget.cells).forEach((c) => (c.style.background = 'var(--s2)'))}
-                    onMouseLeave={(e) => Array.from(e.currentTarget.cells).forEach((c) => (c.style.background = 'transparent'))}
+                    sx={{ '&:hover td': { background: 'var(--s2)' } }}
                   >
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                    <Box
+                      component="td"
+                      sx={{
+                        padding: '10px 16px',
+                        borderBottom: '1px solid var(--border)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '10px',
+                        color: 'var(--muted)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {format(new Date(log.createdAt), 'dd MMM yyyy HH:mm', { locale: fr })}
-                    </td>
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 600 }}>
+                    </Box>
+                    <Box
+                      component="td"
+                      sx={{
+                        padding: '10px 16px',
+                        borderBottom: '1px solid var(--border)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    >
                       {log.user.firstName} {log.user.lastName}
-                    </td>
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)' }}>
+                    </Box>
+                    <Box
+                      component="td"
+                      sx={{ padding: '10px 16px', borderBottom: '1px solid var(--border)' }}
+                    >
                       <StatusChip variant={actionVariant(log.action)}>{log.action}</StatusChip>
-                    </td>
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--cyan)' }}>
+                    </Box>
+                    <Box
+                      component="td"
+                      sx={{
+                        padding: '10px 16px',
+                        borderBottom: '1px solid var(--border)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '11px',
+                        color: 'var(--cyan)',
+                      }}
+                    >
                       {log.entityType}: {log.entityId}
-                    </td>
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--muted2)' }}>
+                    </Box>
+                    <Box
+                      component="td"
+                      sx={{
+                        padding: '10px 16px',
+                        borderBottom: '1px solid var(--border)',
+                        fontSize: '11px',
+                        color: 'var(--muted2)',
+                      }}
+                    >
                       {log.details ? JSON.stringify(log.details) : '—'}
-                    </td>
-                  </tr>
+                    </Box>
+                  </Box>
                 ))}
-              </tbody>
-            </table>
-            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              </Box>
+            </Box>
+            <Box sx={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} disabled={page === 1} onClick={() => setPage((p) => p - 1)}>← Précédent</Button>
-              <span style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: '30px' }}>Page {page}</span>
+              <Box component="span" sx={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: '30px' }}>Page {page}</Box>
               <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>Suivant →</Button>
-            </div>
-          </div>
+            </Box>
+          </Box>
         )}
       </Box>
     </>

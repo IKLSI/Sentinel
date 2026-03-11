@@ -46,16 +46,26 @@ const fmtEur = (n: number) =>
 const fmtDate = (d?: string) =>
   d ? format(new Date(d), "dd MMM yyyy", { locale: fr }) : "—";
 
-const inputStyle: React.CSSProperties = {
+const inputSx = {
   background: "var(--s1)",
   border: "1px solid var(--border)",
   borderRadius: "var(--r)",
-  padding: "8px 12px",
+  px: "12px",
+  py: "8px",
   fontSize: "13px",
   color: "var(--text)",
   width: "100%",
   outline: "none",
   fontFamily: "inherit",
+};
+
+const labelSx = {
+  display: "block",
+  fontSize: "11px",
+  fontWeight: 600,
+  mb: "5px",
+  color: "var(--muted2)",
+  letterSpacing: "0.04em",
 };
 
 export const InvoicesPage: React.FC = () => {
@@ -216,12 +226,12 @@ export const InvoicesPage: React.FC = () => {
         }
       />
       <Box sx={{ p: "24px 28px" }}>
-        <div
-          style={{
+        <Box
+          sx={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
             gap: "14px",
-            marginBottom: "28px",
+            mb: "28px",
           }}
         >
           <KpiCard
@@ -239,13 +249,13 @@ export const InvoicesPage: React.FC = () => {
             value={fmtEur(totalOverdue)}
             color={totalOverdue > 0 ? "var(--red)" : undefined}
           />
-        </div>
+        </Box>
 
-        <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-          <div style={{ position: "relative", flex: 1, maxWidth: "300px" }}>
+        <Box sx={{ display: "flex", gap: "10px", mb: "20px" }}>
+          <Box sx={{ position: "relative", flex: 1, maxWidth: "300px" }}>
             <SearchOutlined
-              sx={{ fontSize: 13 }}
-              style={{
+              sx={{
+                fontSize: 13,
                 position: "absolute",
                 left: "11px",
                 top: "50%",
@@ -253,39 +263,41 @@ export const InvoicesPage: React.FC = () => {
                 color: "var(--muted)",
               }}
             />
-            <input
+            <Box
+              component="input"
               type="text"
               placeholder="Référence, libellé, période..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ ...inputStyle, paddingLeft: "32px" }}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              sx={{ ...inputSx, pl: "32px" }}
             />
-          </div>
-          <select
-            style={{ ...inputStyle, width: "auto" }}
+          </Box>
+          <Box
+            component="select"
+            sx={{ ...inputSx, width: "auto" }}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
           >
             <option value="">Tous les statuts</option>
             <option value="Draft">Brouillon</option>
             <option value="Sent">Envoyée</option>
             <option value="Paid">Payée</option>
-          </select>
-        </div>
+          </Box>
+        </Box>
 
         {loading ? (
-          <div
-            style={{
+          <Box
+            sx={{
               display: "flex",
               justifyContent: "center",
               padding: "48px",
             }}
           >
             <CircularProgress size={24} />
-          </div>
+          </Box>
         ) : filtered.length === 0 ? (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
@@ -293,30 +305,30 @@ export const InvoicesPage: React.FC = () => {
               textAlign: "center",
             }}
           >
-            <div className="empty-state">
-              <div className="empty-state-icon">
+            <Box className="empty-state">
+              <Box className="empty-state-icon">
                 <DescriptionOutlined sx={{ fontSize: 40 }} />
-              </div>
-              <div className="empty-state-title">Aucune facture</div>
-              <div className="empty-state-subtitle">
+              </Box>
+              <Box className="empty-state-title">Aucune facture</Box>
+              <Box className="empty-state-subtitle">
                 {invoices.length === 0
                   ? "Générez votre première facture"
                   : "Modifiez votre recherche"}
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         ) : (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
               overflow: "hidden",
             }}
           >
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
+            <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+              <Box component="thead">
+                <Box component="tr">
                   {[
                     "Référence",
                     "Libellé",
@@ -328,9 +340,10 @@ export const InvoicesPage: React.FC = () => {
                     "Statut",
                     "",
                   ].map((h) => (
-                    <th
+                    <Box
+                      component="th"
                       key={h}
-                      style={{
+                      sx={{
                         fontFamily: "var(--font-mono)",
                         fontSize: "9px",
                         letterSpacing: "0.1em",
@@ -344,31 +357,26 @@ export const InvoicesPage: React.FC = () => {
                       }}
                     >
                       {h}
-                    </th>
+                    </Box>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </Box>
+              </Box>
+              <Box component="tbody">
                 {filtered.map((inv) => {
                   const overdue = inv.isOverdue;
                   return (
-                    <tr
+                    <Box
+                      component="tr"
                       key={inv.id}
-                      style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/invoices/${inv.id}`)}
-                      onMouseEnter={(e) =>
-                        Array.from(e.currentTarget.cells).forEach(
-                          (c) => (c.style.background = "var(--s2)"),
-                        )
-                      }
-                      onMouseLeave={(e) =>
-                        Array.from(e.currentTarget.cells).forEach(
-                          (c) => (c.style.background = "transparent"),
-                        )
-                      }
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover td": { background: "var(--s2)" },
+                      }}
                     >
-                      <td
-                        style={{
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -378,9 +386,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {inv.reference}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontSize: "13px",
@@ -388,9 +397,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {inv.label}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -399,9 +409,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {inv.period}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -409,9 +420,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {inv.totalHours}h
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -420,9 +432,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {fmtEur(inv.totalAmount)}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -432,9 +445,10 @@ export const InvoicesPage: React.FC = () => {
                         }}
                       >
                         {fmtEur(inv.totalWithTax)}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -444,9 +458,10 @@ export const InvoicesPage: React.FC = () => {
                       >
                         {fmtDate(inv.dueAt)}
                         {overdue && (
-                          <span
-                            style={{
-                              marginLeft: "6px",
+                          <Box
+                            component="span"
+                            sx={{
+                              ml: "6px",
                               fontSize: "9px",
                               background: "var(--red-subtle)",
                               color: "var(--red)",
@@ -456,11 +471,12 @@ export const InvoicesPage: React.FC = () => {
                             }}
                           >
                             RETARD
-                          </span>
+                          </Box>
                         )}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                         }}
@@ -476,15 +492,16 @@ export const InvoicesPage: React.FC = () => {
                             ? "En retard"
                             : (STATUS_LABEL[inv.status] ?? inv.status)}
                         </StatusChip>
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 14px",
                           borderBottom: "1px solid var(--border)",
                         }}
                       >
-                        <div
-                          style={{
+                        <Box
+                          sx={{
                             display: "flex",
                             gap: "6px",
                             alignItems: "center",
@@ -527,14 +544,14 @@ export const InvoicesPage: React.FC = () => {
                               Marquer payée
                             </Button>
                           )}
-                        </div>
-                      </td>
-                    </tr>
+                        </Box>
+                      </Box>
+                    </Box>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         )}
       </Box>
 
@@ -555,50 +572,32 @@ export const InvoicesPage: React.FC = () => {
           Nouvelle facture
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  marginBottom: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Libellé <span style={{ color: "var(--red)" }}>*</span>
-              </label>
-              <input
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <Box sx={{ mb: "14px" }}>
+              <Box component="label" sx={labelSx}>
+                Libellé <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
+              </Box>
+              <Box
+                component="input"
                 type="text"
-                style={inputStyle}
+                sx={inputSx}
                 value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLabel(e.target.value)}
                 placeholder="Ex : Prestation TMA - Mars 2026"
               />
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  marginBottom: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box component="label" sx={labelSx}>
                 Projet associé{" "}
-                <span style={{ color: "var(--muted)", fontSize: "11px" }}>
+                <Box component="span" sx={{ color: "var(--muted)", fontSize: "11px" }}>
                   (optionnel)
-                </span>
-              </label>
-              <select
-                style={inputStyle}
+                </Box>
+              </Box>
+              <Box
+                component="select"
+                sx={inputSx}
                 value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProjectId(e.target.value)}
               >
                 <option value="">— Aucun projet —</option>
                 {projects.map((p) => (
@@ -606,103 +605,65 @@ export const InvoicesPage: React.FC = () => {
                     {p.name}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  marginBottom: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
+              </Box>
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box component="label" sx={labelSx}>
                 Taux journalier (€){" "}
-                <span style={{ color: "var(--red)" }}>*</span>
-              </label>
-              <input
+                <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
+              </Box>
+              <Box
+                component="input"
                 type="number"
-                style={inputStyle}
+                sx={inputSx}
                 value={newDailyRate}
                 min={0}
-                onChange={(e) => setNewDailyRate(Number(e.target.value))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDailyRate(Number(e.target.value))}
                 placeholder="500"
               />
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  marginBottom: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Période
-              </label>
-              <input
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box component="label" sx={labelSx}>Période</Box>
+              <Box
+                component="input"
                 type="month"
-                style={inputStyle}
+                sx={inputSx}
                 value={newPeriod}
-                onChange={(e) => setNewPeriod(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPeriod(e.target.value)}
               />
-            </div>
-            <div
-              style={{
+            </Box>
+            <Box
+              sx={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "12px",
               }}
             >
-              <div style={{ marginBottom: "14px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    marginBottom: "5px",
-                    color: "var(--muted2)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  TVA (%)
-                </label>
-                <input
+              <Box sx={{ mb: "14px" }}>
+                <Box component="label" sx={labelSx}>TVA (%)</Box>
+                <Box
+                  component="input"
                   type="number"
-                  style={inputStyle}
+                  sx={inputSx}
                   value={newTaxRate}
                   min={0}
                   max={100}
-                  onChange={(e) => setNewTaxRate(Number(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTaxRate(Number(e.target.value))}
                 />
-              </div>
-              <div style={{ marginBottom: "14px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    marginBottom: "5px",
-                    color: "var(--muted2)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Délai paiement (jours)
-                </label>
-                <input
+              </Box>
+              <Box sx={{ mb: "14px" }}>
+                <Box component="label" sx={labelSx}>Délai paiement (jours)</Box>
+                <Box
+                  component="input"
                   type="number"
-                  style={inputStyle}
+                  sx={inputSx}
                   value={newDueDays}
                   min={0}
-                  onChange={(e) => setNewDueDays(Number(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDueDays(Number(e.target.value))}
                 />
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -733,8 +694,8 @@ const KpiCard: React.FC<{ label: string; value: string; color?: string }> = ({
   value,
   color,
 }) => (
-  <div
-    style={{
+  <Box
+    sx={{
       background: "var(--s1)",
       border: "1px solid var(--border)",
       borderRadius: "var(--r)",
@@ -744,8 +705,8 @@ const KpiCard: React.FC<{ label: string; value: string; color?: string }> = ({
       boxShadow: "var(--shadow)",
     }}
   >
-    <div
-      style={{
+    <Box
+      sx={{
         position: "absolute",
         top: 0,
         left: 0,
@@ -754,21 +715,21 @@ const KpiCard: React.FC<{ label: string; value: string; color?: string }> = ({
         background: color ?? "var(--border)",
       }}
     />
-    <div
-      style={{
+    <Box
+      sx={{
         fontFamily: "var(--font-mono)",
         fontSize: "9px",
         letterSpacing: "0.15em",
         textTransform: "uppercase",
         color: "var(--muted)",
-        marginBottom: "10px",
+        mb: "10px",
         fontWeight: 500,
       }}
     >
       {label}
-    </div>
-    <div
-      style={{
+    </Box>
+    <Box
+      sx={{
         fontSize: "24px",
         fontWeight: 800,
         color: color ?? "var(--text)",
@@ -777,6 +738,6 @@ const KpiCard: React.FC<{ label: string; value: string; color?: string }> = ({
       }}
     >
       {value}
-    </div>
-  </div>
+    </Box>
+  </Box>
 );

@@ -6,6 +6,7 @@ import NotificationsOutlined from "@mui/icons-material/NotificationsOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import MenuOutlined from "@mui/icons-material/MenuOutlined";
+import Box from "@mui/material/Box";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { useTheme } from "../store/ThemeContext";
 import { useSidebar } from "./SidebarContext";
@@ -17,7 +18,7 @@ interface TopbarProps {
   actions?: React.ReactNode;
 }
 
-const iconBtn: React.CSSProperties = {
+const iconBtnSx = {
   all: "unset",
   cursor: "pointer",
   width: 32,
@@ -31,7 +32,12 @@ const iconBtn: React.CSSProperties = {
   transition: "all 0.12s",
   position: "relative",
   flexShrink: 0,
-};
+  "&:hover": {
+    borderColor: "var(--accent-border)",
+    color: "var(--accent)",
+    background: "var(--accent-subtle)",
+  },
+} as const;
 
 export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
   const { user, logout } = useAuth();
@@ -64,214 +70,159 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
     : "U";
 
   return (
-    <div
-      style={{
+    <Box
+      className="d-flex align-items-center"
+      sx={{
         position: "sticky",
         top: 0,
         zIndex: 50,
         height: 67,
         background: "var(--s1)",
         borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        padding: isMobile ? "0 16px" : "0 28px",
-        gap: 12,
+        px: isMobile ? 2 : "28px",
+        gap: "12px",
         backdropFilter: "blur(8px)",
       }}
     >
-      <div className="topbar-glow" />
+      <Box className="topbar-glow" />
 
       {isMobile && (
-        <button style={iconBtn} onClick={toggle} aria-label="Menu">
+        <Box component="button" sx={iconBtnSx} onClick={toggle} aria-label="Menu">
           <MenuOutlined sx={{ fontSize: 16 }} />
-        </button>
+        </Box>
       )}
 
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "baseline",
-          gap: 8,
-          minWidth: 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 15,
-            fontWeight: 700,
-            letterSpacing: "-0.025em",
-            color: "var(--text)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
+      <Box className="d-flex align-items-baseline gap-2 flex-grow-1 overflow-hidden">
+        <Box
+          component="span"
+          className="text-truncate"
+          sx={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.025em", color: "var(--text)", whiteSpace: "nowrap" }}
         >
           {title}
-        </span>
+        </Box>
         {subtitle && !isMobile && (
-          <span
-            style={{
-              fontSize: 13,
-              color: "var(--muted)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              letterSpacing: "-0.01em",
-            }}
+          <Box
+            component="span"
+            className="text-truncate"
+            sx={{ fontSize: 13, color: "var(--muted)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
           >
             {subtitle}
-          </span>
+          </Box>
         )}
-      </div>
+      </Box>
 
-      <div
-        style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}
-      >
+      <Box className="d-flex align-items-center gap-2 flex-shrink-0">
         {actions && !isMobile && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {actions}
-          </div>
+          <Box className="d-flex align-items-center gap-2">{actions}</Box>
         )}
 
-        <button
-          style={iconBtn}
+        <Box
+          component="button"
+          sx={iconBtnSx}
           title={theme === "dark" ? "Mode clair" : "Mode sombre"}
           onClick={toggleTheme}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent-border)";
-            e.currentTarget.style.color = "var(--accent)";
-            e.currentTarget.style.background = "var(--accent-subtle)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--muted)";
-            e.currentTarget.style.background = "transparent";
-          }}
         >
           {theme === "dark" ? (
             <LightModeOutlined sx={{ fontSize: 14 }} />
           ) : (
             <DarkModeOutlined sx={{ fontSize: 14 }} />
           )}
-        </button>
+        </Box>
 
-        <button
-          style={iconBtn}
+        <Box
+          component="button"
+          sx={iconBtnSx}
           title="Notifications"
           onClick={() => navigate("/notifications")}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent-border)";
-            e.currentTarget.style.color = "var(--accent)";
-            e.currentTarget.style.background = "var(--accent-subtle)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--muted)";
-            e.currentTarget.style.background = "transparent";
-          }}
         >
           <NotificationsOutlined sx={{ fontSize: 14 }} />
           {unreadCount > 0 && (
-            <div style={{
-              position: "absolute",
-              top: -4,
-              right: -4,
-              minWidth: 16,
-              height: 16,
-              borderRadius: 8,
-              background: "var(--red)",
-              color: "#fff",
-              fontSize: 9,
-              fontWeight: 700,
-              fontFamily: "var(--font-mono)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 4px",
-              boxSizing: "border-box",
-              border: "2px solid var(--s1)",
-            }}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                background: "var(--red)",
+                color: "#fff",
+                fontSize: 9,
+                fontWeight: 700,
+                fontFamily: "var(--font-mono)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                px: "4px",
+                boxSizing: "border-box",
+                border: "2px solid var(--s1)",
+              }}
+            >
               {unreadCount > 99 ? "99+" : unreadCount}
-            </div>
+            </Box>
           )}
-        </button>
+        </Box>
 
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            style={{
+        <Box ref={menuRef} className="position-relative">
+          <Box
+            component="button"
+            className="d-flex align-items-center gap-2"
+            sx={{
               all: "unset",
               cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "4px 8px 4px 4px",
+              px: "8px",
+              py: "4px",
+              pl: "4px",
               borderRadius: "10px",
               border: "1px solid var(--border)",
               background: menuOpen ? "var(--s2)" : "transparent",
               transition: "all 0.12s",
+              "&:hover": {
+                background: "var(--s2)",
+                borderColor: "var(--border2)",
+              },
             }}
             onClick={() => setMenuOpen((v) => !v)}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--s2)";
-              e.currentTarget.style.borderColor = "var(--border2)";
-            }}
-            onMouseLeave={(e) => {
-              if (!menuOpen) {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "var(--border)";
-              }
-            }}
           >
-            <div
-              style={{
+            <Box
+              className="d-flex align-items-center justify-content-center flex-shrink-0"
+              sx={{
                 width: 26,
                 height: 26,
                 borderRadius: "7px",
                 background: "linear-gradient(135deg, var(--accent), #818cf8)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 fontSize: "10px",
                 fontFamily: "var(--font-mono)",
                 fontWeight: 700,
                 color: "#fff",
                 boxShadow: "0 2px 6px rgba(99,102,241,0.35)",
-                flexShrink: 0,
               }}
             >
               {initials}
-            </div>
+            </Box>
             {!isMobile && (
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--text)",
-                  letterSpacing: "-0.01em",
-                  maxWidth: 120,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
+              <Box
+                component="span"
+                className="text-truncate"
+                sx={{ fontSize: 12, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", maxWidth: 120 }}
               >
                 {user?.firstName}
-              </span>
+              </Box>
             )}
             <KeyboardArrowDownOutlined
-              sx={{ fontSize: 12 }}
-              style={{
+              sx={{
+                fontSize: 12,
                 color: "var(--muted)",
                 transition: "transform 0.15s",
                 transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
                 flexShrink: 0,
               }}
             />
-          </button>
+          </Box>
 
           {menuOpen && (
-            <div
-              style={{
+            <Box
+              sx={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 right: 0,
@@ -279,83 +230,51 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
                 background: "var(--s1)",
                 border: "1px solid var(--border)",
                 borderRadius: "12px",
-                boxShadow:
-                  "0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
+                boxShadow: "0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
                 overflow: "hidden",
                 animation: "fadeInUp 0.12s ease forwards",
                 zIndex: 100,
               }}
             >
-              <div
-                style={{
-                  padding: "14px 16px",
-                  borderBottom: "1px solid var(--border)",
-                  background: "var(--s1)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "var(--text)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
+              <Box className="p-3" sx={{ borderBottom: "1px solid var(--border)", background: "var(--s1)" }}>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
                   {user?.firstName} {user?.lastName}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    marginTop: 2,
-                    fontFamily: "var(--font-mono)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                </Box>
+                <Box className="text-truncate mt-1" sx={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
                   {user?.email}
-                </div>
-              </div>
-              <div style={{ padding: "6px" }}>
-                <button
-                  style={{
+                </Box>
+              </Box>
+              <Box className="p-1">
+                <Box
+                  component="button"
+                  className="d-flex align-items-center gap-2 w-100"
+                  sx={{
                     all: "unset",
                     cursor: "pointer",
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "9px 10px",
+                    py: "9px",
+                    px: "10px",
                     borderRadius: "7px",
                     fontSize: 13,
                     color: "var(--red)",
                     fontWeight: 500,
                     transition: "background 0.1s",
                     boxSizing: "border-box",
+                    "&:hover": { background: "rgba(239,68,68,0.08)" },
                   }}
                   onClick={handleLogout}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(239,68,68,0.08)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
                 >
                   <LogoutOutlined sx={{ fontSize: 14 }} />
                   Déconnexion
-                </button>
-              </div>
-            </div>
+                </Box>
+              </Box>
+            </Box>
           )}
-        </div>
+        </Box>
 
         {actions && isMobile && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {actions}
-          </div>
+          <Box className="d-flex align-items-center gap-2">{actions}</Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };

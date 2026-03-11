@@ -6,6 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
   getTimeEntries,
@@ -49,18 +50,6 @@ const formatDuration = (minutes: number) => {
 const parseDateLocal = (dateStr: string) => {
   const [y, mo, d] = dateStr.split("-").map(Number);
   return new Date(y, mo - 1, d);
-};
-
-const inputStyle: React.CSSProperties = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r)",
-  padding: "8px 12px",
-  fontSize: "13px",
-  color: "var(--text)",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
 };
 
 type FormState = {
@@ -258,13 +247,13 @@ export const TimeTrackingPage: React.FC = () => {
         }
       />
 
-      <div style={{ padding: "24px 28px" }}>
-        <div
-          style={{
+      <Box sx={{ p: "24px 28px" }}>
+        <Box
+          sx={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 1fr",
             gap: "14px",
-            marginBottom: "24px",
+            mb: "24px",
           }}
         >
           <KpiCard
@@ -277,77 +266,74 @@ export const TimeTrackingPage: React.FC = () => {
             label="Moyenne / jour ouvré"
             value={formatDuration(Math.round(totalMinutes / 5))}
           />
-        </div>
+        </Box>
 
         {statsByProject.length > 0 && (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
               padding: "16px 20px",
-              marginBottom: "16px",
+              mb: "16px",
             }}
           >
-            <div
-              style={{
+            <Box
+              sx={{
                 fontSize: "11px",
                 fontFamily: "var(--font-mono)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 color: "var(--muted)",
-                marginBottom: "12px",
+                mb: "12px",
                 fontWeight: 500,
               }}
             >
               Répartition par projet
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-            >
+            </Box>
+            <Box className="d-flex flex-column" sx={{ gap: "8px" }}>
               {statsByProject.map((p) => {
                 const pct =
                   totalMinutes > 0
                     ? Math.round((p.minutes / totalMinutes) * 100)
                     : 0;
                 return (
-                  <div key={p.name}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: "4px",
-                      }}
+                  <Box key={p.name}>
+                    <Box
+                      className="d-flex justify-content-between"
+                      sx={{ mb: "4px" }}
                     >
-                      <span
-                        style={{
+                      <Box
+                        component="span"
+                        sx={{
                           fontSize: "12px",
                           color: "var(--text)",
                           fontWeight: 500,
                         }}
                       >
                         {p.name}
-                      </span>
-                      <span
-                        style={{
+                      </Box>
+                      <Box
+                        component="span"
+                        sx={{
                           fontSize: "12px",
                           fontFamily: "var(--font-mono)",
                           color: "var(--muted2)",
                         }}
                       >
                         {formatDuration(p.minutes)} · {pct}%
-                      </span>
-                    </div>
-                    <div
-                      style={{
+                      </Box>
+                    </Box>
+                    <Box
+                      sx={{
                         height: "4px",
                         background: "var(--s3)",
                         borderRadius: "2px",
                         overflow: "hidden",
                       }}
                     >
-                      <div
-                        style={{
+                      <Box
+                        sx={{
                           height: "100%",
                           width: `${pct}%`,
                           background: "var(--accent)",
@@ -355,28 +341,22 @@ export const TimeTrackingPage: React.FC = () => {
                           transition: "width 0.4s ease",
                         }}
                       />
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                 );
               })}
-            </div>
-          </div>
+            </Box>
+          </Box>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "12px",
-          }}
+        <Box
+          className="d-flex align-items-center justify-content-between"
+          sx={{ mb: "12px" }}
         >
-          <div
-            style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
-          >
+          <Box sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>
             Vue semaine
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          </Box>
+          <Box className="d-flex align-items-center gap-2">
             <Button
               variant="outlined"
               size="small"
@@ -385,8 +365,9 @@ export const TimeTrackingPage: React.FC = () => {
             >
               <ChevronLeftOutlined sx={{ fontSize: 14 }} />
             </Button>
-            <span
-              style={{
+            <Box
+              component="span"
+              sx={{
                 fontSize: "12px",
                 fontWeight: 500,
                 color: "var(--text-secondary)",
@@ -395,7 +376,7 @@ export const TimeTrackingPage: React.FC = () => {
               }}
             >
               {weekLabel}
-            </span>
+            </Box>
             <Button
               variant="outlined"
               size="small"
@@ -421,20 +402,20 @@ export const TimeTrackingPage: React.FC = () => {
                 <RefreshOutlined sx={{ fontSize: 14 }} />
               </Button>
             )}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div
-          style={{
+        <Box
+          sx={{
             background: "var(--s1)",
             border: "1px solid var(--border)",
             borderRadius: "var(--r)",
             overflow: "hidden",
-            marginBottom: "16px",
+            mb: "16px",
           }}
         >
-          <div
-            style={{
+          <Box
+            sx={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
               gap: "1px",
@@ -464,10 +445,11 @@ export const TimeTrackingPage: React.FC = () => {
                       : "var(--orange)";
 
               return (
-                <button
+                <Box
                   key={dayStr}
+                  component="button"
                   onClick={() => openCreate(dayStr)}
-                  style={{
+                  sx={{
                     background: today
                       ? "var(--accent-subtle)"
                       : isWeekend
@@ -482,20 +464,13 @@ export const TimeTrackingPage: React.FC = () => {
                     flexDirection: "column",
                     alignItems: "center",
                     gap: "6px",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!today) e.currentTarget.style.background = "var(--s3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = today
-                      ? "var(--accent-subtle)"
-                      : isWeekend
-                        ? "var(--s2)"
-                        : "var(--s1)";
+                    "&:hover": {
+                      background: today ? "var(--accent-subtle)" : "var(--s3)",
+                    },
                   }}
                 >
-                  <div
-                    style={{
+                  <Box
+                    sx={{
                       fontFamily: "var(--font-mono)",
                       fontSize: "9px",
                       color: today ? "var(--accent)" : "var(--muted)",
@@ -505,9 +480,9 @@ export const TimeTrackingPage: React.FC = () => {
                     }}
                   >
                     {format(day, "EEE", { locale: fr })}
-                  </div>
-                  <div
-                    style={{
+                  </Box>
+                  <Box
+                    sx={{
                       width: "26px",
                       height: "26px",
                       borderRadius: "50%",
@@ -525,9 +500,9 @@ export const TimeTrackingPage: React.FC = () => {
                     }}
                   >
                     {format(day, "d")}
-                  </div>
-                  <div
-                    style={{
+                  </Box>
+                  <Box
+                    sx={{
                       fontFamily: "var(--font-mono)",
                       fontSize: "14px",
                       fontWeight: 700,
@@ -535,9 +510,9 @@ export const TimeTrackingPage: React.FC = () => {
                     }}
                   >
                     {dayMinutes > 0 ? formatDuration(dayMinutes) : "—"}
-                  </div>
-                  <div
-                    style={{
+                  </Box>
+                  <Box
+                    sx={{
                       width: "100%",
                       height: "3px",
                       background: "var(--s3)",
@@ -545,8 +520,8 @@ export const TimeTrackingPage: React.FC = () => {
                       overflow: "hidden",
                     }}
                   >
-                    <div
-                      style={{
+                    <Box
+                      sx={{
                         height: "100%",
                         width: `${pct}%`,
                         background: barColor,
@@ -554,10 +529,10 @@ export const TimeTrackingPage: React.FC = () => {
                         transition: "width 0.3s ease",
                       }}
                     />
-                  </div>
+                  </Box>
                   {dayEntries.length > 0 && (
-                    <div
-                      style={{
+                    <Box
+                      sx={{
                         fontSize: "9px",
                         color: "var(--muted)",
                         fontFamily: "var(--font-mono)",
@@ -565,66 +540,54 @@ export const TimeTrackingPage: React.FC = () => {
                     >
                       {dayEntries.length} saisie
                       {dayEntries.length > 1 ? "s" : ""}
-                    </div>
+                    </Box>
                   )}
-                </button>
+                </Box>
               );
             })}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "12px",
-          }}
+        <Box
+          className="d-flex align-items-center justify-content-between"
+          sx={{ mb: "12px" }}
         >
-          <div
-            style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
-          >
+          <Box sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>
             Saisies de la semaine
-          </div>
-          <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+          </Box>
+          <Box component="span" sx={{ fontSize: "12px", color: "var(--muted)" }}>
             {weekEntries.length} entrée{weekEntries.length !== 1 ? "s" : ""}
-          </span>
-        </div>
+          </Box>
+        </Box>
 
         {loading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "48px",
-            }}
-          >
+          <Box className="d-flex justify-content-center" sx={{ p: "48px" }}>
             <CircularProgress size={24} />
-          </div>
+          </Box>
         ) : weekEntries.length === 0 ? (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
               padding: "16px 20px",
-              marginBottom: "8px",
+              mb: "8px",
             }}
           >
-            <div className="empty-state">
-              <div className="empty-state-icon">
+            <Box className="empty-state">
+              <Box className="empty-state-icon">
                 <AccessTimeOutlined sx={{ fontSize: 40 }} />
-              </div>
-              <div className="empty-state-title">
+              </Box>
+              <Box className="empty-state-title">
                 Aucune saisie cette semaine
-              </div>
-              <div className="empty-state-subtitle">
+              </Box>
+              <Box className="empty-state-subtitle">
                 Cliquez sur un jour pour ajouter du temps
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Box className="d-flex flex-column" sx={{ gap: "8px" }}>
             {weekDays
               .filter(
                 (d) =>
@@ -641,25 +604,15 @@ export const TimeTrackingPage: React.FC = () => {
                 );
 
                 return (
-                  <div key={dayStr}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "6px 0",
-                        marginBottom: "4px",
-                      }}
+                  <Box key={dayStr}>
+                    <Box
+                      className="d-flex align-items-center justify-content-between"
+                      sx={{ padding: "6px 0", mb: "4px" }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <span
-                          style={{
+                      <Box className="d-flex align-items-center gap-2">
+                        <Box
+                          component="span"
+                          sx={{
                             fontSize: "12px",
                             fontWeight: 700,
                             color: isCurrentDay
@@ -670,9 +623,10 @@ export const TimeTrackingPage: React.FC = () => {
                         >
                           {format(dayDate, "EEEE d MMMM", { locale: fr })}
                           {isCurrentDay && (
-                            <span
-                              style={{
-                                marginLeft: "6px",
+                            <Box
+                              component="span"
+                              sx={{
+                                ml: "6px",
                                 fontSize: "10px",
                                 color: "var(--muted)",
                                 fontWeight: 500,
@@ -680,12 +634,13 @@ export const TimeTrackingPage: React.FC = () => {
                               }}
                             >
                               • en cours
-                            </span>
+                            </Box>
                           )}
-                        </span>
-                      </div>
-                      <span
-                        style={{
+                        </Box>
+                      </Box>
+                      <Box
+                        component="span"
+                        sx={{
                           fontFamily: "var(--font-mono)",
                           fontSize: "12px",
                           fontWeight: 700,
@@ -693,24 +648,23 @@ export const TimeTrackingPage: React.FC = () => {
                         }}
                       >
                         {formatDuration(dayMinutes)}
-                      </span>
-                    </div>
+                      </Box>
+                    </Box>
 
-                    <div
-                      style={{
+                    <Box
+                      sx={{
                         background: "var(--s1)",
                         border: "1px solid var(--border)",
                         borderRadius: "var(--r)",
                         overflow: "hidden",
-                        marginBottom: "4px",
+                        mb: "4px",
                       }}
                     >
                       {dayEntries.map((entry, idx) => (
-                        <div
+                        <Box
                           key={entry.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
+                          className="d-flex align-items-center"
+                          sx={{
                             gap: "14px",
                             padding: "12px 16px",
                             borderBottom:
@@ -719,8 +673,8 @@ export const TimeTrackingPage: React.FC = () => {
                                 : "none",
                           }}
                         >
-                          <div
-                            style={{
+                          <Box
+                            sx={{
                               minWidth: "44px",
                               fontFamily: "var(--font-mono)",
                               fontSize: "14px",
@@ -730,41 +684,39 @@ export const TimeTrackingPage: React.FC = () => {
                             }}
                           >
                             {formatDuration(entry.durationMinutes)}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div
-                              style={{
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box
+                              sx={{
                                 fontSize: "13px",
                                 color: "var(--text)",
                                 fontWeight: 500,
-                                marginBottom: entry.techProjectName ? "3px" : 0,
+                                mb: entry.techProjectName ? "3px" : 0,
                               }}
                             >
                               {entry.comment ?? "—"}
-                            </div>
+                            </Box>
                             {entry.techProjectName && (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <AccountTreeOutlined sx={{ fontSize: 10 }} style={{ color: 'var(--muted)' }} />
-                                <span
-                                  style={{
+                              <Box className="d-flex align-items-center" sx={{ gap: "5px" }}>
+                                <AccountTreeOutlined
+                                  sx={{ fontSize: 10, color: "var(--muted)" }}
+                                />
+                                <Box
+                                  component="span"
+                                  sx={{
                                     fontSize: "11px",
                                     color: "var(--muted2)",
                                   }}
                                 >
                                   {entry.techProjectName}
-                                </span>
-                              </div>
+                                </Box>
+                              </Box>
                             )}
-                          </div>
+                          </Box>
                           {entry.ticketTitle && (
-                            <span
-                              style={{
+                            <Box
+                              component="span"
+                              sx={{
                                 fontFamily: "var(--font-mono)",
                                 fontSize: "10px",
                                 background: "var(--accent-subtle)",
@@ -776,15 +728,9 @@ export const TimeTrackingPage: React.FC = () => {
                               }}
                             >
                               {entry.ticketTitle}
-                            </span>
+                            </Box>
                           )}
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "4px",
-                              flexShrink: 0,
-                            }}
-                          >
+                          <Box className="d-flex flex-shrink-0" sx={{ gap: "4px" }}>
                             <ActionBtn
                               icon={<EditOutlined sx={{ fontSize: 13 }} />}
                               onClick={() => openEdit(entry)}
@@ -796,16 +742,16 @@ export const TimeTrackingPage: React.FC = () => {
                               title="Supprimer"
                               danger
                             />
-                          </div>
-                        </div>
+                          </Box>
+                        </Box>
                       ))}
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                 );
               })}
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       <Dialog
         open={modalOpen}
@@ -824,48 +770,72 @@ export const TimeTrackingPage: React.FC = () => {
           {editingId ? "Modifier la saisie" : "Saisir du temps"}
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div>
-              <label
-                style={{
+          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Date
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="date"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.date}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setForm((f) => ({ ...f, date: e.target.value }))
                 }
               />
-            </div>
-            <div>
-              <label
-                style={{
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Ticket (optionnel)
-              </label>
-              <select
-                style={inputStyle}
+              </Box>
+              <Box
+                component="select"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.ticketId}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setForm((f) => ({ ...f, ticketId: e.target.value }))
                 }
               >
@@ -875,25 +845,38 @@ export const TimeTrackingPage: React.FC = () => {
                     {t.reference} — {t.title}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label
-                style={{
+              </Box>
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Projet (optionnel)
-              </label>
-              <select
-                style={inputStyle}
+              </Box>
+              <Box
+                component="select"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.techProjectId}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setForm((f) => ({ ...f, techProjectId: e.target.value }))
                 }
               >
@@ -903,51 +886,65 @@ export const TimeTrackingPage: React.FC = () => {
                     {p.name}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label
-                style={{
+              </Box>
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Description *
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="text"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.comment}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setForm((f) => ({ ...f, comment: e.target.value }))
                 }
                 placeholder="Ce que vous avez fait..."
                 autoFocus
               />
-            </div>
-            <div>
-              <label
-                style={{
+            </Box>
+            <Box>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "8px",
+                  mb: "8px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Durée
-              </label>
+              </Box>
               <DurationPicker
                 value={form.durationMinutes}
                 onChange={(v) => setForm((f) => ({ ...f, durationMinutes: v }))}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -991,11 +988,11 @@ export const TimeTrackingPage: React.FC = () => {
           Supprimer la saisie
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <p style={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
+          <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
             Supprimer la saisie <strong>"{deleteTarget?.comment}"</strong> (
             {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""})
             ? Cette action est irréversible.
-          </p>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button
@@ -1027,8 +1024,8 @@ const KpiCard: React.FC<{ label: string; value: string; accent?: boolean }> = ({
   value,
   accent,
 }) => (
-  <div
-    style={{
+  <Box
+    sx={{
       background: "var(--s1)",
       border: `1px solid ${accent ? "var(--accent-border)" : "var(--border)"}`,
       borderRadius: "var(--r)",
@@ -1036,21 +1033,21 @@ const KpiCard: React.FC<{ label: string; value: string; accent?: boolean }> = ({
       boxShadow: "var(--shadow)",
     }}
   >
-    <div
-      style={{
+    <Box
+      sx={{
         fontFamily: "var(--font-mono)",
         fontSize: "9px",
         letterSpacing: "0.15em",
         textTransform: "uppercase",
         color: "var(--muted)",
-        marginBottom: "12px",
+        mb: "12px",
         fontWeight: 500,
       }}
     >
       {label}
-    </div>
-    <div
-      style={{
+    </Box>
+    <Box
+      sx={{
         fontSize: "28px",
         fontWeight: 800,
         color: accent ? "var(--accent)" : "var(--text)",
@@ -1059,8 +1056,8 @@ const KpiCard: React.FC<{ label: string; value: string; accent?: boolean }> = ({
       }}
     >
       {value}
-    </div>
-  </div>
+    </Box>
+  </Box>
 );
 
 const ActionBtn: React.FC<{
@@ -1069,10 +1066,11 @@ const ActionBtn: React.FC<{
   title: string;
   danger?: boolean;
 }> = ({ icon, onClick, title, danger }) => (
-  <button
+  <Box
+    component="button"
     title={title}
     onClick={onClick}
-    style={{
+    sx={{
       background: "none",
       border: "none",
       cursor: "pointer",
@@ -1082,18 +1080,12 @@ const ActionBtn: React.FC<{
       display: "flex",
       alignItems: "center",
       transition: "color 0.12s, background 0.12s",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.color = danger ? "var(--red)" : "var(--text)";
-      e.currentTarget.style.background = danger
-        ? "var(--red-subtle)"
-        : "var(--s3)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.color = "var(--muted)";
-      e.currentTarget.style.background = "transparent";
+      "&:hover": {
+        color: danger ? "var(--red)" : "var(--text)",
+        background: danger ? "var(--red-subtle)" : "var(--s3)",
+      },
     }}
   >
     {icon}
-  </button>
+  </Box>
 );

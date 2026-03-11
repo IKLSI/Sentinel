@@ -1,11 +1,96 @@
 import { createTheme } from '@mui/material/styles'
 
+const darkCssVars = `
+  :root {
+    color-scheme: dark;
+    --bg: #080c14;
+    --s1: #0d1120;
+    --s2: #121829;
+    --s3: #192036;
+    --border: #1e2a42;
+    --border2: #263352;
+    --text: #e6eaf6;
+    --text-secondary: #a0aec9;
+    --muted: #4d5e82;
+    --muted2: #7488aa;
+    --accent: #6366f1;
+    --accent2: #4f52cf;
+    --accent-subtle: rgba(99, 102, 241, 0.10);
+    --accent-border: rgba(99, 102, 241, 0.30);
+    --blue: #6366f1;
+    --blue2: #4f52cf;
+    --green: #22c55e;
+    --green-subtle: rgba(34, 197, 94, 0.10);
+    --yellow: #f59e0b;
+    --yellow-subtle: rgba(245, 158, 11, 0.10);
+    --orange: #f97316;
+    --orange-subtle: rgba(249, 115, 22, 0.10);
+    --red: #ef4444;
+    --red-subtle: rgba(239, 68, 68, 0.10);
+    --cyan: #06b6d4;
+    --cyan-subtle: rgba(6, 182, 212, 0.10);
+    --purple: #a855f7;
+    --purple-subtle: rgba(168, 85, 247, 0.10);
+    --r: 8px;
+    --r-sm: 5px;
+    --r-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  }
+  body { scrollbar-width: thin; }
+`
+
+const lightCssVars = `
+  :root {
+    color-scheme: light;
+    --bg: #f0f2f8;
+    --s1: #ffffff;
+    --s2: #f5f7fc;
+    --s3: #eaedfa;
+    --border: #dde3f2;
+    --border2: #c8d2eb;
+    --text: #0e1220;
+    --text-secondary: #3a4768;
+    --muted: #8898bb;
+    --muted2: #5c6f90;
+    --accent: #4f46e5;
+    --accent2: #3730a3;
+    --accent-subtle: rgba(79, 70, 229, 0.08);
+    --accent-border: rgba(79, 70, 229, 0.25);
+    --blue: #4f46e5;
+    --blue2: #3730a3;
+    --green: #16a34a;
+    --green-subtle: rgba(22, 163, 74, 0.08);
+    --yellow: #d97706;
+    --yellow-subtle: rgba(217, 119, 6, 0.08);
+    --orange: #ea580c;
+    --orange-subtle: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-subtle: rgba(220, 38, 38, 0.08);
+    --cyan: #0891b2;
+    --cyan-subtle: rgba(8, 145, 178, 0.08);
+    --purple: #9333ea;
+    --purple-subtle: rgba(147, 51, 234, 0.08);
+    --r: 8px;
+    --r-sm: 5px;
+    --r-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  }
+  body { scrollbar-width: thin; }
+`
+
 const baseComponents = {
-  MuiCssBaseline: {
-    styleOverrides: {
-      body: { scrollbarWidth: 'thin' },
-    },
-  },
   MuiButton: {
     defaultProps: {
       disableElevation: true,
@@ -193,7 +278,10 @@ export const darkTheme = createTheme({
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     button: { textTransform: 'none', fontWeight: 600 },
   },
-  components: baseComponents as object,
+  components: {
+    ...baseComponents,
+    MuiCssBaseline: { styleOverrides: darkCssVars },
+  } as object,
 })
 
 export const lightTheme = createTheme({
@@ -216,5 +304,8 @@ export const lightTheme = createTheme({
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     button: { textTransform: 'none', fontWeight: 600 },
   },
-  components: baseComponents as object,
+  components: {
+    ...baseComponents,
+    MuiCssBaseline: { styleOverrides: lightCssVars },
+  } as object,
 })

@@ -114,6 +114,9 @@ function extractVulns(detail: ProjectDetailDto): Vuln[] {
   );
 }
 
+const thSx = { fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", textAlign: "left", padding: "10px 16px", borderBottom: "1px solid var(--border)", fontWeight: 500 }
+const tdBase = { padding: "11px 16px", borderBottom: "1px solid var(--border)" }
+
 const STATUS_CONFIG: Record<
   DepStatus,
   {
@@ -178,9 +181,10 @@ const ProjectSummaryCard: React.FC<{
   const vulnerable = project.vulnerableDependencies;
 
   return (
-    <button
+    <Box
+      component="button"
       onClick={onClick}
-      style={{
+      sx={{
         width: "100%",
         background: selected ? "var(--accent-subtle)" : "var(--s1)",
         border: `1px solid ${selected ? "var(--accent)" : "var(--border)"}`,
@@ -193,18 +197,10 @@ const ProjectSummaryCard: React.FC<{
         alignItems: "center",
         gap: "12px",
         fontFamily: "var(--font-ui)",
-      }}
-      onMouseEnter={(e) => {
-        if (!selected) {
-          e.currentTarget.style.borderColor = "var(--border2)";
-          e.currentTarget.style.background = "var(--s2)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!selected) {
-          e.currentTarget.style.borderColor = "var(--border)";
-          e.currentTarget.style.background = "var(--s1)";
-        }
+        "&:hover": !selected ? {
+          borderColor: "var(--border2)",
+          background: "var(--s2)",
+        } : {},
       }}
     >
       <HealthScoreCircle
@@ -212,28 +208,21 @@ const ProjectSummaryCard: React.FC<{
         grade={project.healthGrade as HealthGrade}
         size={40}
       />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--text)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box
+          className="text-truncate"
+          sx={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
         >
           {project.name}
-        </div>
-        <div
-          style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}
-        >
+        </Box>
+        <Box sx={{ fontSize: "11px", color: "var(--muted)", mt: "2px" }}>
           {project.repositoryType}
-        </div>
-        <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+        </Box>
+        <Box className="d-flex" sx={{ gap: "8px", mt: "6px" }}>
           {criticalVulns > 0 && (
-            <span
-              style={{
+            <Box
+              component="span"
+              sx={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",
                 fontWeight: 600,
@@ -244,11 +233,12 @@ const ProjectSummaryCard: React.FC<{
               }}
             >
               {criticalVulns} CVE critique{criticalVulns > 1 ? "s" : ""}
-            </span>
+            </Box>
           )}
           {vulnerable > 0 && (
-            <span
-              style={{
+            <Box
+              component="span"
+              sx={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",
                 fontWeight: 600,
@@ -259,11 +249,12 @@ const ProjectSummaryCard: React.FC<{
               }}
             >
               {vulnerable} vulnérable{vulnerable > 1 ? "s" : ""}
-            </span>
+            </Box>
           )}
           {vulnerable === 0 && criticalVulns === 0 && (
-            <span
-              style={{
+            <Box
+              component="span"
+              sx={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",
                 color: "var(--green)",
@@ -273,11 +264,11 @@ const ProjectSummaryCard: React.FC<{
               }}
             >
               ✓ Sain
-            </span>
+            </Box>
           )}
-        </div>
-      </div>
-    </button>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
@@ -288,16 +279,16 @@ const DependenciesTable: React.FC<{ deps: Dependency[] }> = ({ deps }) => {
   });
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         borderRadius: "var(--r)",
         border: "1px solid var(--border)",
         overflow: "hidden",
       }}
     >
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "var(--s2)" }}>
+      <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+        <Box component="thead">
+          <Box component="tr" sx={{ background: "var(--s2)" }}>
             {[
               "Package",
               "Version installée",
@@ -306,113 +297,54 @@ const DependenciesTable: React.FC<{ deps: Dependency[] }> = ({ deps }) => {
               "Type",
               "État",
             ].map((h) => (
-              <th
-                key={h}
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  color: "var(--muted)",
-                  textAlign: "left",
-                  padding: "10px 16px",
-                  borderBottom: "1px solid var(--border)",
-                  fontWeight: 500,
-                }}
-              >
+              <Box component="th" key={h} sx={thSx}>
                 {h}
-              </th>
+              </Box>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </Box>
+        </Box>
+        <Box component="tbody">
           {sorted.map((dep, i) => {
             const cfg = STATUS_CONFIG[dep.status];
             const isCritical =
               dep.status === "critical" || dep.status === "eol";
             return (
-              <tr
+              <Box
+                component="tr"
                 key={`${dep.name}-${i}`}
-                style={{
+                sx={{
                   background: isCritical
                     ? `rgba(${dep.status === "critical" ? "239,68,68" : "168,85,247"},0.04)`
                     : "transparent",
                 }}
               >
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--text)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
+                <Box component="td" sx={{ ...tdBase, fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
+                  <Box className="d-flex align-items-center" sx={{ gap: "6px" }}>
                     <InventoryOutlined
-                      sx={{ fontSize: 13 }}
-                      style={{ color: "var(--muted)", flexShrink: 0 }}
+                      sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}
                     />
                     {dep.name}
-                  </div>
-                </td>
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "12px",
-                    color: "var(--muted2)",
-                  }}
-                >
+                  </Box>
+                </Box>
+                <Box component="td" sx={{ ...tdBase, fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--muted2)" }}>
                   {dep.installed}
-                </td>
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "12px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
+                </Box>
+                <Box component="td" sx={{ ...tdBase, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+                  <Box className="d-flex align-items-center" sx={{ gap: "6px" }}>
                     {dep.status !== "ok" && (
                       <cfg.Icon
-                        sx={{ fontSize: 13 }}
-                        style={{ color: cfg.color, flexShrink: 0 }}
+                        sx={{ fontSize: 13, color: cfg.color, flexShrink: 0 }}
                       />
                     )}
-                    <span
-                      style={{
-                        color: dep.status === "ok" ? "var(--green)" : cfg.color,
-                        fontWeight: dep.status !== "ok" ? 600 : 400,
-                      }}
-                    >
+                    <Box component="span" sx={{ color: dep.status === "ok" ? "var(--green)" : cfg.color, fontWeight: dep.status !== "ok" ? 600 : 400 }}>
                       {dep.latest}
-                    </span>
-                  </div>
-                </td>
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  <span
-                    style={{
+                    </Box>
+                  </Box>
+                </Box>
+                <Box component="td" sx={tdBase}>
+                  <Box
+                    component="span"
+                    sx={{
                       fontFamily: "var(--font-mono)",
                       fontSize: "11px",
                       color: "var(--muted)",
@@ -422,47 +354,37 @@ const DependenciesTable: React.FC<{ deps: Dependency[] }> = ({ deps }) => {
                     }}
                   >
                     {dep.ecosystem}
-                  </span>
-                </td>
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
+                  </Box>
+                </Box>
+                <Box component="td" sx={tdBase}>
                   <StatusChip variant={dep.type === "prod" ? "blue" : "gray"}>
                     {dep.type === "prod" ? "Production" : "Dev"}
                   </StatusChip>
-                </td>
-                <td
-                  style={{
-                    padding: "11px 16px",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
+                </Box>
+                <Box component="td" sx={tdBase}>
                   <StatusChip variant={cfg.variant}>{cfg.label}</StatusChip>
-                </td>
-              </tr>
+                </Box>
+              </Box>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
 const VersionsGrid: React.FC<{ envs: EnvVersion[] }> = ({ envs }) => (
-  <div
-    style={{
+  <Box
+    sx={{
       display: "grid",
       gridTemplateColumns: `repeat(${Math.min(envs.length, 3)}, 1fr)`,
       gap: "12px",
     }}
   >
     {envs.map((env) => (
-      <div
+      <Box
         key={env.env}
-        style={{
+        sx={{
           background: "var(--s1)",
           border: `1px solid ${env.healthy ? "var(--border)" : "rgba(239,68,68,0.3)"}`,
           borderRadius: "var(--r)",
@@ -471,8 +393,8 @@ const VersionsGrid: React.FC<{ envs: EnvVersion[] }> = ({ envs }) => (
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
+        <Box
+          sx={{
             position: "absolute",
             top: 0,
             left: 0,
@@ -481,17 +403,11 @@ const VersionsGrid: React.FC<{ envs: EnvVersion[] }> = ({ envs }) => (
             background: env.healthy ? "var(--accent)" : "var(--red)",
           }}
         />
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "12px",
-          }}
-        >
-          <StorageOutlined sx={{ fontSize: 14 }} style={{ color: "var(--muted)" }} />
-          <span
-            style={{
+        <Box className="d-flex align-items-center" sx={{ gap: "8px", mb: "12px" }}>
+          <StorageOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
+          <Box
+            component="span"
+            sx={{
               fontSize: "12px",
               fontWeight: 600,
               color: "var(--text-secondary)",
@@ -500,10 +416,10 @@ const VersionsGrid: React.FC<{ envs: EnvVersion[] }> = ({ envs }) => (
             }}
           >
             {env.env}
-          </span>
-          <div
-            style={{
-              marginLeft: "auto",
+          </Box>
+          <Box
+            sx={{
+              ml: "auto",
               width: "8px",
               height: "8px",
               borderRadius: "50%",
@@ -511,56 +427,48 @@ const VersionsGrid: React.FC<{ envs: EnvVersion[] }> = ({ envs }) => (
               boxShadow: `0 0 6px ${env.healthy ? "var(--green)" : "var(--red)"}`,
             }}
           />
-        </div>
-        <div
-          style={{
+        </Box>
+        <Box
+          sx={{
             fontFamily: "var(--font-mono)",
             fontSize: "22px",
             fontWeight: 800,
             color: "var(--text)",
             letterSpacing: "-0.02em",
-            marginBottom: "8px",
+            mb: "8px",
           }}
         >
           {env.version}
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-            <span
-              style={{
+        </Box>
+        <Box className="d-flex flex-column" sx={{ gap: "4px" }}>
+          <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
+            <Box
+              component="span"
+              sx={{
                 color: "var(--muted2)",
                 fontFamily: "var(--font-mono)",
                 fontSize: "11px",
               }}
             >
               {env.runtime}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              fontSize: "11px",
-              color: "var(--muted)",
-            }}
-          >
+            </Box>
+          </Box>
+          <Box className="d-flex align-items-center" sx={{ gap: "4px", fontSize: "11px", color: "var(--muted)" }}>
             <AccessTimeOutlined sx={{ fontSize: 10 }} />
             {env.deployedAt}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     ))}
-  </div>
+  </Box>
 );
 
 const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
   if (vulns.length === 0) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
+      <Box
+        className="d-flex align-items-center"
+        sx={{
           gap: "10px",
           padding: "16px 18px",
           background: "var(--green-subtle)",
@@ -569,26 +477,26 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
         }}
       >
         <CheckCircleOutlined
-          sx={{ fontSize: 16 }}
-          style={{ color: "var(--green)", flexShrink: 0 }}
+          sx={{ fontSize: 16, color: "var(--green)", flexShrink: 0 }}
         />
-        <span
-          style={{ fontSize: "13px", color: "var(--green)", fontWeight: 500 }}
+        <Box
+          component="span"
+          sx={{ fontSize: "13px", color: "var(--green)", fontWeight: 500 }}
         >
           Aucune vulnérabilité CVE détectée sur ce projet.
-        </span>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <Box className="d-flex flex-column" sx={{ gap: "8px" }}>
       {vulns.map((vuln, i) => {
         const cfg = SEVERITY_CONFIG[vuln.severity] ?? SEVERITY_CONFIG.medium;
         return (
-          <div
+          <Box
             key={`${vuln.cve}-${i}`}
-            style={{
+            sx={{
               background: "var(--s1)",
               border: `1px solid var(--border)`,
               borderLeft: `3px solid ${cfg.color}`,
@@ -599,18 +507,13 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
               alignItems: "flex-start",
             }}
           >
-            <div
-              style={{
-                flexShrink: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "4px",
-                minWidth: "64px",
-              }}
+            <Box
+              className="d-flex flex-column align-items-center flex-shrink-0"
+              sx={{ gap: "4px", minWidth: "64px" }}
             >
-              <span
-                style={{
+              <Box
+                component="span"
+                sx={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "10px",
                   fontWeight: 700,
@@ -622,9 +525,10 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
                 }}
               >
                 {cfg.label}
-              </span>
-              <span
-                style={{
+              </Box>
+              <Box
+                component="span"
+                sx={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "12px",
                   fontWeight: 600,
@@ -632,32 +536,25 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
                 }}
               >
                 {vuln.cvss.toFixed(1)}
-              </span>
-              <span style={{ fontSize: "9px", color: "var(--muted)" }}>
+              </Box>
+              <Box component="span" sx={{ fontSize: "9px", color: "var(--muted)" }}>
                 CVSS
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "5px",
-                  flexWrap: "wrap",
-                }}
+              </Box>
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                className="d-flex align-items-center flex-wrap"
+                sx={{ gap: "8px", mb: "5px" }}
               >
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--text)",
-                  }}
+                <Box
+                  component="span"
+                  sx={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
                 >
                   {vuln.title}
-                </span>
-                <span
-                  style={{
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
                     fontFamily: "var(--font-mono)",
                     fontSize: "10px",
                     color: "var(--cyan)",
@@ -667,47 +564,30 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
                   }}
                 >
                   {vuln.cve}
-                </span>
-              </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "var(--muted)",
-                  display: "flex",
-                  gap: "16px",
-                  flexWrap: "wrap",
-                }}
+                </Box>
+              </Box>
+              <Box
+                className="d-flex flex-wrap"
+                sx={{ fontSize: "12px", color: "var(--muted)", gap: "16px" }}
               >
-                <span>
+                <Box component="span">
                   Package :{" "}
-                  <code
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      color: "var(--text-secondary)",
-                      fontSize: "11px",
-                    }}
-                  >
+                  <Box component="code" sx={{ fontFamily: "var(--font-mono)", color: "var(--text-secondary)", fontSize: "11px" }}>
                     {vuln.package}@{vuln.version}
-                  </code>
-                </span>
-                <span>
+                  </Box>
+                </Box>
+                <Box component="span">
                   Correction :{" "}
-                  <code
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      color: "var(--green)",
-                      fontSize: "11px",
-                    }}
-                  >
+                  <Box component="code" sx={{ fontFamily: "var(--font-mono)", color: "var(--green)", fontSize: "11px" }}>
                     {vuln.fixedIn}
-                  </code>
-                </span>
-              </div>
-            </div>
-          </div>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         );
       })}
-    </div>
+    </Box>
   );
 };
 
@@ -797,17 +677,12 @@ export const TechHealthPage: React.FC = () => {
       <>
         <Topbar title="Santé technique" subtitle="Chargement…" />
         <Box
-          sx={{
-            p: "24px 28px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "300px",
-          }}
+          className="d-flex align-items-center justify-content-center"
+          sx={{ p: "24px 28px", minHeight: "300px" }}
         >
-          <span style={{ color: "var(--muted)", fontSize: "14px" }}>
+          <Box component="span" sx={{ color: "var(--muted)", fontSize: "14px" }}>
             Chargement des projets…
-          </span>
+          </Box>
         </Box>
       </>
     );
@@ -818,8 +693,8 @@ export const TechHealthPage: React.FC = () => {
       <>
         <Topbar title="Santé technique" subtitle="0 projets" />
         <Box sx={{ p: "24px 28px" }}>
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
@@ -827,18 +702,18 @@ export const TechHealthPage: React.FC = () => {
               textAlign: "center",
             }}
           >
-            <div className="empty-state">
-              <div className="empty-state-icon">
+            <Box className="empty-state">
+              <Box className="empty-state-icon">
                 <InventoryOutlined sx={{ fontSize: 40 }} />
-              </div>
-              <div className="empty-state-title">
+              </Box>
+              <Box className="empty-state-title">
                 Aucun projet technique configuré
-              </div>
-              <div className="empty-state-subtitle">
+              </Box>
+              <Box className="empty-state-subtitle">
                 Ajoutez un projet pour lancer l'analyse
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </>
     );
@@ -851,35 +726,30 @@ export const TechHealthPage: React.FC = () => {
         subtitle={`${projects.length} projet${projects.length > 1 ? "s" : ""} analysé${projects.length > 1 ? "s" : ""}`}
       />
       <Box sx={{ p: "24px 28px" }}>
-        <div
-          style={{
+        <Box
+          sx={{
             display: "grid",
             gridTemplateColumns: "260px 1fr",
             gap: "20px",
             alignItems: "start",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              position: "sticky",
-              top: "24px",
-            }}
+          <Box
+            className="d-flex flex-column"
+            sx={{ gap: "8px", position: "sticky", top: "24px" }}
           >
-            <div
-              style={{
+            <Box
+              sx={{
                 fontSize: "11px",
                 fontWeight: 600,
                 color: "var(--muted)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                marginBottom: "4px",
+                mb: "4px",
               }}
             >
               Projets
-            </div>
+            </Box>
             {projects.map((p) => (
               <ProjectSummaryCard
                 key={p.id}
@@ -888,32 +758,27 @@ export const TechHealthPage: React.FC = () => {
                 onClick={() => handleSelectProject(p.id)}
               />
             ))}
-          </div>
+          </Box>
 
           {selectedProject == null ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "300px",
-              }}
+            <Box
+              className="d-flex align-items-center justify-content-center"
+              sx={{ minHeight: "300px" }}
             >
-              <span style={{ color: "var(--muted)", fontSize: "14px" }}>
+              <Box component="span" sx={{ color: "var(--muted)", fontSize: "14px" }}>
                 Chargement…
-              </span>
-            </div>
+              </Box>
+            </Box>
           ) : (
-            <div>
-              <div
-                style={{
+            <Box>
+              <Box
+                className="d-flex align-items-center"
+                sx={{
                   background: "var(--s1)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--r)",
                   padding: "20px 24px",
-                  marginBottom: "16px",
-                  display: "flex",
-                  alignItems: "center",
+                  mb: "16px",
                   gap: "20px",
                 }}
               >
@@ -922,47 +787,33 @@ export const TechHealthPage: React.FC = () => {
                   grade={selectedProject.healthGrade as HealthGrade}
                   size={60}
                 />
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    <h2
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        letterSpacing: "-0.02em",
-                        margin: 0,
-                      }}
-                    >
+                <Box sx={{ flex: 1 }}>
+                  <Box className="d-flex align-items-center" sx={{ gap: "10px", mb: "4px" }}>
+                    <Box component="h2" sx={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", m: 0 }}>
                       {selectedProject.name}
-                    </h2>
+                    </Box>
                     {selectedProject.repositoryUrl && (
-                      <a
+                      <Box
+                        component="a"
                         href={selectedProject.repositoryUrl}
                         target="_blank"
                         rel="noreferrer"
-                        style={{
+                        sx={{
                           fontSize: "11px",
                           color: "var(--muted)",
                           textDecoration: "none",
                         }}
                       >
                         ↗ {selectedProject.repositoryType}
-                      </a>
+                      </Box>
                     )}
-                  </div>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
+                  </Box>
+                  <Box className="d-flex flex-wrap" sx={{ gap: "8px" }}>
                     {runtimes.map((r) => (
-                      <span
+                      <Box
                         key={r.env}
-                        style={{
+                        component="span"
+                        sx={{
                           fontFamily: "var(--font-mono)",
                           fontSize: "10px",
                           color: "var(--muted2)",
@@ -972,18 +823,11 @@ export const TechHealthPage: React.FC = () => {
                         }}
                       >
                         {r.env} {r.version}
-                      </span>
+                      </Box>
                     ))}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                    alignItems: "flex-end",
-                  }}
-                >
+                  </Box>
+                </Box>
+                <Box className="d-flex flex-column align-items-end" sx={{ gap: "12px" }}>
                   <Button
                     variant="contained"
                     size="small"
@@ -998,17 +842,15 @@ export const TechHealthPage: React.FC = () => {
                     disabled={scanning}
                   >
                     <RefreshOutlined
-                      sx={{ fontSize: 13 }}
-                      style={{
-                        animation: scanning
-                          ? "spin 1s linear infinite"
-                          : "none",
+                      sx={{
+                        fontSize: 13,
+                        animation: scanning ? "spin 1s linear infinite" : "none",
                       }}
                     />
                     {scanning ? "Scan en cours…" : "Lancer un scan"}
                   </Button>
-                  <div
-                    style={{
+                  <Box
+                    sx={{
                       display: "grid",
                       gridTemplateColumns: "repeat(4, 1fr)",
                       gap: "12px",
@@ -1035,38 +877,34 @@ export const TechHealthPage: React.FC = () => {
                       value={vulns.length}
                       color={criticalVulns > 0 ? "var(--red)" : "var(--muted2)"}
                     />
-                  </div>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
 
               {criticalVulns > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
+                <Box
+                  className="d-flex align-items-center"
+                  sx={{
                     gap: "10px",
                     padding: "12px 16px",
-                    marginBottom: "16px",
+                    mb: "16px",
                     background: "var(--red-subtle)",
                     border: "1px solid rgba(239,68,68,0.2)",
                     borderRadius: "var(--r)",
                   }}
                 >
                   <CancelOutlined
-                    sx={{ fontSize: 15 }}
-                    style={{ color: "var(--red)", flexShrink: 0 }}
+                    sx={{ fontSize: 15, color: "var(--red)", flexShrink: 0 }}
                   />
-                  <span
-                    style={{ fontSize: "13px", color: "var(--text-secondary)" }}
-                  >
-                    <strong style={{ color: "var(--red)" }}>
+                  <Box component="span" sx={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                    <Box component="strong" sx={{ color: "var(--red)" }}>
                       {criticalVulns} vulnérabilité
                       {criticalVulns > 1 ? "s" : ""} critique
                       {criticalVulns > 1 ? "s" : ""}
-                    </strong>{" "}
+                    </Box>{" "}
                     — signaler à l'équipe de développement du client.
-                  </span>
-                </div>
+                  </Box>
+                </Box>
               )}
 
               <Section
@@ -1077,9 +915,9 @@ export const TechHealthPage: React.FC = () => {
                 {deps.length > 0 ? (
                   <DependenciesTable deps={deps} />
                 ) : (
-                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>
+                  <Box component="span" sx={{ fontSize: "13px", color: "var(--muted)" }}>
                     Aucune dépendance — lancez un scan pour analyser le dépôt.
-                  </span>
+                  </Box>
                 )}
               </Section>
 
@@ -1088,7 +926,7 @@ export const TechHealthPage: React.FC = () => {
                   title="Runtimes détectés"
                   count={runtimes.length}
                   icon={<StorageOutlined sx={{ fontSize: 14 }} />}
-                  style={{ marginTop: "16px" }}
+                  sx={{ mt: "16px" }}
                 >
                   <VersionsGrid envs={runtimes} />
                 </Section>
@@ -1099,13 +937,13 @@ export const TechHealthPage: React.FC = () => {
                 count={vulns.length}
                 countColor={vulns.length > 0 ? "var(--red)" : "var(--green)"}
                 icon={<WarningAmberOutlined sx={{ fontSize: 14 }} />}
-                style={{ marginTop: "16px", marginBottom: "0" }}
+                sx={{ mt: "16px", mb: 0 }}
               >
                 <VulnsSection vulns={vulns} />
               </Section>
-            </div>
+            </Box>
           )}
-        </div>
+        </Box>
       </Box>
     </>
   );
@@ -1116,49 +954,49 @@ const Section: React.FC<{
   count: number;
   icon: React.ReactNode;
   countColor?: string;
-  style?: React.CSSProperties;
+  sx?: object;
   children: React.ReactNode;
-}> = ({ title, count, icon, countColor, style, children }) => (
-  <div
-    style={{
+}> = ({ title, count, icon, countColor, sx: sxProp, children }) => (
+  <Box
+    sx={{
       background: "var(--s1)",
       border: "1px solid var(--border)",
       borderRadius: "var(--r)",
       overflow: "hidden",
-      ...style,
+      ...sxProp,
     }}
   >
-    <div
-      style={{
+    <Box
+      className="d-flex align-items-center"
+      sx={{
         padding: "14px 20px",
         borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
         gap: "8px",
         background: "var(--s2)",
       }}
     >
-      <span style={{ color: "var(--muted)" }}>{icon}</span>
-      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
+      <Box component="span" sx={{ color: "var(--muted)" }}>{icon}</Box>
+      <Box component="span" sx={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
         {title}
-      </span>
-      <span
-        style={{
+      </Box>
+      <Box
+        component="span"
+        sx={{
           fontFamily: "var(--font-mono)",
           fontSize: "11px",
           fontWeight: 600,
           color: countColor ?? "var(--muted)",
-          marginLeft: "4px",
+          ml: "4px",
           background: "var(--s3)",
           padding: "1px 7px",
           borderRadius: "10px",
         }}
       >
         {count}
-      </span>
-    </div>
-    <div style={{ padding: "16px 20px" }}>{children}</div>
-  </div>
+      </Box>
+    </Box>
+    <Box sx={{ padding: "16px 20px" }}>{children}</Box>
+  </Box>
 );
 
 const StatCell: React.FC<{ label: string; value: number; color: string }> = ({
@@ -1166,9 +1004,9 @@ const StatCell: React.FC<{ label: string; value: number; color: string }> = ({
   value,
   color,
 }) => (
-  <div>
-    <div
-      style={{
+  <Box>
+    <Box
+      sx={{
         fontSize: "22px",
         fontWeight: 800,
         color,
@@ -1177,16 +1015,16 @@ const StatCell: React.FC<{ label: string; value: number; color: string }> = ({
       }}
     >
       {value}
-    </div>
-    <div
-      style={{
+    </Box>
+    <Box
+      sx={{
         fontSize: "10px",
         color: "var(--muted)",
-        marginTop: "3px",
+        mt: "3px",
         whiteSpace: "nowrap",
       }}
     >
       {label}
-    </div>
-  </div>
+    </Box>
+  </Box>
 );

@@ -27,18 +27,6 @@ const roleVariants: Record<UserRole, "red" | "orange" | "blue"> = {
   technician: "blue",
 };
 
-const inputStyle: React.CSSProperties = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r)",
-  padding: "8px 12px",
-  fontSize: "13px",
-  color: "var(--text)",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
-};
-
 export const UsersPage: React.FC = () => {
   const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
@@ -164,25 +152,22 @@ export const UsersPage: React.FC = () => {
       />
       <Box sx={{ p: "24px 28px" }}>
         {loading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "60px",
-            }}
-          >
+          <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />
-          </div>
+          </Box>
         ) : (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
               overflow: "hidden",
             }}
           >
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <Box
+              component="table"
+              sx={{ width: "100%", borderCollapse: "collapse" }}
+            >
               <thead>
                 <tr>
                   {[
@@ -193,9 +178,10 @@ export const UsersPage: React.FC = () => {
                     "Depuis le",
                     "Actions",
                   ].map((h) => (
-                    <th
+                    <Box
+                      component="th"
                       key={h}
-                      style={{
+                      sx={{
                         fontFamily: "var(--font-mono)",
                         fontSize: "9px",
                         letterSpacing: "0.12em",
@@ -208,16 +194,17 @@ export const UsersPage: React.FC = () => {
                       }}
                     >
                       {h}
-                    </th>
+                    </Box>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td
+                    <Box
+                      component="td"
                       colSpan={6}
-                      style={{
+                      sx={{
                         textAlign: "center",
                         padding: "40px",
                         color: "var(--muted)",
@@ -225,38 +212,27 @@ export const UsersPage: React.FC = () => {
                       }}
                     >
                       Aucun utilisateur
-                    </td>
+                    </Box>
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr
+                    <Box
+                      component="tr"
                       key={user.id}
-                      onMouseEnter={(e) =>
-                        Array.from(e.currentTarget.cells).forEach(
-                          (c) => (c.style.background = "var(--s2)"),
-                        )
-                      }
-                      onMouseLeave={(e) =>
-                        Array.from(e.currentTarget.cells).forEach(
-                          (c) => (c.style.background = "transparent"),
-                        )
-                      }
+                      sx={{
+                        "&:hover td": { background: "var(--s2)" },
+                      }}
                     >
-                      <td
-                        style={{
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                         }}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          <div
-                            style={{
+                        <Box className="d-flex align-items-center gap-2">
+                          <Box
+                            sx={{
                               width: "32px",
                               height: "32px",
                               borderRadius: "50%",
@@ -273,14 +249,18 @@ export const UsersPage: React.FC = () => {
                           >
                             {user.firstName[0]}
                             {user.lastName[0]}
-                          </div>
-                          <span style={{ fontWeight: 600, fontSize: "13px" }}>
+                          </Box>
+                          <Box
+                            component="span"
+                            sx={{ fontWeight: 600, fontSize: "13px" }}
+                          >
                             {user.firstName} {user.lastName}
-                          </span>
-                        </div>
-                      </td>
-                      <td
-                        style={{
+                          </Box>
+                        </Box>
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -289,9 +269,10 @@ export const UsersPage: React.FC = () => {
                         }}
                       >
                         {user.email}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                         }}
@@ -299,9 +280,10 @@ export const UsersPage: React.FC = () => {
                         <StatusChip variant={roleVariants[user.role]}>
                           {roleLabels[user.role]}
                         </StatusChip>
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                         }}
@@ -309,9 +291,10 @@ export const UsersPage: React.FC = () => {
                         <StatusChip variant={user.isActive ? "green" : "gray"}>
                           {user.isActive ? "Actif" : "Inactif"}
                         </StatusChip>
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                           fontFamily: "var(--font-mono)",
@@ -322,14 +305,15 @@ export const UsersPage: React.FC = () => {
                         {format(new Date(user.createdAt), "dd MMM yyyy", {
                           locale: fr,
                         })}
-                      </td>
-                      <td
-                        style={{
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
                           padding: "12px 16px",
                           borderBottom: "1px solid var(--border)",
                         }}
                       >
-                        <div style={{ display: "flex", gap: "6px" }}>
+                        <Box className="d-flex gap-2">
                           <Button
                             variant="outlined"
                             size="small"
@@ -354,14 +338,14 @@ export const UsersPage: React.FC = () => {
                           >
                             {user.isActive ? "Désactiver" : "Réactiver"}
                           </Button>
-                        </div>
-                      </td>
-                    </tr>
+                        </Box>
+                      </Box>
+                    </Box>
                   ))
                 )}
               </tbody>
-            </table>
-          </div>
+            </Box>
+          </Box>
         )}
       </Box>
 
@@ -383,127 +367,192 @@ export const UsersPage: React.FC = () => {
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
           <form onSubmit={handleCreate}>
-            <div
-              style={{
+            <Box
+              sx={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "14px",
               }}
             >
-              <div style={{ marginBottom: "14px" }}>
-                <label
-                  style={{
+              <Box sx={{ mb: "14px" }}>
+                <Box
+                  component="label"
+                  sx={{
                     display: "block",
                     fontSize: "11px",
                     fontWeight: 600,
-                    marginBottom: "5px",
+                    mb: "5px",
                     color: "var(--muted2)",
                     letterSpacing: "0.04em",
                   }}
                 >
                   Prénom *
-                </label>
-                <input
+                </Box>
+                <Box
+                  component="input"
                   type="text"
-                  style={inputStyle}
+                  sx={{
+                    background: "var(--s1)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--r)",
+                    px: "12px",
+                    py: "8px",
+                    fontSize: "13px",
+                    color: "var(--text)",
+                    width: "100%",
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
                   value={form.firstName}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setForm((f) => ({ ...f, firstName: e.target.value }))
                   }
                 />
-              </div>
-              <div style={{ marginBottom: "14px" }}>
-                <label
-                  style={{
+              </Box>
+              <Box sx={{ mb: "14px" }}>
+                <Box
+                  component="label"
+                  sx={{
                     display: "block",
                     fontSize: "11px",
                     fontWeight: 600,
-                    marginBottom: "5px",
+                    mb: "5px",
                     color: "var(--muted2)",
                     letterSpacing: "0.04em",
                   }}
                 >
                   Nom *
-                </label>
-                <input
+                </Box>
+                <Box
+                  component="input"
                   type="text"
-                  style={inputStyle}
+                  sx={{
+                    background: "var(--s1)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--r)",
+                    px: "12px",
+                    py: "8px",
+                    fontSize: "13px",
+                    color: "var(--text)",
+                    width: "100%",
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
                   value={form.lastName}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setForm((f) => ({ ...f, lastName: e.target.value }))
                   }
                 />
-              </div>
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
+              </Box>
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Email *
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="email"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.email}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setForm((f) => ({ ...f, email: e.target.value }))
                 }
               />
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Rôle
-              </label>
-              <select
-                style={inputStyle}
+              </Box>
+              <Box
+                component="select"
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.role}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setForm((f) => ({ ...f, role: e.target.value as UserRole }))
                 }
               >
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
                 <option value="technician">Technicien</option>
-              </select>
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
+              </Box>
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Mot de passe temporaire *
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="password"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={form.password}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setForm((f) => ({ ...f, password: e.target.value }))
                 }
               />
-            </div>
+            </Box>
           </form>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
@@ -544,83 +593,125 @@ export const UsersPage: React.FC = () => {
           Modifier l'utilisateur
         </DialogTitle>
         <DialogContent sx={{ pt: "16px !important" }}>
-          <div
-            style={{
+          <Box
+            sx={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
               gap: "14px",
             }}
           >
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
+            <Box sx={{ mb: "14px" }}>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Prénom
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="text"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={editForm.firstName}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setEditForm((f) => ({ ...f, firstName: e.target.value }))
                 }
               />
-            </div>
-            <div style={{ marginBottom: "14px" }}>
-              <label
-                style={{
+            </Box>
+            <Box sx={{ mb: "14px" }}>
+              <Box
+                component="label"
+                sx={{
                   display: "block",
                   fontSize: "11px",
                   fontWeight: 600,
-                  marginBottom: "5px",
+                  mb: "5px",
                   color: "var(--muted2)",
                   letterSpacing: "0.04em",
                 }}
               >
                 Nom
-              </label>
-              <input
+              </Box>
+              <Box
+                component="input"
                 type="text"
-                style={inputStyle}
+                sx={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "12px",
+                  py: "8px",
+                  fontSize: "13px",
+                  color: "var(--text)",
+                  width: "100%",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
                 value={editForm.lastName}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setEditForm((f) => ({ ...f, lastName: e.target.value }))
                 }
               />
-            </div>
-          </div>
-          <div>
-            <label
-              style={{
+            </Box>
+          </Box>
+          <Box>
+            <Box
+              component="label"
+              sx={{
                 display: "block",
                 fontSize: "11px",
                 fontWeight: 600,
-                marginBottom: "5px",
+                mb: "5px",
                 color: "var(--muted2)",
                 letterSpacing: "0.04em",
               }}
             >
               Rôle
-            </label>
-            <select
-              style={inputStyle}
+            </Box>
+            <Box
+              component="select"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
               value={editForm.role}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, role: e.target.value as UserRole }))
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setEditForm((f) => ({
+                  ...f,
+                  role: e.target.value as UserRole,
+                }))
               }
             >
               <option value="admin">Admin</option>
               <option value="manager">Manager</option>
               <option value="technician">Technicien</option>
-            </select>
-          </div>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: "16px", pt: 0 }}>
           <Button

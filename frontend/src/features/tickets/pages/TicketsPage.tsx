@@ -5,9 +5,9 @@ import { StatusChip } from "../../../components/StatusChip";
 import { SlaTimer } from "../../../components/SlaTimer";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import Box from "@mui/material/Box";
 import { useTickets } from "../hooks/useTickets";
 import {
   Ticket,
@@ -58,6 +58,19 @@ const typeLabels: Record<TicketType, string> = {
   performance: "Perf",
   maintenance: "Maintenance",
   question: "Question",
+};
+
+const selectSx = {
+  background: "var(--s1)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--r)",
+  px: "12px",
+  py: "8px",
+  fontSize: "13px",
+  color: "var(--text)",
+  width: "auto",
+  outline: "none",
+  fontFamily: "inherit",
 };
 
 export const TicketsPage: React.FC = () => {
@@ -117,28 +130,12 @@ export const TicketsPage: React.FC = () => {
         }
       />
       <Box sx={{ p: "24px 28px" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginBottom: "20px",
-            flexWrap: "wrap",
-          }}
-        >
-          <select
-            style={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
-              padding: "8px 12px",
-              fontSize: "13px",
-              color: "var(--text)",
-              width: "auto",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+        <Box className="d-flex flex-wrap" sx={{ gap: "10px", mb: "20px" }}>
+          <Box
+            component="select"
+            sx={selectSx}
             value={filters.priority}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setFilters((f) => ({ ...f, priority: e.target.value }))
             }
           >
@@ -147,22 +144,13 @@ export const TicketsPage: React.FC = () => {
             <option value="high">Haute</option>
             <option value="medium">Moyenne</option>
             <option value="low">Basse</option>
-          </select>
+          </Box>
 
-          <select
-            style={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
-              padding: "8px 12px",
-              fontSize: "13px",
-              color: "var(--text)",
-              width: "auto",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+          <Box
+            component="select"
+            sx={selectSx}
             value={filters.status}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setFilters((f) => ({ ...f, status: e.target.value }))
             }
           >
@@ -173,22 +161,13 @@ export const TicketsPage: React.FC = () => {
             <option value="testing">En test</option>
             <option value="resolved">Résolu</option>
             <option value="closed">Fermé</option>
-          </select>
+          </Box>
 
-          <select
-            style={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r)",
-              padding: "8px 12px",
-              fontSize: "13px",
-              color: "var(--text)",
-              width: "auto",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+          <Box
+            component="select"
+            sx={selectSx}
             value={filters.type}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setFilters((f) => ({ ...f, type: e.target.value }))
             }
           >
@@ -197,10 +176,11 @@ export const TicketsPage: React.FC = () => {
             <option value="feature">Évolution</option>
             <option value="security">Sécurité</option>
             <option value="performance">Perf</option>
-          </select>
+          </Box>
 
-          <label
-            style={{
+          <Box
+            component="label"
+            sx={{
               display: "flex",
               alignItems: "center",
               gap: "6px",
@@ -217,22 +197,22 @@ export const TicketsPage: React.FC = () => {
               }
             />
             SLA dépassé uniquement
-          </label>
-        </div>
+          </Box>
+        </Box>
 
         {loading ? (
-          <div
-            style={{
+          <Box
+            sx={{
               display: "flex",
               justifyContent: "center",
               padding: "40px",
             }}
           >
             <CircularProgress />
-          </div>
+          </Box>
         ) : (
-          <div
-            style={{
+          <Box
+            sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
@@ -243,74 +223,69 @@ export const TicketsPage: React.FC = () => {
             }}
           >
             {filtered.length === 0 ? (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div className="empty-state">
-                  <div className="empty-state-icon">
+              <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Box className="empty-state">
+                  <Box className="empty-state-icon">
                     <ConfirmationNumberOutlined sx={{ fontSize: 40 }} />
-                  </div>
-                  <div className="empty-state-title">Aucun ticket trouvé</div>
-                  <div className="empty-state-subtitle">
+                  </Box>
+                  <Box className="empty-state-title">Aucun ticket trouvé</Box>
+                  <Box className="empty-state-subtitle">
                     {displayTickets.length === 0
                       ? "Créez votre premier ticket"
                       : "Modifiez vos filtres"}
-                  </div>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
             ) : (
-            <div style={{ flex: 1 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    {[
-                      "Référence",
-                      "Titre",
-                      "Projet",
-                      "Priorité",
-                      "Type",
-                      "Statut",
-                      "SLA",
-                      "Assigné",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "9px",
-                          letterSpacing: "0.12em",
-                          textTransform: "uppercase",
-                          color: "var(--muted)",
-                          textAlign: "left",
-                          padding: "10px 14px",
-                          borderBottom: "1px solid var(--border)",
-                          background: "var(--s2)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(
-                    filtered.map((ticket) => (
-                      <tr
+              <Box sx={{ flex: 1 }}>
+                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                  <Box component="thead">
+                    <Box component="tr">
+                      {[
+                        "Référence",
+                        "Titre",
+                        "Projet",
+                        "Priorité",
+                        "Type",
+                        "Statut",
+                        "SLA",
+                        "Assigné",
+                      ].map((h) => (
+                        <Box
+                          component="th"
+                          key={h}
+                          sx={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "9px",
+                            letterSpacing: "0.12em",
+                            textTransform: "uppercase",
+                            color: "var(--muted)",
+                            textAlign: "left",
+                            padding: "10px 14px",
+                            borderBottom: "1px solid var(--border)",
+                            background: "var(--s2)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {h}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                  <Box component="tbody">
+                    {filtered.map((ticket) => (
+                      <Box
+                        component="tr"
                         key={ticket.id}
                         onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        style={{ cursor: "pointer" }}
-                        onMouseEnter={(e) =>
-                          Array.from(e.currentTarget.cells).forEach(
-                            (c) => (c.style.background = "var(--s2)"),
-                          )
-                        }
-                        onMouseLeave={(e) =>
-                          Array.from(e.currentTarget.cells).forEach(
-                            (c) => (c.style.background = "transparent"),
-                          )
-                        }
+                        sx={{
+                          cursor: "pointer",
+                          "&:hover td": { background: "var(--s2)" },
+                        }}
                       >
-                        <td
-                          style={{
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                             fontFamily: "var(--font-mono)",
@@ -319,15 +294,15 @@ export const TicketsPage: React.FC = () => {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          <div
-                            style={{
+                          <Box
+                            sx={{
                               display: "flex",
                               alignItems: "center",
                               gap: "8px",
                             }}
                           >
-                            <div
-                              style={{
+                            <Box
+                              sx={{
                                 width: "4px",
                                 height: "20px",
                                 borderRadius: "2px",
@@ -336,28 +311,30 @@ export const TicketsPage: React.FC = () => {
                               }}
                             />
                             {ticket.reference}
-                          </div>
-                        </td>
-                        <td
-                          style={{
+                          </Box>
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                             fontSize: "12.5px",
                             maxWidth: "300px",
                           }}
                         >
-                          <div
-                            style={{
+                          <Box
+                            sx={{
                               whiteSpace: "nowrap",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                             }}
                           >
                             {ticket.title}
-                          </div>
-                        </td>
-                        <td
-                          style={{
+                          </Box>
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                             fontSize: "12px",
@@ -366,9 +343,10 @@ export const TicketsPage: React.FC = () => {
                           }}
                         >
                           {ticket.projectName ?? "—"}
-                        </td>
-                        <td
-                          style={{
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                           }}
@@ -386,9 +364,10 @@ export const TicketsPage: React.FC = () => {
                           >
                             {priorityLabels[ticket.priority]}
                           </StatusChip>
-                        </td>
-                        <td
-                          style={{
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                           }}
@@ -396,9 +375,10 @@ export const TicketsPage: React.FC = () => {
                           <StatusChip variant="gray">
                             {typeLabels[ticket.type]}
                           </StatusChip>
-                        </td>
-                        <td
-                          style={{
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                           }}
@@ -406,9 +386,10 @@ export const TicketsPage: React.FC = () => {
                           <StatusChip variant={statusVariant[ticket.status]}>
                             {statusLabels[ticket.status]}
                           </StatusChip>
-                        </td>
-                        <td
-                          style={{
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                           }}
@@ -417,9 +398,10 @@ export const TicketsPage: React.FC = () => {
                             deadline={ticket.slaDeadline}
                             breached={ticket.slaBreached}
                           />
-                        </td>
-                        <td
-                          style={{
+                        </Box>
+                        <Box
+                          component="td"
+                          sx={{
                             padding: "10px 14px",
                             borderBottom: "1px solid var(--border)",
                             fontSize: "12px",
@@ -429,17 +411,16 @@ export const TicketsPage: React.FC = () => {
                           {ticket.assignee
                             ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
                             : "—"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
             )}
 
-            <div
-              style={{
+            <Box
+              sx={{
                 padding: "12px 14px",
                 borderTop: "1px solid var(--border)",
                 display: "flex",
@@ -447,11 +428,11 @@ export const TicketsPage: React.FC = () => {
                 justifyContent: "space-between",
               }}
             >
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+              <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
                 {filtered.length} ticket(s)
-              </div>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              </Box>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <Button
                   variant="outlined"
@@ -462,8 +443,9 @@ export const TicketsPage: React.FC = () => {
                 >
                   ← Précédent
                 </Button>
-                <span
-                  style={{
+                <Box
+                  component="span"
+                  sx={{
                     fontSize: "12px",
                     color: "var(--muted2)",
                     lineHeight: "30px",
@@ -471,7 +453,7 @@ export const TicketsPage: React.FC = () => {
                   }}
                 >
                   Page {page}
-                </span>
+                </Box>
                 <Button
                   variant="outlined"
                   size="small"
@@ -481,9 +463,9 @@ export const TicketsPage: React.FC = () => {
                 >
                   Suivant →
                 </Button>
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
         )}
       </Box>
     </>

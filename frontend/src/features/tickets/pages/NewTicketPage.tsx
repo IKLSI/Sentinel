@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../../../layouts/Topbar'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
+import Box from '@mui/material/Box'
 import apiClient from '../../../services/client'
 import { useToast } from '../../../hooks/useToast'
 import { getProjects, ProjectDto } from '../../techHealth/api/projects'
@@ -18,6 +19,28 @@ interface CreateTicketPayload {
   techProjectId?: string
   assignedToId?: string
   estimatedHours?: number
+}
+
+const inputSx = {
+  background: 'var(--s1)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--r)',
+  px: '12px',
+  py: '8px',
+  fontSize: '13px',
+  color: 'var(--text)',
+  width: '100%',
+  outline: 'none',
+  fontFamily: 'inherit',
+}
+
+const labelSx = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: 600,
+  mb: '5px',
+  color: 'var(--muted2)',
+  letterSpacing: '0.04em',
 }
 
 export const NewTicketPage: React.FC = () => {
@@ -65,113 +88,123 @@ export const NewTicketPage: React.FC = () => {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    background: 'var(--s1)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--r)',
-    padding: '8px 12px',
-    fontSize: '13px',
-    color: 'var(--text)',
-    width: '100%',
-    outline: 'none',
-    fontFamily: 'inherit',
-  }
-
   return (
     <>
       <Topbar title="Nouveau ticket" />
-      <div style={{ padding: '24px 28px', maxWidth: '800px' }}>
-        <div style={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', marginBottom: '16px', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Créer un ticket</div>
-          <div style={{ padding: '16px 20px' }}>
+      <Box sx={{ padding: '24px 28px', maxWidth: '800px' }}>
+        <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', mb: '16px', overflow: 'hidden' }}>
+          <Box sx={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Créer un ticket</Box>
+          <Box sx={{ padding: '16px 20px' }}>
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Titre *</label>
-                <input
+              <Box sx={{ mb: '14px' }}>
+                <Box component="label" sx={labelSx}>Titre *</Box>
+                <Box
+                  component="input"
                   type="text"
                   value={form.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('title', e.target.value)}
                   placeholder="Description courte du problème"
                   required
                   autoFocus
-                  style={inputStyle}
+                  sx={inputSx}
                 />
-              </div>
+              </Box>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Priorité</label>
-                  <select value={form.priority} onChange={(e) => handleChange('priority', e.target.value as CreateTicketPayload['priority'])} style={inputStyle}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <Box sx={{ mb: '14px' }}>
+                  <Box component="label" sx={labelSx}>Priorité</Box>
+                  <Box
+                    component="select"
+                    value={form.priority}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChange('priority', e.target.value as CreateTicketPayload['priority'])}
+                    sx={inputSx}
+                  >
                     <option value="Critical">Critique</option>
                     <option value="High">Haute</option>
                     <option value="Medium">Moyenne</option>
                     <option value="Low">Basse</option>
-                  </select>
-                </div>
+                  </Box>
+                </Box>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Type</label>
-                  <select value={form.type} onChange={(e) => handleChange('type', e.target.value as CreateTicketPayload['type'])} style={inputStyle}>
+                <Box sx={{ mb: '14px' }}>
+                  <Box component="label" sx={labelSx}>Type</Box>
+                  <Box
+                    component="select"
+                    value={form.type}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChange('type', e.target.value as CreateTicketPayload['type'])}
+                    sx={inputSx}
+                  >
                     <option value="Bug">Bug</option>
                     <option value="Feature">Évolution</option>
                     <option value="Security">Sécurité</option>
                     <option value="Performance">Performance</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Question">Question</option>
-                  </select>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Projet</label>
-                  <select value={form.techProjectId ?? ''} onChange={(e) => handleChange('techProjectId', e.target.value || undefined)} style={inputStyle}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <Box sx={{ mb: '14px' }}>
+                  <Box component="label" sx={labelSx}>Projet</Box>
+                  <Box
+                    component="select"
+                    value={form.techProjectId ?? ''}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChange('techProjectId', e.target.value || undefined)}
+                    sx={inputSx}
+                  >
                     <option value="">— Aucun projet —</option>
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                  </select>
-                </div>
+                  </Box>
+                </Box>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Assigné à</label>
-                  <select value={form.assignedToId ?? ''} onChange={(e) => handleChange('assignedToId', e.target.value || undefined)} style={inputStyle}>
+                <Box sx={{ mb: '14px' }}>
+                  <Box component="label" sx={labelSx}>Assigné à</Box>
+                  <Box
+                    component="select"
+                    value={form.assignedToId ?? ''}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChange('assignedToId', e.target.value || undefined)}
+                    sx={inputSx}
+                  >
                     <option value="">— Non assigné —</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
                     ))}
-                  </select>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '8px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Estimation</label>
+              <Box sx={{ mb: '14px' }}>
+                <Box component="label" sx={{ ...labelSx, mb: '8px' }}>Estimation</Box>
                 <DurationPicker value={estMinutes} onChange={setEstMinutes} />
-              </div>
+              </Box>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '5px', color: 'var(--muted2)', letterSpacing: '0.04em' }}>Description (Markdown supporté)</label>
-                <textarea
+              <Box sx={{ mb: '14px' }}>
+                <Box component="label" sx={labelSx}>Description (Markdown supporté)</Box>
+                <Box
+                  component="textarea"
                   value={form.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('description', e.target.value)}
                   placeholder="Décrivez le problème, les étapes de reproduction, l'impact..."
                   rows={8}
-                  style={{ ...inputStyle, resize: 'vertical' }}
+                  sx={{ ...inputSx, resize: 'vertical' }}
                 />
-              </div>
+              </Box>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                 <Button type="button" variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => navigate('/tickets')}>
                   Annuler
                 </Button>
                 <Button type="submit" variant="contained" size="small" sx={{ textTransform: 'none' }} disabled={submitting}>
                   {submitting ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'Créer le ticket'}
                 </Button>
-              </div>
+              </Box>
             </form>
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     </>
   )
 }

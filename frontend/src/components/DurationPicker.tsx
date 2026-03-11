@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Box from '@mui/material/Box'
 
 function parse(input: string): number {
   const s = input.trim().toLowerCase()
@@ -50,27 +51,29 @@ export const DurationPicker: React.FC<DurationPickerProps> = ({
   }
 
   return (
-    <input
+    <Box
+      component="input"
       type="text"
       value={text}
-      onChange={(e) => setText(e.target.value)}
-      onFocus={(e) => { setFocused(true); e.target.select() }}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+      onFocus={(e: React.FocusEvent<HTMLInputElement>) => { setFocused(true); e.target.select() }}
       onBlur={commit}
-      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit() } }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); commit() } }}
       placeholder={placeholder}
-      style={{
+      sx={{
         background: 'var(--s1)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--r)',
-        padding: '8px 12px',
+        px: '12px',
+        py: '8px',
         height: '34px',
-        boxSizing: 'border-box',
         width,
         fontSize: '13px',
         fontFamily: 'var(--font-mono)',
         fontWeight: 600,
         color: 'var(--text)',
         outline: 'none',
+        boxSizing: 'border-box',
       }}
     />
   )

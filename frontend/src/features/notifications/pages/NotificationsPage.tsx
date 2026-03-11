@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import { useNotifications } from "../hooks/useNotifications";
@@ -37,10 +38,7 @@ const typeIconComponents: Record<NotificationType, IconComponent> = {
   system: InfoOutlined,
 };
 
-const typeVariants: Record<
-  NotificationType,
-  "blue" | "red" | "orange" | "green" | "gray"
-> = {
+const typeVariants: Record<NotificationType, "blue" | "red" | "orange" | "green" | "gray"> = {
   ticket_created: "blue",
   ticket_updated: "blue",
   ticket_assigned: "blue",
@@ -53,15 +51,13 @@ const typeVariants: Record<
   system: "gray",
 };
 
-const typeAccent: Record<"blue" | "red" | "orange" | "green" | "gray", string> =
-  {
-    red: "var(--red)",
-    blue: "var(--accent)",
-    green: "var(--green)",
-    orange: "var(--orange)",
-    gray: "var(--muted)",
-  };
-
+const typeAccent: Record<"blue" | "red" | "orange" | "green" | "gray", string> = {
+  red: "var(--red)",
+  blue: "var(--accent)",
+  green: "var(--green)",
+  orange: "var(--orange)",
+  gray: "var(--muted)",
+};
 
 const entityRoute: Partial<Record<string, (id: string) => string>> = {
   ticket: (id) => `/tickets/${id}`,
@@ -71,8 +67,7 @@ const entityRoute: Partial<Record<string, (id: string) => string>> = {
 
 export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAllAsRead, markAsRead, loading } =
-    useNotifications();
+  const { notifications, unreadCount, markAllAsRead, markAsRead, loading } = useNotifications();
   const [selected, setSelected] = useState<Notification | null>(null);
 
   const handleOpen = (notif: Notification) => {
@@ -98,164 +93,85 @@ export const NotificationsPage: React.FC = () => {
     <>
       <Topbar
         title="Notifications"
-        subtitle={
-          unreadCount > 0
-            ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}`
-            : undefined
-        }
+        subtitle={unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : undefined}
         actions={
           unreadCount > 0 ? (
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={markAllAsRead}
-            >
+            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={markAllAsRead}>
               Tout marquer comme lu
             </Button>
           ) : undefined
         }
       />
 
-      <div style={{ padding: "24px 28px", maxWidth: "800px" }}>
+      <Box sx={{ p: "24px 28px", maxWidth: "800px" }}>
         {loading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "60px",
-            }}
-          >
+          <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />
-          </div>
+          </Box>
         ) : notifications.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "60px",
-              color: "var(--muted)",
-              fontSize: "13px",
-            }}
-          >
+          <Box className="text-center" sx={{ p: "60px", color: "var(--muted)", fontSize: "13px" }}>
             Aucune notification
-          </div>
+          </Box>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <Box className="d-flex flex-column gap-2">
             {notifications.map((notif) => {
               const variant = typeVariants[notif.type] ?? "gray";
               const accent = typeAccent[variant];
+              const Icon = typeIconComponents[notif.type] ?? InfoOutlined;
               return (
-                <div
+                <Box
                   key={notif.id}
+                  className="d-flex gap-3 align-items-start"
                   onClick={() => handleOpen(notif)}
-                  style={{
-                    background: notif.isRead
-                      ? "var(--s1)"
-                      : "var(--accent-subtle)",
+                  sx={{
+                    background: notif.isRead ? "var(--s1)" : "var(--accent-subtle)",
                     border: `1px solid ${notif.isRead ? "var(--border)" : "var(--accent-border)"}`,
                     borderLeft: `3px solid ${notif.isRead ? "var(--border)" : accent}`,
                     borderRadius: "var(--r)",
-                    padding: "12px 16px",
-                    display: "flex",
-                    gap: "12px",
-                    alignItems: "flex-start",
+                    p: "12px 16px",
                     cursor: "pointer",
                     transition: "background 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--s2)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = notif.isRead
-                      ? "var(--s1)"
-                      : "var(--accent-subtle)";
+                    "&:hover": { background: "var(--s2)" },
                   }}
                 >
-                  {(() => {
-                    const Icon = typeIconComponents[notif.type] ?? InfoOutlined;
-                    return (
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "50%",
-                          background: `color-mix(in srgb, ${accent} 12%, transparent)`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: accent,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon sx={{ fontSize: 14 }} />
-                      </div>
-                    );
-                  })()}
+                  <Box
+                    className="d-flex align-items-center justify-content-center flex-shrink-0"
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: `color-mix(in srgb, ${accent} 12%, transparent)`,
+                      color: accent,
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 14 }} />
+                  </Box>
 
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "3px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                  <Box className="flex-grow-1 overflow-hidden">
+                    <Box className="d-flex align-items-center gap-2 mb-1">
+                      <Box component="span" className="text-truncate" sx={{ fontSize: "13px", fontWeight: 700 }}>
                         {notif.title}
-                      </span>
+                      </Box>
                       {!notif.isRead && (
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: accent,
-                            marginLeft: "auto",
-                            flexShrink: 0,
-                          }}
+                        <Box
+                          className="flex-shrink-0 ms-auto"
+                          sx={{ width: 6, height: 6, borderRadius: "50%", background: accent }}
                         />
                       )}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--muted2)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        marginBottom: "4px",
-                      }}
-                    >
+                    </Box>
+                    <Box className="text-truncate mb-1" sx={{ fontSize: "12px", color: "var(--muted2)" }}>
                       {notif.message}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "10px",
-                        color: "var(--muted)",
-                      }}
-                    >
-                      {formatDistanceToNow(new Date(notif.createdAt), {
-                        addSuffix: true,
-                        locale: fr,
-                      })}
-                    </div>
-                  </div>
-                </div>
+                    </Box>
+                    <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)" }}>
+                      {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })}
+                    </Box>
+                  </Box>
+                </Box>
               );
             })}
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       <Dialog
         open={!!selected}
@@ -277,160 +193,80 @@ export const NotificationsPage: React.FC = () => {
             const variant = typeVariants[selected.type] ?? "gray";
             const accent = typeAccent[variant];
             const entityKey = selected.entityType?.toLowerCase();
-            const canNavigate = !!(
-              entityKey &&
-              entityRoute[entityKey] &&
-              selected.entityId
-            );
+            const canNavigate = !!(entityKey && entityRoute[entityKey] && selected.entityId);
+            const Icon = typeIconComponents[selected.type] ?? InfoOutlined;
 
             return (
-              <div>
-                <div
-                  style={{
-                    borderTop: `3px solid ${accent}`,
-                    padding: "20px 20px 16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    {(() => {
-                      const Icon = typeIconComponents[selected.type] ?? InfoOutlined;
-                      return (
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "10px",
-                            flexShrink: 0,
-                            background: `color-mix(in srgb, ${accent} 14%, transparent)`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: accent,
-                          }}
-                        >
-                          <Icon sx={{ fontSize: 18 }} />
-                        </div>
-                      );
-                    })()}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: "15px",
-                          fontWeight: 700,
-                          lineHeight: 1.3,
-                        }}
-                      >
+              <Box>
+                <Box sx={{ borderTop: `3px solid ${accent}`, p: "20px 20px 16px" }}>
+                  <Box className="d-flex align-items-center gap-3">
+                    <Box
+                      className="d-flex align-items-center justify-content-center flex-shrink-0"
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "10px",
+                        background: `color-mix(in srgb, ${accent} 14%, transparent)`,
+                        color: accent,
+                      }}
+                    >
+                      <Icon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box className="flex-grow-1 overflow-hidden">
+                      <Box sx={{ fontSize: "15px", fontWeight: 700, lineHeight: 1.3 }}>
                         {selected.title}
-                      </div>
+                      </Box>
                       {!selected.isRead && (
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            fontFamily: "var(--font-mono)",
-                            color: accent,
-                            fontWeight: 700,
-                            display: "block",
-                            marginTop: "3px",
-                          }}
+                        <Box
+                          component="span"
+                          className="d-block mt-1"
+                          sx={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: accent, fontWeight: 700 }}
                         >
                           NON LUE
-                        </span>
+                        </Box>
                       )}
-                    </div>
-                    <button
+                    </Box>
+                    <Box
+                      component="button"
+                      className="d-flex flex-shrink-0"
                       onClick={() => setSelected(null)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--muted)",
-                        padding: "2px",
-                        display: "flex",
-                        flexShrink: 0,
-                      }}
+                      sx={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", p: "2px" }}
                     >
                       <CloseOutlined sx={{ fontSize: 16 }} />
-                    </button>
-                  </div>
-                </div>
+                    </Box>
+                  </Box>
+                </Box>
 
-                <div style={{ height: "1px", background: "var(--border)" }} />
+                <Box sx={{ height: "1px", background: "var(--border)" }} />
 
-                <div style={{ padding: "20px" }}>
-                  <p
-                    style={{
-                      margin: "0 0 20px",
-                      fontSize: "14px",
-                      color: "var(--text)",
-                      lineHeight: 1.75,
-                    }}
-                  >
+                <Box sx={{ p: "20px" }}>
+                  <Box component="p" className="mb-4" sx={{ fontSize: "14px", color: "var(--text)", lineHeight: 1.75 }}>
                     {selected.message}
-                  </p>
+                  </Box>
 
-                  <div
-                    style={{
-                      background: "var(--s2)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "var(--r)",
-                      padding: "12px 14px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
+                  <Box
+                    className="d-flex justify-content-between align-items-center"
+                    sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "var(--r)", p: "12px 14px" }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "3px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "11px",
-                          color: "var(--text)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {format(
-                          new Date(selected.createdAt),
-                          "dd MMMM yyyy 'à' HH:mm",
-                          { locale: fr },
-                        )}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {formatDistanceToNow(new Date(selected.createdAt), {
-                          addSuffix: true,
-                          locale: fr,
-                        })}
-                      </span>
-                    </div>
+                    <Box className="d-flex flex-column gap-1">
+                      <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", fontWeight: 600 }}>
+                        {format(new Date(selected.createdAt), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}
+                      </Box>
+                      <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)" }}>
+                        {formatDistanceToNow(new Date(selected.createdAt), { addSuffix: true, locale: fr })}
+                      </Box>
+                    </Box>
                     {canNavigate && (
-                      <button
+                      <Box
+                        component="button"
+                        className="d-flex align-items-center gap-2"
                         onClick={handleNavigate}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
+                        sx={{
                           background: "var(--accent)",
                           color: "#fff",
                           border: "none",
                           borderRadius: "var(--r)",
-                          padding: "7px 12px",
+                          p: "7px 12px",
                           fontSize: "12px",
                           fontWeight: 600,
                           cursor: "pointer",
@@ -439,11 +275,11 @@ export const NotificationsPage: React.FC = () => {
                       >
                         <OpenInNewOutlined sx={{ fontSize: 12 }} />
                         {navLabel[entityKey!] ?? "Voir"}
-                      </button>
+                      </Box>
                     )}
-                  </div>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
             );
           })()}
       </Dialog>

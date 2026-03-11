@@ -11,9 +11,9 @@ import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
 import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
-
 
 interface NavItem {
   to: string
@@ -96,9 +96,9 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {isMobile && (
-        <div
+        <Box
           onClick={close}
-          style={{
+          sx={{
             position: 'fixed',
             inset: 0,
             background: 'rgba(0,0,0,0.5)',
@@ -108,196 +108,143 @@ export const Sidebar: React.FC = () => {
         />
       )}
 
-      <div style={{
-        width: '232px',
-        flexShrink: 0,
-        height: '100vh',
-        background: 'var(--s1)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        position: isMobile ? 'fixed' : 'relative',
-        left: 0,
-        top: 0,
-        zIndex: isMobile ? 200 : 'auto',
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: -60,
-          left: -60,
-          width: 200,
-          height: 200,
-          background: 'radial-gradient(circle, var(--accent-subtle) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }} />
+      <Box
+        className="d-flex flex-column overflow-auto"
+        sx={{
+          width: '232px',
+          flexShrink: 0,
+          height: '100vh',
+          background: 'var(--s1)',
+          borderRight: '1px solid var(--border)',
+          overflowX: 'hidden',
+          position: isMobile ? 'fixed' : 'relative',
+          left: 0,
+          top: 0,
+          zIndex: isMobile ? 200 : 'auto',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -60,
+            left: -60,
+            width: 200,
+            height: 200,
+            background: 'radial-gradient(circle, var(--accent-subtle) 0%, transparent 70%)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
 
-        <button
+        <Box
+          component="button"
+          className="d-flex align-items-center gap-2"
           onClick={() => navigate('/')}
-          style={{
+          sx={{
             all: 'unset',
             cursor: 'pointer',
-            padding: '18px 18px 16px',
+            p: '18px 18px 16px',
             borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
             position: 'relative',
             zIndex: 1,
             transition: 'opacity 0.15s',
+            '&:hover': { opacity: 0.8 },
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8' }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
         >
-          <div style={{
-            width: 32,
-            height: 32,
-            background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
-            borderRadius: '9px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '13px',
-            fontWeight: 800,
-            color: '#fff',
-            letterSpacing: '-0.05em',
-            flexShrink: 0,
-            boxShadow: '0 0 20px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.3)',
-          }}>
+          <Box
+            className="d-flex align-items-center justify-content-center flex-shrink-0"
+            sx={{
+              width: 32,
+              height: 32,
+              background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
+              borderRadius: '9px',
+              fontSize: '13px',
+              fontWeight: 800,
+              color: '#fff',
+              letterSpacing: '-0.05em',
+              boxShadow: '0 0 20px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.3)',
+            }}
+          >
             T
-          </div>
-          <div>
-            <div style={{
-              fontSize: '14px',
-              fontWeight: 700,
-              letterSpacing: '-0.03em',
-              color: 'var(--text)',
-              lineHeight: 1.2,
-            }}>
-              TMA<span style={{ color: 'var(--accent)' }}>flow</span>
-            </div>
-            <div style={{
-              fontSize: '9px',
-              color: 'var(--muted)',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: '1px',
-            }}>
+          </Box>
+          <Box>
+            <Box sx={{ fontSize: '14px', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.2 }}>
+              TMA<Box component="span" sx={{ color: 'var(--accent)' }}>flow</Box>
+            </Box>
+            <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '1px' }}>
               workspace
-            </div>
-          </div>
-        </button>
+            </Box>
+          </Box>
+        </Box>
 
-        <nav style={{
-          flex: 1,
-          padding: '10px 8px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2px',
-          position: 'relative',
-          zIndex: 1,
-        }}>
+        <Box
+          component="nav"
+          className="d-flex flex-column flex-grow-1 p-2"
+          sx={{ gap: '2px', position: 'relative', zIndex: 1 }}
+        >
           {filteredSections.map((section, si) => (
-            <div key={section.title} style={{ marginTop: si > 0 ? '6px' : 0 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 10px 5px',
-              }}>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '8.5px',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: 'var(--muted)',
-                  fontWeight: 500,
-                  whiteSpace: 'nowrap',
-                }}>
+            <Box key={section.title} sx={{ mt: si > 0 ? '6px' : 0 }}>
+              <Box className="d-flex align-items-center gap-2" sx={{ p: '10px 10px 5px' }}>
+                <Box component="span" sx={{ fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                   {section.title}
-                </span>
-                <div style={{
-                  flex: 1,
-                  height: '1px',
-                  background: 'linear-gradient(90deg, var(--border), transparent)',
-                }} />
-              </div>
+                </Box>
+                <Box className="flex-grow-1" sx={{ height: '1px', background: 'linear-gradient(90deg, var(--border), transparent)' }} />
+              </Box>
 
               {section.items.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.end ?? item.to === '/'}
-                  style={{ textDecoration: 'none', display: 'block' }}
+                  className="d-block text-decoration-none"
                 >
                   {({ isActive }) => {
                     const Icon = item.icon
                     return (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
+                      <Box
+                        className="d-flex align-items-center"
+                        sx={{
                           gap: '9px',
-                          padding: '8px 10px',
+                          p: '8px 10px',
                           borderRadius: '7px',
                           cursor: 'pointer',
                           position: 'relative',
                           background: isActive ? 'var(--accent-subtle)' : 'transparent',
                           borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
                           transition: 'background 0.12s, border-color 0.12s',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.background = 'var(--s2)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.background = 'transparent'
-                          }
+                          '&:hover': !isActive ? { background: 'var(--s2)' } : {},
                         }}
                       >
-                        <div style={{
-                          width: 18,
-                          height: 18,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          color: isActive ? 'var(--accent)' : 'var(--muted)',
-                          transition: 'color 0.12s',
-                        }}>
+                        <Box
+                          className="d-flex align-items-center justify-content-center flex-shrink-0"
+                          sx={{
+                            width: 18,
+                            height: 18,
+                            color: isActive ? 'var(--accent)' : 'var(--muted)',
+                            transition: 'color 0.12s',
+                          }}
+                        >
                           <Icon sx={{ fontSize: 14 }} />
-                        </div>
-                        <span style={{
-                          flex: 1,
-                          fontSize: '13px',
-                          fontWeight: isActive ? 600 : 450,
-                          color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                          letterSpacing: '-0.01em',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          transition: 'color 0.12s, font-weight 0.12s',
-                        }}>
+                        </Box>
+                        <Box
+                          component="span"
+                          className="flex-grow-1 text-truncate"
+                          sx={{ fontSize: '13px', fontWeight: isActive ? 600 : 450, color: isActive ? 'var(--accent)' : 'var(--text-secondary)', letterSpacing: '-0.01em', transition: 'color 0.12s, font-weight 0.12s' }}
+                        >
                           {item.label}
-                        </span>
-                        {isActive ? (
-                          <ChevronRightOutlined sx={{ fontSize: 12 }} style={{ color: 'var(--accent)', opacity: 0.6, flexShrink: 0 }} />
-                        ) : null}
-                      </div>
+                        </Box>
+                        {isActive && (
+                          <ChevronRightOutlined sx={{ fontSize: 12, color: 'var(--accent)', opacity: 0.6, flexShrink: 0 }} />
+                        )}
+                      </Box>
                     )
                   }}
                 </NavLink>
               ))}
-            </div>
+            </Box>
           ))}
-        </nav>
-
-      </div>
+        </Box>
+      </Box>
     </>
   )
 }
