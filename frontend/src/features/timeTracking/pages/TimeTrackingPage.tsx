@@ -1,11 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { AppModal } from "../../../components/AppModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
@@ -753,268 +750,246 @@ export const TimeTrackingPage: React.FC = () => {
         )}
       </Box>
 
-      <Dialog
+      <AppModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title={editingId ? "Modifier la saisie" : "Saisir du temps"}
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setModalOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleSubmit}
+              disabled={!form.comment.trim() || submitting || form.durationMinutes <= 0}
+            >
+              {submitting
+                ? "Enregistrement..."
+                : editingId
+                  ? "Modifier"
+                  : "Enregistrer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          {editingId ? "Modifier la saisie" : "Saisir du temps"}
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Date
-              </Box>
-              <Box
-                component="input"
-                type="date"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.date}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
-              />
+        <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Date
             </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Ticket (optionnel)
-              </Box>
-              <Box
-                component="select"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.ticketId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setForm((f) => ({ ...f, ticketId: e.target.value }))
-                }
-              >
-                <option value="">Aucun ticket</option>
-                {tickets.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.reference} — {t.title}
-                  </option>
-                ))}
-              </Box>
+            <Box
+              component="input"
+              type="date"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.date}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setForm((f) => ({ ...f, date: e.target.value }))
+              }
+            />
+          </Box>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Ticket (optionnel)
             </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Projet (optionnel)
-              </Box>
-              <Box
-                component="select"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.techProjectId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setForm((f) => ({ ...f, techProjectId: e.target.value }))
-                }
-              >
-                <option value="">Aucun projet</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Box>
-            </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Description *
-              </Box>
-              <Box
-                component="input"
-                type="text"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.comment}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setForm((f) => ({ ...f, comment: e.target.value }))
-                }
-                placeholder="Ce que vous avez fait..."
-                autoFocus
-              />
-            </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "8px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Durée
-              </Box>
-              <DurationPicker
-                value={form.durationMinutes}
-                onChange={(v) => setForm((f) => ({ ...f, durationMinutes: v }))}
-              />
+            <Box
+              component="select"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.ticketId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setForm((f) => ({ ...f, ticketId: e.target.value }))
+              }
+            >
+              <option value="">Aucun ticket</option>
+              {tickets.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.reference} — {t.title}
+                </option>
+              ))}
             </Box>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setModalOpen(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleSubmit}
-            disabled={!form.comment.trim() || submitting || form.durationMinutes <= 0}
-          >
-            {submitting
-              ? "Enregistrement..."
-              : editingId
-                ? "Modifier"
-                : "Enregistrer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Projet (optionnel)
+            </Box>
+            <Box
+              component="select"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.techProjectId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setForm((f) => ({ ...f, techProjectId: e.target.value }))
+              }
+            >
+              <option value="">Aucun projet</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Box>
+          </Box>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Description *
+            </Box>
+            <Box
+              component="input"
+              type="text"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.comment}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setForm((f) => ({ ...f, comment: e.target.value }))
+              }
+              placeholder="Ce que vous avez fait..."
+              autoFocus
+            />
+          </Box>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "8px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Durée
+            </Box>
+            <DurationPicker
+              value={form.durationMinutes}
+              onChange={(v) => setForm((f) => ({ ...f, durationMinutes: v }))}
+            />
+          </Box>
+        </Box>
+      </AppModal>
 
-      <Dialog
+      <AppModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title="Supprimer la saisie"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Suppression..." : "Supprimer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Supprimer la saisie
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
-            Supprimer la saisie <strong>"{deleteTarget?.comment}"</strong> (
-            {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""})
-            ? Cette action est irréversible.
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setDeleteTarget(null)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? "Suppression..." : "Supprimer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
+          Supprimer la saisie <strong>"{deleteTarget?.comment}"</strong> (
+          {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""})
+          ? Cette action est irréversible.
+        </Box>
+      </AppModal>
     </>
   );
 };
