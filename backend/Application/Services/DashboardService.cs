@@ -37,7 +37,7 @@ public class DashboardService
             .Where(t => t.OrganizationId == organizationId)
             .ToListAsync();
 
-        TicketStatus[] openStatuses = new[] { TicketStatus.New, TicketStatus.Analysis, TicketStatus.InProgress, TicketStatus.Testing };
+        TicketStatus[] openStatuses = new[] { TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing };
         TicketStatus[] closedStatuses = new[] { TicketStatus.Resolved, TicketStatus.Closed };
 
         int openTickets = tickets.Count(t => openStatuses.Contains(t.Status));

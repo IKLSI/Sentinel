@@ -16,7 +16,6 @@ import { useToast } from "../../../hooks/useToast";
 
 const statusConfig: Record<TicketStatus, { label: string; color: string; bg: string }> = {
   new:         { label: "Nouveau",  color: "#3b82f6", bg: "rgba(59,130,246,0.1)"  },
-  analysis:    { label: "Analyse",  color: "#06b6d4", bg: "rgba(6,182,212,0.1)"   },
   in_progress: { label: "En cours", color: "#f97316", bg: "rgba(249,115,22,0.1)"  },
   testing:     { label: "En test",  color: "#a855f7", bg: "rgba(168,85,247,0.1)"  },
   resolved:    { label: "Résolu",   color: "#22c55e", bg: "rgba(34,197,94,0.1)"   },

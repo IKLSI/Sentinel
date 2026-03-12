@@ -45,7 +45,7 @@ export interface Project {
 
 export type TicketPriority = 'critical' | 'high' | 'medium' | 'low'
 export type TicketType = 'bug' | 'feature' | 'security' | 'performance' | 'maintenance' | 'question'
-export type TicketStatus = 'new' | 'analysis' | 'in_progress' | 'testing' | 'resolved' | 'closed'
+export type TicketStatus = 'new' | 'in_progress' | 'testing' | 'resolved' | 'closed'
 
 export interface TicketComment {
   id: string

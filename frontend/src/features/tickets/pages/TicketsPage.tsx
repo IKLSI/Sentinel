@@ -143,7 +143,6 @@ const statusVariant: Record<
   "red" | "orange" | "blue" | "cyan" | "green" | "gray" | "purple"
 > = {
   new: "blue",
-  analysis: "cyan",
   in_progress: "orange",
   testing: "purple",
   resolved: "green",
@@ -152,7 +151,6 @@ const statusVariant: Record<
 
 const statusLabels: Record<TicketStatus, string> = {
   new: "Nouveau",
-  analysis: "En analyse",
   in_progress: "En cours",
   testing: "En test",
   resolved: "Résolu",
@@ -289,7 +287,7 @@ export const TicketsPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, [filtersOpen]);
   const defaultPageSize = 30;
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(null);
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({ col: "Priorité", dir: "asc" });
 
   const toggleSort = (col: string) => {
     setSort((s) => {
@@ -310,7 +308,7 @@ export const TicketsPage: React.FC = () => {
   }, [tickets]);
 
   const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
-  const STATUS_ORDER   = { new: 0, analysis: 1, in_progress: 2, testing: 3, resolved: 4, closed: 5 };
+  const STATUS_ORDER   = { new: 0, in_progress: 1, testing: 2, resolved: 3, closed: 4 };
 
   const q = search.toLowerCase();
   const filtered = displayTickets
@@ -403,7 +401,7 @@ export const TicketsPage: React.FC = () => {
               }}>
                 {[
                   { label: "Priorité", key: "priority", value: filters.priority, options: [["", "Toutes"], ["critical", "Critique"], ["high", "Haute"], ["medium", "Moyenne"], ["low", "Basse"]] },
-                  { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["analysis", "Analyse"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
+                  { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
                   { label: "Type",     key: "type",     value: filters.type,     options: [["", "Tous"], ["bug", "Bug"], ["feature", "Évolution"], ["security", "Sécurité"], ["performance", "Perf"]] },
                 ].map(({ label, key, value, options }) => (
                   <Box key={key}>
@@ -728,6 +726,7 @@ export const TicketsPage: React.FC = () => {
           </Box>
         )}
       </Box>
+
       <AppModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}

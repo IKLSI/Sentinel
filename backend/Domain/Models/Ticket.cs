@@ -21,7 +21,6 @@ public enum TicketType
 public enum TicketStatus
 {
     New,
-    Analysis,
     InProgress,
     Testing,
     Resolved,

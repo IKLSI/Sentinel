@@ -193,7 +193,6 @@ public class TicketsController : ControllerBase
         Dictionary<string, TicketStatus> statusMap = new Dictionary<string, TicketStatus>(StringComparer.OrdinalIgnoreCase)
         {
             ["new"] = TicketStatus.New,
-            ["analysis"] = TicketStatus.Analysis,
             ["in_progress"] = TicketStatus.InProgress,
             ["inprogress"] = TicketStatus.InProgress,
             ["testing"] = TicketStatus.Testing,

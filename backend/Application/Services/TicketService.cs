@@ -287,7 +287,6 @@ public class TicketService
             Status = ticket.Status switch
             {
                 TicketStatus.New => "new",
-                TicketStatus.Analysis => "analysis",
                 TicketStatus.InProgress => "in_progress",
                 TicketStatus.Testing => "testing",
                 TicketStatus.Resolved => "resolved",
