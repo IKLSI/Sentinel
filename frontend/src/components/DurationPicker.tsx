@@ -34,7 +34,7 @@ interface DurationPickerProps {
 }
 
 export const DurationPicker: React.FC<DurationPickerProps> = ({
-  value, onChange, placeholder = '2h30 · 1h · 90m', width = '160px',
+  value, onChange, placeholder = '', width = '160px',
 }) => {
   const [text, setText] = useState(fmt(value))
   const [focused, setFocused] = useState(false)

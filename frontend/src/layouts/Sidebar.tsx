@@ -10,7 +10,7 @@ import SecurityOutlined from '@mui/icons-material/SecurityOutlined'
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
 import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
-import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
@@ -71,8 +71,15 @@ const navSections: NavSection[] = [
 ]
 
 export const Sidebar: React.FC = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
+
+  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 'U'
   const location = useLocation()
   const { isOpen, isMobile, close } = useSidebar()
   const isAdmin = user?.role === 'admin' || user?.role === 'manager'
@@ -115,7 +122,7 @@ export const Sidebar: React.FC = () => {
           flexShrink: 0,
           height: '100vh',
           background: 'var(--s1)',
-          borderRight: '1px solid var(--border)',
+          borderRight: 'none',
           overflowX: 'hidden',
           position: isMobile ? 'fixed' : 'relative',
           left: 0,
@@ -144,7 +151,7 @@ export const Sidebar: React.FC = () => {
             all: 'unset',
             cursor: 'pointer',
             p: '18px 18px 16px',
-            borderBottom: '1px solid var(--border)',
+            borderBottom: 'none',
             position: 'relative',
             zIndex: 1,
             transition: 'opacity 0.15s',
@@ -210,8 +217,8 @@ export const Sidebar: React.FC = () => {
                           cursor: 'pointer',
                           position: 'relative',
                           background: isActive ? 'var(--accent-subtle)' : 'transparent',
-                          borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
-                          transition: 'background 0.12s, border-color 0.12s',
+                          boxShadow: isActive ? 'inset 2px 0 0 var(--accent)' : 'none',
+                          transition: 'background 0.12s, box-shadow 0.12s',
                           '&:hover': !isActive ? { background: 'var(--s2)' } : {},
                         }}
                       >
@@ -233,9 +240,6 @@ export const Sidebar: React.FC = () => {
                         >
                           {item.label}
                         </Box>
-                        {isActive && (
-                          <ChevronRightOutlined sx={{ fontSize: 12, color: 'var(--accent)', opacity: 0.6, flexShrink: 0 }} />
-                        )}
                       </Box>
                     )
                   }}
@@ -243,6 +247,63 @@ export const Sidebar: React.FC = () => {
               ))}
             </Box>
           ))}
+        </Box>
+
+        <Box
+          className="d-flex align-items-center gap-2"
+          sx={{
+            p: '12px 14px',
+            mt: 'auto',
+            position: 'relative',
+            zIndex: 1,
+            background: 'var(--s2)',
+          }}
+        >
+          <Box
+            className="d-flex align-items-center justify-content-center flex-shrink-0"
+            sx={{
+              width: 30,
+              height: 30,
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, var(--accent), #818cf8)',
+              fontSize: '10px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              color: '#fff',
+              boxShadow: '0 2px 6px rgba(99,102,241,0.35)',
+            }}
+          >
+            {initials}
+          </Box>
+          <Box className="flex-grow-1 overflow-hidden">
+            <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+              {user?.firstName} {user?.lastName}
+            </Box>
+            <Box className="text-truncate" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+              {user?.email}
+            </Box>
+          </Box>
+          <Box
+            component="button"
+            sx={{
+              all: 'unset',
+              cursor: 'pointer',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '7px',
+              color: 'var(--muted)',
+              flexShrink: 0,
+              transition: 'color 0.12s, background 0.12s',
+              '&:hover': { color: 'var(--red)', background: 'rgba(239,68,68,0.08)' },
+            }}
+            onClick={handleLogout}
+            title="Déconnexion"
+          >
+            <LogoutOutlined sx={{ fontSize: 14 }} />
+          </Box>
         </Box>
       </Box>
     </>
