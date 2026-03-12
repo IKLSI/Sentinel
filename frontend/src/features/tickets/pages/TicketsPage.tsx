@@ -1,20 +1,128 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import { SlaTimer } from "../../../components/SlaTimer";
+import { DurationPicker } from "../../../components/DurationPicker";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import { AppModal } from "../../../components/AppModal";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import TuneOutlined from "@mui/icons-material/TuneOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { useTickets } from "../hooks/useTickets";
+import { deleteTicket, createTicket, updateTicket } from "../api/tickets";
+import { getProjects, ProjectDto } from "../../techHealth/api/projects";
+import { getUsers } from "../../users/api/users";
 import {
   Ticket,
   TicketPriority,
   TicketStatus,
   TicketType,
+  User,
 } from "../../../types";
+
+interface CreateTicketPayload {
+  title: string
+  description: string
+  priority: 'Critical' | 'High' | 'Medium' | 'Low'
+  type: 'Bug' | 'Feature' | 'Security' | 'Performance' | 'Maintenance' | 'Question'
+  techProjectId?: string
+  assignedToId?: string
+  estimatedHours?: number
+}
+
+function getPageNumbers(page: number, totalPages: number): (number | "...")[] {
+  if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  const pages: (number | "...")[] = [1, 2]
+  if (page > 3) pages.push("...")
+  if (page > 2 && page < totalPages) pages.push(page)
+  if (page < totalPages - 1) pages.push("...")
+  if (!pages.includes(totalPages)) pages.push(totalPages)
+  return pages
+}
+
+const navBtnSx = (disabled: boolean) => ({
+  all: "unset" as const,
+  cursor: disabled ? "default" : "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  gap: "6px",
+  height: "32px", px: "12px",
+  borderRadius: "8px",
+  fontSize: "12px", fontWeight: 600,
+  color: disabled ? "var(--muted)" : "var(--text-secondary)",
+  background: "var(--s2)",
+  border: "1px solid var(--border)",
+  opacity: disabled ? 0.4 : 1,
+  pointerEvents: disabled ? "none" : "auto",
+  transition: "background 0.12s, border-color 0.12s, color 0.12s",
+  ...(!disabled && { "&:hover": { background: "var(--s3)", borderColor: "var(--border2)", color: "var(--text)" } }),
+})
+
+const pageBtnSx = (active: boolean) => ({
+  all: "unset" as const,
+  cursor: active ? "default" : "pointer",
+  minWidth: "32px", height: "32px",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  borderRadius: "8px",
+  fontSize: "12px", fontWeight: active ? 700 : 500,
+  color: active ? "#fff" : "var(--text-secondary)",
+  background: active ? "var(--accent)" : "transparent",
+  boxShadow: active ? "0 2px 8px rgba(99,102,241,0.35)" : "none",
+  transition: "background 0.12s, color 0.12s, box-shadow 0.12s",
+  ...(!active && { "&:hover": { background: "var(--s2)", color: "var(--text)" } }),
+})
+
+const Pagination: React.FC<{
+  page: number
+  totalPages: number
+  total: number
+  onChange: (p: number) => void
+}> = ({ page, totalPages, total, onChange }) => {
+  const pages = getPageNumbers(page, totalPages)
+  return (
+    <Box sx={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      px: "16px", py: "10px",
+      borderTop: "1px solid var(--border)",
+      flexShrink: 0,
+      background: "var(--s2)",
+    }}>
+      <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+        {total} ticket{total > 1 ? "s" : ""}
+      </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>
+          ← Précédent
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}>
+          {pages.map((p, i) =>
+            p === "..." ? (
+              <Box key={`e-${i}`} sx={{ minWidth: "28px", textAlign: "center", fontSize: "13px", color: "var(--muted)", pb: "2px" }}>
+                ···
+              </Box>
+            ) : (
+              <Box key={p} component="button" sx={pageBtnSx(p === page)} onClick={() => p !== page && onChange(p as number)}>
+                {p}
+              </Box>
+            )
+          )}
+        </Box>
+
+        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>
+          Suivant →
+        </Box>
+      </Box>
+    </Box>
+  )
+}
 
 const priorityColors: Record<TicketPriority, string> = {
   critical: "var(--red)",
@@ -77,14 +185,119 @@ export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
   const { tickets, loading, fetchTickets } = useTickets();
   const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
-  const [filters, setFilters] = useState({
-    priority: "",
-    status: "",
-    type: "",
-    slaBreached: false,
-  });
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState({ priority: "", status: "", type: "" });
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; reference: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateTicketPayload>({ title: '', description: '', priority: 'Medium', type: 'Bug' });
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createEstMinutes, setCreateEstMinutes] = useState(0);
+  const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
+  const [modalUsers, setModalUsers] = useState<User[]>([]);
+  const [editTarget, setEditTarget] = useState<Ticket | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', techProjectId: '', assignedToId: '', estimatedMinutes: 0 });
+  const [editSaving, setEditSaving] = useState(false);
+
+  const openCreateModal = () => {
+    setCreateForm({ title: '', description: '', priority: 'Medium', type: 'Bug' });
+    setCreateEstMinutes(0);
+    setShowCreateModal(true);
+    Promise.all([
+      getProjects().catch(() => [] as ProjectDto[]),
+      getUsers().catch(() => ({ items: [] as User[] })),
+    ]).then(([p, u]) => { setModalProjects(p); setModalUsers(u.items); });
+  };
+
+  const handleCreate = async () => {
+    if (!createForm.title.trim()) return;
+    setCreateSubmitting(true);
+    try {
+      const payload: CreateTicketPayload = { ...createForm };
+      if (!payload.techProjectId) delete payload.techProjectId;
+      if (!payload.assignedToId) delete payload.assignedToId;
+      if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
+      const created = await createTicket(payload as unknown as Partial<Ticket>);
+      setShowCreateModal(false);
+      navigate(`/tickets/${created.id}`);
+    } catch {
+      /* ignore */
+    } finally {
+      setCreateSubmitting(false);
+    }
+  };
+
+  const openEditModal = (ticket: Ticket) => {
+    setEditForm({
+      title: ticket.title,
+      description: ticket.description ?? '',
+      priority: ticket.priority,
+      type: ticket.type,
+      techProjectId: ticket.projectId ?? '',
+      assignedToId: ticket.assignee?.id ?? '',
+      estimatedMinutes: ticket.estimatedHours != null ? Math.round(ticket.estimatedHours * 60) : 0,
+    });
+    setEditTarget(ticket);
+    Promise.all([
+      getProjects().catch(() => [] as ProjectDto[]),
+      getUsers().catch(() => ({ items: [] as User[] })),
+    ]).then(([p, u]) => { setModalProjects(p); setModalUsers(u.items); });
+  };
+
+  const handleEdit = async () => {
+    if (!editTarget) return;
+    setEditSaving(true);
+    try {
+      const payload: Record<string, unknown> = {
+        title: editForm.title, description: editForm.description,
+        priority: editForm.priority, type: editForm.type,
+      };
+      if (editForm.techProjectId) payload.techProjectId = editForm.techProjectId;
+      if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
+      if (editForm.estimatedMinutes > 0) payload.estimatedHours = editForm.estimatedMinutes / 60;
+      const updated = await updateTicket(editTarget.id, payload as Partial<Ticket>);
+      setDisplayTickets((prev) => prev.map((t) => t.id === updated.id ? updated : t));
+      setEditTarget(null);
+    } catch {
+      /* ignore */
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteTicket(deleteTarget.id);
+      setDisplayTickets((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) setFiltersOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [filtersOpen]);
   const defaultPageSize = 30;
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(null);
+
+  const toggleSort = (col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  };
 
   useEffect(() => {
     fetchTickets({ page, pageSize: defaultPageSize }).catch(() => {});
@@ -96,108 +309,152 @@ export const TicketsPage: React.FC = () => {
     }
   }, [tickets]);
 
-  const filtered = displayTickets.filter((t) => {
-    if (filters.priority && t.priority !== filters.priority) return false;
-    if (filters.status && t.status !== filters.status) return false;
-    if (filters.type && t.type !== filters.type) return false;
-    if (filters.slaBreached && !t.slaBreached) return false;
-    return true;
-  });
+  const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+  const STATUS_ORDER   = { new: 0, analysis: 1, in_progress: 2, testing: 3, resolved: 4, closed: 5 };
 
-  const canGoNext =
-    tickets != null && page < tickets.totalPages && tickets.items.length > 0;
+  const q = search.toLowerCase();
+  const filtered = displayTickets
+    .filter((t) => {
+      if (filters.priority && t.priority !== filters.priority) return false;
+      if (filters.status && t.status !== filters.status) return false;
+      if (filters.type && t.type !== filters.type) return false;
+      if (q && !t.title.toLowerCase().includes(q) && !t.reference.toLowerCase().includes(q) && !(t.projectName ?? "").toLowerCase().includes(q)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (!sort) return 0;
+      const mul = sort.dir === "asc" ? 1 : -1;
+      switch (sort.col) {
+        case "Référence": return mul * a.reference.localeCompare(b.reference);
+        case "Titre":     return mul * a.title.localeCompare(b.title);
+        case "Projet":    return mul * (a.projectName ?? "").localeCompare(b.projectName ?? "");
+        case "Priorité":  return mul * ((PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
+        case "Type":      return mul * a.type.localeCompare(b.type);
+        case "Statut":    return mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+        case "Assigné":   return mul * (`${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`).localeCompare(`${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`);
+        default: return 0;
+      }
+    });
 
   return (
     <>
-      <Topbar
-        title="Tickets"
-        subtitle={`${filtered.length} ticket(s)`}
-        actions={
+      <Topbar title="" subtitle={undefined} />
+      <Box sx={{ p: "24px 28px", height: "calc(100vh - 67px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>
+          <Box sx={{
+            flex: "0 0 260px", display: "flex", alignItems: "center", gap: "8px",
+            background: "var(--s1)", border: "1px solid var(--border)",
+            borderRadius: "9px", px: "10px", height: "32px",
+            transition: "border-color 0.15s, box-shadow 0.15s",
+            "&:focus-within": { borderColor: "var(--accent-border)", boxShadow: "0 0 0 3px rgba(99,102,241,0.08)" },
+          }}>
+            <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
+            <Box
+              component="input"
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              sx={{
+                all: "unset", flex: 1, fontSize: "12.5px",
+                color: "var(--text)",
+                "&::placeholder": { color: "var(--muted)" },
+                "&:focus": { outline: "none", boxShadow: "none !important" },
+              }}
+            />
+          </Box>
+
+          <Box ref={filtersRef} sx={{ position: "relative" }}>
+            {(filters.priority || filters.status || filters.type) && (
+              <Box sx={{
+                position: "absolute", top: -5, right: -5,
+                width: 8, height: 8, borderRadius: "50%",
+                background: "var(--accent)", zIndex: 1,
+                border: "2px solid var(--bg)",
+              }} />
+            )}
+            <Box
+              component="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              sx={{
+                all: "unset", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "7px",
+                px: "14px", height: "32px",
+                background: filtersOpen ? "var(--accent-subtle)" : "var(--s1)",
+                border: `1px solid ${filtersOpen ? "var(--accent-border)" : "var(--border)"}`,
+                borderRadius: "9px", fontSize: "13px", fontWeight: 500,
+                color: filtersOpen ? "var(--accent)" : "var(--text-secondary)",
+                transition: "all 0.12s",
+                "&:hover": { background: "var(--s2)", borderColor: "var(--border2)" },
+              }}
+            >
+              <TuneOutlined sx={{ fontSize: 15 }} />
+              Filtres
+            </Box>
+
+            {filtersOpen && (
+              <Box sx={{
+                position: "absolute", top: "calc(100% + 8px)", right: 0,
+                background: "var(--s1)", border: "1px solid var(--border)",
+                borderRadius: "12px", p: "16px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                zIndex: 50, minWidth: "220px",
+                display: "flex", flexDirection: "column", gap: "10px",
+                animation: "fadeInUp 0.12s ease forwards",
+              }}>
+                {[
+                  { label: "Priorité", key: "priority", value: filters.priority, options: [["", "Toutes"], ["critical", "Critique"], ["high", "Haute"], ["medium", "Moyenne"], ["low", "Basse"]] },
+                  { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["analysis", "Analyse"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
+                  { label: "Type",     key: "type",     value: filters.type,     options: [["", "Tous"], ["bug", "Bug"], ["feature", "Évolution"], ["security", "Sécurité"], ["performance", "Perf"]] },
+                ].map(({ label, key, value, options }) => (
+                  <Box key={key}>
+                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
+                      {label}
+                    </Box>
+                    <Box component="select" value={value}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, [key]: e.target.value }))}
+                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                    >
+                      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </Box>
+                  </Box>
+                ))}
+
+                {(filters.priority || filters.status || filters.type) && (
+                  <Box
+                    component="button"
+                    onClick={() => { setFilters({ priority: "", status: "", type: "" }); setFiltersOpen(false); }}
+                    sx={{
+                      all: "unset", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      gap: "6px", mt: "4px",
+                      fontSize: "12px", fontWeight: 600,
+                      color: "var(--red)",
+                      background: "var(--red-subtle)",
+                      border: "1px solid rgba(239,68,68,0.2)",
+                      borderRadius: "7px",
+                      py: "8px",
+                      transition: "background 0.12s, border-color 0.12s",
+                      "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
+                    }}
+                  >
+                    Réinitialiser
+                  </Box>
+                )}
+              </Box>
+            )}
+          </Box>
+
+          <Box sx={{ flex: 1 }} />
+
           <Button
             variant="contained"
             size="small"
-            sx={{
-              textTransform: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-            onClick={() => navigate("/tickets/new")}
+            sx={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+            onClick={openCreateModal}
           >
             <AddOutlined sx={{ fontSize: 14 }} />
             Nouveau ticket
           </Button>
-        }
-      />
-      <Box sx={{ p: "24px 28px" }}>
-        <Box className="d-flex flex-wrap" sx={{ gap: "10px", mb: "20px" }}>
-          <Box
-            component="select"
-            sx={selectSx}
-            value={filters.priority}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setFilters((f) => ({ ...f, priority: e.target.value }))
-            }
-          >
-            <option value="">Toutes priorités</option>
-            <option value="critical">Critique</option>
-            <option value="high">Haute</option>
-            <option value="medium">Moyenne</option>
-            <option value="low">Basse</option>
-          </Box>
-
-          <Box
-            component="select"
-            sx={selectSx}
-            value={filters.status}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setFilters((f) => ({ ...f, status: e.target.value }))
-            }
-          >
-            <option value="">Tous statuts</option>
-            <option value="new">Nouveau</option>
-            <option value="analysis">En analyse</option>
-            <option value="in_progress">En cours</option>
-            <option value="testing">En test</option>
-            <option value="resolved">Résolu</option>
-            <option value="closed">Fermé</option>
-          </Box>
-
-          <Box
-            component="select"
-            sx={selectSx}
-            value={filters.type}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setFilters((f) => ({ ...f, type: e.target.value }))
-            }
-          >
-            <option value="">Tous types</option>
-            <option value="bug">Bug</option>
-            <option value="feature">Évolution</option>
-            <option value="security">Sécurité</option>
-            <option value="performance">Perf</option>
-          </Box>
-
-          <Box
-            component="label"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              cursor: "pointer",
-              fontSize: "13px",
-              color: "var(--muted2)",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={filters.slaBreached}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, slaBreached: e.target.checked }))
-              }
-            />
-            SLA dépassé uniquement
-          </Box>
         </Box>
 
         {loading ? (
@@ -217,7 +474,7 @@ export const TicketsPage: React.FC = () => {
               border: "1px solid var(--border)",
               borderRadius: "var(--r)",
               overflow: "hidden",
-              minHeight: "560px",
+              flex: 1,
               display: "flex",
               flexDirection: "column",
             }}
@@ -237,39 +494,46 @@ export const TicketsPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, overflowY: "auto" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                  <Box component="thead">
+                  <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
-                      {[
-                        "Référence",
-                        "Titre",
-                        "Projet",
-                        "Priorité",
-                        "Type",
-                        "Statut",
-                        "SLA",
-                        "Assigné",
-                      ].map((h) => (
-                        <Box
-                          component="th"
-                          key={h}
-                          sx={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "9px",
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                            color: "var(--muted)",
-                            textAlign: "left",
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            background: "var(--s2)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {h}
-                        </Box>
-                      ))}
+                      {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "SLA", "Assigné", ""].map((h) => {
+                        const sortable = h !== "SLA";
+                        const isActive = sort?.col === h;
+                        return (
+                          <Box
+                            component="th"
+                            key={h}
+                            onClick={() => sortable && toggleSort(h)}
+                            sx={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "9px",
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                              color: isActive ? "var(--accent)" : "var(--muted)",
+                              textAlign: "left",
+                              padding: "10px 14px",
+                              borderBottom: "1px solid var(--border)",
+                              background: "var(--s2)",
+                              whiteSpace: "nowrap",
+                              cursor: sortable ? "pointer" : "default",
+                              userSelect: "none",
+                              transition: "color 0.12s",
+                              "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
+                            }}
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              {h}
+                              {sortable && isActive && (
+                                <Box sx={{ fontSize: "12px", color: "var(--accent)", lineHeight: 1, display: "flex", alignItems: "center" }}>
+                                  {sort?.dir === "asc" ? "↑" : "↓"}
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      })}
                     </Box>
                   </Box>
                   <Box component="tbody">
@@ -412,6 +676,42 @@ export const TicketsPage: React.FC = () => {
                             ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
                             : "—"}
                         </Box>
+                        <Box
+                          component="td"
+                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                          sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <Box
+                              component="button"
+                              onClick={() => openEditModal(ticket)}
+                              title="Modifier"
+                              sx={{
+                                all: "unset", cursor: "pointer",
+                                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                                borderRadius: "6px", color: "var(--muted)",
+                                transition: "background 0.12s, color 0.12s",
+                                "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" },
+                              }}
+                            >
+                              <EditOutlined sx={{ fontSize: 14 }} />
+                            </Box>
+                            <Box
+                              component="button"
+                              onClick={() => setDeleteTarget({ id: ticket.id, reference: ticket.reference })}
+                              title="Supprimer"
+                              sx={{
+                                all: "unset", cursor: "pointer",
+                                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                                borderRadius: "6px", color: "var(--muted)",
+                                transition: "background 0.12s, color 0.12s",
+                                "&:hover": { background: "var(--red-subtle)", color: "var(--red)" },
+                              }}
+                            >
+                              <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
+                            </Box>
+                          </Box>
+                        </Box>
                       </Box>
                     ))}
                   </Box>
@@ -419,55 +719,226 @@ export const TicketsPage: React.FC = () => {
               </Box>
             )}
 
-            <Box
-              sx={{
-                padding: "12px 14px",
-                borderTop: "1px solid var(--border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
-                {filtered.length} ticket(s)
-              </Box>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ textTransform: "none" }}
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  ← Précédent
-                </Button>
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: "12px",
-                    color: "var(--muted2)",
-                    lineHeight: "30px",
-                    margin: "0 14px",
-                  }}
-                >
-                  Page {page}
-                </Box>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ textTransform: "none" }}
-                  disabled={!canGoNext}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Suivant →
-                </Button>
-              </Box>
-            </Box>
+            <Pagination
+              page={page}
+              totalPages={tickets?.totalPages ?? 1}
+              total={tickets?.total ?? filtered.length}
+              onChange={setPage}
+            />
           </Box>
         )}
       </Box>
+      <AppModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Nouveau ticket"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setShowCreateModal(false)}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleCreate} disabled={!createForm.title.trim() || createSubmitting}>
+              {createSubmitting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Créer le ticket"}
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre *</Box>
+            <Box component="input" autoFocus type="text" placeholder="Description courte du problème" value={createForm.title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+            />
+          </Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
+              <Box component="select" value={createForm.priority}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, priority: e.target.value as CreateTicketPayload['priority'] }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="Critical">Critique</option>
+                <option value="High">Haute</option>
+                <option value="Medium">Moyenne</option>
+                <option value="Low">Basse</option>
+              </Box>
+            </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
+              <Box component="select" value={createForm.type}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, type: e.target.value as CreateTicketPayload['type'] }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="Bug">Bug</option>
+                <option value="Feature">Évolution</option>
+                <option value="Security">Sécurité</option>
+                <option value="Performance">Performance</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Question">Question</option>
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
+              <Box component="select" value={createForm.techProjectId ?? ''}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, techProjectId: e.target.value || undefined }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="">— Aucun projet —</option>
+                {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </Box>
+            </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
+              <Box component="select" value={createForm.assignedToId ?? ''}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, assignedToId: e.target.value || undefined }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="">— Non assigné —</option>
+                {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+              </Box>
+            </Box>
+          </Box>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mb: '8px' }}>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
+              <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'var(--muted)', cursor: 'default', lineHeight: 1, flexShrink: 0 }}>i</Box>
+              </Tooltip>
+            </Box>
+            <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} />
+          </Box>
+          <Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
+            <Box component="textarea" rows={5} placeholder="Décrivez le problème..." value={createForm.description}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </Box>
+        </Box>
+      </AppModal>
+
+      <AppModal
+        open={!!editTarget}
+        onClose={() => !editSaving && setEditTarget(null)}
+        title="Modifier le ticket"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)} disabled={editSaving}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEdit} disabled={!editForm.title.trim() || editSaving}>
+              {editSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre *</Box>
+            <Box component="input" autoFocus type="text" value={editForm.title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+            />
+          </Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
+              <Box component="select" value={editForm.priority}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, priority: e.target.value }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="critical">Critique</option>
+                <option value="high">Haute</option>
+                <option value="medium">Moyenne</option>
+                <option value="low">Basse</option>
+              </Box>
+            </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
+              <Box component="select" value={editForm.type}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, type: e.target.value }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="bug">Bug</option>
+                <option value="feature">Évolution</option>
+                <option value="security">Sécurité</option>
+                <option value="performance">Performance</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="question">Question</option>
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
+              <Box component="select" value={editForm.techProjectId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="">— Aucun projet —</option>
+                {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </Box>
+            </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
+              <Box component="select" value={editForm.assignedToId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}
+                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+              >
+                <option value="">— Non assigné —</option>
+                {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+              </Box>
+            </Box>
+          </Box>
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
+              <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
+              </Tooltip>
+            </Box>
+            <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} />
+          </Box>
+          <Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
+            <Box component="textarea" rows={5} value={editForm.description}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </Box>
+        </Box>
+      </AppModal>
+
+      {deleteTarget && (
+        <Box
+          className="d-flex align-items-center justify-content-center"
+          sx={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000 }}
+        >
+          <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", p: "28px 32px", width: "380px", maxWidth: "90vw" }}>
+            <Box sx={{ fontWeight: 700, fontSize: "15px", mb: "10px" }}>Supprimer ce ticket ?</Box>
+            <Box sx={{ fontSize: "13px", color: "var(--muted2)", mb: "20px" }}>
+              Cette action est irréversible. Le ticket <strong>{deleteTarget.reference}</strong> sera définitivement supprimé.
+            </Box>
+            <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <Box
+                component="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "var(--r)", p: "7px 16px", fontSize: "12px", fontWeight: 600, color: "var(--text)", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Annuler
+              </Box>
+              <Box
+                component="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                sx={{ background: "#ef4444", border: "none", borderRadius: "var(--r)", p: "7px 16px", fontSize: "12px", fontWeight: 600, color: "#fff", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: deleting ? 0.7 : 1 }}
+              >
+                {deleting ? "Suppression..." : "Supprimer définitivement"}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      )}
     </>
   );
 };
