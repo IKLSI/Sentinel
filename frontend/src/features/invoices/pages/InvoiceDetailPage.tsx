@@ -2,11 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Topbar } from '../../../layouts/Topbar'
 import CircularProgress from '@mui/material/CircularProgress'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
+import { AppModal } from '../../../components/AppModal'
 import Paper from '@mui/material/Paper'
 import Box from '@mui/material/Box'
 import { useToast } from '../../../hooks/useToast'
@@ -278,54 +275,63 @@ export const InvoiceDetailPage: React.FC = () => {
         </Box>
       </Box>
 
-      <Dialog open={showSendModal} onClose={() => setShowSendModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
-        <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Envoyer la facture</DialogTitle>
-        <DialogContent sx={{ pt: '16px !important' }}>
-          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            Marquer la facture <strong>{invoice.reference}</strong> ({fmtEur(invoice.totalWithTax)}) comme envoyée à <strong>{invoice.label}</strong> ?
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: '16px', pt: 0 }}>
-          <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowSendModal(false)}>Annuler</Button>
-          <Button variant="contained" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handleSend} disabled={actionLoading}>
-            <SendOutlined sx={{ fontSize: 14 }} />
-            {actionLoading ? 'Envoi...' : "Confirmer l'envoi"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AppModal
+        open={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        title="Envoyer la facture"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowSendModal(false)}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handleSend} disabled={actionLoading}>
+              <SendOutlined sx={{ fontSize: 14 }} />
+              {actionLoading ? 'Envoi...' : "Confirmer l'envoi"}
+            </Button>
+          </>
+        }
+      >
+        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          Marquer la facture <strong>{invoice.reference}</strong> ({fmtEur(invoice.totalWithTax)}) comme envoyée à <strong>{invoice.label}</strong> ?
+        </Box>
+      </AppModal>
 
-      <Dialog open={showPayModal} onClose={() => setShowPayModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
-        <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Confirmer le paiement</DialogTitle>
-        <DialogContent sx={{ pt: '16px !important' }}>
-          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            Enregistrer le paiement de <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture <strong>{invoice.reference}</strong> ?
-            La date de paiement sera enregistrée à aujourd'hui.
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: '16px', pt: 0 }}>
-          <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowPayModal(false)}>Annuler</Button>
-          <Button variant="contained" size="small" sx={{ textTransform: 'none', background: 'var(--green)', borderColor: 'var(--green)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handlePay} disabled={actionLoading}>
-            <CheckCircleOutlined sx={{ fontSize: 14 }} />
-            {actionLoading ? 'Enregistrement...' : 'Confirmer le paiement'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AppModal
+        open={showPayModal}
+        onClose={() => setShowPayModal(false)}
+        title="Confirmer le paiement"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowPayModal(false)}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: 'none', background: 'var(--green)', borderColor: 'var(--green)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handlePay} disabled={actionLoading}>
+              <CheckCircleOutlined sx={{ fontSize: 14 }} />
+              {actionLoading ? 'Enregistrement...' : 'Confirmer le paiement'}
+            </Button>
+          </>
+        }
+      >
+        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          Enregistrer le paiement de <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture <strong>{invoice.reference}</strong> ?
+          La date de paiement sera enregistrée à aujourd'hui.
+        </Box>
+      </AppModal>
 
-      <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
-        <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Supprimer le brouillon</DialogTitle>
-        <DialogContent sx={{ pt: '16px !important' }}>
-          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            Supprimer définitivement le brouillon <strong>{invoice.reference}</strong> ?
-            Cette action est irréversible.
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: '16px', pt: 0 }}>
-          <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
-          <Button variant="contained" color="error" size="small" sx={{ textTransform: 'none' }} onClick={handleDelete} disabled={actionLoading}>
-            {actionLoading ? 'Suppression...' : 'Supprimer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AppModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Supprimer le brouillon"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
+            <Button variant="contained" color="error" size="small" sx={{ textTransform: 'none' }} onClick={handleDelete} disabled={actionLoading}>
+              {actionLoading ? 'Suppression...' : 'Supprimer'}
+            </Button>
+          </>
+        }
+      >
+        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          Supprimer définitivement le brouillon <strong>{invoice.reference}</strong> ?
+          Cette action est irréversible.
+        </Box>
+      </AppModal>
     </>
   )
 }

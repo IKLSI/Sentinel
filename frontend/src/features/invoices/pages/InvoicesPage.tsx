@@ -3,11 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { AppModal } from "../../../components/AppModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
@@ -555,136 +552,125 @@ export const InvoicesPage: React.FC = () => {
         )}
       </Box>
 
-      <Dialog
+      <AppModal
         open={showNewModal}
         onClose={() => setShowNewModal(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title="Nouvelle facture"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowNewModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleGenerate}
+              disabled={generating || !newLabel.trim() || !user?.organizationId}
+            >
+              {generating ? "Génération..." : "Générer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Nouvelle facture
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            <Box sx={{ mb: "14px" }}>
-              <Box component="label" sx={labelSx}>
-                Libellé <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
-              </Box>
-              <Box
-                component="input"
-                type="text"
-                sx={inputSx}
-                value={newLabel}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLabel(e.target.value)}
-                placeholder="Ex : Prestation TMA - Mars 2026"
-              />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <Box sx={{ mb: "14px" }}>
+            <Box component="label" sx={labelSx}>
+              Libellé <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
             </Box>
-            <Box sx={{ mb: "14px" }}>
-              <Box component="label" sx={labelSx}>
-                Projet associé{" "}
-                <Box component="span" sx={{ color: "var(--muted)", fontSize: "11px" }}>
-                  (optionnel)
-                </Box>
-              </Box>
-              <Box
-                component="select"
-                sx={inputSx}
-                value={selectedProjectId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProjectId(e.target.value)}
-              >
-                <option value="">— Aucun projet —</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
+            <Box
+              component="input"
+              type="text"
+              sx={inputSx}
+              value={newLabel}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLabel(e.target.value)}
+              placeholder="Ex : Prestation TMA - Mars 2026"
+            />
+          </Box>
+          <Box sx={{ mb: "14px" }}>
+            <Box component="label" sx={labelSx}>
+              Projet associé{" "}
+              <Box component="span" sx={{ color: "var(--muted)", fontSize: "11px" }}>
+                (optionnel)
               </Box>
             </Box>
+            <Box
+              component="select"
+              sx={inputSx}
+              value={selectedProjectId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProjectId(e.target.value)}
+            >
+              <option value="">— Aucun projet —</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Box>
+          </Box>
+          <Box sx={{ mb: "14px" }}>
+            <Box component="label" sx={labelSx}>
+              Taux journalier (€){" "}
+              <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
+            </Box>
+            <Box
+              component="input"
+              type="number"
+              sx={inputSx}
+              value={newDailyRate}
+              min={0}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDailyRate(Number(e.target.value))}
+              placeholder="500"
+            />
+          </Box>
+          <Box sx={{ mb: "14px" }}>
+            <Box component="label" sx={labelSx}>Période</Box>
+            <Box
+              component="input"
+              type="month"
+              sx={inputSx}
+              value={newPeriod}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPeriod(e.target.value)}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "12px",
+            }}
+          >
             <Box sx={{ mb: "14px" }}>
-              <Box component="label" sx={labelSx}>
-                Taux journalier (€){" "}
-                <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
-              </Box>
+              <Box component="label" sx={labelSx}>TVA (%)</Box>
               <Box
                 component="input"
                 type="number"
                 sx={inputSx}
-                value={newDailyRate}
+                value={newTaxRate}
                 min={0}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDailyRate(Number(e.target.value))}
-                placeholder="500"
+                max={100}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTaxRate(Number(e.target.value))}
               />
             </Box>
             <Box sx={{ mb: "14px" }}>
-              <Box component="label" sx={labelSx}>Période</Box>
+              <Box component="label" sx={labelSx}>Délai paiement (jours)</Box>
               <Box
                 component="input"
-                type="month"
+                type="number"
                 sx={inputSx}
-                value={newPeriod}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPeriod(e.target.value)}
+                value={newDueDays}
+                min={0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDueDays(Number(e.target.value))}
               />
             </Box>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "12px",
-              }}
-            >
-              <Box sx={{ mb: "14px" }}>
-                <Box component="label" sx={labelSx}>TVA (%)</Box>
-                <Box
-                  component="input"
-                  type="number"
-                  sx={inputSx}
-                  value={newTaxRate}
-                  min={0}
-                  max={100}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTaxRate(Number(e.target.value))}
-                />
-              </Box>
-              <Box sx={{ mb: "14px" }}>
-                <Box component="label" sx={labelSx}>Délai paiement (jours)</Box>
-                <Box
-                  component="input"
-                  type="number"
-                  sx={inputSx}
-                  value={newDueDays}
-                  min={0}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDueDays(Number(e.target.value))}
-                />
-              </Box>
-            </Box>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setShowNewModal(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleGenerate}
-            disabled={generating || !newLabel.trim() || !user?.organizationId}
-          >
-            {generating ? "Génération..." : "Générer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </AppModal>
     </>
   );
 };
