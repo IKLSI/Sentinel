@@ -21,12 +21,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
-import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import { getTickets, changeStatus } from "../api/tickets";
 import { TicketStatus, TicketPriority, Ticket } from "../../../types";
-import AddOutlined from "@mui/icons-material/AddOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
@@ -35,6 +34,7 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutline";
+
 
 interface KanbanTicket {
   id: string;
@@ -57,12 +57,6 @@ const priorityColors: Record<TicketPriority, string> = {
   low: "var(--green)",
 };
 
-const priorityLabels: Record<TicketPriority, string> = {
-  critical: "Critique",
-  high: "Haute",
-  medium: "Moyenne",
-  low: "Basse",
-};
 
 const typeColors: Record<KanbanTicket["type"], string> = {
   bug: "var(--red)",
@@ -83,21 +77,21 @@ const typeLabels: Record<KanbanTicket["type"], string> = {
 };
 
 const typeIcons: Record<KanbanTicket["type"], React.ReactNode> = {
-  bug: <BugReportOutlined sx={{ fontSize: 11 }} />,
-  feature: <AutoFixHighOutlined sx={{ fontSize: 11 }} />,
-  security: <SecurityOutlined sx={{ fontSize: 11 }} />,
-  performance: <SpeedOutlined sx={{ fontSize: 11 }} />,
-  maintenance: <BuildOutlined sx={{ fontSize: 11 }} />,
-  question: <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
+  bug: <BugReportOutlined sx={{ fontSize: 10 }} />,
+  feature: <AutoFixHighOutlined sx={{ fontSize: 10 }} />,
+  security: <SecurityOutlined sx={{ fontSize: 10 }} />,
+  performance: <SpeedOutlined sx={{ fontSize: 10 }} />,
+  maintenance: <BuildOutlined sx={{ fontSize: 10 }} />,
+  question: <HelpOutlineOutlined sx={{ fontSize: 10 }} />,
 };
 
-const columnMeta: Record<TicketStatus, { label: string; color: string; pastel: string }> = {
-  new: { label: "Nouveau", color: "var(--accent)", pastel: "#a5b4fc" },
-  analysis: { label: "En analyse", color: "var(--cyan)", pastel: "#a5f3fc" },
-  in_progress: { label: "En cours", color: "var(--orange)", pastel: "#fdba74" },
-  testing: { label: "En test", color: "var(--purple)", pastel: "#d8b4fe" },
-  resolved: { label: "Résolu", color: "var(--green)", pastel: "#86efac" },
-  closed: { label: "Fermé", color: "var(--muted2)", pastel: "#cbd5e1" },
+const columnMeta: Record<TicketStatus, { label: string; color: string; subtle: string; border: string }> = {
+  new:         { label: "Nouveau",    color: "var(--accent)",  subtle: "var(--accent-subtle)",  border: "var(--accent-border)" },
+  analysis:    { label: "En analyse", color: "var(--cyan)",    subtle: "var(--cyan-subtle)",    border: "rgba(6,182,212,0.28)" },
+  in_progress: { label: "En cours",   color: "var(--orange)",  subtle: "var(--orange-subtle)",  border: "rgba(249,115,22,0.28)" },
+  testing:     { label: "En test",    color: "var(--purple)",  subtle: "var(--purple-subtle)",  border: "rgba(168,85,247,0.28)" },
+  resolved:    { label: "Résolu",     color: "var(--green)",   subtle: "var(--green-subtle)",   border: "rgba(34,197,94,0.28)" },
+  closed:      { label: "Fermé",      color: "var(--muted2)",  subtle: "rgba(116,136,170,0.10)", border: "rgba(116,136,170,0.22)" },
 };
 
 const columnOrder: TicketStatus[] = [
@@ -169,8 +163,15 @@ function fmtSlaCompact(deadline: string): { label: string; color: string; bg: st
   else if (totalH < 24) label = mins > 0 ? `${totalH}h ${mins}m` : `${totalH}h`;
   else label = hours > 0 ? `${days}j ${hours}h` : `${days}j`;
 
-  const color = totalMin < 60 ? "var(--red)" : totalH < 4 ? "var(--orange)" : totalH < 24 ? "var(--yellow)" : "var(--muted)";
-  const bg = totalMin < 60 ? "var(--red-subtle)" : totalH < 4 ? "var(--orange-subtle)" : "transparent";
+  const color =
+    totalMin < 60 ? "var(--red)"
+    : totalH < 4 ? "var(--orange)"
+    : totalH < 24 ? "var(--yellow)"
+    : "var(--muted)";
+  const bg =
+    totalMin < 60 ? "var(--red-subtle)"
+    : totalH < 4 ? "var(--orange-subtle)"
+    : "transparent";
   return { label, color, bg };
 }
 
@@ -228,45 +229,30 @@ function TicketCard({
       onClick={() => !isDragging && navigate(`/tickets/${ticket.id}`)}
       sx={{
         background: isUpdating ? "var(--accent-subtle)" : "var(--s1)",
-        border: `1px solid ${
-          isDragging
-            ? "var(--accent-border)"
-            : isUpdating
-              ? "var(--accent-border)"
-              : "var(--border)"
-        }`,
+        border: "1px solid var(--border)",
         borderRadius: "var(--r)",
-        padding: "10px 12px",
+        padding: "9px 13px 11px",
         cursor: isDragging ? "grabbing" : "pointer",
-        boxShadow: isDragging ? "var(--shadow-lg)" : "var(--shadow)",
+        boxShadow: isDragging
+          ? "0 20px 48px rgba(0,0,0,0.55), 0 6px 16px rgba(0,0,0,0.3)"
+          : `inset 0 2px 0 ${priorityColor}60, 0 1px 3px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)`,
         userSelect: "none",
-        opacity: isUpdating ? 0.65 : 1,
-        transition:
-          "border-color 0.15s, opacity 0.2s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s",
+        opacity: isUpdating ? 0.6 : 1,
+        transition: "opacity 0.2s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s",
         animation: justDropped
           ? "kanbanLand 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
           : undefined,
         willChange: "transform",
-        "&:hover": !isDragging ? {
-          borderColor: "var(--border2)",
-          boxShadow: "var(--shadow-md)",
-          transform: "translateY(-2px)",
-        } : {},
+        "&:hover": !isDragging
+          ? {
+              boxShadow: "0 6px 20px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.09)",
+              transform: "translateY(-2px)",
+            }
+          : {},
       }}
     >
-      <Box className="d-flex align-items-center justify-content-between" sx={{ mb: "6px", gap: "6px" }}>
-        <Box
-          component="span"
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "var(--accent)",
-            letterSpacing: "0.04em",
-          }}
-        >
-          {ticket.reference}
-        </Box>
+      {/* Header: type badge */}
+      <Box sx={{ mb: "9px", ml: "-5px" }}>
         <Box
           component="span"
           sx={{
@@ -276,11 +262,9 @@ function TicketCard({
             fontSize: "10px",
             fontWeight: 600,
             color: typeColor,
-            background: `${typeColor}15`,
-            border: `1px solid ${typeColor}30`,
+            background: `${typeColor}12`,
             borderRadius: "4px",
-            padding: "1px 6px",
-            flexShrink: 0,
+            padding: "2px 7px 2px 5px",
           }}
         >
           {typeIcons[ticket.type]}
@@ -288,71 +272,92 @@ function TicketCard({
         </Box>
       </Box>
 
+      {/* Title */}
       <Box
         sx={{
           fontSize: "13px",
           fontWeight: 600,
-          lineHeight: 1.4,
+          lineHeight: 1.5,
           color: "var(--text)",
-          mb: "8px",
+          mb: "11px",
           display: "-webkit-box",
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
           overflow: "hidden",
+          letterSpacing: "-0.015em",
         }}
       >
         {ticket.title}
       </Box>
 
-      <Box className="d-flex align-items-center" sx={{ gap: "5px" }}>
+      {/* Footer */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
         <Box
-          component="span"
-          className="d-inline-flex align-items-center flex-shrink-0"
-          sx={{ gap: "3px", fontSize: "10px", fontWeight: 700, color: priorityColor }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            flex: 1,
+            overflow: "hidden",
+            minWidth: 0,
+          }}
         >
           <Box
             component="span"
             sx={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: priorityColor,
-              display: "inline-block",
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              fontWeight: 600,
+              color: "var(--muted)",
+              letterSpacing: "0.04em",
+              flexShrink: 0,
             }}
-          />
-          {priorityLabels[ticket.priority]}
-        </Box>
-        {ticket.project && (
-          <Box
-            component="span"
-            className="text-truncate"
-            sx={{ fontSize: "10px", color: "var(--muted2)", flex: 1 }}
           >
-            · {ticket.project}
+            {ticket.reference}
           </Box>
-        )}
-        <Box className="d-flex align-items-center flex-shrink-0" sx={{ ml: "auto", gap: "5px" }}>
+          {ticket.project && (
+            <>
+              <Box component="span" sx={{ fontSize: "9px", color: "var(--border2)", flexShrink: 0 }}>·</Box>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: "10px",
+                  color: "var(--muted2)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {ticket.project}
+              </Box>
+            </>
+          )}
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
           <SlaChip deadline={ticket.slaDeadline} breached={ticket.slaBreached} />
           {ticket.assigneeInitials && (
-            <Box
-              sx={{
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                background: "var(--accent-subtle)",
-                border: "1px solid var(--accent-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "8px",
-                fontWeight: 700,
-                color: "var(--accent)",
-                fontFamily: "var(--font-mono)",
-                flexShrink: 0,
-              }}
-            >
-              {ticket.assigneeInitials}
-            </Box>
+            <Tooltip title={ticket.assigneeInitials} placement="top" arrow>
+              <Box
+                sx={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background: "var(--accent-subtle)",
+                  border: "1.5px solid var(--accent-border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "8px",
+                  fontWeight: 700,
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-mono)",
+                  flexShrink: 0,
+                }}
+              >
+                {ticket.assigneeInitials}
+              </Box>
+            </Tooltip>
           )}
         </Box>
       </Box>
@@ -369,13 +374,8 @@ function SortableCard({
   updatingId: string | null;
   justDroppedId: string | null;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useSortable({ id: ticket.id });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useSortable({ id: ticket.id });
 
   return (
     <Box
@@ -401,12 +401,12 @@ function SortableCard({
 function DroppableColumn({
   colId,
   isOver,
-  color,
+  subtle,
   children,
 }: {
   colId: string;
   isOver: boolean;
-  color: string;
+  subtle: string;
   children: React.ReactNode;
 }) {
   const { setNodeRef } = useDroppable({ id: colId });
@@ -417,15 +417,15 @@ function DroppableColumn({
       sx={{
         flex: 1,
         minHeight: "120px",
-        background: isOver ? `${color}0d` : "var(--s2)",
-        border: `1px solid ${isOver ? color : "var(--border2)"}`,
+        background: isOver ? subtle : "var(--s2)",
         borderRadius: "var(--r)",
-        padding: "8px",
+        padding: "10px",
         display: "flex",
         flexDirection: "column",
         gap: "8px",
-        transition: "background 0.2s, border-color 0.2s",
+        transition: "background 0.2s",
         overflowY: "auto",
+        boxShadow: "inset 0 1px 3px rgba(0,0,0,0.08)",
       }}
     >
       {children}
@@ -434,7 +434,6 @@ function DroppableColumn({
 }
 
 export const KanbanPage: React.FC = () => {
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const [columns, setColumns] = useState<KanbanColumns>(emptyColumns());
   const [loading, setLoading] = useState(true);
@@ -543,33 +542,10 @@ export const KanbanPage: React.FC = () => {
     }
   };
 
-  const totalTickets = Object.values(columns).reduce(
-    (s, col) => s + col.length,
-    0,
-  );
 
   return (
     <>
-      <Topbar
-        title="Kanban"
-        subtitle={`${totalTickets} tickets`}
-        actions={
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              textTransform: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-            onClick={() => navigate("/tickets/new")}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-            Nouveau ticket
-          </Button>
-        }
-      />
+      <Topbar title="" />
 
       {loading && (
         <Box
@@ -598,60 +574,66 @@ export const KanbanPage: React.FC = () => {
           >
             <Box
               className="d-flex"
-              sx={{ gap: "12px", minWidth: "fit-content", height: "100%" }}
+              sx={{ gap: "14px", minWidth: "fit-content", height: "100%" }}
             >
               {columnOrder.map((colId) => {
                 const meta = columnMeta[colId];
                 const colTickets = columns[colId];
-
                 return (
                   <Box
                     key={colId}
                     className="d-flex flex-column flex-shrink-0"
-                    sx={{ width: "280px" }}
+                    sx={{ width: "296px" }}
                   >
+                    {/* Title card */}
                     <Box
-                      className="d-flex align-items-center"
                       sx={{
-                        gap: "8px",
-                        mb: "10px",
-                        padding: "8px 12px",
-                        background: `${meta.color}10`,
-                        border: `1px solid ${meta.color}25`,
-                        borderRadius: "var(--r-sm)",
+                        mb: "22px",
+                        padding: "11px 14px",
+                        background: "var(--s1)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--r)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.07)",
                       }}
                     >
-                      <Box
-                        component="span"
-                        sx={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: meta.color,
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          flex: 1,
-                        }}
-                      >
-                        {meta.label}
-                      </Box>
-                      <Box
-                        component="span"
-                        sx={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          background: meta.pastel,
-                          color: "#1e293b",
-                          padding: "2px 8px",
-                          borderRadius: "10px",
-                          minWidth: "24px",
-                          textAlign: "center",
-                        }}
-                      >
-                        {colTickets.length}
+                      <Box className="d-flex align-items-center" sx={{ gap: "8px" }}>
+                        <Box
+                          component="span"
+                          sx={{
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            color: "var(--text)",
+                            letterSpacing: "-0.01em",
+                            flex: 1,
+                          }}
+                        >
+                          {meta.label}
+                        </Box>
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minWidth: "26px",
+                            height: "26px",
+                            padding: "0 6px",
+                            borderRadius: "99px",
+                            background: meta.subtle,
+                            border: `1px solid ${meta.border}`,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: meta.color,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {colTickets.length}
+                        </Box>
                       </Box>
                     </Box>
 
+                    {/* Content card */}
                     <SortableContext
                       items={colTickets.map((t) => t.id)}
                       strategy={verticalListSortingStrategy}
@@ -659,7 +641,7 @@ export const KanbanPage: React.FC = () => {
                       <DroppableColumn
                         colId={colId}
                         isOver={overColumn === colId}
-                        color={meta.color}
+                        subtle={meta.subtle}
                       >
                         {colTickets.map((ticket) => (
                           <SortableCard
@@ -671,10 +653,18 @@ export const KanbanPage: React.FC = () => {
                         ))}
                         {colTickets.length === 0 && (
                           <Box
-                            className="d-flex align-items-center justify-content-center flex-grow-1"
-                            sx={{ minHeight: "80px", opacity: 0.25, color: "var(--muted)" }}
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flex: 1,
+                              minHeight: "100px",
+                              gap: "8px",
+                              opacity: 0.35,
+                            }}
                           >
-                            <ConfirmationNumberOutlined sx={{ fontSize: 22 }} />
+                            <ConfirmationNumberOutlined sx={{ fontSize: 22, color: "var(--muted)" }} />
                           </Box>
                         )}
                       </DroppableColumn>
@@ -684,9 +674,7 @@ export const KanbanPage: React.FC = () => {
               })}
             </Box>
 
-            <DragOverlay
-              dropAnimation={null}
-            >
+            <DragOverlay dropAnimation={null}>
               {activeTicket && (
                 <Box
                   sx={{
