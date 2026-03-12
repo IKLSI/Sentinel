@@ -2,11 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { AppModal } from "../../../components/AppModal";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import Box from "@mui/material/Box";
 import { getUsers, createUser, updateUser } from "../api/users";
@@ -349,250 +346,33 @@ export const UsersPage: React.FC = () => {
         )}
       </Box>
 
-      <Dialog
+      <AppModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
-      >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Nouvel utilisateur
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <form onSubmit={handleCreate}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "14px",
-              }}
+        title="Nouvel utilisateur"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setCreateModalOpen(false)}
             >
-              <Box sx={{ mb: "14px" }}>
-                <Box
-                  component="label"
-                  sx={{
-                    display: "block",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    mb: "5px",
-                    color: "var(--muted2)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Prénom *
-                </Box>
-                <Box
-                  component="input"
-                  type="text"
-                  sx={{
-                    background: "var(--s1)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--r)",
-                    px: "12px",
-                    py: "8px",
-                    fontSize: "13px",
-                    color: "var(--text)",
-                    width: "100%",
-                    outline: "none",
-                    fontFamily: "inherit",
-                  }}
-                  value={form.firstName}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setForm((f) => ({ ...f, firstName: e.target.value }))
-                  }
-                />
-              </Box>
-              <Box sx={{ mb: "14px" }}>
-                <Box
-                  component="label"
-                  sx={{
-                    display: "block",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    mb: "5px",
-                    color: "var(--muted2)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Nom *
-                </Box>
-                <Box
-                  component="input"
-                  type="text"
-                  sx={{
-                    background: "var(--s1)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--r)",
-                    px: "12px",
-                    py: "8px",
-                    fontSize: "13px",
-                    color: "var(--text)",
-                    width: "100%",
-                    outline: "none",
-                    fontFamily: "inherit",
-                  }}
-                  value={form.lastName}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setForm((f) => ({ ...f, lastName: e.target.value }))
-                  }
-                />
-              </Box>
-            </Box>
-            <Box sx={{ mb: "14px" }}>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Email *
-              </Box>
-              <Box
-                component="input"
-                type="email"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-              />
-            </Box>
-            <Box sx={{ mb: "14px" }}>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Rôle
-              </Box>
-              <Box
-                component="select"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.role}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setForm((f) => ({ ...f, role: e.target.value as UserRole }))
-                }
-              >
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="technician">Technicien</option>
-              </Box>
-            </Box>
-            <Box sx={{ mb: "14px" }}>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Mot de passe temporaire *
-              </Box>
-              <Box
-                component="input"
-                type="password"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                value={form.password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setForm((f) => ({ ...f, password: e.target.value }))
-                }
-              />
-            </Box>
-          </form>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setCreateModalOpen(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleCreate}
-            disabled={submitting}
-          >
-            {submitting ? <CircularProgress size={16} /> : "Créer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={!!editUser}
-        onClose={() => setEditUser(null)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleCreate}
+              disabled={submitting}
+            >
+              {submitting ? <CircularProgress size={16} /> : "Créer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Modifier l'utilisateur
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
+        <form onSubmit={handleCreate}>
           <Box
             sx={{
               display: "grid",
@@ -612,7 +392,7 @@ export const UsersPage: React.FC = () => {
                   letterSpacing: "0.04em",
                 }}
               >
-                Prénom
+                Prénom *
               </Box>
               <Box
                 component="input"
@@ -629,9 +409,9 @@ export const UsersPage: React.FC = () => {
                   outline: "none",
                   fontFamily: "inherit",
                 }}
-                value={editForm.firstName}
+                value={form.firstName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEditForm((f) => ({ ...f, firstName: e.target.value }))
+                  setForm((f) => ({ ...f, firstName: e.target.value }))
                 }
               />
             </Box>
@@ -647,7 +427,7 @@ export const UsersPage: React.FC = () => {
                   letterSpacing: "0.04em",
                 }}
               >
-                Nom
+                Nom *
               </Box>
               <Box
                 component="input"
@@ -664,14 +444,49 @@ export const UsersPage: React.FC = () => {
                   outline: "none",
                   fontFamily: "inherit",
                 }}
-                value={editForm.lastName}
+                value={form.lastName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEditForm((f) => ({ ...f, lastName: e.target.value }))
+                  setForm((f) => ({ ...f, lastName: e.target.value }))
                 }
               />
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ mb: "14px" }}>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Email *
+            </Box>
+            <Box
+              component="input"
+              type="email"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setForm((f) => ({ ...f, email: e.target.value }))
+              }
+            />
+          </Box>
+          <Box sx={{ mb: "14px" }}>
             <Box
               component="label"
               sx={{
@@ -699,12 +514,9 @@ export const UsersPage: React.FC = () => {
                 outline: "none",
                 fontFamily: "inherit",
               }}
-              value={editForm.role}
+              value={form.role}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setEditForm((f) => ({
-                  ...f,
-                  role: e.target.value as UserRole,
-                }))
+                setForm((f) => ({ ...f, role: e.target.value as UserRole }))
               }
             >
               <option value="admin">Admin</option>
@@ -712,27 +524,190 @@ export const UsersPage: React.FC = () => {
               <option value="technician">Technicien</option>
             </Box>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setEditUser(null)}
+          <Box sx={{ mb: "14px" }}>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Mot de passe temporaire *
+            </Box>
+            <Box
+              component="input"
+              type="password"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={form.password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setForm((f) => ({ ...f, password: e.target.value }))
+              }
+            />
+          </Box>
+        </form>
+      </AppModal>
+
+      <AppModal
+        open={!!editUser}
+        onClose={() => setEditUser(null)}
+        title="Modifier l'utilisateur"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setEditUser(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleEdit}
+              disabled={submitting}
+            >
+              {submitting ? <CircularProgress size={16} /> : "Sauvegarder"}
+            </Button>
+          </>
+        }
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "14px",
+          }}
+        >
+          <Box sx={{ mb: "14px" }}>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Prénom
+            </Box>
+            <Box
+              component="input"
+              type="text"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={editForm.firstName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEditForm((f) => ({ ...f, firstName: e.target.value }))
+              }
+            />
+          </Box>
+          <Box sx={{ mb: "14px" }}>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Nom
+            </Box>
+            <Box
+              component="input"
+              type="text"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              value={editForm.lastName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEditForm((f) => ({ ...f, lastName: e.target.value }))
+              }
+            />
+          </Box>
+        </Box>
+        <Box>
+          <Box
+            component="label"
+            sx={{
+              display: "block",
+              fontSize: "11px",
+              fontWeight: 600,
+              mb: "5px",
+              color: "var(--muted2)",
+              letterSpacing: "0.04em",
+            }}
           >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleEdit}
-            disabled={submitting}
+            Rôle
+          </Box>
+          <Box
+            component="select"
+            sx={{
+              background: "var(--s1)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r)",
+              px: "12px",
+              py: "8px",
+              fontSize: "13px",
+              color: "var(--text)",
+              width: "100%",
+              outline: "none",
+              fontFamily: "inherit",
+            }}
+            value={editForm.role}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              setEditForm((f) => ({
+                ...f,
+                role: e.target.value as UserRole,
+              }))
+            }
           >
-            {submitting ? <CircularProgress size={16} /> : "Sauvegarder"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="technician">Technicien</option>
+          </Box>
+        </Box>
+      </AppModal>
     </>
   );
 };
