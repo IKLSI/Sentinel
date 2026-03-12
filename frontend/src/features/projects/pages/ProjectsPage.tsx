@@ -2,11 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Topbar } from "../../../layouts/Topbar";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { AppModal } from "../../../components/AppModal";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import { useToast } from "../../../hooks/useToast";
 import { useNavigate } from "react-router-dom";
@@ -255,267 +252,234 @@ export const ProjectsPage: React.FC = () => {
         </Box>
       )}
 
-      <Dialog
+      <AppModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title="Nouveau projet"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleSubmit}
+              disabled={!formName.trim() || submitting}
+            >
+              {submitting ? "Création..." : "Créer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Nouveau projet
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Nom du projet *
-              </Box>
-              <Box
-                component="input"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                type="text"
-                placeholder="Ex : API Paiement v2"
-                value={formName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormName(e.target.value)}
-              />
+        <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Nom du projet *
             </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                URL dépôt (optionnel)
-              </Box>
-              <Box
-                component="input"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                type="text"
-                placeholder="https://github.com/org/repo"
-                value={formRepoUrl}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormRepoUrl(e.target.value)}
-              />
-            </Box>
+            <Box
+              component="input"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              type="text"
+              placeholder="Ex : API Paiement v2"
+              value={formName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormName(e.target.value)}
+            />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setShowModal(false)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleSubmit}
-            disabled={!formName.trim() || submitting}
-          >
-            {submitting ? "Création..." : "Créer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              URL dépôt (optionnel)
+            </Box>
+            <Box
+              component="input"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              type="text"
+              placeholder="https://github.com/org/repo"
+              value={formRepoUrl}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormRepoUrl(e.target.value)}
+            />
+          </Box>
+        </Box>
+      </AppModal>
 
-      <Dialog
+      <AppModal
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title="Modifier le projet"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setEditTarget(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleEdit}
+              disabled={!editName.trim() || editSaving}
+            >
+              {editSaving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Modifier le projet
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Nom du projet *
-              </Box>
-              <Box
-                component="input"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                type="text"
-                value={editName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value)}
-              />
+        <Box className="d-flex flex-column" sx={{ gap: "14px" }}>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Nom du projet *
             </Box>
-            <Box>
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  mb: "5px",
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                URL dépôt (optionnel)
-              </Box>
-              <Box
-                component="input"
-                sx={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r)",
-                  px: "12px",
-                  py: "8px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  width: "100%",
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                type="text"
-                placeholder="https://github.com/org/repo"
-                value={editRepoUrl}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditRepoUrl(e.target.value)}
-              />
-            </Box>
+            <Box
+              component="input"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              type="text"
+              value={editName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value)}
+            />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setEditTarget(null)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleEdit}
-            disabled={!editName.trim() || editSaving}
-          >
-            {editSaving ? "Enregistrement..." : "Enregistrer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Box>
+            <Box
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                mb: "5px",
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              URL dépôt (optionnel)
+            </Box>
+            <Box
+              component="input"
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+              type="text"
+              placeholder="https://github.com/org/repo"
+              value={editRepoUrl}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditRepoUrl(e.target.value)}
+            />
+          </Box>
+        </Box>
+      </AppModal>
 
-      <Dialog
+      <AppModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          },
-        }}
+        title="Supprimer le projet"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Suppression..." : "Supprimer"}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: "15px", fontWeight: 700, pb: 1 }}>
-          Supprimer le projet
-        </DialogTitle>
-        <DialogContent sx={{ pt: "16px !important" }}>
-          <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
-            Supprimer <strong>{deleteTarget?.name}</strong> ? Cette action
-            supprimera aussi toutes les dépendances et vulnérabilités associées.
-            Elle est irréversible.
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: "16px", pt: 0 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setDeleteTarget(null)}
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? "Suppression..." : "Supprimer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
+          Supprimer <strong>{deleteTarget?.name}</strong> ? Cette action
+          supprimera aussi toutes les dépendances et vulnérabilités associées.
+          Elle est irréversible.
+        </Box>
+      </AppModal>
     </>
   );
 };
