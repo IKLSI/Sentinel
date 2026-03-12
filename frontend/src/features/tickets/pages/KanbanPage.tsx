@@ -1,5 +1,16 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -20,7 +31,13 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 
-type KanbanType = "bug" | "feature" | "security" | "performance" | "maintenance" | "question";
+type KanbanType =
+  | "bug"
+  | "feature"
+  | "security"
+  | "performance"
+  | "maintenance"
+  | "question";
 
 interface KanbanTicket {
   id: string;
@@ -41,68 +58,104 @@ type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
 
 const priorityColors: Record<TicketPriority, string> = {
   critical: "var(--red)",
-  high:     "var(--orange)",
-  medium:   "var(--yellow)",
-  low:      "var(--green)",
+  high: "var(--orange)",
+  medium: "var(--yellow)",
+  low: "var(--green)",
 };
 
 const priorityLabels: Record<TicketPriority, string> = {
   critical: "Critique",
-  high:     "Haute",
-  medium:   "Moyenne",
-  low:      "Basse",
+  high: "Haute",
+  medium: "Moyenne",
+  low: "Basse",
 };
 
 const typeColors: Record<KanbanType, string> = {
-  bug:         "var(--red)",
-  feature:     "var(--accent)",
-  security:    "var(--orange)",
+  bug: "var(--red)",
+  feature: "var(--accent)",
+  security: "var(--orange)",
   performance: "var(--cyan)",
   maintenance: "var(--muted2)",
-  question:    "var(--purple)",
+  question: "var(--purple)",
 };
 
 const typeSubtles: Record<KanbanType, string> = {
-  bug:         "var(--red-subtle)",
-  feature:     "var(--accent-subtle)",
-  security:    "var(--orange-subtle)",
+  bug: "var(--red-subtle)",
+  feature: "var(--accent-subtle)",
+  security: "var(--orange-subtle)",
   performance: "var(--cyan-subtle)",
   maintenance: "rgba(116,136,170,0.10)",
-  question:    "var(--purple-subtle)",
+  question: "var(--purple-subtle)",
 };
 
 const typeLabels: Record<KanbanType, string> = {
-  bug:         "Bug",
-  feature:     "Feature",
-  security:    "Sécurité",
+  bug: "Bug",
+  feature: "Feature",
+  security: "Sécurité",
   performance: "Performance",
   maintenance: "Maintenance",
-  question:    "Question",
+  question: "Question",
 };
 
 const typeIcons: Record<KanbanType, React.ReactElement> = {
-  bug:         <BugReportOutlined sx={{ fontSize: 11 }} />,
-  feature:     <AutoFixHighOutlined sx={{ fontSize: 11 }} />,
-  security:    <SecurityOutlined sx={{ fontSize: 11 }} />,
+  bug: <BugReportOutlined sx={{ fontSize: 11 }} />,
+  feature: <AutoFixHighOutlined sx={{ fontSize: 11 }} />,
+  security: <SecurityOutlined sx={{ fontSize: 11 }} />,
   performance: <SpeedOutlined sx={{ fontSize: 11 }} />,
   maintenance: <BuildOutlined sx={{ fontSize: 11 }} />,
-  question:    <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
+  question: <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
 };
 
-const columnMeta: Record<TicketStatus, { label: string; color: string; subtle: string; border: string }> = {
-  new:         { label: "Nouveau",  color: "var(--accent)",  subtle: "var(--accent-subtle)",   border: "var(--accent-border)" },
-  in_progress: { label: "En cours", color: "var(--orange)",  subtle: "var(--orange-subtle)",   border: "rgba(249,115,22,0.28)" },
-  testing:     { label: "En test",  color: "var(--purple)",  subtle: "var(--purple-subtle)",   border: "rgba(168,85,247,0.28)" },
-  resolved:    { label: "Résolu",   color: "var(--green)",   subtle: "var(--green-subtle)",    border: "rgba(34,197,94,0.28)" },
-  closed:      { label: "Fermé",    color: "var(--muted2)",  subtle: "rgba(116,136,170,0.10)", border: "rgba(116,136,170,0.22)" },
+const columnMeta: Record<
+  TicketStatus,
+  { label: string; color: string; subtle: string; border: string }
+> = {
+  new: {
+    label: "Nouveau",
+    color: "var(--accent)",
+    subtle: "var(--accent-subtle)",
+    border: "var(--accent-border)",
+  },
+  in_progress: {
+    label: "En cours",
+    color: "var(--orange)",
+    subtle: "var(--orange-subtle)",
+    border: "rgba(249,115,22,0.28)",
+  },
+  testing: {
+    label: "En test",
+    color: "var(--purple)",
+    subtle: "var(--purple-subtle)",
+    border: "rgba(168,85,247,0.28)",
+  },
+  resolved: {
+    label: "Résolu",
+    color: "var(--green)",
+    subtle: "var(--green-subtle)",
+    border: "rgba(34,197,94,0.28)",
+  },
+  closed: {
+    label: "Fermé",
+    color: "var(--muted2)",
+    subtle: "rgba(116,136,170,0.10)",
+    border: "rgba(116,136,170,0.22)",
+  },
 };
 
 const columnOrder: TicketStatus[] = [
-  "new", "in_progress", "testing", "resolved", "closed",
+  "new",
+  "in_progress",
+  "testing",
+  "resolved",
+  "closed",
 ];
 
 const emptyColumns = (): KanbanColumns => ({
-  new: [], in_progress: [], testing: [], resolved: [], closed: [],
+  new: [],
+  in_progress: [],
+  testing: [],
+  resolved: [],
+  closed: [],
 });
 
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
@@ -141,23 +194,40 @@ function ticketsToColumns(tickets: Ticket[]): KanbanColumns {
   return cols;
 }
 
-function getSlaChip(deadline?: string, breached?: boolean): {
-  label: string; color: string; subtle: string;
+function getSlaChip(
+  deadline?: string,
+  breached?: boolean,
+): {
+  label: string;
+  color: string;
+  subtle: string;
 } | null {
-  if (breached) return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
+  if (breached)
+    return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
   if (!deadline) return null;
   const diff = new Date(deadline).getTime() - Date.now();
-  if (diff <= 0) return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
+  if (diff <= 0)
+    return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
   const hours = diff / 3_600_000;
   if (hours < 24) {
-    return { label: `SLA ${Math.ceil(hours)}h`, color: "var(--orange)", subtle: "var(--orange-subtle)" };
+    return {
+      label: `SLA ${Math.ceil(hours)}h`,
+      color: "var(--orange)",
+      subtle: "var(--orange-subtle)",
+    };
   }
   return null;
 }
 
 // ─── Filter bar ──────────────────────────────────────────────────────────────
 
-function FilterBar({ search, onSearch }: { search: string; onSearch: (v: string) => void }) {
+function FilterBar({
+  search,
+  onSearch,
+}: {
+  search: string;
+  onSearch: (v: string) => void;
+}) {
   return (
     <Box
       sx={{
@@ -169,21 +239,36 @@ function FilterBar({ search, onSearch }: { search: string; onSearch: (v: string)
     >
       <Box
         sx={{
-          flex: "0 0 295px", display: "flex", alignItems: "center", gap: "8px",
-          background: "var(--s1)", border: "1px solid var(--border)",
-          borderRadius: "9px", px: "10px", height: "32px",
+          flex: "0 0 295px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "9px",
+          px: "10px",
+          height: "32px",
           transition: "border-color 0.15s, box-shadow 0.15s",
-          "&:focus-within": { borderColor: "var(--accent-border)", boxShadow: "0 0 0 3px rgba(99,102,241,0.08)" },
+          "&:focus-within": {
+            borderColor: "var(--accent-border)",
+            boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+          },
         }}
       >
-        <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
+        <SearchOutlined
+          sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
+        />
         <Box
           component="input"
           placeholder="Rechercher..."
           value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearch(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onSearch(e.target.value)
+          }
           sx={{
-            all: "unset", flex: 1, fontSize: "12.5px",
+            all: "unset",
+            flex: 1,
+            fontSize: "12.5px",
             color: "var(--text)",
             "&::placeholder": { color: "var(--muted)" },
             "&:focus": { outline: "none", boxShadow: "none !important" },
@@ -227,21 +312,36 @@ function TicketCard({
         userSelect: "none",
         opacity: isUpdating ? 0.55 : 1,
         transition: "opacity 0.15s, box-shadow 0.15s, border-color 0.15s",
-        "&:hover": !isDragging ? {
-          boxShadow: "0 3px 10px rgba(0,0,0,0.09)",
-          borderColor: "var(--border2)",
-        } : {},
+        "&:hover": !isDragging
+          ? {
+              boxShadow: "0 3px 10px rgba(0,0,0,0.09)",
+              borderColor: "var(--border2)",
+            }
+          : {},
       }}
     >
       {/* Row 1: type badge + SLA */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "6px", gap: "6px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: "6px",
+          gap: "6px",
+        }}
+      >
         <Box
           component="span"
           sx={{
-            display: "inline-flex", alignItems: "center", gap: "3px",
-            fontSize: "10px", fontWeight: 600,
-            color: typeColor, background: typeSubtle,
-            borderRadius: "4px", padding: "1px 6px 1px 4px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "3px",
+            fontSize: "10px",
+            fontWeight: 600,
+            color: typeColor,
+            background: typeSubtle,
+            borderRadius: "4px",
+            padding: "1px 6px 1px 4px",
           }}
         >
           {typeIcons[ticket.type]}
@@ -250,19 +350,26 @@ function TicketCard({
 
         {slaChip && (
           <Tooltip
-            title={ticket.slaDeadline
-              ? `Deadline : ${new Date(ticket.slaDeadline).toLocaleString("fr-FR")}`
-              : "SLA dépassé"}
+            title={
+              ticket.slaDeadline
+                ? `Deadline : ${new Date(ticket.slaDeadline).toLocaleString("fr-FR")}`
+                : "SLA dépassé"
+            }
             placement="top"
             arrow
           >
             <Box
               component="span"
               sx={{
-                display: "inline-flex", alignItems: "center", gap: "3px",
-                fontSize: "9px", fontWeight: 700,
-                color: slaChip.color, background: slaChip.subtle,
-                borderRadius: "4px", padding: "1px 5px 1px 3px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "3px",
+                fontSize: "9px",
+                fontWeight: 700,
+                color: slaChip.color,
+                background: slaChip.subtle,
+                borderRadius: "4px",
+                padding: "1px 5px 1px 3px",
                 letterSpacing: "0.02em",
               }}
             >
@@ -277,11 +384,16 @@ function TicketCard({
       <Box
         sx={{
           height: "34px",
-          fontSize: "12.5px", fontWeight: 600, lineHeight: "17px",
-          color: "var(--text)", mb: "8px",
+          fontSize: "12.5px",
+          fontWeight: 600,
+          lineHeight: "17px",
+          color: "var(--text)",
+          mb: "8px",
           display: "-webkit-box",
-          WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-          overflow: "hidden", letterSpacing: "-0.01em",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          letterSpacing: "-0.01em",
         }}
       >
         {ticket.title}
@@ -289,18 +401,32 @@ function TicketCard({
 
       {/* Row 3: footer */}
       <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        <Tooltip title={`Priorité ${priorityLabels[ticket.priority]}`} placement="top" arrow>
+        <Tooltip
+          title={`Priorité ${priorityLabels[ticket.priority]}`}
+          placement="top"
+          arrow
+        >
           <Box
             component="span"
-            sx={{ width: "6px", height: "6px", borderRadius: "50%", background: priorityColors[ticket.priority], flexShrink: 0 }}
+            sx={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              background: priorityColors[ticket.priority],
+              flexShrink: 0,
+            }}
           />
         </Tooltip>
 
         <Box
           component="span"
           sx={{
-            fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 600,
-            color: "var(--muted)", letterSpacing: "0.03em", flexShrink: 0,
+            fontFamily: "var(--font-mono)",
+            fontSize: "10px",
+            fontWeight: 600,
+            color: "var(--muted)",
+            letterSpacing: "0.03em",
+            flexShrink: 0,
           }}
         >
           {ticket.reference}
@@ -309,18 +435,41 @@ function TicketCard({
         {ticket.jiraKey && (
           <Box
             component="span"
-            sx={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, color: "var(--cyan)", flexShrink: 0 }}
+            sx={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              fontWeight: 600,
+              color: "var(--cyan)",
+              flexShrink: 0,
+            }}
           >
             {ticket.jiraKey}
           </Box>
         )}
 
         {ticket.project ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: "3px", flex: 1, minWidth: 0, overflow: "hidden" }}>
-            <FolderOutlined sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }} />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+            }}
+          >
+            <FolderOutlined
+              sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }}
+            />
             <Box
               component="span"
-              sx={{ fontSize: "10px", color: "var(--muted2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              sx={{
+                fontSize: "10px",
+                color: "var(--muted2)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
             >
               {ticket.project}
             </Box>
@@ -330,8 +479,21 @@ function TicketCard({
         )}
 
         {ticket.commentCount > 0 && (
-          <Tooltip title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`} placement="top" arrow>
-            <Box sx={{ display: "flex", alignItems: "center", gap: "2px", fontSize: "10px", color: "var(--muted2)", flexShrink: 0 }}>
+          <Tooltip
+            title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}
+            placement="top"
+            arrow
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "2px",
+                fontSize: "10px",
+                color: "var(--muted2)",
+                flexShrink: 0,
+              }}
+            >
               <CommentOutlined sx={{ fontSize: 10 }} />
               {ticket.commentCount}
             </Box>
@@ -339,14 +501,26 @@ function TicketCard({
         )}
 
         {ticket.assigneeInitials && (
-          <Tooltip title={ticket.assigneeName ?? ticket.assigneeInitials} placement="top" arrow>
+          <Tooltip
+            title={ticket.assigneeName ?? ticket.assigneeInitials}
+            placement="top"
+            arrow
+          >
             <Box
               sx={{
-                width: "20px", height: "20px", borderRadius: "50%",
-                background: "var(--accent-subtle)", border: "1.5px solid var(--accent-border)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "8px", fontWeight: 700, color: "var(--accent)",
-                fontFamily: "var(--font-mono)", flexShrink: 0,
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                background: "var(--accent-subtle)",
+                border: "1.5px solid var(--accent-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "8px",
+                fontWeight: 700,
+                color: "var(--accent)",
+                fontFamily: "var(--font-mono)",
+                flexShrink: 0,
               }}
             >
               {ticket.assigneeInitials}
@@ -381,81 +555,110 @@ export const KanbanPage: React.FC = () => {
     }
   }, [showToast]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const filteredColumns = useMemo<KanbanColumns>(() => {
     const term = search.toLowerCase().trim();
     if (!term) return columns;
     const filter = (tickets: KanbanTicket[]) =>
-      tickets.filter((t) =>
-        t.title.toLowerCase().includes(term) || t.reference.toLowerCase().includes(term),
+      tickets.filter(
+        (t) =>
+          t.title.toLowerCase().includes(term) ||
+          t.reference.toLowerCase().includes(term),
       );
     return {
-      new:         filter(columns.new),
+      new: filter(columns.new),
       in_progress: filter(columns.in_progress),
-      testing:     filter(columns.testing),
-      resolved:    filter(columns.resolved),
-      closed:      filter(columns.closed),
+      testing: filter(columns.testing),
+      resolved: filter(columns.resolved),
+      closed: filter(columns.closed),
     };
   }, [columns, search]);
 
   const hasFilters = !!search;
 
-  const onDragEnd = useCallback(async (result: DropResult) => {
-    setTimeout(() => { wasDragging.current = false; }, 0);
+  const onDragEnd = useCallback(
+    async (result: DropResult) => {
+      setTimeout(() => {
+        wasDragging.current = false;
+      }, 0);
 
-    if (!result.destination) return;
-    const { draggableId, source, destination } = result;
-    const sourceCol = source.droppableId as TicketStatus;
-    const destCol = destination.droppableId as TicketStatus;
-    if (sourceCol === destCol && source.index === destination.index) return;
+      if (!result.destination) return;
+      const { draggableId, source, destination } = result;
+      const sourceCol = source.droppableId as TicketStatus;
+      const destCol = destination.droppableId as TicketStatus;
+      if (sourceCol === destCol && source.index === destination.index) return;
 
-    if (sourceCol === destCol) {
-      const visibleItems = filteredColumns[sourceCol];
-      const movedId = visibleItems[source.index]?.id;
-      const targetId = visibleItems[destination.index]?.id;
-      if (!movedId || !targetId) return;
+      if (sourceCol === destCol) {
+        const visibleItems = filteredColumns[sourceCol];
+        const movedId = visibleItems[source.index]?.id;
+        const targetId = visibleItems[destination.index]?.id;
+        if (!movedId || !targetId) return;
+        setColumns((prev) => {
+          const items = [...prev[sourceCol]];
+          return {
+            ...prev,
+            [sourceCol]: arrayMove(
+              items,
+              items.findIndex((t) => t.id === movedId),
+              items.findIndex((t) => t.id === targetId),
+            ),
+          };
+        });
+        return;
+      }
+
+      const movedTicket = columns[sourceCol].find((t) => t.id === draggableId);
+      if (!movedTicket) return;
+
+      const afterId = filteredColumns[destCol][destination.index]?.id;
       setColumns((prev) => {
-        const items = [...prev[sourceCol]];
-        return {
-          ...prev,
-          [sourceCol]: arrayMove(items, items.findIndex((t) => t.id === movedId), items.findIndex((t) => t.id === targetId)),
-        };
+        const sourceItems = prev[sourceCol].filter((t) => t.id !== draggableId);
+        const destItems = [...prev[destCol]];
+        const insertAt = afterId
+          ? destItems.findIndex((t) => t.id === afterId)
+          : destItems.length;
+        destItems.splice(
+          insertAt >= 0 ? insertAt : destItems.length,
+          0,
+          movedTicket,
+        );
+        return { ...prev, [sourceCol]: sourceItems, [destCol]: destItems };
       });
-      return;
-    }
 
-    const movedTicket = columns[sourceCol].find((t) => t.id === draggableId);
-    if (!movedTicket) return;
-
-    const afterId = filteredColumns[destCol][destination.index]?.id;
-    setColumns((prev) => {
-      const sourceItems = prev[sourceCol].filter((t) => t.id !== draggableId);
-      const destItems = [...prev[destCol]];
-      const insertAt = afterId ? destItems.findIndex((t) => t.id === afterId) : destItems.length;
-      destItems.splice(insertAt >= 0 ? insertAt : destItems.length, 0, movedTicket);
-      return { ...prev, [sourceCol]: sourceItems, [destCol]: destItems };
-    });
-
-    setUpdatingId(draggableId);
-    try {
-      await changeStatus(draggableId, destCol);
-    } catch {
-      showToast("Erreur lors du changement de statut", "error");
-      load();
-    } finally {
-      setUpdatingId(null);
-    }
-  }, [columns, filteredColumns, showToast, load]);
+      setUpdatingId(draggableId);
+      try {
+        await changeStatus(draggableId, destCol);
+      } catch {
+        showToast("Erreur lors du changement de statut", "error");
+        load();
+      } finally {
+        setUpdatingId(null);
+      }
+    },
+    [columns, filteredColumns, showToast, load],
+  );
 
   return (
     <>
-      <GlobalStyles styles={{
-        ".kanban-col-body": { scrollbarWidth: "thin", scrollbarColor: "var(--border2) transparent" },
-        ".kanban-col-body::-webkit-scrollbar": { width: "3px" },
-        ".kanban-col-body::-webkit-scrollbar-track": { background: "transparent" },
-        ".kanban-col-body::-webkit-scrollbar-thumb": { background: "var(--border2)", borderRadius: "4px" },
-      }} />
+      <GlobalStyles
+        styles={{
+          ".kanban-col-body": {
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--border2) transparent",
+          },
+          ".kanban-col-body::-webkit-scrollbar": { width: "3px" },
+          ".kanban-col-body::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          ".kanban-col-body::-webkit-scrollbar-thumb": {
+            background: "var(--border2)",
+            borderRadius: "4px",
+          },
+        }}
+      />
 
       <Topbar title="" />
 
@@ -467,15 +670,39 @@ export const KanbanPage: React.FC = () => {
           <CircularProgress size={28} />
         </Box>
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 67px)", overflow: "hidden" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "calc(100vh - 67px)",
+            overflow: "hidden",
+          }}
+        >
           <FilterBar search={search} onSearch={setSearch} />
 
-          <Box sx={{ flex: 1, overflowX: "auto", overflowY: "hidden", padding: "16px 28px 20px", minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: 1,
+              overflowX: "auto",
+              overflowY: "hidden",
+              padding: "16px 28px 20px",
+              minHeight: 0,
+            }}
+          >
             <DragDropContext
-              onBeforeDragStart={() => { wasDragging.current = true; }}
+              onBeforeDragStart={() => {
+                wasDragging.current = true;
+              }}
               onDragEnd={onDragEnd}
             >
-              <div style={{ display: "flex", gap: "14px", minWidth: "fit-content", height: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "14px",
+                  minWidth: "fit-content",
+                  height: "100%",
+                }}
+              >
                 {columnOrder.map((colId) => {
                   const meta = columnMeta[colId];
                   const colTickets = filteredColumns[colId];
@@ -484,34 +711,76 @@ export const KanbanPage: React.FC = () => {
                   return (
                     <div
                       key={colId}
-                      style={{ width: "295px", height: "100%", display: "flex", flexDirection: "column" }}
+                      style={{
+                        width: "295px",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
                     >
                       {/* Column header */}
                       <Box
                         sx={{
                           mb: "10px",
                           padding: "11px 14px",
-                          background: "var(--s1)",
+                          background: "var(--s2)",
                           border: "1px solid var(--border)",
                           borderRadius: "var(--r)",
                           flexShrink: 0,
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                            <Box sx={{ width: "7px", height: "7px", borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
-                            <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "8px",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "7px",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: "7px",
+                                height: "7px",
+                                borderRadius: "50%",
+                                background: meta.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                color: "var(--text)",
+                                letterSpacing: "0.04em",
+                                textTransform: "uppercase",
+                              }}
+                            >
                               {meta.label}
                             </Box>
                           </Box>
                           <Box
                             component="span"
                             sx={{
-                              display: "inline-flex", alignItems: "center", justifyContent: "center",
-                              minWidth: "22px", height: "20px", padding: "0 6px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: "22px",
+                              height: "20px",
+                              padding: "0 6px",
                               borderRadius: "99px",
-                              background: meta.subtle, border: `1px solid ${meta.border}`,
-                              fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, color: meta.color,
+                              background: meta.subtle,
+                              border: `1px solid ${meta.border}`,
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: meta.color,
                             }}
                           >
                             {hasFilters && colTickets.length !== totalInCol
@@ -536,14 +805,20 @@ export const KanbanPage: React.FC = () => {
                               flexDirection: "column",
                               gap: "7px",
                               padding: "8px 8px 16px 8px",
-                              background: snapshot.isDraggingOver ? meta.subtle : "var(--s2)",
+                              background: snapshot.isDraggingOver
+                                ? meta.subtle
+                                : "var(--s2)",
                               border: "1px solid var(--border)",
                               borderRadius: "var(--r)",
                               transition: "background 0.15s",
                             }}
                           >
                             {colTickets.map((ticket, index) => (
-                              <Draggable key={ticket.id} draggableId={ticket.id} index={index}>
+                              <Draggable
+                                key={ticket.id}
+                                draggableId={ticket.id}
+                                index={index}
+                              >
                                 {(provided, snapshot) => (
                                   <div
                                     ref={provided.innerRef}
@@ -555,7 +830,10 @@ export const KanbanPage: React.FC = () => {
                                       ticket={ticket}
                                       isDragging={snapshot.isDragging}
                                       updatingId={updatingId}
-                                      onClick={() => { if (!wasDragging.current) navigate(`/tickets/${ticket.id}`); }}
+                                      onClick={() => {
+                                        if (!wasDragging.current)
+                                          navigate(`/tickets/${ticket.id}`);
+                                      }}
                                     />
                                   </div>
                                 )}
@@ -566,11 +844,21 @@ export const KanbanPage: React.FC = () => {
                             {colTickets.length === 0 && (
                               <Box
                                 sx={{
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  flex: 1, opacity: 0.25,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flex: 1,
+                                  opacity: 0.25,
                                 }}
                               >
-                                <Box sx={{ width: "24px", height: "24px", border: "2px dashed var(--muted2)", borderRadius: "6px" }} />
+                                <Box
+                                  sx={{
+                                    width: "24px",
+                                    height: "24px",
+                                    border: "2px dashed var(--muted2)",
+                                    borderRadius: "6px",
+                                  }}
+                                />
                               </Box>
                             )}
                           </div>

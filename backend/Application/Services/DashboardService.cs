@@ -73,7 +73,7 @@ public class DashboardService
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
 
-        TicketStatus[] allStatuses = new[] { TicketStatus.New, TicketStatus.Analysis, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed };
+        TicketStatus[] allStatuses = new[] { TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed };
         Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(s => s.ToString(), s => tickets.Count(t => t.Status == s));
 
         List<UrgentTicketDto> urgentTickets = tickets
