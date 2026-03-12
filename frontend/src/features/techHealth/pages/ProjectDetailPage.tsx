@@ -4,11 +4,8 @@ import { Topbar } from '../../../layouts/Topbar'
 import { StatusChip } from '../../../components/StatusChip'
 import { HealthScoreCircle } from '../../../components/HealthScoreCircle'
 import CircularProgress from '@mui/material/CircularProgress'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
+import { AppModal } from '../../../components/AppModal'
 import Paper from '@mui/material/Paper'
 import Box from '@mui/material/Box'
 import { useToast } from '../../../hooks/useToast'
@@ -319,22 +316,25 @@ export const ProjectDetailPage: React.FC = () => {
         )}
       </Box>
 
-      <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' } }}>
-        <DialogTitle sx={{ fontSize: '15px', fontWeight: 700, pb: 1 }}>Supprimer le projet</DialogTitle>
-        <DialogContent sx={{ pt: '16px !important' }}>
-          <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            Supprimer <strong>{project.name}</strong> ?
-            Cette action supprimera aussi toutes les dépendances et vulnérabilités associées.
-            Elle est irréversible.
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: '16px', pt: 0 }}>
-          <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
-          <Button variant="contained" color="error" size="small" sx={{ textTransform: 'none' }} onClick={handleDelete} disabled={deleting}>
-            {deleting ? 'Suppression...' : 'Supprimer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AppModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Supprimer le projet"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
+            <Button variant="contained" color="error" size="small" sx={{ textTransform: 'none' }} onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Suppression...' : 'Supprimer'}
+            </Button>
+          </>
+        }
+      >
+        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+          Supprimer <strong>{project.name}</strong> ?
+          Cette action supprimera aussi toutes les dépendances et vulnérabilités associées.
+          Elle est irréversible.
+        </Box>
+      </AppModal>
     </>
   )
 }
