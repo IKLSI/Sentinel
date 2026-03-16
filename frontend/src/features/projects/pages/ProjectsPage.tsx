@@ -129,11 +129,6 @@ export const ProjectsPage: React.FC = () => {
     });
   };
 
-  const totalCritical = projects.reduce((s, p) => s + p.criticalVulnerabilities, 0);
-  const avgScore = projects.length > 0
-    ? Math.round(projects.reduce((s, p) => s + p.healthScore, 0) / projects.length)
-    : 0;
-
   const filtered = projects
     .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
@@ -153,17 +148,6 @@ export const ProjectsPage: React.FC = () => {
         </Box>
       ) : (
         <Box sx={{ p: "24px 28px" }}>
-          <Box className="d-flex gap-2 flex-wrap mb-3">
-            <KpiCard label="Projets" value={projects.length} suffix="" />
-            <KpiCard
-              label="Vulnérabilités critiques"
-              value={totalCritical}
-              suffix=""
-              color={totalCritical > 0 ? "var(--red)" : undefined}
-            />
-            <KpiCard label="Score santé moyen" value={avgScore} suffix="%" />
-          </Box>
-
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "16px" }}>
             <Box
               sx={{
@@ -463,14 +447,3 @@ const ModalField: React.FC<{ label: string; value: string; onChange: (v: string)
   </Box>
 );
 
-const KpiCard: React.FC<{ label: string; value: number; suffix: string; color?: string }> = ({ label, value, suffix, color }) => (
-  <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", padding: "20px 22px", boxShadow: "var(--shadow)", flex: 1 }}>
-    <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", mb: "12px" }}>
-      {label}
-    </Box>
-    <Box sx={{ fontSize: "30px", fontWeight: 800, color: color ?? "var(--text)", letterSpacing: "-0.03em" }}>
-      {value}
-      <Box component="span" sx={{ fontSize: "16px", color: "var(--muted)", fontWeight: 400 }}>{suffix}</Box>
-    </Box>
-  </Box>
-);
