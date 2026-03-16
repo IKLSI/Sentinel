@@ -48,9 +48,9 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Time & Facturation',
+    title: 'Temps & Facturation',
     items: [
-      { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Time tracking' },
+      { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Suivi du temps' },
       { to: '/invoices', icon: ReceiptOutlined, label: 'Factures' },
     ],
   },
