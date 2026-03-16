@@ -4,8 +4,8 @@ public class DashboardStatsDto
 {
     public int OpenTickets { get; set; }
     public int OpenTicketsDelta { get; set; }
-    public int SlaRespected { get; set; }
-    public int SlaRespectedDelta { get; set; }
+    public int ResolvedThisMonth { get; set; }
+    public int ResolvedThisMonthDelta { get; set; }
     public int HoursThisMonth { get; set; }
     public decimal BillableRevenue { get; set; }
     public decimal UnbilledRevenue { get; set; }

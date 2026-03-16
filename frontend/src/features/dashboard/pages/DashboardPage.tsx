@@ -6,8 +6,6 @@ import Box from "@mui/material/Box";
 import { getDashboardStats } from "../api/dashboard";
 import { getProjects } from "../../techHealth/api/projects";
 import type { ProjectDto } from "../../techHealth/api/projects";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import TrendingUpOutlined from "@mui/icons-material/TrendingUpOutlined";
 import type { HealthGrade } from "../../../types";
@@ -31,7 +29,7 @@ interface ActivityItem {
 }
 interface StatsData {
   openTickets: number; openTicketsDelta: number;
-  slaRespected: number; slaRespectedDelta: number;
+  resolvedThisMonth: number; resolvedThisMonthDelta: number;
   hoursThisMonth: number; billableRevenue: number;
   unbilledRevenue: number; criticalVulnerabilities: number;
   ticketsByStatus: Record<string, number>;
@@ -40,11 +38,20 @@ interface StatsData {
 }
 
 const EMPTY_STATS: StatsData = {
-  openTickets: 0, openTicketsDelta: 0, slaRespected: 100,
-  slaRespectedDelta: 0, hoursThisMonth: 0, billableRevenue: 0,
+  openTickets: 0, openTicketsDelta: 0, resolvedThisMonth: 0,
+  resolvedThisMonthDelta: 0, hoursThisMonth: 0, billableRevenue: 0,
   unbilledRevenue: 0, criticalVulnerabilities: 0,
   ticketsByStatus: {}, urgentTickets: [], recentActivity: [],
 };
+
+function compactAgo(timestamp: string): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60)  return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `${h}h`;
+  return `${Math.floor(h / 24)}j`;
+}
 
 function formatSlaRemaining(deadline?: string): { text: string; warn: boolean } {
   if (!deadline) return { text: "—", warn: false };
@@ -62,9 +69,11 @@ function formatSlaRemaining(deadline?: string): { text: string; warn: boolean } 
   return { text, warn: totalH < 4 };
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  critical: "var(--red)", high: "var(--orange)",
-  medium: "var(--yellow)", low: "var(--green)",
+const PRIORITY_CONFIG: Record<string, { color: string; label: string; bg: string; border: string }> = {
+  critical: { color: "var(--red)",    label: "Critique", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.28)"   },
+  high:     { color: "var(--orange)", label: "Élevée",   bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.28)"  },
+  medium:   { color: "var(--yellow)", label: "Moyenne",  bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.28)"   },
+  low:      { color: "var(--green)",  label: "Faible",   bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.25)"   },
 };
 const ACTIVITY_COLORS: Record<string, string> = {
   red: "var(--red)", accent: "var(--accent)",
@@ -156,8 +165,8 @@ export const DashboardPage: React.FC = () => {
             trend={<><TrendingUpOutlined sx={{ fontSize: 10 }} /> {stats.openTicketsDelta} cette semaine</>}
             trendColor="var(--red)"
           />
-          <KpiCard label="SLA respectés" value={stats.slaRespected} unit="%" color="var(--green)"
-            trend={<>+{stats.slaRespectedDelta}% vs mois dernier</>}
+          <KpiCard label="Résolus ce mois" value={stats.resolvedThisMonth ?? 0} color="var(--green)"
+            trend={<><TrendingUpOutlined sx={{ fontSize: 10 }} /> {stats.resolvedThisMonthDelta ?? 0} vs mois dernier</>}
             trendColor="var(--green)"
           />
           <KpiCard label="Heures ce mois" value={stats.hoursThisMonth} unit="h" color="var(--cyan)"
@@ -178,21 +187,21 @@ export const DashboardPage: React.FC = () => {
             {stats.urgentTickets.length === 0 ? (
               <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>Aucun ticket urgent.</Box>
             ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {stats.urgentTickets.slice(0, 3).map((t) => (
-                  <TicketRow key={t.id} ticket={t} onClick={() => navigate(`/tickets/${t.id}`)} />
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
+                {stats.urgentTickets.slice(0, 5).map((t, idx) => (
+                  <TicketRow key={t.id} ticket={t} onClick={() => navigate(`/tickets/${t.id}`)} index={idx} />
                 ))}
               </Box>
             )}
           </Card>
 
-          <Card title="Activité récente" noPadding>
+          <Card title="Activité récente">
             {stats.recentActivity.length === 0 ? (
-              <Box sx={{ fontSize: "12px", color: "var(--muted)", p: "14px 16px" }}>Aucune activité.</Box>
+              <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>Aucune activité.</Box>
             ) : (
-              <Box>
-                {stats.recentActivity.slice(0, 3).map((item, idx) => (
-                  <ActivityRow key={idx} item={item} last={idx === Math.min(stats.recentActivity.length, 3) - 1} />
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
+                {stats.recentActivity.slice(0, 5).map((item, idx) => (
+                  <ActivityRow key={idx} item={item} index={idx} />
                 ))}
               </Box>
             )}
@@ -330,57 +339,83 @@ const TicketDistribution: React.FC<{ ticketsByStatus: Record<string, number> }> 
   );
 };
 
-const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ticket, onClick }) => {
+const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void; index: number }> = ({ ticket, onClick }) => {
   const sla = formatSlaRemaining(ticket.slaDeadline);
+  const p   = PRIORITY_CONFIG[ticket.priority] ?? PRIORITY_CONFIG.medium;
   return (
     <Box onClick={onClick} sx={{
       display: "flex", alignItems: "center", gap: "10px",
-      p: "9px 11px", borderRadius: "8px",
-      border: "1px solid var(--border)", background: "var(--s2)",
-      cursor: "pointer", transition: "background 0.12s, border-color 0.12s",
-      "&:hover": { background: "var(--accent-subtle)", borderColor: "var(--accent-border)" },
+      py: "7px", mx: "-16px", px: "16px",
+      cursor: "pointer",
+      transition: "background 0.12s",
+      "&:hover": { background: "var(--s2)", "& .t-title": { color: "var(--accent)" } },
     }}>
       <Box sx={{
-        width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
-        background: PRIORITY_COLORS[ticket.priority] ?? "var(--muted)",
+        width: 3, alignSelf: "stretch", borderRadius: "2px",
+        background: p.color, flexShrink: 0, opacity: 0.75,
       }} />
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
-        <Box sx={{ fontSize: "10px", color: "var(--muted)", fontFamily: "var(--font-mono)", mb: "2px" }}>
-          {ticket.reference}{ticket.projectName ? ` · ${ticket.projectName}` : ""}
-        </Box>
-        <Box sx={{ fontSize: "12px", fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {ticket.title}
-        </Box>
+      <Box sx={{
+        fontSize: "10px", fontWeight: 500, color: p.color,
+        flexShrink: 0, minWidth: "52px",
+        opacity: 0.9,
+      }}>
+        {p.label}
       </Box>
       <Box sx={{
-        fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 600, flexShrink: 0,
-        color: ticket.slaBreached ? "var(--red)" : sla.warn ? "var(--orange)" : "var(--green)",
+        fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)",
+        flexShrink: 0,
       }}>
-        {ticket.slaBreached ? "Breach" : sla.text}
+        {ticket.reference}
       </Box>
+      <Box className="t-title" sx={{
+        flex: 1, fontSize: "12.5px", fontWeight: 500, color: "var(--text)",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        letterSpacing: "-0.015em", transition: "color 0.12s",
+      }}>
+        {ticket.title}
+      </Box>
+      {ticket.slaBreached ? (
+        <Box sx={{
+          fontSize: "10px", fontWeight: 600, flexShrink: 0,
+          color: "var(--red)",
+        }}>Dépassé</Box>
+      ) : (
+        <Box sx={{
+          fontFamily: "var(--font-mono)", fontSize: "10px", flexShrink: 0,
+          color: sla.warn ? "var(--orange)" : "var(--muted)",
+          fontWeight: sla.warn ? 600 : 400,
+        }}>{sla.text}</Box>
+      )}
     </Box>
   );
 };
 
-const ActivityRow: React.FC<{ item: ActivityItem; last: boolean }> = ({ item, last }) => {
-  const ago   = formatDistanceToNow(new Date(item.timestamp), { locale: fr, addSuffix: false });
+const ActivityRow: React.FC<{ item: ActivityItem; index: number }> = ({ item, index }) => {
   const color = ACTIVITY_COLORS[item.color] ?? "var(--accent)";
   return (
     <Box sx={{
-      display: "flex", gap: "12px", alignItems: "center",
-      px: "16px", py: "11px",
-      borderBottom: last ? "none" : "1px solid var(--border)",
-      transition: "background 0.1s",
-      "&:hover": { background: "var(--s2)" },
+      display: "flex", alignItems: "center", gap: "11px",
+      py: "8px", mx: "-16px", px: "16px",
+      cursor: "default",
+      transition: "background 0.12s",
+"&:hover": { background: "var(--s2)" },
     }}>
-      <Box sx={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
-        <Box sx={{ fontSize: "12px", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {item.text}
-        </Box>
+      <Box sx={{
+        width: 6, height: 6, borderRadius: "2px", flexShrink: 0,
+        background: color, opacity: 0.85,
+      }} />
+      <Box sx={{
+        flex: 1, fontSize: "12.5px", fontWeight: 500, color: "var(--text)",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        letterSpacing: "-0.015em",
+      }}>
+        {item.text}
       </Box>
-      <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", flexShrink: 0 }}>
-        {ago}
+      <Box sx={{
+        fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)",
+        flexShrink: 0,
+      }}>
+        {compactAgo(item.timestamp)}
       </Box>
     </Box>
   );

@@ -44,12 +44,7 @@ public class DashboardService
         int openTicketsDelta = tickets.Count(t => openStatuses.Contains(t.Status) && t.CreatedAt >= weekAgo);
 
         List<Ticket> closedThisMonth = tickets.Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= monthStart).ToList();
-        int slaRespectedThisMonth = closedThisMonth.Count == 0 ? 100 :
-            (int)Math.Round((double)closedThisMonth.Count(t => !t.SlaBreached) / closedThisMonth.Count * 100);
-
         List<Ticket> closedLastMonth = tickets.Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd).ToList();
-        int slaRespectedLastMonth = closedLastMonth.Count == 0 ? 100 :
-            (int)Math.Round((double)closedLastMonth.Count(t => !t.SlaBreached) / closedLastMonth.Count * 100);
 
         int hoursThisMonth = await _context.TimeEntries
             .Include(te => te.User)
@@ -101,8 +96,8 @@ public class DashboardService
         {
             OpenTickets = openTickets,
             OpenTicketsDelta = openTicketsDelta,
-            SlaRespected = slaRespectedThisMonth,
-            SlaRespectedDelta = slaRespectedThisMonth - slaRespectedLastMonth,
+            ResolvedThisMonth = closedThisMonth.Count,
+            ResolvedThisMonthDelta = closedThisMonth.Count - closedLastMonth.Count,
             HoursThisMonth = hoursThisMonth / 60,
             BillableRevenue = billableRevenue,
             UnbilledRevenue = unbilledRevenue,
