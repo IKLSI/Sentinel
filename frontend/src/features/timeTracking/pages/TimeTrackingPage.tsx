@@ -237,7 +237,7 @@ export const TimeTrackingPage: React.FC = () => {
   return (
     <>
       <Topbar
-        title="Suivi du temps"
+        title=""
         subtitle={undefined}
       />
 
