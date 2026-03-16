@@ -10,6 +10,8 @@ import { getProjects, ProjectDto } from '../../techHealth/api/projects'
 import { getUsers } from '../../users/api/users'
 import { User } from '../../../types'
 import { DurationPicker } from '../../../components/DurationPicker'
+import InfoOutlined from '@mui/icons-material/InfoOutlined'
+import Tooltip from '@mui/material/Tooltip'
 
 interface CreateTicketPayload {
   title: string
@@ -177,7 +179,12 @@ export const NewTicketPage: React.FC = () => {
               </Box>
 
               <Box sx={{ mb: '14px' }}>
-                <Box component="label" sx={{ ...labelSx, mb: '8px' }}>Estimation</Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px', mb: '8px' }}>
+                  <Box component="label" sx={labelSx}>Estimation</Box>
+                  <Tooltip title="Formats acceptés : 2h, 1h30, 45m" placement="top" arrow>
+                    <InfoOutlined sx={{ fontSize: 12, color: 'var(--muted)', cursor: 'help' }} />
+                  </Tooltip>
+                </Box>
                 <DurationPicker value={estMinutes} onChange={setEstMinutes} />
               </Box>
 

@@ -15,6 +15,7 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { useTickets } from "../hooks/useTickets";
 import { deleteTicket, createTicket, updateTicket } from "../api/tickets";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
@@ -801,8 +802,8 @@ export const TicketsPage: React.FC = () => {
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mb: '8px' }}>
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
-              <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
-                <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'var(--muted)', cursor: 'default', lineHeight: 1, flexShrink: 0 }}>i</Box>
+              <Tooltip title="Formats acceptés : 2h, 1h30, 45m" placement="top" arrow>
+                <InfoOutlined sx={{ fontSize: 12, color: 'var(--muted)', cursor: 'help' }} />
               </Tooltip>
             </Box>
             <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} />
