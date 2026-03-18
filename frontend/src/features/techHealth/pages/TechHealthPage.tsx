@@ -675,7 +675,7 @@ export const TechHealthPage: React.FC = () => {
   if (loading) {
     return (
       <>
-        <Topbar title="Santé technique" subtitle="Chargement…" />
+        <Topbar title="" />
         <Box
           className="d-flex align-items-center justify-content-center"
           sx={{ p: "24px 28px", minHeight: "300px" }}
@@ -691,7 +691,7 @@ export const TechHealthPage: React.FC = () => {
   if (projects.length === 0) {
     return (
       <>
-        <Topbar title="Santé technique" subtitle="0 projets" />
+        <Topbar title="" />
         <Box sx={{ p: "24px 28px" }}>
           <Box
             sx={{
@@ -721,10 +721,7 @@ export const TechHealthPage: React.FC = () => {
 
   return (
     <>
-      <Topbar
-        title="Santé technique"
-        subtitle={`${projects.length} projet${projects.length > 1 ? "s" : ""} analysé${projects.length > 1 ? "s" : ""}`}
-      />
+      <Topbar title="" />
       <Box sx={{ p: "24px 28px" }}>
         <Box
           sx={{

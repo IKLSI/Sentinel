@@ -8,18 +8,15 @@ import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
   getInvoice,
-  updateInvoiceStatus,
-  deleteInvoice,
   downloadInvoicePdf,
   openInvoicePdf,
   InvoiceDto,
 } from "../api/invoices";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
-import SendOutlined from "@mui/icons-material/SendOutlined";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
-import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -50,10 +47,6 @@ export const InvoiceDetailPage: React.FC = () => {
 
   const [invoice, setInvoice] = useState<InvoiceDto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [showPayModal, setShowPayModal] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadFilename, setDownloadFilename] = useState("");
 
@@ -73,47 +66,6 @@ export const InvoiceDetailPage: React.FC = () => {
   useEffect(() => {
     load();
   }, [load]);
-
-  const handleSend = async () => {
-    if (!invoice) return;
-    setActionLoading(true);
-    try {
-      setInvoice(await updateInvoiceStatus(invoice.id, "Sent"));
-      setShowSendModal(false);
-      showToast("Facture marquée comme envoyée", "success");
-    } catch {
-      showToast("Erreur", "error");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handlePay = async () => {
-    if (!invoice) return;
-    setActionLoading(true);
-    try {
-      setInvoice(await updateInvoiceStatus(invoice.id, "Paid"));
-      setShowPayModal(false);
-      showToast("Facture marquée comme payée", "success");
-    } catch {
-      showToast("Erreur", "error");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!invoice) return;
-    setActionLoading(true);
-    try {
-      await deleteInvoice(invoice.id);
-      showToast("Facture supprimée", "success");
-      navigate("/invoices");
-    } catch {
-      showToast("Erreur lors de la suppression", "error");
-      setActionLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -151,66 +103,7 @@ export const InvoiceDetailPage: React.FC = () => {
       <Topbar
         title=""
         subtitle={undefined}
-        actions={
-          <Box sx={{ display: "flex", gap: "8px" }}>
-            {invoice.status === "Draft" && (
-              <>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    textTransform: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                  onClick={() => setShowSendModal(true)}
-                >
-                  <SendOutlined sx={{ fontSize: 14 }} />
-                  Envoyer
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    textTransform: "none",
-                    color: "var(--red)",
-                    borderColor: "rgba(239,68,68,0.35)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    "&:hover": {
-                      borderColor: "var(--red)",
-                      background: "rgba(239,68,68,0.05)",
-                    },
-                  }}
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
-                  Supprimer
-                </Button>
-              </>
-            )}
-            {invoice.status === "Sent" && (
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  textTransform: "none",
-                  background: "var(--green)",
-                  "&:hover": { background: "#16a34a" },
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-                onClick={() => setShowPayModal(true)}
-              >
-                <CheckCircleOutlined sx={{ fontSize: 14 }} />
-                Marquer payée
-              </Button>
-            )}
-          </Box>
-        }
+        actions={undefined}
       />
 
       <Box
@@ -369,10 +262,10 @@ export const InvoiceDetailPage: React.FC = () => {
                         : {}),
                     }}
                   >
-                    {done ? (
-                      <CheckCircleOutlined sx={{ fontSize: 15 }} />
-                    ) : isOverdueStep ? (
+                    {isOverdueStep ? (
                       <WarningAmberOutlined sx={{ fontSize: 15 }} />
+                    ) : (done || active) ? (
+                      <CheckCircleOutlined sx={{ fontSize: 15 }} />
                     ) : (
                       idx + 1
                     )}
@@ -824,127 +717,6 @@ export const InvoiceDetailPage: React.FC = () => {
       </Box>
 
       {/* ── Modales ── */}
-      <AppModal
-        open={showSendModal}
-        onClose={() => setShowSendModal(false)}
-        title="Envoyer la facture"
-        actions={
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={() => setShowSendModal(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                textTransform: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-              onClick={handleSend}
-              disabled={actionLoading}
-            >
-              <SendOutlined sx={{ fontSize: 14 }} />
-              {actionLoading ? "Envoi..." : "Confirmer l'envoi"}
-            </Button>
-          </>
-        }
-      >
-        <Box
-          component="p"
-          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
-        >
-          Marquer la facture <strong>{invoice.reference}</strong> (
-          {fmtEur(invoice.totalWithTax)}) comme envoyée ?
-        </Box>
-      </AppModal>
-
-      <AppModal
-        open={showPayModal}
-        onClose={() => setShowPayModal(false)}
-        title="Confirmer le paiement"
-        actions={
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={() => setShowPayModal(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                textTransform: "none",
-                background: "var(--green)",
-                "&:hover": { background: "#16a34a" },
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-              onClick={handlePay}
-              disabled={actionLoading}
-            >
-              <CheckCircleOutlined sx={{ fontSize: 14 }} />
-              {actionLoading ? "Enregistrement..." : "Confirmer le paiement"}
-            </Button>
-          </>
-        }
-      >
-        <Box
-          component="p"
-          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
-        >
-          Enregistrer le paiement de{" "}
-          <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture{" "}
-          <strong>{invoice.reference}</strong> ?
-        </Box>
-      </AppModal>
-
-      <AppModal
-        open={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Supprimer le brouillon"
-        actions={
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={handleDelete}
-              disabled={actionLoading}
-            >
-              {actionLoading ? "Suppression..." : "Supprimer"}
-            </Button>
-          </>
-        }
-      >
-        <Box
-          component="p"
-          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
-        >
-          Supprimer définitivement le brouillon{" "}
-          <strong>{invoice.reference}</strong> ? Cette action est irréversible.
-        </Box>
-      </AppModal>
-
       <AppModal
         open={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}

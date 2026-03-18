@@ -20,6 +20,11 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import SendOutlined from "@mui/icons-material/SendOutlined";
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
+import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -539,21 +544,27 @@ export const InvoicesPage: React.FC = () => {
                             </StatusChip>
                           </Box>
                           <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-                            <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                            <Box sx={{ display: "flex", gap: "2px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
                               {inv.status === "Draft" && (
                                 <>
-                                  <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={(e) => handleSend(inv, e)}>
-                                    Envoyer
-                                  </Button>
-                                  <Button variant="outlined" size="small" sx={{ textTransform: "none", color: "var(--red)" }} onClick={(e) => handleDelete(inv, e)}>
-                                    Supprimer
-                                  </Button>
+                                  <Tooltip title="Marquer comme envoyée" placement="top">
+                                    <IconButton size="small" onClick={(e) => handleSend(inv, e)} sx={{ color: "var(--accent)", "&:hover": { background: "var(--accent-subtle)" } }}>
+                                      <SendOutlined sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Supprimer" placement="top">
+                                    <IconButton size="small" onClick={(e) => handleDelete(inv, e)} sx={{ color: "var(--red)", "&:hover": { background: "var(--red-subtle)" } }}>
+                                      <DeleteOutlineOutlined sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </Tooltip>
                                 </>
                               )}
                               {inv.status === "Sent" && (
-                                <Button variant="outlined" size="small" sx={{ textTransform: "none", color: "var(--green)" }} onClick={(e) => handlePay(inv, e)}>
-                                  Marquer payée
-                                </Button>
+                                <Tooltip title="Marquer comme payée" placement="top">
+                                  <IconButton size="small" onClick={(e) => handlePay(inv, e)} sx={{ color: "var(--green)", "&:hover": { background: "rgba(34,197,94,0.1)" } }}>
+                                    <CheckCircleOutlineOutlined sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
                               )}
                             </Box>
                           </Box>
