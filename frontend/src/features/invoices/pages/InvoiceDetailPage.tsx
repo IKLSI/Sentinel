@@ -1,296 +1,867 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Topbar } from '../../../layouts/Topbar'
-import CircularProgress from '@mui/material/CircularProgress'
-import Button from '@mui/material/Button'
-import { AppModal } from '../../../components/AppModal'
-import Paper from '@mui/material/Paper'
-import Box from '@mui/material/Box'
-import { useToast } from '../../../hooks/useToast'
-import { getInvoice, updateInvoiceStatus, deleteInvoice, downloadInvoicePdf, InvoiceDto } from '../api/invoices'
-import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined'
-import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined'
-import SendOutlined from '@mui/icons-material/SendOutlined'
-import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined'
-import DeleteOutlineOutlined from '@mui/icons-material/DeleteOutlineOutlined'
-import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
-import EuroOutlined from '@mui/icons-material/EuroOutlined'
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
-import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined'
-import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import React, { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Topbar } from "../../../layouts/Topbar";
+import CircularProgress from "@mui/material/CircularProgress";
+import Button from "@mui/material/Button";
+import { AppModal } from "../../../components/AppModal";
+import Box from "@mui/material/Box";
+import { useToast } from "../../../hooks/useToast";
+import {
+  getInvoice,
+  updateInvoiceStatus,
+  deleteInvoice,
+  downloadInvoicePdf,
+  openInvoicePdf,
+  InvoiceDto,
+} from "../api/invoices";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
+import SendOutlined from "@mui/icons-material/SendOutlined";
+import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import { format, differenceInDays } from "date-fns";
+import { fr } from "date-fns/locale";
 
 const fmtEur = (n: number) =>
-  n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+  n.toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + " €";
 
 const fmtDate = (d?: string) =>
-  d ? format(new Date(d), 'dd MMMM yyyy', { locale: fr }) : '—'
+  d ? format(new Date(d), "dd MMM yyyy", { locale: fr }) : "—";
+
+const fmtDateShort = (d?: string) =>
+  d ? format(new Date(d), "dd/MM/yy", { locale: fr }) : "—";
 
 const STEPS = [
-  { key: 'Draft', label: 'Brouillon' },
-  { key: 'Sent', label: 'Envoyée' },
-  { key: 'Paid', label: 'Payée' },
-]
+  { key: "Draft", label: "Brouillon" },
+  { key: "Sent", label: "Envoyée" },
+  { key: "Paid", label: "Payée" },
+];
+
+const HR = () => <Box sx={{ height: "1px", background: "var(--border)" }} />;
 
 export const InvoiceDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const [invoice, setInvoice] = useState<InvoiceDto | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showSendModal, setShowSendModal] = useState(false)
-  const [showPayModal, setShowPayModal] = useState(false)
+  const [invoice, setInvoice] = useState<InvoiceDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadFilename, setDownloadFilename] = useState("");
 
   const load = useCallback(async () => {
-    if (!id) return
-    setLoading(true)
+    if (!id) return;
+    setLoading(true);
     try {
-      const data = await getInvoice(id)
-      setInvoice(data)
+      setInvoice(await getInvoice(id));
     } catch {
-      showToast('Facture introuvable', 'error')
-      navigate('/invoices')
+      showToast("Facture introuvable", "error");
+      navigate("/invoices");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [id, showToast, navigate])
+  }, [id, showToast, navigate]);
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleSend = async () => {
-    if (!invoice) return
-    setActionLoading(true)
+    if (!invoice) return;
+    setActionLoading(true);
     try {
-      const updated = await updateInvoiceStatus(invoice.id, 'Sent')
-      setInvoice(updated)
-      setShowSendModal(false)
-      showToast('Facture marquée comme envoyée', 'success')
+      setInvoice(await updateInvoiceStatus(invoice.id, "Sent"));
+      setShowSendModal(false);
+      showToast("Facture marquée comme envoyée", "success");
     } catch {
-      showToast('Erreur', 'error')
+      showToast("Erreur", "error");
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handlePay = async () => {
-    if (!invoice) return
-    setActionLoading(true)
+    if (!invoice) return;
+    setActionLoading(true);
     try {
-      const updated = await updateInvoiceStatus(invoice.id, 'Paid')
-      setInvoice(updated)
-      setShowPayModal(false)
-      showToast('Facture marquée comme payée', 'success')
+      setInvoice(await updateInvoiceStatus(invoice.id, "Paid"));
+      setShowPayModal(false);
+      showToast("Facture marquée comme payée", "success");
     } catch {
-      showToast('Erreur', 'error')
+      showToast("Erreur", "error");
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!invoice) return
-    setActionLoading(true)
+    if (!invoice) return;
+    setActionLoading(true);
     try {
-      await deleteInvoice(invoice.id)
-      showToast('Facture supprimée', 'success')
-      navigate('/invoices')
+      await deleteInvoice(invoice.id);
+      showToast("Facture supprimée", "success");
+      navigate("/invoices");
     } catch {
-      showToast('Erreur lors de la suppression', 'error')
-      setActionLoading(false)
+      showToast("Erreur lors de la suppression", "error");
+      setActionLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <Box className="d-flex justify-content-center align-items-center" sx={{ height: '100vh' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress size={28} />
       </Box>
-    )
+    );
   }
 
-  if (!invoice) return null
+  if (!invoice) return null;
 
-  const currentStep = STEPS.findIndex((s) => s.key === invoice.status)
-  const overdue = invoice.isOverdue
-  const hourlyRate = invoice.dailyRate > 0 ? invoice.dailyRate / 8 : 0
+  const currentStep = STEPS.findIndex((s) => s.key === invoice.status);
+  const overdue = invoice.isOverdue;
+  const hourlyRate = invoice.dailyRate > 0 ? invoice.dailyRate / 8 : 0;
+  const overduedays =
+    overdue && invoice.dueAt
+      ? differenceInDays(new Date(), new Date(invoice.dueAt))
+      : 0;
+
+  const stripGradient = overdue
+    ? "linear-gradient(90deg, #ef4444, #f87171)"
+    : invoice.status === "Paid"
+      ? "linear-gradient(90deg, #16a34a, #22c55e)"
+      : "linear-gradient(90deg, #4f46e5, #818cf8)";
 
   return (
     <>
       <Topbar
-        title={invoice.reference}
-        subtitle={`${invoice.label} · ${invoice.period}`}
+        title=""
+        subtitle={undefined}
         actions={
-          <Box className="d-flex gap-2">
-            <Button variant="outlined" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => navigate('/invoices')}>
-              <ArrowBackOutlined sx={{ fontSize: 14 }} />Factures
-            </Button>
-            {invoice.hasPdf && (
-              <Button variant="outlined" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => downloadInvoicePdf(invoice.id)}>
-                <FileDownloadOutlined sx={{ fontSize: 14 }} />PDF
-              </Button>
-            )}
-            {invoice.status === 'Draft' && (
+          <Box sx={{ display: "flex", gap: "8px" }}>
+            {invoice.status === "Draft" && (
               <>
-                <Button variant="contained" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setShowSendModal(true)}>
-                  <SendOutlined sx={{ fontSize: 14 }} />Envoyer
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    textTransform: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                  onClick={() => setShowSendModal(true)}
+                >
+                  <SendOutlined sx={{ fontSize: 14 }} />
+                  Envoyer
                 </Button>
-                <Button variant="outlined" size="small" sx={{ textTransform: 'none', color: 'var(--red)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setShowDeleteModal(true)}>
-                  <DeleteOutlineOutlined sx={{ fontSize: 14 }} />Supprimer
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    textTransform: "none",
+                    color: "var(--red)",
+                    borderColor: "rgba(239,68,68,0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    "&:hover": {
+                      borderColor: "var(--red)",
+                      background: "rgba(239,68,68,0.05)",
+                    },
+                  }}
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
+                  Supprimer
                 </Button>
               </>
             )}
-            {invoice.status === 'Sent' && (
-              <Button variant="contained" size="small" sx={{ textTransform: 'none', background: 'var(--green)', borderColor: 'var(--green)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setShowPayModal(true)}>
-                <CheckCircleOutlined sx={{ fontSize: 14 }} />Marquer payée
+            {invoice.status === "Sent" && (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  textTransform: "none",
+                  background: "var(--green)",
+                  "&:hover": { background: "#16a34a" },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+                onClick={() => setShowPayModal(true)}
+              >
+                <CheckCircleOutlined sx={{ fontSize: 14 }} />
+                Marquer payée
               </Button>
             )}
           </Box>
         }
       />
 
-      <Box sx={{ p: '24px 28px' }}>
+      <Box
+        sx={{
+          p: "24px 28px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          animation: "fadeInUp 0.35s cubic-bezier(0.16,1,0.3,1) both",
+        }}
+      >
+        {/* ── Actions PDF ── */}
+        {invoice.hasPdf && (
+          <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+            <Box
+              component="button"
+              onClick={() => openInvoicePdf(invoice.id)}
+              sx={{
+                all: "unset",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--muted2)",
+                px: "10px",
+                height: "28px",
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                transition: "background 0.1s, color 0.1s",
+                "&:hover": { background: "var(--s2)", color: "var(--text)" },
+              }}
+            >
+              <VisibilityOutlined sx={{ fontSize: 13 }} />
+              Visualiser
+            </Box>
+            <Box
+              component="button"
+              onClick={() => {
+                setDownloadFilename(invoice.reference);
+                setShowDownloadModal(true);
+              }}
+              sx={{
+                all: "unset",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--muted2)",
+                px: "10px",
+                height: "28px",
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                transition: "background 0.1s, color 0.1s",
+                "&:hover": { background: "var(--s2)", color: "var(--text)" },
+              }}
+            >
+              <FileDownloadOutlined sx={{ fontSize: 13 }} />
+              Télécharger
+            </Box>
+          </Box>
+        )}
 
-        <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-          <Box sx={{ p: '20px 24px' }}>
-            <Box className="d-flex align-items-center" sx={{ gap: '0' }}>
-              {STEPS.map((step, idx) => {
-                const done = idx < currentStep
-                const active = idx === currentStep
-                const isOverdueStep = active && overdue
+        {/* ══ Card 1 — Stepper ══ */}
+        <Box
+          sx={{
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "14px",
+            px: "40px",
+            py: "22px",
+            display: "flex",
+            alignItems: "flex-start",
+          }}
+        >
+          {STEPS.map((step, idx) => {
+            const done = idx < currentStep;
+            const active = idx === currentStep;
+            const isOverdueStep = active && overdue && step.key === "Sent";
 
-                return (
-                  <React.Fragment key={step.key}>
-                    <Box className="d-flex flex-column align-items-center" sx={{ gap: '6px', flex: 1 }}>
-                      <Box sx={{
-                        width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: done ? 'var(--green)' : active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : 'var(--s3)',
-                        border: `2px solid ${done ? 'var(--green)' : active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : 'var(--border)'}`,
-                        color: done || active ? '#fff' : 'var(--muted)',
-                        fontSize: '12px', fontWeight: 700, transition: 'all 0.2s',
-                      }}>
-                        {done ? <CheckCircleOutlined sx={{ fontSize: 16 }} /> : idx + 1}
-                      </Box>
-                      <Box component="span" sx={{ fontSize: '11px', fontWeight: active ? 700 : 400, color: active ? (isOverdueStep ? 'var(--red)' : 'var(--accent)') : done ? 'var(--green)' : 'var(--muted)' }}>
-                        {isOverdueStep ? 'En retard' : step.label}
-                      </Box>
-                      {active && invoice.paidAt && (
-                        <Box component="span" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{fmtDate(invoice.paidAt)}</Box>
+            const dotBg = done
+              ? "var(--green)"
+              : active
+                ? isOverdueStep
+                  ? "var(--red)"
+                  : "var(--accent)"
+                : "var(--s3)";
+            const dotBorder = done
+              ? "var(--green)"
+              : active
+                ? isOverdueStep
+                  ? "var(--red)"
+                  : "var(--accent)"
+                : "var(--border)";
+            const labelFg = done
+              ? "var(--green)"
+              : active
+                ? isOverdueStep
+                  ? "var(--red)"
+                  : "var(--accent)"
+                : "var(--muted)";
+            const lineFg = done ? "var(--green)" : "var(--border)";
+
+            let dateLine: string | undefined;
+            let dateFg = "var(--muted)";
+            if (done && step.key === "Draft" && invoice.issuedAt) {
+              dateLine = fmtDateShort(invoice.issuedAt);
+            } else if (
+              step.key === "Sent" &&
+              invoice.dueAt &&
+              (active || done)
+            ) {
+              dateLine = fmtDateShort(invoice.dueAt);
+              dateFg = active && overdue ? "var(--red)" : "var(--muted)";
+            } else if (step.key === "Paid" && invoice.paidAt) {
+              dateLine = fmtDateShort(invoice.paidAt);
+              dateFg = "var(--green)";
+            }
+
+            return (
+              <React.Fragment key={step.key}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    flex: 1,
+                  }}
+                >
+                  {/* Dot */}
+                  <Box
+                    sx={{
+                      width: "30px",
+                      height: "30px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: dotBg,
+                      border: `2px solid ${dotBorder}`,
+                      color: done || active ? "#fff" : "var(--muted)",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      transition: "all 0.2s",
+                      flexShrink: 0,
+                      ...(active
+                        ? {
+                            boxShadow: `0 0 0 4px ${isOverdueStep ? "rgba(239,68,68,0.14)" : "rgba(99,102,241,0.14)"}`,
+                          }
+                        : {}),
+                    }}
+                  >
+                    {done ? (
+                      <CheckCircleOutlined sx={{ fontSize: 15 }} />
+                    ) : isOverdueStep ? (
+                      <WarningAmberOutlined sx={{ fontSize: 15 }} />
+                    ) : (
+                      idx + 1
+                    )}
+                  </Box>
+
+                  {/* Label */}
+                  <Box sx={{ textAlign: "center" }}>
+                    <Box
+                      sx={{
+                        fontSize: "11px",
+                        fontWeight: active ? 700 : done ? 600 : 400,
+                        color: labelFg,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {isOverdueStep ? "En retard" : step.label}
+                      {isOverdueStep && overduedays > 0 && (
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: "6px",
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            px: "5px",
+                            py: "1px",
+                            borderRadius: "4px",
+                            background: "rgba(239,68,68,0.12)",
+                            color: "var(--red)",
+                            fontFamily: "var(--font-mono)",
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          +{overduedays}j
+                        </Box>
                       )}
                     </Box>
-                    {idx < STEPS.length - 1 && (
-                      <Box sx={{ flex: 2, height: '2px', background: done ? 'var(--green)' : 'var(--border)', margin: '0 4px', marginBottom: '22px', transition: 'background 0.2s' }} />
+                    {dateLine && (
+                      <Box
+                        sx={{
+                          fontSize: "10px",
+                          color: dateFg,
+                          mt: "3px",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        {dateLine}
+                      </Box>
                     )}
-                  </React.Fragment>
-                )
-              })}
-            </Box>
-          </Box>
-        </Paper>
+                  </Box>
+                </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', mb: '24px' }}>
-
-          <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-            <Box sx={{ p: '20px 22px' }}>
-              <SectionLabel icon={<ApartmentOutlined sx={{ fontSize: 13 }} />} label="Libellé" />
-              <Box className="d-flex flex-column" sx={{ gap: '10px' }}>
-                <InfoRow label="Libellé" value={invoice.label} bold />
-                {invoice.techProjectName && <InfoRow label="Projet" value={invoice.techProjectName} />}
-                <InfoRow label="Taux journalier" value={fmtEur(invoice.dailyRate)} />
-                <InfoRow label="Taux horaire" value={fmtEur(hourlyRate)} />
-              </Box>
-            </Box>
-          </Paper>
-
-          <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-            <Box sx={{ p: '20px 22px' }}>
-              <SectionLabel icon={<CalendarTodayOutlined sx={{ fontSize: 13 }} />} label="Dates" />
-              <Box className="d-flex flex-column" sx={{ gap: '10px' }}>
-                <InfoRow label="Période facturée" value={invoice.period} bold />
-                <InfoRow label="Date d'émission" value={fmtDate(invoice.issuedAt)} />
-                <InfoRow
-                  label="Date d'échéance"
-                  value={fmtDate(invoice.dueAt)}
-                  valueColor={overdue ? 'var(--red)' : undefined}
-                  suffix={overdue ? ' · DÉPASSÉE' : undefined}
-                />
-                {invoice.paidAt && <InfoRow label="Date de paiement" value={fmtDate(invoice.paidAt)} valueColor="var(--green)" />}
-              </Box>
-            </Box>
-          </Paper>
+                {idx < STEPS.length - 1 && (
+                  <Box
+                    sx={{
+                      flex: 2,
+                      height: "1.5px",
+                      background: lineFg,
+                      mx: "8px",
+                      mt: "14px",
+                      borderRadius: "1px",
+                      transition: "background 0.3s",
+                    }}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </Box>
 
-        <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-          <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>
-            <SectionLabel icon={<DescriptionOutlined sx={{ fontSize: 13 }} />} label="Détail de facturation" />
-          </Box>
-          <Box sx={{ p: '0' }}>
-            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {['Description', 'Quantité', 'Prix unitaire', 'Montant HT'].map((h) => (
-                    <Box component="th" key={h} sx={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', textAlign: 'left', padding: '10px 20px', background: 'var(--s2)', fontWeight: 500 }}>
-                      {h}
-                    </Box>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <Box component="td" sx={{ padding: '16px 20px', fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>
-                    {invoice.techProjectName ? `${invoice.techProjectName} — ` : ''}{invoice.period}
-                  </Box>
-                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
-                    {invoice.totalHours}h
-                  </Box>
-                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    {hourlyRate > 0 ? fmtEur(hourlyRate) + '/h' : '—'}
-                  </Box>
-                  <Box component="td" sx={{ padding: '16px 20px', fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700 }}>
-                    {fmtEur(invoice.totalAmount)}
-                  </Box>
-                </tr>
-              </tbody>
-            </Box>
+        {/* ══ Card 2 — Document ══ */}
+        <Box
+          sx={{
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "14px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Accent strip */}
+          <Box sx={{ height: "2px", background: stripGradient }} />
 
-            <Box sx={{ borderTop: '1px solid var(--border)', padding: '16px 20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <Box sx={{ minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <TotalRow label="Total HT" value={fmtEur(invoice.totalAmount)} />
-                <TotalRow label={`TVA (${invoice.taxRate}%)`} value={fmtEur(invoice.taxAmount)} />
-                <Box sx={{ borderTop: '1px solid var(--border)', pt: '8px' }}>
-                  <TotalRow label="Total TTC" value={fmtEur(invoice.totalWithTax)} accent />
+          {/* ─ En-tête : référence + montant ─ */}
+          <Box
+            sx={{
+              px: "32px",
+              pt: "26px",
+              pb: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: "32px",
+            }}
+          >
+            {/* Gauche */}
+            <Box>
+              <Box
+                sx={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "20px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1,
+                  color: "var(--text)",
+                }}
+              >
+                {invoice.reference}
+              </Box>
+              <Box
+                sx={{
+                  fontSize: "13px",
+                  color: "var(--muted2)",
+                  mt: "6px",
+                  fontWeight: 400,
+                  lineHeight: 1.5,
+                }}
+              >
+                {invoice.label}
+                {invoice.techProjectName && (
+                  <Box
+                    component="span"
+                    sx={{ color: "var(--border2)", mx: "6px" }}
+                  >
+                    ·
+                  </Box>
+                )}
+                {invoice.techProjectName}
+                <Box
+                  component="span"
+                  sx={{ color: "var(--border2)", mx: "6px" }}
+                >
+                  ·
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12px",
+                    color: "var(--muted)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {invoice.period}
                 </Box>
               </Box>
             </Box>
           </Box>
-        </Paper>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
-          <FinCard icon={<AccessTimeOutlined sx={{ fontSize: 16 }} />} label="Heures prestées" value={`${invoice.totalHours}h`} />
-          <FinCard icon={<EuroOutlined sx={{ fontSize: 16 }} />} label="Montant HT" value={fmtEur(invoice.totalAmount)} />
-          <FinCard icon={<EuroOutlined sx={{ fontSize: 16 }} />} label="Montant TTC" value={fmtEur(invoice.totalWithTax)} accent />
+          <HR />
+
+          {/* ─ Dates & Tarification ─ */}
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+            {/* Dates */}
+            <Box
+              sx={{
+                px: "32px",
+                py: "20px",
+                borderRight: "1px solid var(--border)",
+              }}
+            >
+              <Box
+                sx={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "var(--muted)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  mb: "16px",
+                }}
+              >
+                Dates
+              </Box>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: "11px" }}
+              >
+                {(
+                  [
+                    { label: "Émission", value: fmtDate(invoice.issuedAt) },
+                    {
+                      label: "Échéance",
+                      value: fmtDate(invoice.dueAt),
+                      alert: overdue,
+                      badge:
+                        overdue && overduedays > 0
+                          ? `+${overduedays}j`
+                          : undefined,
+                    },
+                    ...(invoice.paidAt
+                      ? [
+                          {
+                            label: "Paiement",
+                            value: fmtDate(invoice.paidAt),
+                            success: true,
+                          },
+                        ]
+                      : []),
+                  ] as {
+                    label: string;
+                    value: string;
+                    alert?: boolean;
+                    success?: boolean;
+                    badge?: string;
+                  }[]
+                ).map(({ label, value, alert, success, badge }) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: "12px",
+                        color: "var(--muted)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {label}
+                    </Box>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          fontFamily: "var(--font-mono)",
+                          letterSpacing: "-0.02em",
+                          color: alert
+                            ? "var(--red)"
+                            : success
+                              ? "var(--green)"
+                              : "var(--text)",
+                        }}
+                      >
+                        {value}
+                      </Box>
+                      {badge && (
+                        <Box
+                          component="span"
+                          sx={{
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            px: "5px",
+                            py: "1px",
+                            borderRadius: "4px",
+                            background: "rgba(239,68,68,0.1)",
+                            color: "var(--red)",
+                            fontFamily: "var(--font-mono)",
+                            border: "1px solid rgba(239,68,68,0.18)",
+                          }}
+                        >
+                          {badge}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Tarification */}
+            <Box sx={{ px: "32px", py: "20px" }}>
+              <Box
+                sx={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "var(--muted)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  mb: "16px",
+                }}
+              >
+                Tarification
+              </Box>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: "11px" }}
+              >
+                {[
+                  {
+                    label: "Taux journalier",
+                    value: fmtEur(invoice.dailyRate),
+                  },
+                  {
+                    label: "Taux horaire",
+                    value: hourlyRate > 0 ? fmtEur(hourlyRate) : "—",
+                  },
+                  {
+                    label: "Heures facturées",
+                    value: `${invoice.totalHours} h`,
+                  },
+                ].map(({ label, value }) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: "12px",
+                        color: "var(--muted)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {label}
+                    </Box>
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        fontFamily: "var(--font-mono)",
+                        letterSpacing: "-0.02em",
+                        color: "var(--text)",
+                      }}
+                    >
+                      {value}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+
+          <HR />
+
+          {/* ─ Ligne de prestation ─ */}
+          <Box
+            component="table"
+            sx={{ width: "100%", borderCollapse: "collapse" }}
+          >
+            <Box component="thead">
+              <Box component="tr" sx={{ background: "var(--s2)" }}>
+                {(
+                  [
+                    "Description",
+                    `TVA (${invoice.taxRate}%)`,
+                    "Montant HT",
+                    "Montant TTC",
+                  ] as const
+                ).map((h, i) => (
+                  <Box
+                    component="th"
+                    key={h}
+                    sx={{
+                      px: i === 0 ? "32px" : "20px",
+                      pr: i === 3 ? "32px" : undefined,
+                      py: "10px",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "9px",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                      textAlign: i === 0 ? "left" : "right",
+                      borderBottom: "1px solid var(--border)",
+                    }}
+                  >
+                    {h}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+            <Box component="tbody">
+              <Box component="tr">
+                <Box component="td" sx={{ px: "32px", py: "18px" }}>
+                  <Box
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text)",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {invoice.techProjectName ?? invoice.label}
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: "11px",
+                      color: "var(--muted)",
+                      mt: "3px",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {invoice.period}
+                  </Box>
+                </Box>
+                <Box
+                  component="td"
+                  sx={{
+                    px: "20px",
+                    py: "18px",
+                    textAlign: "right",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--muted2)",
+                  }}
+                >
+                  {fmtEur(invoice.taxAmount)}
+                </Box>
+                <Box
+                  component="td"
+                  sx={{
+                    px: "20px",
+                    py: "18px",
+                    textAlign: "right",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "var(--text)",
+                  }}
+                >
+                  {fmtEur(invoice.totalAmount)}
+                </Box>
+                <Box
+                  component="td"
+                  sx={{
+                    px: "20px",
+                    pr: "32px",
+                    py: "18px",
+                    textAlign: "right",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    letterSpacing: "-0.03em",
+                    color:
+                      invoice.status === "Paid"
+                        ? "var(--green)"
+                        : overdue
+                          ? "var(--red)"
+                          : "var(--accent)",
+                  }}
+                >
+                  {fmtEur(invoice.totalWithTax)}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
+      {/* ── Modales ── */}
       <AppModal
         open={showSendModal}
         onClose={() => setShowSendModal(false)}
         title="Envoyer la facture"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowSendModal(false)}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handleSend} disabled={actionLoading}>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowSendModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{
+                textTransform: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+              onClick={handleSend}
+              disabled={actionLoading}
+            >
               <SendOutlined sx={{ fontSize: 14 }} />
-              {actionLoading ? 'Envoi...' : "Confirmer l'envoi"}
+              {actionLoading ? "Envoi..." : "Confirmer l'envoi"}
             </Button>
           </>
         }
       >
-        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          Marquer la facture <strong>{invoice.reference}</strong> ({fmtEur(invoice.totalWithTax)}) comme envoyée à <strong>{invoice.label}</strong> ?
+        <Box
+          component="p"
+          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
+        >
+          Marquer la facture <strong>{invoice.reference}</strong> (
+          {fmtEur(invoice.totalWithTax)}) comme envoyée ?
         </Box>
       </AppModal>
 
@@ -300,17 +871,41 @@ export const InvoiceDetailPage: React.FC = () => {
         title="Confirmer le paiement"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowPayModal(false)}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none', background: 'var(--green)', borderColor: 'var(--green)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={handlePay} disabled={actionLoading}>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowPayModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{
+                textTransform: "none",
+                background: "var(--green)",
+                "&:hover": { background: "#16a34a" },
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+              onClick={handlePay}
+              disabled={actionLoading}
+            >
               <CheckCircleOutlined sx={{ fontSize: 14 }} />
-              {actionLoading ? 'Enregistrement...' : 'Confirmer le paiement'}
+              {actionLoading ? "Enregistrement..." : "Confirmer le paiement"}
             </Button>
           </>
         }
       >
-        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          Enregistrer le paiement de <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture <strong>{invoice.reference}</strong> ?
-          La date de paiement sera enregistrée à aujourd'hui.
+        <Box
+          component="p"
+          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
+        >
+          Enregistrer le paiement de{" "}
+          <strong>{fmtEur(invoice.totalWithTax)}</strong> pour la facture{" "}
+          <strong>{invoice.reference}</strong> ?
         </Box>
       </AppModal>
 
@@ -320,59 +915,126 @@ export const InvoiceDetailPage: React.FC = () => {
         title="Supprimer le brouillon"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setShowDeleteModal(false)}>Annuler</Button>
-            <Button variant="contained" color="error" size="small" sx={{ textTransform: 'none' }} onClick={handleDelete} disabled={actionLoading}>
-              {actionLoading ? 'Suppression...' : 'Supprimer'}
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={handleDelete}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Suppression..." : "Supprimer"}
             </Button>
           </>
         }
       >
-        <Box component="p" sx={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          Supprimer définitivement le brouillon <strong>{invoice.reference}</strong> ?
-          Cette action est irréversible.
+        <Box
+          component="p"
+          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
+        >
+          Supprimer définitivement le brouillon{" "}
+          <strong>{invoice.reference}</strong> ? Cette action est irréversible.
         </Box>
       </AppModal>
+
+      <AppModal
+        open={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        title="Télécharger le PDF"
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowDownloadModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
+              disabled={!downloadFilename.trim()}
+              onClick={() => {
+                downloadInvoicePdf(invoice.id, downloadFilename.trim());
+                setShowDownloadModal(false);
+              }}
+            >
+              Télécharger
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <Box
+            component="label"
+            sx={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--muted2)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Nom du fichier
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "stretch" }}>
+            <Box
+              component="input"
+              autoFocus
+              type="text"
+              value={downloadFilename}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setDownloadFilename(e.target.value)
+              }
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === "Enter" && downloadFilename.trim()) {
+                  downloadInvoicePdf(invoice.id, downloadFilename.trim());
+                  setShowDownloadModal(false);
+                }
+              }}
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r) 0 0 var(--r)",
+                px: "12px",
+                py: "8px",
+                fontSize: "13px",
+                color: "var(--text)",
+                flex: 1,
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            />
+            <Box
+              sx={{
+                background: "var(--s2)",
+                border: "1px solid var(--border)",
+                borderLeft: "none",
+                borderRadius: "0 var(--r) var(--r) 0",
+                display: "flex",
+                alignItems: "center",
+                px: "10px",
+                fontSize: "12px",
+                color: "var(--muted)",
+                fontFamily: "var(--font-mono)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              .pdf
+            </Box>
+          </Box>
+        </Box>
+      </AppModal>
+
     </>
-  )
-}
-
-const SectionLabel: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
-  <Box className="d-flex align-items-center" sx={{ gap: '7px', mb: '14px' }}>
-    <Box component="span" sx={{ color: 'var(--muted)', display: 'flex' }}>{icon}</Box>
-    <Box component="span" sx={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600 }}>{label}</Box>
-  </Box>
-)
-
-const InfoRow: React.FC<{ label: string; value: string; bold?: boolean; valueColor?: string; suffix?: string }> = ({ label, value, bold, valueColor, suffix }) => (
-  <Box className="d-flex justify-content-between align-items-center">
-    <Box component="span" sx={{ fontSize: '12px', color: 'var(--muted)' }}>{label}</Box>
-    <Box component="span" sx={{ fontSize: '13px', fontWeight: bold ? 700 : 500, color: valueColor ?? 'var(--text)', fontFamily: bold ? undefined : 'var(--font-mono)' }}>
-      {value}{suffix && <Box component="span" sx={{ fontSize: '10px', fontWeight: 700, ml: '6px' }}>{suffix}</Box>}
-    </Box>
-  </Box>
-)
-
-const TotalRow: React.FC<{ label: string; value: string; accent?: boolean }> = ({ label, value, accent }) => (
-  <Box className="d-flex justify-content-between align-items-center">
-    <Box component="span" sx={{ fontSize: accent ? '14px' : '13px', fontWeight: accent ? 700 : 400, color: accent ? 'var(--text)' : 'var(--text-secondary)' }}>
-      {label}
-    </Box>
-    <Box component="span" sx={{ fontFamily: 'var(--font-mono)', fontSize: accent ? '18px' : '13px', fontWeight: accent ? 800 : 600, color: accent ? 'var(--green)' : 'var(--text)' }}>
-      {value}
-    </Box>
-  </Box>
-)
-
-const FinCard: React.FC<{ icon: React.ReactNode; label: string; value: string; accent?: boolean }> = ({ icon, label, value, accent }) => (
-  <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-    <Box sx={{ p: '18px 20px' }}>
-      <Box className="d-flex align-items-center" sx={{ gap: '8px', mb: '10px', color: 'var(--muted)' }}>
-        {icon}
-        <Box component="span" sx={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>{label}</Box>
-      </Box>
-      <Box sx={{ fontSize: '22px', fontWeight: 800, color: accent ? 'var(--green)' : 'var(--text)', letterSpacing: '-0.02em' }}>
-        {value}
-      </Box>
-    </Box>
-  </Paper>
-)
+  );
+};

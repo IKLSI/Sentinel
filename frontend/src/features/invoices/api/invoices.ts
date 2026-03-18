@@ -57,12 +57,18 @@ export const deleteInvoice = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/invoices/${id}`)
 }
 
-export const downloadInvoicePdf = async (id: string): Promise<void> => {
+export const downloadInvoicePdf = async (id: string, filename: string): Promise<void> => {
   const response = await apiClient.get(`/api/invoices/${id}/pdf`, { responseType: 'blob' })
   const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
   const a = document.createElement('a')
   a.href = url
-  a.download = `facture_${id}.pdf`
+  a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
   a.click()
   URL.revokeObjectURL(url)
+}
+
+export const openInvoicePdf = async (id: string): Promise<void> => {
+  const response = await apiClient.get(`/api/invoices/${id}/pdf`, { responseType: 'blob' })
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+  window.open(url, '_blank')
 }
