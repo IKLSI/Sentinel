@@ -664,13 +664,14 @@ export const KanbanPage: React.FC = () => {
 
       {loading ? (
         <Box
-          className="d-flex justify-content-center align-items-center"
+          className="d-flex justify-content-center align-items-center kanban-content"
           sx={{ height: "calc(100vh - 67px)" }}
         >
           <CircularProgress size={28} />
         </Box>
       ) : (
         <Box
+          className="kanban-content"
           sx={{
             display: "flex",
             flexDirection: "column",
