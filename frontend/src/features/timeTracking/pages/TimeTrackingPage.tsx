@@ -31,6 +31,7 @@ import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import TodayOutlined from "@mui/icons-material/TodayOutlined";
+import AddOutlined from "@mui/icons-material/AddOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import Tooltip from "@mui/material/Tooltip";
 import Popover from "@mui/material/Popover";
@@ -95,6 +96,7 @@ export const TimeTrackingPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [hoveredWeekStart, setHoveredWeekStart] = useState<Date | null>(null);
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -210,8 +212,9 @@ export const TimeTrackingPage: React.FC = () => {
     }
   };
 
-  const weekLabel = `Semaine du ${format(weekStart, "dd MMM", { locale: fr })} au ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
   const isCurrentWeek = weekOffset === 0;
+
+  const weekLabel = `${format(weekStart, "dd MMM", { locale: fr })} — ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
 
   const calendarGrid = useMemo(() => {
     const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
@@ -225,6 +228,7 @@ export const TimeTrackingPage: React.FC = () => {
     const diff = Math.round((selectedWeekStart.getTime() - currentWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
     setWeekOffset(diff);
     setCalendarAnchor(null);
+    setHoveredWeekStart(null);
   };
 
   const entriesByDay = useMemo(() => {
@@ -234,31 +238,40 @@ export const TimeTrackingPage: React.FC = () => {
     return map;
   }, [weekDays, weekEntries]);
 
+  const progressColor = weekPct >= 100 ? "var(--green)" : weekPct >= 70 ? "var(--accent)" : weekPct >= 40 ? "var(--orange)" : "var(--border2)";
+
   return (
     <>
-      <Topbar
-        title=""
-        subtitle={undefined}
-      />
+      <Topbar title="" subtitle={undefined} />
 
-      <Box sx={{ p: "20px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      <Box sx={{ p: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
-        {/* ── Week grid card ── */}
-        <SectionCard
-          title={
-            <Box component="span" sx={{ display: "inline-flex", alignItems: "baseline", gap: "6px" }}>
-              <Box component="span">Vue hebdomadaire</Box>
-              {totalMinutes > 0 && (
-                <>
-                  <Box component="span" sx={{ color: "var(--border2)", fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>·</Box>
-                  <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: 0, textTransform: "none" }}>
-                    {formatDuration(totalMinutes)}
-                  </Box>
-                </>
-              )}
+        {/* ── Card semaine ── */}
+        <Box sx={{
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "12px",
+          overflow: "hidden",
+        }}>
+          {/* Navigation */}
+          <Box sx={{
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between",
+            px: "16px", py: "10px",
+            borderBottom: "1px solid var(--border)",
+          }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Semaine
+              </Box>
+              <Box sx={{
+                fontSize: "12px", fontWeight: 600, color: "var(--text)",
+                letterSpacing: "-0.01em", fontFamily: "var(--font-ui)",
+                textTransform: "capitalize",
+              }}>
+                {weekLabel}
+              </Box>
             </Box>
-          }
-          action={
             <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
               {!isCurrentWeek && (
                 <Box
@@ -306,16 +319,42 @@ export const TimeTrackingPage: React.FC = () => {
                 <CalendarTodayOutlined sx={{ fontSize: 12 }} />
               </Box>
             </Box>
-          }
-          noPadding
-        >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(7, 1fr)",
-              borderTop: "1px solid var(--border)",
-            }}
-          >
+          </Box>
+
+          {/* Récap total + barre */}
+          <Box sx={{
+            display: "flex", alignItems: "center", gap: "16px",
+            px: "16px", py: "10px",
+            borderBottom: "1px solid var(--border)",
+          }}>
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: "5px", flexShrink: 0 }}>
+              <Box sx={{
+                fontFamily: "var(--font-mono)", fontSize: "20px", fontWeight: 800,
+                color: "var(--text)", letterSpacing: "-0.04em", lineHeight: 1,
+              }}>
+                {formatDuration(totalMinutes)}
+              </Box>
+              <Box sx={{ fontSize: "11px", color: "var(--muted)", fontWeight: 500 }}>
+                / {formatDuration(WEEK_TARGET)}
+              </Box>
+            </Box>
+            <Box sx={{ flex: 1, height: "4px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
+              <Box sx={{
+                height: "100%", width: `${weekPct}%`,
+                background: progressColor, borderRadius: "2px",
+                transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
+              }} />
+            </Box>
+            <Box sx={{
+              fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700,
+              color: progressColor, flexShrink: 0,
+            }}>
+              {weekPct}%
+            </Box>
+          </Box>
+
+          {/* Grille jours */}
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
             {weekDays.map((day, idx) => {
               const dayStr = format(day, "yyyy-MM-dd");
               const dayEntries = entriesByDay.get(dayStr) ?? [];
@@ -336,40 +375,36 @@ export const TimeTrackingPage: React.FC = () => {
                   onClick={() => openCreate(dayStr)}
                   sx={{
                     background: today
-                      ? "linear-gradient(180deg, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.04) 100%)"
-                      : isWeekend ? "var(--s2)" : "var(--s1)",
+                      ? "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)"
+                      : isWeekend ? "rgba(0,0,0,0.03)" : "transparent",
                     borderRight: idx < 6 ? "1px solid var(--border)" : "none",
-                    borderTop: today ? "2px solid var(--accent)" : "none",
-                    border: "none",
-                    padding: "16px 10px 14px",
+                    borderTop: today ? "2px solid var(--accent)" : "2px solid transparent",
+                    borderBottom: "none", borderLeft: "none",
+                    padding: "14px 10px 14px",
                     cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "8px",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
                     fontFamily: "var(--font-ui)",
-                    minHeight: "80px",
+                    minHeight: "106px",
                     transition: "background 0.15s",
-                    position: "relative",
-                    "&:hover": { background: today ? "rgba(99,102,241,0.12)" : isWeekend ? "var(--s3)" : "var(--s2)" },
+                    "&:hover": {
+                      background: today
+                        ? "rgba(99,102,241,0.12)"
+                        : isWeekend ? "rgba(0,0,0,0.07)" : "var(--s2)",
+                    },
                   }}
                 >
                   <Box sx={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "10px",
+                    fontFamily: "var(--font-mono)", fontSize: "9px",
                     color: today ? "var(--accent)" : isWeekend ? "var(--border2)" : "var(--muted)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700,
                   }}>
                     {format(day, "EEE", { locale: fr })}
                   </Box>
 
                   <Box sx={{
-                    width: "30px", height: "30px",
-                    borderRadius: "50%",
+                    width: "30px", height: "30px", borderRadius: "50%",
                     background: today ? "var(--accent)" : "transparent",
-                    boxShadow: today ? "0 2px 8px rgba(99,102,241,0.4)" : "none",
+                    boxShadow: today ? "0 2px 10px rgba(99,102,241,0.4)" : "none",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "13px", fontWeight: 700,
                     color: today ? "#fff" : isWeekend ? "var(--muted)" : "var(--text)",
@@ -377,79 +412,111 @@ export const TimeTrackingPage: React.FC = () => {
                     {format(day, "d")}
                   </Box>
 
-                  <Box sx={{
-                    width: "100%", height: "4px",
-                    background: "var(--s3)", borderRadius: "2px",
-                    overflow: "hidden",
-                  }}>
-                    {pct > 0 && (
+                  <Box sx={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: "5px" }}>
+                    {dayMinutes > 0 && (
                       <Box sx={{
-                        height: "100%", width: `${pct}%`,
-                        background: barColor, borderRadius: "2px",
-                        transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
-                      }} />
+                        fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
+                        color: barColor, textAlign: "center", letterSpacing: "-0.02em",
+                      }}>
+                        {formatDuration(dayMinutes)}
+                      </Box>
                     )}
+                    <Box sx={{ width: "100%", height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
+                      {pct > 0 && (
+                        <Box sx={{
+                          height: "100%", width: `${pct}%`, background: barColor, borderRadius: "2px",
+                          transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
+                        }} />
+                      )}
+                    </Box>
                   </Box>
                 </Box>
               );
             })}
           </Box>
-        </SectionCard>
+        </Box>
 
-        {/* ── Project distribution ── */}
+        {/* ── Répartition par projet ── */}
         {statsByProject.length > 0 && (
-          <SectionCard title="Répartition par projet">
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <Box sx={{
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "12px",
+            px: "16px", py: "14px",
+            display: "flex", flexDirection: "column", gap: "10px",
+          }}>
+            <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", mb: "2px" }}>
+              Par projet
+            </Box>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {statsByProject.map((p) => {
                 const pct = totalMinutes > 0 ? Math.round((p.minutes / totalMinutes) * 100) : 0;
                 const color = getProjectColor(p.name);
                 return (
-                  <Box key={p.name} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <Box key={p.name} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Box sx={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />
                     <Box sx={{
-                      width: "3px", height: "32px", borderRadius: "2px",
-                      background: color, flexShrink: 0, opacity: 0.85,
-                    }} />
-                    <Box component="span" sx={{
                       fontSize: "12.5px", color: "var(--text)", fontWeight: 500,
-                      minWidth: "130px", letterSpacing: "-0.01em",
+                      letterSpacing: "-0.01em", minWidth: "120px",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {p.name}
                     </Box>
-                    <Box sx={{
-                      flex: 1, height: "4px",
-                      background: "var(--s3)", borderRadius: "2px", overflow: "hidden",
-                    }}>
+                    <Box sx={{ flex: 1, height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
                       <Box sx={{
-                        height: "100%", width: `${pct}%`,
-                        background: color, borderRadius: "2px",
+                        height: "100%", width: `${pct}%`, background: color, borderRadius: "2px",
                         transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
-                        opacity: 0.9,
                       }} />
                     </Box>
-                    <Box sx={{
-                      fontFamily: "var(--font-mono)",
-                      display: "flex", alignItems: "center", gap: "14px",
-                      minWidth: "88px", justifyContent: "flex-end",
-                    }}>
-                      <Box component="span" sx={{ fontSize: "12px", fontWeight: 700, color: "var(--text)" }}>
-                        {formatDuration(p.minutes)}
-                      </Box>
-                      <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)", minWidth: "28px", textAlign: "right" }}>
-                        {pct}%
-                      </Box>
+                    <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--text)", minWidth: "28px", textAlign: "right" }}>
+                      {formatDuration(p.minutes)}
+                    </Box>
+                    <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", minWidth: "28px", textAlign: "right" }}>
+                      {pct}%
                     </Box>
                   </Box>
                 );
               })}
             </Box>
-          </SectionCard>
+          </Box>
         )}
 
         {/* ── Journal ── */}
-        <SectionCard
-          title="Journal"
-          noPadding
-        >
+        <Box sx={{
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "12px",
+          overflow: "hidden",
+        }}>
+          <Box sx={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            px: "16px", py: "10px", minHeight: "44px",
+            borderBottom: "1px solid var(--border)",
+          }}>
+            <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Journal
+            </Box>
+            <Box
+              component="button"
+              onClick={() => openCreate()}
+              sx={{
+                display: "flex", alignItems: "center", gap: "4px",
+                background: "var(--accent-subtle)",
+                border: "1px solid var(--accent-border)",
+                borderRadius: "6px",
+                px: "8px", height: "24px",
+                cursor: "pointer", color: "var(--accent)",
+                fontSize: "11px", fontWeight: 600,
+                fontFamily: "var(--font-ui)",
+                transition: "background 0.12s",
+                "&:hover": { background: "rgba(99,102,241,0.15)" },
+              }}
+            >
+              <AddOutlined sx={{ fontSize: 12 }} />
+              Ajouter
+            </Box>
+          </Box>
+
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: "40px" }}>
               <CircularProgress size={22} />
@@ -458,15 +525,13 @@ export const TimeTrackingPage: React.FC = () => {
             <Box className="empty-state">
               <Box className="empty-state-icon"><AccessTimeOutlined sx={{ fontSize: 36 }} /></Box>
               <Box className="empty-state-title">Aucune saisie cette semaine</Box>
-              <Box className="empty-state-subtitle">
-                Cliquez sur un jour dans le calendrier pour ajouter du temps
-              </Box>
+              <Box className="empty-state-subtitle">Cliquez sur un jour dans le calendrier pour ajouter du temps</Box>
             </Box>
           ) : (
             <Box>
               {weekDays
                 .filter((d) => (entriesByDay.get(format(d, "yyyy-MM-dd")) ?? []).length > 0)
-                .map((day) => {
+                .map((day, groupIdx) => {
                   const dayStr = format(day, "yyyy-MM-dd");
                   const dayDate = parseDateLocal(dayStr);
                   const isCurrentDay = isToday(dayDate);
@@ -475,43 +540,49 @@ export const TimeTrackingPage: React.FC = () => {
 
                   return (
                     <Box key={dayStr}>
+                      {/* En-tête du jour */}
                       <Box sx={{
-                        display: "flex", alignItems: "center",
-                        justifyContent: "space-between",
-                        px: "16px", py: "9px",
-                        borderTop: "1px solid var(--border)",
-                        borderLeft: isCurrentDay ? "3px solid var(--accent)" : "3px solid transparent",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        px: "16px", py: "8px",
+                        borderTop: groupIdx > 0 ? "1px solid var(--border)" : "none",
                         background: isCurrentDay ? "rgba(99,102,241,0.04)" : "var(--s2)",
+                        borderLeft: isCurrentDay ? "3px solid var(--accent)" : "3px solid transparent",
                       }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Box component="span" sx={{
-                            fontSize: "12px", fontWeight: 700,
-                            color: isCurrentDay ? "var(--accent)" : "var(--text)",
-                            textTransform: "capitalize",
-                            letterSpacing: "-0.01em",
+                          <Box sx={{
+                            fontSize: "11px", fontWeight: 700,
+                            color: isCurrentDay ? "var(--accent)" : "var(--muted2)",
+                            textTransform: "uppercase", letterSpacing: "0.06em",
                           }}>
-                            {format(dayDate, "EEEE d MMMM", { locale: fr })}
+                            {format(dayDate, "EEE", { locale: fr })}
+                          </Box>
+                          <Box sx={{
+                            fontSize: "12px", fontWeight: 600,
+                            color: isCurrentDay ? "var(--accent)" : "var(--text)",
+                            letterSpacing: "-0.01em", textTransform: "capitalize",
+                          }}>
+                            {format(dayDate, "d MMMM", { locale: fr })}
                           </Box>
                           {isCurrentDay && (
-                            <Box component="span" sx={{
-                              fontSize: "10px",
+                            <Box sx={{
+                              fontSize: "10px", fontWeight: 600,
                               background: "var(--accent-subtle)", color: "var(--accent)",
-                              padding: "1px 7px", borderRadius: "4px", fontWeight: 600,
+                              px: "6px", py: "1px", borderRadius: "4px",
                               letterSpacing: "0.02em",
                             }}>
                               Aujourd'hui
                             </Box>
                           )}
                         </Box>
-                        <Box component="span" sx={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "12px", fontWeight: 800,
+                        <Box sx={{
+                          fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700,
                           color: isCurrentDay ? "var(--accent)" : "var(--muted2)",
                         }}>
                           {formatDuration(dayMinutes)}
                         </Box>
                       </Box>
 
+                      {/* Entrées du jour */}
                       {dayEntries.map((entry) => {
                         const projColor = entry.techProjectName
                           ? getProjectColor(entry.techProjectName)
@@ -521,52 +592,62 @@ export const TimeTrackingPage: React.FC = () => {
                             key={entry.id}
                             sx={{
                               display: "flex", alignItems: "center",
-                              gap: "0",
+                              px: "16px", py: "0",
                               borderTop: "1px solid var(--border)",
+                              minHeight: "48px",
+                              gap: "12px",
                               transition: "background 0.1s",
                               "&:hover": { background: "var(--s2)" },
                               "&:hover .tt-actions": { opacity: 1 },
                             }}
                           >
-                            <Box sx={{ width: "4px", alignSelf: "stretch", background: projColor, flexShrink: 0, opacity: 0.75 }} />
+                            {/* Badge durée */}
                             <Box sx={{
-                              px: "16px", py: "12px",
                               fontFamily: "var(--font-mono)",
-                              fontSize: "13px", fontWeight: 800,
+                              fontSize: "12px", fontWeight: 800,
                               color: "var(--accent)",
-                              minWidth: "60px", flexShrink: 0,
+                              minWidth: "40px", flexShrink: 0,
                               letterSpacing: "-0.02em",
                             }}>
                               {formatDuration(entry.durationMinutes)}
                             </Box>
+
+                            {/* Séparateur vertical */}
+                            <Box sx={{ width: "1px", height: "28px", background: "var(--border)", flexShrink: 0 }} />
+
+                            {/* Contenu */}
                             <Box sx={{ flex: 1, minWidth: 0, py: "12px" }}>
                               <Box sx={{
                                 fontSize: "13px", color: "var(--text)", fontWeight: 500,
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                                 letterSpacing: "-0.01em",
-                                mb: (entry.techProjectName || entry.ticketTitle) ? "4px" : 0,
+                                mb: (entry.techProjectName || entry.ticketTitle) ? "5px" : 0,
                               }}>
                                 {entry.comment ?? "—"}
                               </Box>
                               {(entry.techProjectName || entry.ticketTitle) && (
-                                <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                                   {entry.techProjectName && (
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    <Box sx={{
+                                      display: "inline-flex", alignItems: "center", gap: "5px",
+                                      background: "var(--s3)",
+                                      border: "1px solid var(--border)",
+                                      px: "7px", py: "2px", borderRadius: "5px",
+                                    }}>
                                       <Box sx={{ width: "5px", height: "5px", borderRadius: "50%", background: projColor, flexShrink: 0 }} />
-                                      <Box component="span" sx={{ fontSize: "11px", color: "var(--muted2)", fontWeight: 500, letterSpacing: "-0.01em" }}>
+                                      <Box component="span" sx={{ fontSize: "11px", color: "var(--muted2)", fontWeight: 500 }}>
                                         {entry.techProjectName}
                                       </Box>
                                     </Box>
                                   )}
-                                  {entry.techProjectName && entry.ticketTitle && (
-                                    <Box component="span" sx={{ fontSize: "10px", color: "var(--border2)" }}>·</Box>
-                                  )}
                                   {entry.ticketTitle && (
-                                    <Box component="span" sx={{
+                                    <Box sx={{
+                                      display: "inline-flex", alignItems: "center",
                                       fontFamily: "var(--font-mono)", fontSize: "10px",
                                       background: "var(--accent-subtle)", color: "var(--accent)",
-                                      padding: "2px 7px", borderRadius: "4px", fontWeight: 600,
-                                      whiteSpace: "nowrap", letterSpacing: "0.01em",
+                                      px: "7px", py: "2px", borderRadius: "5px",
+                                      fontWeight: 600, letterSpacing: "0.01em",
+                                      border: "1px solid var(--accent-border)",
                                     }}>
                                       {entry.ticketTitle}
                                     </Box>
@@ -574,25 +655,17 @@ export const TimeTrackingPage: React.FC = () => {
                                 </Box>
                               )}
                             </Box>
+
+                            {/* Actions */}
                             <Box
                               className="tt-actions"
                               sx={{
                                 display: "flex", alignItems: "center", gap: "2px",
-                                px: "12px", opacity: 0,
-                                transition: "opacity 0.15s", flexShrink: 0,
+                                opacity: 0, transition: "opacity 0.15s", flexShrink: 0,
                               }}
                             >
-                              <RowActionBtn
-                                icon={<EditOutlined sx={{ fontSize: 13 }} />}
-                                onClick={() => openEdit(entry)}
-                                title="Modifier"
-                              />
-                              <RowActionBtn
-                                icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />}
-                                onClick={() => setDeleteTarget(entry)}
-                                title="Supprimer"
-                                danger
-                              />
+                              <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
+                              <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
                             </Box>
                           </Box>
                         );
@@ -602,14 +675,14 @@ export const TimeTrackingPage: React.FC = () => {
                 })}
             </Box>
           )}
-        </SectionCard>
+        </Box>
       </Box>
 
       {/* ── Calendrier picker ── */}
       <Popover
         open={!!calendarAnchor}
         anchorEl={calendarAnchor}
-        onClose={() => setCalendarAnchor(null)}
+        onClose={() => { setCalendarAnchor(null); setHoveredWeekStart(null); }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         slotProps={{
@@ -621,7 +694,7 @@ export const TimeTrackingPage: React.FC = () => {
               boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
               p: "12px",
               mt: "4px",
-              width: "224px",
+              width: "236px",
             },
           },
         }}
@@ -646,35 +719,47 @@ export const TimeTrackingPage: React.FC = () => {
           ))}
         </Box>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px" }}>
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px" }}
+          onMouseLeave={() => setHoveredWeekStart(null)}
+        >
           {calendarGrid.map((day, i) => {
             const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
             const isInSelectedWeek = isSameWeek(day, weekStart, { weekStartsOn: 1 });
+            const isInHoveredWeek = hoveredWeekStart
+              ? isSameWeek(day, hoveredWeekStart, { weekStartsOn: 1 })
+              : false;
             const todayDay = isToday(day);
+            const isMonday = day.getDay() === 1;
+            const isSunday = day.getDay() === 0;
+            const highlighted = isInSelectedWeek || isInHoveredWeek;
+
             return (
               <Box
                 key={i}
                 component="button"
                 onClick={() => handleCalendarDayClick(day)}
+                onMouseEnter={() => setHoveredWeekStart(startOfWeek(day, { weekStartsOn: 1 }))}
                 sx={{
-                  background: isInSelectedWeek ? "var(--accent-subtle)" : "transparent",
+                  background: highlighted
+                    ? isInSelectedWeek ? "var(--accent-subtle)" : "var(--s3)"
+                    : "transparent",
                   border: "none",
-                  borderRadius: "5px",
+                  borderRadius: isMonday ? "6px 0 0 6px" : isSunday ? "0 6px 6px 0" : "0",
                   height: "28px",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: "pointer",
                   fontFamily: "var(--font-mono)",
                   fontSize: "11px",
-                  fontWeight: todayDay ? 800 : isInSelectedWeek ? 600 : 400,
+                  fontWeight: todayDay ? 800 : highlighted ? 600 : 400,
                   color: todayDay
                     ? "var(--accent)"
-                    : isInSelectedWeek
-                    ? "var(--text)"
-                    : isCurrentMonth
-                    ? "var(--text)"
+                    : isInSelectedWeek ? "var(--text)"
+                    : isInHoveredWeek ? "var(--text)"
+                    : isCurrentMonth ? "var(--muted2)"
                     : "var(--border2)",
-                  transition: "background 0.1s",
-                  "&:hover": { background: isInSelectedWeek ? "rgba(99,102,241,0.18)" : "var(--s3)" },
+                  transition: "background 0.08s",
+                  outline: "none",
                 }}
               >
                 {format(day, "d")}
@@ -792,7 +877,7 @@ export const TimeTrackingPage: React.FC = () => {
   );
 };
 
-// ── Shared styles ──
+// ── Styles ──
 
 const inputSx = {
   background: "var(--s1)",
@@ -809,95 +894,10 @@ const inputSx = {
 
 // ── Components ──
 
-const SectionCard: React.FC<{
-  title: React.ReactNode;
-  action?: React.ReactNode;
-  noPadding?: boolean;
-  children: React.ReactNode;
-}> = ({ title, action, noPadding, children }) => (
-  <Box sx={{
-    background: "var(--s1)",
-    border: "1px solid var(--border)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  }}>
-    <Box sx={{
-      display: "flex", alignItems: "center",
-      justifyContent: "space-between",
-      px: "16px", py: "10px", minHeight: "44px",
-      borderBottom: "1px solid var(--border)",
-    }}>
-      <Box sx={{
-        fontSize: "11px", fontWeight: 700,
-        color: "var(--muted)", letterSpacing: "0.08em",
-        textTransform: "uppercase",
-      }}>
-        {title}
-      </Box>
-      {action}
-    </Box>
-    <Box sx={noPadding ? {} : { p: "14px 16px" }}>
-      {children}
-    </Box>
-  </Box>
-);
-
-const KpiCard: React.FC<{
-  label: string;
-  value: string;
-  color: string;
-  sub?: string;
-  progress?: number;
-}> = ({ label, value, color, sub, progress }) => (
-  <Box sx={{
-    background: "var(--s1)",
-    border: "1px solid var(--border)",
-    borderRadius: "12px",
-    padding: "16px 18px",
-    borderTop: `2px solid ${color}`,
-    boxShadow: "var(--shadow)",
-  }}>
-    <Box sx={{
-      fontSize: "10px", fontWeight: 600,
-      color: "var(--muted)", letterSpacing: "0.1em",
-      textTransform: "uppercase", mb: "10px",
-    }}>
-      {label}
-    </Box>
-    <Box sx={{
-      fontSize: "30px", fontWeight: 800,
-      fontFamily: "var(--font-mono)",
-      color: "var(--text)", letterSpacing: "-0.04em",
-      lineHeight: 1, mb: "8px",
-    }}>
-      {value}
-    </Box>
-    {progress !== undefined && (
-      <Box sx={{ height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden", mb: "6px" }}>
-        <Box sx={{
-          height: "100%", width: `${progress}%`,
-          background: color, borderRadius: "2px",
-          transition: "width 0.4s ease",
-        }} />
-      </Box>
-    )}
-    {sub && (
-      <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-        {sub}
-      </Box>
-    )}
-  </Box>
-);
-
 const FormField: React.FC<{ label: string; labelSuffix?: React.ReactNode; children: React.ReactNode }> = ({ label, labelSuffix, children }) => (
   <Box>
-    <Box sx={{
-      display: "flex", alignItems: "center", gap: "5px", mb: "5px",
-    }}>
-      <Box component="label" sx={{
-        fontSize: "11px", fontWeight: 600,
-        color: "var(--muted2)", letterSpacing: "0.04em",
-      }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mb: "5px" }}>
+      <Box component="label" sx={{ fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>
         {label}
       </Box>
       {labelSuffix}
