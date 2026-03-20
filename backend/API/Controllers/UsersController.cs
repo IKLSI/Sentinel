@@ -15,12 +15,10 @@ namespace TMAflow.API.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly TMAflowContext _context;
-    private readonly AuditService _auditService;
 
-    public UsersController(TMAflowContext context, AuditService auditService)
+    public UsersController(TMAflowContext context)
     {
         _context = context;
-        _auditService = auditService;
     }
 
     [HttpGet]
@@ -91,7 +89,6 @@ public class UsersController : ControllerBase
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
-        await _auditService.LogAsync(currentUserId, "USER_CREATED", "User", user.Id, new { user.Email, user.Role });
 
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, MapToDto(user));
     }
@@ -122,7 +119,6 @@ public class UsersController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
-        await _auditService.LogAsync(currentUserId, "USER_UPDATED", "User", id);
 
         return Ok(MapToDto(user));
     }
@@ -165,34 +161,6 @@ public class UsersController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok(MapToDto(user));
-    }
-
-    [HttpPost("{id:guid}/change-password")]
-    public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordDto dto)
-    {
-        Guid? currentUserId = GetCurrentUserId();
-        Guid? organizationId = GetOrganizationId();
-        if (currentUserId == null || organizationId == null) return Unauthorized();
-
-        if (currentUserId != id)
-            return Forbid();
-
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id && u.OrganizationId == organizationId.Value);
-
-        if (user == null)
-            return NotFound(new { message = "Utilisateur introuvable" });
-
-        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
-            return BadRequest(new { message = "Mot de passe actuel incorrect" });
-
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-        user.RefreshToken = null;
-        user.RefreshTokenExpiry = null;
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
     }
 
     private static UserDto MapToDto(User user)

@@ -1,5 +1,5 @@
 import apiClient from '../../../services/client'
-import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TimeEntry, TicketStatus } from '../../../types'
+import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TicketStatus } from '../../../types'
 
 interface TicketDto {
   id: string
@@ -105,11 +105,3 @@ export const changeStatus = async (ticketId: string, status: TicketStatus): Prom
   return mapTicketDto(response.data)
 }
 
-export const startTimer = async (ticketId: string): Promise<void> => {
-  await apiClient.post(`/api/tickets/${ticketId}/timer/start`)
-}
-
-export const stopTimer = async (ticketId: string): Promise<TimeEntry> => {
-  const response = await apiClient.post<TimeEntry>(`/api/tickets/${ticketId}/timer/stop`)
-  return response.data
-}

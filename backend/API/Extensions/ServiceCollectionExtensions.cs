@@ -123,14 +123,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<DashboardService>();
-        services.AddScoped<ReportService>();
-        services.AddScoped<EmailService>();
-        services.AddScoped<AuditService>();
         services.AddScoped<DataSeeder>();
 
         services.AddTransient<SlaCheckJob>();
         services.AddTransient<TechHealthScanJob>();
-        services.AddTransient<MonthlyReportJob>();
 
         return services;
     }

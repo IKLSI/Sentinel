@@ -7,9 +7,6 @@ import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined'
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
 import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import SecurityOutlined from '@mui/icons-material/SecurityOutlined'
-import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
-import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
-import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
@@ -60,14 +57,6 @@ const navSections: NavSection[] = [
       { to: '/tech-health', icon: SecurityOutlined, label: 'Santé technique' },
     ],
   },
-  {
-    title: 'Administration',
-    items: [
-      { to: '/users', icon: PeopleOutlined, label: 'Utilisateurs' },
-      { to: '/organization', icon: BusinessOutlined, label: 'Organisation' },
-      { to: '/audit', icon: ListAltOutlined, label: 'Audit log' },
-    ],
-  },
 ]
 
 export const Sidebar: React.FC = () => {
@@ -82,8 +71,7 @@ export const Sidebar: React.FC = () => {
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 'U'
   const location = useLocation()
   const { isOpen, isMobile, close } = useSidebar()
-  const isAdmin = user?.role === 'admin' || user?.role === 'manager'
-  const filteredSections = navSections.filter((s) => s.title !== 'Administration' || isAdmin)
+  const filteredSections = navSections
 
   useEffect(() => {
     if (isMobile) close()

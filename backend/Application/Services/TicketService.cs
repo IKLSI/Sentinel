@@ -11,18 +11,15 @@ public class TicketService
 {
     private readonly TMAflowContext _context;
     private readonly SlaService _slaService;
-    private readonly AuditService _auditService;
     private readonly IMemoryCache _cache;
 
     public TicketService(
         TMAflowContext context,
         SlaService slaService,
-        AuditService auditService,
         IMemoryCache cache)
     {
         _context = context;
         _slaService = slaService;
-        _auditService = auditService;
         _cache = cache;
     }
 
@@ -54,8 +51,6 @@ public class TicketService
         await _context.Tickets.AddAsync(ticket);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(organizationId);
-
-        await _auditService.LogAsync(createdById, "CREATE", "Ticket", ticket.Id, new { ticket.Title, ticket.Priority });
 
         return ticket;
     }
@@ -126,7 +121,6 @@ public class TicketService
 
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
-        await _auditService.LogAsync(userId, "UPDATE", "Ticket", ticketId);
 
         return ticket;
     }
@@ -173,62 +167,6 @@ public class TicketService
         await _context.SaveChangesAsync();
 
         return comment;
-    }
-
-    public async Task<TimeEntry?> StartTimerAsync(Guid ticketId, Guid userId)
-    {
-        Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
-        if (ticket == null)
-        {
-            return null;
-        }
-
-        TimeEntry? activeTimer = await _context.TimeEntries
-            .FirstOrDefaultAsync(te => te.UserId == userId && te.TimerStartedAt.HasValue && !te.IsManual);
-
-        if (activeTimer != null)
-        {
-            throw new InvalidOperationException("Un timer est déjà en cours. Arrêtez-le avant d'en démarrer un nouveau.");
-        }
-
-        TimeEntry timeEntry = new TimeEntry
-        {
-            TicketId = ticketId,
-            UserId = userId,
-            Date = DateOnly.FromDateTime(DateTime.UtcNow),
-            DurationMinutes = 0,
-            IsManual = false,
-            TimerStartedAt = DateTime.UtcNow
-        };
-
-        await _context.TimeEntries.AddAsync(timeEntry);
-        await _context.SaveChangesAsync();
-
-        return timeEntry;
-    }
-
-    public async Task<TimeEntry?> StopTimerAsync(Guid ticketId, Guid userId)
-    {
-        TimeEntry? activeEntry = await _context.TimeEntries
-            .FirstOrDefaultAsync(te =>
-                te.TicketId == ticketId
-                && te.UserId == userId
-                && te.TimerStartedAt.HasValue
-                && !te.IsManual);
-
-        if (activeEntry == null)
-        {
-            return null;
-        }
-
-        int duration = (int)(DateTime.UtcNow - activeEntry.TimerStartedAt!.Value).TotalMinutes;
-        activeEntry.DurationMinutes = Math.Max(1, duration);
-        activeEntry.TimerStartedAt = null;
-        activeEntry.IsManual = false;
-
-        await _context.SaveChangesAsync();
-
-        return activeEntry;
     }
 
     public async Task<TicketDto?> GetTicketWithDetailsAsync(Guid ticketId)

@@ -164,13 +164,6 @@ export interface Vulnerability {
   detectedAt: string
 }
 
-export interface EnvironmentVersion {
-  environment: 'production' | 'staging' | 'dev'
-  version: string
-  deployedAt: string
-  isHealthy: boolean
-}
-
 export interface TechProject {
   id: string
   name: string
@@ -178,20 +171,7 @@ export interface TechProject {
   healthGrade: HealthGrade
   dependencies: Dependency[]
   vulnerabilities: Vulnerability[]
-  environments: EnvironmentVersion[]
   lastScannedAt: string
-}
-
-export interface AuditLog {
-  id: string
-  userId: string
-  user: User
-  action: string
-  entityType: string
-  entityId: string
-  details?: Record<string, unknown>
-  ipAddress?: string
-  createdAt: string
 }
 
 export interface PaginatedResponse<T> {

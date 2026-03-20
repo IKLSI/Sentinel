@@ -10,14 +10,10 @@ import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
 import { TicketsPage } from '../features/tickets/pages/TicketsPage'
 import { KanbanPage } from '../features/tickets/pages/KanbanPage'
 import { TicketDetailPage } from '../features/tickets/pages/TicketDetailPage'
-import { NewTicketPage } from '../features/tickets/pages/NewTicketPage'
 import { TimeTrackingPage } from '../features/timeTracking/pages/TimeTrackingPage'
 import { InvoicesPage } from '../features/invoices/pages/InvoicesPage'
 import { InvoiceDetailPage } from '../features/invoices/pages/InvoiceDetailPage'
 import { TechHealthPage } from '../features/techHealth/pages/TechHealthPage'
-import { UsersPage } from '../features/users/pages/UsersPage'
-import { OrganizationPage } from '../features/organization/pages/OrganizationPage'
-import { AuditPage } from '../features/users/pages/AuditPage'
 import { ProjectsPage } from '../features/projects/pages/ProjectsPage'
 import { ProjectDetailPage } from '../features/techHealth/pages/ProjectDetailPage'
 import { ProfilePage } from '../features/users/pages/ProfilePage'
@@ -45,7 +41,6 @@ export const AppRoutes: React.FC = () => (
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tickets" element={<TicketsPage />} />
       <Route path="/tickets/kanban" element={<KanbanPage />} />
-      <Route path="/tickets/new" element={<NewTicketPage />} />
       <Route path="/tickets/:id" element={<TicketDetailPage />} />
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
@@ -53,9 +48,6 @@ export const AppRoutes: React.FC = () => (
       <Route path="/invoices" element={<InvoicesPage />} />
       <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
       <Route path="/tech-health" element={<TechHealthPage />} />
-      <Route path="/users" element={<UsersPage />} />
-      <Route path="/organization" element={<OrganizationPage />} />
-      <Route path="/audit" element={<AuditPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>

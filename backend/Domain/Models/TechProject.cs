@@ -27,7 +27,6 @@ public class TechProject
 
     public Organization Organization { get; set; } = null!;
     public ICollection<Dependency> Dependencies { get; set; } = new List<Dependency>();
-    public ICollection<EnvironmentVersion> EnvironmentVersions { get; set; } = new List<EnvironmentVersion>();
     public ICollection<Runtime> Runtimes { get; set; } = new List<Runtime>();
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

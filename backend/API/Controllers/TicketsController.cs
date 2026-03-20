@@ -17,13 +17,11 @@ public class TicketsController : ControllerBase
 {
     private readonly TMAflowContext _context;
     private readonly TicketService _ticketService;
-    private readonly AuditService _auditService;
 
-    public TicketsController(TMAflowContext context, TicketService ticketService, AuditService auditService)
+    public TicketsController(TMAflowContext context, TicketService ticketService)
     {
         _context = context;
         _ticketService = ticketService;
-        _auditService = auditService;
     }
 
     [HttpGet]
@@ -89,8 +87,6 @@ public class TicketsController : ControllerBase
         Ticket ticket = await _ticketService.CreateTicketAsync(dto, userId.Value, organizationId.Value);
         TicketDto? ticketDto = await _ticketService.GetTicketWithDetailsAsync(ticket.Id);
 
-        await _auditService.LogAsync(userId, "TICKET_CREATED", "Ticket", ticket.Id);
-
         return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticketDto);
     }
 
@@ -126,8 +122,6 @@ public class TicketsController : ControllerBase
 
         await _ticketService.UpdateTicketAsync(id, dto, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
-
-        await _auditService.LogAsync(userId, "TICKET_UPDATED", "Ticket", id);
 
         return Ok(updatedDto);
     }
@@ -206,44 +200,7 @@ public class TicketsController : ControllerBase
         await _ticketService.ChangeStatusAsync(id, ticketStatus, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
 
-        await _auditService.LogAsync(userId, "TICKET_STATUS_CHANGED", "Ticket", id);
-
         return Ok(updatedDto);
-    }
-
-    [HttpPost("{id:guid}/timer/start")]
-    public async Task<IActionResult> StartTimer(Guid id)
-    {
-        Guid? userId = GetCurrentUserId();
-        if (userId == null) return Unauthorized();
-
-        Guid? organizationId = GetOrganizationId();
-        bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
-
-        if (!ticketExists)
-            return NotFound(new { message = "Ticket introuvable" });
-
-        TimeEntry? entry = await _ticketService.StartTimerAsync(id, userId.Value);
-        return Ok(new { timeEntryId = entry?.Id, startedAt = entry?.TimerStartedAt });
-    }
-
-    [HttpPost("{id:guid}/timer/stop")]
-    public async Task<IActionResult> StopTimer(Guid id)
-    {
-        Guid? userId = GetCurrentUserId();
-        if (userId == null) return Unauthorized();
-
-        TimeEntry? entry = await _ticketService.StopTimerAsync(id, userId.Value);
-
-        if (entry == null)
-            return NotFound(new { message = "Aucun timer actif trouvé pour ce ticket" });
-
-        return Ok(new
-        {
-            timeEntryId = entry.Id,
-            durationMinutes = entry.DurationMinutes,
-            durationFormatted = $"{entry.DurationMinutes / 60}h{entry.DurationMinutes % 60:D2}m"
-        });
     }
 
     private Guid? GetCurrentUserId()

@@ -25,7 +25,6 @@ public class User
     public string Theme { get; set; } = "dark";
 
     public Organization Organization { get; set; } = null!;
-    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
 
     public string FullName => $"{FirstName} {LastName}".Trim();

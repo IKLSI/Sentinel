@@ -13,12 +13,10 @@ namespace TMAflow.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
-    private readonly AuditService _auditService;
 
-    public AuthController(AuthService authService, AuditService auditService)
+    public AuthController(AuthService authService)
     {
         _authService = authService;
-        _auditService = auditService;
     }
 
     [HttpPost("login")]
@@ -31,8 +29,6 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { message = "Email ou mot de passe incorrect" });
         }
-
-        await _auditService.LogAsync(result.User.Id, "LOGIN", "User", result.User.Id, new { email = request.Email });
 
         return Ok(result);
     }
@@ -62,7 +58,6 @@ public class AuthController : ControllerBase
         }
 
         await _authService.LogoutAsync(userId.Value);
-        await _auditService.LogAsync(userId, "LOGOUT", "User", userId);
 
         return NoContent();
     }

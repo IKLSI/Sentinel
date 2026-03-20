@@ -17,10 +17,7 @@ public class TMAflowContext : DbContext
     public DbSet<TechProject> TechProjects => Set<TechProject>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
-    public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
     public DbSet<Runtime> Runtimes => Set<Runtime>();
-    public DbSet<Report> Reports => Set<Report>();
-    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,10 +33,7 @@ public class TMAflowContext : DbContext
         ConfigureTechProject(modelBuilder);
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
-        ConfigureEnvironmentVersion(modelBuilder);
         ConfigureRuntime(modelBuilder);
-        ConfigureReport(modelBuilder);
-        ConfigureAuditLog(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -272,22 +266,6 @@ public class TMAflowContext : DbContext
         });
     }
 
-    private static void ConfigureEnvironmentVersion(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<EnvironmentVersion>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Environment).HasConversion<string>();
-            entity.Property(e => e.Version).HasMaxLength(100).IsRequired();
-            entity.HasIndex(e => e.TechProjectId);
-
-            entity.HasOne(e => e.TechProject)
-                .WithMany(p => p.EnvironmentVersions)
-                .HasForeignKey(e => e.TechProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
     private static void ConfigureRuntime(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Runtime>(entity =>
@@ -301,42 +279,6 @@ public class TMAflowContext : DbContext
                 .WithMany(p => p.Runtimes)
                 .HasForeignKey(e => e.TechProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
-    private static void ConfigureReport(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Report>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Period).HasMaxLength(7).IsRequired();
-            entity.HasIndex(e => e.OrganizationId);
-            entity.HasIndex(e => e.Period);
-
-            entity.HasOne(e => e.Organization)
-                .WithMany()
-                .HasForeignKey(e => e.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
-    private static void ConfigureAuditLog(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<AuditLog>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Action).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.EntityType).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.Metadata).HasColumnType("jsonb");
-            entity.Property(e => e.IpAddress).HasMaxLength(45);
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.CreatedAt);
-            entity.HasIndex(e => e.EntityType);
-
-            entity.HasOne(e => e.User)
-                .WithMany(u => u.AuditLogs)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

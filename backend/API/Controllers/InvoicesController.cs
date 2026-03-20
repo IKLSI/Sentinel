@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using TMAflow.Infrastructure.Data;
 using TMAflow.Domain.DTOs.Invoices;
 using TMAflow.Domain.Models;
@@ -16,13 +15,11 @@ public class InvoicesController : ControllerBase
 {
     private readonly TMAflowContext _context;
     private readonly InvoiceService _invoiceService;
-    private readonly AuditService _auditService;
 
-    public InvoicesController(TMAflowContext context, InvoiceService invoiceService, AuditService auditService)
+    public InvoicesController(TMAflowContext context, InvoiceService invoiceService)
     {
         _context = context;
         _invoiceService = invoiceService;
-        _auditService = auditService;
     }
 
     [HttpGet]
@@ -91,9 +88,6 @@ public class InvoicesController : ControllerBase
             .Include(i => i.TechProject)
             .FirstAsync(i => i.Id == invoice.Id);
 
-        Guid? currentUserId = GetCurrentUserId();
-        await _auditService.LogAsync(currentUserId, "INVOICE_CREATED", "Invoice", invoice.Id);
-
         return CreatedAtAction(nameof(GetInvoice), new { id = invoice.Id }, MapToDto(result));
     }
 
@@ -141,9 +135,6 @@ public class InvoicesController : ControllerBase
             .Include(i => i.TechProject)
             .FirstAsync(i => i.Id == id);
 
-        Guid? currentUserId = GetCurrentUserId();
-        await _auditService.LogAsync(currentUserId, "INVOICE_STATUS_UPDATED", "Invoice", id);
-
         return Ok(MapToDto(result));
     }
 
@@ -188,12 +179,6 @@ public class InvoicesController : ControllerBase
             PaidAt = invoice.PaidAt,
             HasPdf = invoice.PdfData != null && invoice.PdfData.Length > 0
         };
-    }
-
-    private Guid? GetCurrentUserId()
-    {
-        string? claim = User.FindFirst("userId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
     }
 
     private Guid? GetOrganizationId()

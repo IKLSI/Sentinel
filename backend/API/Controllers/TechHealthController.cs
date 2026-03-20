@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using TMAflow.Infrastructure.Data;
 using TMAflow.Domain.DTOs.TechHealth;
 using TMAflow.Domain.Models;
@@ -16,13 +15,11 @@ public class TechHealthController : ControllerBase
 {
     private readonly TMAflowContext _context;
     private readonly TechHealthService _techHealthService;
-    private readonly AuditService _auditService;
 
-    public TechHealthController(TMAflowContext context, TechHealthService techHealthService, AuditService auditService)
+    public TechHealthController(TMAflowContext context, TechHealthService techHealthService)
     {
         _context = context;
         _techHealthService = techHealthService;
-        _auditService = auditService;
     }
 
     [HttpGet("projects")]
@@ -154,53 +151,7 @@ public class TechHealthController : ControllerBase
         await _techHealthService.ScanProjectAsync(id);
         TechProjectDto? updated = await _techHealthService.GetProjectWithDetailsAsync(id);
 
-        Guid? currentUserId = GetCurrentUserId();
-        await _auditService.LogAsync(currentUserId, "TECHHEALTH_SCAN_TRIGGERED", "TechProject", id);
-
         return Ok(updated);
-    }
-
-    [HttpPost("projects/{id:guid}/dependencies")]
-    [Authorize(Roles = "Admin,Manager,Developer")]
-    public async Task<IActionResult> AddDependency(Guid id, [FromBody] AddDependencyDto dto)
-    {
-        Guid? organizationId = GetOrganizationId();
-        if (organizationId == null) return Unauthorized();
-
-        TechProject? project = await _context.TechProjects
-            .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (project == null)
-            return NotFound(new { message = "Projet introuvable" });
-
-        if (!Enum.TryParse<DependencyType>(dto.Type, true, out DependencyType depType))
-            depType = DependencyType.Prod;
-
-        if (!Enum.TryParse<DependencyEcosystem>(dto.Ecosystem, true, out DependencyEcosystem ecosystem))
-            ecosystem = DependencyEcosystem.Npm;
-
-        Dependency dependency = new Dependency
-        {
-            TechProjectId = id,
-            Name = dto.Name,
-            CurrentVersion = dto.CurrentVersion,
-            LatestVersion = dto.LatestVersion,
-            Type = depType,
-            Ecosystem = ecosystem,
-            Status = DependencyStatus.UpToDate,
-            ScannedAt = DateTime.UtcNow
-        };
-
-        await _context.Dependencies.AddAsync(dependency);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetProject), new { id }, new { dependency.Id, dependency.Name });
-    }
-
-    private Guid? GetCurrentUserId()
-    {
-        string? claim = User.FindFirst("userId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
     }
 
     private Guid? GetOrganizationId()

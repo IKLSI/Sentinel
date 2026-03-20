@@ -24,7 +24,6 @@ public static class Program
             .AddApplicationServices()
             .AddSwaggerWithJwt()
             .AddControllersWithJsonOptions()
-            .AddHttpContextAccessor()
             .AddLoginRateLimiting()
             .AddMemoryCache();
 
