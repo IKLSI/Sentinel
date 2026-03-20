@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using TMAflow.Infrastructure.Data;
 using TMAflow.Domain.DTOs.Tickets;
@@ -12,18 +13,24 @@ public class TicketService
     private readonly SlaService _slaService;
     private readonly NotificationService _notificationService;
     private readonly AuditService _auditService;
+    private readonly IMemoryCache _cache;
 
     public TicketService(
         TMAflowContext context,
         SlaService slaService,
         NotificationService notificationService,
-        AuditService auditService)
+        AuditService auditService,
+        IMemoryCache cache)
     {
         _context = context;
         _slaService = slaService;
         _notificationService = notificationService;
         _auditService = auditService;
+        _cache = cache;
     }
+
+    private void InvalidateDashboardCache(Guid organizationId) =>
+        _cache.Remove($"dashboard:{organizationId}");
 
     public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto, Guid createdById, Guid organizationId)
     {
@@ -49,6 +56,7 @@ public class TicketService
 
         await _context.Tickets.AddAsync(ticket);
         await _context.SaveChangesAsync();
+        InvalidateDashboardCache(organizationId);
 
         if (dto.AssignedToId.HasValue)
         {
@@ -142,6 +150,7 @@ public class TicketService
         }
 
         await _context.SaveChangesAsync();
+        InvalidateDashboardCache(ticket.OrganizationId);
         await _auditService.LogAsync(userId, "UPDATE", "Ticket", ticketId);
 
         return ticket;
@@ -162,6 +171,7 @@ public class TicketService
         TicketHistory history = CreateHistory(ticketId, userId, "Status", oldStatus.ToString(), newStatus.ToString());
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
+        InvalidateDashboardCache(ticket.OrganizationId);
 
         await _notificationService.NotifyOrganizationAsync(
             ticket.OrganizationId,

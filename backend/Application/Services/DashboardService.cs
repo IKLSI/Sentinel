@@ -68,8 +68,39 @@ public class DashboardService
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
 
+        List<Ticket> closedOrResolvedThisMonth = tickets
+            .Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= monthStart)
+            .ToList();
+        int slaRespectedThisMonth = closedOrResolvedThisMonth.Count(t => !t.SlaBreached);
+        int slaRespected = closedOrResolvedThisMonth.Count > 0
+            ? (int)Math.Round((double)slaRespectedThisMonth / closedOrResolvedThisMonth.Count * 100)
+            : 100;
+
+        List<Ticket> closedOrResolvedLastMonth = tickets
+            .Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd)
+            .ToList();
+        int slaRespectedLastMonthCount = closedOrResolvedLastMonth.Count(t => !t.SlaBreached);
+        int slaRespectedLastMonth = closedOrResolvedLastMonth.Count > 0
+            ? (int)Math.Round((double)slaRespectedLastMonthCount / closedOrResolvedLastMonth.Count * 100)
+            : 100;
+
         TicketStatus[] allStatuses = new[] { TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed };
         Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(s => s.ToString(), s => tickets.Count(t => t.Status == s));
+
+        TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
+        Dictionary<string, int> ticketsByPriority = allPriorities.ToDictionary(
+            p => p.ToString(),
+            p => tickets.Count(t => openStatuses.Contains(t.Status) && t.Priority == p)
+        );
+
+        int unassignedOpenTickets = tickets.Count(t => openStatuses.Contains(t.Status) && t.AssignedToId == null);
+
+        List<Invoice> overdueInvoices = await _context.Invoices
+            .Where(i => i.OrganizationId == organizationId
+                && i.Status == InvoiceStatus.Sent
+                && i.DueAt != null
+                && i.DueAt < now)
+            .ToListAsync();
 
         List<UrgentTicketDto> urgentTickets = tickets
             .Where(t => openStatuses.Contains(t.Status) && (t.Priority == TicketPriority.Critical || t.Priority == TicketPriority.High))
@@ -102,7 +133,13 @@ public class DashboardService
             BillableRevenue = billableRevenue,
             UnbilledRevenue = unbilledRevenue,
             CriticalVulnerabilities = criticalVulnerabilities,
+            SlaRespected = slaRespected,
+            SlaRespectedDelta = slaRespected - slaRespectedLastMonth,
             TicketsByStatus = ticketsByStatus,
+            TicketsByPriority = ticketsByPriority,
+            UnassignedOpenTickets = unassignedOpenTickets,
+            OverdueInvoicesCount = overdueInvoices.Count,
+            OverdueInvoicesAmount = overdueInvoices.Sum(i => i.TotalAmount),
             UrgentTickets = urgentTickets,
             RecentActivity = recentActivity,
         };
