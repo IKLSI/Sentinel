@@ -101,12 +101,12 @@ export const InvoiceDetailPage: React.FC = () => {
     <>
 
       <Box
+        className="page-enter"
         sx={{
           p: "36px 28px 24px",
           display: "flex",
           flexDirection: "column",
           gap: "12px",
-          animation: "fadeInUp 0.35s cubic-bezier(0.16,1,0.3,1) both",
         }}
       >
         {/* ── Actions PDF ── */}

@@ -304,7 +304,7 @@ export const InvoicesPage: React.FC = () => {
   return (
     <>
 
-      <Box sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box className="page-enter" sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* ── Barre recherche + filtres + bouton ── */}
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>

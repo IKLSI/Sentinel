@@ -260,7 +260,7 @@ export const TicketDetailPage: React.FC = () => {
     <>
 
 
-      <Box sx={{ p: { xs: "36px 16px 20px", md: "36px 32px 28px" }, display: "flex", gap: "24px", alignItems: "flex-start", flexDirection: { xs: "column", lg: "row" } }}>
+      <Box className="page-enter" sx={{ p: { xs: "36px 16px 20px", md: "36px 32px 28px" }, display: "flex", gap: "24px", alignItems: "flex-start", flexDirection: { xs: "column", lg: "row" } }}>
 
         {/* ── COLONNE GAUCHE ── */}
         <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "16px" }}>

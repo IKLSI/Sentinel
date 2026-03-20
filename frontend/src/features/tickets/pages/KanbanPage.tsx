@@ -586,7 +586,7 @@ export const KanbanPage: React.FC = () => {
       />
 
       <Box
-        className="kanban-content"
+        className="kanban-content page-enter"
         sx={{
           display: "flex",
           flexDirection: "column",

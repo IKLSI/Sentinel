@@ -117,7 +117,7 @@ export const UsersPage: React.FC = () => {
   return (
     <>
 
-      <Box sx={{ p: "36px 28px 24px" }}>
+      <Box className="page-enter" sx={{ p: "36px 28px 24px" }}>
         {loading ? (
           <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />

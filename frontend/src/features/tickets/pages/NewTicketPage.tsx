@@ -92,7 +92,7 @@ export const NewTicketPage: React.FC = () => {
   return (
     <>
 
-      <Box sx={{ padding: '36px 28px 24px', maxWidth: '800px' }}>
+      <Box className="page-enter" sx={{ padding: '36px 28px 24px', maxWidth: '800px' }}>
         <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', mb: '16px', overflow: 'hidden' }}>
           <Box sx={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Créer un ticket</Box>
           <Box sx={{ padding: '16px 20px' }}>
