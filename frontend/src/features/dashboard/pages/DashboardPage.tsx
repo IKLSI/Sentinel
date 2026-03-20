@@ -188,7 +188,7 @@ const PanelHead: React.FC<{
 }> = ({ title, action, badge }) => (
   <Box sx={{
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    px: "16px", py: "11px", minHeight: "42px",
+    px: "18px", py: "13px", minHeight: "48px",
     borderBottom: "1px solid var(--border)", flexShrink: 0, gap: "8px",
   }}>
     <Box sx={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
@@ -240,7 +240,7 @@ export const DashboardPage: React.FC = () => {
 
 
   return (
-    <Box sx={{ p: "26px 26px 36px", display: "flex", flexDirection: "column", gap: "13px" }}>
+    <Box sx={{ p: "28px 28px 48px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
 
 {/* ── Alert vulns ────────────────────────────────────────── */}
@@ -299,22 +299,24 @@ export const DashboardPage: React.FC = () => {
             title="Tickets urgents"
             action={<ViewBtn onClick={() => navigate("/tickets")} />}
           />
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
+          <Box sx={{ p: "18px 18px 16px", flex: 1 }}>
             {stats.urgentTickets.length === 0 ? (
-              <Box sx={{ px: "16px", py: "24px", fontSize: "12px", color: "var(--muted)", textAlign: "center" }}>
+              <Box sx={{ fontSize: "12px", color: "var(--muted)", textAlign: "center", pt: "10px" }}>
                 Aucun ticket critique ou élevé en cours.
               </Box>
             ) : (
-              stats.urgentTickets.map((t) => (
-                <TicketRow key={t.id} ticket={t} onClick={() => navigate(`/tickets/${t.id}`)} />
-              ))
+              <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {stats.urgentTickets.map((t) => (
+                  <TicketRow key={t.id} ticket={t} onClick={() => navigate(`/tickets/${t.id}`)} />
+                ))}
+              </Box>
             )}
           </Box>
         </Panel>
 
         <Panel delay={280}>
           <PanelHead title="Activité récente" />
-          <Box sx={{ p: "14px 15px 12px", flex: 1 }}>
+          <Box sx={{ p: "18px 18px 16px", flex: 1 }}>
             {stats.recentActivity.length === 0 ? (
               <Box sx={{ fontSize: "11px", color: "var(--muted)", textAlign: "center", pt: "10px" }}>
                 Aucune activité récente.
@@ -342,7 +344,7 @@ export const DashboardPage: React.FC = () => {
             title="Répartition par statut"
             action={<ViewBtn onClick={() => navigate("/tickets")} />}
           />
-          <Box sx={{ p: "14px 16px 16px" }}>
+          <Box sx={{ p: "18px 20px 20px" }}>
             <StatusDistribution ticketsByStatus={stats.ticketsByStatus} />
           </Box>
         </Panel>
@@ -352,7 +354,7 @@ export const DashboardPage: React.FC = () => {
             title="Santé technique"
             action={<ViewBtn onClick={() => navigate("/tech-health")} />}
           />
-          <Box sx={{ p: "8px 10px 10px", display: "flex", flexDirection: "column", gap: "5px" }}>
+          <Box sx={{ p: "10px 12px 12px", display: "flex", flexDirection: "column", gap: "7px" }}>
             {techProjects.length === 0 ? (
               <Box sx={{ fontSize: "12px", color: "var(--muted)", p: "10px 6px" }}>
                 Aucun projet configuré.
@@ -384,10 +386,10 @@ const KpiCard: React.FC<{
     background: "var(--s1)",
     border: "1px solid var(--border)",
     borderRadius: "12px",
-    p: "18px 20px",
+    p: "24px 26px",
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
+    gap: "10px",
     position: "relative",
     overflow: "hidden",
     animation: "fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) both",
@@ -404,13 +406,13 @@ const KpiCard: React.FC<{
   }}>
     <Box sx={{ display: "flex", alignItems: "baseline", gap: "3px" }}>
       <Box sx={{
-        fontFamily: "var(--font-mono)", fontSize: "34px", fontWeight: 800,
+        fontFamily: "var(--font-mono)", fontSize: "42px", fontWeight: 800,
         color: loaded ? color : "var(--muted)", letterSpacing: "-0.05em", lineHeight: 1,
       }}>
         {value}
       </Box>
       {unit && (
-        <Box component="span" sx={{ fontSize: "14px", color: "var(--muted)", fontWeight: 400, ml: "1px" }}>
+        <Box component="span" sx={{ fontSize: "16px", color: "var(--muted)", fontWeight: 400, ml: "2px" }}>
           {unit}
         </Box>
       )}
@@ -434,7 +436,7 @@ const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ti
       onClick={onClick}
       sx={{
         display: "flex", alignItems: "center", gap: "9px",
-        px: "16px", py: "9px", cursor: "pointer",
+        px: "4px", py: "8px", cursor: "pointer", borderRadius: "6px",
         transition: "background 0.12s",
         "&:hover": { background: "var(--s2)", "& .t-title": { color: "var(--accent)" } },
       }}
@@ -472,7 +474,7 @@ const ActivityRow: React.FC<{ item: ActivityItem; isLast: boolean }> = ({ item, 
   const color = ACTIVITY_COLOR[item.color] ?? "var(--accent)";
   const rel   = item.timestamp ? formatRelativeTime(item.timestamp) : "";
   return (
-    <Box sx={{ display: "flex", gap: "10px", pb: isLast ? "0" : "12px" }}>
+    <Box sx={{ display: "flex", gap: "12px", pb: isLast ? "0" : "16px" }}>
       <Box sx={{
         display: "flex", flexDirection: "column", alignItems: "center",
         flexShrink: 0, width: "12px", pt: "4px",
@@ -487,7 +489,7 @@ const ActivityRow: React.FC<{ item: ActivityItem; isLast: boolean }> = ({ item, 
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{
-          fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.5, mb: "3px",
+          fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5, mb: "4px",
           overflow: "hidden", textOverflow: "ellipsis",
           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
         }}>
@@ -521,9 +523,9 @@ const StatusDistribution: React.FC<{ ticketsByStatus: Record<string, number> }> 
   }));
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
-        <DonutChart segments={segments} size={110} />
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "9px", flex: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
+        <DonutChart segments={segments} size={130} />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "11px", flex: 1 }}>
           {TICKET_STATUS_CONFIG.map(({ key, label, color }) => {
             const count = safeStatus[key] ?? 0;
             const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -531,12 +533,12 @@ const StatusDistribution: React.FC<{ ticketsByStatus: Record<string, number> }> 
               <Box key={key}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "4px" }}>
                   <Box sx={{ width: "7px", height: "7px", borderRadius: "2px", background: color, flexShrink: 0 }} />
-                  <Box sx={{ flex: 1, fontSize: "11px", color: "var(--muted2)" }}>{label}</Box>
-                  <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--text)" }}>
+                  <Box sx={{ flex: 1, fontSize: "12px", color: "var(--muted2)" }}>{label}</Box>
+                  <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 700, color: "var(--text)" }}>
                     {count}
                   </Box>
                 </Box>
-                <Box sx={{ height: "3px", background: "var(--s3)", borderRadius: "99px", overflow: "hidden" }}>
+                <Box sx={{ height: "4px", background: "var(--s3)", borderRadius: "99px", overflow: "hidden" }}>
                   <Box sx={{
                     height: "100%", width: `${pct}%`, background: color,
                     borderRadius: "99px", transition: "width 0.8s cubic-bezier(0.16,1,0.3,1)",
@@ -559,12 +561,12 @@ const TechProjectRow: React.FC<{ project: ProjectDto; onClick: () => void }> = (
     sx={{
       all: "unset", display: "flex", alignItems: "center", gap: "9px",
       background: "var(--s2)", border: "1px solid var(--border)",
-      borderRadius: "9px", p: "9px 11px", cursor: "pointer",
+      borderRadius: "9px", p: "12px 14px", cursor: "pointer",
       transition: "border-color 0.15s, background 0.15s",
       "&:hover": { borderColor: "var(--accent-border)", background: "var(--accent-subtle)" },
     }}
   >
-    <HealthScoreCircle score={project.healthScore} grade={project.healthGrade as HealthGrade} size={30} />
+    <HealthScoreCircle score={project.healthScore} grade={project.healthGrade as HealthGrade} size={36} />
     <Box sx={{ flex: 1, overflow: "hidden" }}>
       <Box sx={{
         fontSize: "11px", fontWeight: 600, color: "var(--text)",
