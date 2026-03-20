@@ -12,8 +12,8 @@ using TMAflow.Infrastructure.Data;
 namespace TMAflow.Infrastructure.Migrations
 {
     [DbContext(typeof(TMAflowContext))]
-    [Migration("20260320141958_RemoveNotificationsAndJira")]
-    partial class RemoveNotificationsAndJira
+    [Migration("20260320152611_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,49 +24,6 @@ namespace TMAflow.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("TMAflow.Domain.Models.AuditLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("EntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("character varying(45)");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("EntityType");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AuditLogs");
-                });
 
             modelBuilder.Entity("TMAflow.Domain.Models.Dependency", b =>
                 {
@@ -113,37 +70,6 @@ namespace TMAflow.Infrastructure.Migrations
                     b.HasIndex("TechProjectId");
 
                     b.ToTable("Dependencies");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.EnvironmentVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("DeployedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeployedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Environment")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("TechProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Version")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TechProjectId");
-
-                    b.ToTable("EnvironmentVersions");
                 });
 
             modelBuilder.Entity("TMAflow.Domain.Models.Invoice", b =>
@@ -252,51 +178,6 @@ namespace TMAflow.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Organizations");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.Report", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EmailSentTo")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("GeneratedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PdfPath")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Period")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
-
-                    b.Property<string>("PeriodEnd")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PeriodStart")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ReportType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("Period");
-
-                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("TMAflow.Domain.Models.Runtime", b =>
@@ -690,31 +571,10 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.AuditLog", b =>
-                {
-                    b.HasOne("TMAflow.Domain.Models.User", "User")
-                        .WithMany("AuditLogs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TMAflow.Domain.Models.Dependency", b =>
                 {
                     b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
                         .WithMany("Dependencies")
-                        .HasForeignKey("TechProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TechProject");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.EnvironmentVersion", b =>
-                {
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
-                        .WithMany("EnvironmentVersions")
                         .HasForeignKey("TechProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -738,17 +598,6 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("TechProject");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.Report", b =>
-                {
-                    b.HasOne("TMAflow.Domain.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("TMAflow.Domain.Models.Runtime", b =>
@@ -905,8 +754,6 @@ namespace TMAflow.Infrastructure.Migrations
                 {
                     b.Navigation("Dependencies");
 
-                    b.Navigation("EnvironmentVersions");
-
                     b.Navigation("Runtimes");
 
                     b.Navigation("Tickets");
@@ -923,8 +770,6 @@ namespace TMAflow.Infrastructure.Migrations
 
             modelBuilder.Entity("TMAflow.Domain.Models.User", b =>
                 {
-                    b.Navigation("AuditLogs");
-
                     b.Navigation("TimeEntries");
                 });
 #pragma warning restore 612, 618

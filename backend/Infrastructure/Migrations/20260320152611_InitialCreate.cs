@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TMAflow.Infrastructure.Migrations
 {
+    /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -24,32 +26,6 @@ namespace TMAflow.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Organizations", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Reports",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Period = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
-                    ReportType = table.Column<string>(type: "text", nullable: false),
-                    PeriodStart = table.Column<string>(type: "text", nullable: true),
-                    PeriodEnd = table.Column<string>(type: "text", nullable: true),
-                    GeneratedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    PdfPath = table.Column<string>(type: "text", nullable: true),
-                    SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    EmailSentTo = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reports", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Reports_Organizations_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -133,28 +109,6 @@ namespace TMAflow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EnvironmentVersions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TechProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Environment = table.Column<string>(type: "text", nullable: false),
-                    Version = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    DeployedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DeployedBy = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EnvironmentVersions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EnvironmentVersions_TechProjects_TechProjectId",
-                        column: x => x.TechProjectId,
-                        principalTable: "TechProjects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Invoices",
                 columns: table => new
                 {
@@ -192,30 +146,6 @@ namespace TMAflow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraConfigs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TechProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    InstanceUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    ApiToken = table.Column<string>(type: "text", nullable: false),
-                    ProjectKey = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    StatusMapping = table.Column<string>(type: "jsonb", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_JiraConfigs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_JiraConfigs_TechProjects_TechProjectId",
-                        column: x => x.TechProjectId,
-                        principalTable: "TechProjects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Runtimes",
                 columns: table => new
                 {
@@ -233,55 +163,6 @@ namespace TMAflow.Infrastructure.Migrations
                         name: "FK_Runtimes_TechProjects_TechProjectId",
                         column: x => x.TechProjectId,
                         principalTable: "TechProjects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AuditLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    EntityType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    EntityId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Metadata = table.Column<string>(type: "jsonb", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AuditLogs_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Notifications",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Message = table.Column<string>(type: "text", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RelatedEntityType = table.Column<string>(type: "text", nullable: true),
-                    RelatedEntityId = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Notifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -305,9 +186,6 @@ namespace TMAflow.Infrastructure.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SlaDeadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     SlaBreached = table.Column<bool>(type: "boolean", nullable: false),
-                    JiraKey = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    JiraId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    IsJiraSync = table.Column<bool>(type: "boolean", nullable: false),
                     Tags = table.Column<string>(type: "jsonb", nullable: false),
                     SlaWarningNotifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -462,21 +340,6 @@ namespace TMAflow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditLogs_CreatedAt",
-                table: "AuditLogs",
-                column: "CreatedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AuditLogs_EntityType",
-                table: "AuditLogs",
-                column: "EntityType");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AuditLogs_UserId",
-                table: "AuditLogs",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Dependencies_Status",
                 table: "Dependencies",
                 column: "Status");
@@ -484,11 +347,6 @@ namespace TMAflow.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Dependencies_TechProjectId",
                 table: "Dependencies",
-                column: "TechProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EnvironmentVersions_TechProjectId",
-                table: "EnvironmentVersions",
                 column: "TechProjectId");
 
             migrationBuilder.CreateIndex(
@@ -512,41 +370,10 @@ namespace TMAflow.Infrastructure.Migrations
                 column: "TechProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_JiraConfigs_TechProjectId",
-                table: "JiraConfigs",
-                column: "TechProjectId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_CreatedAt",
-                table: "Notifications",
-                column: "CreatedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_IsRead",
-                table: "Notifications",
-                column: "IsRead");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserId",
-                table: "Notifications",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_Slug",
                 table: "Organizations",
                 column: "Slug",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reports_OrganizationId",
-                table: "Reports",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reports_Period",
-                table: "Reports",
-                column: "Period");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Runtimes_TechProjectId",
@@ -676,25 +503,11 @@ namespace TMAflow.Infrastructure.Migrations
                 column: "Severity");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AuditLogs");
-
-            migrationBuilder.DropTable(
-                name: "EnvironmentVersions");
-
-            migrationBuilder.DropTable(
                 name: "Invoices");
-
-            migrationBuilder.DropTable(
-                name: "JiraConfigs");
-
-            migrationBuilder.DropTable(
-                name: "Notifications");
-
-            migrationBuilder.DropTable(
-                name: "Reports");
 
             migrationBuilder.DropTable(
                 name: "Runtimes");
