@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './features/auth/context/AuthContext'
 import { ThemeProvider } from './store/ThemeContext'
-import { NotificationProvider } from './features/notifications/context/NotificationContext'
 import { ToastProvider } from './hooks/ToastProvider'
 import { App } from './App'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -15,9 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ThemeProvider>
           <ToastProvider>
-            <NotificationProvider>
-              <App />
-            </NotificationProvider>
+            <App />
           </ToastProvider>
         </ThemeProvider>
       </AuthProvider>

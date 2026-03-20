@@ -58,24 +58,6 @@ public class EmailService
         }
     }
 
-    public async Task SendSlaBreachAlertAsync(string toEmail, string toName, string ticketTitle, DateTime deadline)
-    {
-        string subject = $"[TMAflow] Alerte SLA : {ticketTitle}";
-        string htmlBody = $@"
-<html>
-<body style='font-family: Arial, sans-serif; color: #333;'>
-    <h2 style='color: #e74c3c;'>Alerte SLA</h2>
-    <p>Le SLA du ticket suivant est dépassé ou sur le point de l'être :</p>
-    <p>Ticket : <strong>{ticketTitle}</strong></p>
-    <p>Échéance SLA : <strong>{deadline:dd/MM/yyyy HH:mm}</strong></p>
-    <hr/>
-    <p style='color: #666; font-size: 12px;'>TMAflow - Gestion TMA</p>
-</body>
-</html>";
-
-        await SendEmailAsync(toEmail, toName, subject, htmlBody);
-    }
-
     public async Task SendMonthlyReportAsync(string toEmail, string toName, string clientName, string period, byte[] pdfBytes)
     {
         string subject = $"[TMAflow] Rapport mensuel {clientName} - {period}";

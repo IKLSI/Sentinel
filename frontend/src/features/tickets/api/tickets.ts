@@ -20,8 +20,6 @@ interface TicketDto {
   updatedAt: string
   slaDeadline?: string
   slaBreached: boolean
-  jiraKey?: string
-  isJiraSync: boolean
   tags: string[]
   comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }[]
   history: { id: string; userId: string; userName: string; field: string; oldValue?: string; newValue?: string; createdAt: string }[]
@@ -54,7 +52,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
     slaBreached: dto.slaBreached,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
-    jiraKey: dto.jiraKey,
     comments: dto.comments.map((c) => ({
       id: c.id, ticketId: dto.id, authorId: c.authorId,
       author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'technician' as const, organizationId: '', isActive: true, createdAt: c.createdAt },

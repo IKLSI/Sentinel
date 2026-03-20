@@ -11,20 +11,17 @@ public class TicketService
 {
     private readonly TMAflowContext _context;
     private readonly SlaService _slaService;
-    private readonly NotificationService _notificationService;
     private readonly AuditService _auditService;
     private readonly IMemoryCache _cache;
 
     public TicketService(
         TMAflowContext context,
         SlaService slaService,
-        NotificationService notificationService,
         AuditService auditService,
         IMemoryCache cache)
     {
         _context = context;
         _slaService = slaService;
-        _notificationService = notificationService;
         _auditService = auditService;
         _cache = cache;
     }
@@ -57,17 +54,6 @@ public class TicketService
         await _context.Tickets.AddAsync(ticket);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(organizationId);
-
-        if (dto.AssignedToId.HasValue)
-        {
-            await _notificationService.NotifyUserAsync(
-                dto.AssignedToId.Value,
-                "ticket_assigned",
-                "Ticket assigné",
-                $"Le ticket #{ticket.Id} vous a été assigné : {ticket.Title}",
-                "Ticket",
-                ticket.Id);
-        }
 
         await _auditService.LogAsync(createdById, "CREATE", "Ticket", ticket.Id, new { ticket.Title, ticket.Priority });
 
@@ -115,17 +101,6 @@ public class TicketService
             changes.Add(CreateHistory(ticketId, userId, "AssignedTo",
                 ticket.AssignedToId?.ToString(), dto.AssignedToId?.ToString()));
             ticket.AssignedToId = dto.AssignedToId;
-
-            if (dto.AssignedToId.HasValue)
-            {
-                await _notificationService.NotifyUserAsync(
-                    dto.AssignedToId.Value,
-                    "ticket_assigned",
-                    "Ticket assigné",
-                    $"Le ticket vous a été assigné : {ticket.Title}",
-                    "Ticket",
-                    ticket.Id);
-            }
         }
 
         if (dto.EstimatedHours.HasValue && dto.EstimatedHours != ticket.EstimatedHours)
@@ -172,14 +147,6 @@ public class TicketService
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
-
-        await _notificationService.NotifyOrganizationAsync(
-            ticket.OrganizationId,
-            "ticket_status_changed",
-            "Statut de ticket modifié",
-            $"Le ticket '{ticket.Title}' est passé de {oldStatus} à {newStatus}",
-            "Ticket",
-            ticket.Id);
 
         return ticket;
     }
@@ -312,8 +279,6 @@ public class TicketService
             UpdatedAt = ticket.UpdatedAt,
             SlaDeadline = ticket.SlaDeadline,
             SlaBreached = ticket.SlaBreached,
-            JiraKey = ticket.JiraKey,
-            IsJiraSync = ticket.IsJiraSync,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto

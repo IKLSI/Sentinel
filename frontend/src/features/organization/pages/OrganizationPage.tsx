@@ -38,9 +38,7 @@ export const OrganizationPage: React.FC = () => {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [savingJira, setSavingJira] = useState(false)
   const [orgForm, setOrgForm] = useState<OrgData>({ name: '', slug: '', timezone: 'Europe/Paris' })
-  const [jiraForm, setJiraForm] = useState({ url: '', username: '', apiToken: '' })
 
   useEffect(() => {
     apiClient.get<OrgData & { slug?: string }>('/api/organizations/current')
@@ -68,22 +66,6 @@ export const OrganizationPage: React.FC = () => {
       showToast('Erreur lors de la sauvegarde', 'error')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleSaveJira = async () => {
-    if (!jiraForm.url || !jiraForm.username || !jiraForm.apiToken) {
-      showToast('Remplissez tous les champs Jira', 'warning')
-      return
-    }
-    setSavingJira(true)
-    try {
-      await apiClient.post('/api/organizations/current/jira', jiraForm)
-      showToast('Intégration Jira sauvegardée', 'success')
-    } catch {
-      showToast('Erreur lors de la sauvegarde Jira', 'error')
-    } finally {
-      setSavingJira(false)
     }
   }
 
@@ -127,30 +109,6 @@ export const OrganizationPage: React.FC = () => {
                 {saving ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Sauvegarder'}
               </Button>
             </form>
-          </Box>
-        </Paper>
-
-        <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
-          <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Intégration Jira</Box>
-          <Box sx={{ p: '16px 20px' }}>
-            <Box className="mb-3" sx={{ p: '12px', background: 'var(--accent-subtle)', borderRadius: 'var(--r)', fontSize: '12px', color: 'var(--muted2)', border: '1px solid var(--accent-border)' }}>
-              ℹ Connectez votre instance Jira pour synchroniser les tickets automatiquement.
-            </Box>
-            <Box className="mb-3">
-              <Box component="label" sx={labelSx}>URL Jira</Box>
-              <Box component="input" type="url" sx={fieldSx} value={jiraForm.url} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://votre-org.atlassian.net" />
-            </Box>
-            <Box className="mb-3">
-              <Box component="label" sx={labelSx}>Nom d'utilisateur</Box>
-              <Box component="input" type="text" sx={fieldSx} value={jiraForm.username} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, username: e.target.value }))} />
-            </Box>
-            <Box className="mb-3">
-              <Box component="label" sx={labelSx}>Token API</Box>
-              <Box component="input" type="password" sx={fieldSx} value={jiraForm.apiToken} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJiraForm((f) => ({ ...f, apiToken: e.target.value }))} placeholder="••••••••••••••••" />
-            </Box>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} onClick={handleSaveJira} disabled={savingJira}>
-              {savingJira ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Tester & Sauvegarder'}
-            </Button>
           </Box>
         </Paper>
 

@@ -49,7 +49,6 @@ interface KanbanTicket {
   slaDeadline?: string;
   slaBreached: boolean;
   commentCount: number;
-  jiraKey?: string;
 }
 
 type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
@@ -168,7 +167,6 @@ function ticketToKanban(t: Ticket): KanbanTicket {
     slaDeadline: t.slaDeadline,
     slaBreached: t.slaBreached,
     commentCount: t.comments.length,
-    jiraKey: t.jiraKey,
   };
 }
 
@@ -359,20 +357,6 @@ function TicketCard({
             {ticket.reference}
           </Box>
 
-          {ticket.jiraKey && (
-            <Box
-              component="span"
-              sx={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                fontWeight: 600,
-                color: "var(--cyan)",
-                flexShrink: 0,
-              }}
-            >
-              · {ticket.jiraKey}
-            </Box>
-          )}
         </Box>
 
         {/* Right: comments + assignee */}

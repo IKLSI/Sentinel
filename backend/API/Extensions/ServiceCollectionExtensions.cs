@@ -6,7 +6,6 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using TMAflow.Infrastructure.Data;
@@ -53,17 +52,6 @@ public static class ServiceCollectionExtensions
                     ClockSkew = TimeSpan.Zero
                 };
 
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
-                    {
-                        StringValues accessToken = context.Request.Query["access_token"];
-                        PathString path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                            context.Token = accessToken;
-                        return Task.CompletedTask;
-                    }
-                };
             });
 
         services.AddAuthorization();
@@ -136,7 +124,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TechHealthService>();
         services.AddScoped<DashboardService>();
         services.AddScoped<ReportService>();
-        services.AddScoped<NotificationService>();
         services.AddScoped<EmailService>();
         services.AddScoped<AuditService>();
         services.AddScoped<DataSeeder>();

@@ -20,9 +20,7 @@ public class TMAflowContext : DbContext
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<Report> Reports => Set<Report>();
-    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<JiraConfig> JiraConfigs => Set<JiraConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,9 +39,7 @@ public class TMAflowContext : DbContext
         ConfigureEnvironmentVersion(modelBuilder);
         ConfigureRuntime(modelBuilder);
         ConfigureReport(modelBuilder);
-        ConfigureNotification(modelBuilder);
         ConfigureAuditLog(modelBuilder);
-        ConfigureJiraConfig(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -89,8 +85,6 @@ public class TMAflowContext : DbContext
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
-            entity.Property(e => e.JiraKey).HasMaxLength(50);
-            entity.Property(e => e.JiraId).HasMaxLength(50);
             entity.Property(e => e.Tags).HasColumnType("jsonb");
 
             entity.HasIndex(e => e.OrganizationId);
@@ -326,24 +320,6 @@ public class TMAflowContext : DbContext
         });
     }
 
-    private static void ConfigureNotification(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Notification>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Type).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.IsRead);
-            entity.HasIndex(e => e.CreatedAt);
-
-            entity.HasOne(e => e.User)
-                .WithMany(u => u.Notifications)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
     private static void ConfigureAuditLog(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AuditLog>(entity =>
@@ -364,20 +340,4 @@ public class TMAflowContext : DbContext
         });
     }
 
-    private static void ConfigureJiraConfig(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<JiraConfig>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.InstanceUrl).HasMaxLength(500).IsRequired();
-            entity.Property(e => e.ProjectKey).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.StatusMapping).HasColumnType("jsonb");
-            entity.HasIndex(e => e.TechProjectId).IsUnique();
-
-            entity.HasOne(e => e.TechProject)
-                .WithMany()
-                .HasForeignKey(e => e.TechProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
 }

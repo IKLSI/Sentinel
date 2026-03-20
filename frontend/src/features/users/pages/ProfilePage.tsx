@@ -48,26 +48,6 @@ const CARD_SX = {
 } as const
 
 
-/* ── Toggle ── */
-function Toggle({ on, onChange, busy }: { on: boolean; onChange: () => void; busy?: boolean }) {
-  return busy ? <CircularProgress size={13} /> : (
-    <Box component="button" onClick={onChange} sx={{
-      all: 'unset', cursor: 'pointer', width: 32, height: 18, borderRadius: 9, flexShrink: 0,
-      background: on ? 'var(--accent)' : 'var(--border2)',
-      position: 'relative', transition: 'background 0.18s',
-      boxShadow: on ? '0 0 6px rgba(99,102,241,0.4)' : 'none',
-    }}>
-      <Box sx={{
-        position: 'absolute', top: 2,
-        left: on ? 'calc(100% - 15px)' : 2,
-        width: 14, height: 14, borderRadius: '50%',
-        background: '#fff', transition: 'left 0.16s cubic-bezier(0.4,0,0.2,1)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-      }} />
-    </Box>
-  )
-}
-
 
 /* ── Séparateur interne ── */
 function InnerDivider({ label }: { label: string }) {
@@ -94,9 +74,6 @@ export const ProfilePage: React.FC = () => {
   const isAdmin = role === 'admin'
   const isAdminOrManager = role === 'admin' || role === 'manager'
   const [pf, setPf] = useState({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '' })
-  const [emailNotifs, setEmailNotifs] = useState(user?.emailNotifications ?? true)
-  const [savingNotifs, setSavingNotifs] = useState(false)
-
   const [members, setMembers] = useState<User[]>([])
   const [loadingMembers, setLoadingMembers] = useState(true)
   const [memberSearch, setMemberSearch] = useState('')
@@ -142,14 +119,6 @@ export const ProfilePage: React.FC = () => {
       setUser({ ...user!, ...updated })
       showToast('Profil enregistré', 'success')
     } catch { showToast('Erreur lors de la sauvegarde', 'error') }
-  }
-
-  const handleToggleNotifs = async () => {
-    const next = !emailNotifs
-    setEmailNotifs(next); setSavingNotifs(true)
-    try { await updatePreferences({ emailNotifications: next }); setUser({ ...user!, emailNotifications: next }) }
-    catch { setEmailNotifs(!next); showToast('Erreur', 'error') }
-    finally { setSavingNotifs(false) }
   }
 
   const handleToggleTheme = () => {
@@ -291,12 +260,6 @@ export const ProfilePage: React.FC = () => {
                       </Box>
                     </Box>
                   ))}
-                </Box>
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', mb: '5px' }}>Notifications e-mail</Box>
-                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                  <Toggle on={emailNotifs} onChange={handleToggleNotifs} busy={savingNotifs} />
                 </Box>
               </Box>
             </Box>

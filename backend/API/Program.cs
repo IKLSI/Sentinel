@@ -2,8 +2,6 @@ using Scalar.AspNetCore;
 using TMAflow.Infrastructure.Data;
 using TMAflow.API.Extensions;
 using TMAflow.API.Middleware;
-using TMAflow.Application.Hubs;
-
 namespace TMAflow.API;
 
 public static class Program
@@ -28,8 +26,7 @@ public static class Program
             .AddControllersWithJsonOptions()
             .AddHttpContextAccessor()
             .AddLoginRateLimiting()
-            .AddMemoryCache()
-            .AddSignalR();
+            .AddMemoryCache();
 
         WebApplication app = builder.Build();
 
@@ -60,7 +57,6 @@ public static class Program
         app.UseAuthorization();
         app.ConfigureHangfire();
         app.MapControllers();
-        app.MapHub<NotificationHub>("/hubs/notifications");
 
         app.Run();
     }

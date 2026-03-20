@@ -34,7 +34,7 @@ export const updateUserTheme = async (theme: 'dark' | 'light'): Promise<void> =>
   await apiClient.patch('/api/users/me/preferences', { theme })
 }
 
-export const updatePreferences = async (data: { theme?: 'dark' | 'light'; emailNotifications?: boolean }): Promise<void> => {
+export const updatePreferences = async (data: { theme?: 'dark' | 'light' }): Promise<void> => {
   await apiClient.patch('/api/users/me/preferences', data)
 }
 

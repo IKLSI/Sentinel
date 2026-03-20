@@ -143,9 +143,6 @@ public class UsersController : ControllerBase
         if (!string.IsNullOrEmpty(dto.Theme) && (dto.Theme == "dark" || dto.Theme == "light"))
             user.Theme = dto.Theme;
 
-        if (dto.EmailNotifications.HasValue)
-            user.EmailNotifications = dto.EmailNotifications.Value;
-
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -210,8 +207,7 @@ public class UsersController : ControllerBase
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt,
-            Theme = user.Theme,
-            EmailNotifications = user.EmailNotifications
+            Theme = user.Theme
         };
     }
 

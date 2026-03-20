@@ -15,7 +15,6 @@ import { TimeTrackingPage } from '../features/timeTracking/pages/TimeTrackingPag
 import { InvoicesPage } from '../features/invoices/pages/InvoicesPage'
 import { InvoiceDetailPage } from '../features/invoices/pages/InvoiceDetailPage'
 import { TechHealthPage } from '../features/techHealth/pages/TechHealthPage'
-import { NotificationsPage } from '../features/notifications/pages/NotificationsPage'
 import { UsersPage } from '../features/users/pages/UsersPage'
 import { OrganizationPage } from '../features/organization/pages/OrganizationPage'
 import { AuditPage } from '../features/users/pages/AuditPage'
@@ -54,7 +53,6 @@ export const AppRoutes: React.FC = () => (
       <Route path="/invoices" element={<InvoicesPage />} />
       <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
       <Route path="/tech-health" element={<TechHealthPage />} />
-      <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/users" element={<UsersPage />} />
       <Route path="/organization" element={<OrganizationPage />} />
       <Route path="/audit" element={<AuditPage />} />

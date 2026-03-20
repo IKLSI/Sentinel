@@ -19,7 +19,6 @@ export interface User {
   createdAt: string
   isActive: boolean
   theme?: 'dark' | 'light'
-  emailNotifications?: boolean
   lastLoginAt?: string
 }
 
@@ -87,7 +86,6 @@ export interface Ticket {
   slaBreached: boolean
   estimatedHours?: number
   timeSpentMinutes?: number
-  jiraKey?: string
   comments: TicketComment[]
   history: TicketHistory[]
   createdAt: string
@@ -182,20 +180,6 @@ export interface TechProject {
   vulnerabilities: Vulnerability[]
   environments: EnvironmentVersion[]
   lastScannedAt: string
-}
-
-export type NotificationType = 'ticket_created' | 'ticket_updated' | 'ticket_assigned' | 'ticket_status_changed' | 'sla_breach' | 'sla_warning' | 'vulnerability' | 'invoice' | 'deployment' | 'system'
-
-export interface Notification {
-  id: string
-  userId: string
-  type: NotificationType
-  title: string
-  message: string
-  entityId?: string
-  entityType?: string
-  isRead: boolean
-  createdAt: string
 }
 
 export interface AuditLog {

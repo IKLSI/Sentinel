@@ -213,93 +213,6 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.JiraConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ApiToken")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InstanceUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ProjectKey")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("StatusMapping")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid>("TechProjectId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TechProjectId")
-                        .IsUnique();
-
-                    b.ToTable("JiraConfigs");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.Notification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("RelatedEntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("RelatedEntityType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("IsRead");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("TMAflow.Domain.Models.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -480,17 +393,6 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Property<decimal?>("EstimatedHours")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
-
-                    b.Property<bool>("IsJiraSync")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JiraId")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("JiraKey")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
@@ -680,9 +582,6 @@ namespace TMAflow.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("EmailNotifications")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -836,28 +735,6 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("TechProject");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.JiraConfig", b =>
-                {
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
-                        .WithMany()
-                        .HasForeignKey("TechProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TechProject");
-                });
-
-            modelBuilder.Entity("TMAflow.Domain.Models.Notification", b =>
-                {
-                    b.HasOne("TMAflow.Domain.Models.User", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TMAflow.Domain.Models.Report", b =>
@@ -1044,8 +921,6 @@ namespace TMAflow.Infrastructure.Migrations
             modelBuilder.Entity("TMAflow.Domain.Models.User", b =>
                 {
                     b.Navigation("AuditLogs");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("TimeEntries");
                 });

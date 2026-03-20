@@ -21,8 +21,6 @@ public class TicketDto
     public DateTime UpdatedAt { get; set; }
     public DateTime? SlaDeadline { get; set; }
     public bool SlaBreached { get; set; }
-    public string? JiraKey { get; set; }
-    public bool IsJiraSync { get; set; }
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();

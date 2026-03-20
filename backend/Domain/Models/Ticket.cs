@@ -44,9 +44,6 @@ public class Ticket
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SlaDeadline { get; set; }
     public bool SlaBreached { get; set; } = false;
-    public string? JiraKey { get; set; }
-    public string? JiraId { get; set; }
-    public bool IsJiraSync { get; set; } = false;
     public string Tags { get; set; } = "[]";
     public DateTime? SlaWarningNotifiedAt { get; set; }
 

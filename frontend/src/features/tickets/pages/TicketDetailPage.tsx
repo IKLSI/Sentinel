@@ -285,11 +285,6 @@ export const TicketDetailPage: React.FC = () => {
                 <Box sx={{ width: 5, height: 5, borderRadius: "50%", background: sc.color }} />
                 {sc.label}
               </Box>
-              {ticket.jiraKey && (
-                <Box sx={{ display: "inline-flex", alignItems: "center", px: "8px", py: "3px", borderRadius: "5px", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.18)", fontSize: "11px", fontWeight: 600, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
-                  {ticket.jiraKey}
-                </Box>
-              )}
             </Box>
           </Box>
 

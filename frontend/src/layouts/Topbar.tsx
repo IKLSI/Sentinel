@@ -1,13 +1,10 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
-import NotificationsOutlined from "@mui/icons-material/NotificationsOutlined";
 import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import Box from "@mui/material/Box";
 import { useTheme } from "../store/ThemeContext";
 import { useSidebar } from "./SidebarContext";
-import { useNotifications } from "../features/notifications/hooks/useNotifications";
 
 interface TopbarProps {
   title: string;
@@ -39,8 +36,6 @@ const iconBtnSx = {
 export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
   const { theme, toggleTheme } = useTheme();
   const { isMobile, toggle } = useSidebar();
-  const { unreadCount } = useNotifications();
-  const navigate = useNavigate();
 
   return (
     <Box
@@ -98,40 +93,6 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
             <LightModeOutlined sx={{ fontSize: 14 }} />
           ) : (
             <DarkModeOutlined sx={{ fontSize: 14 }} />
-          )}
-        </Box>
-
-        <Box
-          component="button"
-          sx={iconBtnSx}
-          title="Notifications"
-          onClick={() => navigate("/notifications")}
-        >
-          <NotificationsOutlined sx={{ fontSize: 14 }} />
-          {unreadCount > 0 && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: -4,
-                right: -4,
-                minWidth: 16,
-                height: 16,
-                borderRadius: 8,
-                background: "var(--red)",
-                color: "#fff",
-                fontSize: 9,
-                fontWeight: 700,
-                fontFamily: "var(--font-mono)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                px: "4px",
-                boxSizing: "border-box",
-                border: "2px solid var(--s1)",
-              }}
-            >
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </Box>
           )}
         </Box>
 
