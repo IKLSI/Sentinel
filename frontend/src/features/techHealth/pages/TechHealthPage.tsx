@@ -762,12 +762,18 @@ export const TechHealthPage: React.FC = () => {
               className="d-flex align-items-center justify-content-center"
               sx={{ minHeight: "300px" }}
             >
+              <Box sx={{ fontSize: "11px", fontWeight: 600, mb: "12px", visibility: "hidden", pointerEvents: "none" }}>
+                Projets
+              </Box>
               <Box component="span" sx={{ color: "var(--muted)", fontSize: "14px" }}>
                 Chargement…
               </Box>
             </Box>
           ) : (
             <Box>
+              <Box sx={{ fontSize: "11px", fontWeight: 600, mb: "12px", visibility: "hidden", pointerEvents: "none" }}>
+                Projets
+              </Box>
               <Box
                 className="d-flex align-items-center"
                 sx={{

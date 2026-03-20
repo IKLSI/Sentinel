@@ -143,8 +143,31 @@ public class UsersController : ControllerBase
         if (!string.IsNullOrEmpty(dto.Theme) && (dto.Theme == "dark" || dto.Theme == "light"))
             user.Theme = dto.Theme;
 
+        if (dto.EmailNotifications.HasValue)
+            user.EmailNotifications = dto.EmailNotifications.Value;
+
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpPatch("me")]
+    public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UpdateMyProfileDto dto)
+    {
+        Guid? currentUserId = GetCurrentUserId();
+        Guid? organizationId = GetOrganizationId();
+        if (currentUserId == null || organizationId == null) return Unauthorized();
+
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
+
+        if (user == null)
+            return NotFound(new { message = "Utilisateur introuvable" });
+
+        if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
+        if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
+
+        await _context.SaveChangesAsync();
+        return Ok(MapToDto(user));
     }
 
     [HttpPost("{id:guid}/change-password")]
@@ -186,7 +209,9 @@ public class UsersController : ControllerBase
             Role = user.Role.ToString(),
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
-            LastLoginAt = user.LastLoginAt
+            LastLoginAt = user.LastLoginAt,
+            Theme = user.Theme,
+            EmailNotifications = user.EmailNotifications
         };
     }
 
