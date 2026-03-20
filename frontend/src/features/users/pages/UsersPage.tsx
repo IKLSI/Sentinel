@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
-import AddOutlined from "@mui/icons-material/AddOutlined";
 import Box from "@mui/material/Box";
 import { getUsers, createUser, updateUser } from "../api/users";
 import { useToast } from "../../../hooks/useToast";
@@ -118,36 +116,8 @@ export const UsersPage: React.FC = () => {
 
   return (
     <>
-      <Topbar
-        title="Utilisateurs"
-        subtitle={`${users.length} utilisateur(s)`}
-        actions={
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              textTransform: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-            onClick={() => {
-              setForm({
-                firstName: "",
-                lastName: "",
-                email: "",
-                role: "technician",
-                password: "",
-              });
-              setCreateModalOpen(true);
-            }}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-            Nouvel utilisateur
-          </Button>
-        }
-      />
-      <Box sx={{ p: "24px 28px" }}>
+
+      <Box sx={{ p: "36px 28px 24px" }}>
         {loading ? (
           <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />

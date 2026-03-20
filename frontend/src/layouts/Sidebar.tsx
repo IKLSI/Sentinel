@@ -260,27 +260,46 @@ export const Sidebar: React.FC = () => {
           }}
         >
           <Box
-            className="d-flex align-items-center justify-content-center flex-shrink-0"
+            component="button"
+            className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden"
+            onClick={() => navigate('/profile')}
             sx={{
-              width: 30,
-              height: 30,
+              all: 'unset',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexGrow: 1,
+              overflow: 'hidden',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, var(--accent), #818cf8)',
-              fontSize: '10px',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              color: '#fff',
-              boxShadow: '0 2px 6px rgba(99,102,241,0.35)',
+              p: '4px 6px 4px 0',
+              transition: 'opacity 0.12s',
+              '&:hover': { opacity: 0.75 },
             }}
           >
-            {initials}
-          </Box>
-          <Box className="flex-grow-1 overflow-hidden">
-            <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
-              {user?.firstName} {user?.lastName}
+            <Box
+              className="d-flex align-items-center justify-content-center flex-shrink-0"
+              sx={{
+                width: 30,
+                height: 30,
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, var(--accent), #818cf8)',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                color: '#fff',
+                boxShadow: '0 2px 6px rgba(99,102,241,0.35)',
+              }}
+            >
+              {initials}
             </Box>
-            <Box className="text-truncate" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-              {user?.email}
+            <Box className="overflow-hidden">
+              <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+                {user?.firstName} {user?.lastName}
+              </Box>
+              <Box className="text-truncate" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+                {user?.email}
+              </Box>
             </Box>
           </Box>
           <Box

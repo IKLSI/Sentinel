@@ -21,6 +21,7 @@ import { OrganizationPage } from '../features/organization/pages/OrganizationPag
 import { AuditPage } from '../features/users/pages/AuditPage'
 import { ProjectsPage } from '../features/projects/pages/ProjectsPage'
 import { ProjectDetailPage } from '../features/techHealth/pages/ProjectDetailPage'
+import { ProfilePage } from '../features/users/pages/ProfilePage'
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -57,6 +58,7 @@ export const AppRoutes: React.FC = () => (
       <Route path="/users" element={<UsersPage />} />
       <Route path="/organization" element={<OrganizationPage />} />
       <Route path="/audit" element={<AuditPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   </Routes>

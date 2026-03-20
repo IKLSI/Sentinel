@@ -33,3 +33,26 @@ export const getAuditLogs = async (params: { page?: number; userId?: string; ent
 export const updateUserTheme = async (theme: 'dark' | 'light'): Promise<void> => {
   await apiClient.patch('/api/users/me/preferences', { theme })
 }
+
+export const updatePreferences = async (data: { theme?: 'dark' | 'light'; emailNotifications?: boolean }): Promise<void> => {
+  await apiClient.patch('/api/users/me/preferences', data)
+}
+
+export const updateMyProfile = async (data: { firstName?: string; lastName?: string }): Promise<User> => {
+  const response = await apiClient.patch<User>('/api/users/me', data)
+  return response.data
+}
+
+export const inviteUser = async (data: { email: string; firstName: string; lastName: string; role: UserRole; password: string }): Promise<User> => {
+  const response = await apiClient.post<User>('/api/users', data)
+  return response.data
+}
+
+export const changePassword = async (userId: string, data: { currentPassword: string; newPassword: string }): Promise<void> => {
+  await apiClient.post(`/api/users/${userId}/change-password`, data)
+}
+
+export const toggleUserActive = async (userId: string, isActive: boolean): Promise<User> => {
+  const response = await apiClient.put<User>(`/api/users/${userId}`, { isActive })
+  return response.data
+}
