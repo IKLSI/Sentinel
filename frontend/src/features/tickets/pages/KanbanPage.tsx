@@ -12,7 +12,6 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
-import CircularProgress from "@mui/material/CircularProgress";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
@@ -55,19 +54,7 @@ interface KanbanTicket {
 
 type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
 
-const priorityColors: Record<TicketPriority, string> = {
-  critical: "var(--red)",
-  high: "var(--orange)",
-  medium: "var(--yellow)",
-  low: "var(--green)",
-};
 
-const priorityLabels: Record<TicketPriority, string> = {
-  critical: "Critique",
-  high: "Haute",
-  medium: "Moyenne",
-  low: "Basse",
-};
 
 const typeColors: Record<KanbanType, string> = {
   bug: "var(--red)",
@@ -196,11 +183,7 @@ function ticketsToColumns(tickets: Ticket[]): KanbanColumns {
 function getSlaChip(
   deadline?: string,
   breached?: boolean,
-): {
-  label: string;
-  color: string;
-  subtle: string;
-} | null {
+): { label: string; color: string; subtle: string } | null {
   if (breached)
     return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
   if (!deadline) return null;
@@ -216,66 +199,6 @@ function getSlaChip(
     };
   }
   return null;
-}
-
-// ─── Filter bar ──────────────────────────────────────────────────────────────
-
-function FilterBar({
-  search,
-  onSearch,
-}: {
-  search: string;
-  onSearch: (v: string) => void;
-}) {
-  return (
-    <Box
-      sx={{
-        padding: "36px 28px 0",
-        display: "flex",
-        alignItems: "center",
-        flexShrink: 0,
-      }}
-    >
-      <Box
-        sx={{
-          flex: "0 0 295px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          background: "var(--s1)",
-          border: "1px solid var(--border)",
-          borderRadius: "9px",
-          px: "10px",
-          height: "32px",
-          transition: "border-color 0.15s, box-shadow 0.15s",
-          "&:focus-within": {
-            borderColor: "var(--accent-border)",
-            boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
-          },
-        }}
-      >
-        <SearchOutlined
-          sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
-        />
-        <Box
-          component="input"
-          placeholder="Rechercher..."
-          value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onSearch(e.target.value)
-          }
-          sx={{
-            all: "unset",
-            flex: 1,
-            fontSize: "12.5px",
-            color: "var(--text)",
-            "&::placeholder": { color: "var(--muted)" },
-            "&:focus": { outline: "none", boxShadow: "none !important" },
-          }}
-        />
-      </Box>
-    </Box>
-  );
 }
 
 // ─── Ticket card ─────────────────────────────────────────────────────────────
@@ -303,32 +226,25 @@ function TicketCard({
         background: isUpdating ? "var(--accent-subtle)" : "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",
-        padding: "9px 10px",
+        padding: "11px 12px 10px 12px",
         cursor: isDragging ? "grabbing" : "pointer",
         boxShadow: isDragging
-          ? "0 8px 20px rgba(0,0,0,0.22)"
-          : "0 1px 2px rgba(0,0,0,0.06)",
+          ? "0 12px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)"
+          : "none",
         userSelect: "none",
-        opacity: isUpdating ? 0.55 : 1,
-        transition: "opacity 0.15s, box-shadow 0.15s, border-color 0.15s",
+        opacity: isUpdating ? 0.5 : 1,
+        transform: isDragging ? "rotate(1.2deg) scale(1.01)" : "none",
+        transition: "opacity 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.12s",
         "&:hover": !isDragging
           ? {
-              boxShadow: "0 3px 10px rgba(0,0,0,0.09)",
               borderColor: "var(--border2)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
             }
           : {},
       }}
     >
       {/* Row 1: type badge + SLA */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: "6px",
-          gap: "6px",
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "8px", gap: "6px" }}>
         <Box
           component="span"
           sx={{
@@ -340,7 +256,7 @@ function TicketCard({
             color: typeColor,
             background: typeSubtle,
             borderRadius: "4px",
-            padding: "1px 6px 1px 4px",
+            padding: "2px 7px 2px 5px",
           }}
         >
           {typeIcons[ticket.type]}
@@ -368,7 +284,7 @@ function TicketCard({
                 color: slaChip.color,
                 background: slaChip.subtle,
                 borderRadius: "4px",
-                padding: "1px 5px 1px 3px",
+                padding: "2px 6px 2px 4px",
                 letterSpacing: "0.02em",
               }}
             >
@@ -379,153 +295,163 @@ function TicketCard({
         )}
       </Box>
 
-      {/* Row 2: title — fixed height = exactly 2 lines */}
+      {/* Row 2: title */}
       <Box
         sx={{
-          height: "34px",
-          fontSize: "12.5px",
+          fontSize: "13px",
           fontWeight: 600,
-          lineHeight: "17px",
+          lineHeight: "1.45",
           color: "var(--text)",
-          mb: "8px",
+          mb: "9px",
           display: "-webkit-box",
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
           overflow: "hidden",
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.015em",
         }}
       >
         {ticket.title}
       </Box>
 
-      {/* Row 3: footer */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        <Tooltip
-          title={`Priorité ${priorityLabels[ticket.priority]}`}
-          placement="top"
-          arrow
+      {/* Row 3: project */}
+      {ticket.project && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            mb: "9px",
+            minWidth: 0,
+            overflow: "hidden",
+          }}
         >
+          <FolderOutlined sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }} />
           <Box
             component="span"
             sx={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: priorityColors[ticket.priority],
-              flexShrink: 0,
+              fontSize: "10.5px",
+              color: "var(--muted2)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
-          />
-        </Tooltip>
-
-        <Box
-          component="span"
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "10px",
-            fontWeight: 600,
-            color: "var(--muted)",
-            letterSpacing: "0.03em",
-            flexShrink: 0,
-          }}
-        >
-          {ticket.reference}
+          >
+            {ticket.project}
+          </Box>
         </Box>
+      )}
 
-        {ticket.jiraKey && (
+      {/* Row 4: footer */}
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        {/* Left: ref + jira */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: "5px", flex: 1, minWidth: 0 }}>
           <Box
             component="span"
             sx={{
               fontFamily: "var(--font-mono)",
-              fontSize: "9px",
+              fontSize: "10px",
               fontWeight: 600,
-              color: "var(--cyan)",
+              color: "var(--muted)",
+              letterSpacing: "0.03em",
               flexShrink: 0,
             }}
           >
-            {ticket.jiraKey}
+            {ticket.reference}
           </Box>
-        )}
 
-        {ticket.project ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "3px",
-              flex: 1,
-              minWidth: 0,
-              overflow: "hidden",
-            }}
-          >
-            <FolderOutlined
-              sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }}
-            />
+          {ticket.jiraKey && (
             <Box
               component="span"
               sx={{
-                fontSize: "10px",
-                color: "var(--muted2)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {ticket.project}
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ flex: 1 }} />
-        )}
-
-        {ticket.commentCount > 0 && (
-          <Tooltip
-            title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}
-            placement="top"
-            arrow
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "2px",
-                fontSize: "10px",
-                color: "var(--muted2)",
-                flexShrink: 0,
-              }}
-            >
-              <CommentOutlined sx={{ fontSize: 10 }} />
-              {ticket.commentCount}
-            </Box>
-          </Tooltip>
-        )}
-
-        {ticket.assigneeInitials && (
-          <Tooltip
-            title={ticket.assigneeName ?? ticket.assigneeInitials}
-            placement="top"
-            arrow
-          >
-            <Box
-              sx={{
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                background: "var(--accent-subtle)",
-                border: "1.5px solid var(--accent-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "8px",
-                fontWeight: 700,
-                color: "var(--accent)",
                 fontFamily: "var(--font-mono)",
+                fontSize: "9px",
+                fontWeight: 600,
+                color: "var(--cyan)",
                 flexShrink: 0,
               }}
             >
-              {ticket.assigneeInitials}
+              · {ticket.jiraKey}
             </Box>
-          </Tooltip>
-        )}
+          )}
+        </Box>
+
+        {/* Right: comments + assignee */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: "7px", flexShrink: 0 }}>
+          {ticket.commentCount > 0 && (
+            <Tooltip
+              title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}
+              placement="top"
+              arrow
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  fontSize: "10px",
+                  color: "var(--muted2)",
+                }}
+              >
+                <CommentOutlined sx={{ fontSize: 11 }} />
+                {ticket.commentCount}
+              </Box>
+            </Tooltip>
+          )}
+
+          {ticket.assigneeInitials && (
+            <Tooltip
+              title={ticket.assigneeName ?? ticket.assigneeInitials}
+              placement="top"
+              arrow
+            >
+              <Box
+                sx={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "50%",
+                  background: "var(--accent-subtle)",
+                  border: "1.5px solid var(--accent-border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "8.5px",
+                  fontWeight: 700,
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {ticket.assigneeInitials}
+              </Box>
+            </Tooltip>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// ─── Skeleton card ────────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <Box
+      sx={{
+        background: "var(--bg)",
+        border: "1px solid var(--border)",
+        borderLeft: "3px solid var(--border2)",
+        borderRadius: "var(--r)",
+        padding: "10px 11px 10px 10px",
+        animation: "pulse 1.4s ease-in-out infinite",
+      }}
+    >
+      <Box sx={{ display: "flex", gap: "6px", mb: "8px" }}>
+        <Box sx={{ width: 52, height: 16, borderRadius: 4, background: "var(--s2)" }} />
+      </Box>
+      <Box sx={{ height: 12, borderRadius: 4, background: "var(--s2)", mb: "6px" }} />
+      <Box sx={{ height: 12, borderRadius: 4, background: "var(--s2)", width: "70%", mb: "9px" }} />
+      <Box sx={{ display: "flex", gap: "6px" }}>
+        <Box sx={{ width: 6, height: 6, borderRadius: "50%", background: "var(--s2)" }} />
+        <Box sx={{ width: 48, height: 10, borderRadius: 4, background: "var(--s2)" }} />
       </Box>
     </Box>
   );
@@ -659,33 +585,153 @@ export const KanbanPage: React.FC = () => {
         }}
       />
 
-
-
-      {loading ? (
+      <Box
+        className="kanban-content"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        {/* ── Header ─────────────────────────────────────────────────── */}
         <Box
-          className="d-flex justify-content-center align-items-center kanban-content"
-          sx={{ height: "100vh" }}
-        >
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <Box
-          className="kanban-content"
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            height: "100vh",
-            overflow: "hidden",
+            px: "28px",
+            pt: "36px",
+            pb: "14px",
+            flexShrink: 0,
           }}
         >
-          <FilterBar search={search} onSearch={setSearch} />
+          <Box
+            sx={{
+              width: "280px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "var(--s1)",
+              border: "1px solid var(--border)",
+              borderRadius: "9px",
+              px: "10px",
+              height: "32px",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+              "&:focus-within": {
+                borderColor: "var(--accent-border)",
+                boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              },
+            }}
+          >
+            <SearchOutlined
+              sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
+            />
+            <Box
+              component="input"
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearch(e.target.value)
+              }
+              sx={{
+                all: "unset",
+                flex: 1,
+                fontSize: "12.5px",
+                color: "var(--text)",
+                "&::placeholder": { color: "var(--muted)" },
+                "&:focus": { outline: "none", boxShadow: "none !important" },
+              }}
+            />
+          </Box>
+        </Box>
 
+        {/* ── Board ──────────────────────────────────────────────────── */}
+        {loading ? (
           <Box
             sx={{
               flex: 1,
               overflowX: "auto",
               overflowY: "hidden",
-              padding: "16px 28px 20px",
+              px: "28px",
+              pb: "20px",
+              minHeight: 0,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                minWidth: "fit-content",
+                height: "100%",
+              }}
+            >
+              {columnOrder.map((colId) => {
+                const meta = columnMeta[colId];
+                return (
+                  <div
+                    key={colId}
+                    style={{
+                      width: "280px",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    {/* Column header skeleton */}
+                    <Box
+                      sx={{
+                        mb: "8px",
+                        padding: "11px 14px",
+                        background: "var(--s1)",
+                        border: "1px solid var(--border)",
+                        borderTop: `2px solid ${meta.color}`,
+                        borderRadius: "var(--r)",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                        <Box sx={{ width: 7, height: 7, borderRadius: "50%", background: meta.color }} />
+                        <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                          {meta.label}
+                        </Box>
+                      </Box>
+                      <Box sx={{ width: 22, height: 20, borderRadius: 99, background: "var(--s2)" }} />
+                    </Box>
+
+                    {/* Skeleton cards */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                        padding: "8px 0 16px",
+                        background: "var(--s1)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--r)",
+                        px: "8px",
+                        overflowY: "hidden",
+                      }}
+                    >
+                      {[1, 2, 3].map((i) => (
+                        <SkeletonCard key={i} />
+                      ))}
+                    </Box>
+                  </div>
+                );
+              })}
+            </div>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              flex: 1,
+              overflowX: "auto",
+              overflowY: "hidden",
+              px: "28px",
+              pb: "20px",
               minHeight: 0,
             }}
           >
@@ -698,7 +744,7 @@ export const KanbanPage: React.FC = () => {
               <div
                 style={{
                   display: "flex",
-                  gap: "14px",
+                  gap: "12px",
                   minWidth: "fit-content",
                   height: "100%",
                 }}
@@ -712,7 +758,7 @@ export const KanbanPage: React.FC = () => {
                     <div
                       key={colId}
                       style={{
-                        width: "295px",
+                        width: "280px",
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
@@ -721,10 +767,11 @@ export const KanbanPage: React.FC = () => {
                       {/* Column header */}
                       <Box
                         sx={{
-                          mb: "10px",
+                          mb: "8px",
                           padding: "11px 14px",
-                          background: "var(--s2)",
+                          background: "var(--s1)",
                           border: "1px solid var(--border)",
+                          borderTop: `2px solid ${meta.color}`,
                           borderRadius: "var(--r)",
                           flexShrink: 0,
                         }}
@@ -803,14 +850,14 @@ export const KanbanPage: React.FC = () => {
                               overflowY: "auto",
                               display: "flex",
                               flexDirection: "column",
-                              gap: "7px",
+                              gap: "6px",
                               padding: "8px 8px 16px 8px",
                               background: snapshot.isDraggingOver
                                 ? meta.subtle
-                                : "var(--s2)",
-                              border: "1px solid var(--border)",
+                                : "var(--s1)",
+                              border: `1px solid ${snapshot.isDraggingOver ? meta.border : "var(--border)"}`,
                               borderRadius: "var(--r)",
-                              transition: "background 0.15s",
+                              transition: "background 0.15s, border-color 0.15s",
                             }}
                           >
                             {colTickets.map((ticket, index) => (
@@ -870,8 +917,8 @@ export const KanbanPage: React.FC = () => {
               </div>
             </DragDropContext>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </>
   );
 };

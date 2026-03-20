@@ -340,7 +340,7 @@ export const TicketsPage: React.FC = () => {
       <Box sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>
           <Box sx={{
-            flex: "0 0 260px", display: "flex", alignItems: "center", gap: "8px",
+            width: "280px", display: "flex", alignItems: "center", gap: "8px",
             background: "var(--s1)", border: "1px solid var(--border)",
             borderRadius: "9px", px: "10px", height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",

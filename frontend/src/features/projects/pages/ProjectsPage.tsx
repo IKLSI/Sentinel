@@ -240,7 +240,7 @@ export const ProjectsPage: React.FC = () => {
         {/* Barre haut */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "16px", flexShrink: 0 }}>
           <Box sx={{
-            width: "320px", display: "flex", alignItems: "center", gap: "8px",
+            width: "280px", display: "flex", alignItems: "center", gap: "8px",
             background: "var(--s1)", border: "1px solid var(--border)",
             borderRadius: "9px", px: "10px", height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
