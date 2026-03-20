@@ -243,46 +243,6 @@ export const DashboardPage: React.FC = () => {
     <Box sx={{ p: "28px 28px 48px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
 
-{/* ── Alert vulns ────────────────────────────────────────── */}
-      {stats.criticalVulnerabilities > 0 && (
-        <Box className="alert-banner" onClick={() => navigate("/tech-health")}>
-          <WarningAmberOutlined sx={{ fontSize: 14, color: "var(--red)", flexShrink: 0 }} />
-          <Box className="alert-text">
-            <strong>
-              {stats.criticalVulnerabilities} vulnérabilité{stats.criticalVulnerabilities > 1 ? "s" : ""} critique{stats.criticalVulnerabilities > 1 ? "s" : ""}
-            </strong>{" "}détectée{stats.criticalVulnerabilities > 1 ? "s" : ""} — inspection requise.
-          </Box>
-          <button className="alert-btn" onClick={(e) => { e.stopPropagation(); navigate("/tech-health"); }}>
-            Inspecter →
-          </button>
-        </Box>
-      )}
-
-      {loaded && stats.overdueInvoicesCount > 0 && (
-        <Box
-          className="alert-banner"
-          onClick={() => navigate("/invoices")}
-          sx={{
-            borderLeftColor: "var(--orange) !important",
-            borderColor: "rgba(249,115,22,0.18) !important",
-            background: "rgba(249,115,22,0.04) !important",
-          }}
-        >
-          <WarningAmberOutlined sx={{ fontSize: 14, color: "var(--orange)", flexShrink: 0 }} />
-          <Box className="alert-text">
-            <strong>{stats.overdueInvoicesCount} facture{stats.overdueInvoicesCount > 1 ? "s" : ""} en retard</strong>{" "}
-            — {(stats.overdueInvoicesAmount / 1000).toFixed(1)}k€ de paiements en attente.
-          </Box>
-          <button
-            className="alert-btn"
-            onClick={(e) => { e.stopPropagation(); navigate("/invoices"); }}
-            style={{ color: "var(--orange)", borderColor: "rgba(249,115,22,0.28)" }}
-          >
-            Voir →
-          </button>
-        </Box>
-      )}
-
       {/* ── KPIs ───────────────────────────────────────────────── */}
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
 
@@ -337,7 +297,7 @@ export const DashboardPage: React.FC = () => {
       </Box>
 
       {/* ── Bas : statuts | santé ──────────────────────────────── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", alignItems: "start" }}>
 
         <Panel delay={320}>
           <PanelHead
@@ -356,11 +316,11 @@ export const DashboardPage: React.FC = () => {
           />
           <Box sx={{ p: "10px 12px 12px", display: "flex", flexDirection: "column", gap: "7px" }}>
             {techProjects.length === 0 ? (
-              <Box sx={{ fontSize: "12px", color: "var(--muted)", p: "10px 6px" }}>
+              <Box sx={{ fontSize: "12px", color: "var(--muted)", p: "10px 6px", textAlign: "center" }}>
                 Aucun projet configuré.
               </Box>
             ) : (
-              techProjects.map((p) => (
+              techProjects.slice(0, 3).map((p) => (
                 <TechProjectRow key={p.id} project={p} onClick={() => navigate("/tech-health")} />
               ))
             )}
