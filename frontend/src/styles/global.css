@@ -142,9 +142,26 @@ a:hover { text-decoration: underline; }
   pointer-events: none;
 }
 
+@keyframes pageItemIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.page-enter > * {
+  animation: pageItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+.page-enter > *:nth-child(1)  { animation-delay: 0s; }
+.page-enter > *:nth-child(2)  { animation-delay: 0.07s; }
+.page-enter > *:nth-child(3)  { animation-delay: 0.14s; }
+.page-enter > *:nth-child(4)  { animation-delay: 0.21s; }
+.page-enter > *:nth-child(5)  { animation-delay: 0.28s; }
+.page-enter > *:nth-child(n+6){ animation-delay: 0.35s; }
+
 @media (prefers-reduced-motion: reduce) {
   .page-transition  { animation: none; }
   .page-progress-bar { display: none; }
+  .page-enter > * { animation: none; }
 }
 
 

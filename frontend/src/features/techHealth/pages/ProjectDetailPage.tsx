@@ -127,7 +127,7 @@ export const ProjectDetailPage: React.FC = () => {
     <>
 
 
-      <Box sx={{ p: "24px 28px" }}>
+      <Box className="page-enter" sx={{ p: "24px 28px" }}>
         <Paper
           sx={{
             bgcolor: "background.paper",

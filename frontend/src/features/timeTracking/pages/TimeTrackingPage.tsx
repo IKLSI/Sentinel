@@ -243,7 +243,7 @@ export const TimeTrackingPage: React.FC = () => {
     <>
 
 
-      <Box sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Box className="page-enter" sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
         {/* ── Card semaine ── */}
         <Box sx={{

@@ -101,7 +101,7 @@ export const OrganizationPage: React.FC = () => {
   return (
     <>
 
-      <Box sx={{ p: '36px 28px 24px', maxWidth: '800px' }}>
+      <Box className="page-enter" sx={{ p: '36px 28px 24px', maxWidth: '800px' }}>
 
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Informations générales</Box>

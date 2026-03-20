@@ -185,13 +185,12 @@ export const ProfilePage: React.FC = () => {
     <>
 
 
-      <Box sx={{
+      <Box className="page-enter" sx={{
         p: '36px 28px 24px',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
         overflow: 'hidden',
-        animation: 'fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) both',
       }}>
 
         {/* ════ PROFIL CARD ════ */}

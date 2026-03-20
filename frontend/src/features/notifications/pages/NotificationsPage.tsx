@@ -91,7 +91,7 @@ export const NotificationsPage: React.FC = () => {
     <>
 
 
-      <Box sx={{ p: "36px 28px 24px", maxWidth: "800px" }}>
+      <Box className="page-enter" sx={{ p: "36px 28px 24px", maxWidth: "800px" }}>
         {loading ? (
           <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />

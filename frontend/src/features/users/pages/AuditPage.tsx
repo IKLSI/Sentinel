@@ -36,7 +36,7 @@ export const AuditPage: React.FC = () => {
   return (
     <>
 
-      <Box sx={{ p: '36px 28px 24px' }}>
+      <Box className="page-enter" sx={{ p: '36px 28px 24px' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
             <CircularProgress />
