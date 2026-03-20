@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -304,8 +303,8 @@ export const InvoicesPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" subtitle={undefined} />
-      <Box sx={{ p: "24px 28px", height: "calc(100vh - 67px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      <Box sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* ── Barre recherche + filtres + bouton ── */}
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Topbar } from '../../../layouts/Topbar'
 import { StatusChip } from '../../../components/StatusChip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
@@ -36,8 +35,8 @@ export const AuditPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="Audit log" subtitle="Historique des actions" />
-      <Box sx={{ p: '24px 28px' }}>
+
+      <Box sx={{ p: '36px 28px 24px' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
             <CircularProgress />

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -142,7 +141,7 @@ export const ProjectDetailPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" />
+
 
       <Box sx={{ p: "24px 28px" }}>
         <Paper

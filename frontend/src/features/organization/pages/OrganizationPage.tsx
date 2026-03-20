@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { Topbar } from '../../../layouts/Topbar'
 import Paper from '@mui/material/Paper'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -91,7 +90,7 @@ export const OrganizationPage: React.FC = () => {
   if (loading) {
     return (
       <>
-        <Topbar title="Organisation" subtitle="Configuration" />
+
         <Box className="d-flex justify-content-center" sx={{ p: '24px 28px' }}>
           <CircularProgress size={24} />
         </Box>
@@ -101,8 +100,8 @@ export const OrganizationPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="Organisation" subtitle="Configuration" />
-      <Box sx={{ p: '24px 28px', maxWidth: '800px' }}>
+
+      <Box sx={{ p: '36px 28px 24px', maxWidth: '800px' }}>
 
         <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 2 }}>
           <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 700, fontSize: '12px', color: 'text.primary' }}>Informations générales</Box>

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
@@ -67,7 +65,7 @@ const entityRoute: Partial<Record<string, (id: string) => string>> = {
 
 export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAllAsRead, markAsRead, loading } = useNotifications();
+  const { notifications, markAsRead, loading } = useNotifications();
   const [selected, setSelected] = useState<Notification | null>(null);
 
   const handleOpen = (notif: Notification) => {
@@ -91,19 +89,9 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <>
-      <Topbar
-        title="Notifications"
-        subtitle={unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : undefined}
-        actions={
-          unreadCount > 0 ? (
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={markAllAsRead}>
-              Tout marquer comme lu
-            </Button>
-          ) : undefined
-        }
-      />
 
-      <Box sx={{ p: "24px 28px", maxWidth: "800px" }}>
+
+      <Box sx={{ p: "36px 28px 24px", maxWidth: "800px" }}>
         {loading ? (
           <Box className="d-flex justify-content-center" sx={{ p: "60px" }}>
             <CircularProgress size={24} />

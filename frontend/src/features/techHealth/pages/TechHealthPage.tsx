@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import Button from "@mui/material/Button";
@@ -675,7 +674,7 @@ export const TechHealthPage: React.FC = () => {
   if (loading) {
     return (
       <>
-        <Topbar title="" />
+
         <Box
           className="d-flex align-items-center justify-content-center"
           sx={{ p: "24px 28px", minHeight: "300px" }}
@@ -691,8 +690,8 @@ export const TechHealthPage: React.FC = () => {
   if (projects.length === 0) {
     return (
       <>
-        <Topbar title="" />
-        <Box sx={{ p: "24px 28px" }}>
+
+        <Box sx={{ p: "36px 28px 24px" }}>
           <Box
             sx={{
               background: "var(--s1)",
@@ -721,8 +720,8 @@ export const TechHealthPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" />
-      <Box sx={{ p: "24px 28px" }}>
+
+      <Box sx={{ p: "36px 28px 24px" }}>
         <Box
           sx={{
             display: "grid",
@@ -735,18 +734,6 @@ export const TechHealthPage: React.FC = () => {
             className="d-flex flex-column"
             sx={{ gap: "8px", position: "sticky", top: "24px" }}
           >
-            <Box
-              sx={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "var(--muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                mb: "4px",
-              }}
-            >
-              Projets
-            </Box>
             {projects.map((p) => (
               <ProjectSummaryCard
                 key={p.id}
@@ -762,18 +749,14 @@ export const TechHealthPage: React.FC = () => {
               className="d-flex align-items-center justify-content-center"
               sx={{ minHeight: "300px" }}
             >
-              <Box sx={{ fontSize: "11px", fontWeight: 600, mb: "12px", visibility: "hidden", pointerEvents: "none" }}>
-                Projets
-              </Box>
+
               <Box component="span" sx={{ color: "var(--muted)", fontSize: "14px" }}>
                 Chargement…
               </Box>
             </Box>
           ) : (
             <Box>
-              <Box sx={{ fontSize: "11px", fontWeight: 600, mb: "12px", visibility: "hidden", pointerEvents: "none" }}>
-                Projets
-              </Box>
+
               <Box
                 className="d-flex align-items-center"
                 sx={{

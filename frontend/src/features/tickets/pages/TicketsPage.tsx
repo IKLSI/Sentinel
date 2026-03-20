@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import { StatusChip } from "../../../components/StatusChip";
 import { SlaTimer } from "../../../components/SlaTimer";
 import { DurationPicker } from "../../../components/DurationPicker";
@@ -337,8 +336,8 @@ export const TicketsPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" subtitle={undefined} />
-      <Box sx={{ p: "24px 28px", height: "calc(100vh - 67px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      <Box sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>
           <Box sx={{
             flex: "0 0 260px", display: "flex", alignItems: "center", gap: "8px",

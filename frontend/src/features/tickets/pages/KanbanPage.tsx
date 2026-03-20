@@ -12,7 +12,6 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import Tooltip from "@mui/material/Tooltip";
@@ -231,7 +230,7 @@ function FilterBar({
   return (
     <Box
       sx={{
-        padding: "24px 28px 0",
+        padding: "36px 28px 0",
         display: "flex",
         alignItems: "center",
         flexShrink: 0,
@@ -660,12 +659,12 @@ export const KanbanPage: React.FC = () => {
         }}
       />
 
-      <Topbar title="" />
+
 
       {loading ? (
         <Box
           className="d-flex justify-content-center align-items-center kanban-content"
-          sx={{ height: "calc(100vh - 67px)" }}
+          sx={{ height: "100vh" }}
         >
           <CircularProgress size={28} />
         </Box>
@@ -675,7 +674,7 @@ export const KanbanPage: React.FC = () => {
           sx={{
             display: "flex",
             flexDirection: "column",
-            height: "calc(100vh - 67px)",
+            height: "100vh",
             overflow: "hidden",
           }}
         >

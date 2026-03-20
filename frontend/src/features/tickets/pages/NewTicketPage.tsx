@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Topbar } from '../../../layouts/Topbar'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
@@ -92,8 +91,8 @@ export const NewTicketPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="Nouveau ticket" />
-      <Box sx={{ padding: '24px 28px', maxWidth: '800px' }}>
+
+      <Box sx={{ padding: '36px 28px 24px', maxWidth: '800px' }}>
         <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: 'var(--r)', mb: '16px', overflow: 'hidden' }}>
           <Box sx={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: '12px' }}>Créer un ticket</Box>
           <Box sx={{ padding: '16px 20px' }}>

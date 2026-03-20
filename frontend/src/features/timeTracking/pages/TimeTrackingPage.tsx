@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
@@ -242,9 +241,9 @@ export const TimeTrackingPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" subtitle={undefined} />
 
-      <Box sx={{ p: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+      <Box sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
         {/* ── Card semaine ── */}
         <Box sx={{

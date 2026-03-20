@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import Box from "@mui/material/Box";
 import { getDashboardStats } from "../api/dashboard";
@@ -143,9 +142,9 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" subtitle={undefined} />
 
-      <Box sx={{ p: "20px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+
+      <Box sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
 
         {stats.criticalVulnerabilities > 0 && (
           <Box className="alert-banner" onClick={() => navigate("/tech-health")}>
@@ -395,7 +394,7 @@ const ActivityRow: React.FC<{ item: ActivityItem; index: number }> = ({ item, in
   return (
     <Box sx={{
       display: "flex", alignItems: "center", gap: "11px",
-      py: "8px", mx: "-16px", px: "16px",
+      py: "7px", mx: "-16px", px: "16px",
       cursor: "default",
       transition: "background 0.12s",
 "&:hover": { background: "var(--s2)" },

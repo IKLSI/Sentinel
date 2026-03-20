@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Topbar } from "../../../layouts/Topbar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
@@ -100,15 +99,10 @@ export const InvoiceDetailPage: React.FC = () => {
 
   return (
     <>
-      <Topbar
-        title=""
-        subtitle={undefined}
-        actions={undefined}
-      />
 
       <Box
         sx={{
-          p: "24px 28px",
+          p: "36px 28px 24px",
           display: "flex",
           flexDirection: "column",
           gap: "12px",

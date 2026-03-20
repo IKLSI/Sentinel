@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Topbar } from "../../../layouts/Topbar";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -236,8 +235,8 @@ export const ProjectsPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" />
-      <Box sx={{ p: "24px 28px", height: "calc(100vh - 67px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      <Box sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Barre haut */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "16px", flexShrink: 0 }}>
           <Box sx={{

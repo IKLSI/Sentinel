@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { Topbar } from "../../../layouts/Topbar";
 import { SlaTimer } from "../../../components/SlaTimer";
 import { AppModal } from "../../../components/AppModal";
 import Box from "@mui/material/Box";
@@ -206,7 +205,7 @@ export const TicketDetailPage: React.FC = () => {
   if (loading)
     return (
       <>
-        <Topbar title="" />
+
         <Box sx={{ display: "flex", justifyContent: "center", p: "80px" }}>
           <CircularProgress size={28} />
         </Box>
@@ -216,7 +215,7 @@ export const TicketDetailPage: React.FC = () => {
   if (notFound || !ticket)
     return (
       <>
-        <Topbar title="" />
+
         <Box
           sx={{
             display: "flex",
@@ -259,9 +258,9 @@ export const TicketDetailPage: React.FC = () => {
 
   return (
     <>
-      <Topbar title="" />
 
-      <Box sx={{ p: { xs: "20px 16px", md: "28px 32px" }, display: "flex", gap: "24px", alignItems: "flex-start", flexDirection: { xs: "column", lg: "row" } }}>
+
+      <Box sx={{ p: { xs: "36px 16px 20px", md: "36px 32px 28px" }, display: "flex", gap: "24px", alignItems: "flex-start", flexDirection: { xs: "column", lg: "row" } }}>
 
         {/* ── COLONNE GAUCHE ── */}
         <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
