@@ -31,7 +31,7 @@ const navSections: NavSection[] = [
   {
     title: 'Vue globale',
     items: [
-      { to: '/', icon: DashboardOutlined, label: 'Dashboard', end: true },
+      { to: '/', icon: DashboardOutlined, label: 'Tableau de bord', end: true },
     ],
   },
   {

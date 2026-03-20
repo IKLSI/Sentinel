@@ -22,7 +22,6 @@ import {
   VulnerabilityDto,
   RuntimeDto,
 } from "../api/projects";
-import apiClient from "../../../services/client";
 
 const DEP_STATUS: Record<
   string,
@@ -73,7 +72,6 @@ export const ProjectDetailPage: React.FC = () => {
 
   const [project, setProject] = useState<ProjectDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [scanning, setScanning] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -94,20 +92,6 @@ export const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     load();
   }, [load]);
-
-  const handleScan = async () => {
-    if (!id) return;
-    setScanning(true);
-    try {
-      await apiClient.post(`/api/tech-health/projects/${id}/scan`);
-      showToast("Scan lancé avec succès", "success");
-      await load();
-    } catch {
-      showToast("Erreur lors du scan", "error");
-    } finally {
-      setScanning(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!id) return;

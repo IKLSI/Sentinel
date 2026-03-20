@@ -94,8 +94,6 @@ export const ProfilePage: React.FC = () => {
   const isAdmin = role === 'admin'
   const isAdminOrManager = role === 'admin' || role === 'manager'
   const [pf, setPf] = useState({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '' })
-  const [saving, setSaving] = useState(false)
-
   const [emailNotifs, setEmailNotifs] = useState(user?.emailNotifications ?? true)
   const [savingNotifs, setSavingNotifs] = useState(false)
 
@@ -139,13 +137,11 @@ export const ProfilePage: React.FC = () => {
     const unchanged = pf.firstName === user?.firstName && pf.lastName === user?.lastName
     if (unchanged) return
     if (!pf.firstName.trim() || !pf.lastName.trim()) { showToast('Prénom et nom requis', 'warning'); return }
-    setSaving(true)
     try {
       const updated = await updateMyProfile(pf)
       setUser({ ...user!, ...updated })
       showToast('Profil enregistré', 'success')
     } catch { showToast('Erreur lors de la sauvegarde', 'error') }
-    finally { setSaving(false) }
   }
 
   const handleToggleNotifs = async () => {
