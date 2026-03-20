@@ -22,11 +22,6 @@ public static class WebApplicationExtensions
             job => job.ExecuteAsync(),
             Cron.Daily(2));
 
-        RecurringJob.AddOrUpdate<MonthlyReportJob>(
-            "monthly-reports",
-            job => job.ExecuteAsync(),
-            "0 7 1 * *");
-
         return app;
     }
 }
