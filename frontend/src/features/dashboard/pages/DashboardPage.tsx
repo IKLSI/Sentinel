@@ -297,7 +297,7 @@ export const DashboardPage: React.FC = () => {
       </Box>
 
       {/* ── Bas : statuts | santé ──────────────────────────────── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", alignItems: "start" }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
 
         <Panel delay={320}>
           <PanelHead
