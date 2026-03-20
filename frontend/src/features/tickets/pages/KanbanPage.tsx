@@ -225,6 +225,8 @@ function TicketCard({
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",
         padding: "11px 12px 10px 12px",
+        height: "148px",
+        overflow: "hidden",
         cursor: isDragging ? "grabbing" : "pointer",
         boxShadow: isDragging
           ? "0 12px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)"

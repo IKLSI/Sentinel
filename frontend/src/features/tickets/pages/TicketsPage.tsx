@@ -277,6 +277,7 @@ export const TicketsPage: React.FC = () => {
     }
   };
   const filtersRef = useRef<HTMLDivElement>(null);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!filtersOpen) return;
@@ -286,7 +287,23 @@ export const TicketsPage: React.FC = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [filtersOpen]);
-  const defaultPageSize = 30;
+
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const measure = () => {
+      const h = el.clientHeight;
+      const rows = Math.max(5, Math.floor((h - 37 - 53) / 40));
+      setPageSize(rows);
+    };
+    measure();
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({ col: "Priorité", dir: "asc" });
 
   const toggleSort = (col: string) => {
@@ -298,8 +315,8 @@ export const TicketsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTickets({ page, pageSize: defaultPageSize }).catch(() => {});
-  }, [page]);
+    fetchTickets({ page, pageSize }).catch(() => {});
+  }, [page, pageSize]);
 
   useEffect(() => {
     if (tickets?.items !== undefined) {
@@ -455,7 +472,7 @@ export const TicketsPage: React.FC = () => {
           </Button>
         </Box>
 
-        {loading ? (
+        {loading && displayTickets.length === 0 ? (
           <Box
             sx={{
               display: "flex",
@@ -467,6 +484,7 @@ export const TicketsPage: React.FC = () => {
           </Box>
         ) : (
           <Box
+            ref={tableWrapRef}
             sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
@@ -475,6 +493,8 @@ export const TicketsPage: React.FC = () => {
               flex: 1,
               display: "flex",
               flexDirection: "column",
+              opacity: loading ? 0.6 : 1,
+              transition: "opacity 0.15s",
             }}
           >
             {filtered.length === 0 ? (
@@ -492,7 +512,7 @@ export const TicketsPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ flex: 1, overflowY: "auto" }}>
+              <Box sx={{ flex: 1, overflow: "hidden" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                   <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
