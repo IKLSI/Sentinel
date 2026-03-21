@@ -295,7 +295,7 @@ export const TicketsPage: React.FC = () => {
     if (!el) return;
     const measure = () => {
       const h = el.clientHeight;
-      const rows = Math.max(5, Math.floor((h - 37 - 53) / 40));
+      const rows = Math.max(5, Math.floor((h - 40 - 53) / 44));
       setPageSize(rows);
     };
     measure();
