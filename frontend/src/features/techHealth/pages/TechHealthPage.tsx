@@ -887,8 +887,7 @@ export const TechHealthPage: React.FC = () => {
                       {criticalVulns} vulnérabilité
                       {criticalVulns > 1 ? "s" : ""} critique
                       {criticalVulns > 1 ? "s" : ""}
-                    </Box>{" "}
-                    — signaler à l'équipe de développement du client.
+                    </Box>
                   </Box>
                 </Box>
               )}
