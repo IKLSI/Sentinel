@@ -8,11 +8,14 @@ public class JwtMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<JwtMiddleware> _logger;
+    private const string BearerPrefix = "Bearer ";
 
-    public JwtMiddleware(RequestDelegate next, IConfiguration configuration)
+    public JwtMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<JwtMiddleware> logger)
     {
         _next = next;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -31,9 +34,9 @@ public class JwtMiddleware
     {
         string? authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
 
-        if (authHeader != null && authHeader.StartsWith("Bearer "))
+        if (authHeader != null && authHeader.StartsWith(BearerPrefix))
         {
-            return authHeader["Bearer ".Length..].Trim();
+            return authHeader[BearerPrefix.Length..].Trim();
         }
 
         return context.Request.Query["access_token"].FirstOrDefault();
@@ -60,8 +63,9 @@ public class JwtMiddleware
                 ClockSkew = TimeSpan.Zero
             }, out _);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Token JWT invalide ou expiré");
         }
     }
 }

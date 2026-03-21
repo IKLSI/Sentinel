@@ -18,8 +18,6 @@ public class DataSeeder
 
     public async Task SeedAsync()
     {
-        await _context.Database.MigrateAsync();
-
         Organization? organization = await _context.Organizations.FirstOrDefaultAsync();
 
         if (organization == null)

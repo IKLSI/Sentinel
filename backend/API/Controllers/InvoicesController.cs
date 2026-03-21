@@ -11,7 +11,7 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [Route("api/invoices")]
 [Authorize]
-public class InvoicesController : ControllerBase
+public class InvoicesController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly InvoiceService _invoiceService;
@@ -181,9 +181,4 @@ public class InvoicesController : ControllerBase
         };
     }
 
-    private Guid? GetOrganizationId()
-    {
-        string? claim = User.FindFirst("organizationId")?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
 }

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
@@ -12,7 +11,7 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize]
-public class UsersController : ControllerBase
+public class UsersController : BaseController
 {
     private readonly SentinelContext _context;
 
@@ -182,15 +181,4 @@ public class UsersController : ControllerBase
         };
     }
 
-    private Guid? GetCurrentUserId()
-    {
-        string? claim = User.FindFirst("userId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
-
-    private Guid? GetOrganizationId()
-    {
-        string? claim = User.FindFirst("organizationId")?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
 }

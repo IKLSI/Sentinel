@@ -26,8 +26,6 @@ public class TechHealthService
     public async Task ScanProjectAsync(Guid projectId)
     {
         TechProject? project = await _context.TechProjects
-            .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-            .Include(p => p.Runtimes)
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null)
@@ -37,22 +35,26 @@ public class TechHealthService
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
-            foreach (Dependency dep in project.Dependencies)
-                _context.Vulnerabilities.RemoveRange(dep.Vulnerabilities);
-            _context.Dependencies.RemoveRange(project.Dependencies);
-            _context.Runtimes.RemoveRange(project.Runtimes);
-            await _context.SaveChangesAsync();
+            await _context.Vulnerabilities
+                .Where(v => v.Dependency.TechProjectId == projectId)
+                .ExecuteDeleteAsync();
+            await _context.Dependencies
+                .Where(d => d.TechProjectId == projectId)
+                .ExecuteDeleteAsync();
+            await _context.Runtimes
+                .Where(r => r.TechProjectId == projectId)
+                .ExecuteDeleteAsync();
 
             (List<Dependency>? newDeps, List<Runtime>? newRuntimes) = await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
             await _context.Dependencies.AddRangeAsync(newDeps);
             await _context.Runtimes.AddRangeAsync(newRuntimes);
             await _context.SaveChangesAsync();
-
-            project = await _context.TechProjects
-                .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-                .Include(p => p.Runtimes)
-                .FirstAsync(p => p.Id == projectId);
         }
+
+        project = await _context.TechProjects
+            .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
+            .Include(p => p.Runtimes)
+            .FirstAsync(p => p.Id == projectId);
 
         foreach (Dependency dependency in project.Dependencies)
         {

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Extensions;
@@ -32,10 +33,24 @@ public static class Program
         app.UseMiddleware<ErrorHandlingMiddleware>();
         app.UseRouting();
 
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
+            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+            await next();
+        });
+
         using (IServiceScope scope = app.Services.CreateScope())
         {
-            DataSeeder seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-            await seeder.SeedAsync();
+            SentinelContext context = scope.ServiceProvider.GetRequiredService<SentinelContext>();
+            await context.Database.MigrateAsync();
+
+            if (app.Environment.IsDevelopment())
+            {
+                DataSeeder seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+                await seeder.SeedAsync();
+            }
         }
 
         if (app.Environment.IsDevelopment())

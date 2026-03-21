@@ -10,7 +10,7 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [Route("api/time-entries")]
 [Authorize]
-public class TimeEntriesController : ControllerBase
+public class TimeEntriesController : BaseController
 {
     private readonly TimeTrackingService _timeTrackingService;
 
@@ -79,15 +79,4 @@ public class TimeEntriesController : ControllerBase
             c.Value == "Admin");
     }
 
-    private Guid? GetCurrentUserId()
-    {
-        string? claim = User.FindFirst("userId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
-
-    private Guid? GetOrganizationId()
-    {
-        string? claim = User.FindFirst("organizationId")?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
 }

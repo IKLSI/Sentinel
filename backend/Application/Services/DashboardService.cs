@@ -10,6 +10,7 @@ public class DashboardService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
+    private const string CacheKeyPrefix = "dashboard";
 
     public DashboardService(SentinelContext context, IMemoryCache cache)
     {
@@ -19,7 +20,7 @@ public class DashboardService
 
     public async Task<DashboardStatsDto> GetStatsAsync(Guid organizationId)
     {
-        string cacheKey = $"dashboard:{organizationId}";
+        string cacheKey = $"{CacheKeyPrefix}:{organizationId}";
 
         if (_cache.TryGetValue(cacheKey, out DashboardStatsDto? cached) && cached != null)
             return cached;
@@ -32,19 +33,42 @@ public class DashboardService
         DateOnly monthStartDate = DateOnly.FromDateTime(monthStart);
         DateOnly todayDate = DateOnly.FromDateTime(now);
 
-        List<Ticket> tickets = await _context.Tickets
-            .Include(t => t.Project)
+        TicketStatus[] openStatuses = [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing];
+        TicketStatus[] closedStatuses = [TicketStatus.Resolved, TicketStatus.Closed];
+        TicketStatus[] allStatuses = [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed];
+        TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
+
+        var statusCounts = await _context.Tickets
             .Where(t => t.OrganizationId == organizationId)
+            .GroupBy(t => t.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync();
+        Dictionary<TicketStatus, int> statusCountDict = statusCounts.ToDictionary(x => x.Status, x => x.Count);
 
-        TicketStatus[] openStatuses = new[] { TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing };
-        TicketStatus[] closedStatuses = new[] { TicketStatus.Resolved, TicketStatus.Closed };
+        int openTickets = openStatuses.Sum(s => statusCountDict.GetValueOrDefault(s));
 
-        int openTickets = tickets.Count(t => openStatuses.Contains(t.Status));
-        int openTicketsDelta = tickets.Count(t => openStatuses.Contains(t.Status) && t.CreatedAt >= weekAgo);
+        int openTicketsDelta = await _context.Tickets
+            .CountAsync(t => t.OrganizationId == organizationId
+                && openStatuses.Contains(t.Status)
+                && t.CreatedAt >= weekAgo);
 
-        List<Ticket> closedThisMonth = tickets.Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= monthStart).ToList();
-        List<Ticket> closedLastMonth = tickets.Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd).ToList();
+        List<bool> closedThisMonthSla = await _context.Tickets
+            .Where(t => t.OrganizationId == organizationId
+                && closedStatuses.Contains(t.Status)
+                && t.UpdatedAt >= monthStart)
+            .Select(t => t.SlaBreached)
+            .ToListAsync();
+        int resolvedThisMonth = closedThisMonthSla.Count;
+        int slaRespectedThisMonthCount = closedThisMonthSla.Count(b => !b);
+
+        List<bool> closedLastMonthSla = await _context.Tickets
+            .Where(t => t.OrganizationId == organizationId
+                && closedStatuses.Contains(t.Status)
+                && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd)
+            .Select(t => t.SlaBreached)
+            .ToListAsync();
+        int resolvedLastMonth = closedLastMonthSla.Count;
+        int slaRespectedLastMonthCount = closedLastMonthSla.Count(b => !b);
 
         int hoursThisMonth = await _context.TimeEntries
             .Include(te => te.User)
@@ -68,32 +92,32 @@ public class DashboardService
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
 
-        List<Ticket> closedOrResolvedThisMonth = tickets
-            .Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= monthStart)
-            .ToList();
-        int slaRespectedThisMonth = closedOrResolvedThisMonth.Count(t => !t.SlaBreached);
-        int slaRespected = closedOrResolvedThisMonth.Count > 0
-            ? (int)Math.Round((double)slaRespectedThisMonth / closedOrResolvedThisMonth.Count * 100)
+        int slaRespected = resolvedThisMonth > 0
+            ? (int)Math.Round((double)slaRespectedThisMonthCount / resolvedThisMonth * 100)
             : 100;
 
-        List<Ticket> closedOrResolvedLastMonth = tickets
-            .Where(t => closedStatuses.Contains(t.Status) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd)
-            .ToList();
-        int slaRespectedLastMonthCount = closedOrResolvedLastMonth.Count(t => !t.SlaBreached);
-        int slaRespectedLastMonth = closedOrResolvedLastMonth.Count > 0
-            ? (int)Math.Round((double)slaRespectedLastMonthCount / closedOrResolvedLastMonth.Count * 100)
+        int slaRespectedLastMonth = resolvedLastMonth > 0
+            ? (int)Math.Round((double)slaRespectedLastMonthCount / resolvedLastMonth * 100)
             : 100;
 
-        TicketStatus[] allStatuses = new[] { TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed };
-        Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(s => s.ToString(), s => tickets.Count(t => t.Status == s));
+        Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(
+            s => s.ToString(),
+            s => statusCountDict.GetValueOrDefault(s));
 
-        TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
+        var priorityCounts = await _context.Tickets
+            .Where(t => t.OrganizationId == organizationId && openStatuses.Contains(t.Status))
+            .GroupBy(t => t.Priority)
+            .Select(g => new { Priority = g.Key, Count = g.Count() })
+            .ToListAsync();
+        Dictionary<TicketPriority, int> priorityCountDict = priorityCounts.ToDictionary(x => x.Priority, x => x.Count);
         Dictionary<string, int> ticketsByPriority = allPriorities.ToDictionary(
             p => p.ToString(),
-            p => tickets.Count(t => openStatuses.Contains(t.Status) && t.Priority == p)
-        );
+            p => priorityCountDict.GetValueOrDefault(p));
 
-        int unassignedOpenTickets = tickets.Count(t => openStatuses.Contains(t.Status) && t.AssignedToId == null);
+        int unassignedOpenTickets = await _context.Tickets
+            .CountAsync(t => t.OrganizationId == organizationId
+                && openStatuses.Contains(t.Status)
+                && t.AssignedToId == null);
 
         List<Invoice> overdueInvoices = await _context.Invoices
             .Where(i => i.OrganizationId == organizationId
@@ -102,12 +126,18 @@ public class DashboardService
                 && i.DueAt < now)
             .ToListAsync();
 
-        List<UrgentTicketDto> urgentTickets = tickets
-            .Where(t => openStatuses.Contains(t.Status) && (t.Priority == TicketPriority.Critical || t.Priority == TicketPriority.High))
+        List<Ticket> rawUrgentTickets = await _context.Tickets
+            .Include(t => t.Project)
+            .Where(t => t.OrganizationId == organizationId
+                && openStatuses.Contains(t.Status)
+                && (t.Priority == TicketPriority.Critical || t.Priority == TicketPriority.High))
             .OrderByDescending(t => t.SlaBreached)
             .ThenByDescending(t => t.Priority)
             .ThenBy(t => t.SlaDeadline ?? DateTime.MaxValue)
             .Take(5)
+            .ToListAsync();
+
+        List<UrgentTicketDto> urgentTickets = rawUrgentTickets
             .Select(t => new UrgentTicketDto
             {
                 Id = t.Id.ToString(),
@@ -127,8 +157,8 @@ public class DashboardService
         {
             OpenTickets = openTickets,
             OpenTicketsDelta = openTicketsDelta,
-            ResolvedThisMonth = closedThisMonth.Count,
-            ResolvedThisMonthDelta = closedThisMonth.Count - closedLastMonth.Count,
+            ResolvedThisMonth = resolvedThisMonth,
+            ResolvedThisMonthDelta = resolvedThisMonth - resolvedLastMonth,
             HoursThisMonth = hoursThisMonth / 60,
             BillableRevenue = billableRevenue,
             UnbilledRevenue = unbilledRevenue,

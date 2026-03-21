@@ -87,6 +87,9 @@ public class InvoiceService
 
     public async Task<byte[]> GeneratePdfAsync(Invoice invoice)
     {
+        if (invoice.PdfData is { Length: > 0 })
+            return invoice.PdfData;
+
         QuestPDF.Settings.License = LicenseType.Community;
 
         string? projectName = null;

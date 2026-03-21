@@ -11,7 +11,7 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [Route("api/tech-health")]
 [Authorize]
-public class TechHealthController : ControllerBase
+public class TechHealthController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly TechHealthService _techHealthService;
@@ -154,9 +154,4 @@ public class TechHealthController : ControllerBase
         return Ok(updated);
     }
 
-    private Guid? GetOrganizationId()
-    {
-        string? claim = User.FindFirst("organizationId")?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
 }

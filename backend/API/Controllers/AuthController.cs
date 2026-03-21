@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Security.Claims;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -10,7 +9,7 @@ namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController : BaseController
 {
     private readonly AuthService _authService;
 
@@ -92,9 +91,4 @@ public class AuthController : ControllerBase
         });
     }
 
-    private Guid? GetCurrentUserId()
-    {
-        string? userIdClaim = User.FindFirst("userId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out Guid userId) ? userId : null;
-    }
 }

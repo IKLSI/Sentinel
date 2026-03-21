@@ -8,7 +8,7 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [Route("api/dashboard")]
 [Authorize]
-public class DashboardController : ControllerBase
+public class DashboardController : BaseController
 {
     private readonly DashboardService _dashboardService;
 
@@ -32,9 +32,4 @@ public class DashboardController : ControllerBase
         return Ok(stats);
     }
 
-    private Guid? GetOrganizationId()
-    {
-        string? claim = User.FindFirst("organizationId")?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
 }

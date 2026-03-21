@@ -57,6 +57,13 @@ public class Ticket
 
     public string[] GetTags()
     {
-        return System.Text.Json.JsonSerializer.Deserialize<string[]>(Tags) ?? [];
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<string[]>(Tags) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }
