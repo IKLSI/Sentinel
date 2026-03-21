@@ -43,7 +43,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
     projectName: dto.projectName,
     assigneeId: dto.assignedToId,
     assignee: dto.assignedToName
-      ? { id: dto.assignedToId ?? '', email: '', firstName: dto.assignedToName.split(' ')[0] ?? dto.assignedToName, lastName: dto.assignedToName.split(' ').slice(1).join(' '), role: 'technician' as const, organizationId: '', isActive: true, createdAt: dto.createdAt }
+      ? { id: dto.assignedToId ?? '', email: '', firstName: dto.assignedToName.split(' ')[0] ?? dto.assignedToName, lastName: dto.assignedToName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: dto.createdAt }
       : undefined,
     priority: dto.priority as Ticket['priority'],
     type: dto.type as Ticket['type'],
@@ -54,12 +54,12 @@ function mapTicketDto(dto: TicketDto): Ticket {
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({
       id: c.id, ticketId: dto.id, authorId: c.authorId,
-      author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'technician' as const, organizationId: '', isActive: true, createdAt: c.createdAt },
+      author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt },
       content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt,
     })),
     history: dto.history.map((h) => ({
       id: h.id, ticketId: dto.id, authorId: h.userId,
-      author: { id: h.userId, email: '', firstName: h.userName.split(' ')[0] ?? h.userName, lastName: h.userName.split(' ').slice(1).join(' '), role: 'technician' as const, organizationId: '', isActive: true, createdAt: h.createdAt },
+      author: { id: h.userId, email: '', firstName: h.userName.split(' ')[0] ?? h.userName, lastName: h.userName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: h.createdAt },
       field: h.field, oldValue: h.oldValue, newValue: h.newValue, createdAt: h.createdAt,
     })),
     createdAt: dto.createdAt,
@@ -97,7 +97,7 @@ export const addComment = async (ticketId: string, content: string, isInternal =
     `/api/tickets/${ticketId}/comments`, { content, isInternal }
   )
   const c = response.data
-  return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'technician' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+  return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
 export const changeStatus = async (ticketId: string, status: TicketStatus): Promise<Ticket> => {

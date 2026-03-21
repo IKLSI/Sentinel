@@ -28,8 +28,10 @@ public class TimeEntriesController : ControllerBase
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
+        Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
+
         List<TimeEntryDto> entries = await _timeTrackingService.GetEntriesAsync(
-            organizationId.Value, userId, from, to);
+            organizationId.Value, filterUserId, from, to);
 
         return Ok(entries);
     }
@@ -52,7 +54,7 @@ public class TimeEntriesController : ControllerBase
         Guid? currentUserId = GetCurrentUserId();
         if (currentUserId == null) return Unauthorized();
 
-        TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value);
+        TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value, IsAdmin());
         if (entry == null) return NotFound(new { message = "Saisie introuvable" });
 
         return Ok(TimeTrackingService.MapToDto(entry));
@@ -64,10 +66,17 @@ public class TimeEntriesController : ControllerBase
         Guid? currentUserId = GetCurrentUserId();
         if (currentUserId == null) return Unauthorized();
 
-        bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value);
+        bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value, IsAdmin());
         if (!deleted) return NotFound(new { message = "Saisie introuvable" });
 
         return NoContent();
+    }
+
+    private bool IsAdmin()
+    {
+        return User.Claims.Any(c =>
+            (c.Type == "role" || c.Type == ClaimTypes.Role) &&
+            c.Value == "Admin");
     }
 
     private Guid? GetCurrentUserId()

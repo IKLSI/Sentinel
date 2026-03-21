@@ -33,13 +33,13 @@ public class TimeTrackingService
         return entry;
     }
 
-    public async Task<TimeEntry?> UpdateEntryAsync(Guid id, UpdateTimeEntryDto dto, Guid userId)
+    public async Task<TimeEntry?> UpdateEntryAsync(Guid id, UpdateTimeEntryDto dto, Guid userId, bool isAdmin = false)
     {
         TimeEntry? entry = await _context.TimeEntries
             .Include(e => e.User)
             .Include(e => e.Ticket)
             .Include(e => e.TechProject)
-            .FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId);
+            .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.UserId == userId));
 
         if (entry == null) return null;
 
@@ -53,10 +53,10 @@ public class TimeTrackingService
         return entry;
     }
 
-    public async Task<bool> DeleteEntryAsync(Guid id, Guid userId)
+    public async Task<bool> DeleteEntryAsync(Guid id, Guid userId, bool isAdmin = false)
     {
         TimeEntry? entry = await _context.TimeEntries
-            .FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId);
+            .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.UserId == userId));
 
         if (entry == null) return false;
 

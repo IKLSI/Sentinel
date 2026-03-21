@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
+import { useAuth } from "../../auth/hooks/useAuth";
 import {
   getTimeEntries,
   createTimeEntry,
@@ -52,6 +53,12 @@ const getProjectColor = (name: string): string => {
   return PROJECT_PALETTE[Math.abs(hash) % PROJECT_PALETTE.length];
 };
 
+const getUserInitials = (name: string) => {
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
 const formatDuration = (minutes: number) => {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -82,6 +89,8 @@ const emptyForm = (date?: string): FormState => ({
 
 export const TimeTrackingPage: React.FC = () => {
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
   const [entries, setEntries] = useState<TimeEntryDto[]>([]);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -492,8 +501,23 @@ export const TimeTrackingPage: React.FC = () => {
             px: "16px", py: "10px", minHeight: "44px",
             borderBottom: "1px solid var(--border)",
           }}>
-            <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Journal
+            <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Journal
+              </Box>
+              {isAdmin && weekEntries.length > 0 && (() => {
+                const contributors = new Set(weekEntries.map((e) => e.userId)).size;
+                return (
+                  <Box sx={{
+                    fontSize: "10px", fontWeight: 600,
+                    background: "var(--s3)", color: "var(--muted2)",
+                    px: "7px", py: "1px", borderRadius: "4px",
+                    border: "1px solid var(--border)",
+                  }}>
+                    {contributors} membre{contributors > 1 ? "s" : ""}
+                  </Box>
+                );
+              })()}
             </Box>
             <Box
               component="button"
@@ -586,6 +610,8 @@ export const TimeTrackingPage: React.FC = () => {
                         const projColor = entry.techProjectName
                           ? getProjectColor(entry.techProjectName)
                           : "var(--border2)";
+                        const isOwn = entry.userId === user?.id;
+                        const canEdit = isAdmin || isOwn;
                         return (
                           <Box
                             key={entry.id}
@@ -593,7 +619,7 @@ export const TimeTrackingPage: React.FC = () => {
                               display: "flex", alignItems: "center",
                               px: "16px", py: "0",
                               borderTop: "1px solid var(--border)",
-                              minHeight: "48px",
+                              minHeight: "52px",
                               gap: "12px",
                               transition: "background 0.1s",
                               "&:hover": { background: "var(--s2)" },
@@ -614,8 +640,30 @@ export const TimeTrackingPage: React.FC = () => {
                             {/* Séparateur vertical */}
                             <Box sx={{ width: "1px", height: "28px", background: "var(--border)", flexShrink: 0 }} />
 
+                            {/* Avatar initiales (admin uniquement) */}
+                            {isAdmin && (
+                              <Box sx={{
+                                width: "26px", height: "26px", borderRadius: "50%",
+                                background: isOwn ? "var(--accent)" : getProjectColor(entry.userName),
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, fontSize: "9px", fontWeight: 700, color: "#fff",
+                              }}>
+                                {getUserInitials(entry.userName)}
+                              </Box>
+                            )}
+
                             {/* Contenu */}
                             <Box sx={{ flex: 1, minWidth: 0, py: "12px" }}>
+                              {isAdmin && (
+                                <Box sx={{
+                                  fontSize: "10px", fontWeight: 600,
+                                  color: isOwn ? "var(--accent)" : "var(--muted2)",
+                                  letterSpacing: "0.02em", mb: "3px",
+                                  textTransform: "uppercase",
+                                }}>
+                                  {isOwn ? "Vous" : entry.userName}
+                                </Box>
+                              )}
                               <Box sx={{
                                 fontSize: "13px", color: "var(--text)", fontWeight: 500,
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -656,16 +704,18 @@ export const TimeTrackingPage: React.FC = () => {
                             </Box>
 
                             {/* Actions */}
-                            <Box
-                              className="tt-actions"
-                              sx={{
-                                display: "flex", alignItems: "center", gap: "2px",
-                                opacity: 0, transition: "opacity 0.15s", flexShrink: 0,
-                              }}
-                            >
-                              <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
-                              <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
-                            </Box>
+                            {canEdit && (
+                              <Box
+                                className="tt-actions"
+                                sx={{
+                                  display: "flex", alignItems: "center", gap: "2px",
+                                  opacity: 0, transition: "opacity 0.15s", flexShrink: 0,
+                                }}
+                              >
+                                <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
+                                <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
+                              </Box>
+                            )}
                           </Box>
                         );
                       })}

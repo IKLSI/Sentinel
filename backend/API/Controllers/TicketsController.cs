@@ -127,7 +127,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteTicket(Guid id)
     {
         Guid? organizationId = GetOrganizationId();

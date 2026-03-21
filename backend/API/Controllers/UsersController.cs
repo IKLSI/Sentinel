@@ -22,7 +22,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
     {
         Guid? organizationId = GetOrganizationId();
@@ -45,8 +45,7 @@ public class UsersController : ControllerBase
         Guid? currentUserId = GetCurrentUserId();
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
-        string? userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-        if (userRole != "Admin" && userRole != "Manager" && currentUserId != id)
+        if (!User.IsInRole("Admin") && currentUserId != id)
             return Forbid();
 
         User? user = await _context.Users
@@ -73,7 +72,7 @@ public class UsersController : ControllerBase
             return Conflict(new { message = "Un utilisateur avec cet email existe déjà" });
 
         if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
-            return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Manager, Developer" });
+            return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Developer" });
 
         User user = new User
         {
@@ -139,6 +138,9 @@ public class UsersController : ControllerBase
         if (!string.IsNullOrEmpty(dto.Theme) && (dto.Theme == "dark" || dto.Theme == "light"))
             user.Theme = dto.Theme;
 
+        if (dto.EmailNotifications.HasValue)
+            user.EmailNotifications = dto.EmailNotifications.Value;
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -175,7 +177,8 @@ public class UsersController : ControllerBase
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt,
-            Theme = user.Theme
+            Theme = user.Theme,
+            EmailNotifications = user.EmailNotifications
         };
     }
 

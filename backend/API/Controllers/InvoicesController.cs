@@ -74,7 +74,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("generate")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<InvoiceDto>> GenerateInvoice([FromBody] GenerateInvoiceDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -92,7 +92,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteInvoice(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
@@ -114,7 +114,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<InvoiceDto>> UpdateStatus(Guid id, [FromBody] UpdateInvoiceStatusDto dto)
     {
         Guid? organizationId = GetOrganizationId();

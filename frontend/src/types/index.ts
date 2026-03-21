@@ -6,7 +6,7 @@ export interface Organization {
   createdAt: string
 }
 
-export type UserRole = 'admin' | 'manager' | 'technician'
+export type UserRole = 'Admin' | 'Developer'
 
 export interface User {
   id: string
@@ -19,6 +19,7 @@ export interface User {
   createdAt: string
   isActive: boolean
   theme?: 'dark' | 'light'
+  emailNotifications?: boolean
   lastLoginAt?: string
 }
 

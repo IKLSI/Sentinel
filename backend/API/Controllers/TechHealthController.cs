@@ -58,7 +58,7 @@ public class TechHealthController : ControllerBase
     }
 
     [HttpPost("projects")]
-    [Authorize(Roles = "Admin,Manager,Developer")]
+    [Authorize(Roles = "Admin,Developer")]
     public async Task<ActionResult<TechProjectDto>> CreateProject([FromBody] CreateTechProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -89,7 +89,7 @@ public class TechHealthController : ControllerBase
     }
 
     [HttpPut("projects/{id:guid}")]
-    [Authorize(Roles = "Admin,Manager,Developer")]
+    [Authorize(Roles = "Admin,Developer")]
     public async Task<ActionResult<TechProjectDto>> UpdateProject(Guid id, [FromBody] UpdateTechProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -117,7 +117,7 @@ public class TechHealthController : ControllerBase
     }
 
     [HttpDelete("projects/{id:guid}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
@@ -136,7 +136,7 @@ public class TechHealthController : ControllerBase
     }
 
     [HttpPost("projects/{id:guid}/scan")]
-    [Authorize(Roles = "Admin,Manager,Developer")]
+    [Authorize(Roles = "Admin,Developer")]
     public async Task<IActionResult> TriggerScan(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
