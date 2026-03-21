@@ -576,24 +576,7 @@ export const TicketsPage: React.FC = () => {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: "4px",
-                                height: "20px",
-                                borderRadius: "2px",
-                                background: priorityColors[ticket.priority],
-                                flexShrink: 0,
-                              }}
-                            />
-                            {ticket.reference}
-                          </Box>
+                          {ticket.reference}
                         </Box>
                         <Box
                           component="td"

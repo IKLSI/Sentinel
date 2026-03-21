@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -25,6 +25,65 @@ const ROLE_LABELS: Record<string, string> = {
 }
 const ROLE_VARIANTS: Record<string, 'red' | 'orange' | 'blue'> = {
   Admin: 'red', Developer: 'blue',
+}
+
+function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
+  if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  const pages: (number | '...')[] = [1, 2]
+  if (page > 3) pages.push('...')
+  if (page > 2 && page < totalPages) pages.push(page)
+  if (page < totalPages - 1) pages.push('...')
+  if (!pages.includes(totalPages)) pages.push(totalPages)
+  return pages
+}
+
+const navBtnSx = (disabled: boolean) => ({
+  all: 'unset' as const,
+  cursor: disabled ? 'default' : 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  gap: '6px', height: '32px', px: '12px',
+  borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+  color: disabled ? 'var(--muted)' : 'var(--text-secondary)',
+  background: 'var(--s2)', border: '1px solid var(--border)',
+  opacity: disabled ? 0.4 : 1,
+  pointerEvents: disabled ? 'none' : 'auto',
+  transition: 'background 0.12s, border-color 0.12s, color 0.12s',
+  ...(!disabled && { '&:hover': { background: 'var(--s3)', borderColor: 'var(--border2)', color: 'var(--text)' } }),
+})
+
+const pageBtnSx = (active: boolean) => ({
+  all: 'unset' as const,
+  cursor: active ? 'default' : 'pointer',
+  minWidth: '32px', height: '32px',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  borderRadius: '8px', fontSize: '12px', fontWeight: active ? 700 : 500,
+  color: active ? '#fff' : 'var(--text-secondary)',
+  background: active ? 'var(--accent)' : 'transparent',
+  boxShadow: active ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+  transition: 'background 0.12s, color 0.12s, box-shadow 0.12s',
+  ...(!active && { '&:hover': { background: 'var(--s2)', color: 'var(--text)' } }),
+})
+
+const MemberPagination: React.FC<{ page: number; totalPages: number; total: number; onChange: (p: number) => void }> = ({ page, totalPages, total, onChange }) => {
+  const pages = getPageNumbers(page, totalPages)
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderTop: '1px solid var(--border)', flexShrink: 0, background: 'var(--s2)' }}>
+      <Box sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+        {total} membre{total > 1 ? 's' : ''}
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>← Précédent</Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', mx: '4px' }}>
+          {pages.map((p, i) =>
+            p === '...'
+              ? <Box key={`e-${i}`} sx={{ minWidth: '28px', textAlign: 'center', fontSize: '13px', color: 'var(--muted)', pb: '2px' }}>···</Box>
+              : <Box key={p} component="button" sx={pageBtnSx(p === page)} onClick={() => p !== page && onChange(p as number)}>{p}</Box>
+          )}
+        </Box>
+        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>Suivant →</Box>
+      </Box>
+    </Box>
+  )
 }
 
 const inp = {
@@ -95,6 +154,23 @@ export const ProfilePage: React.FC = () => {
   const [memberSearch, setMemberSearch] = useState('')
   const [memberRoleFilter, setMemberRoleFilter] = useState('all')
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const tableWrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = tableWrapRef.current
+    if (!el) return
+    const measure = () => {
+      const h = el.clientHeight
+      const rows = Math.max(1, Math.floor((h - 52 - 31) / 52))
+      setPageSize(rows)
+    }
+    measure()
+    const obs = new ResizeObserver(measure)
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inv, setInv] = useState({ firstName: '', lastName: '', email: '', role: 'Developer' as UserRole, password: '' })
@@ -112,6 +188,8 @@ export const ProfilePage: React.FC = () => {
     else setLoadingMembers(false)
   }, [isAdmin, loadMembers])
 
+  useEffect(() => { setPage(1) }, [memberSearch, memberRoleFilter])
+
   const filteredMembers = useMemo(() => {
     let list = members
     if (memberSearch.trim()) {
@@ -125,6 +203,9 @@ export const ProfilePage: React.FC = () => {
       list = list.filter(m => m.role === memberRoleFilter)
     return list
   }, [members, memberSearch, memberRoleFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize))
+  const paginatedMembers = filteredMembers.slice((page - 1) * pageSize, page * pageSize)
 
   const handleSave = async () => {
     const unchanged = pf.firstName === user?.firstName && pf.lastName === user?.lastName
@@ -182,7 +263,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <>
 
-      <Box className="page-enter" sx={{ p: '36px 24px 20px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
+      <Box className="page-enter" sx={{ p: '36px 24px 20px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100vh', overflow: 'hidden' }}>
 
         {/* ════ PROFIL CARD ════ */}
         <Box sx={CARD_SX}>
@@ -292,7 +373,7 @@ export const ProfilePage: React.FC = () => {
 
         {/* ════ TOOLBAR MEMBRES ════ */}
         {isAdmin && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', mb: '16px', flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <Box sx={{
               flex: '0 0 260px', display: 'flex', alignItems: 'center', gap: '8px',
               background: 'var(--s1)', border: '1px solid var(--border)',
@@ -335,7 +416,7 @@ export const ProfilePage: React.FC = () => {
 
         {/* ════ MEMBRES TABLE CARD ════ */}
         {isAdmin && (
-          <Box sx={{
+          <Box ref={tableWrapRef} sx={{
             background: 'var(--s1)', border: '1px solid var(--border)',
             borderRadius: 'var(--r)', overflow: 'hidden',
             flex: 1, display: 'flex', flexDirection: 'column',
@@ -349,49 +430,65 @@ export const ProfilePage: React.FC = () => {
                 <Box className="empty-state-title">Aucun membre trouvé</Box>
               </Box>
             ) : (
-              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                <Box component="thead">
-                  <Box component="tr" sx={{ borderBottom: '1px solid var(--border)', background: 'var(--s2)' }}>
-                    {['Membre', 'Rôle', 'Statut', 'Dernière connexion', ''].map((h) => (
-                      <Box component="th" key={h} sx={{ px: '16px', py: '8px', textAlign: 'left', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</Box>
-                    ))}
-                  </Box>
-                </Box>
-                <Box component="tbody">
-                  {filteredMembers.map((m) => (
-                    <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' } }}>
-                      <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                        <Box sx={{ fontWeight: 600, color: 'var(--text)', mb: '1px' }}>{m.firstName} {m.lastName}</Box>
-                        <Box sx={{ color: 'var(--muted2)', fontSize: '11px' }}>{m.email}</Box>
-                      </Box>
-                      <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                        <StatusChip variant={ROLE_VARIANTS[m.role] ?? 'blue'}>{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
-                      </Box>
-                      <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                        <StatusChip variant={m.isActive ? 'blue' : 'orange'}>{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
-                      </Box>
-                      <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
-                        {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
-                      </Box>
-                      <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right' }}>
-                        {m.id !== user?.id && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color={m.isActive ? 'error' : 'success'}
-                            disabled={togglingId === m.id}
-                            onClick={() => handleToggleActive(m.id, m.isActive)}
-                            startIcon={m.isActive ? <BlockOutlined sx={{ fontSize: 12 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 12 }} />}
-                            sx={{ textTransform: 'none', fontSize: '11px', py: '3px' }}
-                          >
-                            {m.isActive ? 'Désactiver' : 'Activer'}
-                          </Button>
-                        )}
+              <>
+                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                  <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <Box component="thead" sx={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                      <Box component="tr" sx={{ borderBottom: '1px solid var(--border)', background: 'var(--s2)' }}>
+                        {['Membre', 'Rôle', 'Statut', 'Dernière connexion', ''].map((h) => (
+                          <Box component="th" key={h} sx={{ px: '16px', py: '8px', textAlign: 'left', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</Box>
+                        ))}
                       </Box>
                     </Box>
-                  ))}
+                    <Box component="tbody">
+                      {paginatedMembers.map((m) => (
+                        <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' } }}>
+                          <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                            <Box sx={{ fontWeight: 600, color: 'var(--text)', mb: '1px' }}>{m.firstName} {m.lastName}</Box>
+                            <Box sx={{ color: 'var(--muted2)', fontSize: '11px' }}>{m.email}</Box>
+                          </Box>
+                          <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                            <StatusChip variant={ROLE_VARIANTS[m.role] ?? 'blue'}>{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
+                          </Box>
+                          <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                            <StatusChip variant={m.isActive ? 'blue' : 'orange'}>{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
+                          </Box>
+                          <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
+                            {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
+                          </Box>
+                          <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right' }}>
+                            {m.id !== user?.id && (
+                              togglingId === m.id
+                                ? <CircularProgress size={14} />
+                                : <Box
+                                    component="button"
+                                    onClick={() => handleToggleActive(m.id, m.isActive)}
+                                    title={m.isActive ? 'Désactiver' : 'Activer'}
+                                    sx={{
+                                      all: 'unset', cursor: 'pointer',
+                                      width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      borderRadius: '50%',
+                                      color: m.isActive ? 'var(--red)' : 'var(--green)',
+                                      transition: 'background 0.12s',
+                                      '&:hover': m.isActive
+                                        ? { background: 'var(--red-subtle)' }
+                                        : { background: 'var(--green-subtle)' },
+                                    }}
+                                  >
+                                    {m.isActive
+                                      ? <BlockOutlined sx={{ fontSize: 14 }} />
+                                      : <CheckCircleOutlineOutlined sx={{ fontSize: 14 }} />
+                                    }
+                                  </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
+                <MemberPagination page={page} totalPages={totalPages} total={filteredMembers.length} onChange={setPage} />
+              </>
             )}
           </Box>
         )}

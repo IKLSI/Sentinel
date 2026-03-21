@@ -465,10 +465,11 @@ export const InvoicesPage: React.FC = () => {
                     <Box component="tr">
                       {["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""].map((h) => (
                         <Box component="th" key={h} sx={{
-                          fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em",
+                          fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em",
                           textTransform: "uppercase", color: "var(--muted)", textAlign: "left",
                           padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                          background: "var(--s2)", fontWeight: 500, whiteSpace: "nowrap",
+                          background: "var(--s2)", whiteSpace: "nowrap",
+                          cursor: "default", userSelect: "none",
                         }}>
                           {h}
                         </Box>
@@ -485,65 +486,59 @@ export const InvoicesPage: React.FC = () => {
                           sx={{ cursor: "pointer", "&:hover td": { background: "var(--s2)" } }}
                         >
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--text)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
+                            fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)",
+                            whiteSpace: "nowrap",
                           }}>
                             {inv.reference}
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
-                            fontSize: "13px", fontWeight: 600,
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
+                            fontSize: "12.5px", maxWidth: "260px",
                           }}>
-                            {inv.label}
+                            <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {inv.label}
+                            </Box>
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
                             fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)",
                           }}>
                             {inv.period}
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
                             fontFamily: "var(--font-mono)", fontSize: "12px",
                           }}>
                             {inv.totalHours}h
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
                             fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-secondary)",
                           }}>
                             {fmtEur(inv.totalAmount)}
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 800, color: "var(--green)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
+                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--green)",
                           }}>
                             {fmtEur(inv.totalWithTax)}
                           </Box>
                           <Box component="td" sx={{
-                            padding: "12px 14px", borderBottom: "1px solid var(--border)",
+                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
                             fontFamily: "var(--font-mono)", fontSize: "11px",
                             color: overdue ? "var(--red)" : "var(--muted)",
                             whiteSpace: "nowrap",
                           }}>
                             {fmtDate(inv.dueAt)}
-                            {overdue && (
-                              <Box component="span" sx={{
-                                ml: "6px", fontSize: "9px",
-                                background: "var(--red-subtle)", color: "var(--red)",
-                                padding: "1px 5px", borderRadius: "4px", fontWeight: 700,
-                              }}>
-                                RETARD
-                              </Box>
-                            )}
                           </Box>
-                          <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+                          <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
                             <StatusChip variant={overdue ? "red" : (STATUS_VARIANT[inv.status] ?? "gray")}>
                               {overdue ? "En retard" : (STATUS_LABEL[inv.status] ?? inv.status)}
                             </StatusChip>
                           </Box>
-                          <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-                            <Box sx={{ display: "flex", gap: "2px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                          <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
+                            <Box sx={{ display: "flex", gap: "2px", alignItems: "center", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
                               {inv.status === "Draft" && (
                                 <>
                                   <Tooltip title="Marquer comme envoyée" placement="top">
