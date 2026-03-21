@@ -6,15 +6,6 @@ export const getUsers = async (params: { page?: number; role?: UserRole; search?
   return response.data
 }
 
-export const getUser = async (id: string): Promise<User> => {
-  const response = await apiClient.get<User>(`/api/users/${id}`)
-  return response.data
-}
-
-export const updateUser = async (id: string, data: Partial<User>): Promise<User> => {
-  const response = await apiClient.put<User>(`/api/users/${id}`, data)
-  return response.data
-}
 
 export const updateUserTheme = async (theme: 'dark' | 'light'): Promise<void> => {
   await apiClient.patch('/api/users/me/preferences', { theme })

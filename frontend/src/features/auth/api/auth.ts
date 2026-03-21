@@ -6,10 +6,6 @@ export const login = async (email: string, password: string): Promise<LoginRespo
   return response.data
 }
 
-export const refresh = async (refreshToken: string): Promise<LoginResponse> => {
-  const response = await apiClient.post<LoginResponse>('/api/auth/refresh', { refreshToken })
-  return response.data
-}
 
 export const logout = async (): Promise<void> => {
   const refreshToken = localStorage.getItem('refreshToken')

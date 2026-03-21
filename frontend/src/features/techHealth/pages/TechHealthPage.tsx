@@ -282,10 +282,10 @@ const DependenciesTable: React.FC<{ deps: Dependency[] }> = ({ deps }) => {
       sx={{
         borderRadius: "var(--r)",
         border: "1px solid var(--border)",
-        overflow: "hidden",
+        overflowX: "auto",
       }}
     >
-      <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+      <Box component="table" sx={{ width: "100%", minWidth: "620px", borderCollapse: "collapse" }}>
         <Box component="thead">
           <Box component="tr" sx={{ background: "var(--s2)" }}>
             {[
@@ -728,6 +728,7 @@ export const TechHealthPage: React.FC = () => {
             gridTemplateColumns: "260px 1fr",
             gap: "20px",
             alignItems: "start",
+            minWidth: 0,
           }}
         >
           <Box
@@ -755,7 +756,7 @@ export const TechHealthPage: React.FC = () => {
               </Box>
             </Box>
           ) : (
-            <Box>
+            <Box sx={{ minWidth: 0, overflow: "hidden" }}>
 
               <Box
                 className="d-flex align-items-center"
