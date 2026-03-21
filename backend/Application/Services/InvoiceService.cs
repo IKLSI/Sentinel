@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -13,16 +12,13 @@ public class InvoiceService
 {
     private readonly SentinelContext _context;
     private readonly TimeTrackingService _timeTrackingService;
-    private readonly ILogger<InvoiceService> _logger;
 
     public InvoiceService(
         SentinelContext context,
-        TimeTrackingService timeTrackingService,
-        ILogger<InvoiceService> logger)
+        TimeTrackingService timeTrackingService)
     {
         _context = context;
         _timeTrackingService = timeTrackingService;
-        _logger = logger;
     }
 
     public async Task<Invoice> GenerateInvoiceAsync(GenerateInvoiceDto dto)
