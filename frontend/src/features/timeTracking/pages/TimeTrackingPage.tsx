@@ -335,16 +335,18 @@ export const TimeTrackingPage: React.FC = () => {
             px: "16px", py: "10px",
             borderBottom: "1px solid var(--border)",
           }}>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: "5px", flexShrink: 0 }}>
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: "8px", flexShrink: 0 }}>
               <Box sx={{
                 fontFamily: "var(--font-mono)", fontSize: "20px", fontWeight: 800,
                 color: "var(--text)", letterSpacing: "-0.04em", lineHeight: 1,
               }}>
                 {formatDuration(totalMinutes)}
               </Box>
-              <Box sx={{ fontSize: "11px", color: "var(--muted)", fontWeight: 500 }}>
-                / {formatDuration(WEEK_TARGET)}
-              </Box>
+              {weekEntries.length > 0 && (
+                <Box sx={{ fontSize: "11px", color: "var(--muted)", fontWeight: 500 }}>
+                  · {weekEntries.length} saisie{weekEntries.length > 1 ? "s" : ""}
+                </Box>
+              )}
             </Box>
             <Box sx={{ flex: 1, height: "4px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
               <Box sx={{
@@ -617,7 +619,7 @@ export const TimeTrackingPage: React.FC = () => {
                             key={entry.id}
                             sx={{
                               display: "flex", alignItems: "center",
-                              px: "16px", py: "0",
+                              pl: "0", pr: "12px",
                               borderTop: "1px solid var(--border)",
                               minHeight: "52px",
                               gap: "12px",
@@ -626,96 +628,95 @@ export const TimeTrackingPage: React.FC = () => {
                               "&:hover .tt-actions": { opacity: 1 },
                             }}
                           >
-                            {/* Badge durée */}
+                            {/* Barre couleur projet */}
                             <Box sx={{
-                              fontFamily: "var(--font-mono)",
-                              fontSize: "12px", fontWeight: 800,
-                              color: "var(--accent)",
-                              minWidth: "40px", flexShrink: 0,
-                              letterSpacing: "-0.02em",
-                            }}>
-                              {formatDuration(entry.durationMinutes)}
-                            </Box>
-
-                            {/* Séparateur vertical */}
-                            <Box sx={{ width: "1px", height: "28px", background: "var(--border)", flexShrink: 0 }} />
+                              width: "3px", alignSelf: "stretch", flexShrink: 0,
+                              background: projColor, opacity: 0.7,
+                            }} />
 
                             {/* Avatar initiales (admin uniquement) */}
                             {isAdmin && (
-                              <Box sx={{
-                                width: "26px", height: "26px", borderRadius: "50%",
-                                background: isOwn ? "var(--accent)" : getProjectColor(entry.userName),
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                flexShrink: 0, fontSize: "9px", fontWeight: 700, color: "#fff",
-                              }}>
-                                {getUserInitials(entry.userName)}
-                              </Box>
+                              <Tooltip title={isOwn ? "Vous" : entry.userName} placement="top" arrow>
+                                <Box sx={{
+                                  width: "28px", height: "28px", borderRadius: "50%",
+                                  background: isOwn ? "var(--accent)" : getProjectColor(entry.userName),
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  flexShrink: 0, fontSize: "10px", fontWeight: 700, color: "#fff",
+                                  letterSpacing: "0.02em",
+                                }}>
+                                  {getUserInitials(entry.userName)}
+                                </Box>
+                              </Tooltip>
                             )}
 
                             {/* Contenu */}
-                            <Box sx={{ flex: 1, minWidth: 0, py: "12px" }}>
-                              {isAdmin && (
+                            <Box sx={{ flex: 1, minWidth: 0, py: "11px" }}>
+                              <Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: (entry.techProjectName || entry.ticketTitle) ? "5px" : 0 }}>
                                 <Box sx={{
-                                  fontSize: "10px", fontWeight: 600,
-                                  color: isOwn ? "var(--accent)" : "var(--muted2)",
-                                  letterSpacing: "0.02em", mb: "3px",
-                                  textTransform: "uppercase",
+                                  fontSize: "13px", color: "var(--text)", fontWeight: 500,
+                                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                  letterSpacing: "-0.01em", flex: 1, minWidth: 0,
                                 }}>
-                                  {isOwn ? "Vous" : entry.userName}
+                                  {entry.comment ?? "—"}
                                 </Box>
-                              )}
-                              <Box sx={{
-                                fontSize: "13px", color: "var(--text)", fontWeight: 500,
-                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                                letterSpacing: "-0.01em",
-                                mb: (entry.techProjectName || entry.ticketTitle) ? "5px" : 0,
-                              }}>
-                                {entry.comment ?? "—"}
                               </Box>
                               {(entry.techProjectName || entry.ticketTitle) && (
-                                <Box sx={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
                                   {entry.techProjectName && (
                                     <Box sx={{
-                                      display: "inline-flex", alignItems: "center", gap: "5px",
-                                      background: "var(--s3)",
-                                      border: "1px solid var(--border)",
-                                      px: "7px", py: "2px", borderRadius: "5px",
+                                      display: "inline-flex", alignItems: "center", gap: "4px",
+                                      px: "6px", py: "2px", borderRadius: "4px",
+                                      background: `${projColor}18`,
+                                      border: `1px solid ${projColor}40`,
                                     }}>
                                       <Box sx={{ width: "5px", height: "5px", borderRadius: "50%", background: projColor, flexShrink: 0 }} />
-                                      <Box component="span" sx={{ fontSize: "11px", color: "var(--muted2)", fontWeight: 500 }}>
+                                      <Box component="span" sx={{ fontSize: "11px", fontWeight: 600, color: projColor }}>
                                         {entry.techProjectName}
                                       </Box>
                                     </Box>
                                   )}
-                                  {entry.ticketTitle && (
+                                  {entry.ticketId && (
                                     <Box sx={{
                                       display: "inline-flex", alignItems: "center",
                                       fontFamily: "var(--font-mono)", fontSize: "10px",
                                       background: "var(--accent-subtle)", color: "var(--accent)",
-                                      px: "7px", py: "2px", borderRadius: "5px",
-                                      fontWeight: 600, letterSpacing: "0.01em",
+                                      px: "6px", py: "2px", borderRadius: "4px",
+                                      fontWeight: 600, letterSpacing: "0.04em",
                                       border: "1px solid var(--accent-border)",
                                     }}>
-                                      {entry.ticketTitle}
+                                      {`TKT-${entry.ticketId.replace(/-/g, "").substring(0, 6).toUpperCase()}`}
                                     </Box>
                                   )}
                                 </Box>
                               )}
                             </Box>
 
-                            {/* Actions */}
-                            {canEdit && (
+                            {/* Durée + Actions */}
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                               <Box
                                 className="tt-actions"
                                 sx={{
                                   display: "flex", alignItems: "center", gap: "2px",
-                                  opacity: 0, transition: "opacity 0.15s", flexShrink: 0,
+                                  opacity: 0, transition: "opacity 0.15s",
                                 }}
                               >
-                                <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
-                                <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
+                                {canEdit && <>
+                                  <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
+                                  <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
+                                </>}
                               </Box>
-                            )}
+                              <Box sx={{
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "13px", fontWeight: 800,
+                                color: projColor,
+                                background: `${projColor}18`,
+                                border: `1px solid ${projColor}35`,
+                                px: "8px", py: "3px", borderRadius: "6px",
+                                letterSpacing: "-0.02em", flexShrink: 0,
+                              }}>
+                                {formatDuration(entry.durationMinutes)}
+                              </Box>
+                            </Box>
                           </Box>
                         );
                       })}

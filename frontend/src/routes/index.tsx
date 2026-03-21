@@ -34,6 +34,12 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <>{children}</>
 }
 
+const NonDeveloperRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth()
+  if (user?.role === 'Developer') return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
@@ -45,8 +51,8 @@ export const AppRoutes: React.FC = () => (
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
       <Route path="/time-tracking" element={<TimeTrackingPage />} />
-      <Route path="/invoices" element={<InvoicesPage />} />
-      <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+      <Route path="/invoices" element={<NonDeveloperRoute><InvoicesPage /></NonDeveloperRoute>} />
+      <Route path="/invoices/:id" element={<NonDeveloperRoute><InvoiceDetailPage /></NonDeveloperRoute>} />
       <Route path="/tech-health" element={<TechHealthPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

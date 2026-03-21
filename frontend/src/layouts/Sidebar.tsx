@@ -71,7 +71,18 @@ export const Sidebar: React.FC = () => {
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 'U'
   const location = useLocation()
   const { isOpen, isMobile, close } = useSidebar()
+  const isDeveloper = user?.role === 'Developer'
   const filteredSections = navSections
+    .map((section) => {
+      if (section.title === 'Temps & Facturation') {
+        const items = isDeveloper
+          ? section.items.filter((i) => i.to !== '/invoices')
+          : section.items
+        return { ...section, title: isDeveloper ? 'Temps' : section.title, items }
+      }
+      return section
+    })
+    .filter((section) => section.items.length > 0)
 
   useEffect(() => {
     if (isMobile) close()
