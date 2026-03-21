@@ -1,4 +1,4 @@
-namespace TMAflow.Domain.DTOs.TechHealth;
+namespace Sentinel.Domain.DTOs.TechHealth;
 
 public class TechProjectDto
 {

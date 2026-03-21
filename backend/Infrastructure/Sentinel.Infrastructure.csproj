@@ -3,8 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>TMAflow.Infrastructure</RootNamespace>
-    <AssemblyName>TMAflow.Infrastructure</AssemblyName>
+    <RootNamespace>Sentinel.Infrastructure</RootNamespace>
+    <AssemblyName>Sentinel.Infrastructure</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Domain/TMAflow.Domain.csproj" />
+    <ProjectReference Include="../Domain/Sentinel.Domain.csproj" />
   </ItemGroup>
 </Project>

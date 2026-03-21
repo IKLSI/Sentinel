@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TMAflow.Domain.DTOs.Dashboard;
-using TMAflow.Application.Services;
+using Sentinel.Domain.DTOs.Dashboard;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]

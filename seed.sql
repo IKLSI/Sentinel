@@ -1,7 +1,7 @@
 -- =============================================================================
--- TMAflow — Seed de démonstration
+-- Sentinel — Seed de démonstration
 -- Effet  : remet à zéro toutes les tables et injecte des données réalistes.
--- Comptes: tous les mots de passe = TMAflow2026!
+-- Comptes: tous les mots de passe = Sentinel2026!
 -- =============================================================================
 
 BEGIN;
@@ -26,7 +26,7 @@ INSERT INTO "Organizations" ("Id","Name","Slug","Timezone","CreatedAt","UpdatedA
 );
 
 -- ── Utilisateurs ─────────────────────────────────────────────────────────────
--- Hash BCrypt(11) pour TMAflow2026!
+-- Hash BCrypt(11) pour Sentinel2026!
 INSERT INTO "Users" (
     "Id","OrganizationId","Email","PasswordHash",
     "FirstName","LastName","Role","IsActive","CreatedAt","Theme"
@@ -34,9 +34,9 @@ INSERT INTO "Users" (
 (
     '10000000-0000-0000-0000-000000000001',
     'a0000000-0000-0000-0000-000000000001',
-    'admin@tmaflow.io',
+    'admin@sentinel.io',
     '$2a$11$pXhITXhq4X6CilhhN7FD5eWVfJ5dz/uXNu9Zh89Lw9OYzg9dbUOxG',
-    'Admin','TMAflow','Admin',true,'2025-09-01 08:00:00+00','dark'
+    'Admin','Sentinel','Admin',true,'2025-09-01 08:00:00+00','dark'
 ),
 (
     '10000000-0000-0000-0000-000000000002',

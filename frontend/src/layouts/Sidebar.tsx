@@ -171,13 +171,13 @@ export const Sidebar: React.FC = () => {
               boxShadow: '0 0 20px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.3)',
             }}
           >
-            T
+            S
           </Box>
           <Box>
-            <Box sx={{ fontSize: '14px', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.2 }}>
-              TMA<Box component="span" sx={{ color: 'var(--accent)' }}>flow</Box>
+            <Box sx={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text)', lineHeight: 1.2 }}>
+              SENTINEL
             </Box>
-            <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '1px' }}>
+            <Box sx={{ fontSize: '9.5px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '1px' }}>
               workspace
             </Box>
           </Box>

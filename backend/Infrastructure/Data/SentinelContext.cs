@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Domain.Models;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Infrastructure.Data;
+namespace Sentinel.Infrastructure.Data;
 
-public class TMAflowContext : DbContext
+public class SentinelContext : DbContext
 {
-    public TMAflowContext(DbContextOptions<TMAflowContext> options) : base(options) { }
+    public SentinelContext(DbContextOptions<SentinelContext> options) : base(options) { }
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();

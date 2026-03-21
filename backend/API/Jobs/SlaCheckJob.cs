@@ -1,18 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Jobs;
+namespace Sentinel.API.Jobs;
 
 public class SlaCheckJob
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly SlaService _slaService;
     private readonly ILogger<SlaCheckJob> _logger;
 
     public SlaCheckJob(
-        TMAflowContext context,
+        SentinelContext context,
         SlaService slaService,
         ILogger<SlaCheckJob> logger)
     {

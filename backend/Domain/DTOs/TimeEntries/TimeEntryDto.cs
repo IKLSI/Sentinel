@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TMAflow.Domain.DTOs.TimeEntries;
+namespace Sentinel.Domain.DTOs.TimeEntries;
 
 public class TimeEntryDto
 {

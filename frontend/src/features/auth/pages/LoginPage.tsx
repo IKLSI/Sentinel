@@ -6,8 +6,6 @@ import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 
-const GRID_DOTS = Array.from({ length: 20 * 16 });
-
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const { showToast } = useToast();
@@ -25,7 +23,7 @@ export const LoginPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (mounted) setTimeout(() => emailRef.current?.focus(), 600);
+    if (mounted) setTimeout(() => emailRef.current?.focus(), 700);
   }, [mounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,161 +45,115 @@ export const LoginPage: React.FC = () => {
 
   return (
     <Box className="lp-root">
-      <Box className="lp-grid" aria-hidden>
-        {GRID_DOTS.map((_, i) => (
-          <Box key={i} className="lp-dot" />
-        ))}
-      </Box>
-      <Box className="lp-scanline" aria-hidden />
-      <Box className="lp-glow" aria-hidden />
-      <Box className="lp-glow-2" aria-hidden />
-
       <Box className="lp-card">
-        {/* ── Left panel ── */}
-        <Box className="lp-card-left">
-          <Box className="lp-logo d-flex align-items-center gap-3">
-            <Box className="lp-logo-mark d-flex align-items-center justify-content-center flex-shrink-0">
-              T
-            </Box>
-            <Box
-              sx={{
-                fontFamily: "var(--font-ui)",
-                fontSize: "18px",
-                fontWeight: 800,
-                color: "#fff",
-                letterSpacing: "-0.04em",
-              }}
-            >
-              TMA
-              <Box component="span" sx={{ color: "rgba(255,255,255,0.45)" }}>
-                flow
+      {/* ── Panel gauche ── */}
+      <Box className="lp-left">
+        <Box className="lp-left-noise" aria-hidden />
+
+        {/* Décor SVG fond */}
+        <Box className="lp-decor" aria-hidden>
+          <svg width="100%" height="100%" viewBox="0 0 450 600" fill="none" preserveAspectRatio="xMidYMid slice">
+            <circle cx="380" cy="90" r="200" stroke="rgba(255,255,255,0.055)" strokeWidth="1"/>
+            <circle cx="380" cy="90" r="130" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
+            <circle cx="380" cy="90" r="60" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
+            <circle cx="40" cy="520" r="160" stroke="rgba(255,255,255,0.035)" strokeWidth="1"/>
+          </svg>
+        </Box>
+
+        {/* Logo */}
+        <Box className="lp-logo">
+          <Box className="lp-logo-mark">
+            <svg width="12" height="12" viewBox="0 0 18 18" fill="none">
+              <path d="M9 1L16 4.5V9C16 12.5 12.8 15.7 9 17C5.2 15.7 2 12.5 2 9V4.5L9 1Z" fill="white" fillOpacity="0.95" />
+            </svg>
+          </Box>
+          <Box className="lp-logo-wordmark">SENTINEL</Box>
+        </Box>
+
+        {/* Titre + features */}
+        <Box className="lp-left-body">
+          <Box className="lp-left-headline">
+            <Box component="h1">
+              Gardez une<br />
+              <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+                longueur{" "}
+                <Box component="span" className="lp-headline-accent">d'avance.</Box>
               </Box>
             </Box>
-          </Box>
-
-          <Box
-            sx={{
-              height: "1px",
-              background: "rgba(255,255,255,0.1)",
-              my: "28px",
-            }}
-          />
-
-          <Box className="lp-headline">
-            <Box component="h1">
-              Votre TMA,
-              <br />
-              <Box component="em">sans friction</Box>
-            </Box>
-            <Box component="p">
-              Pilotez vos interventions, respectez vos engagements.
+            <Box component="p" className="lp-headline-sub">
+              L'outil pensé pour les équipes support qui ne laissent rien au hasard.
             </Box>
           </Box>
 
-          <Box
-            className="lp-features mt-auto"
-            sx={{ display: "flex", flexDirection: "column" }}
-          >
+          <Box className="lp-features">
             {[
-              { label: "Délais tenus, clients satisfaits", color: "#fca5a5" },
               {
-                label: "Tickets priorisés, équipe coordonnée",
-                color: "#c4b5fd",
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M7 4v3.5l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ),
+                title: "Délais tenus, alertes immédiates",
+                desc: "Chaque dépassement détecté avant qu'il arrive.",
+                iconBg: "rgba(165,180,252,0.11)",
+                iconColor: "rgba(165,180,252,0.9)",
               },
-              { label: "Failles détectées avant l'impact", color: "#fde68a" },
-              { label: "Facturez juste, payez à temps", color: "#6ee7b7" },
-            ].map((item) => (
+              {
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 1.5h10a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5V2a.5.5 0 0 1 .5-.5z" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M3.5 5.5h4M3.5 8h5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  </svg>
+                ),
+                title: "Facturation sans ressaisie",
+                desc: "Du temps saisi à la facture, en un clic.",
+                iconBg: "rgba(249,168,212,0.11)",
+                iconColor: "rgba(249,168,212,0.85)",
+              },
+              {
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 1.5L12.5 4v4c0 2.8-2.5 5.2-5.5 6C3.5 13.2 1 10.8 1 8V4L7 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                    <path d="M4.5 7l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ),
+                title: "Santé technique suivie",
+                desc: "Score de santé, vulnérabilités et dépendances.",
+                iconBg: "rgba(251,191,36,0.11)",
+                iconColor: "rgba(251,191,36,0.85)",
+              },
+            ].map((f, i) => (
               <Box
-                key={item.label}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  py: "13px",
-                }}
+                key={i}
+                className="lp-feature"
+                style={{ animationDelay: `${0.52 + i * 0.1}s` }}
               >
-                <Box
-                  sx={{
-                    position: "relative",
-                    width: 8,
-                    height: 8,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      inset: "-4px",
-                      borderRadius: "50%",
-                      background: item.color,
-                      opacity: 0.25,
-                      animation: "pulse 2s ease-in-out infinite",
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      background: item.color,
-                    }}
-                  />
+                <Box className="lp-feature-icon" style={{ background: f.iconBg, color: f.iconColor }}>
+                  {f.icon}
                 </Box>
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: "12.5px",
-                    fontWeight: 500,
-                    color: "rgba(255,255,255,0.75)",
-                    flex: 1,
-                  }}
-                >
-                  {item.label}
+                <Box>
+                  <Box className="lp-feature-title">{f.title}</Box>
+                  <Box className="lp-feature-desc">{f.desc}</Box>
                 </Box>
               </Box>
             ))}
           </Box>
         </Box>
+      </Box>
 
-        {/* ── Right panel – form ── */}
-        <Box className="lp-card-right">
-          <Box sx={{ mb: "36px" }}>
-            <Box
-              component="h2"
-              sx={{
-                fontFamily: "var(--font-ui)",
-                fontSize: "28px",
-                fontWeight: 800,
-                color: "#111827",
-                letterSpacing: "-0.04em",
-                m: "0 0 6px",
-              }}
-            >
-              Connexion
-            </Box>
-            <Box
-              component="p"
-              sx={{ fontSize: "13px", color: "#6b7280", m: 0 }}
-            >
-              Accédez à votre tableau de bord
-            </Box>
+        {/* ── Panel droit ── */}
+        <Box className="lp-right">
+        <Box className="lp-form-wrap">
+          {/* En-tête formulaire */}
+          <Box className="lp-form-header">
+            <Box component="h2" className="lp-form-title">Bienvenue</Box>
+            <Box component="p" className="lp-form-sub">Connectez-vous à votre espace de pilotage</Box>
           </Box>
 
           <form onSubmit={handleSubmit} noValidate>
-            <Box className="mb-3">
-              <Box
-                component="label"
-                className="d-block mb-2"
-                sx={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  fontFamily: "var(--font-mono)",
-                }}
-                htmlFor="lp-email"
-              >
+            <Box className="lp-field">
+              <Box component="label" className="lp-label" htmlFor="lp-email">
                 Adresse email
               </Box>
               <input
@@ -217,23 +169,11 @@ export const LoginPage: React.FC = () => {
               />
             </Box>
 
-            <Box className="mb-3">
-              <Box
-                component="label"
-                className="d-block mb-2"
-                sx={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  fontFamily: "var(--font-mono)",
-                }}
-                htmlFor="lp-password"
-              >
+            <Box className="lp-field">
+              <Box component="label" className="lp-label" htmlFor="lp-password">
                 Mot de passe
               </Box>
-              <Box className="position-relative">
+              <Box className="lp-input-wrap">
                 <Box
                   component="input"
                   id="lp-password"
@@ -253,45 +193,32 @@ export const LoginPage: React.FC = () => {
                   className="lp-pw-toggle"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
-                  aria-label={
-                    showPassword
-                      ? "Masquer le mot de passe"
-                      : "Afficher le mot de passe"
-                  }
+                  aria-label={showPassword ? "Masquer" : "Afficher"}
                 >
-                  {showPassword ? (
-                    <VisibilityOffOutlined sx={{ fontSize: 16 }} />
-                  ) : (
-                    <VisibilityOutlined sx={{ fontSize: 16 }} />
-                  )}
+                  {showPassword
+                    ? <VisibilityOffOutlined sx={{ fontSize: 16 }} />
+                    : <VisibilityOutlined sx={{ fontSize: 16 }} />}
                 </button>
               </Box>
             </Box>
 
-            <button
-              type="submit"
-              className="lp-submit d-flex align-items-center justify-content-center gap-2 mt-4"
-              disabled={loading}
-            >
+            <button type="submit" className="lp-submit" disabled={loading}>
               {loading ? (
                 <Box className="lp-submit-loader" />
               ) : (
                 <>
                   Se connecter
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8h10M9 4l4 4-4 4"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8"
+                      strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </>
               )}
             </button>
           </form>
+
         </Box>
+      </Box>
       </Box>
     </Box>
   );

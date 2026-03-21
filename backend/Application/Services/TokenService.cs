@@ -4,9 +4,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using TMAflow.Domain.Models;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class TokenService
 {

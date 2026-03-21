@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using TMAflow.Infrastructure.Data;
-using TMAflow.API.Jobs;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.API.Jobs;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Extensions;
+namespace Sentinel.API.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
         string connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
-        services.AddDbContext<TMAflowContext>(options =>
+        services.AddDbContext<SentinelContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
@@ -102,7 +102,7 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient("Registry", client =>
         {
-            client.DefaultRequestHeaders.Add("User-Agent", "TMAflow-Scanner/1.0");
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0");
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
@@ -138,7 +138,7 @@ public static class ServiceCollectionExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "TMAflow API",
+                Title = "Sentinel API",
                 Version = "v1",
                 Description = "API de gestion TMA (Tierce Maintenance Applicative)"
             });

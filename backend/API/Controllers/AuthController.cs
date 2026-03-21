@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
-using TMAflow.Domain.DTOs.Auth;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Domain.DTOs.Auth;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]

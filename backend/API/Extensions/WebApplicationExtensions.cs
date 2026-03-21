@@ -1,7 +1,7 @@
 using Hangfire;
-using TMAflow.API.Jobs;
+using Sentinel.API.Jobs;
 
-namespace TMAflow.API.Extensions;
+namespace Sentinel.API.Extensions;
 
 public static class WebApplicationExtensions
 {

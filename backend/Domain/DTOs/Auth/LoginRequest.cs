@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TMAflow.Domain.DTOs.Auth;
+namespace Sentinel.Domain.DTOs.Auth;
 
 public class LoginRequest
 {

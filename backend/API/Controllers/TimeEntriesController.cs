@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TMAflow.Domain.DTOs.TimeEntries;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Domain.DTOs.TimeEntries;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/time-entries")]

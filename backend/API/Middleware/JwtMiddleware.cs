@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace TMAflow.API.Middleware;
+namespace Sentinel.API.Middleware;
 
 public class JwtMiddleware
 {

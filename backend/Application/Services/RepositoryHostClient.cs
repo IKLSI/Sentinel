@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class RepositoryHostClient
 {

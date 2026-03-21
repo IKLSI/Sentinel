@@ -1,8 +1,8 @@
 using Scalar.AspNetCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.API.Extensions;
-using TMAflow.API.Middleware;
-namespace TMAflow.API;
+using Sentinel.Infrastructure.Data;
+using Sentinel.API.Extensions;
+using Sentinel.API.Middleware;
+namespace Sentinel.API;
 
 public static class Program
 {
@@ -43,7 +43,7 @@ public static class Program
             app.UseSwagger();
             app.MapScalarApiReference(options =>
             {
-                options.Title = "TMAflow API";
+                options.Title = "Sentinel API";
                 options.Theme = ScalarTheme.DeepSpace;
                 options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
             });

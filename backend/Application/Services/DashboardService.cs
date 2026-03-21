@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Dashboard;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Dashboard;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class DashboardService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
 
-    public DashboardService(TMAflowContext context, IMemoryCache cache)
+    public DashboardService(SentinelContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;

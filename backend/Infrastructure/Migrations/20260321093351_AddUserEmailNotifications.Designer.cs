@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TMAflow.Infrastructure.Data;
+using Sentinel.Infrastructure.Data;
 
 #nullable disable
 
-namespace TMAflow.Infrastructure.Migrations
+namespace Sentinel.Infrastructure.Migrations
 {
-    [DbContext(typeof(TMAflowContext))]
+    [DbContext(typeof(SentinelContext))]
     [Migration("20260321093351_AddUserEmailNotifications")]
     partial class AddUserEmailNotifications
     {
@@ -25,7 +25,7 @@ namespace TMAflow.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -72,7 +72,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Dependencies");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Invoice", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -142,7 +142,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Organization", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -180,7 +180,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Organizations");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Runtime", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -212,7 +212,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Runtimes");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -255,7 +255,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("TechProjects");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -338,7 +338,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TicketComment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -371,7 +371,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("TicketComments");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TicketHistory", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -408,7 +408,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("TicketHistories");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TimeEntry", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -452,7 +452,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("TimeEntries");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.User", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -522,7 +522,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Vulnerability", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Vulnerability", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -574,9 +574,9 @@ namespace TMAflow.Infrastructure.Migrations
                     b.ToTable("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
                         .WithMany("Dependencies")
                         .HasForeignKey("TechProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -585,15 +585,15 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("TechProject");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Invoice", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Invoice", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
                         .WithMany()
                         .HasForeignKey("TechProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -603,9 +603,9 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("TechProject");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Runtime", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
                         .WithMany("Runtimes")
                         .HasForeignKey("TechProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -614,9 +614,9 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("TechProject");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -625,26 +625,26 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.User", "AssignedTo")
+                    b.HasOne("Sentinel.Domain.Models.User", "AssignedTo")
                         .WithMany()
                         .HasForeignKey("AssignedToId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("TMAflow.Domain.Models.User", "CreatedBy")
+                    b.HasOne("Sentinel.Domain.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TMAflow.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "Project")
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "Project")
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -658,15 +658,15 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TicketComment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.User", "Author")
+                    b.HasOne("Sentinel.Domain.Models.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TMAflow.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
                         .WithMany("Comments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -677,15 +677,15 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TicketHistory", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketHistory", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
                         .WithMany("History")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TMAflow.Domain.Models.User", "User")
+                    b.HasOne("Sentinel.Domain.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -696,19 +696,19 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TimeEntry", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
                         .WithMany()
                         .HasForeignKey("TechProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("TMAflow.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
                         .WithMany("TimeEntries")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("TMAflow.Domain.Models.User", "User")
+                    b.HasOne("Sentinel.Domain.Models.User", "User")
                         .WithMany("TimeEntries")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -721,9 +721,9 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.User", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany("Users")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -732,9 +732,9 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Vulnerability", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Vulnerability", b =>
                 {
-                    b.HasOne("TMAflow.Domain.Models.Dependency", "Dependency")
+                    b.HasOne("Sentinel.Domain.Models.Dependency", "Dependency")
                         .WithMany("Vulnerabilities")
                         .HasForeignKey("DependencyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -743,17 +743,17 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Dependency");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
                 {
                     b.Navigation("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Organization", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
                 {
                     b.Navigation("Dependencies");
 
@@ -762,7 +762,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("Tickets");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
                 {
                     b.Navigation("Comments");
 
@@ -771,7 +771,7 @@ namespace TMAflow.Infrastructure.Migrations
                     b.Navigation("TimeEntries");
                 });
 
-            modelBuilder.Entity("TMAflow.Domain.Models.User", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.Navigation("TimeEntries");
                 });

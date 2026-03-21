@@ -2,20 +2,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.TechHealth;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.TechHealth;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class TechHealthService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly HttpClient _httpClient;
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
 
-    public TechHealthService(TMAflowContext context, IHttpClientFactory httpClientFactory, ILogger<TechHealthService> logger, RepositoryScannerService repositoryScanner)
+    public TechHealthService(SentinelContext context, IHttpClientFactory httpClientFactory, ILogger<TechHealthService> logger, RepositoryScannerService repositoryScanner)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient("OSV");

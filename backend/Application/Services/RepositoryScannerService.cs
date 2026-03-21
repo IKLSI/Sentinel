@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using TMAflow.Domain.Models;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class RepositoryScannerService
 {

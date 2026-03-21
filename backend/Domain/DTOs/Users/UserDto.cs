@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TMAflow.Domain.DTOs.Users;
+namespace Sentinel.Domain.DTOs.Users;
 
 public class UserDto
 {

@@ -1,4 +1,4 @@
-namespace TMAflow.Domain.DTOs.Invoices;
+namespace Sentinel.Domain.DTOs.Invoices;
 
 public class UpdateInvoiceStatusDto
 {

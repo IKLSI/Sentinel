@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TMAflow.Infrastructure.Migrations
+namespace Sentinel.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

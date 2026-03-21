@@ -4,8 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>TMAflow.API</RootNamespace>
-    <AssemblyName>TMAflow.API</AssemblyName>
+    <RootNamespace>Sentinel.API</RootNamespace>
+    <AssemblyName>Sentinel.API</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Domain/TMAflow.Domain.csproj" />
-    <ProjectReference Include="../Infrastructure/TMAflow.Infrastructure.csproj" />
-    <ProjectReference Include="../Application/TMAflow.Application.csproj" />
+    <ProjectReference Include="../Domain/Sentinel.Domain.csproj" />
+    <ProjectReference Include="../Infrastructure/Sentinel.Infrastructure.csproj" />
+    <ProjectReference Include="../Application/Sentinel.Application.csproj" />
   </ItemGroup>
 
 </Project>

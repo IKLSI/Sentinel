@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Invoices;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Invoices;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/invoices")]
 [Authorize]
 public class InvoicesController : ControllerBase
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly InvoiceService _invoiceService;
 
-    public InvoicesController(TMAflowContext context, InvoiceService invoiceService)
+    public InvoicesController(SentinelContext context, InvoiceService invoiceService)
     {
         _context = context;
         _invoiceService = invoiceService;

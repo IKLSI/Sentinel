@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using TMAflow.Domain.Models;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Domain.DTOs.Tickets;
+namespace Sentinel.Domain.DTOs.Tickets;
 
 public class CreateTicketDto
 {

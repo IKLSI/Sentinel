@@ -1,4 +1,4 @@
-namespace TMAflow.Domain.DTOs.Dashboard;
+namespace Sentinel.Domain.DTOs.Dashboard;
 
 public class ActivityItemDto
 {

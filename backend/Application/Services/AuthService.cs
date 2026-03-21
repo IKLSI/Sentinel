@@ -1,18 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Auth;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Auth;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class AuthService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly TokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(TMAflowContext context, TokenService tokenService, ILogger<AuthService> logger)
+    public AuthService(SentinelContext context, TokenService tokenService, ILogger<AuthService> logger)
     {
         _context = context;
         _tokenService = tokenService;

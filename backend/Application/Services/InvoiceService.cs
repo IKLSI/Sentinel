@@ -3,20 +3,20 @@ using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Invoices;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Invoices;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class InvoiceService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly TimeTrackingService _timeTrackingService;
     private readonly ILogger<InvoiceService> _logger;
 
     public InvoiceService(
-        TMAflowContext context,
+        SentinelContext context,
         TimeTrackingService timeTrackingService,
         ILogger<InvoiceService> logger)
     {
@@ -129,14 +129,14 @@ public class InvoiceService
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("TMAflow")
+                            col.Item().Text("Sentinel")
                                 .Bold().FontSize(22).FontColor(accentColor);
                             col.Item().Text("Gestion & Maintenance Applicative")
                                 .FontSize(9).FontColor(textMuted);
                             col.Item().PaddingTop(10).Column(addr =>
                             {
-                                addr.Item().Text("TMAflow SAS").Bold().FontSize(9);
-                                addr.Item().Text("contact@tmaflow.io").FontSize(9).FontColor(textMuted);
+                                addr.Item().Text("Sentinel SAS").Bold().FontSize(9);
+                                addr.Item().Text("contact@sentinel.io").FontSize(9).FontColor(textMuted);
                             });
                         });
 
@@ -186,8 +186,8 @@ public class InvoiceService
                             c.Item().Text("ÉMETTEUR")
                                 .FontSize(8).Bold().FontColor(accentColor)
                                 .LetterSpacing(0.08f);
-                            c.Item().PaddingTop(6).Text("TMAflow SAS").Bold().FontSize(10);
-                            c.Item().Text("contact@tmaflow.io").FontSize(9).FontColor(textMuted);
+                            c.Item().PaddingTop(6).Text("Sentinel SAS").Bold().FontSize(10);
+                            c.Item().Text("contact@sentinel.io").FontSize(9).FontColor(textMuted);
                         });
                         row.ConstantItem(16);
                         row.RelativeItem().Border(1).BorderColor(accentColor)
@@ -309,7 +309,7 @@ public class InvoiceService
                     {
                         row.RelativeItem().Text(text =>
                         {
-                            text.Span("TMAflow SAS — contact@tmaflow.io").FontSize(8).FontColor(textMuted);
+                            text.Span("Sentinel SAS — contact@sentinel.io").FontSize(8).FontColor(textMuted);
                         });
                         row.RelativeItem().AlignRight().Text(text =>
                         {

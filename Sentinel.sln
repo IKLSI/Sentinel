@@ -4,13 +4,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMAflow.Domain", "backend\Domain\TMAflow.Domain.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567801}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Domain", "backend\Domain\Sentinel.Domain.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567801}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMAflow.Infrastructure", "backend\Infrastructure\TMAflow.Infrastructure.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567802}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Infrastructure", "backend\Infrastructure\Sentinel.Infrastructure.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567802}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMAflow.Application", "backend\Application\TMAflow.Application.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567803}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Application", "backend\Application\Sentinel.Application.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567803}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMAflow.API", "backend\API\TMAflow.API.csproj", "{328BF3CC-6D5A-8B76-06D4-A4B206022723}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.API", "backend\API\Sentinel.API.csproj", "{328BF3CC-6D5A-8B76-06D4-A4B206022723}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,23 +2,23 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Common;
-using TMAflow.Domain.DTOs.Tickets;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Common;
+using Sentinel.Domain.DTOs.Tickets;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/tickets")]
 [Authorize]
 public class TicketsController : ControllerBase
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly TicketService _ticketService;
 
-    public TicketsController(TMAflowContext context, TicketService ticketService)
+    public TicketsController(SentinelContext context, TicketService ticketService)
     {
         _context = context;
         _ticketService = ticketService;

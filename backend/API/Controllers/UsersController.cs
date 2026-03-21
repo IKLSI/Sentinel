@@ -2,21 +2,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Users;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Users;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/users")]
 [Authorize]
 public class UsersController : ControllerBase
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
 
-    public UsersController(TMAflowContext context)
+    public UsersController(SentinelContext context)
     {
         _context = context;
     }

@@ -1,6 +1,6 @@
-using TMAflow.Application.Services;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Jobs;
+namespace Sentinel.API.Jobs;
 
 public class TechHealthScanJob
 {

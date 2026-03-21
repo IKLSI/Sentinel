@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.TechHealth;
-using TMAflow.Domain.Models;
-using TMAflow.Application.Services;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.TechHealth;
+using Sentinel.Domain.Models;
+using Sentinel.Application.Services;
 
-namespace TMAflow.API.Controllers;
+namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/tech-health")]
 [Authorize]
 public class TechHealthController : ControllerBase
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly TechHealthService _techHealthService;
 
-    public TechHealthController(TMAflowContext context, TechHealthService techHealthService)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService)
     {
         _context = context;
         _techHealthService = techHealthService;

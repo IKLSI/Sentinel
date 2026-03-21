@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TMAflow.Infrastructure.Migrations
+namespace Sentinel.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddUserEmailNotifications : Migration

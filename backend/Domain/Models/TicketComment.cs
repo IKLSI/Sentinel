@@ -1,4 +1,4 @@
-namespace TMAflow.Domain.Models;
+namespace Sentinel.Domain.Models;
 
 public class TicketComment
 {

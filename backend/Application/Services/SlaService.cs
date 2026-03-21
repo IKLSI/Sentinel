@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class SlaService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
 
-    public SlaService(TMAflowContext context)
+    public SlaService(SentinelContext context)
     {
         _context = context;
     }

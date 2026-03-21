@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace TMAflow.API.Middleware;
+namespace Sentinel.API.Middleware;
 
 public class ErrorHandlingMiddleware
 {

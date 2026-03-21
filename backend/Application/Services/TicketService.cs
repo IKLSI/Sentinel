@@ -1,20 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.Tickets;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.Tickets;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class TicketService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly SlaService _slaService;
     private readonly IMemoryCache _cache;
 
     public TicketService(
-        TMAflowContext context,
+        SentinelContext context,
         SlaService slaService,
         IMemoryCache cache)
     {

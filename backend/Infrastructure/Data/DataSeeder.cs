@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TMAflow.Domain.Models;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Infrastructure.Data;
+namespace Sentinel.Infrastructure.Data;
 
 public class DataSeeder
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
     private readonly ILogger<DataSeeder> _logger;
 
-    public DataSeeder(TMAflowContext context, ILogger<DataSeeder> logger)
+    public DataSeeder(SentinelContext context, ILogger<DataSeeder> logger)
     {
         _context = context;
         _logger = logger;
@@ -28,8 +28,8 @@ public class DataSeeder
             organization = new Organization
             {
                 Id = Guid.NewGuid(),
-                Name = "TMAflow",
-                Slug = "tmaflow",
+                Name = "Sentinel",
+                Slug = "sentinel",
                 Timezone = "Europe/Paris",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -41,10 +41,10 @@ public class DataSeeder
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = organization.Id,
-                Email = "admin@tmaflow.io",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("TMAflow2026!"),
+                Email = "admin@sentinel.io",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Sentinel2026!"),
                 FirstName = "Admin",
-                LastName = "TMAflow",
+                LastName = "Sentinel",
                 Role = UserRole.Admin,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -53,7 +53,7 @@ public class DataSeeder
             await _context.Users.AddAsync(adminUser);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Données de base initialisées. Admin: admin@tmaflow.io");
+            _logger.LogInformation("Données de base initialisées. Admin: admin@sentinel.io");
         }
     }
 }

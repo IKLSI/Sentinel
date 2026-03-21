@@ -124,12 +124,6 @@ const Pagination: React.FC<{
   )
 }
 
-const priorityColors: Record<TicketPriority, string> = {
-  critical: "var(--red)",
-  high: "var(--orange)",
-  medium: "var(--yellow)",
-  low: "var(--green)",
-};
 
 const priorityLabels: Record<TicketPriority, string> = {
   critical: "Critique",

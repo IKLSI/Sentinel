@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using TMAflow.Infrastructure.Data;
-using TMAflow.Domain.DTOs.TimeEntries;
-using TMAflow.Domain.Models;
+using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.DTOs.TimeEntries;
+using Sentinel.Domain.Models;
 
-namespace TMAflow.Application.Services;
+namespace Sentinel.Application.Services;
 
 public class TimeTrackingService
 {
-    private readonly TMAflowContext _context;
+    private readonly SentinelContext _context;
 
-    public TimeTrackingService(TMAflowContext context)
+    public TimeTrackingService(SentinelContext context)
     {
         _context = context;
     }

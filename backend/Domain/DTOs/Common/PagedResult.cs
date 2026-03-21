@@ -1,4 +1,4 @@
-namespace TMAflow.Domain.DTOs.Common;
+namespace Sentinel.Domain.DTOs.Common;
 
 public class PagedResult<T>
 {
