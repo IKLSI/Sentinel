@@ -8,6 +8,7 @@ import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
 import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import SecurityOutlined from '@mui/icons-material/SecurityOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
+import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
@@ -69,6 +70,7 @@ export const Sidebar: React.FC = () => {
   }
 
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 'U'
+  const isAdmin = user?.role === 'Admin'
   const location = useLocation()
   const { isOpen, isMobile, close } = useSidebar()
   const isDeveloper = user?.role === 'Developer'
@@ -301,6 +303,29 @@ export const Sidebar: React.FC = () => {
               </Box>
             </Box>
           </Box>
+          {isAdmin && (
+            <Box
+              component="button"
+              sx={{
+                all: 'unset',
+                cursor: 'pointer',
+                width: 28,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '7px',
+                color: 'var(--muted)',
+                flexShrink: 0,
+                transition: 'color 0.12s, background 0.12s',
+                '&:hover': { color: 'var(--accent)', background: 'var(--accent-subtle)' },
+              }}
+              onClick={() => navigate('/settings')}
+              title="Paramétrage"
+            >
+              <SettingsOutlined sx={{ fontSize: 14 }} />
+            </Box>
+          )}
           <Box
             component="button"
             sx={{

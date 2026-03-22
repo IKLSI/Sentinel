@@ -28,7 +28,7 @@ public class TicketService
 
     public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto, Guid createdById, Guid organizationId)
     {
-        DateTime? slaDeadline = await _slaService.CalculateSlaDeadlineAsync(dto.Priority);
+        DateTime? slaDeadline = await _slaService.CalculateSlaDeadlineAsync(dto.Priority, organizationId);
 
         Ticket ticket = new Ticket
         {
@@ -81,7 +81,7 @@ public class TicketService
         {
             changes.Add(CreateHistory(ticketId, userId, "Priority", ticket.Priority.ToString(), dto.Priority.Value.ToString()));
             ticket.Priority = dto.Priority.Value;
-            DateTime? newDeadline = await _slaService.CalculateSlaDeadlineAsync(ticket.Priority);
+            DateTime? newDeadline = await _slaService.CalculateSlaDeadlineAsync(ticket.Priority, ticket.OrganizationId);
             ticket.SlaDeadline = newDeadline;
         }
 

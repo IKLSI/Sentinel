@@ -13,19 +13,21 @@ public class SlaService
         _context = context;
     }
 
-    public Task<DateTime?> CalculateSlaDeadlineAsync(TicketPriority priority)
+    public async Task<DateTime?> CalculateSlaDeadlineAsync(TicketPriority priority, Guid organizationId)
     {
+        Organization? org = await _context.Organizations.FindAsync(organizationId);
+
         int businessHours = priority switch
         {
-            TicketPriority.Critical => 4,
-            TicketPriority.High => 8,
-            TicketPriority.Medium => 24,
-            TicketPriority.Low => 48,
-            _ => 24
+            TicketPriority.Critical => org?.SlaCriticalHours ?? 4,
+            TicketPriority.High => org?.SlaHighHours ?? 8,
+            TicketPriority.Medium => org?.SlaMediumHours ?? 24,
+            TicketPriority.Low => org?.SlaLowHours ?? 48,
+            _ => org?.SlaMediumHours ?? 24
         };
 
         DateTime deadline = AddBusinessHours(DateTime.UtcNow, businessHours);
-        return Task.FromResult<DateTime?>(deadline);
+        return deadline;
     }
 
     private static DateTime AddBusinessHours(DateTime utcStart, int hours)

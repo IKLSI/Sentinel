@@ -17,6 +17,7 @@ import { TechHealthPage } from '../features/techHealth/pages/TechHealthPage'
 import { ProjectsPage } from '../features/projects/pages/ProjectsPage'
 import { ProjectDetailPage } from '../features/techHealth/pages/ProjectDetailPage'
 import { ProfilePage } from '../features/users/pages/ProfilePage'
+import { SettingsPage } from '../features/settings/pages/SettingsPage'
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -40,6 +41,12 @@ const NonDeveloperRoute: React.FC<{ children: React.ReactNode }> = ({ children }
   return <>{children}</>
 }
 
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth()
+  if (user?.role !== 'Admin') return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
@@ -55,6 +62,7 @@ export const AppRoutes: React.FC = () => (
       <Route path="/invoices/:id" element={<NonDeveloperRoute><InvoiceDetailPage /></NonDeveloperRoute>} />
       <Route path="/tech-health" element={<TechHealthPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   </Routes>

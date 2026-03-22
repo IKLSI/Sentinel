@@ -1,0 +1,601 @@
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import { AppModal } from '../../../components/AppModal'
+import { StatusChip } from '../../../components/StatusChip'
+import { useAuth } from '../../auth/hooks/useAuth'
+import { useToast } from '../../../hooks/useToast'
+import { inviteUser, getUsers, toggleUserActive } from '../../users/api/users'
+import {
+  getSlaSettings, updateSlaSettings, SlaSettings,
+  getOrganizationSettings, updateOrganizationSettings, OrganizationSettings,
+} from '../api/settings'
+import { User, UserRole } from '../../../types'
+import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined'
+import SearchOutlined from '@mui/icons-material/SearchOutlined'
+import BlockOutlined from '@mui/icons-material/BlockOutlined'
+import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
+import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined'
+import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
+import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
+
+import { formatDistanceToNow } from 'date-fns'
+import { fr } from 'date-fns/locale'
+
+const ROLE_LABELS: Record<string, string> = {
+  Admin: 'Administrateur', Developer: 'Développeur',
+}
+const ROLE_VARIANTS: Record<string, 'red' | 'orange' | 'blue'> = {
+  Admin: 'red', Developer: 'blue',
+}
+
+const TIMEZONES = [
+  { value: 'Europe/Paris',    label: 'Europe / Paris (CET)' },
+  { value: 'Europe/London',   label: 'Europe / Londres (GMT)' },
+  { value: 'Europe/Berlin',   label: 'Europe / Berlin (CET)' },
+  { value: 'Europe/Madrid',   label: 'Europe / Madrid (CET)' },
+  { value: 'Europe/Rome',     label: 'Europe / Rome (CET)' },
+  { value: 'Europe/Zurich',   label: 'Europe / Zurich (CET)' },
+  { value: 'America/New_York',    label: 'Amérique / New York (EST)' },
+  { value: 'America/Chicago',     label: 'Amérique / Chicago (CST)' },
+  { value: 'America/Los_Angeles', label: 'Amérique / Los Angeles (PST)' },
+  { value: 'America/Sao_Paulo',   label: 'Amérique / São Paulo (BRT)' },
+  { value: 'Asia/Tokyo',      label: 'Asie / Tokyo (JST)' },
+  { value: 'Asia/Shanghai',   label: 'Asie / Shanghai (CST)' },
+  { value: 'Asia/Dubai',      label: 'Asie / Dubaï (GST)' },
+  { value: 'Australia/Sydney', label: 'Australie / Sydney (AEST)' },
+  { value: 'UTC',             label: 'UTC' },
+]
+
+function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
+  if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  const pages: (number | '...')[] = [1, 2]
+  if (page > 3) pages.push('...')
+  if (page > 2 && page < totalPages) pages.push(page)
+  if (page < totalPages - 1) pages.push('...')
+  if (!pages.includes(totalPages)) pages.push(totalPages)
+  return pages
+}
+
+const navBtnSx = (disabled: boolean) => ({
+  all: 'unset' as const,
+  cursor: disabled ? 'default' : 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  gap: '6px', height: '30px', px: '10px',
+  borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+  color: disabled ? 'var(--muted)' : 'var(--text-secondary)',
+  background: 'var(--s2)', border: '1px solid var(--border)',
+  opacity: disabled ? 0.35 : 1,
+  pointerEvents: disabled ? 'none' : 'auto',
+  transition: 'background 0.12s, color 0.12s',
+  ...(!disabled && { '&:hover': { background: 'var(--s3)', color: 'var(--text)' } }),
+})
+
+const pageBtnSx = (active: boolean) => ({
+  all: 'unset' as const,
+  cursor: active ? 'default' : 'pointer',
+  minWidth: '30px', height: '30px',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  borderRadius: '7px', fontSize: '12px', fontWeight: active ? 700 : 500,
+  color: active ? '#fff' : 'var(--text-secondary)',
+  background: active ? 'var(--accent)' : 'transparent',
+  boxShadow: active ? '0 2px 8px rgba(99,102,241,0.3)' : 'none',
+  transition: 'background 0.12s, color 0.12s',
+  ...(!active && { '&:hover': { background: 'var(--s2)', color: 'var(--text)' } }),
+})
+
+const MemberPagination: React.FC<{ page: number; totalPages: number; total: number; onChange: (p: number) => void }> = ({ page, totalPages, total, onChange }) => {
+  const pages = getPageNumbers(page, totalPages)
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderTop: '1px solid var(--border)', flexShrink: 0, background: 'var(--s2)' }}>
+      <Box sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+        {total} membre{total > 1 ? 's' : ''}
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>← Précédent</Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', mx: '2px' }}>
+          {pages.map((p, i) =>
+            p === '...'
+              ? <Box key={`e-${i}`} sx={{ minWidth: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>·</Box>
+              : <Box key={p} component="button" sx={pageBtnSx(p === page)} onClick={() => p !== page && onChange(p as number)}>{p}</Box>
+          )}
+        </Box>
+        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>Suivant →</Box>
+      </Box>
+    </Box>
+  )
+}
+
+const inp = {
+  width: '100%', display: 'block', boxSizing: 'border-box',
+  background: 'var(--s2)', border: '1px solid var(--border)',
+  borderRadius: '6px', padding: '6px 10px',
+  fontSize: '12px', color: 'var(--text)', fontFamily: 'inherit',
+  outline: 'none', transition: 'border-color 0.15s, box-shadow 0.15s',
+  '&:focus': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
+} as const
+
+
+const CARD_SX = {
+  background: 'var(--s1)',
+  border: '1px solid var(--border)',
+  borderRadius: '12px',
+  overflow: 'hidden',
+} as const
+
+function CardHeader({ label }: { label: string }) {
+  return (
+    <Box sx={{
+      px: '16px', minHeight: '40px',
+      display: 'flex', alignItems: 'center',
+      borderBottom: '1px solid var(--border)',
+      background: 'var(--s2)',
+    }}>
+      <Box sx={{ fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        {label}
+      </Box>
+    </Box>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <Box sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', mb: '5px', letterSpacing: '0.01em' }}>{children}</Box>
+}
+
+const SLA_PRIORITIES = [
+  { key: 'criticalHours' as keyof SlaSettings, label: 'Critique', color: '#ef4444', bg: 'rgba(239,68,68,0.07)', desc: 'Service bloqué' },
+  { key: 'highHours'     as keyof SlaSettings, label: 'Haute',    color: '#f97316', bg: 'rgba(249,115,22,0.07)', desc: 'Impact majeur' },
+  { key: 'mediumHours'   as keyof SlaSettings, label: 'Moyenne',  color: '#eab308', bg: 'rgba(234,179,8,0.07)',  desc: 'Gêne fonctionnelle' },
+  { key: 'lowHours'      as keyof SlaSettings, label: 'Basse',    color: '#22c55e', bg: 'rgba(34,197,94,0.07)',  desc: 'Amélioration' },
+]
+
+type Tab = 'members' | 'organisation'
+
+const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+  { id: 'organisation', label: 'Organisation', icon: BusinessOutlined },
+  { id: 'members',      label: 'Membres',      icon: PeopleOutlined   },
+]
+
+export const SettingsPage: React.FC = () => {
+  const { user } = useAuth()
+  const { showToast } = useToast()
+
+  const [activeTab, setActiveTab] = useState<Tab>('organisation')
+
+  // ── Membres
+  const [members, setMembers] = useState<User[]>([])
+  const [loadingMembers, setLoadingMembers] = useState(true)
+  const [memberSearch, setMemberSearch] = useState('')
+  const [memberRoleFilter, setMemberRoleFilter] = useState('all')
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const tableWrapRef = useRef<HTMLDivElement>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [inv, setInv] = useState({ firstName: '', lastName: '', email: '', role: 'Developer' as UserRole, password: '' })
+  const [submitting, setSubmitting] = useState(false)
+
+  // ── Organisation
+  const [org, setOrg] = useState<OrganizationSettings | null>(null)
+  const [orgForm, setOrgForm] = useState({ name: '', timezone: 'Europe/Paris' })
+  const [loadingOrg, setLoadingOrg] = useState(true)
+  const [savingOrg, setSavingOrg] = useState(false)
+
+  // ── SLA
+  const [sla, setSla] = useState<SlaSettings>({ criticalHours: 4, highHours: 8, mediumHours: 24, lowHours: 48 })
+  const [savedSla, setSavedSla] = useState<SlaSettings>({ criticalHours: 4, highHours: 8, mediumHours: 24, lowHours: 48 })
+  const [loadingSla, setLoadingSla] = useState(true)
+  const [savingSla, setSavingSla] = useState(false)
+
+  useEffect(() => {
+    const el = tableWrapRef.current
+    if (!el) return
+    const measure = () => setPageSize(Math.max(1, Math.floor((el.clientHeight - 52 - 41) / 52)))
+    measure()
+    const obs = new ResizeObserver(measure)
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const loadMembers = useCallback(async () => {
+    setLoadingMembers(true)
+    try { setMembers((await getUsers()).items) }
+    catch { showToast('Impossible de charger les membres', 'error') }
+    finally { setLoadingMembers(false) }
+  }, [showToast])
+
+  useEffect(() => { loadMembers() }, [loadMembers])
+
+  useEffect(() => {
+    Promise.all([getOrganizationSettings(), getSlaSettings()])
+      .then(([o, s]) => {
+        setOrg(o)
+        setOrgForm({ name: o.name, timezone: o.timezone })
+        setSla(s); setSavedSla(s)
+      })
+      .catch(() => showToast('Impossible de charger les paramètres', 'error'))
+      .finally(() => { setLoadingOrg(false); setLoadingSla(false) })
+  }, [])
+
+  useEffect(() => { setPage(1) }, [memberSearch, memberRoleFilter])
+
+  const filteredMembers = useMemo(() => {
+    let list = members
+    if (memberSearch.trim()) {
+      const q = memberSearch.toLowerCase()
+      list = list.filter(m =>
+        `${m.firstName} ${m.lastName}`.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q)
+      )
+    }
+    if (memberRoleFilter !== 'all') list = list.filter(m => m.role === memberRoleFilter)
+    return list
+  }, [members, memberSearch, memberRoleFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize))
+  const paginatedMembers = filteredMembers.slice((page - 1) * pageSize, page * pageSize)
+
+  const handleToggleActive = async (memberId: string, currentlyActive: boolean) => {
+    setTogglingId(memberId)
+    try {
+      await toggleUserActive(memberId, !currentlyActive)
+      setMembers(prev => prev.map(m => m.id === memberId ? { ...m, isActive: !currentlyActive } : m))
+    } catch { showToast('Erreur lors de la modification', 'error') }
+    finally { setTogglingId(null) }
+  }
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inv.email || !inv.firstName || !inv.password) { showToast('Champs obligatoires manquants', 'warning'); return }
+    setSubmitting(true)
+    try {
+      await inviteUser(inv)
+      showToast('Membre ajouté', 'success')
+      setInviteOpen(false)
+      setInv({ firstName: '', lastName: '', email: '', role: 'Developer', password: '' })
+      loadMembers()
+    } catch { showToast("Erreur lors de l'invitation", 'error') }
+    finally { setSubmitting(false) }
+  }
+
+  const handleSaveOrg = async () => {
+    if (!orgForm.name.trim()) { showToast('Le nom est requis', 'warning'); return }
+    setSavingOrg(true)
+    try {
+      const updated = await updateOrganizationSettings(orgForm)
+      setOrg(updated)
+      setOrgForm({ name: updated.name, timezone: updated.timezone })
+      showToast('Organisation mise à jour', 'success')
+    } catch { showToast('Erreur lors de la mise à jour', 'error') }
+    finally { setSavingOrg(false) }
+  }
+
+  const handleSaveSla = async () => {
+    setSavingSla(true)
+    try {
+      const updated = await updateSlaSettings(sla)
+      setSla(updated); setSavedSla(updated)
+      showToast('Paramètres SLA sauvegardés', 'success')
+    } catch { showToast('Erreur lors de la sauvegarde', 'error') }
+    finally { setSavingSla(false) }
+  }
+
+  const maxSla = Math.max(sla.criticalHours, sla.highHours, sla.mediumHours, sla.lowHours)
+  const slaUnchanged = sla.criticalHours === savedSla.criticalHours && sla.highHours === savedSla.highHours && sla.mediumHours === savedSla.mediumHours && sla.lowHours === savedSla.lowHours
+  const orgUnchanged = org ? (orgForm.name === org.name && orgForm.timezone === org.timezone) : true
+
+  return (
+    <>
+      <Box className="page-enter" sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+
+        {/* ── Tab strip ── */}
+        <Box sx={{ px: '28px', pt: '28px', pb: 0, flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', borderBottom: '1px solid var(--border)' }}>
+            {TABS.map(tab => {
+              const Icon = tab.icon
+              const active = activeTab === tab.id
+              return (
+                <Box key={tab.id} component="button" onClick={() => setActiveTab(tab.id)} sx={{
+                  all: 'unset', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  px: '14px', pb: '11px', pt: '2px',
+                  fontSize: '13px', fontWeight: active ? 600 : 450,
+                  color: active ? 'var(--text)' : 'var(--muted)',
+                  position: 'relative', transition: 'color 0.12s',
+                  '&:hover': !active ? { color: 'var(--text-secondary)' } : {},
+                  '&::after': {
+                    content: '""', position: 'absolute', bottom: -1, left: 0, right: 0,
+                    height: '2px', borderRadius: '2px 2px 0 0',
+                    background: active ? 'var(--accent)' : 'transparent', transition: 'background 0.15s',
+                  },
+                }}>
+                  <Icon sx={{ fontSize: 14, color: active ? 'var(--accent)' : 'inherit', transition: 'color 0.12s' }} />
+                  {tab.label}
+                </Box>
+              )
+            })}
+          </Box>
+        </Box>
+
+        {/* ── Contenu ── */}
+        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: '20px 28px 20px' }}>
+
+          {/* ════ MEMBRES ════ */}
+          <Box sx={{ display: activeTab === 'members' ? 'contents' : 'none' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '12px', flexShrink: 0 }}>
+              <Box sx={{
+                flex: '0 0 240px', display: 'flex', alignItems: 'center', gap: '8px',
+                background: 'var(--s1)', border: '1px solid var(--border)',
+                borderRadius: '8px', px: '10px', height: '32px',
+                '&:focus-within': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
+              }}>
+                <SearchOutlined sx={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }} />
+                <Box component="input" placeholder="Rechercher…"
+                  sx={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '12px', color: 'var(--text)', fontFamily: 'inherit' }}
+                  value={memberSearch}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMemberSearch(e.target.value)} />
+              </Box>
+              <Box sx={{ position: 'relative' }}>
+                <Box component="select"
+                  sx={{ ...inp, height: '32px', py: 0, pr: '26px', pl: '10px', cursor: 'pointer', appearance: 'none', minWidth: '130px', borderRadius: '8px' }}
+                  value={memberRoleFilter}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMemberRoleFilter(e.target.value)}>
+                  <option value="all">Tous les rôles</option>
+                  <option value="Admin">Administrateur</option>
+                  <option value="Developer">Développeur</option>
+                </Box>
+                <KeyboardArrowDownOutlined sx={{ fontSize: 13, color: 'var(--muted)', position: 'absolute', right: '7px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </Box>
+              <Box sx={{ flex: 1 }} />
+              <Button variant="contained" size="small" onClick={() => setInviteOpen(true)} startIcon={<PersonAddOutlined sx={{ fontSize: '13px !important' }} />}>
+                Ajouter un membre
+              </Button>
+            </Box>
+
+            <Box ref={tableWrapRef} sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+              {loadingMembers ? (
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
+              ) : filteredMembers.length === 0 ? (
+                <Box className="empty-state"><Box className="empty-state-title">Aucun membre trouvé</Box></Box>
+              ) : (
+                <>
+                  <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                    <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <Box component="thead">
+                        <Box component="tr" sx={{ borderBottom: '1px solid var(--border)', background: 'var(--s2)' }}>
+                          {['Membre', 'Rôle', 'Statut', 'Dernière connexion', ''].map(h => (
+                            <Box component="th" key={h} sx={{ px: '16px', py: '10px', textAlign: 'left', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</Box>
+                          ))}
+                        </Box>
+                      </Box>
+                      <Box component="tbody">
+                        {paginatedMembers.map(m => (
+                          <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' }, transition: 'background 0.1s' }}>
+                            <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Box sx={{ width: 28, height: 28, borderRadius: '7px', flexShrink: 0, background: 'linear-gradient(135deg, var(--accent), #818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                                  {m.firstName[0]}{m.lastName[0]}
+                                </Box>
+                                <Box>
+                                  <Box sx={{ fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{m.firstName} {m.lastName}</Box>
+                                  <Box sx={{ color: 'var(--muted2)', fontSize: '11px' }}>{m.email}</Box>
+                                </Box>
+                              </Box>
+                            </Box>
+                            <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                              <StatusChip variant={ROLE_VARIANTS[m.role] ?? 'blue'}>{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
+                            </Box>
+                            <Box component="td" sx={{ px: '16px', py: '10px' }}>
+                              <StatusChip variant={m.isActive ? 'blue' : 'orange'}>{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
+                            </Box>
+                            <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
+                              {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
+                            </Box>
+                            <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right' }}>
+                              {m.id !== user?.id && (
+                                togglingId === m.id ? <CircularProgress size={13} /> :
+                                <Box component="button" onClick={() => handleToggleActive(m.id, m.isActive)} title={m.isActive ? 'Désactiver' : 'Activer'}
+                                  sx={{ all: 'unset', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '7px', color: m.isActive ? 'var(--red)' : 'var(--green)', transition: 'background 0.12s', '&:hover': m.isActive ? { background: 'rgba(239,68,68,0.08)' } : { background: 'rgba(34,197,94,0.08)' } }}>
+                                  {m.isActive ? <BlockOutlined sx={{ fontSize: 14 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 14 }} />}
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  </Box>
+                  <MemberPagination page={page} totalPages={totalPages} total={filteredMembers.length} onChange={setPage} />
+                </>
+              )}
+            </Box>
+          </Box>
+
+          {/* ════ ORGANISATION ════ */}
+          {activeTab === 'organisation' && (
+            <Box sx={{ overflow: 'auto', flex: 1, pr: '4px' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px', pb: '8px' }}>
+
+                {/* ── Card Identité ── */}
+                <Box sx={CARD_SX}>
+                  <CardHeader label="Identité" />
+                  {loadingOrg ? (
+                    <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
+                  ) : (
+                    <>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', px: '16px', py: '12px', borderBottom: '1px solid var(--border)' }}>
+                        <Box>
+                          <FieldLabel>Nom de l'organisation</FieldLabel>
+                          <Box component="input" type="text" sx={inp}
+                            value={orgForm.name}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgForm(f => ({ ...f, name: e.target.value }))} />
+                        </Box>
+                        <Box>
+                          <FieldLabel>Fuseau horaire</FieldLabel>
+                          <Box sx={{ position: 'relative' }}>
+                            <Box component="select" sx={{ ...inp, pr: '28px', cursor: 'pointer', appearance: 'none' }}
+                              value={orgForm.timezone}
+                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOrgForm(f => ({ ...f, timezone: e.target.value }))}>
+                              {TIMEZONES.map(tz => (
+                                <option key={tz.value} value={tz.value}>{tz.label}</option>
+                              ))}
+                            </Box>
+                            <KeyboardArrowDownOutlined sx={{ fontSize: 14, color: 'var(--muted)', position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                          </Box>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ px: '16px', py: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button variant="contained" size="small" onClick={handleSaveOrg} disabled={savingOrg || orgUnchanged} sx={{ minWidth: '110px' }}>
+                          {savingOrg ? 'Sauvegarde…' : 'Sauvegarder'}
+                        </Button>
+                      </Box>
+                    </>
+                  )}
+                </Box>
+
+                {/* ── Card SLA ── */}
+                <Box sx={CARD_SX}>
+                  <CardHeader label="Délais par priorité" />
+                  {loadingSla ? (
+                    <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
+                  ) : (
+                    <>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)', borderBottom: '1px solid var(--border)' }}>
+                        {SLA_PRIORITIES.map(({ key, label, color, bg, desc }) => {
+                          const hours = sla[key]
+                          const pct = Math.round((hours / maxSla) * 100)
+                          const step = hours >= 48 ? 8 : hours >= 12 ? 4 : 1
+                          return (
+                            <Box key={key} sx={{ background: 'var(--s1)', px: '16px', py: '14px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: `3px solid ${color}` }}>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '6px', mb: '8px' }}>
+                                  <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>{label}</Box>
+                                  <Box sx={{ fontSize: '11px', color: 'var(--muted)' }}>— {desc}</Box>
+                                </Box>
+                                <Box sx={{ height: 3, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
+                                  <Box sx={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${color}70, ${color})`, transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)' }} />
+                                </Box>
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                                {/* − */}
+                                <Box component="button" type="button"
+                                  onClick={() => setSla(prev => ({ ...prev, [key]: Math.max(1, prev[key] - step) }))}
+                                  sx={{
+                                    all: 'unset', cursor: 'pointer', width: 26, height: 26,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: '7px', border: `1px solid ${color}30`,
+                                    background: bg, color, fontSize: '14px', fontWeight: 500,
+                                    transition: 'background 0.12s, border-color 0.12s',
+                                    '&:hover': { background: `${color}18`, borderColor: `${color}60` },
+                                    '&:active': { background: `${color}28` },
+                                  }}
+                                >−</Box>
+                                {/* value */}
+                                <Box sx={{
+                                  minWidth: '70px', height: 26, px: '8px',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
+                                  borderRadius: '7px', border: `1px solid ${color}30`, background: bg,
+                                }}>
+                                  <Box component="input" type="number" min={1} max={999}
+                                    sx={{
+                                      width: '36px', background: 'transparent', border: 'none', outline: 'none',
+                                      fontSize: '13px', fontWeight: 700, color, fontFamily: 'var(--font-mono)',
+                                      textAlign: 'center', p: 0,
+                                      'MozAppearance': 'textfield',
+                                      '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': { display: 'none' },
+                                    }}
+                                    value={hours}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                      const v = parseInt(e.target.value)
+                                      if (!isNaN(v) && v > 0) setSla(prev => ({ ...prev, [key]: v }))
+                                    }}
+                                  />
+                                  <Box sx={{ fontSize: '10px', fontWeight: 600, color, fontFamily: 'var(--font-mono)', opacity: 0.6 }}>h</Box>
+                                </Box>
+                                {/* + */}
+                                <Box component="button" type="button"
+                                  onClick={() => setSla(prev => ({ ...prev, [key]: Math.min(999, prev[key] + step) }))}
+                                  sx={{
+                                    all: 'unset', cursor: 'pointer', width: 26, height: 26,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: '7px', border: `1px solid ${color}30`,
+                                    background: bg, color, fontSize: '14px', fontWeight: 500,
+                                    transition: 'background 0.12s, border-color 0.12s',
+                                    '&:hover': { background: `${color}18`, borderColor: `${color}60` },
+                                    '&:active': { background: `${color}28` },
+                                  }}
+                                >+</Box>
+                              </Box>
+                            </Box>
+                          )
+                        })}
+                      </Box>
+
+                      <Box sx={{ px: '16px', py: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+                          S'applique aux nouveaux tickets
+                        </Box>
+                        <Button variant="contained" size="small" onClick={handleSaveSla} disabled={savingSla || slaUnchanged} sx={{ minWidth: '110px' }}>
+                          {savingSla ? 'Sauvegarde…' : 'Sauvegarder'}
+                        </Button>
+                      </Box>
+                    </>
+                  )}
+                </Box>
+
+              </Box>
+            </Box>
+          )}
+
+        </Box>
+      </Box>
+
+      {/* ════ MODAL INVITATION ════ */}
+      <AppModal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Ajouter un membre"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setInviteOpen(false)}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting}>
+              {submitting ? 'Envoi…' : 'Ajouter'}
+            </Button>
+          </>
+        }>
+        <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Box>
+              <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Prénom *</Box>
+              <Box component="input" type="text" sx={inp} value={inv.firstName} placeholder="Prénom"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, firstName: e.target.value }))} />
+            </Box>
+            <Box>
+              <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Nom</Box>
+              <Box component="input" type="text" sx={inp} value={inv.lastName} placeholder="Nom"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, lastName: e.target.value }))} />
+            </Box>
+          </Box>
+          <Box>
+            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>E-mail *</Box>
+            <Box component="input" type="email" sx={inp} value={inv.email} placeholder="prenom.nom@exemple.com"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
+          </Box>
+          <Box>
+            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Rôle</Box>
+            <Box component="select" sx={inp} value={inv.role}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
+              <option value="Admin">Administrateur</option>
+              <option value="Developer">Développeur</option>
+            </Box>
+          </Box>
+          <Box>
+            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Mot de passe temporaire *</Box>
+            <Box component="input" type="password" sx={inp} value={inv.password} placeholder="Min. 8 caractères"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, password: e.target.value }))} />
+            <Box sx={{ fontSize: '10px', color: 'var(--muted)', mt: '4px' }}>Le membre pourra le modifier depuis son profil.</Box>
+          </Box>
+        </Box>
+      </AppModal>
+    </>
+  )
+}
