@@ -148,7 +148,9 @@ export const TimeTrackingPage: React.FC = () => {
   );
 
   const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
-  const weekPct = Math.min(100, Math.round((totalMinutes / WEEK_TARGET) * 100));
+  const contributors = useMemo(() => new Set(weekEntries.map((e) => e.userId)).size, [weekEntries]);
+  const effectiveTarget = isAdmin && contributors > 1 ? contributors * WEEK_TARGET : WEEK_TARGET;
+  const weekPct = Math.min(100, Math.round((totalMinutes / effectiveTarget) * 100));
 
   const statsByProject = useMemo(() => {
     const map = new Map<string, { name: string; minutes: number }>();
@@ -252,7 +254,7 @@ export const TimeTrackingPage: React.FC = () => {
     <>
 
 
-      <Box className="page-enter" sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Box className="page-enter" sx={{ p: "36px 24px 20px", display: "flex", flexDirection: "column", gap: "16px", height: "100vh", overflow: "hidden" }}>
 
         {/* ── Card semaine ── */}
         <Box sx={{
@@ -260,6 +262,7 @@ export const TimeTrackingPage: React.FC = () => {
           border: "1px solid var(--border)",
           borderRadius: "12px",
           overflow: "hidden",
+          flexShrink: 0,
         }}>
           {/* Navigation */}
           <Box sx={{
@@ -342,11 +345,6 @@ export const TimeTrackingPage: React.FC = () => {
               }}>
                 {formatDuration(totalMinutes)}
               </Box>
-              {weekEntries.length > 0 && (
-                <Box sx={{ fontSize: "11px", color: "var(--muted)", fontWeight: 500 }}>
-                  · {weekEntries.length} saisie{weekEntries.length > 1 ? "s" : ""}
-                </Box>
-              )}
             </Box>
             <Box sx={{ flex: 1, height: "4px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
               <Box sx={{
@@ -447,13 +445,14 @@ export const TimeTrackingPage: React.FC = () => {
         </Box>
 
         {/* ── Répartition par projet ── */}
-        {statsByProject.length > 0 && (
+        {statsByProject.some((p) => p.name !== "Sans projet") && (
           <Box sx={{
             background: "var(--s1)",
             border: "1px solid var(--border)",
             borderRadius: "12px",
             px: "16px", py: "14px",
             display: "flex", flexDirection: "column", gap: "10px",
+            flexShrink: 0,
           }}>
             <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", mb: "2px" }}>
               Par projet
@@ -497,29 +496,21 @@ export const TimeTrackingPage: React.FC = () => {
           border: "1px solid var(--border)",
           borderRadius: "12px",
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
         }}>
           <Box sx={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             px: "16px", py: "10px", minHeight: "44px",
             borderBottom: "1px solid var(--border)",
+            flexShrink: 0,
           }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 Journal
               </Box>
-              {isAdmin && weekEntries.length > 0 && (() => {
-                const contributors = new Set(weekEntries.map((e) => e.userId)).size;
-                return (
-                  <Box sx={{
-                    fontSize: "10px", fontWeight: 600,
-                    background: "var(--s3)", color: "var(--muted2)",
-                    px: "7px", py: "1px", borderRadius: "4px",
-                    border: "1px solid var(--border)",
-                  }}>
-                    {contributors} membre{contributors > 1 ? "s" : ""}
-                  </Box>
-                );
-              })()}
             </Box>
             <Box
               component="button"
@@ -543,17 +534,17 @@ export const TimeTrackingPage: React.FC = () => {
           </Box>
 
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: "40px" }}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: "40px", flex: 1 }}>
               <CircularProgress size={22} />
             </Box>
           ) : weekEntries.length === 0 ? (
-            <Box className="empty-state">
+            <Box className="empty-state" sx={{ flex: 1 }}>
               <Box className="empty-state-icon"><AccessTimeOutlined sx={{ fontSize: 36 }} /></Box>
               <Box className="empty-state-title">Aucune saisie cette semaine</Box>
               <Box className="empty-state-subtitle">Cliquez sur un jour dans le calendrier pour ajouter du temps</Box>
             </Box>
           ) : (
-            <Box>
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
               {weekDays
                 .filter((d) => (entriesByDay.get(format(d, "yyyy-MM-dd")) ?? []).length > 0)
                 .map((day, groupIdx) => {
@@ -613,7 +604,7 @@ export const TimeTrackingPage: React.FC = () => {
                           ? getProjectColor(entry.techProjectName)
                           : "var(--border2)";
                         const isOwn = entry.userId === user?.id;
-                        const canEdit = isAdmin || isOwn;
+                        const canEdit = isOwn;
                         return (
                           <Box
                             key={entry.id}
@@ -725,6 +716,21 @@ export const TimeTrackingPage: React.FC = () => {
                 })}
             </Box>
           )}
+          {/* ── Bandeau bas ── */}
+          <Box sx={{
+            display: "flex", alignItems: "center",
+            px: "16px", py: "8px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--s2)",
+            flexShrink: 0,
+            gap: "16px",
+          }}>
+            {contributors > 0 && (
+              <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                {contributors} membre{contributors > 1 ? "s" : ""}
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
 

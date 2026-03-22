@@ -113,8 +113,8 @@ function extractVulns(detail: ProjectDetailDto): Vuln[] {
   );
 }
 
-const thSx = { fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", textAlign: "left", padding: "10px 16px", borderBottom: "1px solid var(--border)", fontWeight: 500 }
-const tdBase = { padding: "11px 16px", borderBottom: "1px solid var(--border)" }
+const thSx = { fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", textAlign: "left", padding: "10px 10px", borderBottom: "1px solid var(--border)", fontWeight: 500 }
+const tdBase = { padding: "10px 10px", borderBottom: "1px solid var(--border)" }
 
 const STATUS_CONFIG: Record<
   DepStatus,
@@ -285,14 +285,22 @@ const DependenciesTable: React.FC<{ deps: Dependency[] }> = ({ deps }) => {
         overflowX: "auto",
       }}
     >
-      <Box component="table" sx={{ width: "100%", minWidth: "620px", borderCollapse: "collapse" }}>
+      <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+        <Box component="colgroup">
+          <Box component="col" sx={{ width: "auto" }} />
+          <Box component="col" sx={{ width: "120px" }} />
+          <Box component="col" sx={{ width: "130px" }} />
+          <Box component="col" sx={{ width: "90px" }} />
+          <Box component="col" sx={{ width: "85px" }} />
+          <Box component="col" sx={{ width: "80px" }} />
+        </Box>
         <Box component="thead">
           <Box component="tr" sx={{ background: "var(--s2)" }}>
             {[
               "Package",
-              "Version installée",
-              "Dernière version",
-              "Écosystème",
+              "Installée",
+              "Dernière",
+              "Éco.",
               "Type",
               "État",
             ].map((h) => (
