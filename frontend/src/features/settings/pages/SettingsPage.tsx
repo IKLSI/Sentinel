@@ -465,44 +465,30 @@ export const SettingsPage: React.FC = () => {
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)', borderBottom: '1px solid var(--border)' }}>
                         {SLA_PRIORITIES.map(({ key, label, color, bg, desc }) => {
                           const hours = sla[key]
-                          const pct = Math.round((hours / maxSla) * 100)
-                          const step = hours >= 48 ? 8 : hours >= 12 ? 4 : 1
+                          const dec = () => setSla(p => ({ ...p, [key]: Math.max(1, p[key] - 1) }))
+                          const inc = () => setSla(p => ({ ...p, [key]: Math.min(999, p[key] + 1) }))
                           return (
-                            <Box key={key} sx={{ background: 'var(--s1)', px: '16px', py: '14px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: `3px solid ${color}` }}>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '6px', mb: '8px' }}>
-                                  <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>{label}</Box>
-                                  <Box sx={{ fontSize: '11px', color: 'var(--muted)' }}>— {desc}</Box>
-                                </Box>
-                                <Box sx={{ height: 3, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
-                                  <Box sx={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${color}70, ${color})`, transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)' }} />
-                                </Box>
+                            <Box key={key} sx={{ background: 'var(--s1)', px: '16px', py: '9px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <Box sx={{ width: 3, height: 24, borderRadius: 2, background: color, flexShrink: 0, opacity: 0.7 }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Box sx={{ fontSize: '12px', fontWeight: 700, color, mb: '1px' }}>{label}</Box>
+                                <Box sx={{ fontSize: '11px', color: 'var(--muted)' }}>{desc}</Box>
                               </Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                                {/* − */}
-                                <Box component="button" type="button"
-                                  onClick={() => setSla(prev => ({ ...prev, [key]: Math.max(1, prev[key] - step) }))}
-                                  sx={{
-                                    all: 'unset', cursor: 'pointer', width: 26, height: 26,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: '7px', border: `1px solid ${color}30`,
-                                    background: bg, color, fontSize: '14px', fontWeight: 500,
-                                    transition: 'background 0.12s, border-color 0.12s',
-                                    '&:hover': { background: `${color}18`, borderColor: `${color}60` },
-                                    '&:active': { background: `${color}28` },
-                                  }}
-                                >−</Box>
-                                {/* value */}
-                                <Box sx={{
-                                  minWidth: '70px', height: 26, px: '8px',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
-                                  borderRadius: '7px', border: `1px solid ${color}30`, background: bg,
-                                }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Box component="button" type="button" onClick={dec} sx={{
+                                  all: 'unset', cursor: 'pointer',
+                                  width: 22, height: 22, borderRadius: '50%',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  border: `1.5px solid ${color}35`, color, fontSize: '14px', lineHeight: 1,
+                                  transition: 'all 0.15s',
+                                  '&:hover': { background: bg, borderColor: color, boxShadow: `0 0 0 3px ${color}12` },
+                                  '&:active': { transform: 'scale(0.9)' },
+                                }}>−</Box>
+                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '2px', minWidth: '36px', justifyContent: 'center' }}>
                                   <Box component="input" type="number" min={1} max={999}
                                     sx={{
-                                      width: '36px', background: 'transparent', border: 'none', outline: 'none',
-                                      fontSize: '13px', fontWeight: 700, color, fontFamily: 'var(--font-mono)',
-                                      textAlign: 'center', p: 0,
+                                      width: '28px', background: 'transparent', border: 'none', outline: 'none', p: 0,
+                                      fontSize: '14px', fontWeight: 800, color, fontFamily: 'var(--font-mono)', textAlign: 'center',
                                       'MozAppearance': 'textfield',
                                       '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': { display: 'none' },
                                     }}
@@ -512,21 +498,17 @@ export const SettingsPage: React.FC = () => {
                                       if (!isNaN(v) && v > 0) setSla(prev => ({ ...prev, [key]: v }))
                                     }}
                                   />
-                                  <Box sx={{ fontSize: '10px', fontWeight: 600, color, fontFamily: 'var(--font-mono)', opacity: 0.6 }}>h</Box>
+                                  <Box sx={{ fontSize: '10px', fontWeight: 600, color, opacity: 0.4, fontFamily: 'var(--font-mono)' }}>h</Box>
                                 </Box>
-                                {/* + */}
-                                <Box component="button" type="button"
-                                  onClick={() => setSla(prev => ({ ...prev, [key]: Math.min(999, prev[key] + step) }))}
-                                  sx={{
-                                    all: 'unset', cursor: 'pointer', width: 26, height: 26,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: '7px', border: `1px solid ${color}30`,
-                                    background: bg, color, fontSize: '14px', fontWeight: 500,
-                                    transition: 'background 0.12s, border-color 0.12s',
-                                    '&:hover': { background: `${color}18`, borderColor: `${color}60` },
-                                    '&:active': { background: `${color}28` },
-                                  }}
-                                >+</Box>
+                                <Box component="button" type="button" onClick={inc} sx={{
+                                  all: 'unset', cursor: 'pointer',
+                                  width: 22, height: 22, borderRadius: '50%',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  border: `1.5px solid ${color}35`, color, fontSize: '14px', lineHeight: 1,
+                                  transition: 'all 0.15s',
+                                  '&:hover': { background: bg, borderColor: color, boxShadow: `0 0 0 3px ${color}12` },
+                                  '&:active': { transform: 'scale(0.9)' },
+                                }}>+</Box>
                               </Box>
                             </Box>
                           )
