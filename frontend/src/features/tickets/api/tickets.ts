@@ -100,6 +100,18 @@ export const addComment = async (ticketId: string, content: string, isInternal =
   return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
+export const updateComment = async (ticketId: string, commentId: string, content: string): Promise<TicketComment> => {
+  const response = await apiClient.put<{ id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }>(
+    `/api/tickets/${ticketId}/comments/${commentId}`, { content }
+  )
+  const c = response.data
+  return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+}
+
+export const deleteComment = async (ticketId: string, commentId: string): Promise<void> => {
+  await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`)
+}
+
 export const changeStatus = async (ticketId: string, status: TicketStatus): Promise<Ticket> => {
   const response = await apiClient.patch<TicketDto>(`/api/tickets/${ticketId}/status`, { status })
   return mapTicketDto(response.data)

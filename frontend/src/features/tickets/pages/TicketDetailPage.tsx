@@ -3,22 +3,32 @@ import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { SlaTimer } from "../../../components/SlaTimer";
 import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import AddOutlined from "@mui/icons-material/AddOutlined";
-import { getTicket, addComment } from "../api/tickets";
+import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
+import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
+import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
+import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
+import BuildOutlined from "@mui/icons-material/BuildOutlined";
+import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
+import { getTicket, addComment, updateComment, deleteComment } from "../api/tickets";
 import { Ticket, TicketStatus } from "../../../types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useToast } from "../../../hooks/useToast";
+import { useAuth } from "../../auth/hooks/useAuth";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 
 const statusConfig: Record<TicketStatus, { label: string; color: string; bg: string }> = {
-  new:         { label: "Nouveau",  color: "#3b82f6", bg: "rgba(59,130,246,0.1)"  },
-  in_progress: { label: "En cours", color: "#f97316", bg: "rgba(249,115,22,0.1)"  },
-  testing:     { label: "En test",  color: "#a855f7", bg: "rgba(168,85,247,0.1)"  },
-  resolved:    { label: "Résolu",   color: "#22c55e", bg: "rgba(34,197,94,0.1)"   },
-  closed:      { label: "Fermé",    color: "#94a3b8", bg: "rgba(148,163,184,0.1)" },
+  new:         { label: "Nouveau",  color: "#818cf8", bg: "rgba(99,102,241,0.10)"   },
+  in_progress: { label: "En cours", color: "#f97316", bg: "rgba(249,115,22,0.10)"   },
+  testing:     { label: "En test",  color: "#06b6d4", bg: "rgba(6,182,212,0.10)"    },
+  resolved:    { label: "Résolu",   color: "#22c55e", bg: "rgba(34,197,94,0.10)"    },
+  closed:      { label: "Fermé",    color: "#7488aa", bg: "rgba(116,136,170,0.10)"  },
 };
 
 const priorityConfig: Record<
@@ -38,6 +48,22 @@ const typeLabels: Record<string, string> = {
   performance: "Performance",
   maintenance: "Maintenance",
   question: "Question",
+};
+
+const typeIcons: Record<string, React.ReactElement> = {
+  bug:         <BugReportOutlined sx={{ fontSize: 11 }} />,
+  feature:     <AutoFixHighOutlined sx={{ fontSize: 11 }} />,
+  security:    <SecurityOutlined sx={{ fontSize: 11 }} />,
+  performance: <SpeedOutlined sx={{ fontSize: 11 }} />,
+  maintenance: <BuildOutlined sx={{ fontSize: 11 }} />,
+  question:    <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
+};
+
+const priorityLevels: Record<string, number> = {
+  critical: 4,
+  high:     3,
+  medium:   2,
+  low:      1,
 };
 
 const Card: React.FC<{ title: string; action?: React.ReactNode; noPadding?: boolean; children: React.ReactNode }> = ({ title, action, noPadding, children }) => (
@@ -153,6 +179,7 @@ function fmtDuration(
 export const TicketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +189,13 @@ export const TicketDetailPage: React.FC = () => {
   const [comment, setComment] = useState("");
   const [commentPreview, setCommentPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [editCommentTarget, setEditCommentTarget] = useState<{ id: string; content: string } | null>(null);
+  const [editCommentValue, setEditCommentValue] = useState("");
+  const [editCommentPreview, setEditCommentPreview] = useState(false);
+  const [editCommentSaving, setEditCommentSaving] = useState(false);
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(null);
+  const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -177,6 +211,36 @@ export const TicketDetailPage: React.FC = () => {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleEditComment = async () => {
+    if (!ticket || !editCommentTarget || !editCommentValue.trim()) return;
+    setEditCommentSaving(true);
+    try {
+      const updated = await updateComment(ticket.id, editCommentTarget.id, editCommentValue);
+      setTicket((prev) => prev ? { ...prev, comments: prev.comments.map((c) => c.id === updated.id ? updated : c) } : prev);
+      setEditCommentTarget(null);
+      showToast("Commentaire modifié", "success");
+    } catch {
+      showToast("Erreur lors de la modification", "error");
+    } finally {
+      setEditCommentSaving(false);
+    }
+  };
+
+  const handleDeleteComment = async () => {
+    if (!ticket || !deleteCommentTarget) return;
+    setDeleteCommentLoading(true);
+    try {
+      await deleteComment(ticket.id, deleteCommentTarget);
+      setTicket((prev) => prev ? { ...prev, comments: prev.comments.filter((c) => c.id !== deleteCommentTarget) } : prev);
+      setDeleteCommentTarget(null);
+      showToast("Commentaire supprimé", "success");
+    } catch {
+      showToast("Erreur lors de la suppression", "error");
+    } finally {
+      setDeleteCommentLoading(false);
+    }
+  };
 
   const openCommentModal = () => {
     setComment("");
@@ -274,15 +338,22 @@ export const TicketDetailPage: React.FC = () => {
               {ticket.title}
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: pc.bg, border: `1px solid ${pc.color}22`, fontSize: "11px", fontWeight: 700, color: pc.color }}>
-                <Box sx={{ width: 5, height: 5, borderRadius: "50%", background: pc.color }} />
+              {/* Priorité — barres de niveau */}
+              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.15)", fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)" }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: '10px' }}>
+                  {[1,2,3,4].map(i => (
+                    <Box key={i} sx={{ width: '3px', height: `${4 + i * 1.5}px`, borderRadius: '1px', background: "currentColor", opacity: i <= (priorityLevels[ticket.priority] ?? 1) ? 1 : 0.2 }} />
+                  ))}
+                </Box>
                 {pc.label}
               </Box>
-              <Box sx={{ display: "inline-flex", alignItems: "center", px: "8px", py: "3px", borderRadius: "5px", background: "var(--s2)", border: "1px solid var(--border)", fontSize: "11px", fontWeight: 600, color: "var(--muted2)" }}>
+              {/* Type — icône */}
+              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.15)", fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)" }}>
+                {typeIcons[ticket.type]}
                 {typeLabels[ticket.type] ?? ticket.type}
               </Box>
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: sc.bg, border: `1px solid ${sc.color}38`, fontSize: "11px", fontWeight: 700, color: sc.color }}>
-                <Box sx={{ width: 5, height: 5, borderRadius: "50%", background: sc.color }} />
+              {/* Statut */}
+              <Box sx={{ display: "inline-flex", alignItems: "center", px: "8px", py: "3px", borderRadius: "5px", background: sc.bg, border: `1px solid ${sc.color}38`, fontSize: "11px", fontWeight: 700, color: sc.color }}>
                 {sc.label}
               </Box>
             </Box>
@@ -329,6 +400,19 @@ export const TicketDetailPage: React.FC = () => {
                         <Box sx={{ fontSize: "10px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
                           {format(new Date(c.createdAt), "dd MMM yyyy · HH:mm", { locale: fr })}
                         </Box>
+                        {user?.id === c.authorId && (
+                          <Box sx={{ display: "flex", gap: "2px", ml: "auto" }}>
+                            <Box component="button" onClick={() => { setEditCommentTarget({ id: c.id, content: c.content }); setEditCommentValue(c.content); setEditCommentPreview(false); }}
+                              sx={{ all: "unset", cursor: "pointer", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", color: "var(--muted)", transition: "background 0.12s, color 0.12s", "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" } }}>
+                              <EditOutlined sx={{ fontSize: 12 }} />
+                            </Box>
+
+                            <Box component="button" onClick={() => setDeleteCommentTarget(c.id)}
+                              sx={{ all: "unset", cursor: "pointer", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", color: "var(--muted)", transition: "background 0.12s, color 0.12s", "&:hover": { background: "var(--red-subtle)", color: "var(--red)" } }}>
+                              <DeleteOutlineOutlined sx={{ fontSize: 12 }} />
+                            </Box>
+                          </Box>
+                        )}
                       </Box>
                       <Box sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "0 8px 8px 8px", p: "8px 12px", ...mdSx, fontSize: "12px" }}>
                         <ReactMarkdown>{c.content}</ReactMarkdown>
@@ -372,14 +456,14 @@ export const TicketDetailPage: React.FC = () => {
 
               <Box sx={rowSx}>
                 <Box sx={rowLabelSx}>Temps passé</Box>
-                <Box sx={{ ...rowValueSx, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--accent)" }}>
+                <Box sx={{ ...rowValueSx, fontFamily: "var(--font-mono)", fontWeight: 600 }}>
                   {fmtDuration(null, ticket.timeSpentMinutes)}
                 </Box>
               </Box>
 
               {ticket.slaDeadline && (
                 <Box sx={rowSx}>
-                  <Box sx={rowLabelSx}>SLA</Box>
+                  <Box sx={rowLabelSx}>Échéance</Box>
                   <Box sx={rowValueSx}>
                     <SlaTimer deadline={ticket.slaDeadline} breached={ticket.slaBreached} />
                   </Box>
@@ -524,6 +608,58 @@ export const TicketDetailPage: React.FC = () => {
           )}
         </Box>
       </AppModal>
+
+      <AppModal
+        open={!!editCommentTarget}
+        onClose={() => !editCommentSaving && setEditCommentTarget(null)}
+        title="Modifier le commentaire"
+        actions={
+          <>
+            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setEditCommentTarget(null)} disabled={editCommentSaving}>Annuler</Button>
+            <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEditComment} disabled={!editCommentValue.trim() || editCommentSaving}>
+              {editCommentSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box sx={{ display: "flex", gap: "4px", background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "8px", p: "3px" }}>
+              {(["Éditer", "Aperçu"] as const).map((tab) => {
+                const active = tab === "Éditer" ? !editCommentPreview : editCommentPreview;
+                return (
+                  <Box key={tab} component="button" onClick={() => setEditCommentPreview(tab === "Aperçu")}
+                    sx={{ all: "unset", cursor: "pointer", px: "12px", height: "26px", fontSize: "11px", fontWeight: 600, borderRadius: "6px", display: "flex", alignItems: "center", background: active ? "var(--s1)" : "transparent", color: active ? "var(--text)" : "var(--muted)", boxShadow: active ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.12s" }}>
+                    {tab}
+                  </Box>
+                );
+              })}
+            </Box>
+            <Box sx={{ fontSize: "10px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Markdown supporté</Box>
+          </Box>
+          {editCommentPreview ? (
+            <Box sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "10px", p: "14px 16px", minHeight: "150px", ...mdSx }}>
+              {editCommentValue ? <ReactMarkdown>{editCommentValue}</ReactMarkdown> : <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>Aperçu vide</Box>}
+            </Box>
+          ) : (
+            <Box component="textarea" autoFocus value={editCommentValue} rows={7}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditCommentValue(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && editCommentValue.trim()) handleEditComment(); }}
+              sx={{ ...fieldSx, resize: "none", lineHeight: 1.65 }}
+            />
+          )}
+        </Box>
+      </AppModal>
+
+      <DeleteModal
+        open={!!deleteCommentTarget}
+        onClose={() => setDeleteCommentTarget(null)}
+        onConfirm={handleDeleteComment}
+        loading={deleteCommentLoading}
+        title="Supprimer ce commentaire ?"
+      >
+        Cette action est irréversible. Le commentaire sera définitivement supprimé.
+      </DeleteModal>
 
     </>
   );
