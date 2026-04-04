@@ -55,24 +55,6 @@ type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
 
 
 
-const typeColors: Record<KanbanType, string> = {
-  bug: "var(--red)",
-  feature: "var(--accent)",
-  security: "var(--orange)",
-  performance: "var(--cyan)",
-  maintenance: "var(--muted2)",
-  question: "var(--purple)",
-};
-
-const typeSubtles: Record<KanbanType, string> = {
-  bug: "var(--red-subtle)",
-  feature: "var(--accent-subtle)",
-  security: "var(--orange-subtle)",
-  performance: "var(--cyan-subtle)",
-  maintenance: "rgba(116,136,170,0.10)",
-  question: "var(--purple-subtle)",
-};
-
 const typeLabels: Record<KanbanType, string> = {
   bug: "Bug",
   feature: "Feature",
@@ -109,9 +91,9 @@ const columnMeta: Record<
   },
   testing: {
     label: "En test",
-    color: "var(--purple)",
-    subtle: "var(--purple-subtle)",
-    border: "rgba(168,85,247,0.28)",
+    color: "var(--cyan)",
+    subtle: "var(--cyan-subtle)",
+    border: "rgba(6,182,212,0.28)",
   },
   resolved: {
     label: "Résolu",
@@ -213,8 +195,6 @@ function TicketCard({
   onClick: () => void;
 }) {
   const isUpdating = updatingId === ticket.id;
-  const typeColor = typeColors[ticket.type];
-  const typeSubtle = typeSubtles[ticket.type];
   const slaChip = getSlaChip(ticket.slaDeadline, ticket.slaBreached);
 
   return (
@@ -253,8 +233,8 @@ function TicketCard({
             gap: "3px",
             fontSize: "10px",
             fontWeight: 600,
-            color: typeColor,
-            background: typeSubtle,
+            color: "var(--text-secondary)",
+            background: "rgba(148,163,184,0.08)",
             borderRadius: "4px",
             padding: "2px 7px 2px 5px",
           }}

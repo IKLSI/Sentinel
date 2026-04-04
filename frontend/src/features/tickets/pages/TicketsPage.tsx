@@ -9,12 +9,18 @@ import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
-import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
+import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
+import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
+import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
+import BuildOutlined from "@mui/icons-material/BuildOutlined";
+import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import { useTickets } from "../hooks/useTickets";
 import { deleteTicket, createTicket, updateTicket } from "../api/tickets";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
@@ -132,15 +138,12 @@ const priorityLabels: Record<TicketPriority, string> = {
   low: "Basse",
 };
 
-const statusVariant: Record<
-  TicketStatus,
-  "red" | "orange" | "blue" | "cyan" | "green" | "gray" | "purple"
-> = {
-  new: "blue",
+const statusVariant: Record<TicketStatus, "blue" | "orange" | "purple" | "green" | "gray" | "cyan"> = {
+  new:         "blue",
   in_progress: "orange",
-  testing: "purple",
-  resolved: "green",
-  closed: "gray",
+  testing:     "cyan",
+  resolved:    "green",
+  closed:      "gray",
 };
 
 const statusLabels: Record<TicketStatus, string> = {
@@ -159,6 +162,30 @@ const typeLabels: Record<TicketType, string> = {
   maintenance: "Maintenance",
   question: "Question",
 };
+
+const typeIcons: Record<TicketType, React.ReactElement> = {
+  bug:         <BugReportOutlined sx={{ fontSize: 10 }} />,
+  feature:     <AutoFixHighOutlined sx={{ fontSize: 10 }} />,
+  security:    <SecurityOutlined sx={{ fontSize: 10 }} />,
+  performance: <SpeedOutlined sx={{ fontSize: 10 }} />,
+  maintenance: <BuildOutlined sx={{ fontSize: 10 }} />,
+  question:    <HelpOutlineOutlined sx={{ fontSize: 10 }} />,
+};
+
+const priorityLevels: Record<string, number> = {
+  critical: 4,
+  high:     3,
+  medium:   2,
+  low:      1,
+};
+
+const LevelBars: React.FC<{ level: number }> = ({ level }) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: '10px', flexShrink: 0 }}>
+    {[1, 2, 3, 4].map(i => (
+      <Box key={i} sx={{ width: '3px', height: `${4 + i * 1.5}px`, borderRadius: '1px', background: 'currentColor', opacity: i <= level ? 1 : 0.2 }} />
+    ))}
+  </Box>
+);
 
 const selectSx = {
   background: "var(--s1)",
@@ -510,8 +537,8 @@ export const TicketsPage: React.FC = () => {
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                   <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
-                      {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "SLA", "Assigné", ""].map((h) => {
-                        const sortable = h !== "SLA";
+                      {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "Échéance", "Assigné", ""].map((h) => {
+                        const sortable = h !== "Échéance";
                         const isActive = sort?.col === h;
                         return (
                           <Box
@@ -611,15 +638,7 @@ export const TicketsPage: React.FC = () => {
                           }}
                         >
                           <StatusChip
-                            variant={
-                              ticket.priority === "critical"
-                                ? "red"
-                                : ticket.priority === "high"
-                                  ? "orange"
-                                  : ticket.priority === "medium"
-                                    ? "yellow"
-                                    : "green"
-                            }
+                            startAdornment={<LevelBars level={priorityLevels[ticket.priority] ?? 1} />}
                           >
                             {priorityLabels[ticket.priority]}
                           </StatusChip>
@@ -631,7 +650,7 @@ export const TicketsPage: React.FC = () => {
                             borderBottom: "1px solid var(--border)",
                           }}
                         >
-                          <StatusChip variant="gray">
+                          <StatusChip startAdornment={typeIcons[ticket.type]}>
                             {typeLabels[ticket.type]}
                           </StatusChip>
                         </Box>
@@ -642,7 +661,7 @@ export const TicketsPage: React.FC = () => {
                             borderBottom: "1px solid var(--border)",
                           }}
                         >
-                          <StatusChip variant={statusVariant[ticket.status]}>
+                          <StatusChip variant={statusVariant[ticket.status]} pill>
                             {statusLabels[ticket.status]}
                           </StatusChip>
                         </Box>
@@ -656,6 +675,7 @@ export const TicketsPage: React.FC = () => {
                           <SlaTimer
                             deadline={ticket.slaDeadline}
                             breached={ticket.slaBreached}
+                            compact
                           />
                         </Box>
                         <Box
@@ -750,7 +770,7 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
               <Box component="select" value={createForm.priority}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, priority: e.target.value as CreateTicketPayload['priority'] }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="Critical">Critique</option>
                 <option value="High">Haute</option>
@@ -762,7 +782,7 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
               <Box component="select" value={createForm.type}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, type: e.target.value as CreateTicketPayload['type'] }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="Bug">Bug</option>
                 <option value="Feature">Évolution</option>
@@ -778,9 +798,9 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
               <Box component="select" value={createForm.techProjectId ?? ''}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, techProjectId: e.target.value || undefined }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">— Aucun projet —</option>
+                <option value="">Aucun projet</option>
                 {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Box>
             </Box>
@@ -788,27 +808,29 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
               <Box component="select" value={createForm.assignedToId ?? ''}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, assignedToId: e.target.value || undefined }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">— Non assigné —</option>
+                <option value="">Non assigné</option>
                 {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
               </Box>
             </Box>
           </Box>
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mb: '8px' }}>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
-              <Tooltip title="Formats acceptés : 2h, 1h30, 45m" placement="top" arrow>
-                <InfoOutlined sx={{ fontSize: 12, color: 'var(--muted)', cursor: 'help' }} />
-              </Tooltip>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
+                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
+                <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                  <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
+                </Tooltip>
+              </Box>
+              <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} width="100%" />
             </Box>
-            <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} />
           </Box>
           <Box>
             <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
             <Box component="textarea" rows={5} placeholder="Décrivez le problème..." value={createForm.description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
-              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", maxWidth: "100%", minHeight: "80px", maxHeight: "300px" }}
             />
           </Box>
         </Box>
@@ -840,7 +862,7 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
               <Box component="select" value={editForm.priority}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, priority: e.target.value }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="critical">Critique</option>
                 <option value="high">Haute</option>
@@ -852,7 +874,7 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
               <Box component="select" value={editForm.type}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, type: e.target.value }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="bug">Bug</option>
                 <option value="feature">Évolution</option>
@@ -868,7 +890,7 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
               <Box component="select" value={editForm.techProjectId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">— Aucun projet —</option>
                 {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -878,63 +900,43 @@ export const TicketsPage: React.FC = () => {
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
               <Box component="select" value={editForm.assignedToId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}
-                sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">— Non assigné —</option>
                 {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
               </Box>
             </Box>
           </Box>
-          <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
-              <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
-                <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
-              </Tooltip>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
+                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
+                <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                  <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
+                </Tooltip>
+              </Box>
+              <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} width="100%" />
             </Box>
-            <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} />
           </Box>
           <Box>
             <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
             <Box component="textarea" rows={5} value={editForm.description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+              sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", maxWidth: "100%", minHeight: "80px", maxHeight: "300px" }}
             />
           </Box>
         </Box>
       </AppModal>
 
-      {deleteTarget && (
-        <Box
-          className="d-flex align-items-center justify-content-center"
-          sx={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000 }}
-        >
-          <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", p: "28px 32px", width: "380px", maxWidth: "90vw" }}>
-            <Box sx={{ fontWeight: 700, fontSize: "15px", mb: "10px" }}>Supprimer ce ticket ?</Box>
-            <Box sx={{ fontSize: "13px", color: "var(--muted2)", mb: "20px" }}>
-              Cette action est irréversible. Le ticket <strong>{deleteTarget.reference}</strong> sera définitivement supprimé.
-            </Box>
-            <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-              <Box
-                component="button"
-                onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
-                sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "var(--r)", p: "7px 16px", fontSize: "12px", fontWeight: 600, color: "var(--text)", cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Annuler
-              </Box>
-              <Box
-                component="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                sx={{ background: "#ef4444", border: "none", borderRadius: "var(--r)", p: "7px 16px", fontSize: "12px", fontWeight: 600, color: "#fff", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: deleting ? 0.7 : 1 }}
-              >
-                {deleting ? "Suppression..." : "Supprimer définitivement"}
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      )}
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Supprimer ce ticket ?"
+      >
+        Cette action est irréversible. Le ticket <strong>{deleteTarget?.reference}</strong> sera définitivement supprimé.
+      </DeleteModal>
     </>
   );
 };
