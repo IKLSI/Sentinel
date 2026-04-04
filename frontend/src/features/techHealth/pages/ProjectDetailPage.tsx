@@ -2,9 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
-import CircularProgress from "@mui/material/CircularProgress";
-import Button from "@mui/material/Button";
-import { AppModal } from "../../../components/AppModal";
+import Skeleton from "@mui/material/Skeleton";
+import { DeleteModal } from "../../../components/DeleteModal";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
@@ -108,11 +107,34 @@ export const ProjectDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box
-        className="d-flex justify-content-center align-items-center"
-        sx={{ height: "100vh" }}
-      >
-        <CircularProgress size={28} />
+      <Box sx={{ p: "24px 28px" }}>
+        <Paper
+          sx={{
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 1,
+            mb: "24px",
+            p: "20px 24px",
+          }}
+        >
+          <Skeleton variant="text" width={200} height={28} sx={{ mb: "8px" }} />
+          <Skeleton variant="text" width={320} height={16} sx={{ mb: "16px" }} />
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--border)", pt: "16px" }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Box key={i} sx={{ px: "20px" }}>
+                <Skeleton variant="text" width={80} height={14} />
+                <Skeleton variant="text" width={50} height={40} />
+              </Box>
+            ))}
+          </Box>
+        </Paper>
+        <Skeleton variant="text" width={140} height={20} sx={{ mb: "10px" }} />
+        <Paper sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} variant="rectangular" height={44} sx={{ mb: "1px" }} />
+          ))}
+        </Paper>
       </Box>
     );
   }
@@ -497,42 +519,15 @@ export const ProjectDetailPage: React.FC = () => {
         )}
       </Box>
 
-      <AppModal
+      <DeleteModal
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Supprimer le projet"
-        actions={
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              sx={{ textTransform: "none" }}
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Suppression..." : "Supprimer"}
-            </Button>
-          </>
-        }
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Supprimer ce projet ?"
       >
-        <Box
-          component="p"
-          sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}
-        >
-          Supprimer <strong>{project.name}</strong> ? Cette action supprimera
-          aussi toutes les dépendances et vulnérabilités associées. Elle est
-          irréversible.
-        </Box>
-      </AppModal>
+        Supprimer <strong>{project.name}</strong> supprimera aussi toutes les dépendances et vulnérabilités associées. Cette action est irréversible.
+      </DeleteModal>
     </>
   );
 };

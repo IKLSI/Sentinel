@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import { useAuth } from "../../auth/hooks/useAuth";
@@ -909,26 +910,17 @@ export const TimeTrackingPage: React.FC = () => {
         </Box>
       </AppModal>
 
-      {/* ── Modal suppression ── */}
-      <AppModal
+      <DeleteModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Supprimer la saisie"
-        actions={
-          <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setDeleteTarget(null)}>
-              Annuler
-            </Button>
-            <Button variant="contained" color="error" size="small" sx={{ textTransform: "none" }} onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Suppression..." : "Supprimer"}
-            </Button>
-          </>
-        }
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Supprimer cette saisie ?"
       >
-        <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
-          Supprimer <strong>"{deleteTarget?.comment}"</strong> ({deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""}) ? Cette action est irréversible.
-        </Box>
-      </AppModal>
+        {deleteTarget?.comment && <><strong>"{deleteTarget.comment}"</strong> — </>}
+        {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""}
+        <br />Cette action est irréversible.
+      </DeleteModal>
     </>
   );
 };

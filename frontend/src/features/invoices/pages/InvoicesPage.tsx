@@ -4,6 +4,7 @@ import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
@@ -183,6 +184,8 @@ export const InvoicesPage: React.FC = () => {
   const [newTaxRate, setNewTaxRate] = useState(20);
   const [newDueDays, setNewDueDays] = useState(30);
   const [generating, setGenerating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<InvoiceDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -289,15 +292,18 @@ export const InvoicesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (inv: InvoiceDto, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm(`Supprimer ${inv.reference} ?`)) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteInvoice(inv.id);
+      await deleteInvoice(deleteTarget.id);
       showToast("Facture supprimée", "success");
+      setDeleteTarget(null);
       load();
     } catch {
       showToast("Erreur lors de la suppression", "error");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -547,7 +553,7 @@ export const InvoicesPage: React.FC = () => {
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip title="Supprimer" placement="top">
-                                    <IconButton size="small" onClick={(e) => handleDelete(inv, e)} sx={{ color: "var(--red)", "&:hover": { background: "var(--red-subtle)" } }}>
+                                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }} sx={{ color: "var(--red)", "&:hover": { background: "var(--red-subtle)" } }}>
                                       <DeleteOutlineOutlined sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
@@ -653,6 +659,16 @@ export const InvoicesPage: React.FC = () => {
           </Box>
         </Box>
       </AppModal>
+
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Supprimer cette facture ?"
+      >
+        La facture <strong>{deleteTarget?.reference}</strong> sera définitivement supprimée. Cette action est irréversible.
+      </DeleteModal>
     </>
   );
 };

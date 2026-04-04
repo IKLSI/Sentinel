@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
 import { useToast } from "../../../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
@@ -388,26 +389,15 @@ export const ProjectsPage: React.FC = () => {
         </Box>
       </AppModal>
 
-      <AppModal
+      <DeleteModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Supprimer le projet"
-        actions={
-          <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setDeleteTarget(null)}>
-              Annuler
-            </Button>
-            <Button variant="contained" color="error" size="small" sx={{ textTransform: "none" }} onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Suppression..." : "Supprimer"}
-            </Button>
-          </>
-        }
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Supprimer ce projet ?"
       >
-        <Box component="p" sx={{ margin: 0, fontSize: "14px", color: "var(--text)" }}>
-          Supprimer <strong>{deleteTarget?.name}</strong> ? Cette action supprimera aussi toutes les
-          dépendances et vulnérabilités associées. Elle est irréversible.
-        </Box>
-      </AppModal>
+        Supprimer <strong>{deleteTarget?.name}</strong> supprimera aussi toutes les dépendances et vulnérabilités associées. Cette action est irréversible.
+      </DeleteModal>
     </>
   );
 };
