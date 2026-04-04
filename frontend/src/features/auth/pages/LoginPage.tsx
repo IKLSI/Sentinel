@@ -53,10 +53,23 @@ export const LoginPage: React.FC = () => {
         {/* Décor SVG fond */}
         <Box className="lp-decor" aria-hidden>
           <svg width="100%" height="100%" viewBox="0 0 450 600" fill="none" preserveAspectRatio="xMidYMid slice">
-            <circle cx="380" cy="90" r="200" stroke="rgba(255,255,255,0.055)" strokeWidth="1"/>
-            <circle cx="380" cy="90" r="130" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-            <circle cx="380" cy="90" r="60" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-            <circle cx="40" cy="520" r="160" stroke="rgba(255,255,255,0.035)" strokeWidth="1"/>
+            <defs>
+              <radialGradient id="lp-glow-tr" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(165,180,252,0.2)"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+            </defs>
+
+            {/* Cluster haut-droite — halo de lumière */}
+            <circle cx="450" cy="0" r="160" fill="url(#lp-glow-tr)"/>
+
+            {/* Anneaux concentriques haut-droite — du plus dense au plus fin */}
+            <circle cx="450" cy="0" r="80"  stroke="rgba(255,255,255,0.30)" strokeWidth="1.2"/>
+            <circle cx="450" cy="0" r="125" stroke="rgba(255,255,255,0.18)" strokeWidth="1"/>
+            <circle cx="450" cy="0" r="175" stroke="rgba(255,255,255,0.11)" strokeWidth="1"/>
+
+
+
           </svg>
         </Box>
 

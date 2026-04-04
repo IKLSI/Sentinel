@@ -281,7 +281,6 @@ export const SettingsPage: React.FC = () => {
     finally { setSavingSla(false) }
   }
 
-  const maxSla = Math.max(sla.criticalHours, sla.highHours, sla.mediumHours, sla.lowHours)
   const slaUnchanged = sla.criticalHours === savedSla.criticalHours && sla.highHours === savedSla.highHours && sla.mediumHours === savedSla.mediumHours && sla.lowHours === savedSla.lowHours
   const orgUnchanged = org ? (orgForm.name === org.name && orgForm.timezone === org.timezone) : true
 
