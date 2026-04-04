@@ -171,6 +171,61 @@ public class TicketsController : BaseController
         });
     }
 
+    [HttpPut("{id:guid}/comments/{commentId:guid}")]
+    public async Task<ActionResult<TicketCommentDto>> UpdateComment(Guid id, Guid commentId, [FromBody] CreateCommentDto dto)
+    {
+        Guid? userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        TicketComment? comment = await _context.TicketComments
+            .Include(c => c.Author)
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == id);
+
+        if (comment == null)
+            return NotFound(new { message = "Commentaire introuvable" });
+
+        if (comment.AuthorId != userId.Value)
+            return Forbid();
+
+        if (string.IsNullOrWhiteSpace(dto.Content))
+            return BadRequest(new { message = "Le contenu du commentaire est requis" });
+
+        comment.Content = dto.Content;
+        comment.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new TicketCommentDto
+        {
+            Id = comment.Id,
+            AuthorId = comment.AuthorId,
+            AuthorName = comment.Author?.FullName ?? string.Empty,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt,
+            UpdatedAt = comment.UpdatedAt
+        });
+    }
+
+    [HttpDelete("{id:guid}/comments/{commentId:guid}")]
+    public async Task<IActionResult> DeleteComment(Guid id, Guid commentId)
+    {
+        Guid? userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        TicketComment? comment = await _context.TicketComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == id);
+
+        if (comment == null)
+            return NotFound(new { message = "Commentaire introuvable" });
+
+        if (comment.AuthorId != userId.Value)
+            return Forbid();
+
+        _context.TicketComments.Remove(comment);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpPatch("{id:guid}/status")]
     public async Task<ActionResult<TicketDto>> ChangeStatus(Guid id, [FromBody] ChangeStatusDto dto)
     {
