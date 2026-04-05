@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -19,7 +18,6 @@ public class AuthController : BaseController
     }
 
     [HttpPost("login")]
-    [EnableRateLimiting("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         LoginResponse? result = await _authService.LoginAsync(request.Email, request.Password);
