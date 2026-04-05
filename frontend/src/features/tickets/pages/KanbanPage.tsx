@@ -27,7 +27,6 @@ import HelpOutlineOutlined from "@mui/icons-material/HelpOutline";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
-import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 
 type KanbanType =
   | "bug"
@@ -160,27 +159,6 @@ function ticketsToColumns(tickets: Ticket[]): KanbanColumns {
   return cols;
 }
 
-function getSlaChip(
-  deadline?: string,
-  breached?: boolean,
-): { label: string; color: string; subtle: string } | null {
-  if (breached)
-    return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
-  if (!deadline) return null;
-  const diff = new Date(deadline).getTime() - Date.now();
-  if (diff <= 0)
-    return { label: "SLA !", color: "var(--red)", subtle: "var(--red-subtle)" };
-  const hours = diff / 3_600_000;
-  if (hours < 24) {
-    return {
-      label: `SLA ${Math.ceil(hours)}h`,
-      color: "var(--orange)",
-      subtle: "var(--orange-subtle)",
-    };
-  }
-  return null;
-}
-
 // ─── Ticket card ─────────────────────────────────────────────────────────────
 
 function TicketCard({
@@ -195,7 +173,6 @@ function TicketCard({
   onClick: () => void;
 }) {
   const isUpdating = updatingId === ticket.id;
-  const slaChip = getSlaChip(ticket.slaDeadline, ticket.slaBreached);
 
   return (
     <Box
@@ -204,8 +181,7 @@ function TicketCard({
         background: isUpdating ? "var(--accent-subtle)" : "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",
-        padding: "11px 12px 10px 12px",
-        height: "148px",
+        padding: "11px 12px",
         overflow: "hidden",
         cursor: isDragging ? "grabbing" : "pointer",
         boxShadow: isDragging
@@ -223,8 +199,8 @@ function TicketCard({
           : {},
       }}
     >
-      {/* Row 1: type badge + SLA */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "8px", gap: "6px" }}>
+      {/* Row 1: type badge */}
+      <Box sx={{ mb: "8px" }}>
         <Box
           component="span"
           sx={{
@@ -242,37 +218,6 @@ function TicketCard({
           {typeIcons[ticket.type]}
           {typeLabels[ticket.type]}
         </Box>
-
-        {slaChip && (
-          <Tooltip
-            title={
-              ticket.slaDeadline
-                ? `Deadline : ${new Date(ticket.slaDeadline).toLocaleString("fr-FR")}`
-                : "SLA dépassé"
-            }
-            placement="top"
-            arrow
-          >
-            <Box
-              component="span"
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "3px",
-                fontSize: "9px",
-                fontWeight: 700,
-                color: slaChip.color,
-                background: slaChip.subtle,
-                borderRadius: "4px",
-                padding: "2px 6px 2px 4px",
-                letterSpacing: "0.02em",
-              }}
-            >
-              <WarningAmberOutlined sx={{ fontSize: 9 }} />
-              {slaChip.label}
-            </Box>
-          </Tooltip>
-        )}
       </Box>
 
       {/* Row 2: title */}
