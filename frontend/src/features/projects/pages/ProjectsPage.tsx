@@ -364,7 +364,7 @@ export const ProjectsPage: React.FC = () => {
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <ModalField label="Nom du projet *" placeholder="Ex : API Paiement v2" value={formName} onChange={setFormName} autoFocus />
-          <ModalField label="URL dépôt (optionnel)" placeholder="https://github.com/org/repo" value={formRepoUrl} onChange={setFormRepoUrl} />
+          <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={formRepoUrl} onChange={setFormRepoUrl} />
         </Box>
       </AppModal>
 
@@ -385,7 +385,7 @@ export const ProjectsPage: React.FC = () => {
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <ModalField label="Nom du projet *" value={editName} onChange={setEditName} />
-          <ModalField label="URL dépôt (optionnel)" placeholder="https://github.com/org/repo" value={editRepoUrl} onChange={setEditRepoUrl} />
+          <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={editRepoUrl} onChange={setEditRepoUrl} />
         </Box>
       </AppModal>
 
