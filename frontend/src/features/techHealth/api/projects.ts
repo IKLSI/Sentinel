@@ -69,9 +69,8 @@ export const deleteProject = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/tech-health/projects/${id}`)
 }
 
-export const scanProject = async (id: string): Promise<ProjectDetailDto> => {
-  const response = await apiClient.post<ProjectDetailDto>(`/api/tech-health/projects/${id}/scan`)
-  return response.data
+export const scanProject = async (id: string): Promise<void> => {
+  await apiClient.post(`/api/tech-health/projects/${id}/scan`)
 }
 
 export const updateProject = async (id: string, data: Partial<CreateProjectDto>): Promise<ProjectDto> => {

@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,13 @@ public class TechHealthController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly TechHealthService _techHealthService;
+    private readonly IBackgroundJobClient _backgroundJobs;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs)
     {
         _context = context;
         _techHealthService = techHealthService;
+        _backgroundJobs = backgroundJobs;
     }
 
     [HttpGet("projects")]
@@ -148,10 +151,9 @@ public class TechHealthController : BaseController
         if (!belongs)
             return NotFound(new { message = "Projet introuvable" });
 
-        await _techHealthService.ScanProjectAsync(id);
-        TechProjectDto? updated = await _techHealthService.GetProjectWithDetailsAsync(id);
+        _backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectAsync(id));
 
-        return Ok(updated);
+        return Accepted();
     }
 
 }

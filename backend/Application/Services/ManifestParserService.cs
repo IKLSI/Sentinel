@@ -91,15 +91,17 @@ public class ManifestParserService
             ["astro"] = "Astro",
         };
 
-        if (!root.TryGetProperty("dependencies", out JsonElement deps)) return null;
-
-        foreach ((string? pkg, string? name) in frameworkMap)
+        foreach (string depsKey in new[] { "dependencies", "devDependencies" })
         {
-            if (deps.TryGetProperty(pkg, out JsonElement vProp))
+            if (!root.TryGetProperty(depsKey, out JsonElement deps)) continue;
+            foreach ((string? pkg, string? name) in frameworkMap)
             {
-                string v = CleanVersion(vProp.GetString() ?? "");
-                if (!string.IsNullOrEmpty(v))
-                    return (name, v);
+                if (deps.TryGetProperty(pkg, out JsonElement vProp))
+                {
+                    string v = CleanVersion(vProp.GetString() ?? "");
+                    if (!string.IsNullOrEmpty(v))
+                        return (name, v);
+                }
             }
         }
         return null;

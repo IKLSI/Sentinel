@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useToast } from "../../../hooks/useToast";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import Button from "@mui/material/Button";
@@ -599,12 +600,20 @@ const VulnsSection: React.FC<{ vulns: Vuln[] }> = ({ vulns }) => {
 };
 
 export const TechHealthPage: React.FC = () => {
+  const { showToast } = useToast();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (scanPollRef.current) clearTimeout(scanPollRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -645,25 +654,53 @@ export const TechHealthPage: React.FC = () => {
   const handleScan = async () => {
     if (!selectedId || scanning) return;
     setScanning(true);
+    const scannedId = selectedId;
+    const previousLastScanAt = selectedProject?.lastScanAt;
+    const deadline = Date.now() + 10 * 60 * 1000;
+
     try {
-      const updated = await scanProject(selectedId);
-      setSelectedProject(updated);
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === selectedId
-            ? {
-                ...p,
-                healthScore: updated.healthScore,
-                healthGrade: updated.healthGrade,
-                criticalVulnerabilities: updated.criticalVulnerabilities,
-                vulnerableDependencies: updated.vulnerableDependencies,
-                totalDependencies: updated.totalDependencies,
-              }
-            : p,
-        ),
-      );
-    } catch {}
-    setScanning(false);
+      await scanProject(scannedId);
+      showToast("Scan lancé, analyse en cours…", "info");
+
+      const poll = async () => {
+        if (Date.now() > deadline) {
+          setScanning(false);
+          showToast("Timeout : le scan prend plus de temps que prévu", "warning");
+          return;
+        }
+        try {
+          const updated = await getProject(scannedId);
+          if (updated.lastScanAt !== previousLastScanAt) {
+            setSelectedProject(updated);
+            setProjects((prev) =>
+              prev.map((p) =>
+                p.id === scannedId
+                  ? {
+                      ...p,
+                      healthScore: updated.healthScore,
+                      healthGrade: updated.healthGrade,
+                      criticalVulnerabilities: updated.criticalVulnerabilities,
+                      vulnerableDependencies: updated.vulnerableDependencies,
+                      totalDependencies: updated.totalDependencies,
+                    }
+                  : p,
+              ),
+            );
+            setScanning(false);
+            showToast("Scan terminé", "success");
+          } else {
+            scanPollRef.current = setTimeout(poll, 3000);
+          }
+        } catch {
+          scanPollRef.current = setTimeout(poll, 5000);
+        }
+      };
+
+      scanPollRef.current = setTimeout(poll, 2000);
+    } catch {
+      showToast("Impossible de lancer le scan", "error");
+      setScanning(false);
+    }
   };
 
   const deps = selectedProject ? selectedProject.dependencies.map(mapDep) : [];

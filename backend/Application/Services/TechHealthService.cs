@@ -35,20 +35,27 @@ public class TechHealthService
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
-            await _context.Vulnerabilities
-                .Where(v => v.Dependency.TechProjectId == projectId)
-                .ExecuteDeleteAsync();
-            await _context.Dependencies
-                .Where(d => d.TechProjectId == projectId)
-                .ExecuteDeleteAsync();
-            await _context.Runtimes
-                .Where(r => r.TechProjectId == projectId)
-                .ExecuteDeleteAsync();
+            (List<Dependency> newDeps, List<Runtime> newRuntimes) = await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
 
-            (List<Dependency>? newDeps, List<Runtime>? newRuntimes) = await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
-            await _context.Dependencies.AddRangeAsync(newDeps);
-            await _context.Runtimes.AddRangeAsync(newRuntimes);
-            await _context.SaveChangesAsync();
+            if (newDeps.Count > 0 || newRuntimes.Count > 0)
+            {
+                await _context.Vulnerabilities
+                    .Where(v => v.Dependency.TechProjectId == projectId)
+                    .ExecuteDeleteAsync();
+                await _context.Dependencies
+                    .Where(d => d.TechProjectId == projectId)
+                    .ExecuteDeleteAsync();
+                await _context.Runtimes
+                    .Where(r => r.TechProjectId == projectId)
+                    .ExecuteDeleteAsync();
+                await _context.Dependencies.AddRangeAsync(newDeps);
+                await _context.Runtimes.AddRangeAsync(newRuntimes);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                _logger.LogWarning("Scan de {Url} : aucune donnée retournée, données existantes conservées", project.RepositoryUrl);
+            }
         }
 
         project = await _context.TechProjects

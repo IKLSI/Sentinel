@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -8,6 +10,7 @@ public class RepositoryHostClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string? _githubToken;
+    private readonly ILogger<RepositoryHostClient> _logger;
 
     private static readonly HashSet<string> SkippedDirs = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -15,31 +18,36 @@ public class RepositoryHostClient
         "target", ".gradle", ".cargo",
     };
 
-    public RepositoryHostClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public RepositoryHostClient(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RepositoryHostClient> logger)
     {
         _httpClientFactory = httpClientFactory;
         _githubToken = configuration["GitHub:Token"];
+        _logger = logger;
     }
 
     public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo)
     {
         if (host.Contains("github"))
-        {
-            HttpClient client = CreateGitHubClient();
-            return await ListGitHubFilesAsync(client, owner, repo);
-        }
+            return await ListGitHubFilesAsync(owner, repo);
         if (host.Contains("gitlab"))
-        {
-            HttpClient client = _httpClientFactory.CreateClient("Registry");
-            return await ListGitLabFilesAsync(client, owner, repo);
-        }
+            return await ListGitLabFilesAsync(_httpClientFactory.CreateClient("Registry"), owner, repo);
         return [];
     }
 
     public async Task<string?> FetchTextAsync(string host, string url)
     {
-        HttpClient client = host.Contains("github") ? CreateGitHubClient() : _httpClientFactory.CreateClient("Registry");
-        return await FetchTextAsync(client, url);
+        if (host.Contains("github"))
+        {
+            HttpClient client = _httpClientFactory.CreateClient("Registry");
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url);
+            try
+            {
+                HttpResponseMessage response = await client.SendAsync(request);
+                return response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
+            }
+            catch { return null; }
+        }
+        return await FetchTextAsync(_httpClientFactory.CreateClient("Registry"), url);
     }
 
     public static bool IsInSkippedDirectory(string filePath)
@@ -52,25 +60,37 @@ public class RepositoryHostClient
         return false;
     }
 
-    private HttpClient CreateGitHubClient()
+    private HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url)
     {
-        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        HttpRequestMessage request = new HttpRequestMessage(method, url);
+        request.Headers.Add("User-Agent", "Sentinel-Scanner/1.0");
         if (!string.IsNullOrEmpty(_githubToken))
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _githubToken);
-        return client;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
+        return request;
     }
 
-    private static async Task<List<(string Name, string Url)>> ListGitHubFilesAsync(HttpClient client, string owner, string repo)
+    private async Task<List<(string Name, string Url)>> ListGitHubFilesAsync(string owner, string repo)
     {
         List<(string, string)> result = new List<(string, string)>();
         JsonElement treeResponse;
         try
         {
-            JsonElement resp = await client.GetFromJsonAsync<JsonElement>(
+            HttpClient client = _httpClientFactory.CreateClient("Registry");
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                 $"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1");
-            treeResponse = resp;
+            HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub API {Owner}/{Repo} : {StatusCode}", owner, repo, (int)response.StatusCode);
+                return result;
+            }
+            treeResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
         }
-        catch { return result; }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Erreur lors du listing GitHub {Owner}/{Repo}", owner, repo);
+            return result;
+        }
 
         if (!treeResponse.TryGetProperty("tree", out JsonElement tree)) return result;
 

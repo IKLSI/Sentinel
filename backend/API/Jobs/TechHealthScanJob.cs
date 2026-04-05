@@ -25,7 +25,6 @@ public class TechHealthScanJob
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors du scan de santé technologique");
-            throw;
         }
     }
 }
