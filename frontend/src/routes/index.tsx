@@ -13,7 +13,6 @@ import { TicketDetailPage } from '../features/tickets/pages/TicketDetailPage'
 import { TimeTrackingPage } from '../features/timeTracking/pages/TimeTrackingPage'
 import { InvoicesPage } from '../features/invoices/pages/InvoicesPage'
 import { InvoiceDetailPage } from '../features/invoices/pages/InvoiceDetailPage'
-import { TechHealthPage } from '../features/techHealth/pages/TechHealthPage'
 import { ProjectsPage } from '../features/projects/pages/ProjectsPage'
 import { ProjectDetailPage } from '../features/techHealth/pages/ProjectDetailPage'
 import { ProfilePage } from '../features/users/pages/ProfilePage'
@@ -60,7 +59,6 @@ export const AppRoutes: React.FC = () => (
       <Route path="/time-tracking" element={<TimeTrackingPage />} />
       <Route path="/invoices" element={<NonDeveloperRoute><InvoicesPage /></NonDeveloperRoute>} />
       <Route path="/invoices/:id" element={<NonDeveloperRoute><InvoiceDetailPage /></NonDeveloperRoute>} />
-      <Route path="/tech-health" element={<TechHealthPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />

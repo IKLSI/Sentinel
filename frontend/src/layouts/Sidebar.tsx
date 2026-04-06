@@ -6,7 +6,6 @@ import ViewKanbanOutlined from '@mui/icons-material/ViewKanbanOutlined'
 import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined'
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
 import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
-import SecurityOutlined from '@mui/icons-material/SecurityOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import PersonOutlined from '@mui/icons-material/PersonOutlined'
@@ -51,12 +50,6 @@ const navSections: NavSection[] = [
     items: [
       { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Suivi du temps' },
       { to: '/invoices', icon: ReceiptOutlined, label: 'Factures' },
-    ],
-  },
-  {
-    title: 'Technique',
-    items: [
-      { to: '/tech-health', icon: SecurityOutlined, label: 'Santé technique' },
     ],
   },
 ]
