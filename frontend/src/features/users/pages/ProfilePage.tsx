@@ -113,6 +113,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <Box className="page-enter" sx={{ p: '36px 24px 20px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100vh', overflow: 'hidden' }}>
 
+      {/* ── Card Informations ── */}
       <Box sx={CARD_SX}>
         <InnerDivider label="Informations" />
 
@@ -148,12 +149,20 @@ export const ProfilePage: React.FC = () => {
           </Box>
         </Box>
 
+        <Box sx={{ px: '16px', py: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="contained" size="small" onClick={handleSave} disabled={savingPf || pfUnchanged} sx={{ minWidth: '110px' }}>
+            {savingPf ? 'Sauvegarde…' : 'Sauvegarder'}
+          </Button>
+        </Box>
+      </Box>
+
+      {/* ── Card Préférences ── */}
+      <Box sx={CARD_SX}>
         <InnerDivider label="Préférences" />
 
         <Box sx={{
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px',
-          px: '16px', py: '9px',
-          borderBottom: '1px solid var(--border)',
+          px: '16px', py: '16px',
         }}>
           <Box>
             <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', mb: '5px' }}>Apparence</Box>
@@ -206,20 +215,13 @@ export const ProfilePage: React.FC = () => {
               ))}
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', mb: '5px' }}>Notifications e-mail</Box>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: '5px' }}>
+              <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>Notifications e-mail</Box>
               <Toggle on={emailNotifs} onChange={handleToggleNotifs} busy={savingNotifs} />
             </Box>
           </Box>
         </Box>
-
-        <Box sx={{ px: '16px', py: '10px', display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="contained" size="small" onClick={handleSave} disabled={savingPf || pfUnchanged} sx={{ minWidth: '110px' }}>
-            {savingPf ? 'Sauvegarde…' : 'Sauvegarder'}
-          </Button>
-        </Box>
-
       </Box>
     </Box>
   )

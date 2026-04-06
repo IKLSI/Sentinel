@@ -339,9 +339,6 @@ export const InvoiceDetailPage: React.FC = () => {
             overflow: "hidden",
           }}
         >
-          {/* Accent strip */}
-          <Box sx={{ height: "2px", background: stripGradient }} />
-
           {/* ─ En-tête : référence + montant ─ */}
           <Box
             sx={{

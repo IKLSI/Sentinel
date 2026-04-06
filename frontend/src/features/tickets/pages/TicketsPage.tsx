@@ -188,11 +188,17 @@ const LevelBars: React.FC<{ level: number }> = ({ level }) => (
 );
 
 const selectSx = {
+  appearance: "none",
+  WebkitAppearance: "none",
   background: "var(--s1)",
+  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
   border: "1px solid var(--border)",
   borderRadius: "var(--r)",
   px: "12px",
-  py: "8px",
+  py: "7px",
+  pr: "36px",
   fontSize: "13px",
   color: "var(--text)",
   width: "auto",
@@ -376,7 +382,7 @@ export const TicketsPage: React.FC = () => {
     <>
 
       <Box className="page-enter" sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0, position: "relative", zIndex: 2 }}>
           <Box sx={{
             width: "280px", display: "flex", alignItems: "center", gap: "8px",
             background: "var(--s1)", border: "1px solid var(--border)",
@@ -428,54 +434,57 @@ export const TicketsPage: React.FC = () => {
             </Box>
 
             {filtersOpen && (
-              <Box sx={{
-                position: "absolute", top: "calc(100% + 8px)", right: 0,
-                background: "var(--s1)", border: "1px solid var(--border)",
-                borderRadius: "12px", p: "16px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                zIndex: 50, minWidth: "220px",
-                display: "flex", flexDirection: "column", gap: "10px",
-                animation: "fadeInUp 0.12s ease forwards",
-              }}>
-                {[
-                  { label: "Priorité", key: "priority", value: filters.priority, options: [["", "Toutes"], ["critical", "Critique"], ["high", "Haute"], ["medium", "Moyenne"], ["low", "Basse"]] },
-                  { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
-                  { label: "Type",     key: "type",     value: filters.type,     options: [["", "Tous"], ["bug", "Bug"], ["feature", "Évolution"], ["security", "Sécurité"], ["performance", "Perf"]] },
-                ].map(({ label, key, value, options }) => (
-                  <Box key={key}>
-                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
-                      {label}
+              <Box sx={{ position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
+                <Box sx={{ position: "absolute", top: -6, left: "calc(50% - 6px)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid var(--border)" }} />
+                <Box sx={{ position: "absolute", top: -5, left: "calc(50% - 5px)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderBottom: "5px solid var(--s1)" }} />
+                <Box sx={{
+                  background: "var(--s1)", border: "1px solid var(--border)",
+                  borderRadius: "12px", p: "16px",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                  minWidth: "220px",
+                  display: "flex", flexDirection: "column", gap: "10px",
+                  animation: "fadeInUp 0.12s ease forwards",
+                }}>
+                  {[
+                    { label: "Priorité", key: "priority", value: filters.priority, options: [["", "Toutes"], ["critical", "Critique"], ["high", "Haute"], ["medium", "Moyenne"], ["low", "Basse"]] },
+                    { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
+                    { label: "Type",     key: "type",     value: filters.type,     options: [["", "Tous"], ["bug", "Bug"], ["feature", "Évolution"], ["security", "Sécurité"], ["performance", "Perf"]] },
+                  ].map(({ label, key, value, options }) => (
+                    <Box key={key}>
+                      <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
+                        {label}
+                      </Box>
+                      <Box component="select" value={value}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, [key]: e.target.value }))}
+                        sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                      >
+                        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </Box>
                     </Box>
-                    <Box component="select" value={value}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, [key]: e.target.value }))}
-                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
-                    >
-                      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </Box>
-                  </Box>
-                ))}
+                  ))}
 
-                {(filters.priority || filters.status || filters.type) && (
-                  <Box
-                    component="button"
-                    onClick={() => { setFilters({ priority: "", status: "", type: "" }); setFiltersOpen(false); }}
-                    sx={{
-                      all: "unset", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      gap: "6px", mt: "4px",
-                      fontSize: "12px", fontWeight: 600,
-                      color: "var(--red)",
-                      background: "var(--red-subtle)",
-                      border: "1px solid rgba(239,68,68,0.2)",
-                      borderRadius: "7px",
-                      py: "8px",
-                      transition: "background 0.12s, border-color 0.12s",
-                      "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
-                    }}
-                  >
-                    Réinitialiser
-                  </Box>
-                )}
+                  {(filters.priority || filters.status || filters.type) && (
+                    <Box
+                      component="button"
+                      onClick={() => { setFilters({ priority: "", status: "", type: "" }); setFiltersOpen(false); }}
+                      sx={{
+                        all: "unset", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        gap: "6px", mt: "4px",
+                        fontSize: "12px", fontWeight: 600,
+                        color: "var(--red)",
+                        background: "var(--red-subtle)",
+                        border: "1px solid rgba(239,68,68,0.2)",
+                        borderRadius: "7px",
+                        py: "8px",
+                        transition: "background 0.12s, border-color 0.12s",
+                        "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
+                      }}
+                    >
+                      Réinitialiser
+                    </Box>
+                  )}
+                </Box>
               </Box>
             )}
           </Box>

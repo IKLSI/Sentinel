@@ -255,6 +255,7 @@ export const ProjectsPage: React.FC = () => {
               sx={{
                 all: "unset", flex: 1, fontSize: "12.5px", color: "var(--text)",
                 "&::placeholder": { color: "var(--muted)" },
+                "&:focus": { outline: "none", boxShadow: "none !important" },
               }}
             />
           </Box>
@@ -448,7 +449,7 @@ const ProjectRow: React.FC<{
         fontWeight: project.vulnerableDependencies > 0 ? 600 : 400,
         color: project.vulnerableDependencies > 0 ? "var(--orange)" : "var(--text-secondary)",
       }}>
-        {project.vulnerableDependencies > 0 ? `${project.vulnerableDependencies} ⚠` : project.vulnerableDependencies}
+        {project.vulnerableDependencies}
       </Box>
 
       <Box component="td" sx={{
@@ -457,7 +458,7 @@ const ProjectRow: React.FC<{
         fontWeight: project.criticalVulnerabilities > 0 ? 600 : 400,
         color: project.criticalVulnerabilities > 0 ? "var(--red)" : "var(--text-secondary)",
       }}>
-        {project.criticalVulnerabilities > 0 ? `${project.criticalVulnerabilities} ⚠` : project.criticalVulnerabilities}
+        {project.criticalVulnerabilities}
       </Box>
 
       <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>

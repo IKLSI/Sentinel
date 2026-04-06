@@ -9,6 +9,7 @@ import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import SecurityOutlined from '@mui/icons-material/SecurityOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
+import PersonOutlined from '@mui/icons-material/PersonOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
@@ -283,16 +284,12 @@ export const Sidebar: React.FC = () => {
               sx={{
                 width: 30,
                 height: 30,
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, var(--accent), #818cf8)',
-                fontSize: '10px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 700,
-                color: '#fff',
-                boxShadow: '0 2px 6px rgba(99,102,241,0.35)',
+                borderRadius: '50%',
+                background: 'var(--s3)',
+                color: 'var(--muted)',
               }}
             >
-              {initials}
+              <PersonOutlined sx={{ fontSize: 18 }} />
             </Box>
             <Box className="overflow-hidden">
               <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>

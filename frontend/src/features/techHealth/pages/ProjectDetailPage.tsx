@@ -1,18 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import Skeleton from "@mui/material/Skeleton";
 import { DeleteModal } from "../../../components/DeleteModal";
-import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
+import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import {
   getProject,
   deleteProject,
@@ -22,47 +23,198 @@ import {
   RuntimeDto,
 } from "../api/projects";
 
-const DEP_STATUS: Record<
-  string,
-  { label: string; variant: "green" | "blue" | "orange" | "red" | "gray" }
-> = {
-  UpToDate: { label: "À jour", variant: "green" },
-  MinorUpdate: { label: "Mise à jour", variant: "blue" },
-  MajorUpdate: { label: "Majeure", variant: "orange" },
-  Critical: { label: "Critique", variant: "red" },
-  Eol: { label: "EOL", variant: "red" },
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const DEP_STATUS: Record<string, { label: string; variant: "green" | "blue" | "orange" | "red" | "gray" }> = {
+  UpToDate:    { label: "À jour",       variant: "green"  },
+  MinorUpdate: { label: "MAJ mineure",  variant: "blue"   },
+  MajorUpdate: { label: "MAJ majeure",  variant: "orange" },
+  EOL:         { label: "Fin de vie",   variant: "red"    },
+  Vulnerable:  { label: "Vulnérable",   variant: "red"    },
 };
 
-const SEV_VARIANT: Record<string, "red" | "orange" | "gray" | "blue"> = {
-  Critical: "red",
-  High: "orange",
-  Medium: "blue",
-  Low: "gray",
+const SEV_CONFIG: Record<string, { label: string; variant: "red" | "orange" | "blue" | "gray"; color: string; bg: string }> = {
+  Critical: { label: "CRITIQUE", variant: "red",    color: "var(--red)",    bg: "var(--red-subtle)"    },
+  High:     { label: "HAUTE",    variant: "orange", color: "var(--orange)", bg: "var(--orange-subtle)" },
+  Medium:   { label: "MOYENNE",  variant: "blue",   color: "var(--yellow)", bg: "var(--yellow-subtle)" },
+  Low:      { label: "FAIBLE",   variant: "gray",   color: "var(--green)",  bg: "var(--green-subtle)"  },
 };
 
-const SEV_LABEL: Record<string, string> = {
-  Critical: "Critique",
-  High: "Haute",
-  Medium: "Moyen",
-  Low: "Faible",
+const EOL_COLOR: Record<string, { text: string; stripe: string; border: string }> = {
+  eol:    { text: "var(--red)",    stripe: "var(--red)",    border: "rgba(239,68,68,0.3)"  },
+  danger: { text: "var(--orange)", stripe: "var(--orange)", border: "rgba(249,115,22,0.25)"},
+  warn:   { text: "var(--yellow)", stripe: "var(--yellow)", border: "rgba(234,179,8,0.25)" },
+  ok:     { text: "var(--green)",  stripe: "var(--accent)", border: "var(--border)"        },
 };
 
-const thSx = {
-  fontFamily: "var(--font-mono)",
-  fontSize: "9px",
-  letterSpacing: "0.1em",
-  textTransform: "uppercase",
-  color: "var(--muted)",
-  textAlign: "left",
-  padding: "10px 16px",
-  borderBottom: "1px solid var(--border)",
-  background: "var(--s2)",
-  fontWeight: 500,
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function getRuntimeUrgency(r: RuntimeDto): keyof typeof EOL_COLOR {
+  if (!r.eolDate) return r.isEol ? "eol" : "ok";
+  const days = Math.round((new Date(r.eolDate).getTime() - Date.now()) / 86400000);
+  if (days < 0)   return "eol";
+  if (days < 90)  return "danger";
+  if (days < 180) return "warn";
+  return "ok";
+}
+
+function getDaysLabel(r: RuntimeDto): string {
+  if (!r.eolDate) return r.isEol ? "Expiré" : "—";
+  const days = Math.round((new Date(r.eolDate).getTime() - Date.now()) / 86400000);
+  if (days < 0) return `Expiré depuis ${Math.abs(days)}j`;
+  return `${days}j restants`;
+}
+
+// ─── Tab bar ─────────────────────────────────────────────────────────────────
+
+interface TabDef { icon: React.ReactNode; label: string; count: number; accentColor?: string }
+
+const TabBar: React.FC<{ tabs: TabDef[]; active: number; onChange: (i: number) => void }> = ({ tabs, active, onChange }) => (
+  <Box sx={{ display: "flex", height: "100%" }}>
+    {tabs.map((tab, i) => (
+      <Box
+        key={i}
+        component="button"
+        onClick={() => onChange(i)}
+        sx={{
+          all: "unset",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          px: "16px",
+          height: "100%",
+          fontSize: "13px",
+          fontWeight: active === i ? 600 : 400,
+          color: active === i ? "var(--text)" : "var(--muted)",
+          borderBottom: active === i ? "2px solid var(--accent)" : "2px solid transparent",
+          marginBottom: "-1px",
+          position: "relative",
+          zIndex: 1,
+          transition: "color 0.12s, border-color 0.12s",
+          "&:hover": { color: "var(--text)" },
+        }}
+      >
+        <Box sx={{ display: "flex", opacity: active === i ? 1 : 0.5, transition: "opacity 0.12s" }}>
+          {tab.icon}
+        </Box>
+        {tab.label}
+      </Box>
+    ))}
+  </Box>
+);
+
+// ─── Table styles ────────────────────────────────────────────────────────────
+
+const TH: React.FC<{ children: React.ReactNode; width?: string }> = ({ children, width }) => (
+  <Box
+    component="th"
+    sx={{
+      fontFamily: "var(--font-mono)",
+      fontSize: "10px",
+      fontWeight: 600,
+      letterSpacing: "0.07em",
+      textTransform: "uppercase",
+      color: "var(--muted)",
+      textAlign: "left",
+      padding: "10px 16px",
+      background: "var(--s2)",
+      borderBottom: "1px solid var(--border)",
+      whiteSpace: "nowrap",
+      width: width ?? "auto",
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const TD: React.FC<{ children: React.ReactNode; mono?: boolean; muted?: boolean }> = ({ children, mono, muted }) => (
+  <Box
+    component="td"
+    sx={{
+      padding: "11px 16px",
+      borderBottom: "1px solid var(--border)",
+      fontSize: "13px",
+      fontFamily: mono ? "var(--font-mono)" : "inherit",
+      color: muted ? "var(--muted2)" : "var(--text)",
+      verticalAlign: "middle",
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const TR: React.FC<{ children: React.ReactNode; accent?: string }> = ({ children }) => (
+  <Box
+    component="tr"
+    sx={{
+      "&:last-child td": { borderBottom: "none" },
+    }}
+  >
+    {children}
+  </Box>
+);
+
+// ─── Vuln row ────────────────────────────────────────────────────────────────
+
+const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
+  const cfg = SEV_CONFIG[vuln.severity] ?? SEV_CONFIG.Low;
+  return (
+    <TR>
+      <TD>
+        <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: cfg.color }}>
+          {vuln.cvssScore.toFixed(1)}
+        </Box>
+      </TD>
+      <TD>{vuln.description}</TD>
+      <TD>
+        <Box
+          component="span"
+          sx={{
+            fontFamily: "var(--font-mono)", fontSize: "10px",
+            color: "var(--cyan)", background: "var(--cyan-subtle)",
+            px: "7px", py: "3px", borderRadius: "3px",
+          }}
+        >
+          {vuln.cveId}
+        </Box>
+      </TD>
+      <TD>
+        {vuln.fixedVersion
+          ? <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--muted2)" }}>{vuln.fixedVersion}</Box>
+          : <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>—</Box>}
+      </TD>
+    </TR>
+  );
 };
-const tdBase = {
-  padding: "11px 16px",
-  borderBottom: "1px solid var(--border)",
+
+// ─── Runtime row ─────────────────────────────────────────────────────────────
+
+const RuntimeRow: React.FC<{ runtime: RuntimeDto }> = ({ runtime: r }) => {
+  const urgency = getRuntimeUrgency(r);
+  const uc = EOL_COLOR[urgency];
+  const daysLabel = getDaysLabel(r);
+
+  return (
+    <TR accent={uc.stripe}>
+      <TD>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <StorageOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
+          <Box component="span" sx={{ fontSize: "13px", fontWeight: 600 }}>{r.name}</Box>
+        </Box>
+      </TD>
+      <TD mono muted>{r.version}</TD>
+      <TD>
+        <Box component="span" sx={{ fontSize: "12px", color: uc.text, fontWeight: urgency !== "ok" ? 600 : 400 }}>
+          {daysLabel}
+        </Box>
+      </TD>
+    </TR>
+  );
 };
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +225,8 @@ export const ProjectDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [depSearch, setDepSearch] = useState("");
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -88,9 +242,7 @@ export const ProjectDetailPage: React.FC = () => {
     }
   }, [id, showToast, navigate]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -105,418 +257,366 @@ export const ProjectDetailPage: React.FC = () => {
     }
   };
 
+  const allVulns = useMemo(
+    () => project?.dependencies.flatMap((d) => d.vulnerabilities) ?? [],
+    [project]
+  );
+
+  const sortedVulns = useMemo(
+    () => allVulns.slice().sort((a, b) => b.cvssScore - a.cvssScore),
+    [allVulns]
+  );
+
+  const filteredDeps = useMemo(() => {
+    if (!project) return [];
+    if (!depSearch) return project.dependencies;
+    return project.dependencies.filter((d) =>
+      d.name.toLowerCase().includes(depSearch.toLowerCase())
+    );
+  }, [project, depSearch]);
+
+  const depsToUpdate = useMemo(
+    () => project?.dependencies.filter((d) => d.status === "MinorUpdate" || d.status === "MajorUpdate").length ?? 0,
+    [project]
+  );
+
+  const eolRuntimes = useMemo(
+    () => project?.runtimes.filter((r) => r.isEol).length ?? 0,
+    [project]
+  );
+
   if (loading) {
     return (
-      <Box sx={{ p: "24px 28px" }}>
-        <Paper
-          sx={{
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            mb: "24px",
-            p: "20px 24px",
-          }}
-        >
+      <Box sx={{ p: "36px 28px 24px" }}>
+        <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", mb: "16px", p: "20px 24px" }}>
           <Skeleton variant="text" width={200} height={28} sx={{ mb: "8px" }} />
           <Skeleton variant="text" width={320} height={16} sx={{ mb: "16px" }} />
           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--border)", pt: "16px" }}>
             {[0, 1, 2, 3].map((i) => (
               <Box key={i} sx={{ px: "20px" }}>
                 <Skeleton variant="text" width={80} height={14} />
-                <Skeleton variant="text" width={50} height={40} />
+                <Skeleton variant="text" width={50} height={36} />
               </Box>
             ))}
           </Box>
-        </Paper>
-        <Skeleton variant="text" width={140} height={20} sx={{ mb: "10px" }} />
-        <Paper sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+        </Box>
+        <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
+          <Skeleton variant="rectangular" height={48} sx={{ mb: 0 }} />
           {[0, 1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} variant="rectangular" height={44} sx={{ mb: "1px" }} />
+            <Skeleton key={i} variant="rectangular" height={52} sx={{ mt: "1px" }} />
           ))}
-        </Paper>
+        </Box>
       </Box>
     );
   }
 
   if (!project) return null;
 
-  const allVulns = project.dependencies.flatMap((d) => d.vulnerabilities);
-  const criticalVulns = allVulns.filter((v) => v.severity === "Critical");
-  const highVulns = allVulns.filter((v) => v.severity === "High");
+  const vulnAccent = allVulns.some((v) => v.severity === "Critical")
+    ? "var(--red)" : allVulns.some((v) => v.severity === "High")
+    ? "var(--orange)" : undefined;
+
+  const runtimeAccent = project.runtimes.some((r) => r.isEol) ? "var(--red)" : undefined;
+
+  const tabDefs: TabDef[] = [
+    { icon: <GppBadOutlined sx={{ fontSize: 14 }} />,   label: "Vulnérabilités", count: allVulns.length,            accentColor: vulnAccent },
+    { icon: <InventoryOutlined sx={{ fontSize: 14 }} />, label: "Dépendances",   count: project.dependencies.length },
+    { icon: <StorageOutlined sx={{ fontSize: 14 }} />,   label: "Runtimes",      count: project.runtimes.length,    accentColor: runtimeAccent },
+  ];
 
   return (
     <>
+      <Box className="page-enter" sx={{ p: "36px 28px 24px" }}>
 
-
-      <Box className="page-enter" sx={{ p: "24px 28px" }}>
-        <Paper
+        {/* ── Header card ─────────────────────────────────────────── */}
+        <Box
           sx={{
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            mb: "24px",
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r)",
+            mb: "16px",
+            overflow: "hidden",
           }}
         >
-          <Box sx={{ p: "20px 24px" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                mb: "16px",
-              }}
-            >
-              <Box>
-                <Box
-                  sx={{
-                    fontSize: "18px",
-                    fontWeight: 700,
-                    color: "var(--text)",
-                    letterSpacing: "-0.01em",
-                    mb: "6px",
-                  }}
-                >
-                  {project.name}
-                </Box>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: "16px" }}
-                >
-                  {project.repositoryUrl && (
-                    <Box
-                      className="d-flex align-items-center"
-                      sx={{ gap: "6px" }}
-                    >
-                      <AccountTreeOutlined
-                        sx={{ fontSize: 12, color: "var(--muted)" }}
-                      />
-                      <Box
-                        component="span"
-                        sx={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "11px",
-                          color: "var(--muted2)",
-                        }}
-                      >
-                        {project.repositoryUrl}
-                      </Box>
-                    </Box>
-                  )}
-                  {project.scanFrequency && (
-                    <Box
-                      className="d-flex align-items-center"
-                      sx={{ gap: "6px" }}
-                    >
-                      <RefreshOutlined
-                        sx={{ fontSize: 12, color: "var(--muted)" }}
-                      />
-                      <Box
-                        component="span"
-                        sx={{ fontSize: "11px", color: "var(--muted)" }}
-                      >
-                        Scan{" "}
-                        {project.scanFrequency === "Daily"
-                          ? "quotidien"
-                          : "hebdomadaire"}
-                      </Box>
-                    </Box>
-                  )}
-                  {project.lastScanAt && (
-                    <Box
-                      className="d-flex align-items-center"
-                      sx={{ gap: "6px" }}
-                    >
-                      <AccessTimeOutlined
-                        sx={{ fontSize: 12, color: "var(--muted)" }}
-                      />
-                      <Box
-                        component="span"
-                        sx={{ fontSize: "11px", color: "var(--muted)" }}
-                      >
-                        {new Date(project.lastScanAt).toLocaleDateString(
-                          "fr-FR",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )}
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
+          {/* Contenu principal */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "20px", p: "20px 24px 20px 28px" }}>
+            {/* Nom + méta */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ fontSize: "20px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", mb: "10px", lineHeight: 1.2 }}>
+                {project.name}
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <HealthScoreCircle
-                  score={project.healthScore}
-                  grade={project.healthGrade as "A" | "B" | "C" | "D" | "F"}
-                  size={52}
-                />
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {project.repositoryUrl && (
+                  <Box sx={{
+                    display: "flex", alignItems: "center", gap: "5px",
+                    background: "var(--s2)", border: "1px solid var(--border)",
+                    borderRadius: "5px", px: "8px", py: "3px",
+                    maxWidth: "320px",
+                  }}>
+                    <AccountTreeOutlined sx={{ fontSize: 11, color: "var(--accent)", flexShrink: 0 }} />
+                    <Box component="span" sx={{
+                      fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {project.repositoryUrl}
+                    </Box>
+                  </Box>
+                )}
+                {project.scanFrequency && (
+                  <Box sx={{
+                    display: "flex", alignItems: "center", gap: "5px",
+                    background: "var(--s2)", border: "1px solid var(--border)",
+                    borderRadius: "5px", px: "8px", py: "3px",
+                  }}>
+                    <RefreshOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
+                    <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {project.scanFrequency === "Daily" ? "Quotidien" : "Hebdomadaire"}
+                    </Box>
+                  </Box>
+                )}
+                {project.lastScanAt && (
+                  <Box sx={{
+                    display: "flex", alignItems: "center", gap: "5px",
+                    background: "var(--s2)", border: "1px solid var(--border)",
+                    borderRadius: "5px", px: "8px", py: "3px",
+                  }}>
+                    <AccessTimeOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
+                    <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {new Date(project.lastScanAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </Box>
+                  </Box>
+                )}
               </Box>
             </Box>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                borderTop: "1px solid var(--border)",
-                pt: "16px",
-              }}
-            >
-              <StatCell
-                label="Dépendances"
-                value={project.totalDependencies}
-                icon={<InventoryOutlined sx={{ fontSize: 16 }} />}
-              />
-              <StatCell
-                label="Vulnérables"
-                value={project.vulnerableDependencies}
-                icon={<GppBadOutlined sx={{ fontSize: 16 }} />}
-                warn={project.vulnerableDependencies > 0}
-              />
-              <StatCell
-                label="Critiques"
-                value={project.criticalVulnerabilities}
-                icon={<GppBadOutlined sx={{ fontSize: 16 }} />}
-                warn={project.criticalVulnerabilities > 0}
-                danger
-              />
-              <StatCell
-                label="Runtimes"
-                value={project.runtimes.length}
-                icon={<StorageOutlined sx={{ fontSize: 16 }} />}
-              />
-            </Box>
-          </Box>
-        </Paper>
 
-        {(criticalVulns.length > 0 || highVulns.length > 0) && (
-          <Box sx={{ mb: "24px" }}>
-            <SectionTitle
-              icon={<GppBadOutlined sx={{ fontSize: 14 }} />}
-              label="Vulnérabilités"
-              count={allVulns.length}
+            {/* Score à droite */}
+            <HealthScoreCircle
+              score={project.healthScore}
+              grade={project.healthGrade as "A" | "B" | "C" | "D" | "F"}
+              size={64}
             />
-            <Box className="d-flex flex-column" sx={{ gap: "8px" }}>
-              {[...criticalVulns, ...highVulns].map((v) => (
-                <VulnCard key={v.id} vuln={v} />
-              ))}
-            </Box>
           </Box>
-        )}
 
-        <Box sx={{ mb: "24px" }}>
-          <SectionTitle
-            icon={<InventoryOutlined sx={{ fontSize: 14 }} />}
-            label="Dépendances"
-            count={project.dependencies.length}
-          />
-          <Paper
+          {/* Stats bar */}
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--border)" }}>
+            {([
+              { label: "Dépendances",   value: project.totalDependencies,       icon: <InventoryOutlined sx={{ fontSize: 13 }} />, alert: null },
+              { label: "À mettre à jour", value: depsToUpdate,                  icon: <RefreshOutlined sx={{ fontSize: 13 }} />,   alert: depsToUpdate > 0 ? "orange" : null },
+              { label: "Critiques",     value: project.criticalVulnerabilities, icon: <GppBadOutlined sx={{ fontSize: 13 }} />,   alert: project.criticalVulnerabilities > 0 ? "red" : null },
+              { label: "Fin de support",  value: eolRuntimes,                     icon: <StorageOutlined sx={{ fontSize: 13 }} />,  alert: eolRuntimes > 0 ? "red" : null },
+            ] as const).map((s, i) => (
+              <Box key={i} sx={{
+                p: "14px 20px",
+                borderRight: i < 3 ? "1px solid var(--border)" : "none",
+                background: "transparent",
+              }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: "5px", color: "var(--muted)", mb: "6px" }}>
+                  {s.icon}
+                  <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    {s.label}
+                  </Box>
+                </Box>
+                <Box sx={{
+                  fontSize: "28px", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1,
+                  color: s.alert === "red" ? "var(--red)" : s.alert === "orange" ? "var(--orange)" : "var(--text)",
+                }}>
+                  {s.value}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* ── Tab panel ───────────────────────────────────────────── */}
+        <Box
+          sx={{
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Tab header */}
+          <Box
             sx={{
-              bgcolor: "background.paper",
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 1,
-              mb: 2,
+              height: "44px",
+              display: "flex",
+              alignItems: "stretch",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--s2)",
+              px: "4px",
             }}
           >
-            <Box sx={{ p: "0" }}>
-              <Box
-                component="table"
-                sx={{ width: "100%", borderCollapse: "collapse" }}
-              >
+            <TabBar
+              tabs={tabDefs}
+              active={activeTab}
+              onChange={(i) => { setActiveTab(i); setDepSearch(""); }}
+            />
+          </Box>
+
+          {/* Tab content */}
+          <Box
+            key={activeTab}
+            sx={{
+              p: "20px",
+              animation: "tabIn 0.18s cubic-bezier(0.4,0,0.2,1) both",
+              "@keyframes tabIn": {
+                from: { opacity: 0, transform: "translateY(6px)" },
+                to:   { opacity: 1, transform: "translateY(0)" },
+              },
+            }}
+          >
+
+            {/* ── Vulnérabilités ────────────────────────────────── */}
+            {activeTab === 0 && (
+              allVulns.length === 0 ? (
+                <Box sx={{
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: "10px", p: "24px",
+                  borderRadius: "var(--r)",
+                }}>
+                  <CheckCircleOutlined sx={{ fontSize: 32, color: "var(--green)" }} />
+                  <Box sx={{ fontSize: "14px", color: "var(--green)", textAlign: "center" }}>
+                    Aucune vulnérabilité détectée
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                    <Box component="thead">
+                      <Box component="tr">
+                        <TH width="160px">Score</TH>
+                        <TH>Vulnérabilité</TH>
+                        <TH width="160px">Référence CVE</TH>
+                        <TH width="140px">Version corrigée</TH>
+                      </Box>
+                    </Box>
+                    <Box component="tbody">
+                      {sortedVulns.map((v) => <VulnRow key={v.id} vuln={v} />)}
+                    </Box>
+                  </Box>
+                </Box>
+              )
+            )}
+
+            {/* ── Dépendances ───────────────────────────────────── */}
+            {activeTab === 1 && (
+              <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
+                {/* Search bar */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: "12px", px: "16px", py: "14px", borderBottom: "1px solid var(--border)", background: "var(--s2)" }}>
+                  <Box sx={{
+                    display: "flex", alignItems: "center", gap: "7px",
+                    background: "var(--s1)", border: "1px solid var(--border)",
+                    borderRadius: "7px", px: "9px", height: "28px", width: "340px",
+                    transition: "border-color 0.15s",
+                    "&:focus-within": { borderColor: "var(--accent-border)", boxShadow: "0 0 0 3px rgba(99,102,241,0.08)" },
+                  }}>
+                    <SearchOutlined sx={{ color: "var(--muted)", fontSize: "13px", flexShrink: 0 }} />
+                    <Box
+                      component="input"
+                      placeholder="Rechercher..."
+                      value={depSearch}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDepSearch(e.target.value)}
+                      sx={{ all: "unset", flex: 1, fontSize: "12px", color: "var(--text)", "&::placeholder": { color: "var(--muted)" }, "&:focus": { outline: "none", boxShadow: "none !important" } }}
+                    />
+                  </Box>
+                  {depSearch && (
+                    <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)" }}>
+                      {filteredDeps.length} / {project.dependencies.length}
+                    </Box>
+                  )}
+                </Box>
+              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                 <Box component="thead">
                   <Box component="tr">
-                    {[
-                      "Paquet",
-                      "Écosystème",
-                      "Type",
-                      "Installée",
-                      "Dernière",
-                      "Statut",
-                      "Vulnérabilités",
-                    ].map((h) => (
-                      <Box component="th" key={h} sx={thSx}>
-                        {h}
-                      </Box>
-                    ))}
+                    <TH>Librairie</TH>
+                    <TH width="90px">Écosystème</TH>
+                    <TH width="60px">Type</TH>
+                    <TH width="180px">Version</TH>
+                    <TH width="110px">Statut</TH>
+                    <TH width="70px">Vulnérabilités</TH>
                   </Box>
                 </Box>
                 <Box component="tbody">
-                  {project.dependencies.map((d: DependencyDto) => {
-                    const s = DEP_STATUS[d.status] ?? {
-                      label: d.status,
-                      variant: "gray" as const,
-                    };
-                    return (
-                      <Box
-                        component="tr"
-                        key={d.id}
-                        sx={{
-                          "& td": { background: "transparent" },
-                          "&:hover td": { background: "var(--s2)" },
-                        }}
-                      >
-                        <Box
-                          component="td"
-                          sx={{
-                            ...tdBase,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            color: "var(--text)",
-                          }}
-                        >
-                          {d.name}
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            ...tdBase,
-                            fontSize: "11px",
-                            color: "var(--muted)",
-                          }}
-                        >
-                          {d.ecosystem}
-                        </Box>
-                        <Box component="td" sx={tdBase}>
-                          <StatusChip
-                            variant={d.type === "Prod" ? "blue" : "gray"}
-                          >
-                            {d.type}
-                          </StatusChip>
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            ...tdBase,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "11px",
-                          }}
-                        >
-                          {d.currentVersion}
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            ...tdBase,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "11px",
-                            color:
-                              d.latestVersion &&
-                              d.latestVersion !== d.currentVersion
-                                ? "var(--orange)"
-                                : "var(--muted)",
-                          }}
-                        >
-                          {d.latestVersion ?? "—"}
-                        </Box>
-                        <Box component="td" sx={tdBase}>
-                          <StatusChip variant={s.variant}>{s.label}</StatusChip>
-                        </Box>
-                        <Box component="td" sx={tdBase}>
-                          {d.vulnerabilities.length > 0 ? (
-                            <StatusChip variant="red">
-                              {d.vulnerabilities.length}
-                            </StatusChip>
-                          ) : (
-                            <Box
-                              component="span"
-                              sx={{ color: "var(--muted)", fontSize: "12px" }}
-                            >
-                              —
-                            </Box>
-                          )}
-                        </Box>
+                  {filteredDeps.length === 0 ? (
+                    <Box component="tr">
+                      <Box component="td" colSpan={6} sx={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px", borderBottom: "none" }}>
+                        Aucun résultat
                       </Box>
-                    );
-                  })}
+                    </Box>
+                  ) : (
+                    filteredDeps.map((d: DependencyDto) => {
+                      const s = DEP_STATUS[d.status] ?? { label: d.status, variant: "gray" as const };
+                      const accent = undefined;
+                      return (
+                        <TR key={d.id} accent={accent}>
+                          <TD>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <InventoryOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
+                              <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600 }}>{d.name}</Box>
+                            </Box>
+                          </TD>
+                          <TD>
+                            <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", background: "var(--s3)", px: "7px", py: "2px", borderRadius: "3px" }}>
+                              {d.ecosystem}
+                            </Box>
+                          </TD>
+                          <TD>
+                            <StatusChip variant="gray">{d.type === "Prod" ? "Prod" : "Dev"}</StatusChip>
+                          </TD>
+                          <TD mono muted>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span>{d.currentVersion}</span>
+                              {d.latestVersion && d.latestVersion !== d.currentVersion && (
+                                <>
+                                  <Box component="span" sx={{ color: "var(--muted)", fontFamily: "var(--font-mono)" }}>→</Box>
+                                  <Box component="span" sx={{ color: "var(--orange)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{d.latestVersion}</Box>
+                                </>
+                              )}
+                            </Box>
+                          </TD>
+                          <TD><StatusChip variant={s.variant}>{s.label}</StatusChip></TD>
+                          <TD>
+                            {d.vulnerabilities.length > 0
+                              ? <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+                              : <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>—</Box>}
+                          </TD>
+                        </TR>
+                      );
+                    })
+                  )}
                 </Box>
               </Box>
-            </Box>
-          </Paper>
-        </Box>
+              </Box>
+            )}
 
-        {project.runtimes.length > 0 && (
-          <Box sx={{ mb: "24px" }}>
-            <SectionTitle
-              icon={<StorageOutlined sx={{ fontSize: 14 }} />}
-              label="Runtimes"
-              count={project.runtimes.length}
-            />
-            <Paper
-              sx={{
-                bgcolor: "background.paper",
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 1,
-                mb: 2,
-              }}
-            >
-              <Box sx={{ p: "0" }}>
-                <Box
-                  component="table"
-                  sx={{ width: "100%", borderCollapse: "collapse" }}
-                >
-                  <Box component="thead">
-                    <Box component="tr">
-                      {["Runtime", "Version", "Fin de support", "Statut"].map(
-                        (h) => (
-                          <Box component="th" key={h} sx={thSx}>
-                            {h}
-                          </Box>
-                        ),
-                      )}
+            {/* ── Runtimes ──────────────────────────────────────── */}
+            {activeTab === 2 && (
+              project.runtimes.length === 0 ? (
+                <Box className="empty-state">
+                  <StorageOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+                  <Box className="empty-state-title">Aucun runtime détecté</Box>
+                  <Box className="empty-state-subtitle">Lancez un scan pour détecter les runtimes du projet.</Box>
+                </Box>
+              ) : (
+                <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                    <Box component="thead">
+                      <Box component="tr">
+                        <TH>Runtime</TH>
+                        <TH width="120px">Version</TH>
+                        <TH width="160px">Fin de support</TH>
+                      </Box>
+                    </Box>
+                    <Box component="tbody">
+                      {project.runtimes.map((r: RuntimeDto) => <RuntimeRow key={r.id} runtime={r} />)}
                     </Box>
                   </Box>
-                  <Box component="tbody">
-                    {project.runtimes.map((r: RuntimeDto) => (
-                      <Box
-                        component="tr"
-                        key={r.id}
-                        sx={{
-                          "& td": { background: "transparent" },
-                          "&:hover td": { background: "var(--s2)" },
-                        }}
-                      >
-                        <Box component="td" sx={{ ...tdBase, fontWeight: 600 }}>
-                          {r.name}
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            ...tdBase,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "11px",
-                          }}
-                        >
-                          {r.version}
-                        </Box>
-                        <Box component="td" sx={tdBase}>
-                          {r.eolDate
-                            ? new Date(r.eolDate).toLocaleDateString("fr-FR", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                            : "—"}
-                        </Box>
-                        <Box component="td" sx={tdBase}>
-                          {r.isEol ? (
-                            <StatusChip variant="red">EOL</StatusChip>
-                          ) : (
-                            <StatusChip variant="green">Supporté</StatusChip>
-                          )}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
                 </Box>
-              </Box>
-            </Paper>
+              )
+            )}
           </Box>
-        )}
+        </Box>
       </Box>
 
       <DeleteModal
@@ -532,145 +632,23 @@ export const ProjectDetailPage: React.FC = () => {
   );
 };
 
-const SectionTitle: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  count: number;
-}> = ({ icon, label, count }) => (
-  <Box className="d-flex align-items-center" sx={{ gap: "8px", mb: "10px" }}>
-    <Box component="span" sx={{ color: "var(--muted)", display: "flex" }}>
-      {icon}
-    </Box>
-    <Box
-      component="span"
-      sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
-    >
-      {label}
-    </Box>
-    <Box
-      component="span"
-      sx={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "10px",
-        fontWeight: 600,
-        background: "var(--s3)",
-        color: "var(--muted2)",
-        padding: "1px 7px",
-        borderRadius: "10px",
-      }}
-    >
-      {count}
-    </Box>
-  </Box>
-);
+// ─── StatCell ────────────────────────────────────────────────────────────────
 
 const StatCell: React.FC<{
   label: string;
   value: number;
+  color: string;
   icon: React.ReactNode;
-  warn?: boolean;
-  danger?: boolean;
-}> = ({ label, value, icon, warn, danger }) => (
-  <Box
-    sx={{
-      padding: "0 20px",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      gap: "6px",
-    }}
-  >
-    <Box
-      className="d-flex align-items-center"
-      sx={{ gap: "6px", color: "var(--muted)" }}
-    >
+}> = ({ label, value, color, icon }) => (
+  <Box sx={{ padding: "0 20px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "4px" }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--muted)" }}>
       {icon}
-      <Box
-        component="span"
-        sx={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "9px",
-          textTransform: "uppercase",
-          letterSpacing: "0.1em",
-        }}
-      >
+      <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
         {label}
       </Box>
     </Box>
-    <Box
-      sx={{
-        fontSize: "28px",
-        fontWeight: 800,
-        color:
-          danger && value > 0
-            ? "var(--red)"
-            : warn && value > 0
-              ? "var(--orange)"
-              : "var(--text)",
-        letterSpacing: "-0.02em",
-      }}
-    >
+    <Box sx={{ fontSize: "28px", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1, color }}>
       {value}
     </Box>
   </Box>
-);
-
-const VulnCard: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => (
-  <Paper
-    sx={{
-      bgcolor: "background.paper",
-      border: "1px solid",
-      borderColor: "divider",
-      borderRadius: 1,
-      mb: 2,
-    }}
-  >
-    <Box sx={{ p: "14px 18px" }}>
-      <Box className="d-flex align-items-flex-start" sx={{ gap: "12px" }}>
-        <StatusChip variant={SEV_VARIANT[vuln.severity] ?? "gray"}>
-          {SEV_LABEL[vuln.severity] ?? vuln.severity}
-        </StatusChip>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box
-            className="d-flex align-items-center"
-            sx={{ gap: "10px", mb: "4px" }}
-          >
-            <Box
-              component="span"
-              sx={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                color: "var(--muted)",
-                fontWeight: 600,
-              }}
-            >
-              {vuln.cveId}
-            </Box>
-            <Box
-              component="span"
-              sx={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                color: "var(--orange)",
-                fontWeight: 700,
-              }}
-            >
-              CVSS {vuln.cvssScore.toFixed(1)}
-            </Box>
-            {vuln.fixedVersion && (
-              <Box
-                component="span"
-                sx={{ fontSize: "10px", color: "var(--green)" }}
-              >
-                Fix : {vuln.fixedVersion}
-              </Box>
-            )}
-          </Box>
-          <Box sx={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.4 }}>
-            {vuln.description}
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  </Paper>
 );

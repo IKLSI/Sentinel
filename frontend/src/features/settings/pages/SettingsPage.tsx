@@ -335,16 +335,20 @@ export const SettingsPage: React.FC = () => {
                   value={memberSearch}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMemberSearch(e.target.value)} />
               </Box>
-              <Box sx={{ position: 'relative' }}>
-                <Box component="select"
-                  sx={{ ...inp, height: '32px', py: 0, pr: '26px', pl: '10px', cursor: 'pointer', appearance: 'none', minWidth: '130px', borderRadius: '8px' }}
-                  value={memberRoleFilter}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMemberRoleFilter(e.target.value)}>
-                  <option value="all">Tous les rôles</option>
-                  <option value="Admin">Administrateur</option>
-                  <option value="Developer">Développeur</option>
-                </Box>
-                <KeyboardArrowDownOutlined sx={{ fontSize: 13, color: 'var(--muted)', position: 'absolute', right: '7px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <Box component="select"
+                sx={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  background: "var(--s1) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\") no-repeat right 12px center",
+                  border: '1px solid var(--border)', borderRadius: 'var(--r)',
+                  px: '12px', py: '7px', pr: '36px',
+                  fontSize: '13px', color: 'var(--text)',
+                  outline: 'none', fontFamily: 'inherit', cursor: 'pointer',
+                }}
+                value={memberRoleFilter}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMemberRoleFilter(e.target.value)}>
+                <option value="all">Tous les rôles</option>
+                <option value="Admin">Administrateur</option>
+                <option value="Developer">Développeur</option>
               </Box>
               <Box sx={{ flex: 1 }} />
               <Button variant="contained" size="small" onClick={() => setInviteOpen(true)} startIcon={<PersonAddOutlined sx={{ fontSize: '13px !important' }} />}>
@@ -373,9 +377,6 @@ export const SettingsPage: React.FC = () => {
                           <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' }, transition: 'background 0.1s' }}>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Box sx={{ width: 28, height: 28, borderRadius: '7px', flexShrink: 0, background: 'linear-gradient(135deg, var(--accent), #818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-mono)' }}>
-                                  {m.firstName[0]}{m.lastName[0]}
-                                </Box>
                                 <Box>
                                   <Box sx={{ fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{m.firstName} {m.lastName}</Box>
                                   <Box sx={{ color: 'var(--muted2)', fontSize: '11px' }}>{m.email}</Box>
@@ -383,10 +384,10 @@ export const SettingsPage: React.FC = () => {
                               </Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                              <StatusChip variant={ROLE_VARIANTS[m.role] ?? 'blue'}>{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
+                              <StatusChip variant="gray">{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                              <StatusChip variant={m.isActive ? 'blue' : 'orange'}>{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
+                              <StatusChip variant="gray">{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
                               {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
@@ -423,7 +424,7 @@ export const SettingsPage: React.FC = () => {
                     <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
                   ) : (
                     <>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', px: '16px', py: '12px', borderBottom: '1px solid var(--border)' }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', px: '16px', py: '12px' }}>
                         <Box>
                           <FieldLabel>Nom de l'organisation</FieldLabel>
                           <Box component="input" type="text" sx={inp}
@@ -461,7 +462,7 @@ export const SettingsPage: React.FC = () => {
                     <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
                   ) : (
                     <>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)', borderBottom: '1px solid var(--border)' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)' }}>
                         {SLA_PRIORITIES.map(({ key, label, color, bg, desc }) => {
                           const hours = sla[key]
                           const dec = () => setSla(p => ({ ...p, [key]: Math.max(1, p[key] - 1) }))
@@ -538,7 +539,7 @@ export const SettingsPage: React.FC = () => {
         actions={
           <>
             <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setInviteOpen(false)}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting}>
+            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting || !inv.firstName.trim() || !inv.email.trim() || !inv.password.trim()}>
               {submitting ? 'Envoi…' : 'Ajouter'}
             </Button>
           </>
@@ -546,23 +547,23 @@ export const SettingsPage: React.FC = () => {
         <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Box>
-              <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Prénom *</Box>
+              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Prénom *</Box>
               <Box component="input" type="text" sx={inp} value={inv.firstName} placeholder="Prénom"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, firstName: e.target.value }))} />
             </Box>
             <Box>
-              <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Nom</Box>
+              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Nom</Box>
               <Box component="input" type="text" sx={inp} value={inv.lastName} placeholder="Nom"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, lastName: e.target.value }))} />
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>E-mail *</Box>
+            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>E-mail *</Box>
             <Box component="input" type="email" sx={inp} value={inv.email} placeholder="prenom.nom@exemple.com"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
           </Box>
           <Box>
-            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Rôle</Box>
+            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Rôle</Box>
             <Box component="select" sx={inp} value={inv.role}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
               <option value="Admin">Administrateur</option>
@@ -570,7 +571,7 @@ export const SettingsPage: React.FC = () => {
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', mb: '4px' }}>Mot de passe temporaire *</Box>
+            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Mot de passe temporaire *</Box>
             <Box component="input" type="password" sx={inp} value={inv.password} placeholder="Min. 8 caractères"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, password: e.target.value }))} />
             <Box sx={{ fontSize: '10px', color: 'var(--muted)', mt: '4px' }}>Le membre pourra le modifier depuis son profil.</Box>

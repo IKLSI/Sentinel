@@ -37,6 +37,7 @@ import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import Tooltip from "@mui/material/Tooltip";
 import Popover from "@mui/material/Popover";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
+import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
 import { DurationPicker } from "../../../components/DurationPicker";
 
 const WORK_HOURS_TARGET = 7 * 60;
@@ -106,6 +107,11 @@ export const TimeTrackingPage: React.FC = () => {
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [hoveredWeekStart, setHoveredWeekStart] = useState<Date | null>(null);
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const [calendarView, setCalendarView] = useState<"days" | "months">("days");
+  const [formCalendarAnchor, setFormCalendarAnchor] = useState<HTMLElement | null>(null);
+  const [formCalendarMonth, setFormCalendarMonth] = useState(() => new Date());
+  const [formCalendarView, setFormCalendarView] = useState<"days" | "months">("days");
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -165,7 +171,11 @@ export const TimeTrackingPage: React.FC = () => {
     return Array.from(map.values()).sort((a, b) => b.minutes - a.minutes);
   }, [weekEntries]);
 
-  const openCreate = (date?: string) => { setEditingId(null); setForm(emptyForm(date)); setModalOpen(true); };
+  const openCreate = (date?: string) => {
+    const d = date ? parseDateLocal(date) : new Date();
+    setEditingId(null); setForm(emptyForm(date));
+    setFormCalendarMonth(d); setFormCalendarView("days"); setModalOpen(true);
+  };
   const openEdit = (entry: TimeEntryDto) => {
     setEditingId(entry.id);
     setForm({
@@ -175,6 +185,8 @@ export const TimeTrackingPage: React.FC = () => {
       techProjectId: entry.techProjectId ?? "",
       ticketId: entry.ticketId ?? "",
     });
+    setFormCalendarMonth(parseDateLocal(entry.date));
+    setFormCalendarView("days");
     setModalOpen(true);
   };
 
@@ -283,6 +295,15 @@ export const TimeTrackingPage: React.FC = () => {
               }}>
                 {weekLabel}
               </Box>
+              {totalMinutes > 0 && (
+                <Box sx={{
+                  fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 800,
+                  color: "var(--accent)", letterSpacing: "-0.04em", lineHeight: 1,
+                  background: "var(--accent-subtle)", borderRadius: "4px", px: "8px", py: "4px",
+                }}>
+                  {formatDuration(totalMinutes)}
+                </Box>
+              )}
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
               {!isCurrentWeek && (
@@ -294,23 +315,23 @@ export const TimeTrackingPage: React.FC = () => {
                     background: "var(--accent-subtle)",
                     border: "1px solid var(--accent-border)",
                     borderRadius: "6px",
-                    px: "8px", height: "26px",
+                    px: "10px", height: "28px",
                     cursor: "pointer", color: "var(--accent)",
-                    fontSize: "11px", fontWeight: 600,
+                    fontSize: "12px", fontWeight: 600,
                     fontFamily: "var(--font-ui)",
                     transition: "background 0.12s",
                     "&:hover": { background: "rgba(99,102,241,0.15)" },
                   }}
                 >
-                  <TodayOutlined sx={{ fontSize: 12 }} />
+                  <TodayOutlined sx={{ fontSize: 15 }} />
                   Aujourd'hui
                 </Box>
               )}
               <IconNavBtn onClick={() => setWeekOffset((o) => o - 1)}>
-                <ChevronLeftOutlined sx={{ fontSize: 14 }} />
+                <ChevronLeftOutlined sx={{ fontSize: 18 }} />
               </IconNavBtn>
               <IconNavBtn onClick={() => setWeekOffset((o) => o + 1)} disabled={isCurrentWeek}>
-                <ChevronRightOutlined sx={{ fontSize: 14 }} />
+                <ChevronRightOutlined sx={{ fontSize: 18 }} />
               </IconNavBtn>
               <Box
                 component="button"
@@ -319,7 +340,7 @@ export const TimeTrackingPage: React.FC = () => {
                   background: calendarAnchor ? "var(--accent-subtle)" : "var(--s1)",
                   border: "1px solid var(--border)",
                   borderRadius: "6px",
-                  width: "26px", height: "26px",
+                  width: "28px", height: "28px",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: "pointer",
                   color: calendarAnchor ? "var(--accent)" : "var(--muted2)",
@@ -328,37 +349,8 @@ export const TimeTrackingPage: React.FC = () => {
                   "&:hover": { background: "var(--s3)", color: "var(--text)" },
                 }}
               >
-                <CalendarTodayOutlined sx={{ fontSize: 12 }} />
+                <CalendarTodayOutlined sx={{ fontSize: 16 }} />
               </Box>
-            </Box>
-          </Box>
-
-          {/* Récap total + barre */}
-          <Box sx={{
-            display: "flex", alignItems: "center", gap: "16px",
-            px: "16px", py: "10px",
-            borderBottom: "1px solid var(--border)",
-          }}>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: "8px", flexShrink: 0 }}>
-              <Box sx={{
-                fontFamily: "var(--font-mono)", fontSize: "20px", fontWeight: 800,
-                color: "var(--text)", letterSpacing: "-0.04em", lineHeight: 1,
-              }}>
-                {formatDuration(totalMinutes)}
-              </Box>
-            </Box>
-            <Box sx={{ flex: 1, height: "4px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
-              <Box sx={{
-                height: "100%", width: `${weekPct}%`,
-                background: progressColor, borderRadius: "2px",
-                transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
-              }} />
-            </Box>
-            <Box sx={{
-              fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700,
-              color: progressColor, flexShrink: 0,
-            }}>
-              {weekPct}%
             </Box>
           </Box>
 
@@ -421,7 +413,7 @@ export const TimeTrackingPage: React.FC = () => {
                     {format(day, "d")}
                   </Box>
 
-                  <Box sx={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: "5px" }}>
+                  <Box sx={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
                     {dayMinutes > 0 && (
                       <Box sx={{
                         fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
@@ -430,14 +422,6 @@ export const TimeTrackingPage: React.FC = () => {
                         {formatDuration(dayMinutes)}
                       </Box>
                     )}
-                    <Box sx={{ width: "100%", height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
-                      {pct > 0 && (
-                        <Box sx={{
-                          height: "100%", width: `${pct}%`, background: barColor, borderRadius: "2px",
-                          transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
-                        }} />
-                      )}
-                    </Box>
                   </Box>
                 </Box>
               );
@@ -470,7 +454,7 @@ export const TimeTrackingPage: React.FC = () => {
                       letterSpacing: "-0.01em", minWidth: "120px",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
-                      {p.name}
+                      {p.name === "Sans projet" ? "Non attribué" : p.name}
                     </Box>
                     <Box sx={{ flex: 1, height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
                       <Box sx={{
@@ -555,17 +539,35 @@ export const TimeTrackingPage: React.FC = () => {
                   const dayEntries = entriesByDay.get(dayStr) ?? [];
                   const dayMinutes = dayEntries.reduce((s, e) => s + e.durationMinutes, 0);
 
+                  const isCollapsed = collapsedDays.has(dayStr);
+                  const toggleCollapse = () => setCollapsedDays((prev) => {
+                    const next = new Set(prev);
+                    next.has(dayStr) ? next.delete(dayStr) : next.add(dayStr);
+                    return next;
+                  });
+
                   return (
                     <Box key={dayStr}>
                       {/* En-tête du jour */}
-                      <Box sx={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        px: "16px", py: "8px",
-                        borderTop: groupIdx > 0 ? "1px solid var(--border)" : "none",
-                        background: isCurrentDay ? "rgba(99,102,241,0.04)" : "var(--s2)",
-                        borderLeft: isCurrentDay ? "3px solid var(--accent)" : "3px solid transparent",
-                      }}>
+                      <Box
+                        component="button"
+                        onClick={toggleCollapse}
+                        sx={{
+                          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                          px: "16px", py: "8px",
+                          background: isCurrentDay ? "rgba(99,102,241,0.04)" : "var(--s2)",
+                          border: "none", borderTop: "1px solid var(--border)",
+                          cursor: "pointer", fontFamily: "var(--font-ui)",
+                          transition: "background 0.1s",
+                          "&:hover": { background: isCurrentDay ? "rgba(99,102,241,0.07)" : "var(--s3)" },
+                        }}
+                      >
                         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <ExpandMoreOutlined sx={{
+                            fontSize: 16, color: "var(--muted2)",
+                            transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s",
+                          }} />
                           <Box sx={{
                             fontSize: "11px", fontWeight: 700,
                             color: isCurrentDay ? "var(--accent)" : "var(--muted2)",
@@ -600,7 +602,7 @@ export const TimeTrackingPage: React.FC = () => {
                       </Box>
 
                       {/* Entrées du jour */}
-                      {dayEntries.map((entry) => {
+                      {!isCollapsed && dayEntries.map((entry) => {
                         const projColor = entry.techProjectName
                           ? getProjectColor(entry.techProjectName)
                           : "var(--border2)";
@@ -611,7 +613,7 @@ export const TimeTrackingPage: React.FC = () => {
                             key={entry.id}
                             sx={{
                               display: "flex", alignItems: "center",
-                              pl: "0", pr: "12px",
+                              pl: "16px", pr: "12px",
                               borderTop: "1px solid var(--border)",
                               minHeight: "52px",
                               gap: "12px",
@@ -620,11 +622,6 @@ export const TimeTrackingPage: React.FC = () => {
                               "&:hover .tt-actions": { opacity: 1 },
                             }}
                           >
-                            {/* Barre couleur projet */}
-                            <Box sx={{
-                              width: "3px", alignSelf: "stretch", flexShrink: 0,
-                              background: projColor, opacity: 0.7,
-                            }} />
 
                             {/* Avatar initiales (admin uniquement) */}
                             {isAdmin && (
@@ -739,7 +736,7 @@ export const TimeTrackingPage: React.FC = () => {
       <Popover
         open={!!calendarAnchor}
         anchorEl={calendarAnchor}
-        onClose={() => { setCalendarAnchor(null); setHoveredWeekStart(null); }}
+        onClose={() => { setCalendarAnchor(null); setHoveredWeekStart(null); setCalendarView("days"); }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         slotProps={{
@@ -757,17 +754,71 @@ export const TimeTrackingPage: React.FC = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "10px" }}>
-          <IconNavBtn onClick={() => setCalendarMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>
+          <IconNavBtn onClick={() => setCalendarMonth((m) => new Date(
+            calendarView === "months" ? m.getFullYear() - 1 : m.getFullYear(),
+            calendarView === "months" ? m.getMonth() : m.getMonth() - 1,
+            1
+          ))}>
             <ChevronLeftOutlined sx={{ fontSize: 14 }} />
           </IconNavBtn>
-          <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", textTransform: "capitalize" }}>
-            {format(calendarMonth, "MMMM yyyy", { locale: fr })}
+          <Box
+            component="button"
+            onClick={() => setCalendarView((v) => v === "days" ? "months" : "days")}
+            sx={{
+              display: "flex", alignItems: "center", gap: "4px",
+              fontSize: "12px", fontWeight: 600, color: "var(--text)",
+              letterSpacing: "-0.01em", textTransform: "capitalize",
+              background: "transparent", border: "none", cursor: "pointer",
+              borderRadius: "6px", px: "6px", py: "2px", fontFamily: "var(--font-ui)",
+              "&:hover": { background: "var(--s3)" },
+            }}
+          >
+            {calendarView === "days"
+              ? format(calendarMonth, "MMMM yyyy", { locale: fr })
+              : calendarMonth.getFullYear()
+            }
+            <ExpandMoreOutlined sx={{
+              fontSize: 14, color: "var(--muted2)",
+              transform: calendarView === "months" ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s",
+            }} />
           </Box>
-          <IconNavBtn onClick={() => setCalendarMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>
+          <IconNavBtn onClick={() => setCalendarMonth((m) => new Date(
+            calendarView === "months" ? m.getFullYear() + 1 : m.getFullYear(),
+            calendarView === "months" ? m.getMonth() : m.getMonth() + 1,
+            1
+          ))}>
             <ChevronRightOutlined sx={{ fontSize: 14 }} />
           </IconNavBtn>
         </Box>
 
+        {calendarView === "months" ? (
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px", mb: "4px" }}>
+            {Array.from({ length: 12 }, (_, i) => i).map((monthIdx) => {
+              const isCurrent = monthIdx === calendarMonth.getMonth();
+              const label = format(new Date(2000, monthIdx, 1), "MMM", { locale: fr });
+              return (
+                <Box
+                  key={monthIdx}
+                  component="button"
+                  onClick={() => { setCalendarMonth((m) => new Date(m.getFullYear(), monthIdx, 1)); setCalendarView("days"); }}
+                  sx={{
+                    fontSize: "11px", fontWeight: isCurrent ? 700 : 500,
+                    color: isCurrent ? "var(--accent)" : "var(--text)",
+                    background: isCurrent ? "var(--accent-subtle)" : "transparent",
+                    border: isCurrent ? "1px solid var(--accent-border)" : "1px solid transparent",
+                    borderRadius: "6px", py: "7px", cursor: "pointer",
+                    fontFamily: "var(--font-ui)", textTransform: "capitalize",
+                    "&:hover": { background: isCurrent ? "var(--accent-subtle)" : "var(--s3)" },
+                  }}
+                >
+                  {label}
+                </Box>
+              );
+            })}
+          </Box>
+        ) : (
+        <>
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", mb: "4px" }}>
           {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
             <Box key={i} sx={{ textAlign: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", py: "3px" }}>
@@ -824,6 +875,8 @@ export const TimeTrackingPage: React.FC = () => {
             );
           })}
         </Box>
+        </>
+        )}
       </Popover>
 
       {/* ── Modal saisie ── */}
@@ -849,12 +902,130 @@ export const TimeTrackingPage: React.FC = () => {
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <FormField label="Date">
-              <Box component="input" type="date" sx={inputSx}
-                value={form.date}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
-              />
+              <Box
+                component="button"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => setFormCalendarAnchor(e.currentTarget)}
+                sx={{
+                  ...inputSx, display: "flex", alignItems: "center", justifyContent: "space-between",
+                  cursor: "pointer", textAlign: "left",
+                }}
+              >
+                {form.date ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: fr }) : "Choisir une date"}
+                <CalendarTodayOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
+              </Box>
+              <Popover
+                open={!!formCalendarAnchor}
+                anchorEl={formCalendarAnchor}
+                onClose={() => { setFormCalendarAnchor(null); setFormCalendarView("days"); }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+                slotProps={{ paper: { sx: { mt: "4px", p: "12px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.25)", background: "var(--s1)", minWidth: "220px" } } }}
+              >
+                {/* Header */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "10px" }}>
+                  <IconNavBtn onClick={() => setFormCalendarMonth((m) => new Date(
+                    formCalendarView === "months" ? m.getFullYear() - 1 : m.getFullYear(),
+                    formCalendarView === "months" ? m.getMonth() : m.getMonth() - 1, 1
+                  ))}>
+                    <ChevronLeftOutlined sx={{ fontSize: 14 }} />
+                  </IconNavBtn>
+                  <Box
+                    component="button"
+                    onClick={() => setFormCalendarView((v) => v === "days" ? "months" : "days")}
+                    sx={{
+                      display: "flex", alignItems: "center", gap: "4px",
+                      fontSize: "12px", fontWeight: 600, color: "var(--text)",
+                      letterSpacing: "-0.01em", textTransform: "capitalize",
+                      background: "transparent", border: "none", cursor: "pointer",
+                      borderRadius: "6px", px: "6px", py: "2px", fontFamily: "var(--font-ui)",
+                      "&:hover": { background: "var(--s3)" },
+                    }}
+                  >
+                    {formCalendarView === "days"
+                      ? format(formCalendarMonth, "MMMM yyyy", { locale: fr })
+                      : formCalendarMonth.getFullYear()
+                    }
+                    <ExpandMoreOutlined sx={{
+                      fontSize: 14, color: "var(--muted2)",
+                      transform: formCalendarView === "months" ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }} />
+                  </Box>
+                  <IconNavBtn onClick={() => setFormCalendarMonth((m) => new Date(
+                    formCalendarView === "months" ? m.getFullYear() + 1 : m.getFullYear(),
+                    formCalendarView === "months" ? m.getMonth() : m.getMonth() + 1, 1
+                  ))}>
+                    <ChevronRightOutlined sx={{ fontSize: 14 }} />
+                  </IconNavBtn>
+                </Box>
+
+                {formCalendarView === "months" ? (
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px" }}>
+                    {Array.from({ length: 12 }, (_, i) => i).map((monthIdx) => {
+                      const isCurrent = monthIdx === formCalendarMonth.getMonth();
+                      return (
+                        <Box
+                          key={monthIdx}
+                          component="button"
+                          onClick={() => { setFormCalendarMonth((m) => new Date(m.getFullYear(), monthIdx, 1)); setFormCalendarView("days"); }}
+                          sx={{
+                            fontSize: "11px", fontWeight: isCurrent ? 700 : 500,
+                            color: isCurrent ? "var(--accent)" : "var(--text)",
+                            background: isCurrent ? "var(--accent-subtle)" : "transparent",
+                            border: isCurrent ? "1px solid var(--accent-border)" : "1px solid transparent",
+                            borderRadius: "6px", py: "7px", cursor: "pointer",
+                            fontFamily: "var(--font-ui)", textTransform: "capitalize",
+                            "&:hover": { background: isCurrent ? "var(--accent-subtle)" : "var(--s3)" },
+                          }}
+                        >
+                          {format(new Date(2000, monthIdx, 1), "MMM", { locale: fr })}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                ) : (
+                  <>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", mb: "4px" }}>
+                    {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+                      <Box key={i} sx={{ textAlign: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", py: "3px" }}>
+                        {d}
+                      </Box>
+                    ))}
+                  </Box>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px" }}>
+                    {(() => {
+                      const firstDay = new Date(formCalendarMonth.getFullYear(), formCalendarMonth.getMonth(), 1);
+                      const start = startOfWeek(firstDay, { weekStartsOn: 1 });
+                      return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+                    })().map((day, i) => {
+                      const isCurrentMonth = day.getMonth() === formCalendarMonth.getMonth();
+                      const isSelected = form.date === format(day, "yyyy-MM-dd");
+                      const todayDay = isToday(day);
+                      return (
+                        <Box
+                          key={i}
+                          component="button"
+                          onClick={() => { setForm((f) => ({ ...f, date: format(day, "yyyy-MM-dd") })); setFormCalendarAnchor(null); setFormCalendarView("days"); }}
+                          sx={{
+                            background: isSelected ? "var(--accent)" : "transparent",
+                            border: "none", borderRadius: "6px",
+                            height: "28px",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: "11px",
+                            fontWeight: todayDay ? 800 : isSelected ? 700 : 400,
+                            color: isSelected ? "#fff" : todayDay ? "var(--accent)" : isCurrentMonth ? "var(--muted2)" : "var(--border2)",
+                            transition: "background 0.08s", outline: "none",
+                            "&:hover": { background: isSelected ? "var(--accent)" : "var(--s3)" },
+                          }}
+                        >
+                          {format(day, "d")}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                  </>
+                )}
+              </Popover>
             </FormField>
             <FormField
               label="Durée"
@@ -880,12 +1051,13 @@ export const TimeTrackingPage: React.FC = () => {
           </FormField>
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <FormField label="Ticket (optionnel)">
-              <Box component="select" sx={inputSx}
+            <FormField label="Ticket">
+              <Box component="select"
                 value={form.ticketId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setForm((f) => ({ ...f, ticketId: e.target.value }))
                 }
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">Aucun ticket</option>
                 {tickets.map((t) => (
@@ -893,12 +1065,13 @@ export const TimeTrackingPage: React.FC = () => {
                 ))}
               </Box>
             </FormField>
-            <FormField label="Projet (optionnel)">
-              <Box component="select" sx={inputSx}
+            <FormField label="Projet">
+              <Box component="select"
                 value={form.techProjectId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setForm((f) => ({ ...f, techProjectId: e.target.value }))
                 }
+                sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">Aucun projet</option>
                 {projects.map((p) => (
@@ -963,7 +1136,7 @@ const IconNavBtn: React.FC<{ onClick: () => void; disabled?: boolean; children: 
       background: "var(--s1)",
       border: "1px solid var(--border)",
       borderRadius: "6px",
-      width: "26px", height: "26px",
+      width: "28px", height: "28px",
       display: "flex", alignItems: "center", justifyContent: "center",
       cursor: disabled ? "not-allowed" : "pointer",
       color: disabled ? "var(--border2)" : "var(--muted2)",

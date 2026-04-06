@@ -139,11 +139,17 @@ const inputSx = {
 };
 
 const selectSx = {
+  appearance: "none",
+  WebkitAppearance: "none",
   background: "var(--s1)",
+  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
   border: "1px solid var(--border)",
   borderRadius: "var(--r)",
   px: "12px",
-  py: "8px",
+  py: "7px",
+  pr: "36px",
   fontSize: "13px",
   color: "var(--text)",
   width: "auto",
@@ -313,7 +319,7 @@ export const InvoicesPage: React.FC = () => {
       <Box className="page-enter" sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* ── Barre recherche + filtres + bouton ── */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0, position: "relative", zIndex: 2 }}>
           {/* Recherche */}
           <Box sx={{
             width: "280px", display: "flex", alignItems: "center", gap: "8px",
@@ -367,65 +373,57 @@ export const InvoicesPage: React.FC = () => {
             </Box>
 
             {filtersOpen && (
-              <Box sx={{
-                position: "absolute", top: "calc(100% + 8px)", left: 0,
-                background: "var(--s1)", border: "1px solid var(--border)",
-                borderRadius: "12px", p: "16px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                zIndex: 50, minWidth: "200px",
-                display: "flex", flexDirection: "column", gap: "10px",
-                animation: "fadeInUp 0.12s ease forwards",
-              }}>
-                <Box>
-                  <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
-                    Statut
+              <Box sx={{ position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
+                <Box sx={{ position: "absolute", top: -6, left: "calc(50% - 6px)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid var(--border)" }} />
+                <Box sx={{ position: "absolute", top: -5, left: "calc(50% - 5px)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderBottom: "5px solid var(--s1)" }} />
+                <Box sx={{
+                  background: "var(--s1)", border: "1px solid var(--border)",
+                  borderRadius: "12px", p: "16px",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                  minWidth: "200px",
+                  display: "flex", flexDirection: "column", gap: "10px",
+                  animation: "fadeInUp 0.12s ease forwards",
+                }}>
+                  <Box>
+                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>Statut</Box>
+                    <Box component="select" value={filters.status}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, status: e.target.value }))}
+                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                    >
+                      <option value="">Tous</option>
+                      <option value="Draft">Brouillon</option>
+                      <option value="Sent">Envoyée</option>
+                      <option value="Paid">Payée</option>
+                    </Box>
                   </Box>
-                  <Box component="select" value={filters.status}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                    sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
-                  >
-                    <option value="">Tous</option>
-                    <option value="Draft">Brouillon</option>
-                    <option value="Sent">Envoyée</option>
-                    <option value="Paid">Payée</option>
+                  <Box>
+                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>Échéance</Box>
+                    <Box component="select" value={filters.overdue}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, overdue: e.target.value }))}
+                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                    >
+                      <option value="">Toutes</option>
+                      <option value="yes">En retard</option>
+                      <option value="no">Dans les délais</option>
+                    </Box>
                   </Box>
+                  {hasActiveFilters && (
+                    <Box component="button" onClick={() => { setFilters({ status: "", overdue: "" }); setFiltersOpen(false); }}
+                      sx={{
+                        all: "unset", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        gap: "6px", mt: "4px",
+                        fontSize: "12px", fontWeight: 600,
+                        color: "var(--red)", background: "var(--red-subtle)",
+                        border: "1px solid rgba(239,68,68,0.2)", borderRadius: "7px", py: "8px",
+                        transition: "background 0.12s, border-color 0.12s",
+                        "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
+                      }}
+                    >
+                      Réinitialiser
+                    </Box>
+                  )}
                 </Box>
-
-                <Box>
-                  <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
-                    Échéance
-                  </Box>
-                  <Box component="select" value={filters.overdue}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, overdue: e.target.value }))}
-                    sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
-                  >
-                    <option value="">Toutes</option>
-                    <option value="yes">En retard</option>
-                    <option value="no">Dans les délais</option>
-                  </Box>
-                </Box>
-
-                {hasActiveFilters && (
-                  <Box
-                    component="button"
-                    onClick={() => { setFilters({ status: "", overdue: "" }); setFiltersOpen(false); }}
-                    sx={{
-                      all: "unset", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      gap: "6px", mt: "4px",
-                      fontSize: "12px", fontWeight: 600,
-                      color: "var(--red)",
-                      background: "var(--red-subtle)",
-                      border: "1px solid rgba(239,68,68,0.2)",
-                      borderRadius: "7px",
-                      py: "8px",
-                      transition: "background 0.12s, border-color 0.12s",
-                      "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
-                    }}
-                  >
-                    Réinitialiser
-                  </Box>
-                )}
               </Box>
             )}
           </Box>

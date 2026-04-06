@@ -55,7 +55,7 @@ export const DurationPicker: React.FC<DurationPickerProps> = ({
       component="input"
       type="text"
       value={text}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setText(e.target.value); const parsed = parse(e.target.value); if (parsed > 0) onChange(parsed); }}
       onFocus={(e: React.FocusEvent<HTMLInputElement>) => { setFocused(true); e.target.select() }}
       onBlur={commit}
       onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); commit() } }}

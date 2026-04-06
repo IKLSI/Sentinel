@@ -11,6 +11,9 @@ import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import EuroOutlined from "@mui/icons-material/EuroOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
+import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import type { HealthGrade } from "../../../types";
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -23,19 +26,24 @@ const TICKET_STATUS_CONFIG = [
   { key: "Closed",     label: "Clôturé",  color: "var(--muted)" },
 ];
 
-const PRIORITY_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  Critical: { color: "var(--red)",    bg: "var(--red-subtle)",    label: "Critique" },
-  High:     { color: "var(--orange)", bg: "var(--orange-subtle)", label: "Élevée"   },
-  Medium:   { color: "var(--yellow)", bg: "var(--yellow-subtle)", label: "Moyenne"  },
-  Low:      { color: "var(--green)",  bg: "var(--green-subtle)",  label: "Faible"   },
+const PRIORITY_CONFIG: Record<string, { color: string; bg: string }> = {
+  Critical: { color: "var(--red)",    bg: "var(--red-subtle)"    },
+  High:     { color: "var(--orange)", bg: "var(--orange-subtle)" },
+  Medium:   { color: "var(--yellow)", bg: "var(--yellow-subtle)" },
+  Low:      { color: "var(--green)",  bg: "var(--green-subtle)"  },
 };
 
-const ACTIVITY_COLOR: Record<string, string> = {
-  accent: "var(--accent)",
-  red:    "var(--red)",
-  green:  "var(--green)",
-  yellow: "var(--yellow)",
-  blue:   "var(--blue)",
+const PRIORITY_LEVEL: Record<string, number> = {
+  Critical: 4, High: 3, Medium: 2, Low: 1,
+};
+
+
+const ACTIVITY_CONFIG: Record<string, { color: string; Icon: React.ElementType }> = {
+  accent: { color: "var(--accent)", Icon: InfoOutlined          },
+  red:    { color: "var(--red)",    Icon: ErrorOutlined         },
+  green:  { color: "var(--green)",  Icon: TaskAltOutlined       },
+  yellow: { color: "var(--yellow)", Icon: WarningAmberOutlined  },
+  blue:   { color: "var(--blue)",   Icon: StorageOutlined       },
 };
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -477,24 +485,12 @@ const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ti
         },
       }}
     >
-      {/* Dot */}
-      <Box sx={{
-        width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
-        background: p.color,
-        boxShadow: `0 0 7px ${p.color}99`,
-      }} />
-
-      {/* Priority label */}
-      <Box sx={{
-        fontSize: "9px", fontWeight: 700, color: p.color,
-        textTransform: "uppercase", letterSpacing: "0.08em",
-        flexShrink: 0, minWidth: "46px",
-      }}>
-        {p.label}
+      {/* Level bars */}
+      <Box sx={{ display: "flex", alignItems: "flex-end", gap: "1.5px", height: "10px", flexShrink: 0, color: p.color }}>
+        {[1, 2, 3, 4].map(i => (
+          <Box key={i} sx={{ width: "3px", height: `${4 + i * 1.5}px`, borderRadius: "1px", background: "currentColor", opacity: i <= (PRIORITY_LEVEL[key] ?? 1) ? 1 : 0.15 }} />
+        ))}
       </Box>
-
-      {/* Séparateur */}
-      <Box sx={{ width: "1px", height: "18px", background: "var(--border)", flexShrink: 0 }} />
 
       {/* Titre + méta */}
       <Box sx={{ flex: 1, overflow: "hidden" }}>
@@ -529,53 +525,33 @@ const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ti
 // ── Activity Card ──────────────────────────────────────────────────────
 
 const ActivityCard: React.FC<{ item: ActivityItem }> = ({ item }) => {
-  const color = ACTIVITY_COLOR[item.color] ?? "var(--accent)";
-  const rel   = item.timestamp ? formatRelativeTime(item.timestamp) : "";
+  const cfg = ACTIVITY_CONFIG[item.color] ?? ACTIVITY_CONFIG.accent;
   return (
     <Box sx={{
       display: "flex", alignItems: "center", gap: "10px",
       background: "var(--s2)", border: "1px solid var(--border)",
-      borderRadius: "8px", p: "6px 12px", cursor: "default", flex: 1,
-      transition: "border-color 0.15s, background 0.15s, transform 0.15s",
-      "&:hover": { borderColor: "var(--border2)", background: "var(--s3)", transform: "translateX(2px)" },
+      borderRadius: "8px", p: "6px 12px", cursor: "default",
     }}>
-      {/* Dot — même emplacement que HealthScoreCircle */}
       <Box sx={{
-        width: "36px", height: "36px", borderRadius: "9px", flexShrink: 0,
-        background: `color-mix(in srgb, ${color} 12%, transparent)`,
-        border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+        width: "28px", height: "28px", borderRadius: "8px", flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
+        color: cfg.color,
       }}>
-        <Box sx={{
-          width: "8px", height: "8px", borderRadius: "50%",
-          background: color, boxShadow: `0 0 8px ${color}88`,
-        }} />
+        <cfg.Icon sx={{ fontSize: 14 }} />
       </Box>
-
-      {/* Content */}
       <Box sx={{ flex: 1, overflow: "hidden" }}>
         <Box sx={{
-          fontSize: "12px", fontWeight: 500, color: "var(--text)",
+          fontSize: "12px", fontWeight: 600, color: "var(--text)",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          letterSpacing: "-0.015em",
+          letterSpacing: "-0.02em",
         }}>
           {item.text}
         </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: "2px" }}>
-          {item.detail && (
-            <>
-              <Box sx={{
-                fontSize: "9px", color: "var(--muted)", fontFamily: "var(--font-mono)",
-              }}>
-                {item.detail}
-              </Box>
-              <Box sx={{ width: "2px", height: "2px", borderRadius: "50%", background: "var(--border2)", flexShrink: 0 }} />
-            </>
-          )}
-          <Box sx={{ fontSize: "9px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-            il y a {rel}
+        {item.detail && (
+          <Box sx={{ fontSize: "9px", color: "var(--muted)", fontFamily: "var(--font-mono)", mt: "2px" }}>
+            {item.detail}
           </Box>
-        </Box>
+        )}
       </Box>
     </Box>
   );
