@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -11,11 +11,14 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import {
   getProjects,
+  getProject,
   createProject,
   updateProject,
   deleteProject,
+  scanProject,
   ProjectDto,
 } from "../../techHealth/api/projects";
 
@@ -130,6 +133,10 @@ export const ProjectsPage: React.FC = () => {
   const [editName, setEditName] = useState("");
   const [editRepoUrl, setEditRepoUrl] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+  const [scanningId, setScanningId] = useState<string | null>(null);
+  const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (scanPollRef.current) clearTimeout(scanPollRef.current); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -199,6 +206,40 @@ export const ProjectsPage: React.FC = () => {
       showToast("Erreur lors de la suppression", "error");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleScan = async (id: string) => {
+    if (scanningId) return;
+    setScanningId(id);
+    const previousLastScanAt = projects.find((p) => p.id === id)?.lastScanAt;
+    const deadline = Date.now() + 10 * 60 * 1000;
+    try {
+      await scanProject(id);
+      showToast("Scan lancé, analyse en cours…", "info");
+      const poll = async () => {
+        if (Date.now() > deadline) {
+          setScanningId(null);
+          showToast("Timeout : le scan prend plus de temps que prévu", "warning");
+          return;
+        }
+        try {
+          const updated = await getProject(id);
+          if (updated.lastScanAt !== previousLastScanAt) {
+            setProjects((prev) => prev.map((p) => p.id === id ? { ...p, healthScore: updated.healthScore, healthGrade: updated.healthGrade, totalDependencies: updated.totalDependencies, vulnerableDependencies: updated.vulnerableDependencies, criticalVulnerabilities: updated.criticalVulnerabilities } : p));
+            setScanningId(null);
+            showToast("Scan terminé", "success");
+          } else {
+            scanPollRef.current = setTimeout(poll, 3000);
+          }
+        } catch {
+          scanPollRef.current = setTimeout(poll, 5000);
+        }
+      };
+      scanPollRef.current = setTimeout(poll, 2000);
+    } catch {
+      showToast("Impossible de lancer le scan", "error");
+      setScanningId(null);
     }
   };
 
@@ -326,7 +367,7 @@ export const ProjectsPage: React.FC = () => {
                       })}
                       <Box component="th" sx={{
                         padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                        background: "var(--s2)", width: "72px",
+                        background: "var(--s2)", width: "100px",
                       }} />
                     </Box>
                   </Box>
@@ -337,6 +378,8 @@ export const ProjectsPage: React.FC = () => {
                         project={project}
                         onEdit={() => openEdit(project)}
                         onDelete={() => setDeleteTarget(project)}
+                        onScan={() => handleScan(project.id)}
+                        isScanning={scanningId === project.id}
                       />
                     ))}
                   </Box>
@@ -407,7 +450,9 @@ const ProjectRow: React.FC<{
   project: ProjectDto;
   onEdit: () => void;
   onDelete: () => void;
-}> = ({ project, onEdit, onDelete }) => {
+  onScan: () => void;
+  isScanning: boolean;
+}> = ({ project, onEdit, onDelete, onScan, isScanning }) => {
   const navigate = useNavigate();
   const color = gradeColor(project.healthGrade);
 
@@ -463,6 +508,20 @@ const ProjectRow: React.FC<{
 
       <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <Box
+            component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onScan(); }} title="Lancer un scan"
+            disabled={isScanning}
+            sx={{
+              all: "unset", cursor: isScanning ? "default" : "pointer",
+              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "6px", color: isScanning ? "var(--accent)" : "var(--muted)",
+              opacity: isScanning ? 0.7 : 1,
+              transition: "background 0.12s, color 0.12s",
+              ...(!isScanning && { "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" } }),
+            }}
+          >
+            <RefreshOutlined sx={{ fontSize: 14, animation: isScanning ? "spin 1s linear infinite" : "none" }} />
+          </Box>
           <Box
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onEdit(); }} title="Modifier"
             sx={{
