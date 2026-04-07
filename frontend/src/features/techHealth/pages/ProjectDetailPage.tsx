@@ -123,6 +123,9 @@ const TH: React.FC<{ children: React.ReactNode; width?: string }> = ({ children,
       borderBottom: "1px solid var(--border)",
       whiteSpace: "nowrap",
       width: width ?? "auto",
+      position: "sticky",
+      top: 0,
+      zIndex: 1,
     }}
   >
     {children}
@@ -326,11 +329,12 @@ export const ProjectDetailPage: React.FC = () => {
 
   return (
     <>
-      <Box className="page-enter" sx={{ p: "36px 28px 24px" }}>
+      <Box className="page-enter" sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* ── Header card ─────────────────────────────────────────── */}
         <Box
           sx={{
+            flexShrink: 0,
             background: "var(--s1)",
             border: "1px solid var(--border)",
             borderRadius: "var(--r)",
@@ -430,6 +434,10 @@ export const ProjectDetailPage: React.FC = () => {
         {/* ── Tab panel ───────────────────────────────────────────── */}
         <Box
           sx={{
+            flex: "0 1 auto",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
             background: "var(--s1)",
             border: "1px solid var(--border)",
             borderRadius: "var(--r)",
@@ -439,6 +447,7 @@ export const ProjectDetailPage: React.FC = () => {
           {/* Tab header */}
           <Box
             sx={{
+              flexShrink: 0,
               height: "44px",
               display: "flex",
               alignItems: "stretch",
@@ -458,6 +467,10 @@ export const ProjectDetailPage: React.FC = () => {
           <Box
             key={activeTab}
             sx={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
               p: "20px",
               animation: "tabIn 0.18s cubic-bezier(0.4,0,0.2,1) both",
               "@keyframes tabIn": {
@@ -472,8 +485,7 @@ export const ProjectDetailPage: React.FC = () => {
               allVulns.length === 0 ? (
                 <Box sx={{
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  gap: "10px", p: "24px",
-                  borderRadius: "var(--r)",
+                  gap: "10px", p: "24px", borderRadius: "var(--r)",
                 }}>
                   <CheckCircleOutlined sx={{ fontSize: 32, color: "var(--green)" }} />
                   <Box sx={{ fontSize: "14px", color: "var(--green)", textAlign: "center" }}>
@@ -481,18 +493,20 @@ export const ProjectDetailPage: React.FC = () => {
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
-                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                    <Box component="thead">
-                      <Box component="tr">
-                        <TH width="160px">Score</TH>
-                        <TH>Vulnérabilité</TH>
-                        <TH width="160px">Référence CVE</TH>
-                        <TH width="140px">Version corrigée</TH>
+                <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ overflowY: "auto" }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                      <Box component="thead">
+                        <Box component="tr">
+                          <TH width="160px">Score</TH>
+                          <TH>Vulnérabilité</TH>
+                          <TH width="160px">Référence CVE</TH>
+                          <TH width="140px">Version corrigée</TH>
+                        </Box>
                       </Box>
-                    </Box>
-                    <Box component="tbody">
-                      {sortedVulns.map((v) => <VulnRow key={v.id} vuln={v} />)}
+                      <Box component="tbody">
+                        {sortedVulns.map((v) => <VulnRow key={v.id} vuln={v} />)}
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
@@ -501,9 +515,9 @@ export const ProjectDetailPage: React.FC = () => {
 
             {/* ── Dépendances ───────────────────────────────────── */}
             {activeTab === 1 && (
-              <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
+              <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {/* Search bar */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: "12px", px: "16px", py: "14px", borderBottom: "1px solid var(--border)", background: "var(--s2)" }}>
+                <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "12px", px: "16px", py: "14px", borderBottom: "1px solid var(--border)", background: "var(--s2)" }}>
                   <Box sx={{
                     display: "flex", alignItems: "center", gap: "7px",
                     background: "var(--s1)", border: "1px solid var(--border)",
@@ -526,67 +540,68 @@ export const ProjectDetailPage: React.FC = () => {
                     </Box>
                   )}
                 </Box>
-              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                <Box component="thead">
-                  <Box component="tr">
-                    <TH>Librairie</TH>
-                    <TH width="90px">Écosystème</TH>
-                    <TH width="60px">Type</TH>
-                    <TH width="180px">Version</TH>
-                    <TH width="110px">Statut</TH>
-                    <TH width="70px">Vulnérabilités</TH>
-                  </Box>
-                </Box>
-                <Box component="tbody">
-                  {filteredDeps.length === 0 ? (
-                    <Box component="tr">
-                      <Box component="td" colSpan={6} sx={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px", borderBottom: "none" }}>
-                        Aucun résultat
+                <Box sx={{ overflowY: "auto" }}>
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                    <Box component="thead">
+                      <Box component="tr">
+                        <TH>Librairie</TH>
+                        <TH width="90px">Écosystème</TH>
+                        <TH width="60px">Type</TH>
+                        <TH width="180px">Version</TH>
+                        <TH width="110px">Statut</TH>
+                        <TH width="70px">Vulnérabilités</TH>
                       </Box>
                     </Box>
-                  ) : (
-                    filteredDeps.map((d: DependencyDto) => {
-                      const s = DEP_STATUS[d.status] ?? { label: d.status, variant: "gray" as const };
-                      const accent = undefined;
-                      return (
-                        <TR key={d.id} accent={accent}>
-                          <TD>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <InventoryOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
-                              <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600 }}>{d.name}</Box>
-                            </Box>
-                          </TD>
-                          <TD>
-                            <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", background: "var(--s3)", px: "7px", py: "2px", borderRadius: "3px" }}>
-                              {d.ecosystem}
-                            </Box>
-                          </TD>
-                          <TD>
-                            <StatusChip variant="gray">{d.type === "Prod" ? "Prod" : "Dev"}</StatusChip>
-                          </TD>
-                          <TD mono muted>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <span>{d.currentVersion}</span>
-                              {d.latestVersion && d.latestVersion !== d.currentVersion && (
-                                <>
-                                  <Box component="span" sx={{ color: "var(--muted)", fontFamily: "var(--font-mono)" }}>→</Box>
-                                  <Box component="span" sx={{ color: "var(--orange)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{d.latestVersion}</Box>
-                                </>
-                              )}
-                            </Box>
-                          </TD>
-                          <TD><StatusChip variant={s.variant}>{s.label}</StatusChip></TD>
-                          <TD>
-                            {d.vulnerabilities.length > 0
-                              ? <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
-                              : <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>—</Box>}
-                          </TD>
-                        </TR>
-                      );
-                    })
-                  )}
+                    <Box component="tbody">
+                      {filteredDeps.length === 0 ? (
+                        <Box component="tr">
+                          <Box component="td" colSpan={6} sx={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px", borderBottom: "none" }}>
+                            Aucun résultat
+                          </Box>
+                        </Box>
+                      ) : (
+                        filteredDeps.map((d: DependencyDto) => {
+                          const s = DEP_STATUS[d.status] ?? { label: d.status, variant: "gray" as const };
+                          return (
+                            <TR key={d.id}>
+                              <TD>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <InventoryOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
+                                  <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600 }}>{d.name}</Box>
+                                </Box>
+                              </TD>
+                              <TD>
+                                <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", background: "var(--s3)", px: "7px", py: "2px", borderRadius: "3px" }}>
+                                  {d.ecosystem}
+                                </Box>
+                              </TD>
+                              <TD>
+                                <StatusChip variant="gray">{d.type === "Prod" ? "Prod" : "Dev"}</StatusChip>
+                              </TD>
+                              <TD mono muted>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span>{d.currentVersion}</span>
+                                  {d.latestVersion && d.latestVersion !== d.currentVersion && (
+                                    <>
+                                      <Box component="span" sx={{ color: "var(--muted)", fontFamily: "var(--font-mono)" }}>→</Box>
+                                      <Box component="span" sx={{ color: "var(--orange)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{d.latestVersion}</Box>
+                                    </>
+                                  )}
+                                </Box>
+                              </TD>
+                              <TD><StatusChip variant={s.variant}>{s.label}</StatusChip></TD>
+                              <TD>
+                                {d.vulnerabilities.length > 0
+                                  ? <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+                                  : <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>—</Box>}
+                              </TD>
+                            </TR>
+                          );
+                        })
+                      )}
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
               </Box>
             )}
 
@@ -599,17 +614,19 @@ export const ProjectDetailPage: React.FC = () => {
                   <Box className="empty-state-subtitle">Lancez un scan pour détecter les runtimes du projet.</Box>
                 </Box>
               ) : (
-                <Box sx={{ border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden" }}>
-                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                    <Box component="thead">
-                      <Box component="tr">
-                        <TH>Runtime</TH>
-                        <TH width="120px">Version</TH>
-                        <TH width="160px">Fin de support</TH>
+                <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ overflowY: "auto" }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                      <Box component="thead">
+                        <Box component="tr">
+                          <TH>Runtime</TH>
+                          <TH width="120px">Version</TH>
+                          <TH width="160px">Fin de support</TH>
+                        </Box>
                       </Box>
-                    </Box>
-                    <Box component="tbody">
-                      {project.runtimes.map((r: RuntimeDto) => <RuntimeRow key={r.id} runtime={r} />)}
+                      <Box component="tbody">
+                        {project.runtimes.map((r: RuntimeDto) => <RuntimeRow key={r.id} runtime={r} />)}
+                      </Box>
                     </Box>
                   </Box>
                 </Box>

@@ -277,25 +277,6 @@ export const InvoiceDetailPage: React.FC = () => {
                       }}
                     >
                       {isOverdueStep ? "En retard" : step.label}
-                      {isOverdueStep && overduedays > 0 && (
-                        <Box
-                          component="span"
-                          sx={{
-                            ml: "6px",
-                            fontSize: "9px",
-                            fontWeight: 700,
-                            px: "5px",
-                            py: "1px",
-                            borderRadius: "4px",
-                            background: "rgba(239,68,68,0.12)",
-                            color: "var(--red)",
-                            fontFamily: "var(--font-mono)",
-                            verticalAlign: "middle",
-                          }}
-                        >
-                          +{overduedays}j
-                        </Box>
-                      )}
                     </Box>
                     {dateLine && (
                       <Box
@@ -439,10 +420,6 @@ export const InvoiceDetailPage: React.FC = () => {
                       label: "Échéance",
                       value: fmtDate(invoice.dueAt),
                       alert: overdue,
-                      badge:
-                        overdue && overduedays > 0
-                          ? `+${overduedays}j`
-                          : undefined,
                     },
                     ...(invoice.paidAt
                       ? [
@@ -548,10 +525,7 @@ export const InvoiceDetailPage: React.FC = () => {
                     label: "Taux horaire",
                     value: hourlyRate > 0 ? fmtEur(hourlyRate) : "—",
                   },
-                  {
-                    label: "Heures facturées",
-                    value: `${invoice.totalHours} h`,
-                  },
+
                 ].map(({ label, value }) => (
                   <Box
                     key={label}
@@ -594,24 +568,26 @@ export const InvoiceDetailPage: React.FC = () => {
           {/* ─ Ligne de prestation ─ */}
           <Box
             component="table"
-            sx={{ width: "100%", borderCollapse: "collapse" }}
+            sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}
           >
             <Box component="thead">
               <Box component="tr" sx={{ background: "var(--s2)" }}>
                 {(
                   [
-                    "Description",
-                    "TVA",
-                    "Montant HT",
-                    "Montant TTC",
+                    { label: "Description", width: "auto" },
+                    { label: "Heures", width: "100px" },
+                    { label: "TVA", width: "100px" },
+                    { label: "Montant HT", width: "150px" },
+                    { label: "Montant TTC", width: "160px" },
                   ] as const
-                ).map((h, i) => (
+                ).map(({ label, width }, i) => (
                   <Box
                     component="th"
-                    key={h}
+                    key={label}
                     sx={{
-                      px: i === 0 ? "32px" : "20px",
-                      pr: i === 3 ? "32px" : undefined,
+                      width,
+                      pl: i === 0 ? "32px" : "20px",
+                      pr: i === 0 ? undefined : i === 4 ? "32px" : "12px",
                       py: "10px",
                       fontFamily: "var(--font-mono)",
                       fontSize: "10px",
@@ -623,7 +599,7 @@ export const InvoiceDetailPage: React.FC = () => {
                       borderBottom: "1px solid var(--border)",
                     }}
                   >
-                    {h}
+                    {label}
                   </Box>
                 ))}
               </Box>
@@ -655,7 +631,24 @@ export const InvoiceDetailPage: React.FC = () => {
                 <Box
                   component="td"
                   sx={{
-                    px: "20px",
+                    pl: "20px",
+                    pr: "12px",
+                    py: "18px",
+                    textAlign: "right",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--text)",
+                  }}
+                >
+                  {invoice.totalHours}
+                  <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)", ml: "2px" }}>h</Box>
+                </Box>
+                <Box
+                  component="td"
+                  sx={{
+                    pl: "20px",
+                    pr: "12px",
                     py: "18px",
                     textAlign: "right",
                     fontFamily: "var(--font-mono)",
@@ -669,7 +662,8 @@ export const InvoiceDetailPage: React.FC = () => {
                 <Box
                   component="td"
                   sx={{
-                    px: "20px",
+                    pl: "20px",
+                    pr: "12px",
                     py: "18px",
                     textAlign: "right",
                     fontFamily: "var(--font-mono)",
