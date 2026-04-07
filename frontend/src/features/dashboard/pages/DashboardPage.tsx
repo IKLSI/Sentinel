@@ -333,7 +333,6 @@ export const DashboardPage: React.FC = () => {
         <Panel delay={340}>
           <PanelHead
             title="Répartition par statut"
-            action={<ViewBtn onClick={() => navigate("/tickets")} />}
           />
           <Box sx={{ p: "20px 22px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
             <StatusDistribution ticketsByStatus={stats.ticketsByStatus} />
@@ -342,18 +341,16 @@ export const DashboardPage: React.FC = () => {
 
         <Panel delay={420}>
           <PanelHead
-            title="Santé technique"
-            badge={techProjects.length > 0
-              ? <CountBadge count={techProjects.length} />
-              : undefined}
-            action={<ViewBtn onClick={() => navigate("/tech-health")} />}
+            title="Projets"
+            badge={undefined}
+            action={<ViewBtn onClick={() => navigate("/projects")} />}
           />
           <Box sx={{ p: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
             {techProjects.length === 0 ? (
               <EmptyState text="Aucun projet configuré." />
             ) : (
               techProjects.slice(0, 4).map((p) => (
-                <TechProjectRow key={p.id} project={p} onClick={() => navigate("/tech-health")} />
+                <TechProjectRow key={p.id} project={p} onClick={() => navigate(`/projects/${p.id}`)} />
               ))
             )}
           </Box>
@@ -651,7 +648,7 @@ const TechProjectRow: React.FC<{ project: ProjectDto; onClick: () => void }> = (
         border: "1px solid color-mix(in srgb, var(--red) 25%, transparent)",
       }}>
         <WarningAmberOutlined sx={{ fontSize: 10 }} />
-        {project.criticalVulnerabilities} CVE
+        {project.criticalVulnerabilities} critique{project.criticalVulnerabilities > 1 ? 's' : ''}
       </Box>
     )}
     <ChevronRightOutlined sx={{ fontSize: 14, color: "var(--muted)", opacity: 0.4, flexShrink: 0 }} />
