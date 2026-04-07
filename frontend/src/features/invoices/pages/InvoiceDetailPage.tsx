@@ -601,7 +601,7 @@ export const InvoiceDetailPage: React.FC = () => {
                 {(
                   [
                     "Description",
-                    `TVA (${invoice.taxRate}%)`,
+                    "TVA",
                     "Montant HT",
                     "Montant TTC",
                   ] as const
@@ -614,9 +614,9 @@ export const InvoiceDetailPage: React.FC = () => {
                       pr: i === 3 ? "32px" : undefined,
                       py: "10px",
                       fontFamily: "var(--font-mono)",
-                      fontSize: "9px",
-                      fontWeight: 600,
-                      letterSpacing: "0.1em",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
                       textTransform: "uppercase",
                       color: "var(--muted)",
                       textAlign: i === 0 ? "left" : "right",
@@ -664,7 +664,7 @@ export const InvoiceDetailPage: React.FC = () => {
                     color: "var(--muted2)",
                   }}
                 >
-                  {fmtEur(invoice.taxAmount)}
+                  {invoice.taxRate} %
                 </Box>
                 <Box
                   component="td"
