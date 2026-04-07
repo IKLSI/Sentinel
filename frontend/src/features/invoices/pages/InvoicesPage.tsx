@@ -28,7 +28,7 @@ import IconButton from "@mui/material/IconButton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 20;
 
 function getPageNumbers(page: number, totalPages: number): (number | "...")[] {
   if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -467,10 +467,11 @@ export const InvoicesPage: React.FC = () => {
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                   <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
-                      {["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""].map((h) => (
+                      {(["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""] as const).map((h) => (
                         <Box component="th" key={h} sx={{
-                          fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em",
-                          textTransform: "uppercase", color: "var(--muted)", textAlign: "left",
+                          fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
+                          textTransform: "uppercase", color: "var(--muted)",
+                          textAlign: ["Heures", "HT", "TTC"].includes(h) ? "center" : "left",
                           padding: "10px 14px", borderBottom: "1px solid var(--border)",
                           background: "var(--s2)", whiteSpace: "nowrap",
                           cursor: "default", userSelect: "none",
@@ -512,19 +513,19 @@ export const InvoicesPage: React.FC = () => {
                           </Box>
                           <Box component="td" sx={{
                             padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px",
+                            fontFamily: "var(--font-mono)", fontSize: "12px", textAlign: "center",
                           }}>
                             {inv.totalHours}h
                           </Box>
                           <Box component="td" sx={{
                             padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-secondary)",
+                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-secondary)", textAlign: "center",
                           }}>
                             {fmtEur(inv.totalAmount)}
                           </Box>
                           <Box component="td" sx={{
                             padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--green)",
+                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--green)", textAlign: "center",
                           }}>
                             {fmtEur(inv.totalWithTax)}
                           </Box>
@@ -611,14 +612,13 @@ export const InvoicesPage: React.FC = () => {
           </Box>
           <Box>
             <Box component="label" sx={labelSx}>
-              Projet associé{" "}
-              <Box component="span" sx={{ color: "var(--muted)", fontSize: "11px" }}>(optionnel)</Box>
+              Projet associé
             </Box>
-            <Box component="select" sx={inputSx}
+            <Box component="select" sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
               value={selectedProjectId}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProjectId(e.target.value)}
             >
-              <option value="">— Aucun projet —</option>
+              <option value="">Aucun projet</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Box>
           </Box>
