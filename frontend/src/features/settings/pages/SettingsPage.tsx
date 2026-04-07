@@ -573,7 +573,16 @@ export const SettingsPage: React.FC = () => {
           </Box>
           <Box>
             <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Rôle</Box>
-            <Box component="select" sx={inp} value={inv.role}
+            <Box component="select" sx={{
+              appearance: 'none', WebkitAppearance: 'none',
+              width: '100%', boxSizing: 'border-box',
+              background: 'var(--s1)',
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+              border: '1px solid var(--border)', borderRadius: 'var(--r)',
+              px: '12px', py: '7px', pr: '36px',
+              fontSize: '13px', color: 'var(--text)', outline: 'none', fontFamily: 'inherit',
+            }} value={inv.role}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
               <option value="Admin">Administrateur</option>
               <option value="Developer">Développeur</option>
