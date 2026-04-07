@@ -336,6 +336,8 @@ a:hover { text-decoration: underline; }
 .lp-input:focus { border-color:#6366f1 !important; box-shadow:0 0 0 3px rgba(99,102,241,0.1) !important; background:#fff; }
 .lp-pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9ca3af; cursor:pointer; padding:4px; transition:color 0.15s; }
 .lp-pw-toggle:hover { color:#6b7280; }
+.lp-input--error { border-color:#fca5a5 !important; background:#fff5f5 !important; }
+.lp-input--error:focus { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,0.12) !important; }
 
 /* Submit */
 .lp-submit { width:100%; padding:13px 20px; background:linear-gradient(135deg,#4338ca 0%,#6366f1 100%); border:none; border-radius:9px; color:#fff; font-size:14px; font-weight:700; font-family:var(--font-ui); cursor:pointer; position:relative; overflow:hidden; transition:transform 0.15s,box-shadow 0.2s,opacity 0.2s; letter-spacing:-0.01em; box-shadow:0 4px 18px rgba(99,102,241,0.28); display:flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; opacity:0; animation:lp-up 0.5s 0.66s forwards; }

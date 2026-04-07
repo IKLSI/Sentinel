@@ -14,6 +14,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [mounted, setMounted] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +30,7 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      showToast("Veuillez remplir tous les champs", "warning");
+      showToast("Veuillez remplir tous les champs.", "warning");
       return;
     }
     setLoading(true);
@@ -37,7 +38,8 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       navigate("/");
     } catch {
-      showToast("Identifiants incorrects", "error");
+      setHasError(true);
+      showToast("Identifiants incorrects.", "error");
     } finally {
       setLoading(false);
     }
@@ -173,9 +175,9 @@ export const LoginPage: React.FC = () => {
                 id="lp-email"
                 ref={emailRef}
                 type="email"
-                className="lp-input"
+                className={`lp-input${hasError ? " lp-input--error" : ""}`}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setHasError(false); }}
                 placeholder="utilisateur@entreprise.com"
                 autoComplete="email"
                 required
@@ -191,11 +193,12 @@ export const LoginPage: React.FC = () => {
                   component="input"
                   id="lp-password"
                   type={showPassword ? "text" : "password"}
-                  className="lp-input"
+                  className={`lp-input${hasError ? " lp-input--error" : ""}`}
                   value={password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setPassword(e.target.value);
+                    setHasError(false);
+                  }}
                   placeholder="••••••••••"
                   autoComplete="current-password"
                   sx={{ paddingRight: "44px" }}
