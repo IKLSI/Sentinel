@@ -332,44 +332,57 @@ export const ProjectsPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ flex: 1, overflowY: "auto" }}>
-                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                  <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
-                    <Box component="tr">
-                      {COLS.map(({ key, label, numeric }) => {
-                        const isActive = sort?.key === key;
-                        return (
-                          <Box
-                            component="th" key={key}
-                            onClick={() => toggleSort(key)}
-                            sx={{
-                              fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              color: isActive ? "var(--accent)" : "var(--muted)",
-                              textAlign: numeric ? "center" : "left", padding: "10px 14px",
-                              borderBottom: "1px solid var(--border)",
-                              background: "var(--s2)", whiteSpace: "nowrap",
-                              cursor: "pointer", userSelect: "none",
-                              transition: "color 0.12s",
-                              "&:hover": { color: "var(--text-secondary)" },
-                            }}
-                          >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: numeric ? "center" : "flex-start" }}>
-                              {label}
-                              {isActive && (
-                                <Box sx={{ fontSize: "12px", color: "var(--accent)", lineHeight: 1 }}>
-                                  {sort?.dir === "asc" ? "↑" : "↓"}
-                                </Box>
-                              )}
-                            </Box>
+              <>
+              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
+                <Box component="colgroup">
+                  {(["37%","11%","15%","15%","13%","9%"] as const).map((w, i) => (
+                    <Box key={i} component="col" sx={{ width: w }} />
+                  ))}
+                </Box>
+                <Box component="thead">
+                  <Box component="tr">
+                    {COLS.map(({ key, label, numeric }) => {
+                      const isActive = sort?.key === key;
+                      return (
+                        <Box
+                          component="th" key={key}
+                          onClick={() => toggleSort(key)}
+                          sx={{
+                            fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            color: isActive ? "var(--accent)" : "var(--muted)",
+                            textAlign: numeric ? "center" : "left", padding: "10px 14px",
+                            borderBottom: "1px solid var(--border)",
+                            background: "var(--s2)", whiteSpace: "nowrap",
+                            cursor: "pointer", userSelect: "none",
+                            transition: "color 0.12s",
+                            "&:hover": { color: "var(--text-secondary)" },
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: numeric ? "center" : "flex-start" }}>
+                            {label}
+                            {isActive && (
+                              <Box sx={{ fontSize: "12px", color: "var(--accent)", lineHeight: 1 }}>
+                                {sort?.dir === "asc" ? "↑" : "↓"}
+                              </Box>
+                            )}
                           </Box>
-                        );
-                      })}
-                      <Box component="th" sx={{
-                        padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                        background: "var(--s2)", width: "100px",
-                      }} />
-                    </Box>
+                        </Box>
+                      );
+                    })}
+                    <Box component="th" sx={{
+                      padding: "10px 14px", borderBottom: "1px solid var(--border)",
+                      background: "var(--s2)",
+                    }} />
+                  </Box>
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1, overflowY: "auto" }}>
+                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                  <Box component="colgroup">
+                    {(["37%","11%","15%","15%","13%","9%"] as const).map((w, i) => (
+                      <Box key={i} component="col" sx={{ width: w }} />
+                    ))}
                   </Box>
                   <Box component="tbody">
                     {paged.map((project) => (
@@ -385,6 +398,7 @@ export const ProjectsPage: React.FC = () => {
                   </Box>
                 </Box>
               </Box>
+              </>
             )}
             <Pagination page={page} totalPages={totalPages} total={filtered.length} onChange={setPage} />
           </Box>

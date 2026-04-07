@@ -527,11 +527,16 @@ export const TicketsPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
-                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                  <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
-                    <Box component="tr">
-                      {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "Échéance", "Assigné", ""].map((h) => {
+              <>
+              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
+                <Box component="colgroup">
+                  {(["9%","24%","14%","9%","9%","10%","10%","11%","4%"] as const).map((w, i) => (
+                    <Box key={i} component="col" sx={{ width: w }} />
+                  ))}
+                </Box>
+                <Box component="thead">
+                  <Box component="tr">
+                    {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "Échéance", "Assigné", ""].map((h) => {
                         const sortable = h !== "Échéance";
                         const isActive = sort?.col === h;
                         return (
@@ -569,6 +574,14 @@ export const TicketsPage: React.FC = () => {
                         );
                       })}
                     </Box>
+                  </Box>
+                </Box>
+              <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
+                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                  <Box component="colgroup">
+                    {(["9%","24%","14%","9%","9%","10%","10%","11%","4%"] as const).map((w, i) => (
+                      <Box key={i} component="col" sx={{ width: w }} />
+                    ))}
                   </Box>
                   <Box component="tbody">
                     {filtered.map((ticket) => (
@@ -727,6 +740,7 @@ export const TicketsPage: React.FC = () => {
                   </Box>
                 </Box>
               </Box>
+              </>
             )}
 
             <Pagination

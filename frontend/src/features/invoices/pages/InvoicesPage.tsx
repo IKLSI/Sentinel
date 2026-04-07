@@ -463,23 +463,36 @@ export const InvoicesPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
+              <>
+              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
+                <Box component="colgroup">
+                  {(["9%","24%","10%","7%","11%","11%","10%","10%","8%"] as const).map((w, i) => (
+                    <Box key={i} component="col" sx={{ width: w }} />
+                  ))}
+                </Box>
+                <Box component="thead">
+                  <Box component="tr">
+                    {(["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""] as const).map((h) => (
+                      <Box component="th" key={h} sx={{
+                        fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
+                        textTransform: "uppercase", color: "var(--muted)",
+                        textAlign: ["Heures", "HT", "TTC"].includes(h) ? "center" : "left",
+                        padding: "10px 14px", borderBottom: "1px solid var(--border)",
+                        background: "var(--s2)", whiteSpace: "nowrap",
+                        cursor: "default", userSelect: "none",
+                      }}>
+                        {h}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
               <Box sx={{ flex: 1, overflowY: "auto" }}>
-                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-                  <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
-                    <Box component="tr">
-                      {(["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""] as const).map((h) => (
-                        <Box component="th" key={h} sx={{
-                          fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
-                          textTransform: "uppercase", color: "var(--muted)",
-                          textAlign: ["Heures", "HT", "TTC"].includes(h) ? "center" : "left",
-                          padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                          background: "var(--s2)", whiteSpace: "nowrap",
-                          cursor: "default", userSelect: "none",
-                        }}>
-                          {h}
-                        </Box>
-                      ))}
-                    </Box>
+                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                  <Box component="colgroup">
+                    {(["9%","24%","10%","7%","11%","11%","10%","10%","8%"] as const).map((w, i) => (
+                      <Box key={i} component="col" sx={{ width: w }} />
+                    ))}
                   </Box>
                   <Box component="tbody">
                     {paged.map((inv) => {
@@ -573,6 +586,7 @@ export const InvoicesPage: React.FC = () => {
                   </Box>
                 </Box>
               </Box>
+              </>
             )}
             <InvoicesPagination page={page} totalPages={totalPages} total={filtered.length} onChange={setPage} />
           </Box>
