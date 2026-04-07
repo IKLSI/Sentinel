@@ -19,6 +19,7 @@ import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOu
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined'
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
+import InfoOutlined from '@mui/icons-material/InfoOutlined'
 
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -340,7 +341,7 @@ export const SettingsPage: React.FC = () => {
                   appearance: 'none', WebkitAppearance: 'none',
                   background: "var(--s1) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\") no-repeat right 12px center",
                   border: '1px solid var(--border)', borderRadius: 'var(--r)',
-                  px: '12px', py: '7px', pr: '36px',
+                  px: '12px', height: '32px', pr: '36px', boxSizing: 'border-box',
                   fontSize: '13px', color: 'var(--text)',
                   outline: 'none', fontFamily: 'inherit', cursor: 'pointer',
                 }}
@@ -516,8 +517,16 @@ export const SettingsPage: React.FC = () => {
                       </Box>
 
                       <Box sx={{ px: '16px', py: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                          S'applique aux nouveaux tickets
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <InfoOutlined sx={{ fontSize: 13, color: 'var(--muted2)' }} />
+                          <Box sx={{
+                            fontSize: '11px', fontWeight: 700,
+                            color: 'var(--muted2)',
+                            fontFamily: 'var(--font-mono)',
+                            letterSpacing: '0.04em',
+                          }}>
+                            S'applique aux nouveaux tickets
+                          </Box>
                         </Box>
                         <Button variant="contained" size="small" onClick={handleSaveSla} disabled={savingSla || slaUnchanged} sx={{ minWidth: '110px' }}>
                           {savingSla ? 'Sauvegarde…' : 'Sauvegarder'}
@@ -547,7 +556,7 @@ export const SettingsPage: React.FC = () => {
         <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Box>
-              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Prénom *</Box>
+              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Prénom <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
               <Box component="input" type="text" sx={inp} value={inv.firstName} placeholder="Prénom"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, firstName: e.target.value }))} />
             </Box>
@@ -558,7 +567,7 @@ export const SettingsPage: React.FC = () => {
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>E-mail *</Box>
+            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>E-mail <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
             <Box component="input" type="email" sx={inp} value={inv.email} placeholder="prenom.nom@exemple.com"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
           </Box>
@@ -571,7 +580,7 @@ export const SettingsPage: React.FC = () => {
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Mot de passe temporaire *</Box>
+            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Mot de passe temporaire <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
             <Box component="input" type="password" sx={inp} value={inv.password} placeholder="Min. 8 caractères"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, password: e.target.value }))} />
             <Box sx={{ fontSize: '10px', color: 'var(--muted)', mt: '4px' }}>Le membre pourra le modifier depuis son profil.</Box>

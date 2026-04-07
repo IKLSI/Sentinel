@@ -315,21 +315,7 @@ export const TicketsPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, [filtersOpen]);
 
-  const [pageSize, setPageSize] = useState(20);
-
-  useEffect(() => {
-    const el = tableWrapRef.current;
-    if (!el) return;
-    const measure = () => {
-      const h = el.clientHeight;
-      const rows = Math.max(5, Math.floor((h - 40 - 53) / 44));
-      setPageSize(rows);
-    };
-    measure();
-    const obs = new ResizeObserver(measure);
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  const pageSize = 20;
 
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({ col: "Priorité", dir: "asc" });
 
@@ -514,7 +500,6 @@ export const TicketsPage: React.FC = () => {
           </Box>
         ) : (
           <Box
-            ref={tableWrapRef}
             sx={{
               background: "var(--s1)",
               border: "1px solid var(--border)",
@@ -542,7 +527,7 @@ export const TicketsPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ flex: 1, overflow: "hidden" }}>
+              <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                   <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
@@ -556,8 +541,9 @@ export const TicketsPage: React.FC = () => {
                             onClick={() => sortable && toggleSort(h)}
                             sx={{
                               fontFamily: "var(--font-mono)",
-                              fontSize: "9px",
-                              letterSpacing: "0.12em",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              letterSpacing: "0.08em",
                               textTransform: "uppercase",
                               color: isActive ? "var(--accent)" : "var(--muted)",
                               textAlign: "left",
@@ -768,7 +754,7 @@ export const TicketsPage: React.FC = () => {
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre *</Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
             <Box component="input" autoFocus type="text" placeholder="Description courte du problème" value={createForm.title}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
@@ -860,7 +846,7 @@ export const TicketsPage: React.FC = () => {
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre *</Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
             <Box component="input" autoFocus type="text" value={editForm.title}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, title: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}

@@ -1039,7 +1039,7 @@ export const TimeTrackingPage: React.FC = () => {
             </FormField>
           </Box>
 
-          <FormField label="Description *">
+          <FormField label={<>Description <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>}>
             <Box component="input" type="text" sx={inputSx}
               value={form.comment}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>

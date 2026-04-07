@@ -25,7 +25,7 @@ import {
 type SortKey = "name" | "healthScore" | "totalDependencies" | "vulnerableDependencies" | "criticalVulnerabilities";
 type SortDir = "asc" | "desc";
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 20;
 
 const gradeColor = (grade: string) => {
   switch (grade) {
@@ -267,12 +267,12 @@ export const ProjectsPage: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const COLS: { key: SortKey; label: string }[] = [
+  const COLS: { key: SortKey; label: string; numeric?: boolean }[] = [
     { key: "name", label: "Nom" },
-    { key: "healthScore", label: "Score" },
-    { key: "totalDependencies", label: "Dépendances" },
-    { key: "vulnerableDependencies", label: "Vulnérables" },
-    { key: "criticalVulnerabilities", label: "Critiques" },
+    { key: "healthScore", label: "Score", numeric: true },
+    { key: "totalDependencies", label: "Dépendances", numeric: true },
+    { key: "vulnerableDependencies", label: "Vulnérables", numeric: true },
+    { key: "criticalVulnerabilities", label: "Critiques", numeric: true },
   ];
 
   return (
@@ -336,17 +336,17 @@ export const ProjectsPage: React.FC = () => {
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
                   <Box component="thead" sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                     <Box component="tr">
-                      {COLS.map(({ key, label }) => {
+                      {COLS.map(({ key, label, numeric }) => {
                         const isActive = sort?.key === key;
                         return (
                           <Box
                             component="th" key={key}
                             onClick={() => toggleSort(key)}
                             sx={{
-                              fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em",
+                              fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
                               textTransform: "uppercase",
                               color: isActive ? "var(--accent)" : "var(--muted)",
-                              textAlign: "left", padding: "10px 14px",
+                              textAlign: numeric ? "center" : "left", padding: "10px 14px",
                               borderBottom: "1px solid var(--border)",
                               background: "var(--s2)", whiteSpace: "nowrap",
                               cursor: "pointer", userSelect: "none",
@@ -354,7 +354,7 @@ export const ProjectsPage: React.FC = () => {
                               "&:hover": { color: "var(--text-secondary)" },
                             }}
                           >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: numeric ? "center" : "flex-start" }}>
                               {label}
                               {isActive && (
                                 <Box sx={{ fontSize: "12px", color: "var(--accent)", lineHeight: 1 }}>
@@ -407,7 +407,7 @@ export const ProjectsPage: React.FC = () => {
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <ModalField label="Nom du projet *" placeholder="Ex : API Paiement v2" value={formName} onChange={setFormName} autoFocus />
+          <ModalField label={<>Nom du projet <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} placeholder="Ex : API Paiement v2" value={formName} onChange={setFormName} autoFocus />
           <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={formRepoUrl} onChange={setFormRepoUrl} />
         </Box>
       </AppModal>
@@ -428,7 +428,7 @@ export const ProjectsPage: React.FC = () => {
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <ModalField label="Nom du projet *" value={editName} onChange={setEditName} />
+          <ModalField label={<>Nom du projet <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} value={editName} onChange={setEditName} />
           <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={editRepoUrl} onChange={setEditRepoUrl} />
         </Box>
       </AppModal>
@@ -473,7 +473,7 @@ const ProjectRow: React.FC<{
         )}
       </Box>
 
-      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
         <Box sx={{
           px: "6px", py: "2px",
           background: `${color}18`, border: `1px solid ${color}40`,
@@ -484,7 +484,7 @@ const ProjectRow: React.FC<{
         </Box>
       </Box>
 
-      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--text-secondary)" }}>
+      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--text-secondary)", textAlign: "center" }}>
         {project.totalDependencies}
       </Box>
 
@@ -493,6 +493,7 @@ const ProjectRow: React.FC<{
         fontFamily: "var(--font-mono)", fontSize: "13px",
         fontWeight: project.vulnerableDependencies > 0 ? 600 : 400,
         color: project.vulnerableDependencies > 0 ? "var(--orange)" : "var(--text-secondary)",
+        textAlign: "center",
       }}>
         {project.vulnerableDependencies}
       </Box>
@@ -502,6 +503,7 @@ const ProjectRow: React.FC<{
         fontFamily: "var(--font-mono)", fontSize: "13px",
         fontWeight: project.criticalVulnerabilities > 0 ? 600 : 400,
         color: project.criticalVulnerabilities > 0 ? "var(--red)" : "var(--text-secondary)",
+        textAlign: "center",
       }}>
         {project.criticalVulnerabilities}
       </Box>
@@ -552,7 +554,7 @@ const ProjectRow: React.FC<{
   );
 };
 
-const ModalField: React.FC<{ label: string; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }> = ({
+const ModalField: React.FC<{ label: React.ReactNode; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }> = ({
   label, value, onChange, placeholder, autoFocus,
 }) => (
   <Box>
