@@ -690,7 +690,7 @@ export const InvoiceDetailPage: React.FC = () => {
                         ? "var(--green)"
                         : overdue
                           ? "var(--red)"
-                          : "var(--accent)",
+                          : "var(--text)",
                   }}
                 >
                   {fmtEur(invoice.totalWithTax)}

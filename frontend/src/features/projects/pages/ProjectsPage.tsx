@@ -530,10 +530,10 @@ const ProjectRow: React.FC<{
             sx={{
               all: "unset", cursor: isScanning ? "default" : "pointer",
               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "6px", color: isScanning ? "var(--accent)" : "var(--muted)",
+              borderRadius: "6px", color: isScanning ? "var(--yellow)" : "var(--muted)",
               opacity: isScanning ? 0.7 : 1,
               transition: "background 0.12s, color 0.12s",
-              ...(!isScanning && { "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" } }),
+              ...(!isScanning && { "&:hover": { background: "var(--yellow-subtle)", color: "var(--yellow)" } }),
             }}
           >
             <RefreshOutlined sx={{ fontSize: 14, animation: isScanning ? "spin 1s linear infinite" : "none" }} />

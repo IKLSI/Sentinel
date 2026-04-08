@@ -493,16 +493,32 @@ export const ProjectDetailPage: React.FC = () => {
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                  <Box sx={{ overflowY: "auto" }}>
-                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ flexShrink: 0 }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                      <Box component="colgroup">
+                        <Box component="col" sx={{ width: "13%" }} />
+                        <Box component="col" />
+                        <Box component="col" sx={{ width: "13%" }} />
+                        <Box component="col" sx={{ width: "12%" }} />
+                      </Box>
                       <Box component="thead">
                         <Box component="tr">
-                          <TH width="160px">Score</TH>
+                          <TH>Score</TH>
                           <TH>Vulnérabilité</TH>
-                          <TH width="160px">Référence CVE</TH>
-                          <TH width="140px">Version corrigée</TH>
+                          <TH>Référence CVE</TH>
+                          <TH>Version corrigée</TH>
                         </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box sx={{ overflowY: "auto", flex: 1 }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                      <Box component="colgroup">
+                        <Box component="col" sx={{ width: "13%" }} />
+                        <Box component="col" />
+                        <Box component="col" sx={{ width: "13%" }} />
+                        <Box component="col" sx={{ width: "12%" }} />
                       </Box>
                       <Box component="tbody">
                         {sortedVulns.map((v) => <VulnRow key={v.id} vuln={v} />)}
@@ -515,13 +531,13 @@ export const ProjectDetailPage: React.FC = () => {
 
             {/* ── Dépendances ───────────────────────────────────── */}
             {activeTab === 1 && (
-              <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {/* Search bar */}
                 <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "12px", px: "16px", py: "14px", borderBottom: "1px solid var(--border)", background: "var(--s2)" }}>
                   <Box sx={{
                     display: "flex", alignItems: "center", gap: "7px",
                     background: "var(--s1)", border: "1px solid var(--border)",
-                    borderRadius: "7px", px: "9px", height: "28px", width: "340px",
+                    borderRadius: "7px", px: "9px", height: "28px", width: "calc(30% + 10px)",
                     transition: "border-color 0.15s",
                     "&:focus-within": { borderColor: "var(--accent-border)", boxShadow: "0 0 0 3px rgba(99,102,241,0.08)" },
                   }}>
@@ -540,17 +556,37 @@ export const ProjectDetailPage: React.FC = () => {
                     </Box>
                   )}
                 </Box>
-                <Box sx={{ overflowY: "auto" }}>
-                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                <Box sx={{ flexShrink: 0 }}>
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                    <Box component="colgroup">
+                      <Box component="col" sx={{ width: "30%" }} />
+                      <Box component="col" sx={{ width: "9%" }} />
+                      <Box component="col" sx={{ width: "6%" }} />
+                      <Box component="col" sx={{ width: "17%" }} />
+                      <Box component="col" sx={{ width: "10%" }} />
+                      <Box component="col" sx={{ width: "12%" }} />
+                    </Box>
                     <Box component="thead">
                       <Box component="tr">
                         <TH>Librairie</TH>
-                        <TH width="90px">Écosystème</TH>
-                        <TH width="60px">Type</TH>
-                        <TH width="180px">Version</TH>
-                        <TH width="110px">Statut</TH>
-                        <TH width="70px">Vulnérabilités</TH>
+                        <TH>Écosystème</TH>
+                        <TH>Type</TH>
+                        <TH>Version</TH>
+                        <TH>Statut</TH>
+                        <TH>Vulnérabilités</TH>
                       </Box>
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ overflowY: "auto", flex: 1 }}>
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                    <Box component="colgroup">
+                      <Box component="col" sx={{ width: "30%" }} />
+                      <Box component="col" sx={{ width: "9%" }} />
+                      <Box component="col" sx={{ width: "6%" }} />
+                      <Box component="col" sx={{ width: "17%" }} />
+                      <Box component="col" sx={{ width: "10%" }} />
+                      <Box component="col" sx={{ width: "12%" }} />
                     </Box>
                     <Box component="tbody">
                       {filteredDeps.length === 0 ? (
@@ -614,15 +650,29 @@ export const ProjectDetailPage: React.FC = () => {
                   <Box className="empty-state-subtitle">Lancez un scan pour détecter les runtimes du projet.</Box>
                 </Box>
               ) : (
-                <Box sx={{ maxHeight: "100%", border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                  <Box sx={{ overflowY: "auto" }}>
-                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ flexShrink: 0 }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                      <Box component="colgroup">
+                        <Box component="col" />
+                        <Box component="col" sx={{ width: "12%" }} />
+                        <Box component="col" sx={{ width: "15%" }} />
+                      </Box>
                       <Box component="thead">
                         <Box component="tr">
                           <TH>Runtime</TH>
-                          <TH width="120px">Version</TH>
-                          <TH width="160px">Fin de support</TH>
+                          <TH>Version</TH>
+                          <TH>Fin de support</TH>
                         </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box sx={{ overflowY: "auto", flex: 1 }}>
+                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                      <Box component="colgroup">
+                        <Box component="col" />
+                        <Box component="col" sx={{ width: "12%" }} />
+                        <Box component="col" sx={{ width: "15%" }} />
                       </Box>
                       <Box component="tbody">
                         {project.runtimes.map((r: RuntimeDto) => <RuntimeRow key={r.id} runtime={r} />)}

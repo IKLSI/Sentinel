@@ -360,6 +360,7 @@ export const TicketsPage: React.FC = () => {
         case "Type":      return mul * a.type.localeCompare(b.type);
         case "Statut":    return mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
         case "Assigné":   return mul * (`${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`).localeCompare(`${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`);
+        case "Échéance":  return mul * ((a.slaDeadline ?? "").localeCompare(b.slaDeadline ?? ""));
         default: return 0;
       }
     });
@@ -530,14 +531,14 @@ export const TicketsPage: React.FC = () => {
               <>
               <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
                 <Box component="colgroup">
-                  {(["9%","24%","14%","9%","9%","10%","10%","11%","4%"] as const).map((w, i) => (
+                  {(["9%","23%","13%","9%","9%","10%","10%","10%","7%"] as const).map((w, i) => (
                     <Box key={i} component="col" sx={{ width: w }} />
                   ))}
                 </Box>
                 <Box component="thead">
                   <Box component="tr">
                     {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "Échéance", "Assigné", ""].map((h) => {
-                        const sortable = h !== "Échéance";
+                        const sortable = h !== "";
                         const isActive = sort?.col === h;
                         return (
                           <Box
@@ -579,7 +580,7 @@ export const TicketsPage: React.FC = () => {
               <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
                   <Box component="colgroup">
-                    {(["9%","24%","14%","9%","9%","10%","10%","11%","4%"] as const).map((w, i) => (
+                    {(["9%","23%","13%","9%","9%","10%","10%","10%","7%"] as const).map((w, i) => (
                       <Box key={i} component="col" sx={{ width: w }} />
                     ))}
                   </Box>
@@ -707,7 +708,7 @@ export const TicketsPage: React.FC = () => {
                           <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
                             <Box
                               component="button"
-                              onClick={() => openEditModal(ticket)}
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); openEditModal(ticket); }}
                               title="Modifier"
                               sx={{
                                 all: "unset", cursor: "pointer",
@@ -721,7 +722,7 @@ export const TicketsPage: React.FC = () => {
                             </Box>
                             <Box
                               component="button"
-                              onClick={() => setDeleteTarget({ id: ticket.id, reference: ticket.reference })}
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDeleteTarget({ id: ticket.id, reference: ticket.reference }); }}
                               title="Supprimer"
                               sx={{
                                 all: "unset", cursor: "pointer",
@@ -911,7 +912,7 @@ export const TicketsPage: React.FC = () => {
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">— Non assigné —</option>
+                <option value="">Non assigné</option>
                 {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
               </Box>
             </Box>
