@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { StatusChip } from "../../../components/StatusChip";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -24,14 +30,25 @@ import SendOutlined from "@mui/icons-material/SendOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
+type SortKey =
+  | "reference"
+  | "label"
+  | "period"
+  | "totalHours"
+  | "totalAmount"
+  | "totalWithTax"
+  | "dueAt"
+  | "status";
+type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
 function getPageNumbers(page: number, totalPages: number): (number | "...")[] {
-  if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
+  if (totalPages <= 3)
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
   const pages: (number | "...")[] = [1, 2];
   if (page > 3) pages.push("...");
   if (page > 2 && page < totalPages) pages.push(page);
@@ -43,28 +60,48 @@ function getPageNumbers(page: number, totalPages: number): (number | "...")[] {
 const navBtnSx = (disabled: boolean) => ({
   all: "unset" as const,
   cursor: disabled ? "default" : "pointer",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  gap: "6px", height: "32px", px: "12px",
-  borderRadius: "8px", fontSize: "12px", fontWeight: 600,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  height: "32px",
+  px: "12px",
+  borderRadius: "8px",
+  fontSize: "12px",
+  fontWeight: 600,
   color: disabled ? "var(--muted)" : "var(--text-secondary)",
-  background: "var(--s2)", border: "1px solid var(--border)",
+  background: "var(--s2)",
+  border: "1px solid var(--border)",
   opacity: disabled ? 0.4 : 1,
   pointerEvents: disabled ? "none" : "auto",
   transition: "background 0.12s, border-color 0.12s, color 0.12s",
-  ...(!disabled && { "&:hover": { background: "var(--s3)", borderColor: "var(--border2)", color: "var(--text)" } }),
+  ...(!disabled && {
+    "&:hover": {
+      background: "var(--s3)",
+      borderColor: "var(--border2)",
+      color: "var(--text)",
+    },
+  }),
 });
 
 const pageBtnSx = (active: boolean) => ({
   all: "unset" as const,
   cursor: active ? "default" : "pointer",
-  minWidth: "32px", height: "32px",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  borderRadius: "8px", fontSize: "12px", fontWeight: active ? 700 : 500,
+  minWidth: "32px",
+  height: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "8px",
+  fontSize: "12px",
+  fontWeight: active ? 700 : 500,
   color: active ? "#fff" : "var(--text-secondary)",
   background: active ? "var(--accent)" : "transparent",
   boxShadow: active ? "0 2px 8px rgba(99,102,241,0.35)" : "none",
   transition: "background 0.12s, color 0.12s, box-shadow 0.12s",
-  ...(!active && { "&:hover": { background: "var(--s2)", color: "var(--text)" } }),
+  ...(!active && {
+    "&:hover": { background: "var(--s2)", color: "var(--text)" },
+  }),
 });
 
 const InvoicesPagination: React.FC<{
@@ -75,31 +112,70 @@ const InvoicesPagination: React.FC<{
 }> = ({ page, totalPages, total, onChange }) => {
   const pages = getPageNumbers(page, totalPages);
   return (
-    <Box sx={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      px: "16px", py: "10px",
-      borderTop: "1px solid var(--border)",
-      flexShrink: 0, background: "var(--s2)",
-    }}>
-      <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        px: "16px",
+        py: "10px",
+        borderTop: "1px solid var(--border)",
+        flexShrink: 0,
+        background: "var(--s2)",
+      }}
+    >
+      <Box
+        sx={{
+          fontSize: "11px",
+          color: "var(--muted)",
+          fontFamily: "var(--font-mono)",
+          letterSpacing: "0.04em",
+        }}
+      >
         {total} facture{total > 1 ? "s" : ""}
       </Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>
+        <Box
+          component="button"
+          sx={navBtnSx(page === 1)}
+          onClick={() => onChange(page - 1)}
+        >
           ← Précédent
         </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}
+        >
           {pages.map((p, i) =>
             p === "..." ? (
-              <Box key={`e-${i}`} sx={{ minWidth: "28px", textAlign: "center", fontSize: "13px", color: "var(--muted)", pb: "2px" }}>···</Box>
+              <Box
+                key={`e-${i}`}
+                sx={{
+                  minWidth: "28px",
+                  textAlign: "center",
+                  fontSize: "13px",
+                  color: "var(--muted)",
+                  pb: "2px",
+                }}
+              >
+                ···
+              </Box>
             ) : (
-              <Box key={p} component="button" sx={pageBtnSx(p === page)} onClick={() => p !== page && onChange(p as number)}>
+              <Box
+                key={p}
+                component="button"
+                sx={pageBtnSx(p === page)}
+                onClick={() => p !== page && onChange(p as number)}
+              >
                 {p}
               </Box>
-            )
+            ),
           )}
         </Box>
-        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>
+        <Box
+          component="button"
+          sx={navBtnSx(page === totalPages)}
+          onClick={() => onChange(page + 1)}
+        >
           Suivant →
         </Box>
       </Box>
@@ -120,7 +196,10 @@ const STATUS_VARIANT: Record<string, "gray" | "yellow" | "green" | "red"> = {
 };
 
 const fmtEur = (n: number) =>
-  n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  n.toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + " €";
 
 const fmtDate = (d?: string) =>
   d ? format(new Date(d), "dd MMM yyyy", { locale: fr }) : "—";
@@ -142,7 +221,8 @@ const selectSx = {
   appearance: "none",
   WebkitAppearance: "none",
   background: "var(--s1)",
-  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
   backgroundRepeat: "no-repeat",
   backgroundPosition: "right 12px center",
   border: "1px solid var(--border)",
@@ -177,6 +257,15 @@ export const InvoicesPage: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
+
+  const toggleSort = (key: SortKey) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  };
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
@@ -207,12 +296,15 @@ export const InvoicesPage: React.FC = () => {
     }
   }, [filters.status, showToast]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
     if (!filtersOpen) return;
     const handler = (e: MouseEvent) => {
-      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) setFiltersOpen(false);
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node))
+        setFiltersOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -220,20 +312,37 @@ export const InvoicesPage: React.FC = () => {
 
   const filtered = useMemo(
     () =>
-      invoices.filter((inv) => {
-        if (search && !inv.reference.toLowerCase().includes(search.toLowerCase()) &&
-          !inv.label.toLowerCase().includes(search.toLowerCase()) &&
-          !inv.period.toLowerCase().includes(search.toLowerCase())) return false;
-        if (filters.overdue === "yes" && !inv.isOverdue) return false;
-        if (filters.overdue === "no" && inv.isOverdue) return false;
-        return true;
-      }),
-    [invoices, search, filters.overdue],
+      invoices
+        .filter((inv) => {
+          if (
+            search &&
+            !inv.reference.toLowerCase().includes(search.toLowerCase()) &&
+            !inv.label.toLowerCase().includes(search.toLowerCase()) &&
+            !inv.period.toLowerCase().includes(search.toLowerCase())
+          )
+            return false;
+          if (filters.overdue === "yes" && !inv.isOverdue) return false;
+          if (filters.overdue === "no" && inv.isOverdue) return false;
+          return true;
+        })
+        .sort((a, b) => {
+          if (!sort) return 0;
+          const va = a[sort.key];
+          const vb = b[sort.key];
+          const cmp =
+            typeof va === "string"
+              ? (va ?? "").localeCompare((vb ?? "") as string)
+              : ((va ?? 0) as number) - ((vb ?? 0) as number);
+          return sort.dir === "asc" ? cmp : -cmp;
+        }),
+    [invoices, search, filters.overdue, sort],
   );
 
   const hasActiveFilters = !!(filters.status || filters.overdue);
 
-  useEffect(() => { setPage(1); }, [search, filters]);
+  useEffect(() => {
+    setPage(1);
+  }, [search, filters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -244,6 +353,8 @@ export const InvoicesPage: React.FC = () => {
       setProjects(projectsData);
       setNewLabel("");
       setNewDailyRate(500);
+      setNewTaxRate(20);
+      setNewDueDays(30);
       setSelectedProjectId("");
     } catch {
       showToast("Impossible de charger les projets", "error");
@@ -269,7 +380,8 @@ export const InvoicesPage: React.FC = () => {
       setShowNewModal(false);
       navigate(`/invoices/${invoice.id}`);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const msg = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
       showToast(msg ?? "Erreur lors de la génération", "error");
     } finally {
       setGenerating(false);
@@ -315,27 +427,61 @@ export const InvoicesPage: React.FC = () => {
 
   return (
     <>
-
-      <Box className="page-enter" sx={{ p: "36px 28px 24px", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-
+      <Box
+        className="page-enter"
+        sx={{
+          p: "36px 28px 24px",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* ── Barre recherche + filtres + bouton ── */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "16px", flexShrink: 0, position: "relative", zIndex: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            mb: "16px",
+            flexShrink: 0,
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
           {/* Recherche */}
-          <Box sx={{
-            width: "280px", display: "flex", alignItems: "center", gap: "8px",
-            background: "var(--s1)", border: "1px solid var(--border)",
-            borderRadius: "9px", px: "10px", height: "32px",
-            transition: "border-color 0.15s, box-shadow 0.15s",
-            "&:focus-within": { borderColor: "var(--accent-border)", boxShadow: "0 0 0 3px rgba(99,102,241,0.08)" },
-          }}>
-            <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
+          <Box
+            sx={{
+              width: "280px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "var(--s1)",
+              border: "1px solid var(--border)",
+              borderRadius: "9px",
+              px: "10px",
+              height: "32px",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+              "&:focus-within": {
+                borderColor: "var(--accent-border)",
+                boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              },
+            }}
+          >
+            <SearchOutlined
+              sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
+            />
             <Box
               component="input"
               placeholder="Rechercher..."
               value={search}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearch(e.target.value)
+              }
               sx={{
-                all: "unset", flex: 1, fontSize: "12.5px",
+                all: "unset",
+                flex: 1,
+                fontSize: "12.5px",
                 color: "var(--text)",
                 "&::placeholder": { color: "var(--muted)" },
                 "&:focus": { outline: "none", boxShadow: "none !important" },
@@ -346,26 +492,42 @@ export const InvoicesPage: React.FC = () => {
           {/* Filtres */}
           <Box ref={filtersRef} sx={{ position: "relative" }}>
             {hasActiveFilters && (
-              <Box sx={{
-                position: "absolute", top: -5, right: -5,
-                width: 8, height: 8, borderRadius: "50%",
-                background: "var(--accent)", zIndex: 1,
-                border: "2px solid var(--bg)",
-              }} />
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: -5,
+                  right: -5,
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "var(--accent)",
+                  zIndex: 1,
+                  border: "2px solid var(--bg)",
+                }}
+              />
             )}
             <Box
               component="button"
               onClick={() => setFiltersOpen((v) => !v)}
               sx={{
-                all: "unset", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "7px",
-                px: "14px", height: "32px",
+                all: "unset",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "7px",
+                px: "14px",
+                height: "32px",
                 background: filtersOpen ? "var(--accent-subtle)" : "var(--s1)",
                 border: `1px solid ${filtersOpen ? "var(--accent-border)" : "var(--border)"}`,
-                borderRadius: "9px", fontSize: "13px", fontWeight: 500,
+                borderRadius: "9px",
+                fontSize: "13px",
+                fontWeight: 500,
                 color: filtersOpen ? "var(--accent)" : "var(--text-secondary)",
                 transition: "all 0.12s",
-                "&:hover": { background: "var(--s2)", borderColor: "var(--border2)" },
+                "&:hover": {
+                  background: "var(--s2)",
+                  borderColor: "var(--border2)",
+                },
               }}
             >
               <TuneOutlined sx={{ fontSize: 15 }} />
@@ -373,22 +535,77 @@ export const InvoicesPage: React.FC = () => {
             </Box>
 
             {filtersOpen && (
-              <Box sx={{ position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
-                <Box sx={{ position: "absolute", top: -6, left: "calc(50% - 6px)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid var(--border)" }} />
-                <Box sx={{ position: "absolute", top: -5, left: "calc(50% - 5px)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderBottom: "5px solid var(--s1)" }} />
-                <Box sx={{
-                  background: "var(--s1)", border: "1px solid var(--border)",
-                  borderRadius: "12px", p: "16px",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                  minWidth: "200px",
-                  display: "flex", flexDirection: "column", gap: "10px",
-                  animation: "fadeInUp 0.12s ease forwards",
-                }}>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 50,
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: -6,
+                    left: "calc(50% - 6px)",
+                    width: 0,
+                    height: 0,
+                    borderLeft: "6px solid transparent",
+                    borderRight: "6px solid transparent",
+                    borderBottom: "6px solid var(--border)",
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: -5,
+                    left: "calc(50% - 5px)",
+                    width: 0,
+                    height: 0,
+                    borderLeft: "5px solid transparent",
+                    borderRight: "5px solid transparent",
+                    borderBottom: "5px solid var(--s1)",
+                  }}
+                />
+                <Box
+                  sx={{
+                    background: "var(--s1)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    p: "16px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                    minWidth: "200px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    animation: "fadeInUp 0.12s ease forwards",
+                  }}
+                >
                   <Box>
-                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>Statut</Box>
-                    <Box component="select" value={filters.status}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                    <Box
+                      sx={{
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        color: "var(--muted)",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        mb: "5px",
+                      }}
+                    >
+                      Statut
+                    </Box>
+                    <Box
+                      component="select"
+                      value={filters.status}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        setFilters((f) => ({ ...f, status: e.target.value }))
+                      }
+                      sx={{
+                        ...selectSx,
+                        width: "100%",
+                        boxSizing: "border-box",
+                      }}
                     >
                       <option value="">Tous</option>
                       <option value="Draft">Brouillon</option>
@@ -397,10 +614,29 @@ export const InvoicesPage: React.FC = () => {
                     </Box>
                   </Box>
                   <Box>
-                    <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>Échéance</Box>
-                    <Box component="select" value={filters.overdue}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, overdue: e.target.value }))}
-                      sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+                    <Box
+                      sx={{
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        color: "var(--muted)",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        mb: "5px",
+                      }}
+                    >
+                      Échéance
+                    </Box>
+                    <Box
+                      component="select"
+                      value={filters.overdue}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        setFilters((f) => ({ ...f, overdue: e.target.value }))
+                      }
+                      sx={{
+                        ...selectSx,
+                        width: "100%",
+                        boxSizing: "border-box",
+                      }}
                     >
                       <option value="">Toutes</option>
                       <option value="yes">En retard</option>
@@ -408,16 +644,32 @@ export const InvoicesPage: React.FC = () => {
                     </Box>
                   </Box>
                   {hasActiveFilters && (
-                    <Box component="button" onClick={() => { setFilters({ status: "", overdue: "" }); setFiltersOpen(false); }}
+                    <Box
+                      component="button"
+                      onClick={() => {
+                        setFilters({ status: "", overdue: "" });
+                        setFiltersOpen(false);
+                      }}
                       sx={{
-                        all: "unset", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        gap: "6px", mt: "4px",
-                        fontSize: "12px", fontWeight: 600,
-                        color: "var(--red)", background: "var(--red-subtle)",
-                        border: "1px solid rgba(239,68,68,0.2)", borderRadius: "7px", py: "8px",
+                        all: "unset",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        mt: "4px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "var(--red)",
+                        background: "var(--red-subtle)",
+                        border: "1px solid rgba(239,68,68,0.2)",
+                        borderRadius: "7px",
+                        py: "8px",
                         transition: "background 0.12s, border-color 0.12s",
-                        "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
+                        "&:hover": {
+                          background: "rgba(239,68,68,0.14)",
+                          borderColor: "rgba(239,68,68,0.35)",
+                        },
                       }}
                     >
                       Réinitialiser
@@ -433,7 +685,13 @@ export const InvoicesPage: React.FC = () => {
           <Button
             variant="contained"
             size="small"
-            sx={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, textTransform: "none" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              textTransform: "none",
+            }}
             onClick={openNewModal}
           >
             <AddOutlined sx={{ fontSize: 14 }} />
@@ -443,152 +701,444 @@ export const InvoicesPage: React.FC = () => {
 
         {/* ── Tableau ── */}
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", padding: "48px" }}>
+          <Box
+            sx={{ display: "flex", justifyContent: "center", padding: "48px" }}
+          >
             <CircularProgress size={24} />
           </Box>
         ) : (
-          <Box sx={{
-            background: "var(--s1)", border: "1px solid var(--border)",
-            borderRadius: "var(--r)", overflow: "hidden",
-            flex: 1, display: "flex", flexDirection: "column",
-          }}>
+          <Box
+            sx={{
+              background: "var(--s1)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r)",
+              overflow: "hidden",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             {filtered.length === 0 ? (
-              <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <Box className="empty-state">
-                  <Box className="empty-state-icon"><DescriptionOutlined sx={{ fontSize: 40 }} /></Box>
+                  <Box className="empty-state-icon">
+                    <DescriptionOutlined sx={{ fontSize: 40 }} />
+                  </Box>
                   <Box className="empty-state-title">Aucune facture</Box>
                   <Box className="empty-state-subtitle">
-                    {invoices.length === 0 ? "Générez votre première facture" : "Modifiez votre recherche"}
+                    {invoices.length === 0
+                      ? "Générez votre première facture"
+                      : "Modifiez votre recherche"}
                   </Box>
                 </Box>
               </Box>
             ) : (
               <>
-              <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
-                <Box component="colgroup">
-                  {(["9%","24%","10%","7%","11%","11%","10%","10%","8%"] as const).map((w, i) => (
-                    <Box key={i} component="col" sx={{ width: w }} />
-                  ))}
-                </Box>
-                <Box component="thead">
-                  <Box component="tr">
-                    {(["Référence", "Libellé", "Période", "Heures", "HT", "TTC", "Échéance", "Statut", ""] as const).map((h) => (
-                      <Box component="th" key={h} sx={{
-                        fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
-                        textTransform: "uppercase", color: "var(--muted)",
-                        textAlign: ["Heures", "HT", "TTC"].includes(h) ? "center" : "left",
-                        padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                        background: "var(--s2)", whiteSpace: "nowrap",
-                        cursor: "default", userSelect: "none",
-                      }}>
-                        {h}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              </Box>
-              <Box sx={{ flex: 1, overflowY: "auto" }}>
-                <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                <Box
+                  component="table"
+                  sx={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    tableLayout: "fixed",
+                    flexShrink: 0,
+                  }}
+                >
                   <Box component="colgroup">
-                    {(["9%","24%","10%","7%","11%","11%","10%","10%","8%"] as const).map((w, i) => (
+                    {(
+                      [
+                        "9%",
+                        "24%",
+                        "10%",
+                        "7%",
+                        "11%",
+                        "11%",
+                        "10%",
+                        "10%",
+                        "8%",
+                      ] as const
+                    ).map((w, i) => (
                       <Box key={i} component="col" sx={{ width: w }} />
                     ))}
                   </Box>
-                  <Box component="tbody">
-                    {paged.map((inv) => {
-                      const overdue = inv.isOverdue;
-                      return (
-                        <Box
-                          component="tr" key={inv.id}
-                          onClick={() => navigate(`/invoices/${inv.id}`)}
-                          sx={{ cursor: "pointer", "&:hover td": { background: "var(--s2)" } }}
-                        >
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)",
-                            whiteSpace: "nowrap",
-                          }}>
-                            {inv.reference}
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontSize: "12.5px", maxWidth: "260px",
-                          }}>
-                            <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {inv.label}
-                            </Box>
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)",
-                          }}>
-                            {inv.period}
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px", textAlign: "center",
-                          }}>
-                            {inv.totalHours}h
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-secondary)", textAlign: "center",
-                          }}>
-                            {fmtEur(inv.totalAmount)}
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--green)", textAlign: "center",
-                          }}>
-                            {fmtEur(inv.totalWithTax)}
-                          </Box>
-                          <Box component="td" sx={{
-                            padding: "10px 14px", borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)", fontSize: "11px",
-                            color: overdue ? "var(--red)" : "var(--muted)",
-                            whiteSpace: "nowrap",
-                          }}>
-                            {fmtDate(inv.dueAt)}
-                          </Box>
-                          <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
-                            <StatusChip variant={overdue ? "red" : (STATUS_VARIANT[inv.status] ?? "gray")}>
-                              {overdue ? "En retard" : (STATUS_LABEL[inv.status] ?? inv.status)}
-                            </StatusChip>
-                          </Box>
-                          <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
-                            <Box sx={{ display: "flex", gap: "2px", alignItems: "center", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
-                              {inv.status === "Draft" && (
-                                <>
-                                  <Tooltip title="Marquer comme envoyée" placement="top">
-                                    <IconButton size="small" onClick={(e) => handleSend(inv, e)} sx={{ color: "var(--accent)", "&:hover": { background: "var(--accent-subtle)" } }}>
-                                      <SendOutlined sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Supprimer" placement="top">
-                                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }} sx={{ color: "var(--red)", "&:hover": { background: "var(--red-subtle)" } }}>
-                                      <DeleteOutlineOutlined sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                  </Tooltip>
-                                </>
-                              )}
-                              {inv.status === "Sent" && (
-                                <Tooltip title="Marquer comme payée" placement="top">
-                                  <IconButton size="small" onClick={(e) => handlePay(inv, e)} sx={{ color: "var(--green)", "&:hover": { background: "rgba(34,197,94,0.1)" } }}>
-                                    <CheckCircleOutlineOutlined sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
+                  <Box component="thead">
+                    <Box component="tr">
+                      {[
+                        { key: "reference" as SortKey, label: "Référence" },
+                        { key: "label" as SortKey, label: "Libellé" },
+                        { key: "period" as SortKey, label: "Période" },
+                        {
+                          key: "totalHours" as SortKey,
+                          label: "Heures",
+                          numeric: true,
+                        },
+                        {
+                          key: "totalAmount" as SortKey,
+                          label: "HT",
+                          numeric: true,
+                        },
+                        {
+                          key: "totalWithTax" as SortKey,
+                          label: "TTC",
+                          numeric: true,
+                        },
+                        { key: "dueAt" as SortKey, label: "Échéance" },
+                        { key: "status" as SortKey, label: "Statut" },
+                      ].map(({ key, label, numeric }) => {
+                        const isActive = sort?.key === key;
+                        return (
+                          <Box
+                            component="th"
+                            key={key}
+                            onClick={() => toggleSort(key)}
+                            sx={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              color: isActive
+                                ? "var(--accent)"
+                                : "var(--muted)",
+                              textAlign: numeric ? "center" : "left",
+                              padding: "10px 14px",
+                              borderBottom: "1px solid var(--border)",
+                              background: "var(--s2)",
+                              whiteSpace: "nowrap",
+                              cursor: "pointer",
+                              userSelect: "none",
+                              transition: "color 0.12s",
+                              "&:hover": { color: "var(--text-secondary)" },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                justifyContent: numeric
+                                  ? "center"
+                                  : "flex-start",
+                              }}
+                            >
+                              {label}
+                              {isActive && (
+                                <Box
+                                  sx={{
+                                    fontSize: "12px",
+                                    color: "var(--accent)",
+                                    lineHeight: 1,
+                                  }}
+                                >
+                                  {sort?.dir === "asc" ? "↑" : "↓"}
+                                </Box>
                               )}
                             </Box>
                           </Box>
-                        </Box>
-                      );
-                    })}
+                        );
+                      })}
+                      <Box
+                        component="th"
+                        sx={{
+                          padding: "10px 14px",
+                          borderBottom: "1px solid var(--border)",
+                          background: "var(--s2)",
+                        }}
+                      />
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
+                <Box sx={{ flex: 1, overflowY: "auto" }}>
+                  <Box
+                    component="table"
+                    sx={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      tableLayout: "fixed",
+                    }}
+                  >
+                    <Box component="colgroup">
+                      {(
+                        [
+                          "9%",
+                          "24%",
+                          "10%",
+                          "7%",
+                          "11%",
+                          "11%",
+                          "10%",
+                          "10%",
+                          "8%",
+                        ] as const
+                      ).map((w, i) => (
+                        <Box key={i} component="col" sx={{ width: w }} />
+                      ))}
+                    </Box>
+                    <Box component="tbody">
+                      {paged.map((inv) => {
+                        const overdue = inv.isOverdue;
+                        return (
+                          <Box
+                            component="tr"
+                            key={inv.id}
+                            onClick={() => navigate(`/invoices/${inv.id}`)}
+                            sx={{
+                              cursor: "pointer",
+                              "&:hover td": { background: "var(--s2)" },
+                            }}
+                          >
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "11px",
+                                color: "var(--muted)",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {inv.reference}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontSize: "12.5px",
+                                maxWidth: "260px",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {inv.label}
+                              </Box>
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "11px",
+                                color: "var(--muted2)",
+                              }}
+                            >
+                              {inv.period}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "12px",
+                                textAlign: "center",
+                              }}
+                            >
+                              {inv.totalHours}h
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "12px",
+                                color: "var(--text-secondary)",
+                                textAlign: "center",
+                              }}
+                            >
+                              {fmtEur(inv.totalAmount)}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "12px",
+                                textAlign: "center",
+                              }}
+                            >
+                              {fmtEur(inv.totalWithTax)}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "11px",
+                                color: "var(--muted)",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {fmtDate(inv.dueAt)}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                padding: "10px 14px",
+                                borderBottom: "1px solid var(--border)",
+                              }}
+                            >
+                              <StatusChip
+                                variant={
+                                  overdue
+                                    ? "red"
+                                    : (STATUS_VARIANT[inv.status] ?? "gray")
+                                }
+                              >
+                                {overdue
+                                  ? "En retard"
+                                  : (STATUS_LABEL[inv.status] ?? inv.status)}
+                              </StatusChip>
+                            </Box>
+                            <Box
+                              component="td"
+                              onClick={(e: React.MouseEvent) =>
+                                e.stopPropagation()
+                              }
+                              sx={{
+                                padding: "6px 10px",
+                                borderBottom: "1px solid var(--border)",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                {inv.status === "Draft" && (
+                                  <>
+                                    <Tooltip
+                                      title="Marquer comme envoyée"
+                                      placement="top"
+                                    >
+                                      <Box
+                                        component="button"
+                                        onClick={(e: React.MouseEvent) =>
+                                          handleSend(inv, e)
+                                        }
+                                        sx={{
+                                          all: "unset",
+                                          cursor: "pointer",
+                                          width: 28,
+                                          height: 28,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          borderRadius: "6px",
+                                          color: "var(--muted)",
+                                          transition:
+                                            "background 0.12s, color 0.12s",
+                                          "&:hover": {
+                                            background: "var(--accent-subtle)",
+                                            color: "var(--accent)",
+                                          },
+                                        }}
+                                      >
+                                        <SendOutlined sx={{ fontSize: 14 }} />
+                                      </Box>
+                                    </Tooltip>
+                                    <Tooltip title="Supprimer" placement="top">
+                                      <Box
+                                        component="button"
+                                        onClick={(e: React.MouseEvent) => {
+                                          e.stopPropagation();
+                                          setDeleteTarget(inv);
+                                        }}
+                                        sx={{
+                                          all: "unset",
+                                          cursor: "pointer",
+                                          width: 28,
+                                          height: 28,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          borderRadius: "6px",
+                                          color: "var(--muted)",
+                                          transition:
+                                            "background 0.12s, color 0.12s",
+                                          "&:hover": {
+                                            background: "var(--red-subtle)",
+                                            color: "var(--red)",
+                                          },
+                                        }}
+                                      >
+                                        <DeleteOutlineOutlined
+                                          sx={{ fontSize: 14 }}
+                                        />
+                                      </Box>
+                                    </Tooltip>
+                                  </>
+                                )}
+                                {inv.status === "Sent" && (
+                                  <Tooltip
+                                    title="Marquer comme payée"
+                                    placement="top"
+                                  >
+                                    <Box
+                                      component="button"
+                                      onClick={(e: React.MouseEvent) =>
+                                        handlePay(inv, e)
+                                      }
+                                      sx={{
+                                        all: "unset",
+                                        cursor: "pointer",
+                                        width: 28,
+                                        height: 28,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: "6px",
+                                        color: "var(--muted)",
+                                        transition:
+                                          "background 0.12s, color 0.12s",
+                                        "&:hover": {
+                                          background: "rgba(34,197,94,0.1)",
+                                          color: "var(--green)",
+                                        },
+                                      }}
+                                    >
+                                      <CheckCircleOutlineOutlined
+                                        sx={{ fontSize: 14 }}
+                                      />
+                                    </Box>
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </Box>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                </Box>
               </>
             )}
-            <InvoicesPagination page={page} totalPages={totalPages} total={filtered.length} onChange={setPage} />
+            <InvoicesPagination
+              page={page}
+              totalPages={totalPages}
+              total={filtered.length}
+              onChange={setPage}
+            />
           </Box>
         )}
       </Box>
@@ -600,11 +1150,18 @@ export const InvoicesPage: React.FC = () => {
         title="Nouvelle facture"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setShowNewModal(false)}>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: "none" }}
+              onClick={() => setShowNewModal(false)}
+            >
               Annuler
             </Button>
             <Button
-              variant="contained" size="small" sx={{ textTransform: "none" }}
+              variant="contained"
+              size="small"
+              sx={{ textTransform: "none" }}
               onClick={handleGenerate}
               disabled={generating || !newLabel.trim() || !user?.organizationId}
             >
@@ -616,11 +1173,19 @@ export const InvoicesPage: React.FC = () => {
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
             <Box component="label" sx={labelSx}>
-              Libellé <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
+              Libellé{" "}
+              <Box component="span" sx={{ color: "var(--red)" }}>
+                *
+              </Box>
             </Box>
-            <Box component="input" type="text" sx={inputSx}
+            <Box
+              component="input"
+              type="text"
+              sx={inputSx}
               value={newLabel}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLabel(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewLabel(e.target.value)
+              }
               placeholder="Ex : Prestation TMA - Mars 2026"
             />
           </Box>
@@ -628,32 +1193,62 @@ export const InvoicesPage: React.FC = () => {
             <Box component="label" sx={labelSx}>
               Projet associé
             </Box>
-            <Box component="select" sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
+            <Box
+              component="select"
+              sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
               value={selectedProjectId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProjectId(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSelectedProjectId(e.target.value)
+              }
             >
               <option value="">Aucun projet</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
             </Box>
           </Box>
           <Box>
             <Box component="label" sx={labelSx}>
-              Taux journalier (€) <Box component="span" sx={{ color: "var(--red)" }}>*</Box>
+              Taux journalier (€){" "}
+              <Box component="span" sx={{ color: "var(--red)" }}>
+                *
+              </Box>
             </Box>
-            <Box component="input" type="number" sx={inputSx}
-              value={newDailyRate} min={0}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDailyRate(Number(e.target.value))}
+            <Box
+              component="input"
+              type="number"
+              sx={inputSx}
+              value={newDailyRate}
+              min={0}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewDailyRate(Number(e.target.value))
+              }
               placeholder="500"
             />
           </Box>
           <Box>
-            <Box component="label" sx={labelSx}>Période</Box>
-            <Box component="input" type="month" sx={inputSx}
+            <Box component="label" sx={labelSx}>
+              Période
+            </Box>
+            <Box
+              component="input"
+              type="month"
+              sx={inputSx}
               value={newPeriod}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPeriod(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewPeriod(e.target.value)
+              }
             />
           </Box>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "12px",
+            }}
+          >
             <Box>
               <Box component="label" sx={labelSx}>TVA (%)</Box>
               <Box component="input" type="number" sx={inputSx}
@@ -662,10 +1257,18 @@ export const InvoicesPage: React.FC = () => {
               />
             </Box>
             <Box>
-              <Box component="label" sx={labelSx}>Délai paiement (jours)</Box>
-              <Box component="input" type="number" sx={inputSx}
-                value={newDueDays} min={0}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDueDays(Number(e.target.value))}
+              <Box component="label" sx={labelSx}>
+                Délai paiement (jours)
+              </Box>
+              <Box
+                component="input"
+                type="number"
+                sx={inputSx}
+                value={newDueDays}
+                min={0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewDueDays(Number(e.target.value))
+                }
               />
             </Box>
           </Box>
@@ -679,7 +1282,8 @@ export const InvoicesPage: React.FC = () => {
         loading={deleting}
         title="Supprimer cette facture ?"
       >
-        La facture <strong>{deleteTarget?.reference}</strong> sera définitivement supprimée. Cette action est irréversible.
+        La facture <strong>{deleteTarget?.reference}</strong> sera
+        définitivement supprimée. Cette action est irréversible.
       </DeleteModal>
     </>
   );
