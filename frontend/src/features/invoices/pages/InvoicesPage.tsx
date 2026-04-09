@@ -891,6 +891,7 @@ export const InvoicesPage: React.FC = () => {
                             sx={{
                               cursor: "pointer",
                               "&:hover td": { background: "var(--s2)" },
+                              "&:hover .row-actions": { opacity: 1 },
                             }}
                           >
                             <Box
@@ -1014,115 +1015,66 @@ export const InvoicesPage: React.FC = () => {
                               sx={{
                                 padding: "6px 10px",
                                 borderBottom: "1px solid var(--border)",
+                                textAlign: "center",
                                 whiteSpace: "nowrap",
                               }}
                             >
                               <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "4px",
-                                }}
+                                className="row-actions"
+                                sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}
                               >
                                 {inv.status === "Draft" && (
-                                  <>
-                                    <Tooltip
-                                      title="Marquer comme envoyée"
-                                      placement="top"
-                                    >
-                                      <Box
-                                        component="button"
-                                        onClick={(e: React.MouseEvent) =>
-                                          handleSend(inv, e)
-                                        }
-                                        sx={{
-                                          all: "unset",
-                                          cursor: "pointer",
-                                          width: 28,
-                                          height: 28,
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          borderRadius: "6px",
-                                          color: "var(--muted)",
-                                          transition:
-                                            "background 0.12s, color 0.12s",
-                                          "&:hover": {
-                                            background: "var(--accent-subtle)",
-                                            color: "var(--accent)",
-                                          },
-                                        }}
-                                      >
-                                        <SendOutlined sx={{ fontSize: 14 }} />
-                                      </Box>
-                                    </Tooltip>
-                                    <Tooltip title="Supprimer" placement="top">
-                                      <Box
-                                        component="button"
-                                        onClick={(e: React.MouseEvent) => {
-                                          e.stopPropagation();
-                                          setDeleteTarget(inv);
-                                        }}
-                                        sx={{
-                                          all: "unset",
-                                          cursor: "pointer",
-                                          width: 28,
-                                          height: 28,
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          borderRadius: "6px",
-                                          color: "var(--muted)",
-                                          transition:
-                                            "background 0.12s, color 0.12s",
-                                          "&:hover": {
-                                            background: "var(--red-subtle)",
-                                            color: "var(--red)",
-                                          },
-                                        }}
-                                      >
-                                        <DeleteOutlineOutlined
-                                          sx={{ fontSize: 14 }}
-                                        />
-                                      </Box>
-                                    </Tooltip>
-                                  </>
-                                )}
-                                {inv.status === "Sent" && (
-                                  <Tooltip
-                                    title="Marquer comme payée"
-                                    placement="top"
-                                  >
+                                  <Tooltip title="Marquer comme envoyée" placement="top">
                                     <Box
                                       component="button"
-                                      onClick={(e: React.MouseEvent) =>
-                                        handlePay(inv, e)
-                                      }
+                                      onClick={(e: React.MouseEvent) => handleSend(inv, e)}
                                       sx={{
-                                        all: "unset",
-                                        cursor: "pointer",
-                                        width: 28,
-                                        height: 28,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        borderRadius: "6px",
-                                        color: "var(--muted)",
-                                        transition:
-                                          "background 0.12s, color 0.12s",
-                                        "&:hover": {
-                                          background: "rgba(34,197,94,0.1)",
-                                          color: "var(--green)",
-                                        },
+                                        all: "unset", cursor: "pointer",
+                                        width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                                        border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                        color: "var(--accent)",
+                                        transition: "background 0.12s, color 0.12s",
+                                        "&:hover": { background: "var(--accent-subtle)" },
                                       }}
                                     >
-                                      <CheckCircleOutlineOutlined
-                                        sx={{ fontSize: 14 }}
-                                      />
+                                      <SendOutlined sx={{ fontSize: 13 }} />
                                     </Box>
                                   </Tooltip>
                                 )}
+                                {inv.status === "Sent" && (
+                                  <Tooltip title="Marquer comme payée" placement="top">
+                                    <Box
+                                      component="button"
+                                      onClick={(e: React.MouseEvent) => handlePay(inv, e)}
+                                      sx={{
+                                        all: "unset", cursor: "pointer",
+                                        width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                                        border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                        color: "var(--green)",
+                                        transition: "background 0.12s, color 0.12s",
+                                        "&:hover": { background: "rgba(34,197,94,0.1)" },
+                                      }}
+                                    >
+                                      <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />
+                                    </Box>
+                                  </Tooltip>
+                                )}
+                                <Tooltip title="Supprimer" placement="top">
+                                  <Box
+                                    component="button"
+                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDeleteTarget(inv); }}
+                                    sx={{
+                                      all: "unset", cursor: "pointer",
+                                      width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                                      border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                      color: "var(--red)",
+                                      transition: "background 0.12s, color 0.12s",
+                                      "&:hover": { background: "var(--red-subtle)" },
+                                    }}
+                                  >
+                                    <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
+                                  </Box>
+                                </Tooltip>
                               </Box>
                             </Box>
                           </Box>

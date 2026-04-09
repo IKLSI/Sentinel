@@ -7,7 +7,7 @@ import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
-import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
@@ -346,26 +346,29 @@ export const ProjectDetailPage: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: "20px", p: "20px 24px 20px 28px" }}>
             {/* Nom + méta */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ fontSize: "20px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", mb: "10px", lineHeight: 1.2 }}>
-                {project.name}
-              </Box>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: "10px" }}>
+                <Box sx={{ fontSize: "20px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  {project.name}
+                </Box>
                 {project.repositoryUrl && (
-                  <Box sx={{
-                    display: "flex", alignItems: "center", gap: "5px",
-                    background: "var(--s2)", border: "1px solid var(--border)",
-                    borderRadius: "5px", px: "8px", py: "3px",
-                    maxWidth: "320px",
-                  }}>
-                    <AccountTreeOutlined sx={{ fontSize: 11, color: "var(--accent)", flexShrink: 0 }} />
-                    <Box component="span" sx={{
-                      fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {project.repositoryUrl}
-                    </Box>
+                  <Box
+                    component="a"
+                    href={project.repositoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={project.repositoryUrl}
+                    sx={{
+                      display: "flex", alignItems: "center",
+                      color: "var(--muted)", textDecoration: "none",
+                      transition: "color 0.12s",
+                      "&:hover": { color: "var(--accent)" },
+                    }}
+                  >
+                    <OpenInNewOutlined sx={{ fontSize: 15 }} />
                   </Box>
                 )}
+              </Box>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {project.scanFrequency && (
                   <Box sx={{
                     display: "flex", alignItems: "center", gap: "5px",

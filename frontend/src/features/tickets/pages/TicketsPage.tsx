@@ -593,6 +593,7 @@ export const TicketsPage: React.FC = () => {
                         sx={{
                           cursor: "pointer",
                           "&:hover td": { background: "var(--s2)" },
+                          "&:hover .row-actions": { opacity: 1 },
                         }}
                       >
                         <Box
@@ -703,9 +704,9 @@ export const TicketsPage: React.FC = () => {
                         <Box
                           component="td"
                           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                          sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}
+                          sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", textAlign: "center" }}
                         >
-                          <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <Box className="row-actions" sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                             <Box
                               component="button"
                               onClick={(e: React.MouseEvent) => { e.stopPropagation(); openEditModal(ticket); }}
@@ -713,12 +714,13 @@ export const TicketsPage: React.FC = () => {
                               sx={{
                                 all: "unset", cursor: "pointer",
                                 width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                borderRadius: "6px", color: "var(--muted)",
+                                border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                color: "var(--accent)",
                                 transition: "background 0.12s, color 0.12s",
-                                "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" },
+                                "&:hover": { background: "var(--accent-subtle)" },
                               }}
                             >
-                              <EditOutlined sx={{ fontSize: 14 }} />
+                              <EditOutlined sx={{ fontSize: 13 }} />
                             </Box>
                             <Box
                               component="button"
@@ -727,12 +729,13 @@ export const TicketsPage: React.FC = () => {
                               sx={{
                                 all: "unset", cursor: "pointer",
                                 width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                borderRadius: "6px", color: "var(--muted)",
+                                border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                color: "var(--red)",
                                 transition: "background 0.12s, color 0.12s",
-                                "&:hover": { background: "var(--red-subtle)", color: "var(--red)" },
+                                "&:hover": { background: "var(--red-subtle)" },
                               }}
                             >
-                              <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
+                              <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
                             </Box>
                           </Box>
                         </Box>

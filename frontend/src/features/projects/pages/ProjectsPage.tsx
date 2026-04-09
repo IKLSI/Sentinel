@@ -460,6 +460,7 @@ export const ProjectsPage: React.FC = () => {
   );
 };
 
+
 const ProjectRow: React.FC<{
   project: ProjectDto;
   onEdit: () => void;
@@ -474,93 +475,95 @@ const ProjectRow: React.FC<{
     <Box
       component="tr"
       onClick={() => navigate(`/projects/${project.id}`)}
-      sx={{ cursor: "pointer", "&:hover td": { background: "var(--s2)" } }}
+      sx={{
+        cursor: "pointer",
+        position: "relative",
+        transition: "background 0.1s",
+        "& td": { transition: "background 0.1s" },
+        "&:hover td": { background: "var(--s2)" },
+        "&:hover .row-actions": { opacity: 1 },
+      }}
     >
-      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", maxWidth: "320px" }}>
-        <Box sx={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      {/* Nom */}
+      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
+        <Box sx={{
+          fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 400, color: "var(--muted)",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
           {project.name}
         </Box>
-        {project.repositoryUrl && (
-          <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", mt: "2px" }}>
-            {project.repositoryUrl}
-          </Box>
-        )}
       </Box>
 
-      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
+      {/* Grade */}
+      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
         <Box sx={{
           px: "6px", py: "2px",
-          background: `${color}18`, border: `1px solid ${color}40`,
-          borderRadius: "5px", fontSize: "12px", fontWeight: 700, color,
-          letterSpacing: "0.02em", display: "inline-flex", width: "fit-content",
+          background: `${color}18`, border: `1px solid ${color}35`,
+          borderRadius: "5px", fontSize: "11px", fontWeight: 800, color,
+          letterSpacing: "0.04em", display: "inline-flex", width: "fit-content",
+          fontFamily: "var(--font-mono)",
         }}>
           {project.healthGrade}
         </Box>
       </Box>
 
-      <Box component="td" sx={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--text-secondary)", textAlign: "center" }}>
+      {/* Total dépendances */}
+      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", textAlign: "center", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", fontWeight: 400 }}>
         {project.totalDependencies}
       </Box>
 
-      <Box component="td" sx={{
-        padding: "12px 14px", borderBottom: "1px solid var(--border)",
-        fontFamily: "var(--font-mono)", fontSize: "13px",
-        fontWeight: project.vulnerableDependencies > 0 ? 600 : 400,
-        color: project.vulnerableDependencies > 0 ? "var(--orange)" : "var(--text-secondary)",
-        textAlign: "center",
-      }}>
-        {project.vulnerableDependencies}
+      {/* Vulnérables */}
+      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", textAlign: "center", fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: project.vulnerableDependencies > 0 ? 600 : 400, color: project.vulnerableDependencies > 0 ? "var(--orange)" : "var(--muted)" }}>
+        {project.vulnerableDependencies > 0 ? project.vulnerableDependencies : "—"}
       </Box>
 
-      <Box component="td" sx={{
-        padding: "12px 14px", borderBottom: "1px solid var(--border)",
-        fontFamily: "var(--font-mono)", fontSize: "13px",
-        fontWeight: project.criticalVulnerabilities > 0 ? 600 : 400,
-        color: project.criticalVulnerabilities > 0 ? "var(--red)" : "var(--text-secondary)",
-        textAlign: "center",
-      }}>
-        {project.criticalVulnerabilities}
+      {/* Critiques */}
+      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", textAlign: "center", fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: project.criticalVulnerabilities > 0 ? 600 : 400, color: project.criticalVulnerabilities > 0 ? "var(--red)" : "var(--muted)" }}>
+        {project.criticalVulnerabilities > 0 ? project.criticalVulnerabilities : "—"}
       </Box>
 
-      <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+      {/* Actions */}
+      <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "10px 2px 10px 0", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", overflow: "hidden", textAlign: "center" }}>
+        <Box className="row-actions" sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}>
           <Box
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onScan(); }} title="Lancer un scan"
             disabled={isScanning}
             sx={{
               all: "unset", cursor: isScanning ? "default" : "pointer",
               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "6px", color: isScanning ? "var(--yellow)" : "var(--muted)",
-              opacity: isScanning ? 0.7 : 1,
+              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              color: "var(--yellow)",
               transition: "background 0.12s, color 0.12s",
-              ...(!isScanning && { "&:hover": { background: "var(--yellow-subtle)", color: "var(--yellow)" } }),
+              ...(!isScanning && { "&:hover": { background: "var(--yellow-subtle)" } }),
             }}
           >
-            <RefreshOutlined sx={{ fontSize: 14, animation: isScanning ? "spin 1s linear infinite" : "none" }} />
+            <RefreshOutlined sx={{ fontSize: 13, animation: isScanning ? "spin 1s linear infinite" : "none" }} />
           </Box>
           <Box
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onEdit(); }} title="Modifier"
             sx={{
               all: "unset", cursor: "pointer",
               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "6px", color: "var(--muted)",
+              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              color: "var(--accent)",
               transition: "background 0.12s, color 0.12s",
-              "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" },
+              "&:hover": { background: "var(--accent-subtle)" },
             }}
           >
-            <EditOutlined sx={{ fontSize: 14 }} />
+            <EditOutlined sx={{ fontSize: 13 }} />
           </Box>
           <Box
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(); }} title="Supprimer"
             sx={{
               all: "unset", cursor: "pointer",
               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "6px", color: "var(--muted)",
+              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              color: "var(--red)",
               transition: "background 0.12s, color 0.12s",
-              "&:hover": { background: "var(--red-subtle)", color: "var(--red)" },
+              "&:hover": { background: "var(--red-subtle)" },
             }}
           >
-            <DeleteOutlineOutlined sx={{ fontSize: 14 }} />
+            <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
           </Box>
         </Box>
       </Box>
