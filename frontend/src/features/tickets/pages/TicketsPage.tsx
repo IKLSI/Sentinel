@@ -760,7 +760,7 @@ export const TicketsPage: React.FC = () => {
         title="Nouveau ticket"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setShowCreateModal(false)}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setShowCreateModal(false)}>Annuler</Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleCreate} disabled={!createForm.title.trim() || createSubmitting}>
               {createSubmitting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Créer le ticket"}
             </Button>
@@ -852,7 +852,7 @@ export const TicketsPage: React.FC = () => {
         title="Modifier le ticket"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)} disabled={editSaving}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)} disabled={editSaving}>Annuler</Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEdit} disabled={!editForm.title.trim() || editSaving}>
               {editSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
             </Button>

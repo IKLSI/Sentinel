@@ -411,7 +411,7 @@ export const ProjectsPage: React.FC = () => {
         title="Nouveau projet"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setShowModal(false)}>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setShowModal(false)}>
               Annuler
             </Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleSubmit} disabled={!formName.trim() || submitting}>
@@ -432,7 +432,7 @@ export const ProjectsPage: React.FC = () => {
         title="Modifier le projet"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)}>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)}>
               Annuler
             </Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEdit} disabled={!editName.trim() || editSaving}>

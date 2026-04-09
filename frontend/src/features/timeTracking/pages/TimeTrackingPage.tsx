@@ -886,7 +886,7 @@ export const TimeTrackingPage: React.FC = () => {
         title={editingId ? "Modifier la saisie" : "Saisir du temps"}
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setModalOpen(false)}>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setModalOpen(false)}>
               Annuler
             </Button>
             <Button

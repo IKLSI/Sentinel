@@ -711,6 +711,7 @@ export const InvoiceDetailPage: React.FC = () => {
             <Button
               variant="outlined"
               size="small"
+              className="btn-cancel"
               sx={{ textTransform: "none" }}
               onClick={() => setShowDownloadModal(false)}
             >

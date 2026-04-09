@@ -493,6 +493,7 @@ export const TicketDetailPage: React.FC = () => {
             <Button
               variant="outlined"
               size="small"
+              className="btn-cancel"
               sx={{ textTransform: "none" }}
               onClick={() => setCommentModal(false)}
               disabled={submitting}
@@ -615,7 +616,7 @@ export const TicketDetailPage: React.FC = () => {
         title="Modifier le commentaire"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={() => setEditCommentTarget(null)} disabled={editCommentSaving}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditCommentTarget(null)} disabled={editCommentSaving}>Annuler</Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEditComment} disabled={!editCommentValue.trim() || editCommentSaving}>
               {editCommentSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
             </Button>

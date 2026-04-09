@@ -20,6 +20,7 @@ import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutl
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
 import InfoOutlined from '@mui/icons-material/InfoOutlined'
+import EmailOutlined from '@mui/icons-material/EmailOutlined'
 
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -543,40 +544,77 @@ export const SettingsPage: React.FC = () => {
       </Box>
 
       {/* ════ MODAL INVITATION ════ */}
-      <AppModal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Ajouter un membre"
+      <AppModal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Inviter un membre"
         actions={
           <>
-            <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setInviteOpen(false)}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting || !inv.email.trim()}>
-              {submitting ? 'Envoi…' : 'Ajouter'}
+            <Button variant="outlined" size="small" className="btn-cancel" onClick={() => setInviteOpen(false)}>Annuler</Button>
+            <Button variant="contained" size="small" type="submit" form="invite-form" disabled={submitting || !inv.email.trim()}>
+              {submitting ? 'Envoi…' : "Envoyer l'invitation"}
             </Button>
           </>
         }>
-        <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <Box>
-            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>E-mail <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
-            <Box component="input" type="email" sx={inp} value={inv.email} placeholder="prenom.nom@exemple.com"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
-          </Box>
-          <Box>
-            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Rôle</Box>
-            <Box component="select" sx={{
-              appearance: 'none', WebkitAppearance: 'none',
-              width: '100%', boxSizing: 'border-box',
-              background: 'var(--s1)',
-              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
-              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-              border: '1px solid var(--border)', borderRadius: 'var(--r)',
-              px: '12px', py: '7px', pr: '36px',
-              fontSize: '13px', color: 'var(--text)', outline: 'none', fontFamily: 'inherit',
-            }} value={inv.role}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
-              <option value="Admin">Administrateur</option>
-              <option value="Developer">Développeur</option>
+        <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* ── Bannière ── */}
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: '14px',
+            p: '16px', borderRadius: '12px',
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.09) 0%, rgba(99,102,241,0.03) 100%)',
+            border: '1px solid var(--accent-border)',
+          }}>
+            <Box sx={{
+              width: 44, height: 44, borderRadius: '11px', flexShrink: 0,
+              background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 6px 16px rgba(99,102,241,0.30)',
+            }}>
+              <EmailOutlined sx={{ fontSize: 20, color: '#fff' }} />
+            </Box>
+            <Box>
+              <Box sx={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em', mb: '3px' }}>
+                Invitation par email
+              </Box>
+              <Box sx={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.55 }}>
+                Un lien d'activation sera envoyé.<br />Le membre définira son mot de passe à l'inscription.
+              </Box>
             </Box>
           </Box>
-          <Box sx={{ fontSize: '11px', color: 'var(--muted)', p: '10px 12px', background: 'var(--s2)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
-            Un email d'invitation sera envoyé. Le membre choisira son mot de passe en acceptant l'invitation.
+
+          {/* ── Champs ── */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <Box>
+              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', mb: '7px' }}>
+                Adresse e-mail <Box component="span" sx={{ color: 'var(--red)' }}>*</Box>
+              </Box>
+              <Box component="input" type="email" sx={{ ...inp, py: '9px', px: '12px', fontSize: '13px' }}
+                value={inv.email} placeholder="prenom.nom@exemple.com"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
+            </Box>
+
+            <Box>
+              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', mb: '7px' }}>
+                Rôle
+              </Box>
+              <Box sx={{ position: 'relative' }}>
+                <Box component="select" sx={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  width: '100%', boxSizing: 'border-box',
+                  background: 'var(--s2)', border: '1px solid var(--border)', borderRadius: '6px',
+                  px: '12px', py: '9px', pr: '36px',
+                  fontSize: '13px', color: 'var(--text)', outline: 'none', fontFamily: 'inherit',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  '&:focus': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
+                }} value={inv.role}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
+                  <option value="Admin">Administrateur</option>
+                  <option value="Developer">Développeur</option>
+                </Box>
+                <KeyboardArrowDownOutlined sx={{
+                  position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                  fontSize: 16, color: 'var(--muted)', pointerEvents: 'none',
+                }} />
+              </Box>
+            </Box>
           </Box>
         </Box>
       </AppModal>

@@ -56,6 +56,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
       <Button
         variant="outlined"
         size="small"
+        className="btn-cancel"
         sx={{ textTransform: 'none' }}
         onClick={onClose}
         disabled={loading}
