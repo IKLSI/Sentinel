@@ -174,7 +174,7 @@ export const SettingsPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10)
   const tableWrapRef = useRef<HTMLDivElement>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [inv, setInv] = useState({ firstName: '', lastName: '', email: '', role: 'Developer' as UserRole, password: '' })
+  const [inv, setInv] = useState({ email: '', role: 'Developer' as UserRole })
   const [submitting, setSubmitting] = useState(false)
 
   // ── Organisation
@@ -248,14 +248,13 @@ export const SettingsPage: React.FC = () => {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inv.email || !inv.firstName || !inv.password) { showToast('Champs obligatoires manquants', 'warning'); return }
+    if (!inv.email) { showToast('Champs obligatoires manquants', 'warning'); return }
     setSubmitting(true)
     try {
       await inviteUser(inv)
-      showToast('Membre ajouté', 'success')
+      showToast('Invitation envoyée', 'success')
       setInviteOpen(false)
-      setInv({ firstName: '', lastName: '', email: '', role: 'Developer', password: '' })
-      loadMembers()
+      setInv({ email: '', role: 'Developer' })
     } catch { showToast("Erreur lors de l'invitation", 'error') }
     finally { setSubmitting(false) }
   }
@@ -548,24 +547,12 @@ export const SettingsPage: React.FC = () => {
         actions={
           <>
             <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => setInviteOpen(false)}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting || !inv.firstName.trim() || !inv.email.trim() || !inv.password.trim()}>
+            <Button variant="contained" size="small" sx={{ textTransform: 'none' }} type="submit" form="invite-form" disabled={submitting || !inv.email.trim()}>
               {submitting ? 'Envoi…' : 'Ajouter'}
             </Button>
           </>
         }>
         <Box component="form" id="invite-form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <Box>
-              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Prénom <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
-              <Box component="input" type="text" sx={inp} value={inv.firstName} placeholder="Prénom"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, firstName: e.target.value }))} />
-            </Box>
-            <Box>
-              <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Nom</Box>
-              <Box component="input" type="text" sx={inp} value={inv.lastName} placeholder="Nom"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, lastName: e.target.value }))} />
-            </Box>
-          </Box>
           <Box>
             <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>E-mail <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
             <Box component="input" type="email" sx={inp} value={inv.email} placeholder="prenom.nom@exemple.com"
@@ -588,11 +575,8 @@ export const SettingsPage: React.FC = () => {
               <option value="Developer">Développeur</option>
             </Box>
           </Box>
-          <Box>
-            <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.04em', display: 'block', mb: '5px' }}>Mot de passe temporaire <Box component="span" sx={{ color: 'var(--red)' }}>*</Box></Box>
-            <Box component="input" type="password" sx={inp} value={inv.password} placeholder="Min. 8 caractères"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, password: e.target.value }))} />
-            <Box sx={{ fontSize: '10px', color: 'var(--muted)', mt: '4px' }}>Le membre pourra le modifier depuis son profil.</Box>
+          <Box sx={{ fontSize: '11px', color: 'var(--muted)', p: '10px 12px', background: 'var(--s2)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
+            Un email d'invitation sera envoyé. Le membre choisira son mot de passe en acceptant l'invitation.
           </Box>
         </Box>
       </AppModal>

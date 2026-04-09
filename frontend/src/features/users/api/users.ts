@@ -20,9 +20,12 @@ export const updateMyProfile = async (data: { firstName?: string; lastName?: str
   return response.data
 }
 
-export const inviteUser = async (data: { email: string; firstName: string; lastName: string; role: UserRole; password: string }): Promise<User> => {
-  const response = await apiClient.post<User>('/api/users', data)
-  return response.data
+export const inviteUser = async (data: { email: string; role: UserRole }): Promise<void> => {
+  await apiClient.post('/api/users', data)
+}
+
+export const acceptInvitation = async (data: { token: string; firstName: string; lastName: string; password: string }): Promise<void> => {
+  await apiClient.post('/api/users/accept-invitation', data)
 }
 
 export const toggleUserActive = async (userId: string, isActive: boolean): Promise<User> => {
