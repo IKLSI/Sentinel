@@ -18,6 +18,7 @@ public class SentinelContext : DbContext
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
     public DbSet<Runtime> Runtimes => Set<Runtime>();
+    public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,7 @@ public class SentinelContext : DbContext
 
         ConfigureOrganization(modelBuilder);
         ConfigureUser(modelBuilder);
+        ConfigureUserInvitation(modelBuilder);
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
@@ -70,6 +72,30 @@ public class SentinelContext : DbContext
                 .WithMany(o => o.Users)
                 .HasForeignKey(e => e.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureUserInvitation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserInvitation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
+            entity.Property(e => e.Role).HasConversion<string>();
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.Email);
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.InvitedBy)
+                .WithMany()
+                .HasForeignKey(e => e.InvitedById)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
