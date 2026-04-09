@@ -127,6 +127,9 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<SlaCheckJob>();
         services.AddTransient<TechHealthScanJob>();
+        services.AddTransient<SendInvitationEmailJob>();
+
+        services.AddSingleton<IEmailService, EmailService>();
 
         return services;
     }

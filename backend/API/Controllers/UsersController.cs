@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -5,6 +6,7 @@ using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
+using Sentinel.API.Jobs;
 
 namespace Sentinel.API.Controllers;
 
@@ -14,10 +16,12 @@ namespace Sentinel.API.Controllers;
 public class UsersController : BaseController
 {
     private readonly SentinelContext _context;
+    private readonly IBackgroundJobClient _jobs;
 
-    public UsersController(SentinelContext context)
+    public UsersController(SentinelContext context, IBackgroundJobClient jobs)
     {
         _context = context;
+        _jobs = jobs;
     }
 
     [HttpGet]
@@ -58,37 +62,80 @@ public class UsersController : BaseController
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
+    public async Task<IActionResult> InviteUser([FromBody] CreateUserDto dto)
     {
         Guid? organizationId = GetOrganizationId();
         Guid? currentUserId = GetCurrentUserId();
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
-        bool emailExists = await _context.Users
+        bool userExists = await _context.Users
             .AnyAsync(u => u.Email == dto.Email.ToLower() && u.OrganizationId == organizationId.Value);
 
-        if (emailExists)
+        if (userExists)
             return Conflict(new { message = "Un utilisateur avec cet email existe déjà" });
+
+        bool pendingInvitation = await _context.UserInvitations
+            .AnyAsync(i => i.Email == dto.Email.ToLower() && i.OrganizationId == organizationId.Value && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
+
+        if (pendingInvitation)
+            return Conflict(new { message = "Une invitation est déjà en attente pour cet email" });
 
         if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
             return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Developer" });
 
-        User user = new User
+        UserInvitation invitation = new UserInvitation
         {
             OrganizationId = organizationId.Value,
             Email = dto.Email.ToLower(),
+            Role = role,
+            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            InvitedById = currentUserId.Value,
+            ExpiresAt = DateTime.UtcNow.AddHours(48),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _context.UserInvitations.AddAsync(invitation);
+        await _context.SaveChangesAsync();
+
+        _jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id));
+
+        return Accepted(new { message = "Invitation envoyée" });
+    }
+
+    [HttpPost("accept-invitation")]
+    [AllowAnonymous]
+    public async Task<IActionResult> AcceptInvitation([FromBody] AcceptInvitationDto dto)
+    {
+        UserInvitation? invitation = await _context.UserInvitations
+            .FirstOrDefaultAsync(i => i.Token == dto.Token && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
+
+        if (invitation == null)
+            return BadRequest(new { message = "Invitation invalide ou expirée" });
+
+        bool emailExists = await _context.Users
+            .AnyAsync(u => u.Email == invitation.Email && u.OrganizationId == invitation.OrganizationId);
+
+        if (emailExists)
+            return Conflict(new { message = "Un compte existe déjà avec cet email" });
+
+        User user = new User
+        {
+            OrganizationId = invitation.OrganizationId,
+            Email = invitation.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            Role = role,
+            Role = invitation.Role,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
+        invitation.AcceptedAt = DateTime.UtcNow;
+
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, MapToDto(user));
+        return Ok(new { message = "Compte créé avec succès" });
     }
 
     [HttpPut("{id:guid}")]
@@ -180,5 +227,4 @@ public class UsersController : BaseController
             EmailNotifications = user.EmailNotifications
         };
     }
-
 }

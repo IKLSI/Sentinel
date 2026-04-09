@@ -22,9 +22,14 @@ public class CreateUserDto
     [EmailAddress(ErrorMessage = "Format d'email invalide")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Le mot de passe est requis")]
-    [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères")]
-    public string Password { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Le rôle est requis")]
+    public string Role { get; set; } = "Developer";
+}
+
+public class AcceptInvitationDto
+{
+    [Required(ErrorMessage = "Le token est requis")]
+    public string Token { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Le prénom est requis")]
     public string FirstName { get; set; } = string.Empty;
@@ -32,8 +37,9 @@ public class CreateUserDto
     [Required(ErrorMessage = "Le nom est requis")]
     public string LastName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Le rôle est requis")]
-    public string Role { get; set; } = "Developer";
+    [Required(ErrorMessage = "Le mot de passe est requis")]
+    [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères")]
+    public string Password { get; set; } = string.Empty;
 }
 
 public class UpdateUserDto
