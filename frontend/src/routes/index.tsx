@@ -6,6 +6,7 @@ import { useAuth } from '../features/auth/hooks/useAuth'
 import { AppLayout } from '../layouts/AppLayout'
 
 import { LoginPage } from '../features/auth/pages/LoginPage'
+import { AcceptInvitationPage } from '../features/auth/pages/AcceptInvitationPage'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
 import { TicketsPage } from '../features/tickets/pages/TicketsPage'
 import { KanbanPage } from '../features/tickets/pages/KanbanPage'
@@ -49,6 +50,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
+    <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
     <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tickets" element={<TicketsPage />} />
