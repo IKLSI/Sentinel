@@ -19,6 +19,56 @@ public class AuthService
         _logger = logger;
     }
 
+    public async Task<PasswordResetToken?> CreatePasswordResetTokenAsync(string email)
+    {
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == email.ToLower() && u.IsActive);
+
+        if (user == null) return null;
+
+        await _context.PasswordResetTokens
+            .Where(t => t.Email == email.ToLower() && !t.IsUsed)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true));
+
+        string rawToken = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
+
+        PasswordResetToken resetToken = new PasswordResetToken
+        {
+            Email = email.ToLower(),
+            Token = rawToken,
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
+        };
+
+        _context.PasswordResetTokens.Add(resetToken);
+        await _context.SaveChangesAsync();
+
+        return resetToken;
+    }
+
+    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    {
+        PasswordResetToken? resetToken = await _context.PasswordResetTokens
+            .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+
+        if (resetToken == null) return false;
+
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == resetToken.Email && u.IsActive);
+
+        if (user == null) return false;
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.RefreshToken = null;
+        user.RefreshTokenExpiry = null;
+
+        resetToken.IsUsed = true;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Mot de passe réinitialisé pour {Email}", user.Email);
+        return true;
+    }
+
     public async Task<LoginResponse?> LoginAsync(string email, string password)
     {
         User? user = await _context.Users

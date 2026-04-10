@@ -7,6 +7,8 @@ import { AppLayout } from '../layouts/AppLayout'
 
 import { LoginPage } from '../features/auth/pages/LoginPage'
 import { AcceptInvitationPage } from '../features/auth/pages/AcceptInvitationPage'
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
 import { TicketsPage } from '../features/tickets/pages/TicketsPage'
 import { KanbanPage } from '../features/tickets/pages/KanbanPage'
@@ -51,6 +53,8 @@ export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
+    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+    <Route path="/reset-password" element={<ResetPasswordPage />} />
     <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tickets" element={<TicketsPage />} />

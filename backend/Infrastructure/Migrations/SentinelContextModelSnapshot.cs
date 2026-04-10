@@ -197,6 +197,41 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Organizations");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("PasswordResetTokens");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
                 {
                     b.Property<Guid>("Id")

@@ -19,6 +19,7 @@ public class SentinelContext : DbContext
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,7 @@ public class SentinelContext : DbContext
         ConfigureOrganization(modelBuilder);
         ConfigureUser(modelBuilder);
         ConfigureUserInvitation(modelBuilder);
+        ConfigurePasswordResetToken(modelBuilder);
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
@@ -96,6 +98,18 @@ public class SentinelContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.InvitedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigurePasswordResetToken(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.Email);
         });
     }
 

@@ -713,11 +713,11 @@ export const TicketsPage: React.FC = () => {
                               title="Modifier"
                               sx={{
                                 all: "unset", cursor: "pointer",
-                                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+                                borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
                                 color: "var(--accent)",
-                                transition: "background 0.12s, color 0.12s",
-                                "&:hover": { background: "var(--accent-subtle)" },
+                                transition: "background 0.12s, border-color 0.12s",
+                                "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
                               }}
                             >
                               <EditOutlined sx={{ fontSize: 13 }} />
@@ -728,11 +728,11 @@ export const TicketsPage: React.FC = () => {
                               title="Supprimer"
                               sx={{
                                 all: "unset", cursor: "pointer",
-                                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+                                borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
                                 color: "var(--red)",
-                                transition: "background 0.12s, color 0.12s",
-                                "&:hover": { background: "var(--red-subtle)" },
+                                transition: "background 0.12s, border-color 0.12s",
+                                "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
                               }}
                             >
                               <DeleteOutlineOutlined sx={{ fontSize: 13 }} />

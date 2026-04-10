@@ -530,11 +530,11 @@ const ProjectRow: React.FC<{
             disabled={isScanning}
             sx={{
               all: "unset", cursor: isScanning ? "default" : "pointer",
-              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "7px", background: "var(--yellow-subtle)", border: "1px solid rgba(234,179,8,0.28)",
               color: "var(--yellow)",
-              transition: "background 0.12s, color 0.12s",
-              ...(!isScanning && { "&:hover": { background: "var(--yellow-subtle)" } }),
+              transition: "background 0.12s, border-color 0.12s",
+              ...(!isScanning && { "&:hover": { background: "rgba(234,179,8,0.18)", borderColor: "rgba(234,179,8,0.5)" } }),
             }}
           >
             <RefreshOutlined sx={{ fontSize: 13, animation: isScanning ? "spin 1s linear infinite" : "none" }} />
@@ -543,11 +543,11 @@ const ProjectRow: React.FC<{
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onEdit(); }} title="Modifier"
             sx={{
               all: "unset", cursor: "pointer",
-              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
               color: "var(--accent)",
-              transition: "background 0.12s, color 0.12s",
-              "&:hover": { background: "var(--accent-subtle)" },
+              transition: "background 0.12s, border-color 0.12s",
+              "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
             }}
           >
             <EditOutlined sx={{ fontSize: 13 }} />
@@ -556,11 +556,11 @@ const ProjectRow: React.FC<{
             component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(); }} title="Supprimer"
             sx={{
               all: "unset", cursor: "pointer",
-              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
               color: "var(--red)",
-              transition: "background 0.12s, color 0.12s",
-              "&:hover": { background: "var(--red-subtle)" },
+              transition: "background 0.12s, border-color 0.12s",
+              "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
             }}
           >
             <DeleteOutlineOutlined sx={{ fontSize: 13 }} />

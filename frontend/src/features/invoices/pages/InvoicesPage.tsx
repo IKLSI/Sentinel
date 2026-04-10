@@ -1030,11 +1030,11 @@ export const InvoicesPage: React.FC = () => {
                                       onClick={(e: React.MouseEvent) => handleSend(inv, e)}
                                       sx={{
                                         all: "unset", cursor: "pointer",
-                                        width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                        border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                        width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+                                        borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
                                         color: "var(--accent)",
-                                        transition: "background 0.12s, color 0.12s",
-                                        "&:hover": { background: "var(--accent-subtle)" },
+                                        transition: "background 0.12s, border-color 0.12s",
+                                        "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
                                       }}
                                     >
                                       <SendOutlined sx={{ fontSize: 13 }} />
@@ -1048,11 +1048,11 @@ export const InvoicesPage: React.FC = () => {
                                       onClick={(e: React.MouseEvent) => handlePay(inv, e)}
                                       sx={{
                                         all: "unset", cursor: "pointer",
-                                        width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                        border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                        width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+                                        borderRadius: "7px", background: "var(--green-subtle)", border: "1px solid rgba(34,197,94,0.28)",
                                         color: "var(--green)",
-                                        transition: "background 0.12s, color 0.12s",
-                                        "&:hover": { background: "rgba(34,197,94,0.1)" },
+                                        transition: "background 0.12s, border-color 0.12s",
+                                        "&:hover": { background: "rgba(34,197,94,0.18)", borderColor: "rgba(34,197,94,0.5)" },
                                       }}
                                     >
                                       <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />
@@ -1065,11 +1065,11 @@ export const InvoicesPage: React.FC = () => {
                                     onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDeleteTarget(inv); }}
                                     sx={{
                                       all: "unset", cursor: "pointer",
-                                      width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                      border: "1px solid var(--border2)", borderRadius: "8px", background: "var(--s1)",
+                                      width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+                                      borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
                                       color: "var(--red)",
-                                      transition: "background 0.12s, color 0.12s",
-                                      "&:hover": { background: "var(--red-subtle)" },
+                                      transition: "background 0.12s, border-color 0.12s",
+                                      "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
                                     }}
                                   >
                                     <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
