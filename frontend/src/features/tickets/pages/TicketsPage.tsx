@@ -10,6 +10,7 @@ import Tooltip from "@mui/material/Tooltip";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
+import { RowActions } from "../../../components/RowActions";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
@@ -593,7 +594,7 @@ export const TicketsPage: React.FC = () => {
                         sx={{
                           cursor: "pointer",
                           "&:hover td": { background: "var(--s2)" },
-                          "&:hover .row-actions": { opacity: 1 },
+                          "&:hover .row-actions": { opacity: "1 !important" },
                         }}
                       >
                         <Box
@@ -706,38 +707,10 @@ export const TicketsPage: React.FC = () => {
                           onClick={(e: React.MouseEvent) => e.stopPropagation()}
                           sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", textAlign: "center" }}
                         >
-                          <Box className="row-actions" sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <Box
-                              component="button"
-                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); openEditModal(ticket); }}
-                              title="Modifier"
-                              sx={{
-                                all: "unset", cursor: "pointer",
-                                width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-                                borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
-                                color: "var(--accent)",
-                                transition: "background 0.12s, border-color 0.12s",
-                                "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
-                              }}
-                            >
-                              <EditOutlined sx={{ fontSize: 13 }} />
-                            </Box>
-                            <Box
-                              component="button"
-                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDeleteTarget({ id: ticket.id, reference: ticket.reference }); }}
-                              title="Supprimer"
-                              sx={{
-                                all: "unset", cursor: "pointer",
-                                width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-                                borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
-                                color: "var(--red)",
-                                transition: "background 0.12s, border-color 0.12s",
-                                "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
-                              }}
-                            >
-                              <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
-                            </Box>
-                          </Box>
+                          <RowActions actions={[
+                            { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: "Modifier", onClick: (e) => { e.stopPropagation(); openEditModal(ticket); }, color: "accent" },
+                            { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: "Supprimer", onClick: (e) => { e.stopPropagation(); setDeleteTarget({ id: ticket.id, reference: ticket.reference }); }, color: "red" },
+                          ]} />
                         </Box>
                       </Box>
                     ))}

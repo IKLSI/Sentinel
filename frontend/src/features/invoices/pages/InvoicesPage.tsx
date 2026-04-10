@@ -11,6 +11,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
+import { RowActions } from "../../../components/RowActions";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
 import {
@@ -29,7 +30,6 @@ import AddOutlined from "@mui/icons-material/AddOutlined";
 import SendOutlined from "@mui/icons-material/SendOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
-import Tooltip from "@mui/material/Tooltip";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -891,7 +891,7 @@ export const InvoicesPage: React.FC = () => {
                             sx={{
                               cursor: "pointer",
                               "&:hover td": { background: "var(--s2)" },
-                              "&:hover .row-actions": { opacity: 1 },
+                              "&:hover .row-actions": { opacity: "1 !important" },
                             }}
                           >
                             <Box
@@ -1019,63 +1019,11 @@ export const InvoicesPage: React.FC = () => {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              <Box
-                                className="row-actions"
-                                sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              >
-                                {inv.status === "Draft" && (
-                                  <Tooltip title="Marquer comme envoyée" placement="top">
-                                    <Box
-                                      component="button"
-                                      onClick={(e: React.MouseEvent) => handleSend(inv, e)}
-                                      sx={{
-                                        all: "unset", cursor: "pointer",
-                                        width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-                                        borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
-                                        color: "var(--accent)",
-                                        transition: "background 0.12s, border-color 0.12s",
-                                        "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
-                                      }}
-                                    >
-                                      <SendOutlined sx={{ fontSize: 13 }} />
-                                    </Box>
-                                  </Tooltip>
-                                )}
-                                {inv.status === "Sent" && (
-                                  <Tooltip title="Marquer comme payée" placement="top">
-                                    <Box
-                                      component="button"
-                                      onClick={(e: React.MouseEvent) => handlePay(inv, e)}
-                                      sx={{
-                                        all: "unset", cursor: "pointer",
-                                        width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-                                        borderRadius: "7px", background: "var(--green-subtle)", border: "1px solid rgba(34,197,94,0.28)",
-                                        color: "var(--green)",
-                                        transition: "background 0.12s, border-color 0.12s",
-                                        "&:hover": { background: "rgba(34,197,94,0.18)", borderColor: "rgba(34,197,94,0.5)" },
-                                      }}
-                                    >
-                                      <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />
-                                    </Box>
-                                  </Tooltip>
-                                )}
-                                <Tooltip title="Supprimer" placement="top">
-                                  <Box
-                                    component="button"
-                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDeleteTarget(inv); }}
-                                    sx={{
-                                      all: "unset", cursor: "pointer",
-                                      width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-                                      borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
-                                      color: "var(--red)",
-                                      transition: "background 0.12s, border-color 0.12s",
-                                      "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
-                                    }}
-                                  >
-                                    <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
-                                  </Box>
-                                </Tooltip>
-                              </Box>
+                              <RowActions actions={[
+                                inv.status === "Draft" && { icon: <SendOutlined sx={{ fontSize: 13 }} />, label: "Marquer comme envoyée", onClick: (e) => handleSend(inv, e), color: "accent" as const },
+                                inv.status === "Sent"  && { icon: <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />, label: "Marquer comme payée", onClick: (e) => handlePay(inv, e), color: "green" as const },
+                                { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: "Supprimer", onClick: (e) => { e.stopPropagation(); setDeleteTarget(inv); }, color: "red" as const },
+                              ]} />
                             </Box>
                           </Box>
                         );

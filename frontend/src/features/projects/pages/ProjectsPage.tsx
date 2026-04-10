@@ -4,6 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
+import { RowActions } from "../../../components/RowActions";
 import { useToast } from "../../../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
@@ -481,13 +482,13 @@ const ProjectRow: React.FC<{
         transition: "background 0.1s",
         "& td": { transition: "background 0.1s" },
         "&:hover td": { background: "var(--s2)" },
-        "&:hover .row-actions": { opacity: 1 },
+        "&:hover .row-actions": { opacity: "1 !important" },
       }}
     >
       {/* Nom */}
       <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
         <Box sx={{
-          fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 400, color: "var(--muted)",
+          fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 400, color: "var(--text)",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {project.name}
@@ -524,48 +525,11 @@ const ProjectRow: React.FC<{
 
       {/* Actions */}
       <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "10px 2px 10px 0", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", overflow: "hidden", textAlign: "center" }}>
-        <Box className="row-actions" sx={{ opacity: 0, transition: "opacity 0.15s", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-          <Box
-            component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onScan(); }} title="Lancer un scan"
-            disabled={isScanning}
-            sx={{
-              all: "unset", cursor: isScanning ? "default" : "pointer",
-              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "7px", background: "var(--yellow-subtle)", border: "1px solid rgba(234,179,8,0.28)",
-              color: "var(--yellow)",
-              transition: "background 0.12s, border-color 0.12s",
-              ...(!isScanning && { "&:hover": { background: "rgba(234,179,8,0.18)", borderColor: "rgba(234,179,8,0.5)" } }),
-            }}
-          >
-            <RefreshOutlined sx={{ fontSize: 13, animation: isScanning ? "spin 1s linear infinite" : "none" }} />
-          </Box>
-          <Box
-            component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onEdit(); }} title="Modifier"
-            sx={{
-              all: "unset", cursor: "pointer",
-              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "7px", background: "var(--accent-subtle)", border: "1px solid rgba(99,102,241,0.28)",
-              color: "var(--accent)",
-              transition: "background 0.12s, border-color 0.12s",
-              "&:hover": { background: "rgba(99,102,241,0.18)", borderColor: "rgba(99,102,241,0.5)" },
-            }}
-          >
-            <EditOutlined sx={{ fontSize: 13 }} />
-          </Box>
-          <Box
-            component="button" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(); }} title="Supprimer"
-            sx={{
-              all: "unset", cursor: "pointer",
-              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "7px", background: "var(--red-subtle)", border: "1px solid rgba(239,68,68,0.28)",
-              color: "var(--red)",
-              transition: "background 0.12s, border-color 0.12s",
-              "&:hover": { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.5)" },
-            }}
-          >
-            <DeleteOutlineOutlined sx={{ fontSize: 13 }} />
-          </Box>
-        </Box>
+        <RowActions actions={[
+          { icon: <RefreshOutlined sx={{ fontSize: 13, animation: isScanning ? "spin 1s linear infinite" : "none" }} />, label: "Lancer un scan", onClick: (e) => { e.stopPropagation(); onScan(); }, color: "yellow", disabled: isScanning },
+          { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: "Modifier", onClick: (e) => { e.stopPropagation(); onEdit(); }, color: "accent" },
+          { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: "Supprimer", onClick: (e) => { e.stopPropagation(); onDelete(); }, color: "red" },
+        ]} />
       </Box>
     </Box>
   );

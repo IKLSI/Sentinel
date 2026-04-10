@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import { AppModal } from '../../../components/AppModal'
+import { RowActions } from '../../../components/RowActions'
 import { StatusChip } from '../../../components/StatusChip'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useToast } from '../../../hooks/useToast'
@@ -381,7 +382,7 @@ export const SettingsPage: React.FC = () => {
                       </Box>
                       <Box component="tbody">
                         {paginatedMembers.map(m => (
-                          <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' }, '&:hover .row-actions': { opacity: 1 }, transition: 'background 0.1s' }}>
+                          <Box component="tr" key={m.id} sx={{ borderBottom: '1px solid var(--border)', '&:last-child': { borderBottom: 'none' }, '&:hover': { background: 'var(--s2)' }, '&:hover .row-actions': { opacity: '1 !important' }, transition: 'background 0.1s' }}>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Box>
@@ -402,14 +403,9 @@ export const SettingsPage: React.FC = () => {
                             <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right' }}>
                               {m.id !== user?.id && (
                                 togglingId === m.id ? <CircularProgress size={13} /> :
-                                <Box className="row-actions" sx={{ display: 'flex', justifyContent: 'flex-end', opacity: 0, transition: 'opacity 0.15s' }}>
-                                  <Box sx={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--border2)', borderRadius: '8px', background: 'var(--s1)', overflow: 'hidden' }}>
-                                    <Box component="button" onClick={() => handleToggleActive(m.id, m.isActive)} title={m.isActive ? 'Désactiver' : 'Activer'}
-                                      sx={{ all: 'unset', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.isActive ? 'var(--red)' : 'var(--green)', transition: 'background 0.12s', '&:hover': m.isActive ? { background: 'rgba(239,68,68,0.08)' } : { background: 'rgba(34,197,94,0.08)' } }}>
-                                      {m.isActive ? <BlockOutlined sx={{ fontSize: 13 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />}
-                                    </Box>
-                                  </Box>
-                                </Box>
+                                <RowActions actions={[
+                                  { icon: m.isActive ? <BlockOutlined sx={{ fontSize: 13 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />, label: m.isActive ? 'Désactiver' : 'Activer', onClick: () => handleToggleActive(m.id, m.isActive), color: m.isActive ? 'red' : 'green' },
+                                ]} />
                               )}
                             </Box>
                           </Box>
