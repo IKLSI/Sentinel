@@ -355,6 +355,11 @@ a:hover { text-decoration: underline; }
 .lp-submit:disabled { opacity:0.45; cursor:not-allowed; }
 .lp-submit-loader { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:lp-spin 0.7s linear infinite; }
 
+/* Lien mot de passe oublié */
+.lp-forgot-wrap { margin-top:18px; text-align:center; opacity:0; animation:lp-up 0.4s 0.74s forwards; }
+.lp-forgot { font-size:13px; color:#c4c9d4; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; text-decoration-color:rgba(196,201,212,0.4); transition:color 0.22s, text-decoration-color 0.22s; }
+.lp-forgot:hover { color:#4b5563; text-decoration-color:rgba(75,85,99,0.6); }
+
 /* Footer form */
 .lp-form-footer { margin-top:28px; font-size:10.5px; color:#e5e7eb; text-align:center; font-family:var(--font-mono); letter-spacing:0.04em; opacity:0; animation:lp-up 0.4s 0.78s forwards; }
 

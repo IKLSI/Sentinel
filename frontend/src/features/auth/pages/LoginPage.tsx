@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../../../hooks/useToast";
 import Box from "@mui/material/Box";
@@ -222,16 +222,16 @@ export const LoginPage: React.FC = () => {
               {loading ? (
                 <Box className="lp-submit-loader" />
               ) : (
-                <>
-                  Se connecter
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8"
-                      strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </>
+                "Se connecter"
               )}
             </button>
           </form>
+
+          <Box className="lp-forgot-wrap">
+            <Link to="/forgot-password" className="lp-forgot">
+              Mot de passe oublié ?
+            </Link>
+          </Box>
 
         </Box>
       </Box>

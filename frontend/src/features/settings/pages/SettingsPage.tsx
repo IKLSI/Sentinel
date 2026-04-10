@@ -535,7 +535,7 @@ export const SettingsPage: React.FC = () => {
                             fontFamily: 'var(--font-mono)',
                             letterSpacing: '0.04em',
                           }}>
-                            S'applique aux nouveaux tickets
+                            S'applique uniquement aux nouveaux tickets
                           </Box>
                         </Box>
                         <Button variant="contained" size="small" onClick={handleSaveSla} disabled={savingSla || slaUnchanged} sx={{ minWidth: '110px' }}>

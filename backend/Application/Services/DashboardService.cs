@@ -201,7 +201,14 @@ public class DashboardService
                 Color = "accent",
                 Text = $"Ticket {(t.Title.Length > 40 ? t.Title[..40] + "…" : t.Title)} résolu{proj}",
                 Timestamp = t.UpdatedAt,
-                Detail = t.Priority.ToString(),
+                Detail = t.Priority switch
+                {
+                    TicketPriority.Critical => "Critique",
+                    TicketPriority.High     => "Haute",
+                    TicketPriority.Medium   => "Moyenne",
+                    TicketPriority.Low      => "Basse",
+                    _                       => t.Priority.ToString(),
+                },
             });
         }
 

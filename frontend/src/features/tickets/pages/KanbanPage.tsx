@@ -806,17 +806,15 @@ export const KanbanPage: React.FC = () => {
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flex: 1,
-                                  opacity: 0.25,
+                                  opacity: 0.2,
                                 }}
                               >
-                                <Box
-                                  sx={{
-                                    width: "24px",
-                                    height: "24px",
-                                    border: "2px dashed var(--muted2)",
-                                    borderRadius: "6px",
-                                  }}
-                                />
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M3 9.5h18v9A2 2 0 0 1 19 20.5H5A2 2 0 0 1 3 18.5V9.5z" stroke="var(--muted2)" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <path d="M3 9.5l2.5-6h13l2.5 6" stroke="var(--muted2)" strokeWidth="1.5" strokeLinejoin="round"/>
+                                  <path d="M12 3.5v6" stroke="var(--muted2)" strokeWidth="1.5" strokeLinecap="round"/>
+                                  <path d="M8 9.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="var(--muted2)" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
                               </Box>
                             )}
                           </div>
