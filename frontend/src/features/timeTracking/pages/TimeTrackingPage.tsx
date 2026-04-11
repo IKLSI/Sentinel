@@ -11,6 +11,7 @@ import {
   createTimeEntry,
   updateTimeEntry,
   deleteTimeEntry,
+  exportTimeEntriesCsv,
   TimeEntryDto,
   CreateTimeEntryDto,
 } from "../api/timeEntries";
@@ -33,6 +34,7 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import TodayOutlined from "@mui/icons-material/TodayOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import Tooltip from "@mui/material/Tooltip";
 import Popover from "@mui/material/Popover";
@@ -112,6 +114,7 @@ export const TimeTrackingPage: React.FC = () => {
   const [formCalendarAnchor, setFormCalendarAnchor] = useState<HTMLElement | null>(null);
   const [formCalendarMonth, setFormCalendarMonth] = useState(() => new Date());
   const [formCalendarView, setFormCalendarView] = useState<"days" | "months">("days");
+  const [exporting, setExporting] = useState(false);
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -136,6 +139,20 @@ export const TimeTrackingPage: React.FC = () => {
   }, [weekStart, weekEnd, showToast]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportTimeEntriesCsv({
+        from: format(weekStart, "yyyy-MM-dd"),
+        to: format(weekEnd, "yyyy-MM-dd"),
+      });
+    } catch {
+      showToast("Impossible d'exporter les saisies", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     getProjects().then(setProjects).catch(() => {});
@@ -351,6 +368,7 @@ export const TimeTrackingPage: React.FC = () => {
               >
                 <CalendarTodayOutlined sx={{ fontSize: 16 }} />
               </Box>
+
             </Box>
           </Box>
 
@@ -497,24 +515,44 @@ export const TimeTrackingPage: React.FC = () => {
                 Journal
               </Box>
             </Box>
-            <Box
-              component="button"
-              onClick={() => openCreate()}
-              sx={{
-                display: "flex", alignItems: "center", gap: "4px",
-                background: "var(--accent-subtle)",
-                border: "1px solid var(--accent-border)",
-                borderRadius: "6px",
-                px: "8px", height: "24px",
-                cursor: "pointer", color: "var(--accent)",
-                fontSize: "11px", fontWeight: 600,
-                fontFamily: "var(--font-ui)",
-                transition: "background 0.12s",
-                "&:hover": { background: "rgba(99,102,241,0.15)" },
-              }}
-            >
-              <AddOutlined sx={{ fontSize: 12 }} />
-              Ajouter
+            <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Box
+                component="button"
+                onClick={handleExport}
+                disabled={exporting}
+                title="Exporter en CSV"
+                sx={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: "24px", height: "24px",
+                  background: "transparent", border: "1px solid transparent",
+                  borderRadius: "6px", cursor: exporting ? "default" : "pointer",
+                  color: "var(--muted2)", opacity: exporting ? 0.5 : 1,
+                  transition: "background 0.12s, color 0.12s, border-color 0.12s",
+                  "&:hover": { background: "var(--s3)", color: "var(--text)", borderColor: "var(--border)" },
+                }}
+              >
+                {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
+              </Box>
+
+              <Box
+                component="button"
+                onClick={() => openCreate()}
+                sx={{
+                  display: "flex", alignItems: "center", gap: "4px",
+                  background: "var(--accent-subtle)",
+                  border: "1px solid var(--accent-border)",
+                  borderRadius: "6px",
+                  px: "8px", height: "24px",
+                  cursor: "pointer", color: "var(--accent)",
+                  fontSize: "11px", fontWeight: 600,
+                  fontFamily: "var(--font-ui)",
+                  transition: "background 0.12s",
+                  "&:hover": { background: "rgba(99,102,241,0.15)" },
+                }}
+              >
+                <AddOutlined sx={{ fontSize: 12 }} />
+                Ajouter
+              </Box>
             </Box>
           </Box>
 

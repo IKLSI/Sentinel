@@ -72,3 +72,15 @@ export const openInvoicePdf = async (id: string): Promise<void> => {
   const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
   window.open(url, '_blank')
 }
+
+export const exportInvoicesCsv = async (params?: { status?: string; period?: string }): Promise<void> => {
+  const response = await apiClient.get('/api/invoices/export/csv', { params, responseType: 'blob' })
+  const period = params?.period
+  const filename = period ? `factures-${period}.csv` : 'factures.csv'
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}

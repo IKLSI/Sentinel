@@ -19,6 +19,7 @@ import {
   updateInvoiceStatus,
   deleteInvoice,
   generateInvoice,
+  exportInvoicesCsv,
   InvoiceDto,
 } from "../api/invoices";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
@@ -27,6 +28,7 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import SendOutlined from "@mui/icons-material/SendOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -279,6 +281,7 @@ export const InvoicesPage: React.FC = () => {
   const [newTaxRate, setNewTaxRate] = useState(20);
   const [newDueDays, setNewDueDays] = useState(30);
   const [generating, setGenerating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<InvoiceDto | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -361,6 +364,17 @@ export const InvoicesPage: React.FC = () => {
       return;
     }
     setShowNewModal(true);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportInvoicesCsv(filters.status ? { status: filters.status } : undefined);
+    } catch {
+      showToast("Impossible d'exporter les factures", "error");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleGenerate = async () => {
@@ -681,6 +695,34 @@ export const InvoicesPage: React.FC = () => {
           </Box>
 
           <Box sx={{ flex: 1 }} />
+
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={exporting}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              textTransform: "none",
+              background: "var(--border)",
+              borderColor: "var(--border2)",
+              color: "var(--text-secondary)",
+              "&:hover": {
+                background: "var(--border2)",
+                borderColor: "var(--border2)",
+                color: "var(--text)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 20px rgba(99,102,241,0.15)",
+              },
+              "&:active": { transform: "translateY(0)", boxShadow: "none" },
+            }}
+            onClick={handleExport}
+          >
+            {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
+            Exporter
+          </Button>
 
           <Button
             variant="contained"

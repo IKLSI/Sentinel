@@ -48,3 +48,16 @@ export const updateTimeEntry = async (id: string, data: UpdateTimeEntryDto): Pro
 export const deleteTimeEntry = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/time-entries/${id}`)
 }
+
+export const exportTimeEntriesCsv = async (params?: { from?: string; to?: string }): Promise<void> => {
+  const response = await apiClient.get('/api/time-entries/export/csv', { params, responseType: 'blob' })
+  const from = params?.from ?? 'debut'
+  const to = params?.to ?? 'fin'
+  const filename = `temps-${from}-${to}.csv`
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
