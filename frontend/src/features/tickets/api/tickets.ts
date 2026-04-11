@@ -117,3 +117,22 @@ export const changeStatus = async (ticketId: string, status: TicketStatus): Prom
   return mapTicketDto(response.data)
 }
 
+export const exportTicketsCsv = async (params?: {
+  status?: string
+  priority?: string
+  assignedTo?: string
+  type?: string
+  slaBreached?: boolean
+  search?: string
+}): Promise<void> => {
+  const response = await apiClient.get('/api/tickets/export/csv', { params, responseType: 'blob' })
+  const date = new Date().toISOString().slice(0, 10)
+  const filename = `tickets-${date}.csv`
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+

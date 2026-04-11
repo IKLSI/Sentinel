@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import AddOutlined from "@mui/icons-material/AddOutlined";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
 import { RowActions } from "../../../components/RowActions";
@@ -22,8 +23,9 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
+import { useToast } from "../../../hooks/useToast";
 import { useTickets } from "../hooks/useTickets";
-import { deleteTicket, createTicket, updateTicket } from "../api/tickets";
+import { deleteTicket, createTicket, updateTicket, exportTicketsCsv } from "../api/tickets";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
 import { getUsers } from "../../users/api/users";
 import {
@@ -209,9 +211,11 @@ const selectSx = {
 
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const { tickets, loading, fetchTickets } = useTickets();
   const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState({ priority: "", status: "", type: "" });
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -226,6 +230,23 @@ export const TicketsPage: React.FC = () => {
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', techProjectId: '', assignedToId: '', estimatedMinutes: 0 });
   const [editSaving, setEditSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportTicketsCsv({
+        priority: filters.priority || undefined,
+        status: filters.status || undefined,
+        type: filters.type || undefined,
+        search: debouncedSearch || undefined,
+      });
+    } catch {
+      showToast("Impossible d'exporter les tickets", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const openCreateModal = () => {
     setCreateForm({ title: '', description: '', priority: 'Medium', type: 'Bug' });
@@ -329,8 +350,21 @@ export const TicketsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTickets({ page, pageSize }).catch(() => {});
-  }, [page, pageSize]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const params: Record<string, unknown> = { page, pageSize };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (filters.priority) params.priority = filters.priority;
+    if (filters.status) params.status = filters.status;
+    if (filters.type) params.type = filters.type;
+    fetchTickets(params).catch(() => {});
+  }, [page, pageSize, debouncedSearch, filters]);
 
   useEffect(() => {
     if (tickets?.items !== undefined) {
@@ -341,15 +375,8 @@ export const TicketsPage: React.FC = () => {
   const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
   const STATUS_ORDER   = { new: 0, in_progress: 1, testing: 2, resolved: 3, closed: 4 };
 
-  const q = search.toLowerCase();
   const filtered = displayTickets
-    .filter((t) => {
-      if (filters.priority && t.priority !== filters.priority) return false;
-      if (filters.status && t.status !== filters.status) return false;
-      if (filters.type && t.type !== filters.type) return false;
-      if (q && !t.title.toLowerCase().includes(q) && !t.reference.toLowerCase().includes(q) && !(t.projectName ?? "").toLowerCase().includes(q)) return false;
-      return true;
-    })
+    .slice()
     .sort((a, b) => {
       if (!sort) return 0;
       const mul = sort.dir === "asc" ? 1 : -1;
@@ -443,7 +470,7 @@ export const TicketsPage: React.FC = () => {
                         {label}
                       </Box>
                       <Box component="select" value={value}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters((f) => ({ ...f, [key]: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setFilters((f) => ({ ...f, [key]: e.target.value })); setPage(1); }}
                         sx={{ ...selectSx, width: "100%", boxSizing: "border-box" }}
                       >
                         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -454,7 +481,7 @@ export const TicketsPage: React.FC = () => {
                   {(filters.priority || filters.status || filters.type) && (
                     <Box
                       component="button"
-                      onClick={() => { setFilters({ priority: "", status: "", type: "" }); setFiltersOpen(false); }}
+                      onClick={() => { setFilters({ priority: "", status: "", type: "" }); setPage(1); setFiltersOpen(false); }}
                       sx={{
                         all: "unset", cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -478,6 +505,34 @@ export const TicketsPage: React.FC = () => {
           </Box>
 
           <Box sx={{ flex: 1 }} />
+
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={exporting}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              textTransform: "none",
+              background: "var(--border)",
+              borderColor: "var(--border2)",
+              color: "var(--text-secondary)",
+              "&:hover": {
+                background: "var(--border2)",
+                borderColor: "var(--border2)",
+                color: "var(--text)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 20px rgba(99,102,241,0.15)",
+              },
+              "&:active": { transform: "translateY(0)", boxShadow: "none" },
+            }}
+            onClick={handleExport}
+          >
+            {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
+            Exporter
+          </Button>
 
           <Button
             variant="contained"
@@ -522,9 +577,9 @@ export const TicketsPage: React.FC = () => {
                   </Box>
                   <Box className="empty-state-title">Aucun ticket trouvé</Box>
                   <Box className="empty-state-subtitle">
-                    {displayTickets.length === 0
+                    {!debouncedSearch && !filters.priority && !filters.status && !filters.type
                       ? "Créez votre premier ticket"
-                      : "Modifiez vos filtres"}
+                      : "Aucun résultat pour cette recherche"}
                   </Box>
                 </Box>
               </Box>
@@ -723,7 +778,7 @@ export const TicketsPage: React.FC = () => {
             <Pagination
               page={page}
               totalPages={tickets?.totalPages ?? 1}
-              total={tickets?.total ?? filtered.length}
+              total={tickets?.total ?? 0}
               onChange={setPage}
             />
           </Box>
