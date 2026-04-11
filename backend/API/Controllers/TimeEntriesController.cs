@@ -13,10 +13,12 @@ namespace Sentinel.API.Controllers;
 public class TimeEntriesController : BaseController
 {
     private readonly TimeTrackingService _timeTrackingService;
+    private readonly ExportService _exportService;
 
-    public TimeEntriesController(TimeTrackingService timeTrackingService)
+    public TimeEntriesController(TimeTrackingService timeTrackingService, ExportService exportService)
     {
         _timeTrackingService = timeTrackingService;
+        _exportService = exportService;
     }
 
     [HttpGet]
@@ -34,6 +36,23 @@ public class TimeEntriesController : BaseController
             organizationId.Value, filterUserId, from, to);
 
         return Ok(entries);
+    }
+
+    [HttpGet("export/csv")]
+    public async Task<IActionResult> ExportCsv(
+        [FromQuery] Guid? userId,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to)
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
+
+        byte[] bytes = await _exportService.ExportTimeEntriesCsvAsync(organizationId.Value, filterUserId, from, to);
+        string fromStr = from?.ToString("yyyy-MM-dd") ?? "debut";
+        string toStr = to?.ToString("yyyy-MM-dd") ?? "fin";
+        return File(bytes, "text/csv; charset=utf-8", $"temps-{fromStr}-{toStr}.csv");
     }
 
     [HttpPost]

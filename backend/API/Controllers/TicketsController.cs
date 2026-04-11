@@ -16,11 +16,13 @@ public class TicketsController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly TicketService _ticketService;
+    private readonly ExportService _exportService;
 
-    public TicketsController(SentinelContext context, TicketService ticketService)
+    public TicketsController(SentinelContext context, TicketService ticketService, ExportService exportService)
     {
         _context = context;
         _ticketService = ticketService;
+        _exportService = exportService;
     }
 
     [HttpGet]
@@ -30,6 +32,7 @@ public class TicketsController : BaseController
         [FromQuery] Guid? assignedTo,
         [FromQuery] string? type,
         [FromQuery] bool? slaBreached,
+        [FromQuery] string? search,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -46,7 +49,16 @@ public class TicketsController : BaseController
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
             query = query.Where(t => t.Priority == parsedPriority);
 
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<TicketStatus>(status, true, out TicketStatus parsedStatus))
+        Dictionary<string, TicketStatus> statusMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["new"] = TicketStatus.New,
+            ["in_progress"] = TicketStatus.InProgress,
+            ["inprogress"] = TicketStatus.InProgress,
+            ["testing"] = TicketStatus.Testing,
+            ["resolved"] = TicketStatus.Resolved,
+            ["closed"] = TicketStatus.Closed,
+        };
+        if (!string.IsNullOrEmpty(status) && statusMap.TryGetValue(status, out TicketStatus parsedStatus))
             query = query.Where(t => t.Status == parsedStatus);
 
         if (assignedTo.HasValue)
@@ -57,6 +69,16 @@ public class TicketsController : BaseController
 
         if (slaBreached.HasValue)
             query = query.Where(t => t.SlaBreached == slaBreached.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            string pattern = $"%{search}%";
+            query = query.Where(t =>
+                EF.Functions.ILike(t.Title, pattern) ||
+                EF.Functions.ILike(t.Description, pattern) ||
+                t.Comments.Any(c => EF.Functions.ILike(c.Content, pattern))
+            );
+        }
 
         int totalCount = await query.CountAsync();
 
@@ -73,6 +95,24 @@ public class TicketsController : BaseController
             Page = page,
             PageSize = pageSize
         });
+    }
+
+    [HttpGet("export/csv")]
+    public async Task<IActionResult> ExportCsv(
+        [FromQuery] string? priority,
+        [FromQuery] string? status,
+        [FromQuery] Guid? assignedTo,
+        [FromQuery] string? type,
+        [FromQuery] bool? slaBreached,
+        [FromQuery] string? search)
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        byte[] bytes = await _exportService.ExportTicketsCsvAsync(
+            organizationId.Value, status, priority, assignedTo, type, slaBreached, search);
+        string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+        return File(bytes, "text/csv; charset=utf-8", filename);
     }
 
     [HttpPost]

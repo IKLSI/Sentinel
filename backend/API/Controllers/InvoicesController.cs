@@ -15,11 +15,13 @@ public class InvoicesController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly InvoiceService _invoiceService;
+    private readonly ExportService _exportService;
 
-    public InvoicesController(SentinelContext context, InvoiceService invoiceService)
+    public InvoicesController(SentinelContext context, InvoiceService invoiceService, ExportService exportService)
     {
         _context = context;
         _invoiceService = invoiceService;
+        _exportService = exportService;
     }
 
     [HttpGet]
@@ -136,6 +138,17 @@ public class InvoicesController : BaseController
             .FirstAsync(i => i.Id == id);
 
         return Ok(MapToDto(result));
+    }
+
+    [HttpGet("export/csv")]
+    public async Task<IActionResult> ExportCsv([FromQuery] string? status, [FromQuery] string? period)
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        byte[] bytes = await _exportService.ExportInvoicesCsvAsync(organizationId.Value, status, period);
+        string filename = string.IsNullOrEmpty(period) ? "factures.csv" : $"factures-{period}.csv";
+        return File(bytes, "text/csv; charset=utf-8", filename);
     }
 
     [HttpGet("{id:guid}/pdf")]
