@@ -9,7 +9,7 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import EuroOutlined from "@mui/icons-material/EuroOutlined";
+import SplitscreenOutlined from "@mui/icons-material/SplitscreenOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
@@ -71,6 +71,7 @@ interface StatsData {
   ticketsByStatus: Record<string, number>;
   ticketsByPriority: Record<string, number>;
   unassignedOpenTickets: number;
+  activeSprintsCount: number;
   overdueInvoicesCount: number;
   overdueInvoicesAmount: number;
   urgentTickets: UrgentTicket[];
@@ -86,6 +87,7 @@ const EMPTY_STATS: StatsData = {
   slaRespected: 0, slaRespectedDelta: 0,
   ticketsByStatus: {}, ticketsByPriority: {},
   unassignedOpenTickets: 0,
+  activeSprintsCount: 0,
   overdueInvoicesCount: 0, overdueInvoicesAmount: 0,
   urgentTickets: [], recentActivity: [],
 };
@@ -288,8 +290,8 @@ export const DashboardPage: React.FC = () => {
         />
         <KpiCard
           delay={210} loaded={loaded}
-          label="Factures en retard" value={stats.overdueInvoicesCount}
-          color="var(--red)" icon={<EuroOutlined sx={{ fontSize: 16 }} />}
+          label="Sprints en cours" value={stats.activeSprintsCount}
+          color="var(--green)" icon={<SplitscreenOutlined sx={{ fontSize: 16 }} />}
         />
       </Box>
 

@@ -119,6 +119,9 @@ public class DashboardService
                 && openStatuses.Contains(t.Status)
                 && t.AssignedToId == null);
 
+        int activeSprintsCount = await _context.Sprints
+            .CountAsync(s => s.OrganizationId == organizationId && s.Status == SprintStatus.Active);
+
         List<Invoice> overdueInvoices = await _context.Invoices
             .Where(i => i.OrganizationId == organizationId
                 && i.Status == InvoiceStatus.Sent
@@ -168,6 +171,7 @@ public class DashboardService
             TicketsByStatus = ticketsByStatus,
             TicketsByPriority = ticketsByPriority,
             UnassignedOpenTickets = unassignedOpenTickets,
+            ActiveSprintsCount = activeSprintsCount,
             OverdueInvoicesCount = overdueInvoices.Count,
             OverdueInvoicesAmount = overdueInvoices.Sum(i => i.TotalAmount),
             UrgentTickets = urgentTickets,
