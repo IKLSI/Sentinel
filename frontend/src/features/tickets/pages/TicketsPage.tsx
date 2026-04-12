@@ -587,13 +587,13 @@ export const TicketsPage: React.FC = () => {
               <>
               <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
                 <Box component="colgroup">
-                  {(["9%","23%","13%","9%","9%","10%","10%","10%","7%"] as const).map((w, i) => (
+                  {(["8%","32%","13%","9%","8%","10%","10%","7%"] as const).map((w, i) => (
                     <Box key={i} component="col" sx={{ width: w }} />
                   ))}
                 </Box>
                 <Box component="thead">
                   <Box component="tr">
-                    {["Référence", "Titre", "Projet", "Priorité", "Type", "Statut", "Échéance", "Assigné", ""].map((h) => {
+                    {["Référence", "Titre", "Projet", "Priorité", "Statut", "Échéance", "Assigné", ""].map((h) => {
                         const sortable = h !== "";
                         const isActive = sort?.col === h;
                         return (
@@ -636,7 +636,7 @@ export const TicketsPage: React.FC = () => {
               <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
                   <Box component="colgroup">
-                    {(["9%","23%","13%","9%","9%","10%","10%","10%","7%"] as const).map((w, i) => (
+                    {(["8%","32%","13%","9%","8%","10%","10%","7%"] as const).map((w, i) => (
                       <Box key={i} component="col" sx={{ width: w }} />
                     ))}
                   </Box>
@@ -654,16 +654,18 @@ export const TicketsPage: React.FC = () => {
                       >
                         <Box
                           component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "11px",
-                            color: "var(--muted)",
-                            whiteSpace: "nowrap",
-                          }}
+                          sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}
                         >
-                          {ticket.reference}
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)", lineHeight: 1 }}>
+                              {ticket.reference}
+                            </Box>
+                            <Tooltip title={typeLabels[ticket.type]} arrow placement="top">
+                              <Box sx={{ display: "inline-flex", alignItems: "center", color: "var(--muted)", flexShrink: 0, lineHeight: 1 }}>
+                                {typeIcons[ticket.type]}
+                              </Box>
+                            </Tooltip>
+                          </Box>
                         </Box>
                         <Box
                           component="td"
@@ -707,17 +709,6 @@ export const TicketsPage: React.FC = () => {
                             startAdornment={<LevelBars level={priorityLevels[ticket.priority] ?? 1} />}
                           >
                             {priorityLabels[ticket.priority]}
-                          </StatusChip>
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                          }}
-                        >
-                          <StatusChip startAdornment={typeIcons[ticket.type]}>
-                            {typeLabels[ticket.type]}
                           </StatusChip>
                         </Box>
                         <Box

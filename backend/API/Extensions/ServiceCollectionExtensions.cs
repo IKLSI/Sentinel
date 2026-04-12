@@ -115,6 +115,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuthService>();
         services.AddScoped<TicketService>();
         services.AddScoped<ExportService>();
+        services.AddScoped<SprintService>();
         services.AddScoped<SlaService>();
         services.AddScoped<TimeTrackingService>();
         services.AddScoped<InvoiceService>();

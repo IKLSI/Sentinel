@@ -33,6 +33,7 @@ public class TicketsController : BaseController
         [FromQuery] string? type,
         [FromQuery] bool? slaBreached,
         [FromQuery] string? search,
+        [FromQuery] string? sprintId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -78,6 +79,14 @@ public class TicketsController : BaseController
                 EF.Functions.ILike(t.Description, pattern) ||
                 t.Comments.Any(c => EF.Functions.ILike(c.Content, pattern))
             );
+        }
+
+        if (sprintId != null)
+        {
+            if (sprintId == "" || sprintId == "none")
+                query = query.Where(t => t.SprintId == null);
+            else if (Guid.TryParse(sprintId, out Guid parsedSprintId))
+                query = query.Where(t => t.SprintId == parsedSprintId);
         }
 
         int totalCount = await query.CountAsync();

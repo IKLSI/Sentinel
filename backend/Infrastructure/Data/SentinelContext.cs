@@ -20,6 +20,7 @@ public class SentinelContext : DbContext
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<Sprint> Sprints => Set<Sprint>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,7 @@ public class SentinelContext : DbContext
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
+        ConfigureSprint(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -152,6 +154,12 @@ public class SentinelContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Sprint)
+                .WithMany(s => s.Tickets)
+                .HasForeignKey(e => e.SprintId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
@@ -322,6 +330,30 @@ public class SentinelContext : DbContext
             entity.HasOne(e => e.TechProject)
                 .WithMany(p => p.Runtimes)
                 .HasForeignKey(e => e.TechProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureSprint(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Sprint>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Status).HasConversion<string>();
+
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

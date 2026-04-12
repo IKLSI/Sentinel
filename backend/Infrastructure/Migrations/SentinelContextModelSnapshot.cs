@@ -264,6 +264,53 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Runtimes");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.Sprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Sprints");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -349,6 +396,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime?>("SlaWarningNotifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("SprintId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -384,6 +434,8 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("SlaBreached");
+
+                    b.HasIndex("SprintId");
 
                     b.HasIndex("Status");
 
@@ -715,6 +767,25 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("TechProject");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.Sprint", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sentinel.Domain.Models.TechProject", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
@@ -750,6 +821,11 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Sentinel.Domain.Models.Sprint", "Sprint")
+                        .WithMany("Tickets")
+                        .HasForeignKey("SprintId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("AssignedTo");
 
                     b.Navigation("CreatedBy");
@@ -757,6 +833,8 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("Project");
+
+                    b.Navigation("Sprint");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
@@ -871,6 +949,11 @@ namespace Sentinel.Infrastructure.Migrations
             modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.Sprint", b =>
+                {
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
