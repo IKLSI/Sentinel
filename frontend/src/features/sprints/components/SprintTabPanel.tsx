@@ -4,7 +4,6 @@ import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Tooltip from '@mui/material/Tooltip'
 import SearchOutlined from '@mui/icons-material/SearchOutlined'
-import TuneOutlined from '@mui/icons-material/TuneOutlined'
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined'
 import RemoveCircleOutlineOutlined from '@mui/icons-material/RemoveCircleOutlineOutlined'
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined'
@@ -70,16 +69,6 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
 }
 
-const selectSx = {
-  appearance: 'none', WebkitAppearance: 'none',
-  background: 'var(--s1)',
-  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
-  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-  border: '1px solid var(--border)', borderRadius: 'var(--r)',
-  px: '12px', py: '7px', pr: '36px', fontSize: '13px',
-  color: 'var(--text)', width: 'auto', outline: 'none', fontFamily: 'inherit',
-}
-
 // ─── sub-components ──────────────────────────────────────────────────────────
 
 const LevelBars: React.FC<{ level: number }> = ({ level }) => (
@@ -124,9 +113,6 @@ export const SprintTabPanel: React.FC<SprintTabPanelProps> = ({
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [filters, setFilters] = useState({ priority: '', status: '', type: '' })
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const filtersRef = useRef<HTMLDivElement>(null)
 
   const [removingTicket, setRemovingTicket] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -138,17 +124,6 @@ export const SprintTabPanel: React.FC<SprintTabPanelProps> = ({
     const t = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(t)
   }, [search])
-
-  // ── close dropdowns on outside click ──────────────────────────────────────
-
-  useEffect(() => {
-    if (!filtersOpen) return
-    const handler = (e: MouseEvent) => {
-      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) setFiltersOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [filtersOpen])
 
 // ── load tickets ───────────────────────────────────────────────────────────
 
@@ -209,26 +184,18 @@ const handleRemoveTicket = async (sprintId: string, ticket: Ticket) => {
 
   // ── filter ─────────────────────────────────────────────────────────────────
 
-  const filterTickets = (tickets: Ticket[]) =>
-    tickets.filter(t => {
-      if (filters.priority && t.priority !== filters.priority) return false
-      if (filters.status && t.status !== filters.status) return false
-      if (filters.type && t.type !== filters.type) return false
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase()
-        if (!t.title.toLowerCase().includes(q) && !t.reference.toLowerCase().includes(q)) return false
-      }
-      return true
-    })
-
-  const hasActiveFilters = !!(filters.priority || filters.status || filters.type || search)
+  const filterTickets = (tickets: Ticket[]) => {
+    if (!debouncedSearch) return tickets
+    const q = debouncedSearch.toLowerCase()
+    return tickets.filter(t => t.title.toLowerCase().includes(q) || t.reference.toLowerCase().includes(q))
+  }
 
   // ── render ─────────────────────────────────────────────────────────────────
 
   if (sprints.length === 0) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: '12px', flexShrink: 0 }}>
+        <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px', pb: '14px', mb: '8px' }}>
           <Box sx={{ flex: 1 }} />
           {onNewSprint && (
             <Button
@@ -236,7 +203,7 @@ const handleRemoveTicket = async (sprintId: string, ticket: Ticket) => {
               variant="contained"
               startIcon={<AddOutlined sx={{ fontSize: 13 }} />}
               onClick={onNewSprint}
-              sx={{ height: '30px', fontSize: '12px', textTransform: 'none', px: '10px', flexShrink: 0 }}
+              sx={{ height: '28px', fontSize: '12px', textTransform: 'none', px: '10px', flexShrink: 0 }}
             >
               Nouveau sprint
             </Button>
@@ -256,88 +223,36 @@ const handleRemoveTicket = async (sprintId: string, ticket: Ticket) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: '0px' }}>
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', mb: '20px', flexShrink: 0, position: 'relative', zIndex: 2 }}>
+      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px', pb: '14px', mb: '8px' }}>
         <Box sx={{
-          width: '260px', display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'var(--s2)', border: '1px solid var(--border)',
-          borderRadius: '9px', px: '10px', height: '30px',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
+          display: 'flex', alignItems: 'center', gap: '7px',
+          background: 'var(--s1)', border: '1px solid var(--border)',
+          borderRadius: '7px', px: '9px', height: '28px', width: 'calc(30% + 10px)',
+          transition: 'border-color 0.15s',
           '&:focus-within': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
         }}>
           <SearchOutlined sx={{ color: 'var(--muted)', fontSize: '13px', flexShrink: 0 }} />
           <Box
             component="input"
-            placeholder="Rechercher dans les tickets..."
+            placeholder="Rechercher..."
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            sx={{ all: 'unset', flex: 1, fontSize: '12px', color: 'var(--text)', '&::placeholder': { color: 'var(--muted)' } }}
+            sx={{ all: 'unset', flex: 1, fontSize: '12px', color: 'var(--text)', '&::placeholder': { color: 'var(--muted)' }, '&:focus': { outline: 'none', boxShadow: 'none !important' } }}
           />
         </Box>
-
-        <Box ref={filtersRef as React.RefObject<HTMLDivElement>} sx={{ position: 'relative' }}>
-          {hasActiveFilters && (
-            <Box sx={{ position: 'absolute', top: -4, right: -4, width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', zIndex: 1, border: '2px solid var(--bg)' }} />
-          )}
-          <Box
-            component="button"
-            onClick={() => setFiltersOpen(v => !v)}
-            sx={{
-              all: 'unset', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '6px',
-              px: '12px', height: '30px',
-              background: filtersOpen ? 'var(--accent-subtle)' : 'var(--s2)',
-              border: `1px solid ${filtersOpen ? 'var(--accent-border)' : 'var(--border)'}`,
-              borderRadius: '9px', fontSize: '12px', fontWeight: 500,
-              color: filtersOpen ? 'var(--accent)' : 'var(--text-secondary)',
-              transition: 'all 0.12s',
-              '&:hover': { background: 'var(--s3)', borderColor: 'var(--border2)' },
-            }}
-          >
-            <TuneOutlined sx={{ fontSize: 14 }} />
-            Filtres
+        {search && (
+          <Box component="span" sx={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--muted)' }}>
+            {sprints.reduce((acc, s) => acc + filterTickets(sprintTickets[s.id] ?? []).length, 0)} résultat{sprints.reduce((acc, s) => acc + filterTickets(sprintTickets[s.id] ?? []).length, 0) > 1 ? 's' : ''}
           </Box>
-
-          {filtersOpen && (
-            <Box sx={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
-              <Box sx={{ position: 'absolute', top: -6, left: 'calc(50% - 6px)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '6px solid var(--border)' }} />
-              <Box sx={{ position: 'absolute', top: -5, left: 'calc(50% - 5px)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '5px solid var(--s1)' }} />
-              <Box sx={{ background: 'var(--s1)', border: '1px solid var(--border)', borderRadius: '12px', p: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {([
-                  { label: 'Priorité', key: 'priority', value: filters.priority, options: [['', 'Toutes'], ['critical', 'Critique'], ['high', 'Haute'], ['medium', 'Moyenne'], ['low', 'Basse']] },
-                  { label: 'Statut', key: 'status', value: filters.status, options: [['', 'Tous'], ['new', 'Nouveau'], ['in_progress', 'En cours'], ['testing', 'En test'], ['resolved', 'Résolu'], ['closed', 'Fermé']] },
-                  { label: 'Type', key: 'type', value: filters.type, options: [['', 'Tous'], ['bug', 'Bug'], ['feature', 'Évolution'], ['security', 'Sécurité'], ['performance', 'Perf'], ['maintenance', 'Maintenance'], ['question', 'Question']] },
-                ] as const).map(({ label, key, value, options }) => (
-                  <Box key={key}>
-                    <Box sx={{ fontSize: '10px', fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', mb: '5px' }}>{label}</Box>
-                    <Box component="select" value={value}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilters(f => ({ ...f, [key]: e.target.value }))}
-                      sx={{ ...selectSx, width: '100%', boxSizing: 'border-box' }}
-                    >
-                      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </Box>
-                  </Box>
-                ))}
-                {hasActiveFilters && (
-                  <Box component="button"
-                    onClick={() => { setFilters({ priority: '', status: '', type: '' }); setSearch(''); setFiltersOpen(false) }}
-                    sx={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: '4px', fontSize: '12px', fontWeight: 600, color: 'var(--red)', background: 'var(--red-subtle)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '7px', py: '8px', transition: 'background 0.12s', '&:hover': { background: 'rgba(239,68,68,0.14)' } }}>
-                    Réinitialiser
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          )}
-        </Box>
-
+        )}
         <Box sx={{ flex: 1 }} />
-
         {onNewSprint && (
           <Button
             size="small"
             variant="contained"
             startIcon={<AddOutlined sx={{ fontSize: 13 }} />}
             onClick={onNewSprint}
-            sx={{ height: '30px', fontSize: '12px', textTransform: 'none', px: '10px', flexShrink: 0 }}
+            sx={{ height: '28px', fontSize: '12px', textTransform: 'none', px: '10px', flexShrink: 0 }}
           >
             Nouveau sprint
           </Button>
