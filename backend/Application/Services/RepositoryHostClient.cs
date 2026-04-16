@@ -36,9 +36,10 @@ public class RepositoryHostClient
 
     public async Task<string?> FetchTextAsync(string host, string url)
     {
+        HttpClient client = _httpClientFactory.CreateClient("Registry");
+
         if (host.Contains("github"))
         {
-            HttpClient client = _httpClientFactory.CreateClient("Registry");
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url);
             try
             {
@@ -47,7 +48,8 @@ public class RepositoryHostClient
             }
             catch { return null; }
         }
-        return await FetchTextAsync(_httpClientFactory.CreateClient("Registry"), url);
+
+        return await FetchTextAsync(client, url);
     }
 
     public static bool IsInSkippedDirectory(string filePath)

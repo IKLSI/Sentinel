@@ -3,8 +3,7 @@ namespace Sentinel.Domain.Models;
 public enum RepositoryType
 {
     GitHub,
-    GitLab,
-    Bitbucket
+    GitLab
 }
 
 public enum ScanFrequency

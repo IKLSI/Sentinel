@@ -11,14 +11,45 @@ namespace Sentinel.Application.Services;
 public class TechHealthService
 {
     private readonly SentinelContext _context;
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _osvClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
 
-    public TechHealthService(SentinelContext context, IHttpClientFactory httpClientFactory, ILogger<TechHealthService> logger, RepositoryScannerService repositoryScanner)
+    private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
+    {
+        [DependencyEcosystem.Npm] = "npm",
+        [DependencyEcosystem.PyPI] = "PyPI",
+        [DependencyEcosystem.NuGet] = "NuGet",
+        [DependencyEcosystem.Maven] = "Maven",
+        [DependencyEcosystem.Go] = "Go",
+        [DependencyEcosystem.Composer] = "Packagist",
+        [DependencyEcosystem.Gem] = "RubyGems",
+        [DependencyEcosystem.Cargo] = "crates.io",
+        [DependencyEcosystem.Gradle] = "Maven",
+    };
+
+    private static readonly Dictionary<string, string> EolProductMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Node.js"] = "nodejs",
+        ["Python"] = "python",
+        [".NET"] = "dotnet",
+        ["PHP"] = "php",
+        ["Ruby"] = "ruby",
+        ["Go"] = "go",
+        ["Java"] = "java",
+        ["Rust"] = "rust",
+    };
+
+    public TechHealthService(
+        SentinelContext context,
+        IHttpClientFactory httpClientFactory,
+        ILogger<TechHealthService> logger,
+        RepositoryScannerService repositoryScanner)
     {
         _context = context;
-        _httpClient = httpClientFactory.CreateClient("OSV");
+        _httpClientFactory = httpClientFactory;
+        _osvClient = httpClientFactory.CreateClient("OSV");
         _logger = logger;
         _repositoryScanner = repositoryScanner;
     }
@@ -28,14 +59,12 @@ public class TechHealthService
         TechProject? project = await _context.TechProjects
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
-        if (project == null)
-        {
-            return;
-        }
+        if (project == null) return;
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
-            (List<Dependency> newDeps, List<Runtime> newRuntimes) = await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
+            (List<Dependency> newDeps, List<Runtime> newRuntimes) =
+                await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
 
             if (newDeps.Count > 0 || newRuntimes.Count > 0)
             {
@@ -64,18 +93,17 @@ public class TechHealthService
             .FirstAsync(p => p.Id == projectId);
 
         foreach (Dependency dependency in project.Dependencies)
-        {
             await CheckVulnerabilitiesAsync(dependency);
-        }
+
+        foreach (Runtime runtime in project.Runtimes)
+            await CheckRuntimeEolAsync(runtime);
 
         project.HealthScore = CalculateHealthScore(project);
         project.HealthGrade = ScoreToGrade(project.HealthScore);
         project.LastScanAt = DateTime.UtcNow;
 
         foreach (Dependency dep in project.Dependencies)
-        {
             dep.ScannedAt = DateTime.UtcNow;
-        }
 
         await _context.SaveChangesAsync();
     }
@@ -94,44 +122,29 @@ public class TechHealthService
             .Select(p => p.Id)
             .ToListAsync();
 
-        List<Guid> allDue = daily.Concat(weekly).ToList();
-
-        foreach (Guid projectId in allDue)
+        foreach (Guid projectId in daily.Concat(weekly))
         {
-            try
-            {
-                await ScanProjectAsync(projectId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors du scan du projet {ProjectId}", projectId);
-            }
+            try { await ScanProjectAsync(projectId); }
+            catch (Exception ex) { _logger.LogError(ex, "Erreur scan projet {ProjectId}", projectId); }
         }
     }
 
     private async Task CheckVulnerabilitiesAsync(Dependency dependency)
     {
+        if (!OsvEcosystemMap.TryGetValue(dependency.Ecosystem, out string? ecosystem)) return;
+
         try
         {
-            string ecosystem = dependency.Ecosystem.ToString();
             var requestBody = new
             {
                 version = dependency.CurrentVersion,
-                package = new
-                {
-                    name = dependency.Name,
-                    ecosystem
-                }
+                package = new { name = dependency.Name, ecosystem }
             };
 
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("https://api.osv.dev/v1/query", requestBody);
-            if (!response.IsSuccessStatusCode)
-            {
-                return;
-            }
+            HttpResponseMessage response = await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/query", requestBody);
+            if (!response.IsSuccessStatusCode) return;
 
-            string content = await response.Content.ReadAsStringAsync();
-            using JsonDocument doc = JsonDocument.Parse(content);
+            using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
             if (!doc.RootElement.TryGetProperty("vulns", out JsonElement vulns))
             {
@@ -140,42 +153,22 @@ public class TechHealthService
             }
 
             HashSet<string> existingCves = dependency.Vulnerabilities.Select(v => v.CveId).ToHashSet();
-            List<Vulnerability> newVulns = new List<Vulnerability>();
+            List<Vulnerability> newVulns = new();
 
             foreach (JsonElement vuln in vulns.EnumerateArray())
             {
-                string id = vuln.TryGetProperty("id", out JsonElement idProp) ? idProp.GetString() ?? string.Empty : string.Empty;
+                string id = vuln.TryGetProperty("id", out JsonElement idProp)
+                    ? idProp.GetString() ?? string.Empty
+                    : string.Empty;
 
-                if (existingCves.Contains(id))
-                {
-                    continue;
-                }
+                if (existingCves.Contains(id)) continue;
 
-                VulnerabilitySeverity severity = VulnerabilitySeverity.Medium;
-                decimal cvss = 0;
-
-                if (vuln.TryGetProperty("severity", out JsonElement severityArr))
-                {
-                    foreach (JsonElement sev in severityArr.EnumerateArray())
-                    {
-                        if (sev.TryGetProperty("score", out JsonElement scoreProp))
-                        {
-                            if (decimal.TryParse(scoreProp.GetString(), out decimal parsedScore))
-                            {
-                                cvss = parsedScore;
-                                severity = cvss switch
-                                {
-                                    >= 9 => VulnerabilitySeverity.Critical,
-                                    >= 7 => VulnerabilitySeverity.High,
-                                    >= 4 => VulnerabilitySeverity.Medium,
-                                    _ => VulnerabilitySeverity.Low
-                                };
-                            }
-                        }
-                    }
-                }
-
-                string summary = vuln.TryGetProperty("summary", out JsonElement sumProp) ? sumProp.GetString() ?? string.Empty : string.Empty;
+                (decimal cvss, VulnerabilitySeverity severity) = ExtractSeverity(vuln);
+                string? fixedVersion = ExtractFixedVersion(vuln, dependency.Name);
+                string? advisoryUrl = ExtractAdvisoryUrl(vuln, id);
+                string summary = vuln.TryGetProperty("summary", out JsonElement sumProp)
+                    ? sumProp.GetString() ?? string.Empty
+                    : string.Empty;
 
                 newVulns.Add(new Vulnerability
                 {
@@ -185,6 +178,8 @@ public class TechHealthService
                     Description = summary,
                     PackageName = dependency.Name,
                     AffectedVersion = dependency.CurrentVersion,
+                    FixedVersion = fixedVersion,
+                    AdvisoryUrl = advisoryUrl,
                     Severity = severity,
                     DetectedAt = DateTime.UtcNow
                 });
@@ -202,7 +197,170 @@ public class TechHealthService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Erreur lors de la vérification des CVE pour {Dependency}", dependency.Name);
+            _logger.LogWarning(ex, "Erreur CVE pour {Dependency}", dependency.Name);
+        }
+    }
+
+    private static (decimal cvss, VulnerabilitySeverity severity) ExtractSeverity(JsonElement vuln)
+    {
+        // 1. database_specific.cvss.baseScore (GitHub Advisory — score numérique direct)
+        if (vuln.TryGetProperty("database_specific", out JsonElement dbSpecific))
+        {
+            if (dbSpecific.TryGetProperty("cvss", out JsonElement cvssObj) &&
+                cvssObj.TryGetProperty("baseScore", out JsonElement baseScoreProp) &&
+                baseScoreProp.TryGetDecimal(out decimal score))
+            {
+                return (score, ScoreToSeverity(score));
+            }
+
+            if (dbSpecific.TryGetProperty("severity", out JsonElement sevStr))
+            {
+                VulnerabilitySeverity sev = sevStr.GetString()?.ToUpperInvariant() switch
+                {
+                    "CRITICAL" => VulnerabilitySeverity.Critical,
+                    "HIGH" => VulnerabilitySeverity.High,
+                    "MODERATE" or "MEDIUM" => VulnerabilitySeverity.Medium,
+                    "LOW" => VulnerabilitySeverity.Low,
+                    _ => VulnerabilitySeverity.Medium
+                };
+                return (0, sev);
+            }
+        }
+
+        // 2. Fallback heuristique sur le vecteur CVSS v3
+        if (vuln.TryGetProperty("severity", out JsonElement severityArr))
+        {
+            foreach (JsonElement sev in severityArr.EnumerateArray())
+            {
+                if (sev.TryGetProperty("score", out JsonElement scoreProp))
+                {
+                    string? vector = scoreProp.GetString();
+                    if (vector != null)
+                        return (0, EstimateSeverityFromVector(vector));
+                }
+            }
+        }
+
+        return (0, VulnerabilitySeverity.Medium);
+    }
+
+    private static VulnerabilitySeverity ScoreToSeverity(decimal score) => score switch
+    {
+        >= 9.0m => VulnerabilitySeverity.Critical,
+        >= 7.0m => VulnerabilitySeverity.High,
+        >= 4.0m => VulnerabilitySeverity.Medium,
+        _ => VulnerabilitySeverity.Low
+    };
+
+    private static VulnerabilitySeverity EstimateSeverityFromVector(string vector)
+    {
+        bool critConfInt = vector.Contains("/C:H") && vector.Contains("/I:H");
+        bool highImpact = vector.Contains("/C:H") || vector.Contains("/I:H") || vector.Contains("/A:H");
+        bool lowPriv = vector.Contains("/PR:N") || vector.Contains("/PR:L");
+
+        if (critConfInt && lowPriv) return VulnerabilitySeverity.Critical;
+        if (highImpact) return VulnerabilitySeverity.High;
+        if (vector.Contains("/C:L") || vector.Contains("/I:L") || vector.Contains("/A:L"))
+            return VulnerabilitySeverity.Medium;
+        return VulnerabilitySeverity.Low;
+    }
+
+    private static string? ExtractFixedVersion(JsonElement vuln, string packageName)
+    {
+        if (!vuln.TryGetProperty("affected", out JsonElement affected)) return null;
+
+        foreach (JsonElement affectedEntry in affected.EnumerateArray())
+        {
+            if (affectedEntry.TryGetProperty("package", out JsonElement pkg))
+            {
+                string? name = pkg.TryGetProperty("name", out JsonElement n) ? n.GetString() : null;
+                if (name != null && !name.Equals(packageName, StringComparison.OrdinalIgnoreCase)) continue;
+            }
+
+            if (!affectedEntry.TryGetProperty("ranges", out JsonElement ranges)) continue;
+
+            foreach (JsonElement range in ranges.EnumerateArray())
+            {
+                if (!range.TryGetProperty("events", out JsonElement events)) continue;
+
+                foreach (JsonElement evt in events.EnumerateArray())
+                {
+                    if (evt.TryGetProperty("fixed", out JsonElement fixedProp))
+                        return fixedProp.GetString();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractAdvisoryUrl(JsonElement vuln, string id)
+    {
+        if (vuln.TryGetProperty("references", out JsonElement refs))
+        {
+            foreach (JsonElement r in refs.EnumerateArray())
+            {
+                if (r.TryGetProperty("type", out JsonElement t) && t.GetString() == "ADVISORY" &&
+                    r.TryGetProperty("url", out JsonElement urlProp))
+                    return urlProp.GetString();
+            }
+
+            foreach (JsonElement r in refs.EnumerateArray())
+            {
+                if (r.TryGetProperty("url", out JsonElement urlProp))
+                    return urlProp.GetString();
+            }
+        }
+
+        if (id.StartsWith("GHSA-", StringComparison.OrdinalIgnoreCase))
+            return $"https://github.com/advisories/{id}";
+
+        return null;
+    }
+
+    private async Task CheckRuntimeEolAsync(Runtime runtime)
+    {
+        if (!EolProductMap.TryGetValue(runtime.Name, out string? product)) return;
+
+        string[] parts = runtime.Version.Split('.');
+        if (parts.Length == 0 || parts[0] == "unknown") return;
+
+        string cycle = runtime.Name.ToLowerInvariant() switch
+        {
+            "node.js" or "nodejs" => parts[0],
+            ".net" or "dotnet" => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0],
+            _ => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0]
+        };
+
+        try
+        {
+            HttpClient eolClient = _httpClientFactory.CreateClient("EolDate");
+            HttpResponseMessage response = await eolClient.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
+            if (!response.IsSuccessStatusCode) return;
+
+            using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            JsonElement root = doc.RootElement;
+
+            if (!root.TryGetProperty("eol", out JsonElement eolProp)) return;
+
+            if (eolProp.ValueKind == JsonValueKind.True)
+            {
+                runtime.IsEol = true;
+            }
+            else if (eolProp.ValueKind == JsonValueKind.False)
+            {
+                runtime.IsEol = false;
+            }
+            else if (eolProp.ValueKind == JsonValueKind.String &&
+                     DateTime.TryParse(eolProp.GetString(), out DateTime eolDate))
+            {
+                runtime.EolDate = eolDate;
+                runtime.IsEol = eolDate < DateTime.UtcNow;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "EOL check non disponible pour {Runtime} {Version}", runtime.Name, runtime.Version);
         }
     }
 
@@ -217,7 +375,6 @@ public class TechHealthService
                 DependencyStatus.MajorUpdate => 2,
                 DependencyStatus.MinorUpdate => 1,
                 DependencyStatus.EOL => 10,
-                DependencyStatus.Vulnerable => 0,
                 _ => 0
             };
 
@@ -234,21 +391,23 @@ public class TechHealthService
             }
         }
 
+        foreach (Runtime rt in project.Runtimes)
+        {
+            if (rt.IsEol) score -= 15;
+        }
+
         return Math.Max(0, Math.Min(100, score));
     }
 
-    private static string ScoreToGrade(int score)
+    private static string ScoreToGrade(int score) => score switch
     {
-        return score switch
-        {
-            >= 90 => "A",
-            >= 75 => "B",
-            >= 60 => "C",
-            >= 45 => "D",
-            >= 30 => "E",
-            _ => "F"
-        };
-    }
+        >= 90 => "A",
+        >= 75 => "B",
+        >= 60 => "C",
+        >= 45 => "D",
+        >= 30 => "E",
+        _ => "F"
+    };
 
     public async Task<TechProjectDto?> GetProjectWithDetailsAsync(Guid projectId)
     {
@@ -257,12 +416,7 @@ public class TechHealthService
             .Include(p => p.Runtimes)
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
-        if (project == null)
-        {
-            return null;
-        }
-
-        return MapToDto(project);
+        return project == null ? null : MapToDto(project);
     }
 
     public static TechProjectDto MapToDto(TechProject project)
@@ -279,7 +433,8 @@ public class TechHealthService
             ScanFrequency = project.ScanFrequency.ToString(),
             TotalDependencies = project.Dependencies?.Count ?? 0,
             VulnerableDependencies = project.Dependencies?.Count(d => d.Status == DependencyStatus.Vulnerable) ?? 0,
-            CriticalVulnerabilities = project.Dependencies?.SelectMany(d => d.Vulnerabilities)
+            CriticalVulnerabilities = project.Dependencies?
+                .SelectMany(d => d.Vulnerabilities)
                 .Count(v => v.Severity == VulnerabilitySeverity.Critical) ?? 0,
             Dependencies = project.Dependencies?.Select(d => new DependencyDto
             {

@@ -163,19 +163,7 @@ public class DataSeeder
             ScanFrequency = ScanFrequency.Daily,
             LastScanAt = now.AddHours(-2)
         };
-        var portailRh = new TechProject
-        {
-            Id = Guid.NewGuid(),
-            OrganizationId = org.Id,
-            Name = "Portail RH",
-            RepositoryUrl = "https://bitbucket.org/nexus-digital/portail-rh",
-            RepositoryType = RepositoryType.Bitbucket,
-            HealthScore = 95,
-            HealthGrade = "A",
-            ScanFrequency = ScanFrequency.Weekly,
-            LastScanAt = now.AddDays(-2)
-        };
-        await _context.TechProjects.AddRangeAsync(eshop, bankcore, crm, portailRh);
+        await _context.TechProjects.AddRangeAsync(eshop, bankcore, crm);
 
         await _context.Runtimes.AddRangeAsync(
             new Runtime { Id = Guid.NewGuid(), TechProjectId = eshop.Id, Name = "Node.js", Version = "18.20.3", EolDate = new DateTime(2025, 4, 30, 0, 0, 0, DateTimeKind.Utc), IsEol = true },
@@ -184,7 +172,7 @@ public class DataSeeder
             new Runtime { Id = Guid.NewGuid(), TechProjectId = bankcore.Id, Name = "Spring Boot", Version = "3.2.4", IsEol = false },
             new Runtime { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "PHP", Version = "8.0.30", EolDate = new DateTime(2023, 11, 26, 0, 0, 0, DateTimeKind.Utc), IsEol = true },
             new Runtime { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "Laravel", Version = "10.48.0", IsEol = false },
-            new Runtime { Id = Guid.NewGuid(), TechProjectId = portailRh.Id, Name = ".NET", Version = "8.0.3", EolDate = new DateTime(2026, 11, 10, 0, 0, 0, DateTimeKind.Utc), IsEol = false }
+            new Runtime { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = ".NET", Version = "8.0.3", EolDate = new DateTime(2026, 11, 10, 0, 0, 0, DateTimeKind.Utc), IsEol = false }
         );
 
         var lodash = new Dependency { Id = Guid.NewGuid(), TechProjectId = eshop.Id, Name = "lodash", CurrentVersion = "4.17.15", LatestVersion = "4.17.21", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.Npm, Status = DependencyStatus.Vulnerable, ScannedAt = now.AddDays(-4) };
@@ -206,9 +194,9 @@ public class DataSeeder
             guzzle,
             new Dependency { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "phpunit/phpunit", CurrentVersion = "10.5.14", LatestVersion = "11.0.6", Type = DependencyType.Dev, Ecosystem = DependencyEcosystem.Composer, Status = DependencyStatus.MajorUpdate, ScannedAt = now.AddHours(-2) },
             new Dependency { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "monolog/monolog", CurrentVersion = "3.5.0", LatestVersion = "3.6.0", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.Composer, Status = DependencyStatus.MinorUpdate, ScannedAt = now.AddHours(-2) },
-            new Dependency { Id = Guid.NewGuid(), TechProjectId = portailRh.Id, Name = "Microsoft.AspNetCore.Authentication.JwtBearer", CurrentVersion = "8.0.3", LatestVersion = "8.0.3", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.UpToDate, ScannedAt = now.AddDays(-2) },
-            new Dependency { Id = Guid.NewGuid(), TechProjectId = portailRh.Id, Name = "Npgsql.EntityFrameworkCore.PostgreSQL", CurrentVersion = "8.0.2", LatestVersion = "8.0.4", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.MinorUpdate, ScannedAt = now.AddDays(-2) },
-            new Dependency { Id = Guid.NewGuid(), TechProjectId = portailRh.Id, Name = "Serilog.AspNetCore", CurrentVersion = "8.0.1", LatestVersion = "8.0.1", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.UpToDate, ScannedAt = now.AddDays(-2) }
+            new Dependency { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "Microsoft.AspNetCore.Authentication.JwtBearer", CurrentVersion = "8.0.3", LatestVersion = "8.0.3", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.UpToDate, ScannedAt = now.AddDays(-2) },
+            new Dependency { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "Npgsql.EntityFrameworkCore.PostgreSQL", CurrentVersion = "8.0.2", LatestVersion = "8.0.4", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.MinorUpdate, ScannedAt = now.AddDays(-2) },
+            new Dependency { Id = Guid.NewGuid(), TechProjectId = crm.Id, Name = "Serilog.AspNetCore", CurrentVersion = "8.0.1", LatestVersion = "8.0.1", Type = DependencyType.Prod, Ecosystem = DependencyEcosystem.NuGet, Status = DependencyStatus.UpToDate, ScannedAt = now.AddDays(-2) }
         );
 
         await _context.Vulnerabilities.AddRangeAsync(
@@ -277,9 +265,9 @@ public class DataSeeder
         var t13 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Widget «Deals en cours» toujours à zéro depuis la v2.4", Description = "Champ renommé pipeline_stage → deal_stage non répercuté dans le contrôleur de tableau de bord.", Priority = TicketPriority.Medium, Type = TicketType.Bug, Status = TicketStatus.Resolved, AssignedToId = antoine.Id, EstimatedHours = 2, CreatedById = julien.Id, CreatedAt = now.AddDays(-11), UpdatedAt = now.AddDays(-5), SlaDeadline = now.AddDays(-4), SlaBreached = false, Tags = Tags("dashboard", "widget", "deals") };
         var t20 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Intégration webhook Stripe — abonnements pro", Description = "Développer la réception des événements subscription.updated et invoice.payment_failed.", Priority = TicketPriority.Medium, Type = TicketType.Feature, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 15, CreatedById = julien.Id, CreatedAt = now.AddDays(1), UpdatedAt = now.AddDays(1), SlaDeadline = now.AddDays(22), SlaBreached = false, Tags = Tags("stripe", "webhook", "subscription") };
 
-        var t14 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = portailRh.Id, Title = "Module congés — jours fériés non pris en compte", Description = "Les demandes chevauchant un jour férié décomptent des jours ouvrés incorrects. Table non mise à jour.", Priority = TicketPriority.High, Type = TicketType.Bug, Status = TicketStatus.InProgress, AssignedToId = camille.Id, EstimatedHours = 6, CreatedById = sophie.Id, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-3), SlaDeadline = now.AddDays(2), SlaBreached = false, Tags = Tags("conges", "jours-feries", "rh") };
-        var t15 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = portailRh.Id, Title = "Export SILAE — intégration paie automatisée", Description = "Développer l'export SILAE (CSV v3.1) pour automatiser la transmission des éléments variables de paie.", Priority = TicketPriority.Medium, Type = TicketType.Feature, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 20, CreatedById = julien.Id, CreatedAt = now.AddDays(1), UpdatedAt = now.AddDays(1), SlaDeadline = now.AddDays(27), SlaBreached = false, Tags = Tags("paie", "silae", "export", "rh") };
-        var t16 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = portailRh.Id, Title = "Mise à jour .NET 8.0.3 → 8.0.5 (patch sécurité)", Description = "Aucun breaking change identifié. Tests de régression à valider.", Priority = TicketPriority.Low, Type = TicketType.Maintenance, Status = TicketStatus.Testing, AssignedToId = antoine.Id, EstimatedHours = 3, CreatedById = sophie.Id, CreatedAt = now.AddDays(-13), UpdatedAt = now, SlaDeadline = now.AddDays(8), SlaBreached = false, Tags = Tags("maintenance", "dotnet", "update") };
+        var t14 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Module congés — jours fériés non pris en compte", Description = "Les demandes chevauchant un jour férié décomptent des jours ouvrés incorrects. Table non mise à jour.", Priority = TicketPriority.High, Type = TicketType.Bug, Status = TicketStatus.InProgress, AssignedToId = camille.Id, EstimatedHours = 6, CreatedById = sophie.Id, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-3), SlaDeadline = now.AddDays(2), SlaBreached = false, Tags = Tags("conges", "jours-feries", "rh") };
+        var t15 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Export SILAE — intégration paie automatisée", Description = "Développer l'export SILAE (CSV v3.1) pour automatiser la transmission des éléments variables de paie.", Priority = TicketPriority.Medium, Type = TicketType.Feature, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 20, CreatedById = julien.Id, CreatedAt = now.AddDays(1), UpdatedAt = now.AddDays(1), SlaDeadline = now.AddDays(27), SlaBreached = false, Tags = Tags("paie", "silae", "export", "rh") };
+        var t16 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Mise à jour .NET 8.0.3 → 8.0.5 (patch sécurité)", Description = "Aucun breaking change identifié. Tests de régression à valider.", Priority = TicketPriority.Low, Type = TicketType.Maintenance, Status = TicketStatus.Testing, AssignedToId = antoine.Id, EstimatedHours = 3, CreatedById = sophie.Id, CreatedAt = now.AddDays(-13), UpdatedAt = now, SlaDeadline = now.AddDays(8), SlaBreached = false, Tags = Tags("maintenance", "dotnet", "update") };
 
         var t17 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = null, Title = "Mise en place d'un environnement de staging mutualisé", Description = "Besoin d'un staging commun aux 4 projets. Devis et procédure CI/CD à définir.", Priority = TicketPriority.Medium, Type = TicketType.Question, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = null, CreatedById = julien.Id, CreatedAt = now.AddDays(-1), UpdatedAt = now.AddDays(-1), SlaDeadline = null, SlaBreached = false, Tags = Tags("infra", "staging", "devops") };
 
@@ -343,8 +331,8 @@ public class DataSeeder
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 300, Comment = "Fix injection SQL — PreparedStatement + PR", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(0), DurationMinutes = 120, Comment = "Tests de sécurité — validation sqlmap", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t2.Id, TechProjectId = eshop.Id, UserId = camille.Id, Date = D(-2), DurationMinutes = 120, Comment = "Reproduction bug paiement AMEX", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = portailRh.Id, UserId = camille.Id, Date = D(-3), DurationMinutes = 240, Comment = "Mise à jour table jours fériés", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = portailRh.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 180, Comment = "Tests module congés + déploiement staging", IsManual = true },
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-3), DurationMinutes = 240, Comment = "Mise à jour table jours fériés", IsManual = true },
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 180, Comment = "Tests module congés + déploiement staging", IsManual = true },
 
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t18.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-32), DurationMinutes = 180, Comment = "Ajout balises Open Graph — fiches produit", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-9), DurationMinutes = 480, Comment = "Développement composant filtre multi-sélection", IsManual = true },
@@ -354,8 +342,8 @@ public class DataSeeder
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t8.Id, TechProjectId = bankcore.Id, UserId = antoine.Id, Date = D(-2), DurationMinutes = 180, Comment = "Fix timezone UTC + recette client", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t12.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-7), DurationMinutes = 420, Comment = "Profiling Horizon + optimisation workers", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t13.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 120, Comment = "Fix champ deal_stage", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = portailRh.Id, UserId = antoine.Id, Date = D(-13), DurationMinutes = 180, Comment = "Update .NET 8.0.5 + tests de régression", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = portailRh.Id, UserId = antoine.Id, Date = D(0), DurationMinutes = 120, Comment = "Recette finale + validation QA", IsManual = true }
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-13), DurationMinutes = 180, Comment = "Update .NET 8.0.5 + tests de régression", IsManual = true },
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(0), DurationMinutes = 120, Comment = "Recette finale + validation QA", IsManual = true }
         );
 
         var p3ago = now.AddMonths(-3);
@@ -368,7 +356,7 @@ public class DataSeeder
             new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = eshop.Id, Label = $"TMA E-Shop Luxe — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 87m, DailyRate = 650m, TotalAmount = 56550m, TaxRate = 20m, InvoiceNumber = 4, Status = InvoiceStatus.Sent, IssuedAt = now.AddDays(-16), DueAt = now.AddDays(-5) },
             new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = crm.Id, Label = $"TMA CRM SaaS — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 94.50m, DailyRate = 600m, TotalAmount = 56700m, TaxRate = 20m, InvoiceNumber = 5, Status = InvoiceStatus.Sent, IssuedAt = now.AddDays(-16), DueAt = now.AddDays(-4) },
             new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = bankcore.Id, Label = $"TMA BankCore API — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 115m, DailyRate = 750m, TotalAmount = 86250m, TaxRate = 20m, InvoiceNumber = 6, Status = InvoiceStatus.Draft, IssuedAt = now.AddDays(1) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = portailRh.Id, Label = $"TMA Portail RH — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 62m, DailyRate = 700m, TotalAmount = 43400m, TaxRate = 20m, InvoiceNumber = 7, Status = InvoiceStatus.Draft, IssuedAt = now.AddDays(1) }
+            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = crm.Id, Label = $"TMA Portail RH — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 62m, DailyRate = 700m, TotalAmount = 43400m, TaxRate = 20m, InvoiceNumber = 7, Status = InvoiceStatus.Draft, IssuedAt = now.AddDays(1) }
         );
 
         await _context.SaveChangesAsync();

@@ -10,9 +10,13 @@ public class ManifestParserService
     private static readonly HashSet<string> ManifestFileNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "package.json",
+        "package-lock.json",
+        "yarn.lock",
         "requirements.txt",
+        "Pipfile.lock",
         "go.mod",
         "composer.json",
+        "composer.lock",
         "pom.xml",
         "build.gradle",
         "build.gradle.kts",
@@ -22,8 +26,19 @@ public class ManifestParserService
         "CMakeLists.txt",
     };
 
+    private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "package-lock.json",
+        "yarn.lock",
+        "Pipfile.lock",
+        "composer.lock",
+    };
+
     public static bool IsManifest(string name)
         => ManifestFileNames.Contains(name) || name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsLockFile(string name)
+        => LockFileNames.Contains(name);
 
     public (List<Dependency>, List<Runtime>) Parse(Guid projectId, string fileName, string content)
     {
@@ -32,12 +47,16 @@ public class ManifestParserService
         string lower = fileName.ToLowerInvariant();
 
         if (lower == "package.json") ParsePackageJson(projectId, content, deps, runtimes);
+        else if (lower == "package-lock.json") ParsePackageLockJson(projectId, content, deps);
+        else if (lower == "yarn.lock") ParseYarnLock(projectId, content, deps);
         else if (lower.EndsWith(".csproj")) ParseCsproj(projectId, content, deps, runtimes);
         else if (lower == "pom.xml") ParsePomXml(projectId, content, deps, runtimes);
         else if (lower == "requirements.txt") ParseRequirementsTxt(projectId, content, deps, runtimes);
+        else if (lower == "pipfile.lock") ParsePipfileLock(projectId, content, deps);
         else if (lower == "pyproject.toml") ParsePyprojectToml(projectId, content, deps, runtimes);
         else if (lower == "go.mod") ParseGoMod(projectId, content, deps, runtimes);
         else if (lower == "composer.json") ParseComposerJson(projectId, content, deps, runtimes);
+        else if (lower == "composer.lock") ParseComposerLock(projectId, content, deps);
         else if (lower is "build.gradle" or "build.gradle.kts") ParseBuildGradle(projectId, content, deps, runtimes);
         else if (lower == "gemfile") ParseGemfile(projectId, content, deps, runtimes);
         else if (lower == "cargo.toml") ParseCargoToml(projectId, content, deps, runtimes);
@@ -596,6 +615,184 @@ public class ManifestParserService
             runtimes.Add(new Runtime { TechProjectId = projectId, Name = lang, Version = cmakeVersion });
     }
 
+    private static void ParsePackageLockJson(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content);
+            JsonElement root = doc.RootElement;
+
+            int lockfileVersion = root.TryGetProperty("lockfileVersion", out JsonElement vProp) ? vProp.GetInt32() : 1;
+
+            if (lockfileVersion >= 2 && root.TryGetProperty("packages", out JsonElement packages))
+            {
+                foreach (JsonProperty pkg in packages.EnumerateObject())
+                {
+                    string key = pkg.Name;
+                    if (!key.StartsWith("node_modules/", StringComparison.Ordinal)) continue;
+
+                    string name = key["node_modules/".Length..];
+                    if (string.IsNullOrEmpty(name)) continue;
+                    // Ignorer les packages imbriqués (node_modules/a/node_modules/b)
+                    if (name.Contains("/node_modules/")) continue;
+
+                    string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
+                    if (string.IsNullOrEmpty(version)) continue;
+
+                    bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
+                    deps.Add(new Dependency
+                    {
+                        TechProjectId = projectId,
+                        Name = name,
+                        CurrentVersion = version,
+                        Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                        Ecosystem = DependencyEcosystem.Npm,
+                        Status = DependencyStatus.UpToDate,
+                    });
+                }
+            }
+            else if (root.TryGetProperty("dependencies", out JsonElement dependencies))
+            {
+                ExtractPackageLockV1Deps(projectId, dependencies, deps);
+            }
+        }
+        catch { }
+    }
+
+    private static void ExtractPackageLockV1Deps(Guid projectId, JsonElement dependencies, List<Dependency> deps)
+    {
+        foreach (JsonProperty pkg in dependencies.EnumerateObject())
+        {
+            string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
+            if (string.IsNullOrEmpty(version)) continue;
+
+            bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
+            deps.Add(new Dependency
+            {
+                TechProjectId = projectId,
+                Name = pkg.Name,
+                CurrentVersion = version,
+                Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Npm,
+                Status = DependencyStatus.UpToDate,
+            });
+
+            if (pkg.Value.TryGetProperty("dependencies", out JsonElement nested))
+                ExtractPackageLockV1Deps(projectId, nested, deps);
+        }
+    }
+
+    private static void ParseYarnLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            string? currentName = null;
+            foreach (string raw in content.Split('\n'))
+            {
+                string line = raw.TrimEnd();
+
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+                {
+                    currentName = null;
+                    continue;
+                }
+
+                // Header : "package-name@^1.2.3, package-name@^1.2.4:"
+                if (!line.StartsWith(' ') && line.EndsWith(':'))
+                {
+                    string firstEntry = line.TrimEnd(':').Split(',')[0].Trim().Trim('"');
+                    int atIdx = firstEntry.LastIndexOf('@');
+                    currentName = atIdx > 0 ? firstEntry[..atIdx] : null;
+                    continue;
+                }
+
+                if (currentName == null) continue;
+
+                Match vMatch = Regex.Match(line.Trim(), @"^version\s+[""']([^""']+)[""']");
+                if (!vMatch.Success) continue;
+
+                deps.Add(new Dependency
+                {
+                    TechProjectId = projectId,
+                    Name = currentName,
+                    CurrentVersion = vMatch.Groups[1].Value,
+                    Type = DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Npm,
+                    Status = DependencyStatus.UpToDate,
+                });
+                currentName = null;
+            }
+        }
+        catch { }
+    }
+
+    private static void ParsePipfileLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content);
+            JsonElement root = doc.RootElement;
+
+            foreach ((string section, DependencyType type) in new[] { ("default", DependencyType.Prod), ("develop", DependencyType.Dev) })
+            {
+                if (!root.TryGetProperty(section, out JsonElement packages)) continue;
+
+                foreach (JsonProperty pkg in packages.EnumerateObject())
+                {
+                    string version = pkg.Value.TryGetProperty("version", out JsonElement vProp)
+                        ? CleanVersion(vProp.GetString() ?? "")
+                        : "";
+
+                    if (string.IsNullOrEmpty(version)) continue;
+
+                    deps.Add(new Dependency
+                    {
+                        TechProjectId = projectId,
+                        Name = pkg.Name,
+                        CurrentVersion = version,
+                        Type = type,
+                        Ecosystem = DependencyEcosystem.PyPI,
+                        Status = DependencyStatus.UpToDate,
+                    });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void ParseComposerLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content);
+            JsonElement root = doc.RootElement;
+
+            foreach ((string section, DependencyType type) in new[] { ("packages", DependencyType.Prod), ("packages-dev", DependencyType.Dev) })
+            {
+                if (!root.TryGetProperty(section, out JsonElement packages)) continue;
+
+                foreach (JsonElement pkg in packages.EnumerateArray())
+                {
+                    string name = pkg.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
+                    string version = pkg.TryGetProperty("version", out JsonElement v) ? CleanVersion(v.GetString() ?? "") : "";
+
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
+
+                    deps.Add(new Dependency
+                    {
+                        TechProjectId = projectId,
+                        Name = name,
+                        CurrentVersion = version,
+                        Type = type,
+                        Ecosystem = DependencyEcosystem.Composer,
+                        Status = DependencyStatus.UpToDate,
+                    });
+                }
+            }
+        }
+        catch { }
+    }
+
     public static string CleanVersion(string version)
-        => Regex.Replace(version.Trim(), @"^[\^~>=<\s]+", "").Split([' ', ','])[0].Trim();
+        => Regex.Replace(version.Trim(), @"^[\^~>=<\s=]+", "").Split([' ', ','])[0].Trim();
 }

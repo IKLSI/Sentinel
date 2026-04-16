@@ -26,24 +26,39 @@ public class RepositoryScannerService
     {
         try
         {
-            (string? host, string? owner, string? repo) = ParseRepoUrl(repoUrl);
+            (string host, string owner, string repo) = ParseRepoUrl(repoUrl);
             List<(string Name, string Url)> files = await _hostClient.ListFilesAsync(host, owner, repo);
 
-            List<Dependency> allDeps = new List<Dependency>();
-            List<Runtime> allRuntimes = new List<Runtime>();
+            List<Dependency> manifestDeps = new();
+            List<Dependency> lockDeps = new();
+            List<Runtime> allRuntimes = new();
 
-            foreach ((string? fileName, string? url) in files)
+            foreach ((string fileName, string url) in files)
             {
                 if (!ManifestParserService.IsManifest(fileName)) continue;
                 string? content = await _hostClient.FetchTextAsync(host, url);
                 if (content == null) continue;
 
-                (List<Dependency>? deps, List<Runtime>? rts) = _parser.Parse(projectId, fileName, content);
-                allDeps.AddRange(deps);
-                allRuntimes.AddRange(rts);
+                (List<Dependency> deps, List<Runtime> rts) = _parser.Parse(projectId, fileName, content);
+
+                if (ManifestParserService.IsLockFile(fileName))
+                {
+                    lockDeps.AddRange(deps);
+                }
+                else
+                {
+                    manifestDeps.AddRange(deps);
+                    allRuntimes.AddRange(rts);
+                }
             }
 
-            List<Dependency> dedupedDeps = allDeps
+            // Les versions de lock files (exactes) ont priorité sur les ranges des manifests
+            HashSet<string> lockNames = lockDeps
+                .Select(d => d.Name.ToLowerInvariant())
+                .ToHashSet();
+
+            List<Dependency> dedupedDeps = lockDeps
+                .Concat(manifestDeps.Where(d => !lockNames.Contains(d.Name.ToLowerInvariant())))
                 .GroupBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(g => g.First())
                 .ToList();
@@ -55,7 +70,7 @@ public class RepositoryScannerService
 
             await _registry.FetchLatestVersionsAsync(dedupedDeps);
 
-            foreach (Dependency? dep in dedupedDeps)
+            foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyRegistryClient.ComputeStatus(dep.CurrentVersion, dep.LatestVersion);
 
             return (dedupedDeps, dedupedRuntimes);
