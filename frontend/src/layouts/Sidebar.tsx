@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined'
 import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined'
@@ -8,7 +8,7 @@ import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
 import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
-import PersonOutlined from '@mui/icons-material/PersonOutlined'
+import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
@@ -22,18 +22,21 @@ interface NavItem {
 
 interface NavSection {
   title: string
+  icon: React.ElementType
   items: NavItem[]
 }
 
 const navSections: NavSection[] = [
   {
-    title: 'Vue globale',
+    title: 'Tableau de bord',
+    icon: DashboardOutlined,
     items: [
       { to: '/', icon: DashboardOutlined, label: 'Tableau de bord', end: true },
     ],
   },
   {
     title: 'Tickets',
+    icon: ConfirmationNumberOutlined,
     items: [
       { to: '/tickets', icon: ConfirmationNumberOutlined, label: 'Tous les tickets', end: true },
       { to: '/tickets/kanban', icon: ViewKanbanOutlined, label: 'Kanban' },
@@ -41,12 +44,14 @@ const navSections: NavSection[] = [
   },
   {
     title: 'Projets',
+    icon: AccountTreeOutlined,
     items: [
       { to: '/projects', icon: AccountTreeOutlined, label: 'Tous les projets' },
     ],
   },
   {
     title: 'Temps & Facturation',
+    icon: AccessTimeOutlined,
     items: [
       { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Suivi du temps' },
       { to: '/invoices', icon: ReceiptOutlined, label: 'Factures' },
@@ -54,20 +59,46 @@ const navSections: NavSection[] = [
   },
 ]
 
+function isSectionActive(section: NavSection, pathname: string): boolean {
+  return section.items.some((item) => isItemActive(item, pathname))
+}
+
+function isItemActive(item: NavItem, pathname: string): boolean {
+  if (item.end) return pathname === item.to
+  return pathname === item.to || pathname.startsWith(item.to + '/')
+}
+
+const ITEM_SX = {
+  height: '34px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '9px',
+  px: '10px',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'background 0.12s, color 0.12s',
+  userSelect: 'none',
+} as const
+
+const Divider = () => (
+  <Box sx={{ height: '1px', mx: '6px', my: '5px', background: 'var(--border)', opacity: 0.6 }} />
+)
+
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { isOpen, isMobile, close } = useSidebar()
 
   const handleLogout = async () => {
     await logout()
     navigate('/login')
   }
 
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 'U'
   const isAdmin = user?.role === 'Admin'
-  const location = useLocation()
-  const { isOpen, isMobile, close } = useSidebar()
   const isDeveloper = user?.role === 'Developer'
+  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?'
+
   const filteredSections = navSections
     .map((section) => {
       if (section.title === 'Temps & Facturation') {
@@ -78,7 +109,15 @@ export const Sidebar: React.FC = () => {
       }
       return section
     })
-    .filter((section) => section.items.length > 0)
+    .filter((s) => s.items.length > 0)
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {}
+    for (const s of filteredSections) {
+      if (s.items.length > 1) init[s.title] = isSectionActive(s, location.pathname)
+    }
+    return init
+  })
 
   useEffect(() => {
     if (isMobile) close()
@@ -93,251 +132,315 @@ export const Sidebar: React.FC = () => {
     return () => { document.body.style.overflow = '' }
   }, [isMobile, isOpen])
 
+  useEffect(() => {
+    for (const s of filteredSections) {
+      if (s.items.length > 1 && isSectionActive(s, location.pathname)) {
+        setOpenGroups((prev) => prev[s.title] ? prev : { ...prev, [s.title]: true })
+      }
+    }
+  }, [location.pathname])
+
   if (isMobile && !isOpen) return null
+
+  const toggleGroup = (title: string) =>
+    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }))
 
   return (
     <>
       {isMobile && (
         <Box
           onClick={close}
-          sx={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 199,
-            backdropFilter: 'blur(2px)',
-          }}
+          sx={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199, backdropFilter: 'blur(2px)' }}
         />
       )}
 
       <Box
-        className="d-flex flex-column overflow-auto"
         sx={{
-          width: '232px',
+          width: '220px',
           flexShrink: 0,
           height: '100vh',
           background: 'var(--s1)',
-          borderRight: 'none',
-          overflowX: 'hidden',
+          borderRight: '1px solid var(--border)',
+          display: 'flex',
+          flexDirection: 'column',
           position: isMobile ? 'fixed' : 'relative',
-          left: 0,
-          top: 0,
+          left: 0, top: 0,
           zIndex: isMobile ? 200 : 'auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -60,
-            left: -60,
-            width: 200,
-            height: 200,
-            background: 'radial-gradient(circle, var(--accent-subtle) 0%, transparent 70%)',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
 
+        {/* ── Logo ─────────────────────────────────────────── */}
         <Box
           component="button"
-          className="d-flex align-items-center gap-2"
           onClick={() => navigate('/')}
           sx={{
             all: 'unset',
             cursor: 'pointer',
-            p: '18px 18px 16px',
-            borderBottom: 'none',
-            position: 'relative',
-            zIndex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            px: '14px',
+            height: '56px',
+            flexShrink: 0,
+            borderBottom: '1px solid var(--border)',
             transition: 'opacity 0.15s',
-            '&:hover': { opacity: 0.8 },
+            '&:hover': { opacity: 0.75 },
           }}
         >
           <Box
-            className="d-flex align-items-center justify-content-center flex-shrink-0"
             sx={{
-              width: 32,
-              height: 32,
+              width: 30,
+              height: 30,
+              borderRadius: '8px',
               background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
-              borderRadius: '9px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               fontSize: '13px',
               fontWeight: 800,
               color: '#fff',
-              letterSpacing: '-0.05em',
-              boxShadow: '0 0 20px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.3)',
+              letterSpacing: '-0.04em',
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
             }}
           >
             S
           </Box>
           <Box>
-            <Box sx={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text)', lineHeight: 1.2 }}>
+            <Box sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>
               SENTINEL
             </Box>
-            <Box sx={{ fontSize: '9.5px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '1px' }}>
+            <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '3px' }}>
               workspace
             </Box>
           </Box>
         </Box>
 
-        <Box
-          component="nav"
-          className="d-flex flex-column flex-grow-1 p-2"
-          sx={{ gap: '2px', position: 'relative', zIndex: 1 }}
-        >
-          {filteredSections.map((section, si) => (
-            <Box key={section.title} sx={{ mt: si > 0 ? '6px' : 0 }}>
-              <Box className="d-flex align-items-center gap-2" sx={{ p: '10px 10px 5px' }}>
-                <Box component="span" sx={{ fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  {section.title}
-                </Box>
-                <Box className="flex-grow-1" sx={{ height: '1px', background: 'linear-gradient(90deg, var(--border), transparent)' }} />
-              </Box>
+        {/* ── Nav ──────────────────────────────────────────── */}
+        <Box component="nav" sx={{ flex: 1, p: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {filteredSections.map((section, si) => {
+            const isMulti = section.items.length > 1
+            const isGroupOpen = openGroups[section.title] ?? false
+            const sectionActive = isSectionActive(section, location.pathname)
+            const GroupIcon = section.icon
 
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end ?? item.to === '/'}
-                  className="d-block text-decoration-none"
-                >
-                  {({ isActive }) => {
-                    const Icon = item.icon
-                    return (
-                      <Box
-                        className="d-flex align-items-center"
+            return (
+              <React.Fragment key={section.title}>
+                {si > 0 && <Divider />}
+
+                {isMulti ? (
+                  <>
+                    {/* Trigger */}
+                    <Box
+                      component="button"
+                      onClick={() => toggleGroup(section.title)}
+                      sx={{
+                        all: 'unset',
+                        ...ITEM_SX,
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        color: sectionActive ? 'var(--text)' : 'var(--text-secondary)',
+                        '&:hover': { background: 'var(--s2)' },
+                      }}
+                    >
+                      <GroupIcon sx={{ fontSize: 16, color: sectionActive ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, transition: 'color 0.12s' }} />
+                      <Box component="span" sx={{ flex: 1, fontSize: '13px', fontWeight: sectionActive ? 600 : 450, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {section.title}
+                      </Box>
+                      <ChevronRightOutlined
                         sx={{
-                          gap: '9px',
-                          p: '8px 10px',
-                          borderRadius: '7px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          background: isActive ? 'var(--accent-subtle)' : 'transparent',
-                          boxShadow: isActive ? 'inset 2px 0 0 var(--accent)' : 'none',
-                          transition: 'background 0.12s, box-shadow 0.12s',
-                          '&:hover': !isActive ? { background: 'var(--s2)' } : {},
+                          fontSize: 14,
+                          color: 'var(--muted)',
+                          flexShrink: 0,
+                          transform: isGroupOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.18s cubic-bezier(0.4,0,0.2,1)',
                         }}
-                      >
+                      />
+                    </Box>
+
+                    {/* Children */}
+                    <Box
+                      sx={{
+                        overflow: 'hidden',
+                        maxHeight: isGroupOpen ? `${section.items.length * 32}px` : '0px',
+                        transition: 'max-height 0.2s cubic-bezier(0.4,0,0.2,1)',
+                        ml: '15px',
+                        borderLeft: `2px solid ${sectionActive ? 'var(--accent-border)' : 'var(--border)'}`,
+                        transition: 'max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s',
+                      }}
+                    >
+                      {section.items.map((item) => {
+                        const active = isItemActive(item, location.pathname)
+                        return (
+                          <NavLink
+                            key={item.to}
+                            to={item.to}
+                            end={item.end ?? false}
+                            className="d-block text-decoration-none"
+                          >
+                            <Box
+                              sx={{
+                                height: '30px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                pl: '14px',
+                                pr: '8px',
+                                cursor: 'pointer',
+                                color: active ? 'var(--accent)' : 'var(--muted)',
+                                transition: 'color 0.12s',
+                                '&:hover': !active ? { color: 'var(--text)' } : {},
+                              }}
+                            >
+                              <Box component="span" sx={{ fontSize: '12.5px', fontWeight: active ? 600 : 440, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.label}
+                              </Box>
+                            </Box>
+                          </NavLink>
+                        )
+                      })}
+                    </Box>
+                  </>
+                ) : (
+                  <NavLink
+                    to={section.items[0].to}
+                    end={section.items[0].end ?? false}
+                    className="d-block text-decoration-none"
+                  >
+                    {({ isActive }) => {
+                      const Icon = section.items[0].icon
+                      return (
                         <Box
-                          className="d-flex align-items-center justify-content-center flex-shrink-0"
                           sx={{
-                            width: 18,
-                            height: 18,
-                            color: isActive ? 'var(--accent)' : 'var(--muted)',
-                            transition: 'color 0.12s',
+                            ...ITEM_SX,
+                            background: isActive ? 'var(--accent-subtle)' : 'transparent',
+                            color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                            '&:hover': !isActive ? { background: 'var(--s2)', color: 'var(--text)' } : {},
                           }}
                         >
-                          <Icon sx={{ fontSize: 14 }} />
+                          <Icon sx={{ fontSize: 16, flexShrink: 0, color: isActive ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.12s' }} />
+                          <Box component="span" sx={{ fontSize: '13px', fontWeight: isActive ? 600 : 450, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {section.items[0].label}
+                          </Box>
                         </Box>
-                        <Box
-                          component="span"
-                          className="flex-grow-1 text-truncate"
-                          sx={{ fontSize: '13px', fontWeight: isActive ? 600 : 450, color: isActive ? 'var(--accent)' : 'var(--text-secondary)', letterSpacing: '-0.01em', transition: 'color 0.12s, font-weight 0.12s' }}
-                        >
-                          {item.label}
-                        </Box>
-                      </Box>
-                    )
-                  }}
-                </NavLink>
-              ))}
-            </Box>
-          ))}
+                      )
+                    }}
+                  </NavLink>
+                )}
+              </React.Fragment>
+            )
+          })}
         </Box>
 
+        {/* ── Footer ───────────────────────────────────────── */}
         <Box
-          className="d-flex align-items-center gap-2"
           sx={{
-            p: '12px 14px',
-            mt: 'auto',
-            position: 'relative',
-            zIndex: 1,
-            background: 'var(--s2)',
+            flexShrink: 0,
+            borderTop: '1px solid var(--border)',
+            px: '10px',
+            py: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}
         >
+          {/* Avatar */}
           <Box
             component="button"
-            className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden"
             onClick={() => navigate('/profile')}
             sx={{
               all: 'unset',
               cursor: 'pointer',
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              flexGrow: 1,
-              overflow: 'hidden',
-              borderRadius: '8px',
-              p: '4px 6px 4px 0',
+              justifyContent: 'center',
+              fontSize: '10.5px',
+              fontWeight: 700,
+              color: '#fff',
+              letterSpacing: '0.04em',
+              flexShrink: 0,
               transition: 'opacity 0.12s',
-              '&:hover': { opacity: 0.75 },
+              '&:hover': { opacity: 0.8 },
             }}
           >
-            <Box
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              sx={{
-                width: 30,
-                height: 30,
-                borderRadius: '50%',
-                background: 'var(--s3)',
-                color: 'var(--muted)',
-              }}
-            >
-              <PersonOutlined sx={{ fontSize: 18 }} />
+            {initials}
+          </Box>
+
+          {/* Nom + email */}
+          <Box
+            component="button"
+            onClick={() => navigate('/profile')}
+            sx={{
+              all: 'unset',
+              cursor: 'pointer',
+              flex: 1,
+              overflow: 'hidden',
+              transition: 'opacity 0.12s',
+              '&:hover': { opacity: 0.7 },
+            }}
+          >
+            <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.firstName} {user?.lastName}
             </Box>
-            <Box className="overflow-hidden">
-              <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
-                {user?.firstName} {user?.lastName}
-              </Box>
-              <Box className="text-truncate" sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                {user?.email}
-              </Box>
+            <Box sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.email}
             </Box>
           </Box>
+
+          {/* Actions */}
           {isAdmin && (
             <Box
               component="button"
+              onClick={() => navigate('/settings')}
+              title="Paramètres"
               sx={{
                 all: 'unset',
                 cursor: 'pointer',
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '7px',
+                borderRadius: '6px',
                 color: 'var(--muted)',
                 flexShrink: 0,
                 transition: 'color 0.12s, background 0.12s',
                 '&:hover': { color: 'var(--accent)', background: 'var(--accent-subtle)' },
               }}
-              onClick={() => navigate('/settings')}
-              title="Paramétrage"
             >
               <SettingsOutlined sx={{ fontSize: 14 }} />
             </Box>
           )}
           <Box
             component="button"
+            onClick={handleLogout}
+            title="Déconnexion"
             sx={{
               all: 'unset',
               cursor: 'pointer',
-              width: 28,
-              height: 28,
+              width: 26,
+              height: 26,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '7px',
+              borderRadius: '6px',
               color: 'var(--muted)',
               flexShrink: 0,
               transition: 'color 0.12s, background 0.12s',
-              '&:hover': { color: 'var(--red)', background: 'rgba(239,68,68,0.08)' },
+              '&:hover': { color: '#ef4444', background: 'rgba(239,68,68,0.08)' },
             }}
-            onClick={handleLogout}
-            title="Déconnexion"
           >
             <LogoutOutlined sx={{ fontSize: 14 }} />
           </Box>
         </Box>
+
       </Box>
     </>
   )
