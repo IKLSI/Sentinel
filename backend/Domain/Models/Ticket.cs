@@ -46,13 +46,10 @@ public class Ticket
     public bool SlaBreached { get; set; } = false;
     public string Tags { get; set; } = "[]";
     public DateTime? SlaWarningNotifiedAt { get; set; }
-    public Guid? SprintId { get; set; }
-
     public Organization Organization { get; set; } = null!;
     public TechProject? Project { get; set; }
     public User? AssignedTo { get; set; }
     public User CreatedBy { get; set; } = null!;
-    public Sprint? Sprint { get; set; }
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     public ICollection<TicketHistory> History { get; set; } = new List<TicketHistory>();
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();

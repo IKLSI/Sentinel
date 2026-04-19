@@ -87,21 +87,7 @@ export interface TicketFilters {
   type?: TicketType
   slaBreached?: boolean
   search?: string
-  sprintId?: string
   page?: number
   pageSize?: number
 }
 
-export type SprintStatus = 'planned' | 'active' | 'completed' | 'archived'
-
-export interface Sprint {
-  id: string
-  projectId: string
-  name: string
-  goal?: string
-  status: SprintStatus
-  startDate: string
-  endDate: string
-  ticketCount: number
-  completedCount: number
-}

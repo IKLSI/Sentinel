@@ -2,10 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { StatusChip } from "../../../components/StatusChip";
 import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
-import { AppModal } from "../../../components/AppModal";
 import Skeleton from "@mui/material/Skeleton";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import { useToast } from "../../../hooks/useToast";
@@ -17,7 +14,6 @@ import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
-import SplitscreenOutlined from "@mui/icons-material/SplitscreenOutlined";
 import {
   getProject,
   deleteProject,
@@ -26,10 +22,6 @@ import {
   VulnerabilityDto,
   RuntimeDto,
 } from "../api/projects";
-import { getSprints, createSprint, updateSprint, deleteSprint } from "../../sprints/api/sprints";
-import { SprintTabPanel } from "../../sprints/components/SprintTabPanel";
-import { Sprint } from "../../../types";
-
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const DEP_STATUS: Record<string, { label: string; variant: "green" | "blue" | "orange" | "red" | "gray" }> = {
@@ -54,19 +46,6 @@ const EOL_COLOR: Record<string, { text: string; stripe: string; border: string }
   ok:     { text: "var(--green)",  stripe: "var(--accent)", border: "var(--border)"        },
 };
 
-
-// ─── Sprint constants ────────────────────────────────────────────────────────
-
-const sprintInputSx = {
-  width: "100%", background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "8px",
-  px: "12px", py: "9px", color: "var(--text)", fontSize: "13px", fontFamily: "var(--font-ui)",
-  outline: "none", boxSizing: "border-box" as const,
-  "&:focus": { borderColor: "var(--accent)", boxShadow: "0 0 0 3px rgba(99,102,241,0.12)" },
-};
-const sprintLabelSx = { fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", mb: "6px", display: "block" };
-
-interface SprintFormState { name: string; goal: string; startDate: string; endDate: string }
-const emptySprintForm: SprintFormState = { name: "", goal: "", startDate: "", endDate: "" };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -251,17 +230,6 @@ export const ProjectDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [depSearch, setDepSearch] = useState("");
 
-  const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [sprintsLoading, setSprintsLoading] = useState(false);
-  const [showSprintCreate, setShowSprintCreate] = useState(false);
-  const [sprintForm, setSprintForm] = useState<SprintFormState>(emptySprintForm);
-  const [sprintSaving, setSprintSaving] = useState(false);
-  const [sprintEditTarget, setSprintEditTarget] = useState<Sprint | null>(null);
-  const [sprintEditForm, setSprintEditForm] = useState<SprintFormState>(emptySprintForm);
-  const [sprintEditSaving, setSprintEditSaving] = useState(false);
-  const [sprintDeleteTarget, setSprintDeleteTarget] = useState<Sprint | null>(null);
-  const [sprintDeleting, setSprintDeleting] = useState(false);
-
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -288,77 +256,6 @@ export const ProjectDetailPage: React.FC = () => {
     } catch {
       showToast("Erreur lors de la suppression", "error");
       setDeleting(false);
-    }
-  };
-
-  const loadSprints = useCallback(async () => {
-    if (!id) return;
-    setSprintsLoading(true);
-    try {
-      const data = await getSprints({ projectId: id });
-      setSprints(data);
-    } catch {
-      /* silent */
-    } finally {
-      setSprintsLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => { loadSprints(); }, [loadSprints]);
-
-  const handleSprintCreate = async () => {
-    if (!sprintForm.name.trim() || !id) return;
-    setSprintSaving(true);
-    try {
-      await createSprint({ projectId: id, name: sprintForm.name, goal: sprintForm.goal || undefined, startDate: sprintForm.startDate, endDate: sprintForm.endDate });
-      showToast("Sprint créé", "success");
-      setShowSprintCreate(false);
-      setSprintForm(emptySprintForm);
-      loadSprints();
-    } catch {
-      showToast("Impossible de créer le sprint", "error");
-    } finally {
-      setSprintSaving(false);
-    }
-  };
-
-  const handleSprintEdit = async () => {
-    if (!sprintEditTarget || !sprintEditForm.name.trim()) return;
-    setSprintEditSaving(true);
-    try {
-      await updateSprint(sprintEditTarget.id, { name: sprintEditForm.name, goal: sprintEditForm.goal || undefined, startDate: sprintEditForm.startDate || undefined, endDate: sprintEditForm.endDate || undefined });
-      showToast("Sprint mis à jour", "success");
-      setSprintEditTarget(null);
-      loadSprints();
-    } catch {
-      showToast("Impossible de mettre à jour le sprint", "error");
-    } finally {
-      setSprintEditSaving(false);
-    }
-  };
-
-  const handleSprintDelete = async () => {
-    if (!sprintDeleteTarget) return;
-    setSprintDeleting(true);
-    try {
-      await deleteSprint(sprintDeleteTarget.id);
-      showToast("Sprint supprimé", "success");
-      setSprintDeleteTarget(null);
-      loadSprints();
-    } catch {
-      showToast("Impossible de supprimer le sprint", "error");
-    } finally {
-      setSprintDeleting(false);
-    }
-  };
-
-  const handleSprintStatusChange = async (e: React.MouseEvent, sprint: Sprint, newStatus: string) => {
-    e.stopPropagation();
-    try {
-      await updateSprint(sprint.id, { status: newStatus });
-      loadSprints();
-    } catch {
-      showToast("Impossible de modifier le statut", "error");
     }
   };
 
@@ -427,7 +324,6 @@ export const ProjectDetailPage: React.FC = () => {
     { icon: <GppBadOutlined sx={{ fontSize: 14 }} />,      label: "Vulnérabilités", count: allVulns.length,            accentColor: vulnAccent },
     { icon: <InventoryOutlined sx={{ fontSize: 14 }} />,   label: "Dépendances",   count: project.dependencies.length },
     { icon: <StorageOutlined sx={{ fontSize: 14 }} />,     label: "Runtimes",      count: project.runtimes.length,    accentColor: runtimeAccent },
-    { icon: <SplitscreenOutlined sx={{ fontSize: 14 }} />, label: "Sprints",       count: sprints.length },
   ];
 
   return (
@@ -748,27 +644,6 @@ export const ProjectDetailPage: React.FC = () => {
               </Box>
             )}
 
-            {/* ── Sprints ───────────────────────────────────────── */}
-            {activeTab === 3 && (
-              sprintsLoading ? (
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : (
-                <SprintTabPanel
-                  sprints={sprints}
-                  onEditSprint={(sprint) => {
-                    setSprintEditTarget(sprint);
-                    setSprintEditForm({ name: sprint.name, goal: sprint.goal ?? "", startDate: sprint.startDate?.split("T")[0] ?? "", endDate: sprint.endDate?.split("T")[0] ?? "" });
-                  }}
-                  onDeleteSprint={(sprint) => setSprintDeleteTarget(sprint)}
-                  onSprintStatusChange={handleSprintStatusChange}
-                  onTicketChanged={loadSprints}
-                  onNewSprint={() => setShowSprintCreate(true)}
-                />
-              )
-            )}
-
             {/* ── Runtimes ──────────────────────────────────────── */}
             {activeTab === 2 && (
               project.runtimes.length === 0 ? (
@@ -824,92 +699,6 @@ export const ProjectDetailPage: React.FC = () => {
         Supprimer <strong>{project.name}</strong> supprimera aussi toutes les dépendances et vulnérabilités associées. Cette action est irréversible.
       </DeleteModal>
 
-      {/* ── Sprint create modal ──────────────────────────────── */}
-      <AppModal
-        open={showSprintCreate}
-        onClose={() => { setShowSprintCreate(false); setSprintForm(emptySprintForm); }}
-        title="Nouveau sprint"
-        actions={
-          <>
-            <Button variant="outlined" onClick={() => { setShowSprintCreate(false); setSprintForm(emptySprintForm); }} disabled={sprintSaving}>
-              Annuler
-            </Button>
-            <Button variant="contained" onClick={handleSprintCreate} disabled={!sprintForm.name.trim() || sprintSaving}>
-              {sprintSaving ? <CircularProgress size={16} /> : "Créer"}
-            </Button>
-          </>
-        }
-      >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <Box>
-            <Box component="label" sx={sprintLabelSx}>Nom *</Box>
-            <Box component="input" value={sprintForm.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintForm(f => ({ ...f, name: e.target.value }))} placeholder="Sprint 1" sx={sprintInputSx} />
-          </Box>
-          <Box>
-            <Box component="label" sx={sprintLabelSx}>Objectif</Box>
-            <Box component="input" value={sprintForm.goal} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintForm(f => ({ ...f, goal: e.target.value }))} placeholder="Objectif du sprint" sx={sprintInputSx} />
-          </Box>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <Box>
-              <Box component="label" sx={sprintLabelSx}>Début</Box>
-              <Box component="input" type="date" value={sprintForm.startDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintForm(f => ({ ...f, startDate: e.target.value }))} sx={sprintInputSx} />
-            </Box>
-            <Box>
-              <Box component="label" sx={sprintLabelSx}>Fin</Box>
-              <Box component="input" type="date" value={sprintForm.endDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintForm(f => ({ ...f, endDate: e.target.value }))} sx={sprintInputSx} />
-            </Box>
-          </Box>
-        </Box>
-      </AppModal>
-
-      {/* ── Sprint edit modal ────────────────────────────────── */}
-      <AppModal
-        open={!!sprintEditTarget}
-        onClose={() => setSprintEditTarget(null)}
-        title="Modifier le sprint"
-        actions={
-          <>
-            <Button variant="outlined" onClick={() => setSprintEditTarget(null)} disabled={sprintEditSaving}>
-              Annuler
-            </Button>
-            <Button variant="contained" onClick={handleSprintEdit} disabled={!sprintEditForm.name.trim() || sprintEditSaving}>
-              {sprintEditSaving ? <CircularProgress size={16} /> : "Enregistrer"}
-            </Button>
-          </>
-        }
-      >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <Box>
-            <Box component="label" sx={sprintLabelSx}>Nom *</Box>
-            <Box component="input" value={sprintEditForm.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintEditForm(f => ({ ...f, name: e.target.value }))} sx={sprintInputSx} />
-          </Box>
-          <Box>
-            <Box component="label" sx={sprintLabelSx}>Objectif</Box>
-            <Box component="input" value={sprintEditForm.goal} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintEditForm(f => ({ ...f, goal: e.target.value }))} sx={sprintInputSx} />
-          </Box>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <Box>
-              <Box component="label" sx={sprintLabelSx}>Début</Box>
-              <Box component="input" type="date" value={sprintEditForm.startDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintEditForm(f => ({ ...f, startDate: e.target.value }))} sx={sprintInputSx} />
-            </Box>
-            <Box>
-              <Box component="label" sx={sprintLabelSx}>Fin</Box>
-              <Box component="input" type="date" value={sprintEditForm.endDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSprintEditForm(f => ({ ...f, endDate: e.target.value }))} sx={sprintInputSx} />
-            </Box>
-          </Box>
-        </Box>
-      </AppModal>
-
-      {/* ── Sprint delete modal ──────────────────────────────── */}
-      <DeleteModal
-        open={!!sprintDeleteTarget}
-        onClose={() => setSprintDeleteTarget(null)}
-        onConfirm={handleSprintDelete}
-        loading={sprintDeleting}
-        title="Supprimer ce sprint ?"
-      >
-        Supprimer <strong>{sprintDeleteTarget?.name}</strong> retirera tous les tickets associés de ce sprint. Cette action est irréversible.
-      </DeleteModal>
     </>
   );
 };

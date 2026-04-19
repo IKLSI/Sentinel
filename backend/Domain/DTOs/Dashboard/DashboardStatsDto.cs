@@ -15,7 +15,6 @@ public class DashboardStatsDto
     public Dictionary<string, int> TicketsByStatus { get; set; } = [];
     public Dictionary<string, int> TicketsByPriority { get; set; } = [];
     public int UnassignedOpenTickets { get; set; }
-    public int ActiveSprintsCount { get; set; }
     public int OverdueInvoicesCount { get; set; }
     public decimal OverdueInvoicesAmount { get; set; }
     public List<UrgentTicketDto> UrgentTickets { get; set; } = [];
