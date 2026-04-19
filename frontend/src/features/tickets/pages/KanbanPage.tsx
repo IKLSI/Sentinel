@@ -181,15 +181,16 @@ function ProjectPicker({
   onClose,
   allProjects,
   selected,
-  onApply,
+  onToggle,
+  onClear,
 }: {
   open: boolean;
   onClose: () => void;
   allProjects: string[];
   selected: string[];
-  onApply: (selection: string[]) => void;
+  onToggle: (p: string) => void;
+  onClear: () => void;
 }) {
-  const [draft, setDraft] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [cursor, setCursor] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -201,7 +202,6 @@ function ProjectPicker({
 
   useEffect(() => {
     if (open) {
-      setDraft(selected);
       setSearch("");
       setCursor(-1);
       setTimeout(() => inputRef.current?.focus(), 80);
@@ -226,7 +226,7 @@ function ProjectPicker({
       setCursor((c) => Math.max(c - 1, 0));
     } else if (e.key === "Enter" && cursor >= 0) {
       e.preventDefault();
-      setDraft((prev) => toggleItem(prev, visible[cursor]));
+      onToggle(visible[cursor]);
     } else if (e.key === "Escape") {
       onClose();
     }
@@ -278,7 +278,7 @@ function ProjectPicker({
       </Box>
 
       {/* ── Sélection active ── */}
-      {draft.length > 0 && (
+      {selected.length > 0 && (
         <Box
           sx={{
             px: "14px",
@@ -292,7 +292,7 @@ function ProjectPicker({
           }}
         >
           <Box sx={{ display: "flex", gap: "5px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-            {draft.map((p) => (
+            {selected.map((p) => (
               <Box
                 key={p}
                 sx={{
@@ -389,7 +389,7 @@ function ProjectPicker({
           </Box>
         ) : (
           visible.map((project, i) => {
-            const isSelected = draft.includes(project);
+            const isSelected = selected.includes(project);
             const isCursor = cursor === i;
             const initials = projectInitials(project);
             return (
@@ -397,7 +397,7 @@ function ProjectPicker({
                 key={project}
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => setDraft((prev) => toggleItem(prev, project))}
+                onClick={() => onToggle(project)}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -497,10 +497,10 @@ function ProjectPicker({
           gap: "8px",
         }}
       >
-        {draft.length > 0 ? (
+        {selected.length > 0 ? (
           <Box
             component="button"
-            onClick={() => setDraft([])}
+            onClick={onClear}
             sx={{
               display: "inline-flex", alignItems: "center",
               height: "30px", px: "12px", borderRadius: "9px",
@@ -516,13 +516,13 @@ function ProjectPicker({
         ) : <Box />}
         <Box
           component="button"
-          onClick={() => { if (draft.length > 0) onApply(draft); onClose(); }}
+          onClick={onClose}
           sx={{
-            display: "inline-flex", alignItems: "center", gap: "5px",
+            display: "inline-flex", alignItems: "center",
             height: "30px", px: "16px", borderRadius: "9px",
-            border: `1px solid ${draft.length > 0 ? "var(--accent)" : "var(--border2)"}`,
-            background: draft.length > 0 ? "var(--accent)" : "transparent",
-            color: draft.length > 0 ? "#fff" : "var(--text-secondary)",
+            border: "1px solid var(--border2)",
+            background: "transparent",
+            color: "var(--text-secondary)",
             fontSize: "12.5px", fontWeight: 600,
             cursor: "pointer", outline: "none",
             transition: "opacity 0.12s",
@@ -530,7 +530,7 @@ function ProjectPicker({
             "&:focus-visible": { boxShadow: "0 0 0 2px var(--accent-border)" },
           }}
         >
-          {draft.length > 0 ? "Appliquer" : "Fermer"}
+          Fermer
         </Box>
       </Box>
     </Dialog>
@@ -1017,7 +1017,8 @@ export const KanbanPage: React.FC = () => {
           onClose={() => setFilterOpen(false)}
           allProjects={allProjects}
           selected={filteredProjects}
-          onApply={(selection) => setFilteredProjects(selection)}
+          onToggle={(p) => setFilteredProjects((prev) => toggleItem(prev, p))}
+          onClear={() => setFilteredProjects([])}
         />
 
         {/* ── Board ──────────────────────────────────────────────────── */}
