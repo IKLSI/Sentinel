@@ -29,6 +29,8 @@ import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
 
 type KanbanType =
   | "bug"
@@ -179,16 +181,15 @@ function ProjectPicker({
   onClose,
   allProjects,
   selected,
-  onToggle,
-  onClear,
+  onApply,
 }: {
   open: boolean;
   onClose: () => void;
   allProjects: string[];
   selected: string[];
-  onToggle: (p: string) => void;
-  onClear: () => void;
+  onApply: (selection: string[]) => void;
 }) {
+  const [draft, setDraft] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [cursor, setCursor] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -200,6 +201,7 @@ function ProjectPicker({
 
   useEffect(() => {
     if (open) {
+      setDraft(selected);
       setSearch("");
       setCursor(-1);
       setTimeout(() => inputRef.current?.focus(), 80);
@@ -224,7 +226,7 @@ function ProjectPicker({
       setCursor((c) => Math.max(c - 1, 0));
     } else if (e.key === "Enter" && cursor >= 0) {
       e.preventDefault();
-      onToggle(visible[cursor]);
+      setDraft((prev) => toggleItem(prev, visible[cursor]));
     } else if (e.key === "Escape") {
       onClose();
     }
@@ -234,37 +236,87 @@ function ProjectPicker({
     <Dialog
       open={open}
       onClose={onClose}
+      aria-labelledby="filter-dialog-title"
       PaperProps={{
         sx: {
           background: "var(--s1)",
           border: "1px solid var(--border2)",
-          borderRadius: "18px",
-          boxShadow: "0 48px 120px rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.22)",
-          width: "520px",
+          borderRadius: "20px",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.04)",
+          width: "460px",
           maxWidth: "calc(100vw - 32px)",
           m: 2,
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "560px",
         },
       }}
       sx={{
         "& .MuiBackdrop-root": {
-          backdropFilter: "blur(14px)",
-          backgroundColor: "rgba(0,0,0,0.55)",
+          backdropFilter: "blur(20px)",
+          backgroundColor: "rgba(0,0,0,0.6)",
         },
       }}
     >
-      {/* ── Search ── */}
-      <Box sx={{ px: "16px", py: "12px", borderBottom: "1px solid var(--border)" }}>
+      {/* ── Header ── */}
+      <Box
+        sx={{
+          px: "20px",
+          py: "16px",
+          background: "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <Box id="filter-dialog-title" sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+          Filtrer par projet
+        </Box>
+      </Box>
+
+      {/* ── Sélection active ── */}
+      {draft.length > 0 && (
         <Box
           sx={{
+            px: "14px",
+            py: "10px",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg)",
+            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            background: "var(--s1)",
-            border: "1px solid var(--border)",
-            borderRadius: "9px",
-            px: "10px",
-            height: "32px",
+          }}
+        >
+          <Box sx={{ display: "flex", gap: "5px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
+            {draft.map((p) => (
+              <Box
+                key={p}
+                sx={{
+                  display: "inline-flex", alignItems: "center",
+                  px: "8px", height: "22px", borderRadius: "99px",
+                  background: "var(--accent-subtle)", border: "1px solid var(--accent-border)",
+                  fontSize: "11px", fontWeight: 600, color: "var(--accent)", maxWidth: "148px",
+                  flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}
+              >
+                {p}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* ── Search ── */}
+      <Box sx={{ px: "10px", pt: "8px", pb: "4px", flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: "flex", alignItems: "center", gap: "8px",
+            background: "var(--s1)", border: "1px solid var(--border)",
+            borderRadius: "9px", px: "10px", height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
@@ -272,213 +324,119 @@ function ProjectPicker({
             },
           }}
         >
-          <SearchOutlined sx={{ fontSize: "14px", color: "var(--muted)", flexShrink: 0 }} />
+          <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
           <Box
             component="input"
             ref={inputRef}
-            placeholder="Filtrer par projet..."
+            placeholder="Rechercher..."
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             onKeyDown={handleKey}
+            aria-label="Rechercher un projet"
             sx={{
-              all: "unset",
-              flex: 1,
-              fontSize: "12.5px",
-              color: "var(--text)",
+              all: "unset", flex: 1, fontSize: "12.5px", color: "var(--text)",
               "&::placeholder": { color: "var(--muted)" },
               "&:focus": { outline: "none", boxShadow: "none !important" },
             }}
           />
+          {search ? (
+            <Box
+              component="button"
+              onClick={() => setSearch("")}
+              aria-label="Effacer"
+              sx={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "17px", height: "17px", borderRadius: "50%",
+                border: "none", background: "var(--border2)", color: "var(--muted)",
+                cursor: "pointer", flexShrink: 0, outline: "none",
+                transition: "background 0.1s",
+                "&:hover": { background: "var(--muted2)", color: "var(--text)" },
+              }}
+            >
+              <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
+                <path d="M1 1L5 5M5 1L1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </Box>
+          ) : null}
         </Box>
       </Box>
 
-      {/* ── Selected chips ── */}
-      {selected.length > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            flexWrap: "wrap",
-            px: "16px",
-            py: "10px",
-            borderBottom: "1px solid var(--border)",
-            background: "rgba(0,0,0,0.06)",
-          }}
-        >
-          {selected.map((p) => {
-            return (
-              <Box
-                key={p}
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  pl: "8px",
-                  pr: "5px",
-                  height: "24px",
-                  borderRadius: "99px",
-                  background: "var(--accent-subtle)",
-                  border: "1px solid var(--accent-border)",
-                  fontSize: "11.5px",
-                  fontWeight: 600,
-                  color: "var(--accent)",
-                  maxWidth: "180px",
-                  flexShrink: 0,
-                }}
-              >
-                <Box sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {p}
-                </Box>
-                <Box
-                  onClick={(e) => { e.stopPropagation(); onToggle(p); }}
-                  sx={{
-                    width: "15px",
-                    height: "15px",
-                    borderRadius: "50%",
-                    background: "rgba(0,0,0,0.15)",
-                    color: "var(--accent)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                    "&:hover": { background: "var(--accent)", color: "#fff" },
-                    transition: "all 0.1s",
-                  }}
-                >
-                  <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
-                    <path d="M1 1L5 5M5 1L1 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                  </svg>
-                </Box>
-              </Box>
-            );
-          })}
-          <Box
-            component="button"
-            onClick={onClear}
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              height: "24px",
-              px: "9px",
-              borderRadius: "99px",
-              border: "1px solid var(--border2)",
-              background: "transparent",
-              color: "var(--muted)",
-              fontSize: "11px",
-              fontWeight: 500,
-              cursor: "pointer",
-              outline: "none",
-              flexShrink: 0,
-              ml: "2px",
-              transition: "border-color 0.15s, color 0.15s, background 0.15s",
-              "&:hover": {
-                borderColor: "rgba(239,68,68,0.4)",
-                background: "rgba(239,68,68,0.07)",
-                color: "#ef4444",
-              },
-            }}
-          >
-            Tout effacer
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </Box>
-        </Box>
-      )}
-
       {/* ── List ── */}
-      <Box sx={{ position: "relative" }}>
       <Box
         ref={listRef}
+        role="listbox"
+        aria-label="Projets"
+        aria-multiselectable="true"
         sx={{
-          maxHeight: "336px",
+          flex: 1,
           overflowY: "auto",
-          pt: "6px",
-          pb: "32px",
-          scrollbarWidth: "thin",
-          scrollbarColor: "var(--border2) transparent",
-          "&::-webkit-scrollbar": { width: "3px" },
-          "&::-webkit-scrollbar-thumb": { background: "var(--border2)", borderRadius: "4px" },
+          py: "6px",
+          px: "6px",
+          minHeight: 0,
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
         }}
       >
         {visible.length === 0 ? (
-          <Box
-            sx={{
-              py: "40px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+          <Box sx={{ py: "48px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
             <Box sx={{ opacity: 0.18 }}>
-              <FolderOutlined sx={{ fontSize: "32px", color: "var(--muted)" }} />
+              <FolderOutlined sx={{ fontSize: "30px", color: "var(--muted)" }} />
             </Box>
-            <Box sx={{ fontSize: "13px", color: "var(--muted)" }}>Aucun projet trouvé</Box>
+            <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>Aucun résultat</Box>
+            <Box sx={{ fontSize: "11.5px", color: "var(--muted2)" }}>
+              Essayez un autre terme
+            </Box>
           </Box>
         ) : (
           visible.map((project, i) => {
-            const isSelected = selected.includes(project);
+            const isSelected = draft.includes(project);
             const isCursor = cursor === i;
             const initials = projectInitials(project);
             return (
               <Box
                 key={project}
-                onClick={() => onToggle(project)}
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => setDraft((prev) => toggleItem(prev, project))}
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  mx: "6px",
+                  gap: "11px",
                   mb: "2px",
+                  px: "10px",
+                  py: "9px",
+                  borderRadius: "11px",
                   cursor: "pointer",
                   userSelect: "none",
+                  background: isSelected
+                    ? "rgba(99,102,241,0.08)"
+                    : isCursor
+                    ? "var(--s2)"
+                    : "transparent",
+                  transition: "background 0.1s",
+                  "&:hover": { background: isSelected ? "rgba(99,102,241,0.11)" : "var(--s2)" },
                 }}
               >
-                {/* Spacer avant l'avatar */}
-                <Box sx={{ width: "8px", flexShrink: 0 }} />
-
-                {/* Zone colorée : avatar → fin */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "13px",
-                    pl: "10px",
-                    pr: "10px",
-                    py: "6px",
-                    borderRadius: "10px",
-                    background: isSelected
-                      ? "var(--accent-subtle)"
-                      : isCursor
-                      ? "var(--s2)"
-                      : "transparent",
-                    transition: "background 0.08s",
-                    "&:hover": { background: isSelected ? "var(--accent-subtle)" : "var(--s2)" },
-                  }}
-                >
-
                 {/* Avatar */}
                 <Box
+                  aria-hidden="true"
                   sx={{
-                    width: "34px",
-                    height: "34px",
+                    width: "32px",
+                    height: "32px",
                     borderRadius: "9px",
-                    background: isSelected ? "var(--accent)" : "var(--accent-subtle)",
-                    border: `1.5px solid ${isSelected ? "var(--accent)" : "var(--accent-border)"}`,
+                    background: isSelected ? "var(--accent)" : "var(--s2)",
+                    border: `1.5px solid ${isSelected ? "transparent" : "var(--border2)"}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "10.5px",
+                    fontSize: "10px",
                     fontWeight: 700,
-                    color: isSelected ? "#fff" : "var(--accent)",
+                    color: isSelected ? "#fff" : "var(--muted2)",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.04em",
                     flexShrink: 0,
                     transition: "all 0.15s",
+                    boxShadow: isSelected ? "0 2px 8px rgba(99,102,241,0.35)" : "none",
                   }}
                 >
                   {initials}
@@ -488,8 +446,8 @@ function ProjectPicker({
                 <Box
                   sx={{
                     flex: 1,
-                    fontSize: "13.5px",
-                    fontWeight: isSelected ? 500 : 400,
+                    fontSize: "13px",
+                    fontWeight: isSelected ? 600 : 400,
                     color: isSelected ? "var(--text)" : "var(--text-secondary)",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -500,49 +458,81 @@ function ProjectPicker({
                   {project}
                 </Box>
 
-                {/* Checkmark */}
-                <Box
-                  sx={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: isSelected ? "var(--accent)" : "transparent",
-                    border: `1.5px solid ${isSelected ? "var(--accent)" : "var(--border2)"}`,
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {isSelected && (
-                    <svg width="8" height="7" viewBox="0 0 8 7" fill="none">
-                      <path d="M1 3.5L3 5.5L7 1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </Box>
-
-                </Box>{/* fin zone colorée */}
+                {/* Indicateur sélection */}
+                {isSelected && (
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      width: "26px",
+                      height: "26px",
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "var(--accent)",
+                      boxShadow: "0 1px 6px rgba(99,102,241,0.4)",
+                    }}
+                  >
+                    <CheckOutlined sx={{ fontSize: "12px", color: "#fff" }} />
+                  </Box>
+                )}
               </Box>
             );
           })
         )}
       </Box>
 
-      {/* Gradient fade */}
+      {/* ── Footer ── */}
       <Box
         sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "52px",
-          background: "linear-gradient(to bottom, transparent, var(--s1))",
-          pointerEvents: "none",
+          px: "16px",
+          py: "12px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--s2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+          gap: "8px",
         }}
-      />
+      >
+        {draft.length > 0 ? (
+          <Box
+            component="button"
+            onClick={() => setDraft([])}
+            sx={{
+              display: "inline-flex", alignItems: "center",
+              height: "30px", px: "12px", borderRadius: "9px",
+              border: "none", background: "transparent",
+              color: "var(--muted2)", fontSize: "12.5px", fontWeight: 500,
+              cursor: "pointer", outline: "none",
+              transition: "color 0.12s",
+              "&:hover": { color: "#ef4444" },
+            }}
+          >
+            Tout effacer
+          </Box>
+        ) : <Box />}
+        <Box
+          component="button"
+          onClick={() => { if (draft.length > 0) onApply(draft); onClose(); }}
+          sx={{
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            height: "30px", px: "16px", borderRadius: "9px",
+            border: `1px solid ${draft.length > 0 ? "var(--accent)" : "var(--border2)"}`,
+            background: draft.length > 0 ? "var(--accent)" : "transparent",
+            color: draft.length > 0 ? "#fff" : "var(--text-secondary)",
+            fontSize: "12.5px", fontWeight: 600,
+            cursor: "pointer", outline: "none",
+            transition: "opacity 0.12s",
+            "&:hover": { opacity: 0.88 },
+            "&:focus-visible": { boxShadow: "0 0 0 2px var(--accent-border)" },
+          }}
+        >
+          {draft.length > 0 ? "Appliquer" : "Fermer"}
+        </Box>
       </Box>
-
     </Dialog>
   );
 }
@@ -1027,8 +1017,7 @@ export const KanbanPage: React.FC = () => {
           onClose={() => setFilterOpen(false)}
           allProjects={allProjects}
           selected={filteredProjects}
-          onToggle={(p) => setFilteredProjects((prev) => toggleItem(prev, p))}
-          onClear={() => setFilteredProjects([])}
+          onApply={(selection) => setFilteredProjects(selection)}
         />
 
         {/* ── Board ──────────────────────────────────────────────────── */}
