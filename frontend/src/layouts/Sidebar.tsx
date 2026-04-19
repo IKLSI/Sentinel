@@ -9,9 +9,11 @@ import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+import PersonOutlined from '@mui/icons-material/PersonOutlined'
 import Box from '@mui/material/Box'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
+import { SentinelLogo } from './SentinelLogo'
 
 interface NavItem {
   to: string
@@ -175,11 +177,7 @@ export const Sidebar: React.FC = () => {
 
         {/* ── Logo ─────────────────────────────────────────── */}
         <Box
-          component="button"
-          onClick={() => navigate('/')}
           sx={{
-            all: 'unset',
-            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
@@ -187,29 +185,9 @@ export const Sidebar: React.FC = () => {
             height: '56px',
             flexShrink: 0,
             borderBottom: '1px solid var(--border)',
-            transition: 'opacity 0.15s',
-            '&:hover': { opacity: 0.75 },
           }}
         >
-          <Box
-            sx={{
-              width: 30,
-              height: 30,
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '13px',
-              fontWeight: 800,
-              color: '#fff',
-              letterSpacing: '-0.04em',
-              flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
-            }}
-          >
-            S
-          </Box>
+          <SentinelLogo />
           <Box>
             <Box sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>
               SENTINEL
@@ -357,20 +335,17 @@ export const Sidebar: React.FC = () => {
               width: 30,
               height: 30,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)',
+              background: 'var(--s3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '10.5px',
-              fontWeight: 700,
-              color: '#fff',
-              letterSpacing: '0.04em',
+              color: 'var(--muted)',
               flexShrink: 0,
               transition: 'opacity 0.12s',
               '&:hover': { opacity: 0.8 },
             }}
           >
-            {initials}
+            <PersonOutlined sx={{ fontSize: 18 }} />
           </Box>
 
           {/* Nom + email */}
@@ -388,9 +363,6 @@ export const Sidebar: React.FC = () => {
           >
             <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.firstName} {user?.lastName}
-            </Box>
-            <Box sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {user?.email}
             </Box>
           </Box>
 
