@@ -254,33 +254,42 @@ function ProjectPicker({
       }}
     >
       {/* ── Search ── */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          px: "20px",
-          height: "58px",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <SearchOutlined sx={{ fontSize: "20px", color: "var(--muted)", flexShrink: 0 }} />
+      <Box sx={{ px: "16px", py: "12px", borderBottom: "1px solid var(--border)" }}>
         <Box
-          component="input"
-          ref={inputRef}
-          placeholder="Filtrer par projet..."
-          value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-          onKeyDown={handleKey}
           sx={{
-            all: "unset",
-            flex: 1,
-            fontSize: "15px",
-            letterSpacing: "-0.015em",
-            color: "var(--text)",
-            "&::placeholder": { color: "var(--muted)" },
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "9px",
+            px: "10px",
+            height: "32px",
+            transition: "border-color 0.15s, box-shadow 0.15s",
+            "&:focus-within": {
+              borderColor: "var(--accent-border)",
+              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+            },
           }}
-        />
+        >
+          <SearchOutlined sx={{ fontSize: "14px", color: "var(--muted)", flexShrink: 0 }} />
+          <Box
+            component="input"
+            ref={inputRef}
+            placeholder="Filtrer par projet..."
+            value={search}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+            onKeyDown={handleKey}
+            sx={{
+              all: "unset",
+              flex: 1,
+              fontSize: "12.5px",
+              color: "var(--text)",
+              "&::placeholder": { color: "var(--muted)" },
+              "&:focus": { outline: "none", boxShadow: "none !important" },
+            }}
+          />
+        </Box>
       </Box>
 
       {/* ── Selected chips ── */}
