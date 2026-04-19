@@ -245,7 +245,6 @@ export const Sidebar: React.FC = () => {
                       sx={{
                         overflow: 'hidden',
                         maxHeight: isGroupOpen ? `${section.items.length * 32}px` : '0px',
-                        transition: 'max-height 0.2s cubic-bezier(0.4,0,0.2,1)',
                         ml: '15px',
                         borderLeft: `2px solid ${sectionActive ? 'var(--accent-border)' : 'var(--border)'}`,
                         transition: 'max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s',
@@ -294,7 +293,7 @@ export const Sidebar: React.FC = () => {
                         <Box
                           sx={{
                             ...ITEM_SX,
-                            background: isActive ? 'var(--accent-subtle)' : 'transparent',
+                            background: 'transparent',
                             color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                             '&:hover': !isActive ? { background: 'var(--s2)', color: 'var(--text)' } : {},
                           }}
