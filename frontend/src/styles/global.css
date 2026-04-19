@@ -301,7 +301,7 @@ a:hover { text-decoration: underline; }
 
 /* Logo */
 .lp-logo { display:inline-flex; align-items:center; gap:8px; opacity:0; animation:lp-up 0.6s 0.3s cubic-bezier(0.22,1,0.36,1) forwards; position:absolute; top:44px; left:48px; z-index:1; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:24px; padding:7px 14px 7px 9px; backdrop-filter:blur(8px); }
-.lp-logo-mark { width:22px; height:22px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.lp-logo-mark { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .lp-logo-wordmark { font-family:var(--font-ui); font-size:12px; font-weight:800; color:#fff; letter-spacing:0.14em; }
 
 /* Groupe bas */
@@ -402,7 +402,7 @@ a:hover { text-decoration: underline; }
 .aip-noise { position:absolute; inset:0; opacity:0.15; pointer-events:none; z-index:0; background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.09) 1px,transparent 0); background-size:28px 28px; }
 
 .aip-logo { display:inline-flex; align-items:center; gap:8px; opacity:0; animation:lp-up 0.6s 0.3s cubic-bezier(0.22,1,0.36,1) forwards; position:absolute; top:44px; left:48px; z-index:1; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:24px; padding:7px 14px 7px 9px; backdrop-filter:blur(8px); }
-.aip-logo-mark { width:22px; height:22px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.aip-logo-mark { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .aip-logo-text { font-family:var(--font-ui); font-size:12px; font-weight:800; color:#fff; letter-spacing:0.14em; }
 
 .aip-body { display:flex; flex-direction:column; gap:32px; position:relative; z-index:1; opacity:0; animation:lp-up 0.7s 0.38s cubic-bezier(0.22,1,0.36,1) forwards; }

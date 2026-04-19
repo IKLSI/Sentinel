@@ -5,6 +5,7 @@ import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined'
 import { resetPassword } from '../api/auth'
 import { useToast } from '../../../hooks/useToast'
+import { SentinelLogo } from '../../../layouts/SentinelLogo'
 
 export const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams()
@@ -71,9 +72,7 @@ export const ResetPasswordPage: React.FC = () => {
 
           <Box className="lp-logo">
             <Box className="lp-logo-mark">
-              <svg width="12" height="12" viewBox="0 0 18 18" fill="none">
-                <path d="M9 1L16 4.5V9C16 12.5 12.8 15.7 9 17C5.2 15.7 2 12.5 2 9V4.5L9 1Z" fill="white" fillOpacity="0.95" />
-              </svg>
+              <SentinelLogo width={20} height={23} />
             </Box>
             <Box className="lp-logo-wordmark">SENTINEL</Box>
           </Box>
