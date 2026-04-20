@@ -29,7 +29,6 @@ import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
-import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 
 type KanbanType =
@@ -810,8 +809,6 @@ export const KanbanPage: React.FC = () => {
     };
   }, [columns, search, filteredProjects]);
 
-  const hasFilters = !!search || activeFilterCount > 0;
-
   const onDragEnd = useCallback(
     async (result: DropResult) => {
       setTimeout(() => {
@@ -1130,7 +1127,6 @@ export const KanbanPage: React.FC = () => {
                 {columnOrder.map((colId) => {
                   const meta = columnMeta[colId];
                   const colTickets = filteredColumns[colId];
-                  const totalInCol = columns[colId].length;
 
                   return (
                     <div

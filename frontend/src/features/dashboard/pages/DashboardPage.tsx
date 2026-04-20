@@ -90,17 +90,6 @@ const EMPTY_STATS: StatsData = {
   urgentTickets: [], recentActivity: [],
 };
 
-// ── Helpers ────────────────────────────────────────────────────────────
-
-function formatRelativeTime(ts: string): string {
-  const diff = Date.now() - new Date(ts).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 2) return "à l'instant";
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}j`;
-}
 
 // ── SVG: Donut Chart ────────────────────────────────────────────────────
 
@@ -232,16 +221,6 @@ const ViewBtn: React.FC<{ onClick: () => void; label?: string }> = ({ onClick, l
   >
     {label}
     <ChevronRightOutlined sx={{ fontSize: 12 }} />
-  </Box>
-);
-
-const CountBadge: React.FC<{ count: number; color?: string }> = ({ count, color = "var(--muted)" }) => (
-  <Box sx={{
-    fontSize: "9px", fontWeight: 700, fontFamily: "var(--font-mono)",
-    color, background: "var(--s3)", border: "1px solid var(--border)",
-    px: "6px", py: "1px", borderRadius: "99px", flexShrink: 0,
-  }}>
-    {count}
   </Box>
 );
 

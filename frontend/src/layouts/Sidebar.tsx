@@ -99,8 +99,6 @@ export const Sidebar: React.FC = () => {
 
   const isAdmin = user?.role === 'Admin'
   const isDeveloper = user?.role === 'Developer'
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?'
-
   const filteredSections = navSections
     .map((section) => {
       if (section.title === 'Temps & Facturation') {

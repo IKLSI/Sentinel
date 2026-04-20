@@ -29,9 +29,6 @@ import { fr } from 'date-fns/locale'
 const ROLE_LABELS: Record<string, string> = {
   Admin: 'Administrateur', Developer: 'Développeur',
 }
-const ROLE_VARIANTS: Record<string, 'red' | 'orange' | 'blue'> = {
-  Admin: 'red', Developer: 'blue',
-}
 
 const TIMEZONES = [
   { value: 'Europe/Paris',    label: 'Europe / Paris (CET)' },

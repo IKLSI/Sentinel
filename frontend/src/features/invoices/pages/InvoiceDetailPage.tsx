@@ -16,7 +16,7 @@ import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const fmtEur = (n: number) =>
@@ -86,17 +86,6 @@ export const InvoiceDetailPage: React.FC = () => {
   const currentStep = STEPS.findIndex((s) => s.key === invoice.status);
   const overdue = invoice.isOverdue;
   const hourlyRate = invoice.dailyRate > 0 ? invoice.dailyRate / 8 : 0;
-  const overduedays =
-    overdue && invoice.dueAt
-      ? differenceInDays(new Date(), new Date(invoice.dueAt))
-      : 0;
-
-  const stripGradient = overdue
-    ? "linear-gradient(90deg, #ef4444, #f87171)"
-    : invoice.status === "Paid"
-      ? "linear-gradient(90deg, #16a34a, #22c55e)"
-      : "linear-gradient(90deg, #4f46e5, #818cf8)";
-
   return (
     <>
 

@@ -43,8 +43,6 @@ import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
 import { DurationPicker } from "../../../components/DurationPicker";
 
 const WORK_HOURS_TARGET = 7 * 60;
-const WEEK_TARGET = 5 * WORK_HOURS_TARGET;
-
 const PROJECT_PALETTE = [
   "#6366f1", "#8b5cf6", "#06b6d4", "#10b981",
   "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
@@ -173,9 +171,6 @@ export const TimeTrackingPage: React.FC = () => {
 
   const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
   const contributors = useMemo(() => new Set(weekEntries.map((e) => e.userId)).size, [weekEntries]);
-  const effectiveTarget = isAdmin && contributors > 1 ? contributors * WEEK_TARGET : WEEK_TARGET;
-  const weekPct = Math.min(100, Math.round((totalMinutes / effectiveTarget) * 100));
-
   const statsByProject = useMemo(() => {
     const map = new Map<string, { name: string; minutes: number }>();
     weekEntries.forEach((e) => {
@@ -278,7 +273,6 @@ export const TimeTrackingPage: React.FC = () => {
     return map;
   }, [weekDays, weekEntries]);
 
-  const progressColor = weekPct >= 100 ? "var(--green)" : weekPct >= 70 ? "var(--accent)" : weekPct >= 40 ? "var(--orange)" : "var(--border2)";
 
   return (
     <>
@@ -380,7 +374,6 @@ export const TimeTrackingPage: React.FC = () => {
               const dayMinutes = dayEntries.reduce((s, e) => s + e.durationMinutes, 0);
               const today = isToday(day);
               const isWeekend = [0, 6].includes(day.getDay());
-              const pct = Math.min(100, Math.round((dayMinutes / WORK_HOURS_TARGET) * 100));
               const barColor = dayMinutes === 0
                 ? "var(--border)"
                 : dayMinutes > WORK_HOURS_TARGET ? "var(--red)"
@@ -570,7 +563,7 @@ export const TimeTrackingPage: React.FC = () => {
             <Box sx={{ flex: 1, overflowY: "auto" }}>
               {weekDays
                 .filter((d) => (entriesByDay.get(format(d, "yyyy-MM-dd")) ?? []).length > 0)
-                .map((day, groupIdx) => {
+                .map((day) => {
                   const dayStr = format(day, "yyyy-MM-dd");
                   const dayDate = parseDateLocal(dayStr);
                   const isCurrentDay = isToday(dayDate);
@@ -1153,7 +1146,7 @@ const inputSx = {
 
 // ── Components ──
 
-const FormField: React.FC<{ label: string; labelSuffix?: React.ReactNode; children: React.ReactNode }> = ({ label, labelSuffix, children }) => (
+const FormField: React.FC<{ label: React.ReactNode; labelSuffix?: React.ReactNode; children: React.ReactNode }> = ({ label, labelSuffix, children }) => (
   <Box>
     <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mb: "5px" }}>
       <Box component="label" sx={{ fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>
