@@ -5,6 +5,7 @@ import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOu
 import ViewKanbanOutlined from '@mui/icons-material/ViewKanbanOutlined'
 import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined'
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
+import AssessmentOutlined from '@mui/icons-material/AssessmentOutlined'
 import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
@@ -40,7 +41,7 @@ const navSections: NavSection[] = [
     title: 'Tickets',
     icon: ConfirmationNumberOutlined,
     items: [
-      { to: '/tickets', icon: ConfirmationNumberOutlined, label: 'Tous les tickets', end: true },
+      { to: '/tickets', icon: ConfirmationNumberOutlined, label: 'Liste', end: true },
       { to: '/tickets/kanban', icon: ViewKanbanOutlined, label: 'Kanban' },
     ],
   },
@@ -48,14 +49,14 @@ const navSections: NavSection[] = [
     title: 'Projets',
     icon: AccountTreeOutlined,
     items: [
-      { to: '/projects', icon: AccountTreeOutlined, label: 'Tous les projets' },
+      { to: '/projects', icon: AccountTreeOutlined, label: 'Projets' },
     ],
   },
   {
-    title: 'Temps & Facturation',
-    icon: AccessTimeOutlined,
+    title: 'Ressources',
+    icon: AssessmentOutlined,
     items: [
-      { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Suivi du temps' },
+      { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Pointage' },
       { to: '/invoices', icon: ReceiptOutlined, label: 'Factures' },
     ],
   },
@@ -105,7 +106,7 @@ export const Sidebar: React.FC = () => {
         const items = isDeveloper
           ? section.items.filter((i) => i.to !== '/invoices')
           : section.items
-        return { ...section, title: isDeveloper ? 'Temps' : section.title, items }
+        return { ...section, title: section.title, items }
       }
       return section
     })
@@ -224,7 +225,7 @@ export const Sidebar: React.FC = () => {
                       }}
                     >
                       <GroupIcon sx={{ fontSize: 16, color: sectionActive ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, transition: 'color 0.12s' }} />
-                      <Box component="span" sx={{ flex: 1, fontSize: '13px', fontWeight: sectionActive ? 600 : 450, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <Box component="span" sx={{ flex: 1, fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: sectionActive ? 'var(--text)' : 'var(--muted2)' }}>
                         {section.title}
                       </Box>
                       <ChevronRightOutlined
@@ -270,7 +271,7 @@ export const Sidebar: React.FC = () => {
                                 '&:hover': !active ? { color: 'var(--text)' } : {},
                               }}
                             >
-                              <Box component="span" sx={{ fontSize: '12.5px', fontWeight: active ? 600 : 440, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <Box component="span" sx={{ fontSize: '12.5px', fontWeight: active ? 600 : 430, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: active ? 'var(--accent)' : 'var(--muted)' }}>
                                 {item.label}
                               </Box>
                             </Box>
@@ -297,7 +298,7 @@ export const Sidebar: React.FC = () => {
                           }}
                         >
                           <Icon sx={{ fontSize: 16, flexShrink: 0, color: isActive ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.12s' }} />
-                          <Box component="span" sx={{ fontSize: '13px', fontWeight: isActive ? 600 : 450, letterSpacing: '-0.012em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <Box component="span" sx={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isActive ? 'var(--text)' : 'var(--muted2)' }}>
                             {section.items[0].label}
                           </Box>
                         </Box>
