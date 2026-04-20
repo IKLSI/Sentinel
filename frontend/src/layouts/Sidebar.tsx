@@ -221,11 +221,11 @@ export const Sidebar: React.FC = () => {
                         width: '100%',
                         boxSizing: 'border-box',
                         color: sectionActive ? 'var(--text)' : 'var(--text-secondary)',
-                        '&:hover': { background: 'var(--s2)' },
+                        '&:hover .nav-label': !sectionActive ? { color: 'var(--text)' } : {},
                       }}
                     >
                       <GroupIcon sx={{ fontSize: 16, color: sectionActive ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, transition: 'color 0.12s' }} />
-                      <Box component="span" sx={{ flex: 1, fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: sectionActive ? 'var(--text)' : 'var(--muted2)' }}>
+                      <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: sectionActive ? 'var(--text)' : 'var(--muted2)', transition: 'color 0.15s' }}>
                         {section.title}
                       </Box>
                       <ChevronRightOutlined
@@ -260,18 +260,19 @@ export const Sidebar: React.FC = () => {
                           >
                             <Box
                               sx={{
-                                height: '30px',
+                                height: '28px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                pl: '14px',
+                                pl: '12px',
                                 pr: '8px',
+                                mx: '4px',
+                                borderRadius: '4px',
                                 cursor: 'pointer',
-                                color: active ? 'var(--accent)' : 'var(--muted)',
-                                transition: 'color 0.12s',
-                                '&:hover': !active ? { color: 'var(--text)' } : {},
+                                background: active ? 'var(--accent-subtle)' : 'transparent',
+                                '&:hover .nav-label': !active ? { color: 'var(--text)' } : {},
                               }}
                             >
-                              <Box component="span" sx={{ fontSize: '12.5px', fontWeight: active ? 600 : 430, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: active ? 'var(--accent)' : 'var(--muted)' }}>
+                              <Box component="span" className="nav-label" sx={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: active ? 700 : 500, letterSpacing: '0.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: active ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.15s' }}>
                                 {item.label}
                               </Box>
                             </Box>
@@ -294,11 +295,11 @@ export const Sidebar: React.FC = () => {
                             ...ITEM_SX,
                             background: 'transparent',
                             color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                            '&:hover': !isActive ? { background: 'var(--s2)', color: 'var(--text)' } : {},
+                            '&:hover .nav-label': !isActive ? { color: 'var(--text)' } : {},
                           }}
                         >
                           <Icon sx={{ fontSize: 16, flexShrink: 0, color: isActive ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.12s' }} />
-                          <Box component="span" sx={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isActive ? 'var(--text)' : 'var(--muted2)' }}>
+                          <Box component="span" className="nav-label" sx={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isActive ? 'var(--text)' : 'var(--muted2)', transition: 'color 0.15s' }}>
                             {section.items[0].label}
                           </Box>
                         </Box>
@@ -339,8 +340,6 @@ export const Sidebar: React.FC = () => {
               justifyContent: 'center',
               color: 'var(--muted)',
               flexShrink: 0,
-              transition: 'opacity 0.12s',
-              '&:hover': { opacity: 0.8 },
             }}
           >
             <PersonOutlined sx={{ fontSize: 18 }} />
