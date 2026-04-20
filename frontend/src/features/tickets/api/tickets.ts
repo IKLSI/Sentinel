@@ -1,5 +1,20 @@
 import apiClient from '../../../services/client'
-import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TicketStatus } from '../../../types'
+import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TicketStatus, User } from '../../../types'
+import { downloadCsv } from '../../../utils/download'
+
+function createPartialUser(name: string, id: string, createdAt: string): User {
+  const [firstName, ...rest] = name.split(' ')
+  return {
+    id,
+    email: '',
+    firstName: firstName ?? name,
+    lastName: rest.join(' '),
+    role: 'Developer',
+    organizationId: '',
+    isActive: true,
+    createdAt,
+  }
+}
 
 interface TicketDto {
   id: string
@@ -43,7 +58,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
     projectName: dto.projectName,
     assigneeId: dto.assignedToId,
     assignee: dto.assignedToName
-      ? { id: dto.assignedToId ?? '', email: '', firstName: dto.assignedToName.split(' ')[0] ?? dto.assignedToName, lastName: dto.assignedToName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: dto.createdAt }
+      ? createPartialUser(dto.assignedToName, dto.assignedToId ?? '', dto.createdAt)
       : undefined,
     priority: dto.priority as Ticket['priority'],
     type: dto.type as Ticket['type'],
@@ -54,12 +69,12 @@ function mapTicketDto(dto: TicketDto): Ticket {
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({
       id: c.id, ticketId: dto.id, authorId: c.authorId,
-      author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt },
+      author: createPartialUser(c.authorName, c.authorId, c.createdAt),
       content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt,
     })),
     history: dto.history.map((h) => ({
       id: h.id, ticketId: dto.id, authorId: h.userId,
-      author: { id: h.userId, email: '', firstName: h.userName.split(' ')[0] ?? h.userName, lastName: h.userName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: h.createdAt },
+      author: createPartialUser(h.userName, h.userId, h.createdAt),
       field: h.field, oldValue: h.oldValue, newValue: h.newValue, createdAt: h.createdAt,
     })),
     createdAt: dto.createdAt,
@@ -97,7 +112,7 @@ export const addComment = async (ticketId: string, content: string, isInternal =
     `/api/tickets/${ticketId}/comments`, { content, isInternal }
   )
   const c = response.data
-  return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
 export const updateComment = async (ticketId: string, commentId: string, content: string): Promise<TicketComment> => {
@@ -105,7 +120,7 @@ export const updateComment = async (ticketId: string, commentId: string, content
     `/api/tickets/${ticketId}/comments/${commentId}`, { content }
   )
   const c = response.data
-  return { id: c.id, ticketId, authorId: c.authorId, author: { id: c.authorId, email: '', firstName: c.authorName.split(' ')[0] ?? c.authorName, lastName: c.authorName.split(' ').slice(1).join(' '), role: 'Developer' as const, organizationId: '', isActive: true, createdAt: c.createdAt }, content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
 export const deleteComment = async (ticketId: string, commentId: string): Promise<void> => {
@@ -125,14 +140,7 @@ export const exportTicketsCsv = async (params?: {
   slaBreached?: boolean
   search?: string
 }): Promise<void> => {
-  const response = await apiClient.get('/api/tickets/export/csv', { params, responseType: 'blob' })
   const date = new Date().toISOString().slice(0, 10)
-  const filename = `tickets-${date}.csv`
-  const url = URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  await downloadCsv('/api/tickets/export/csv', `tickets-${date}.csv`, params as Record<string, unknown>)
 }
 
