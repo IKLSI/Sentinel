@@ -20,12 +20,32 @@ namespace Sentinel.Infrastructure.Migrations
                     Slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     LogoUrl = table.Column<string>(type: "text", nullable: true),
                     Timezone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    SlaCriticalHours = table.Column<int>(type: "integer", nullable: false, defaultValue: 4),
+                    SlaHighHours = table.Column<int>(type: "integer", nullable: false, defaultValue: 8),
+                    SlaMediumHours = table.Column<int>(type: "integer", nullable: false, defaultValue: 24),
+                    SlaLowHours = table.Column<int>(type: "integer", nullable: false, defaultValue: 48),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Organizations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PasswordResetTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsUsed = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PasswordResetTokens", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -70,7 +90,8 @@ namespace Sentinel.Infrastructure.Migrations
                     RefreshToken = table.Column<string>(type: "text", nullable: true),
                     RefreshTokenExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     PreviousRefreshTokenHash = table.Column<string>(type: "text", nullable: true),
-                    Theme = table.Column<string>(type: "text", nullable: false)
+                    Theme = table.Column<string>(type: "text", nullable: false),
+                    EmailNotifications = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -213,6 +234,37 @@ namespace Sentinel.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Tickets_Users_CreatedById",
                         column: x => x.CreatedById,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserInvitations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Role = table.Column<string>(type: "text", nullable: false),
+                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    InvitedById = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    AcceptedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserInvitations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserInvitations_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserInvitations_Users_InvitedById",
+                        column: x => x.InvitedById,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -376,6 +428,17 @@ namespace Sentinel.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_PasswordResetTokens_Email",
+                table: "PasswordResetTokens",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PasswordResetTokens_Token",
+                table: "PasswordResetTokens",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Runtimes_TechProjectId",
                 table: "Runtimes",
                 column: "TechProjectId");
@@ -476,6 +539,27 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserInvitations_Email",
+                table: "UserInvitations",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserInvitations_InvitedById",
+                table: "UserInvitations",
+                column: "InvitedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserInvitations_OrganizationId",
+                table: "UserInvitations",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserInvitations_Token",
+                table: "UserInvitations",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email",
@@ -510,6 +594,9 @@ namespace Sentinel.Infrastructure.Migrations
                 name: "Invoices");
 
             migrationBuilder.DropTable(
+                name: "PasswordResetTokens");
+
+            migrationBuilder.DropTable(
                 name: "Runtimes");
 
             migrationBuilder.DropTable(
@@ -520,6 +607,9 @@ namespace Sentinel.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "TimeEntries");
+
+            migrationBuilder.DropTable(
+                name: "UserInvitations");
 
             migrationBuilder.DropTable(
                 name: "Vulnerabilities");

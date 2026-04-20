@@ -300,9 +300,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("WebhookSecret")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizationId");
