@@ -248,6 +248,24 @@ const labelSx = {
   letterSpacing: "0.04em",
 };
 
+function getAxiosErrorMessage(err: unknown): string | undefined {
+  if (
+    err !== null &&
+    typeof err === 'object' &&
+    'response' in err &&
+    err.response !== null &&
+    typeof err.response === 'object' &&
+    'data' in err.response &&
+    err.response.data !== null &&
+    typeof err.response.data === 'object' &&
+    'message' in err.response.data &&
+    typeof err.response.data.message === 'string'
+  ) {
+    return err.response.data.message;
+  }
+  return undefined;
+}
+
 export const InvoicesPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -394,8 +412,7 @@ export const InvoicesPage: React.FC = () => {
       setShowNewModal(false);
       navigate(`/invoices/${invoice.id}`);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message;
+      const msg = getAxiosErrorMessage(err);
       showToast(msg ?? "Erreur lors de la génération", "error");
     } finally {
       setGenerating(false);

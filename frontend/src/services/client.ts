@@ -58,7 +58,8 @@ apiClient.interceptors.response.use(
         isRefreshing = false
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return apiClient(originalRequest)
-      } catch {
+      } catch (error) {
+        console.error('Token refresh failed:', error)
         isRefreshing = false
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')

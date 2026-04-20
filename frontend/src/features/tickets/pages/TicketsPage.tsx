@@ -270,7 +270,7 @@ export const TicketsPage: React.FC = () => {
       setShowCreateModal(false);
       navigate(`/tickets/${created.id}`);
     } catch {
-      /* ignore */
+      showToast('Erreur lors de la création du ticket', 'error');
     } finally {
       setCreateSubmitting(false);
     }
@@ -308,7 +308,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) => prev.map((t) => t.id === updated.id ? updated : t));
       setEditTarget(null);
     } catch {
-      /* ignore */
+      showToast('Erreur lors de la modification du ticket', 'error');
     } finally {
       setEditSaving(false);
     }
@@ -363,7 +363,9 @@ export const TicketsPage: React.FC = () => {
     if (filters.priority) params.priority = filters.priority;
     if (filters.status) params.status = filters.status;
     if (filters.type) params.type = filters.type;
-    fetchTickets(params).catch(() => {});
+    fetchTickets(params).catch(() => {
+      showToast('Erreur lors du chargement des tickets', 'error');
+    });
   }, [page, pageSize, debouncedSearch, filters]);
 
   useEffect(() => {
