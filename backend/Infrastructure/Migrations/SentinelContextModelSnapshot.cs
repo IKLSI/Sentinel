@@ -148,6 +148,14 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("GithubToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("GitlabToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
 
@@ -517,9 +525,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<bool>("EmailNotifications")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
                         .IsRequired()

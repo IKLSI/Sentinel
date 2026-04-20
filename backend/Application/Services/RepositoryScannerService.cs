@@ -22,12 +22,12 @@ public class RepositoryScannerService
         _logger = logger;
     }
 
-    public async Task<(List<Dependency>, List<Runtime>)> ScanRepositoryAsync(Guid projectId, string repoUrl)
+    public async Task<(List<Dependency>, List<Runtime>)> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null)
     {
         try
         {
             (string host, string owner, string repo) = ParseRepoUrl(repoUrl);
-            List<(string Name, string Url)> files = await _hostClient.ListFilesAsync(host, owner, repo);
+            List<(string Name, string Url)> files = await _hostClient.ListFilesAsync(host, owner, repo, tokenOverride);
 
             List<Dependency> manifestDeps = new();
             List<Dependency> lockDeps = new();
@@ -36,7 +36,7 @@ public class RepositoryScannerService
             foreach ((string fileName, string url) in files)
             {
                 if (!ManifestParserService.IsManifest(fileName)) continue;
-                string? content = await _hostClient.FetchTextAsync(host, url);
+                string? content = await _hostClient.FetchTextAsync(host, url, tokenOverride);
                 if (content == null) continue;
 
                 (List<Dependency> deps, List<Runtime> rts) = _parser.Parse(projectId, fileName, content);

@@ -13,7 +13,6 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public string Theme { get; set; } = "dark";
-    public bool EmailNotifications { get; set; } = true;
 }
 
 public class CreateUserDto
@@ -53,7 +52,6 @@ public class UpdateUserDto
 public class UpdatePreferencesDto
 {
     public string? Theme { get; set; }
-    public bool? EmailNotifications { get; set; }
 }
 
 public class UpdateMyProfileDto

@@ -22,7 +22,6 @@ public class User
     public DateTime? RefreshTokenExpiry { get; set; }
     public string? PreviousRefreshTokenHash { get; set; }
     public string Theme { get; set; } = "dark";
-    public bool EmailNotifications { get; set; } = true;
 
     public Organization Organization { get; set; } = null!;
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();

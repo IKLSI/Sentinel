@@ -103,7 +103,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient("Registry", client =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0");
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.Timeout = TimeSpan.FromSeconds(30);
         });
 
         services.AddHttpClient("EolDate", client =>

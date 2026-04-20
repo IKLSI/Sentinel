@@ -25,22 +25,31 @@ public class RepositoryHostClient
         _logger = logger;
     }
 
-    public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo)
+    public async Task<List<(string Name, string Url)>> ListUserRepositoriesAsync(string token, string platform)
     {
-        if (host.Contains("github"))
-            return await ListGitHubFilesAsync(owner, repo);
-        if (host.Contains("gitlab"))
-            return await ListGitLabFilesAsync(_httpClientFactory.CreateClient("Registry"), owner, repo);
+        if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
+            return await ListGitHubUserRepositoriesAsync(token);
+        if (platform.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
+            return await ListGitLabUserRepositoriesAsync(token);
         return [];
     }
 
-    public async Task<string?> FetchTextAsync(string host, string url)
+    public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo, string? tokenOverride = null)
+    {
+        if (host.Contains("github"))
+            return await ListGitHubFilesAsync(owner, repo, tokenOverride ?? _githubToken);
+        if (host.Contains("gitlab"))
+            return await ListGitLabFilesAsync(_httpClientFactory.CreateClient("Registry"), owner, repo, tokenOverride);
+        return [];
+    }
+
+    public async Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null)
     {
         HttpClient client = _httpClientFactory.CreateClient("Registry");
 
         if (host.Contains("github"))
         {
-            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url, tokenOverride ?? _githubToken);
             try
             {
                 HttpResponseMessage response = await client.SendAsync(request);
@@ -49,7 +58,7 @@ public class RepositoryHostClient
             catch { return null; }
         }
 
-        return await FetchTextAsync(client, url);
+        return await FetchTextAsync(client, url, host.Contains("gitlab") ? tokenOverride : null);
     }
 
     public static bool IsInSkippedDirectory(string filePath)
@@ -62,16 +71,93 @@ public class RepositoryHostClient
         return false;
     }
 
-    private HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url)
+    private async Task<List<(string Name, string Url)>> ListGitHubUserRepositoriesAsync(string token)
+    {
+        List<(string, string)> result = new();
+        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        int page = 1;
+
+        while (true)
+        {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
+                $"https://api.github.com/user/repos?per_page=100&page={page}&affiliation=owner,collaborator,organization_member");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            HttpResponseMessage response;
+            try { response = await client.SendAsync(request); }
+            catch { break; }
+
+            if (!response.IsSuccessStatusCode) break;
+
+            List<JsonElement>? repos;
+            try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
+            catch { break; }
+
+            if (repos == null || repos.Count == 0) break;
+
+            foreach (JsonElement repo in repos)
+            {
+                string name = repo.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
+                string url = repo.TryGetProperty("html_url", out JsonElement u) ? u.GetString() ?? "" : "";
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(url))
+                    result.Add((name, url));
+            }
+
+            if (repos.Count < 100) break;
+            page++;
+        }
+
+        return result;
+    }
+
+    private async Task<List<(string Name, string Url)>> ListGitLabUserRepositoriesAsync(string token)
+    {
+        List<(string, string)> result = new();
+        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        int page = 1;
+
+        while (true)
+        {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
+                $"https://gitlab.com/api/v4/projects?membership=true&per_page=100&page={page}");
+            request.Headers.Add("PRIVATE-TOKEN", token);
+
+            HttpResponseMessage response;
+            try { response = await client.SendAsync(request); }
+            catch { break; }
+
+            if (!response.IsSuccessStatusCode) break;
+
+            List<JsonElement>? projects;
+            try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
+            catch { break; }
+
+            if (projects == null || projects.Count == 0) break;
+
+            foreach (JsonElement project in projects)
+            {
+                string name = project.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
+                string url = project.TryGetProperty("http_url_to_repo", out JsonElement u) ? u.GetString() ?? "" : "";
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(url))
+                    result.Add((name, url));
+            }
+
+            if (projects.Count < 100) break;
+            page++;
+        }
+
+        return result;
+    }
+
+    private static HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(method, url);
-        request.Headers.Add("User-Agent", "Sentinel-Scanner/1.0");
-        if (!string.IsNullOrEmpty(_githubToken))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
+        if (!string.IsNullOrEmpty(token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
     }
 
-    private async Task<List<(string Name, string Url)>> ListGitHubFilesAsync(string owner, string repo)
+    private async Task<List<(string Name, string Url)>> ListGitHubFilesAsync(string owner, string repo, string? token = null)
     {
         List<(string, string)> result = new List<(string, string)>();
         JsonElement treeResponse;
@@ -79,7 +165,7 @@ public class RepositoryHostClient
         {
             HttpClient client = _httpClientFactory.CreateClient("Registry");
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
-                $"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1");
+                $"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1", token);
             HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
@@ -111,11 +197,14 @@ public class RepositoryHostClient
         return result;
     }
 
-    private static async Task<List<(string Name, string Url)>> ListGitLabFilesAsync(HttpClient client, string owner, string repo)
+    private static async Task<List<(string Name, string Url)>> ListGitLabFilesAsync(HttpClient client, string owner, string repo, string? token = null)
     {
         List<(string, string)> result = new List<(string, string)>();
         string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
         int page = 1;
+
+        if (!string.IsNullOrEmpty(token) && !client.DefaultRequestHeaders.Contains("PRIVATE-TOKEN"))
+            client.DefaultRequestHeaders.Add("PRIVATE-TOKEN", token);
 
         while (true)
         {
@@ -149,11 +238,14 @@ public class RepositoryHostClient
         return result;
     }
 
-    private static async Task<string?> FetchTextAsync(HttpClient client, string url)
+    private static async Task<string?> FetchTextAsync(HttpClient client, string url, string? gitlabToken = null)
     {
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(gitlabToken))
+                request.Headers.Add("PRIVATE-TOKEN", gitlabToken);
+            HttpResponseMessage response = await client.SendAsync(request);
             return response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
         }
         catch { return null; }

@@ -33,3 +33,28 @@ export const updateOrganizationSettings = async (data: { name: string; timezone:
   const response = await apiClient.put<OrganizationSettings>('/api/settings/organization', data)
   return response.data
 }
+
+export interface IntegrationSettings {
+  hasGithubToken: boolean
+  hasGitlabToken: boolean
+}
+
+export interface ImportResult {
+  importedCount: number
+  skippedCount: number
+}
+
+export const getIntegrationSettings = async (): Promise<IntegrationSettings> => {
+  const response = await apiClient.get<IntegrationSettings>('/api/settings/integrations')
+  return response.data
+}
+
+export const connectGithub = async (token: string): Promise<ImportResult> => {
+  const response = await apiClient.post<ImportResult>('/api/settings/integrations/github', { token })
+  return response.data
+}
+
+export const connectGitlab = async (token: string): Promise<ImportResult> => {
+  const response = await apiClient.post<ImportResult>('/api/settings/integrations/gitlab', { token })
+  return response.data
+}

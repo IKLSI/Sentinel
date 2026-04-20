@@ -29,3 +29,20 @@ public class UpdateOrganizationSettingsDto
     public string Name { get; set; } = string.Empty;
     public string Timezone { get; set; } = string.Empty;
 }
+
+public class IntegrationSettingsDto
+{
+    public bool HasGithubToken { get; set; }
+    public bool HasGitlabToken { get; set; }
+}
+
+public class ConnectIntegrationDto
+{
+    public string Token { get; set; } = string.Empty;
+}
+
+public class ImportResultDto
+{
+    public int ImportedCount { get; set; }
+    public int SkippedCount { get; set; }
+}

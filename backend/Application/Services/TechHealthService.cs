@@ -63,8 +63,17 @@ public class TechHealthService
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
+            string? tokenOverride = null;
+            Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
+            if (org != null)
+            {
+                tokenOverride = project.RepositoryType == RepositoryType.GitLab
+                    ? org.GitlabToken
+                    : org.GithubToken;
+            }
+
             (List<Dependency> newDeps, List<Runtime> newRuntimes) =
-                await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl);
+                await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl, tokenOverride);
 
             if (newDeps.Count > 0 || newRuntimes.Count > 0)
             {

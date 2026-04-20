@@ -11,6 +11,8 @@ public class Organization
     public int SlaHighHours { get; set; } = 8;
     public int SlaMediumHours { get; set; } = 24;
     public int SlaLowHours { get; set; } = 48;
+    public string? GithubToken { get; set; }
+    public string? GitlabToken { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

@@ -11,7 +11,6 @@ export interface User {
   createdAt: string
   isActive: boolean
   theme?: 'dark' | 'light'
-  emailNotifications?: boolean
   lastLoginAt?: string
 }
 

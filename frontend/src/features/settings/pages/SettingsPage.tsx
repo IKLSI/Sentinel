@@ -11,6 +11,7 @@ import { inviteUser, getUsers, toggleUserActive } from '../../users/api/users'
 import {
   getSlaSettings, updateSlaSettings, SlaSettings,
   getOrganizationSettings, updateOrganizationSettings, OrganizationSettings,
+  getIntegrationSettings, connectGithub, connectGitlab, IntegrationSettings,
 } from '../api/settings'
 import { User, UserRole } from '../../../types'
 import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined'
@@ -188,6 +189,13 @@ export const SettingsPage: React.FC = () => {
   const [loadingSla, setLoadingSla] = useState(true)
   const [savingSla, setSavingSla] = useState(false)
 
+  // ── Intégrations
+  const [integrations, setIntegrations] = useState<IntegrationSettings>({ hasGithubToken: false, hasGitlabToken: false })
+  const [githubToken, setGithubToken] = useState('')
+  const [gitlabToken, setGitlabToken] = useState('')
+  const [connectingGithub, setConnectingGithub] = useState(false)
+  const [connectingGitlab, setConnectingGitlab] = useState(false)
+
   useEffect(() => {
     const el = tableWrapRef.current
     if (!el) return
@@ -208,11 +216,12 @@ export const SettingsPage: React.FC = () => {
   useEffect(() => { loadMembers() }, [loadMembers])
 
   useEffect(() => {
-    Promise.all([getOrganizationSettings(), getSlaSettings()])
-      .then(([o, s]) => {
+    Promise.all([getOrganizationSettings(), getSlaSettings(), getIntegrationSettings()])
+      .then(([o, s, i]) => {
         setOrg(o)
         setOrgForm({ name: o.name, timezone: o.timezone })
         setSla(s); setSavedSla(s)
+        setIntegrations(i)
       })
       .catch(() => showToast('Impossible de charger les paramètres', 'error'))
       .finally(() => { setLoadingOrg(false); setLoadingSla(false) })
@@ -278,6 +287,30 @@ export const SettingsPage: React.FC = () => {
       showToast('Paramètres SLA sauvegardés', 'success')
     } catch { showToast('Erreur lors de la sauvegarde', 'error') }
     finally { setSavingSla(false) }
+  }
+
+  const handleConnectGithub = async () => {
+    if (!githubToken.trim()) { showToast('Le token est requis', 'warning'); return }
+    setConnectingGithub(true)
+    try {
+      const result = await connectGithub(githubToken.trim())
+      setIntegrations(prev => ({ ...prev, hasGithubToken: true }))
+      setGithubToken('')
+      showToast(`GitHub connecté — ${result.importedCount} projet(s) importé(s)`, 'success')
+    } catch { showToast('Erreur lors de la connexion GitHub', 'error') }
+    finally { setConnectingGithub(false) }
+  }
+
+  const handleConnectGitlab = async () => {
+    if (!gitlabToken.trim()) { showToast('Le token est requis', 'warning'); return }
+    setConnectingGitlab(true)
+    try {
+      const result = await connectGitlab(gitlabToken.trim())
+      setIntegrations(prev => ({ ...prev, hasGitlabToken: true }))
+      setGitlabToken('')
+      showToast(`GitLab connecté — ${result.importedCount} projet(s) importé(s)`, 'success')
+    } catch { showToast('Erreur lors de la connexion GitLab', 'error') }
+    finally { setConnectingGitlab(false) }
   }
 
   const slaUnchanged = sla.criticalHours === savedSla.criticalHours && sla.highHours === savedSla.highHours && sla.mediumHours === savedSla.mediumHours && sla.lowHours === savedSla.lowHours
@@ -537,6 +570,68 @@ export const SettingsPage: React.FC = () => {
                       </Box>
                     </>
                   )}
+                </Box>
+
+
+
+                {/* ── Card Intégrations ── */}
+                <Box sx={CARD_SX}>
+                  <CardHeader label="Intégrations" />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)' }}>
+
+                    {/* GitHub */}
+                    <Box sx={{ background: 'var(--s1)', px: '16px', py: '12px' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '8px' }}>
+                        <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>GitHub</Box>
+                        {integrations.hasGithubToken && (
+                          <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '4px', px: '6px', py: '1px' }}>
+                            Connecté
+                          </Box>
+                        )}
+                      </Box>
+                      <Box sx={{ fontSize: '11px', color: 'var(--muted)', mb: '8px' }}>
+                        {integrations.hasGithubToken
+                          ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
+                          : "Renseignez un Personal Access Token (PAT) pour importer automatiquement tous vos dépôts GitHub."}
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: '8px' }}>
+                        <Box component="input" type="password" placeholder="ghp_…" sx={{ ...inp, flex: 1 }}
+                          value={githubToken}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithubToken(e.target.value)} />
+                        <Button variant="contained" size="small" onClick={handleConnectGithub}
+                          disabled={connectingGithub || !githubToken.trim()} sx={{ flexShrink: 0 }}>
+                          {connectingGithub ? 'Import…' : 'Connecter'}
+                        </Button>
+                      </Box>
+                    </Box>
+
+                    {/* GitLab */}
+                    <Box sx={{ background: 'var(--s1)', px: '16px', py: '12px' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '8px' }}>
+                        <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>GitLab</Box>
+                        {integrations.hasGitlabToken && (
+                          <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '4px', px: '6px', py: '1px' }}>
+                            Connecté
+                          </Box>
+                        )}
+                      </Box>
+                      <Box sx={{ fontSize: '11px', color: 'var(--muted)', mb: '8px' }}>
+                        {integrations.hasGitlabToken
+                          ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
+                          : "Renseignez un Personal Access Token pour importer automatiquement tous vos projets GitLab."}
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: '8px' }}>
+                        <Box component="input" type="password" placeholder="glpat-…" sx={{ ...inp, flex: 1 }}
+                          value={gitlabToken}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGitlabToken(e.target.value)} />
+                        <Button variant="contained" size="small" onClick={handleConnectGitlab}
+                          disabled={connectingGitlab || !gitlabToken.trim()} sx={{ flexShrink: 0 }}>
+                          {connectingGitlab ? 'Import…' : 'Connecter'}
+                        </Button>
+                      </Box>
+                    </Box>
+
+                  </Box>
                 </Box>
 
               </Box>

@@ -48,6 +48,8 @@ public class SentinelContext : DbContext
             entity.Property(e => e.Slug).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.Timezone).HasMaxLength(50);
+            entity.Property(e => e.GithubToken).HasMaxLength(500);
+            entity.Property(e => e.GitlabToken).HasMaxLength(500);
             entity.Property(e => e.SlaCriticalHours).HasDefaultValue(4);
             entity.Property(e => e.SlaHighHours).HasDefaultValue(8);
             entity.Property(e => e.SlaMediumHours).HasDefaultValue(24);
