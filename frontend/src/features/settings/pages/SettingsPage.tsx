@@ -499,7 +499,7 @@ export const SettingsPage: React.FC = () => {
                     <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
                   ) : (
                     <>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)' }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', p: '8px' }}>
                         {SLA_PRIORITIES.map(({ key, label, color, bg, desc }) => {
                           const hours = sla[key]
                           const dec = () => setSla(p => ({ ...p, [key]: Math.max(1, p[key] - 1) }))
@@ -584,24 +584,24 @@ export const SettingsPage: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '8px' }}>
                         <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>GitHub</Box>
                         {integrations.hasGithubToken && (
-                          <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '4px', px: '6px', py: '1px' }}>
-                            Connecté
-                          </Box>
+                          <CheckCircleOutlineOutlined sx={{ fontSize: 14, color: '#22c55e' }} />
                         )}
                       </Box>
-                      <Box sx={{ fontSize: '11px', color: 'var(--muted)', mb: '8px' }}>
-                        {integrations.hasGithubToken
-                          ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
-                          : "Renseignez un Personal Access Token (PAT) pour importer automatiquement tous vos dépôts GitHub."}
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: '8px' }}>
-                        <Box component="input" type="password" placeholder="ghp_…" sx={{ ...inp, flex: 1 }}
-                          value={githubToken}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithubToken(e.target.value)} />
-                        <Button variant="contained" size="small" onClick={handleConnectGithub}
-                          disabled={connectingGithub || !githubToken.trim()} sx={{ flexShrink: 0 }}>
-                          {connectingGithub ? 'Import…' : 'Connecter'}
-                        </Button>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Box sx={{ fontSize: '11px', color: 'var(--muted)', flex: 1 }}>
+                          {integrations.hasGithubToken
+                            ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
+                            : "Renseignez un Personal Access Token (PAT) pour importer automatiquement tous vos dépôts GitHub."}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                          <Box component="input" type="password" placeholder="ghp_…" sx={{ ...inp, width: '220px' }}
+                            value={githubToken}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithubToken(e.target.value)} />
+                          <Button variant="contained" size="small" onClick={handleConnectGithub}
+                            disabled={connectingGithub || !githubToken.trim()} sx={{ flexShrink: 0 }}>
+                            {connectingGithub ? 'Import…' : 'Connecter'}
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
 
@@ -610,24 +610,24 @@ export const SettingsPage: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '8px' }}>
                         <Box sx={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>GitLab</Box>
                         {integrations.hasGitlabToken && (
-                          <Box sx={{ fontSize: '10px', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '4px', px: '6px', py: '1px' }}>
-                            Connecté
-                          </Box>
+                          <CheckCircleOutlineOutlined sx={{ fontSize: 14, color: '#22c55e' }} />
                         )}
                       </Box>
-                      <Box sx={{ fontSize: '11px', color: 'var(--muted)', mb: '8px' }}>
-                        {integrations.hasGitlabToken
-                          ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
-                          : "Renseignez un Personal Access Token pour importer automatiquement tous vos projets GitLab."}
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: '8px' }}>
-                        <Box component="input" type="password" placeholder="glpat-…" sx={{ ...inp, flex: 1 }}
-                          value={gitlabToken}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGitlabToken(e.target.value)} />
-                        <Button variant="contained" size="small" onClick={handleConnectGitlab}
-                          disabled={connectingGitlab || !gitlabToken.trim()} sx={{ flexShrink: 0 }}>
-                          {connectingGitlab ? 'Import…' : 'Connecter'}
-                        </Button>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Box sx={{ fontSize: '11px', color: 'var(--muted)', flex: 1 }}>
+                          {integrations.hasGitlabToken
+                            ? "Un token est déjà configuré. Saisissez-en un nouveau pour le remplacer et relancer l'import."
+                            : "Renseignez un Personal Access Token pour importer automatiquement tous vos projets GitLab."}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                          <Box component="input" type="password" placeholder="glpat-…" sx={{ ...inp, width: '220px' }}
+                            value={gitlabToken}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGitlabToken(e.target.value)} />
+                          <Button variant="contained" size="small" onClick={handleConnectGitlab}
+                            disabled={connectingGitlab || !gitlabToken.trim()} sx={{ flexShrink: 0 }}>
+                            {connectingGitlab ? 'Import…' : 'Connecter'}
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
 
