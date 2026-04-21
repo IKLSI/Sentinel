@@ -199,10 +199,6 @@ public class TechHealthService
                 await _context.Vulnerabilities.AddRangeAsync(newVulns);
                 dependency.Status = DependencyStatus.Vulnerable;
             }
-            else if (dependency.Status != DependencyStatus.EOL)
-            {
-                dependency.Status = DependencyStatus.UpToDate;
-            }
         }
         catch (Exception ex)
         {

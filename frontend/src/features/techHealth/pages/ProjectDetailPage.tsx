@@ -486,14 +486,10 @@ export const ProjectDetailPage: React.FC = () => {
             {/* ── Vulnérabilités ────────────────────────────────── */}
             {activeTab === 0 && (
               allVulns.length === 0 ? (
-                <Box sx={{
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  gap: "10px", p: "24px", borderRadius: "var(--r)",
-                }}>
-                  <CheckCircleOutlined sx={{ fontSize: 32, color: "var(--green)" }} />
-                  <Box sx={{ fontSize: "14px", color: "var(--green)", textAlign: "center" }}>
-                    Aucune vulnérabilité détectée
-                  </Box>
+                <Box className="empty-state">
+                  <CheckCircleOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+                  <Box className="empty-state-title">Aucune vulnérabilité détectée</Box>
+                  <Box className="empty-state-subtitle">Aucune vulnérabilité connue n'a été détectée sur ce projet.</Box>
                 </Box>
               ) : (
                 <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -534,7 +530,13 @@ export const ProjectDetailPage: React.FC = () => {
 
             {/* ── Dépendances ───────────────────────────────────── */}
             {activeTab === 1 && (
-              <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              project.dependencies.length === 0 ? (
+                <Box className="empty-state">
+                  <InventoryOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+                  <Box className="empty-state-title">Aucune dépendance détectée</Box>
+                  <Box className="empty-state-subtitle">Lancez un scan pour analyser les dépendances du projet.</Box>
+                </Box>
+              ) : <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {/* Search bar */}
                 <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "12px", px: "16px", py: "14px", borderBottom: "1px solid var(--border)", background: "var(--s2)" }}>
                   <Box sx={{
@@ -645,6 +647,7 @@ export const ProjectDetailPage: React.FC = () => {
             )}
 
             {/* ── Runtimes ──────────────────────────────────────── */}
+
             {activeTab === 2 && (
               project.runtimes.length === 0 ? (
                 <Box className="empty-state">
