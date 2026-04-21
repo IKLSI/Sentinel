@@ -25,7 +25,7 @@ import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
-import HelpOutlineOutlined from "@mui/icons-material/HelpOutline";
+import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";

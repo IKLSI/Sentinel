@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Jobs;
 using Sentinel.Application.Services;
@@ -163,18 +163,11 @@ services.AddScoped<SlaService>();
                 Description = "Entrez 'Bearer' suivi d'un espace et de votre token JWT"
             });
 
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
+                    new OpenApiSecuritySchemeReference("Bearer", doc),
+                    new List<string>()
                 }
             });
         });
