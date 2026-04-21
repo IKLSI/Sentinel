@@ -18,6 +18,7 @@ import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import { useToast } from "../../../hooks/useToast";
 import { getTickets, changeStatus } from "../api/tickets";
+import { getProjects } from "../../techHealth/api/projects";
 import { TicketStatus, TicketPriority, Ticket } from "../../../types";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
@@ -758,15 +759,13 @@ export const KanbanPage: React.FC = () => {
   const [filteredProjects, setFilteredProjects] = useState<string[]>([]);
   const wasDragging = useRef(false);
 
-  const allProjects = useMemo(() => {
-    const set = new Set<string>();
-    for (const col of Object.values(columns)) {
-      for (const t of col) {
-        if (t.project) set.add(t.project);
-      }
-    }
-    return Array.from(set).sort();
-  }, [columns]);
+  const [allProjects, setAllProjects] = useState<string[]>([]);
+
+  useEffect(() => {
+    getProjects()
+      .then((projects) => setAllProjects(projects.map((p) => p.name).sort()))
+      .catch(() => {});
+  }, []);
 
   const activeFilterCount = filteredProjects.length;
 
