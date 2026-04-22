@@ -34,6 +34,7 @@ const gradeColor = (grade: string) => {
     case "B": return "#10b981";
     case "C": return "#f59e0b";
     case "D": return "#f97316";
+    case "E": return "#dc6803";
     default:  return "#ef4444";
   }
 };
@@ -488,7 +489,7 @@ const ProjectRow: React.FC<{
       {/* Nom */}
       <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
         <Box sx={{
-          fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 400, color: "var(--text)",
+          fontWeight: 600, color: "var(--text)", lineHeight: 1.3, fontSize: "12.5px",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {project.name}

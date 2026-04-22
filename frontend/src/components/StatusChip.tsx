@@ -2,7 +2,7 @@ import React from 'react'
 import Chip from '@mui/material/Chip'
 
 type Variant = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'cyan' | 'purple' | 'gray'
-            | 'sky' | 'amber' | 'violet' | 'emerald' | 'slate' | 'rose' | 'teal'
+            | 'sky' | 'amber' | 'violet' | 'emerald' | 'slate' | 'rose' | 'teal' | 'black'
 
 const colorMap: Record<Variant, { bg: string; color: string; border: string }> = {
   red:     { bg: 'rgba(239,68,68,0.12)',    color: '#ef4444', border: 'rgba(239,68,68,0.25)'    },
@@ -20,6 +20,7 @@ const colorMap: Record<Variant, { bg: string; color: string; border: string }> =
   slate:   { bg: 'rgba(100,116,139,0.12)',  color: '#64748b', border: 'rgba(100,116,139,0.2)'   },
   rose:    { bg: 'rgba(244,63,94,0.12)',    color: '#f43f5e', border: 'rgba(244,63,94,0.25)'    },
   teal:    { bg: 'rgba(20,184,166,0.12)',   color: '#14b8a6', border: 'rgba(20,184,166,0.25)'   },
+  black:   { bg: 'rgba(0,0,0,0.08)',        color: 'var(--text)', border: 'rgba(0,0,0,0.15)'     },
 }
 
 interface StatusChipProps {

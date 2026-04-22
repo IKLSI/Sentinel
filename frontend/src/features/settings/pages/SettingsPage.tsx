@@ -422,10 +422,10 @@ export const SettingsPage: React.FC = () => {
                               </Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                              <StatusChip variant="gray">{ROLE_LABELS[m.role] ?? m.role}</StatusChip>
+                              <Box sx={{ fontWeight: 400, color: 'var(--text)', lineHeight: 1.3 }}>{ROLE_LABELS[m.role] ?? m.role}</Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                              <StatusChip variant="gray">{m.isActive ? 'Actif' : 'Inactif'}</StatusChip>
+                              <Box sx={{ fontWeight: 400, color: 'var(--text)', lineHeight: 1.3 }}>{m.isActive ? 'Actif' : 'Inactif'}</Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
                               {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
