@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { version } from '../../../../package.json'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import { useAuth } from '../../auth/hooks/useAuth'
@@ -176,6 +177,15 @@ export const ProfilePage: React.FC = () => {
             ))}
           </Box>
         </Box>
+      </Box>
+
+      <Box sx={{
+        position: 'fixed', bottom: '10px', right: '14px',
+        fontSize: '10px', color: 'var(--muted)',
+        fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
+        userSelect: 'none', pointerEvents: 'none',
+      }}>
+        v{version}
       </Box>
     </Box>
   )

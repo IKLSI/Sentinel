@@ -573,7 +573,7 @@ export const TimeTrackingPage: React.FC = () => {
                   const isCollapsed = collapsedDays.has(dayStr);
                   const toggleCollapse = () => setCollapsedDays((prev) => {
                     const next = new Set(prev);
-                    next.has(dayStr) ? next.delete(dayStr) : next.add(dayStr);
+                    if (next.has(dayStr)) next.delete(dayStr); else next.add(dayStr);
                     return next;
                   });
 
