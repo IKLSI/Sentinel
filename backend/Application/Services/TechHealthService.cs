@@ -88,7 +88,6 @@ public class TechHealthService
                     .ExecuteDeleteAsync();
                 await _context.Dependencies.AddRangeAsync(newDeps);
                 await _context.Runtimes.AddRangeAsync(newRuntimes);
-                await _context.SaveChangesAsync();
             }
             else
             {
@@ -96,10 +95,13 @@ public class TechHealthService
             }
         }
 
-        project = await _context.TechProjects
-            .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-            .Include(p => p.Runtimes)
-            .FirstAsync(p => p.Id == projectId);
+        if (!project.Dependencies.Any() && !project.Runtimes.Any())
+        {
+            project = await _context.TechProjects
+                .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
+                .Include(p => p.Runtimes)
+                .FirstAsync(p => p.Id == projectId);
+        }
 
         foreach (Dependency dependency in project.Dependencies)
             await CheckVulnerabilitiesAsync(dependency);
@@ -228,7 +230,7 @@ public class TechHealthService
                     "LOW" => VulnerabilitySeverity.Low,
                     _ => VulnerabilitySeverity.Medium
                 };
-                return (0, sev);
+                return (SeverityToDefaultScore(sev), sev);
             }
         }
 
@@ -241,12 +243,15 @@ public class TechHealthService
                 {
                     string? vector = scoreProp.GetString();
                     if (vector != null)
-                        return (0, EstimateSeverityFromVector(vector));
+                    {
+                        VulnerabilitySeverity estimatedSev = EstimateSeverityFromVector(vector);
+                        return (SeverityToDefaultScore(estimatedSev), estimatedSev);
+                    }
                 }
             }
         }
 
-        return (0, VulnerabilitySeverity.Medium);
+        return (SeverityToDefaultScore(VulnerabilitySeverity.Medium), VulnerabilitySeverity.Medium);
     }
 
     private static VulnerabilitySeverity ScoreToSeverity(decimal score) => score switch
@@ -255,6 +260,14 @@ public class TechHealthService
         >= 7.0m => VulnerabilitySeverity.High,
         >= 4.0m => VulnerabilitySeverity.Medium,
         _ => VulnerabilitySeverity.Low
+    };
+
+    private static decimal SeverityToDefaultScore(VulnerabilitySeverity severity) => severity switch
+    {
+        VulnerabilitySeverity.Critical => 9.5m,
+        VulnerabilitySeverity.High     => 7.5m,
+        VulnerabilitySeverity.Medium   => 5.0m,
+        _                              => 2.0m
     };
 
     private static VulnerabilitySeverity EstimateSeverityFromVector(string vector)
