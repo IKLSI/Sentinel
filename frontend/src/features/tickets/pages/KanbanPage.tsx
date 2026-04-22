@@ -16,6 +16,7 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
+import Button from "@mui/material/Button";
 import { useToast } from "../../../hooks/useToast";
 import { getTickets, changeStatus } from "../api/tickets";
 import { getProjects } from "../../techHealth/api/projects";
@@ -59,8 +60,6 @@ interface KanbanTicket {
 }
 
 type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
-
-
 
 const typeLabels: Record<KanbanType, string> = {
   bug: "Bug",
@@ -169,6 +168,10 @@ function ticketsToColumns(tickets: Ticket[]): KanbanColumns {
 
 // ─── Project picker ───────────────────────────────────────────────────────────
 
+interface ProjectInfo {
+  name: string;
+  ticketCount: number;
+}
 
 function projectInitials(name: string): string {
   const words = name.trim().split(/\s+/);
@@ -176,147 +179,119 @@ function projectInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+const avatarPalette = [
+  "#7c3aed",
+  "#059669",
+  "#dc2626",
+  "#b45309",
+  "#0891b2",
+  "#be185d",
+  "#4f46e5",
+  "#16a34a",
+  "#9333ea",
+  "#d97706",
+];
+
+function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++)
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return avatarPalette[Math.abs(hash) % avatarPalette.length];
+}
+
 function ProjectPicker({
   open,
   onClose,
   allProjects,
   selected,
-  onToggle,
-  onClear,
+  onApply,
 }: {
   open: boolean;
   onClose: () => void;
-  allProjects: string[];
+  allProjects: ProjectInfo[];
   selected: string[];
-  onToggle: (p: string) => void;
-  onClear: () => void;
+  onApply: (projects: string[]) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [cursor, setCursor] = useState(-1);
+  const [pending, setPending] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  const visible = allProjects.filter((p) =>
-    p.toLowerCase().includes(search.toLowerCase()),
-  );
 
   useEffect(() => {
     if (open) {
+      setPending(selected);
       setSearch("");
-      setCursor(-1);
       setTimeout(() => inputRef.current?.focus(), 80);
     }
   }, [open]);
 
-  useEffect(() => { setCursor(-1); }, [search]);
+  const visible = allProjects.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  useEffect(() => {
-    if (cursor >= 0 && listRef.current) {
-      const el = listRef.current.children[cursor] as HTMLElement;
-      el?.scrollIntoView({ block: "nearest" });
-    }
-  }, [cursor]);
+  const toggle = (name: string) => setPending((prev) => toggleItem(prev, name));
 
-  const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setCursor((c) => Math.min(c + 1, visible.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setCursor((c) => Math.max(c - 1, 0));
-    } else if (e.key === "Enter" && cursor >= 0) {
-      e.preventDefault();
-      onToggle(visible[cursor]);
-    } else if (e.key === "Escape") {
-      onClose();
-    }
+  const selectAll = () => {
+    const names = visible.map((p) => p.name);
+    const allSel = names.every((n) => pending.includes(n));
+    setPending((prev) =>
+      allSel
+        ? prev.filter((n) => !names.includes(n))
+        : [...new Set([...prev, ...names])],
+    );
+  };
+
+  const handleApply = () => {
+    onApply(pending);
+    onClose();
   };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      aria-labelledby="filter-dialog-title"
+      maxWidth="sm"
+      fullWidth
       PaperProps={{
         sx: {
-          background: "var(--s1)",
-          border: "1px solid var(--border2)",
-          borderRadius: "20px",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.04)",
-          width: "460px",
-          maxWidth: "calc(100vw - 32px)",
-          m: 2,
+          bgcolor: "var(--s1)",
+          border: "1px solid",
+          borderColor: "divider",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: "560px",
-        },
-      }}
-      sx={{
-        "& .MuiBackdrop-root": {
-          backdropFilter: "blur(20px)",
-          backgroundColor: "rgba(0,0,0,0.6)",
+          maxHeight: "600px",
         },
       }}
     >
       {/* ── Header ── */}
       <Box
         sx={{
-          px: "20px",
-          py: "16px",
-          background: "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
+          fontSize: "14px",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          p: "16px 24px",
           borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          background:
+            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
           flexShrink: 0,
+          color: "var(--text)",
         }}
       >
-        <Box id="filter-dialog-title" sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
-          Filtrer par projet
-        </Box>
+        Filtrer par projet
       </Box>
 
-      {/* ── Sélection active ── */}
-      {selected.length > 0 && (
+      {/* ── Search ── */}
+      <Box sx={{ px: "20px", pt: "16px", pb: "0", flexShrink: 0 }}>
         <Box
           sx={{
-            px: "14px",
-            py: "10px",
-            borderBottom: "1px solid var(--border)",
-            background: "var(--bg)",
-            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             gap: "8px",
-          }}
-        >
-          <Box sx={{ display: "flex", gap: "5px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-            {selected.map((p) => (
-              <Box
-                key={p}
-                sx={{
-                  display: "inline-flex", alignItems: "center",
-                  px: "8px", height: "22px", borderRadius: "99px",
-                  background: "var(--accent-subtle)", border: "1px solid var(--accent-border)",
-                  fontSize: "11px", fontWeight: 600, color: "var(--accent)", maxWidth: "148px",
-                  flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}
-              >
-                {p}
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      )}
-
-      {/* ── Search ── */}
-      <Box sx={{ px: "10px", pt: "8px", pb: "4px", flexShrink: 0 }}>
-        <Box
-          sx={{
-            display: "flex", alignItems: "center", gap: "8px",
-            background: "var(--s1)", border: "1px solid var(--border)",
-            borderRadius: "9px", px: "10px", height: "32px",
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            borderRadius: "9px",
+            px: "10px",
+            height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
@@ -324,159 +299,210 @@ function ProjectPicker({
             },
           }}
         >
-          <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
+          <SearchOutlined
+            sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
+          />
           <Box
             component="input"
             ref={inputRef}
             placeholder="Rechercher..."
             value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            onKeyDown={handleKey}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setSearch(e.target.value)
+            }
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === "Escape") onClose();
+            }}
             aria-label="Rechercher un projet"
             sx={{
-              all: "unset", flex: 1, fontSize: "12.5px", color: "var(--text)",
+              all: "unset",
+              flex: 1,
+              fontSize: "12.5px",
+              color: "var(--text)",
               "&::placeholder": { color: "var(--muted)" },
               "&:focus": { outline: "none", boxShadow: "none !important" },
             }}
           />
-          {search ? (
-            <Box
-              component="button"
-              onClick={() => setSearch("")}
-              aria-label="Effacer"
-              sx={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: "17px", height: "17px", borderRadius: "50%",
-                border: "none", background: "var(--border2)", color: "var(--muted)",
-                cursor: "pointer", flexShrink: 0, outline: "none",
-                transition: "background 0.1s",
-                "&:hover": { background: "var(--muted2)", color: "var(--text)" },
-              }}
-            >
-              <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
-                <path d="M1 1L5 5M5 1L1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </Box>
-          ) : null}
+        </Box>
+      </Box>
+
+      {/* ── Group header ── */}
+      <Box
+        sx={{
+          px: "20px",
+          pt: "14px",
+          pb: "6px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <Box
+            sx={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--text)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            Projets
+          </Box>
+          <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+            {visible.length}
+          </Box>
+        </Box>
+        <Box
+          component="button"
+          onClick={selectAll}
+          sx={{
+            border: "none",
+            background: "transparent",
+            color: "var(--accent)",
+            fontSize: "12px",
+            fontWeight: 600,
+            cursor: "pointer",
+            outline: "none",
+            "&:hover": { textDecoration: "underline" },
+          }}
+        >
+          Tout sélectionner
         </Box>
       </Box>
 
       {/* ── List ── */}
       <Box
-        ref={listRef}
-        role="listbox"
-        aria-label="Projets"
-        aria-multiselectable="true"
         sx={{
           flex: 1,
-          overflowY: "auto",
-          py: "6px",
-          px: "6px",
           minHeight: 0,
+          overflowY: "auto",
+          px: "12px",
+          pb: "8px",
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
         }}
       >
         {visible.length === 0 ? (
-          <Box sx={{ py: "48px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-            <Box sx={{ opacity: 0.18 }}>
-              <FolderOutlined sx={{ fontSize: "30px", color: "var(--muted)" }} />
-            </Box>
-            <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>Aucun résultat</Box>
-            <Box sx={{ fontSize: "11.5px", color: "var(--muted2)" }}>
-              Essayez un autre terme
+          <Box
+            sx={{
+              py: "40px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <FolderOutlined
+              sx={{ fontSize: "28px", color: "var(--muted2)", opacity: 0.4 }}
+            />
+            <Box
+              sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}
+            >
+              Aucun résultat
             </Box>
           </Box>
         ) : (
-          visible.map((project, i) => {
-            const isSelected = selected.includes(project);
-            const isCursor = cursor === i;
-            const initials = projectInitials(project);
+          visible.map((project) => {
+            const isSelected = pending.includes(project.name);
+            const color = getAvatarColor(project.name);
+            const initials = projectInitials(project.name);
             return (
               <Box
-                key={project}
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => onToggle(project)}
+                key={project.name}
+                onClick={() => toggle(project.name)}
+                onMouseDown={(e) => e.preventDefault()}
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   gap: "11px",
-                  mb: "2px",
                   px: "10px",
                   py: "9px",
-                  borderRadius: "11px",
-                  cursor: "pointer",
-                  userSelect: "none",
+                  borderRadius: "10px",
+                  mb: "2px",
                   background: isSelected
                     ? "rgba(99,102,241,0.08)"
-                    : isCursor
-                    ? "var(--s2)"
                     : "transparent",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  "&:hover": {
+                    background: isSelected
+                      ? "rgba(99,102,241,0.11)"
+                      : "var(--s2)",
+                  },
                   transition: "background 0.1s",
-                  "&:hover": { background: isSelected ? "rgba(99,102,241,0.11)" : "var(--s2)" },
                 }}
               >
                 {/* Avatar */}
                 <Box
-                  aria-hidden="true"
                   sx={{
-                    width: "32px",
-                    height: "32px",
+                    width: "36px",
+                    height: "36px",
                     borderRadius: "9px",
-                    background: isSelected ? "var(--accent)" : "var(--s2)",
-                    border: `1.5px solid ${isSelected ? "transparent" : "var(--border2)"}`,
+                    background: color,
+                    flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "10px",
+                    fontSize: "11px",
                     fontWeight: 700,
-                    color: isSelected ? "#fff" : "var(--muted2)",
+                    color: "#fff",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.04em",
-                    flexShrink: 0,
-                    transition: "all 0.15s",
-                    boxShadow: isSelected ? "0 2px 8px rgba(99,102,241,0.35)" : "none",
                   }}
                 >
                   {initials}
                 </Box>
 
-                {/* Name */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    fontSize: "13px",
-                    fontWeight: isSelected ? 600 : 400,
-                    color: isSelected ? "var(--text)" : "var(--text-secondary)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    letterSpacing: "-0.012em",
-                  }}
-                >
-                  {project}
-                </Box>
-
-                {/* Indicateur sélection */}
-                {isSelected && (
+                {/* Info */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box
-                    aria-hidden="true"
                     sx={{
-                      width: "26px",
-                      height: "26px",
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "var(--accent)",
-                      boxShadow: "0 1px 6px rgba(99,102,241,0.4)",
+                      fontSize: "13px",
+                      fontWeight: isSelected ? 600 : 500,
+                      color: "var(--text)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <CheckOutlined sx={{ fontSize: "12px", color: "#fff" }} />
+                    {project.name}
                   </Box>
-                )}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      mt: "2px",
+                    }}
+                  >
+                    <Box sx={{ fontSize: "11.5px", color: "var(--muted2)" }}>
+                      {project.ticketCount} ticket
+                      {project.ticketCount !== 1 ? "s" : ""}
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Checkbox */}
+                <Box
+                  sx={{
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "4px",
+                    flexShrink: 0,
+                    border: isSelected ? "none" : "1.5px solid var(--border2)",
+                    background: isSelected ? "var(--accent)" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {isSelected && (
+                    <CheckOutlined sx={{ fontSize: "11px", color: "#fff" }} />
+                  )}
+                </Box>
               </Box>
             );
           })
@@ -486,8 +512,7 @@ function ProjectPicker({
       {/* ── Footer ── */}
       <Box
         sx={{
-          px: "16px",
-          py: "12px",
+          p: "14px 20px",
           borderTop: "1px solid var(--border)",
           background: "var(--s2)",
           display: "flex",
@@ -497,40 +522,30 @@ function ProjectPicker({
           gap: "8px",
         }}
       >
-        {selected.length > 0 ? (
-          <Box
-            component="button"
-            onClick={onClear}
-            sx={{
-              display: "inline-flex", alignItems: "center",
-              height: "30px", px: "12px", borderRadius: "9px",
-              border: "none", background: "transparent",
-              color: "var(--muted2)", fontSize: "12.5px", fontWeight: 500,
-              cursor: "pointer", outline: "none",
-              transition: "color 0.12s",
-              "&:hover": { color: "#ef4444" },
-            }}
-          >
-            Tout effacer
-          </Box>
-        ) : <Box />}
         <Box
-          component="button"
-          onClick={onClose}
-          sx={{
-            display: "inline-flex", alignItems: "center",
-            height: "30px", px: "16px", borderRadius: "9px",
-            border: "1px solid var(--border2)",
-            background: "transparent",
-            color: "var(--text-secondary)",
-            fontSize: "12.5px", fontWeight: 600,
-            cursor: "pointer", outline: "none",
-            transition: "opacity 0.12s",
-            "&:hover": { opacity: 0.88 },
-            "&:focus-visible": { boxShadow: "0 0 0 2px var(--accent-border)" },
-          }}
+          sx={{ fontSize: "12.5px", color: "var(--muted2)", fontWeight: 500 }}
         >
-          Fermer
+          {pending.length} projet{pending.length !== 1 ? "s" : ""} sélectionné
+          {pending.length !== 1 ? "s" : ""}
+        </Box>
+        <Box sx={{ display: "flex", gap: "8px" }}>
+          <Button
+            variant="outlined"
+            size="small"
+            className="btn-cancel"
+            sx={{ textTransform: "none" }}
+            onClick={() => setPending([])}
+          >
+            Réinitialiser
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ textTransform: "none" }}
+            onClick={handleApply}
+          >
+            Appliquer les filtres
+          </Button>
         </Box>
       </Box>
     </Dialog>
@@ -568,7 +583,8 @@ function TicketCard({
         userSelect: "none",
         opacity: isUpdating ? 0.5 : 1,
         transform: isDragging ? "rotate(1.2deg) scale(1.01)" : "none",
-        transition: "opacity 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.12s",
+        transition:
+          "opacity 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.12s",
         "&:hover": !isDragging
           ? {
               borderColor: "var(--border2)",
@@ -628,7 +644,9 @@ function TicketCard({
             overflow: "hidden",
           }}
         >
-          <FolderOutlined sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }} />
+          <FolderOutlined
+            sx={{ fontSize: 10, color: "var(--muted2)", flexShrink: 0 }}
+          />
           <Box
             component="span"
             sx={{
@@ -647,7 +665,15 @@ function TicketCard({
       {/* Row 4: footer */}
       <Box sx={{ display: "flex", alignItems: "center" }}>
         {/* Left: ref + jira */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: "5px", flex: 1, minWidth: 0 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
           <Box
             component="span"
             sx={{
@@ -661,11 +687,17 @@ function TicketCard({
           >
             {ticket.reference}
           </Box>
-
         </Box>
 
         {/* Right: comments + assignee */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: "7px", flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "7px",
+            flexShrink: 0,
+          }}
+        >
           {ticket.commentCount > 0 && (
             <Tooltip
               title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}
@@ -734,13 +766,44 @@ function SkeletonCard() {
       }}
     >
       <Box sx={{ display: "flex", gap: "6px", mb: "8px" }}>
-        <Box sx={{ width: 52, height: 16, borderRadius: 4, background: "var(--s2)" }} />
+        <Box
+          sx={{
+            width: 52,
+            height: 16,
+            borderRadius: 4,
+            background: "var(--s2)",
+          }}
+        />
       </Box>
-      <Box sx={{ height: 12, borderRadius: 4, background: "var(--s2)", mb: "6px" }} />
-      <Box sx={{ height: 12, borderRadius: 4, background: "var(--s2)", width: "70%", mb: "9px" }} />
+      <Box
+        sx={{ height: 12, borderRadius: 4, background: "var(--s2)", mb: "6px" }}
+      />
+      <Box
+        sx={{
+          height: 12,
+          borderRadius: 4,
+          background: "var(--s2)",
+          width: "70%",
+          mb: "9px",
+        }}
+      />
       <Box sx={{ display: "flex", gap: "6px" }}>
-        <Box sx={{ width: 6, height: 6, borderRadius: "50%", background: "var(--s2)" }} />
-        <Box sx={{ width: 48, height: 10, borderRadius: 4, background: "var(--s2)" }} />
+        <Box
+          sx={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--s2)",
+          }}
+        />
+        <Box
+          sx={{
+            width: 48,
+            height: 10,
+            borderRadius: 4,
+            background: "var(--s2)",
+          }}
+        />
       </Box>
     </Box>
   );
@@ -759,13 +822,28 @@ export const KanbanPage: React.FC = () => {
   const [filteredProjects, setFilteredProjects] = useState<string[]>([]);
   const wasDragging = useRef(false);
 
-  const [allProjects, setAllProjects] = useState<string[]>([]);
+  const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
 
   useEffect(() => {
     getProjects()
-      .then((projects) => setAllProjects(projects.map((p) => p.name).sort()))
+      .then((projects) =>
+        setAllProjectNames([...new Set(projects.map((p) => p.name))].sort()),
+      )
       .catch(() => {});
   }, []);
+
+  const allProjects = useMemo<ProjectInfo[]>(() => {
+    const counts: Record<string, number> = {};
+    for (const colId of columnOrder) {
+      for (const ticket of columns[colId]) {
+        counts[ticket.project] = (counts[ticket.project] ?? 0) + 1;
+      }
+    }
+    return allProjectNames.map((name) => ({
+      name,
+      ticketCount: counts[name] ?? 0,
+    }));
+  }, [allProjectNames, columns]);
 
   const activeFilterCount = filteredProjects.length;
 
@@ -1013,8 +1091,7 @@ export const KanbanPage: React.FC = () => {
           onClose={() => setFilterOpen(false)}
           allProjects={allProjects}
           selected={filteredProjects}
-          onToggle={(p) => setFilteredProjects((prev) => toggleItem(prev, p))}
-          onClear={() => setFilteredProjects([])}
+          onApply={setFilteredProjects}
         />
 
         {/* ── Board ──────────────────────────────────────────────────── */}
@@ -1064,13 +1141,41 @@ export const KanbanPage: React.FC = () => {
                         justifyContent: "space-between",
                       }}
                     >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        <Box sx={{ width: 7, height: 7, borderRadius: "50%", background: meta.color }} />
-                        <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "7px",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            background: meta.color,
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            color: "var(--text)",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                          }}
+                        >
                           {meta.label}
                         </Box>
                       </Box>
-                      <Box sx={{ width: 22, height: 20, borderRadius: 99, background: "var(--s2)" }} />
+                      <Box
+                        sx={{
+                          width: 22,
+                          height: 20,
+                          borderRadius: 99,
+                          background: "var(--s2)",
+                        }}
+                      />
                     </Box>
 
                     {/* Skeleton cards */}
@@ -1228,7 +1333,8 @@ export const KanbanPage: React.FC = () => {
                                 : "var(--s1)",
                               border: `1px solid ${snapshot.isDraggingOver ? meta.border : "var(--border)"}`,
                               borderRadius: "var(--r)",
-                              transition: "background 0.15s, border-color 0.15s",
+                              transition:
+                                "background 0.15s, border-color 0.15s",
                             }}
                           >
                             {colTickets.map((ticket, index) => (
@@ -1269,11 +1375,37 @@ export const KanbanPage: React.FC = () => {
                                   opacity: 0.2,
                                 }}
                               >
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M3 9.5h18v9A2 2 0 0 1 19 20.5H5A2 2 0 0 1 3 18.5V9.5z" stroke="var(--muted2)" strokeWidth="1.5" strokeLinejoin="round"/>
-                                  <path d="M3 9.5l2.5-6h13l2.5 6" stroke="var(--muted2)" strokeWidth="1.5" strokeLinejoin="round"/>
-                                  <path d="M12 3.5v6" stroke="var(--muted2)" strokeWidth="1.5" strokeLinecap="round"/>
-                                  <path d="M8 9.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="var(--muted2)" strokeWidth="1.5" strokeLinecap="round"/>
+                                <svg
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M3 9.5h18v9A2 2 0 0 1 19 20.5H5A2 2 0 0 1 3 18.5V9.5z"
+                                    stroke="var(--muted2)"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M3 9.5l2.5-6h13l2.5 6"
+                                    stroke="var(--muted2)"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M12 3.5v6"
+                                    stroke="var(--muted2)"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                  />
+                                  <path
+                                    d="M8 9.5c0 2.2 1.8 4 4 4s4-1.8 4-4"
+                                    stroke="var(--muted2)"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                  />
                                 </svg>
                               </Box>
                             )}
