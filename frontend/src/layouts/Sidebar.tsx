@@ -328,28 +328,7 @@ export const Sidebar: React.FC = () => {
             gap: '8px',
           }}
         >
-          {/* Avatar */}
-          <Box
-            component="button"
-            onClick={() => navigate('/profile')}
-            sx={{
-              all: 'unset',
-              cursor: 'pointer',
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: 'var(--s3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--muted)',
-              flexShrink: 0,
-            }}
-          >
-            <PersonOutlined sx={{ fontSize: 18 }} />
-          </Box>
-
-          {/* Nom + email */}
+          {/* Profil (avatar + nom) */}
           <Box
             component="button"
             onClick={() => navigate('/profile')}
@@ -357,11 +336,30 @@ export const Sidebar: React.FC = () => {
               all: 'unset',
               cursor: 'pointer',
               flex: 1,
+              minWidth: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               overflow: 'hidden',
               transition: 'opacity 0.12s',
               '&:hover': { opacity: 0.7 },
             }}
           >
+            <Box
+              sx={{
+                width: 30,
+                height: 30,
+                borderRadius: '50%',
+                background: 'var(--s3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--muted)',
+                flexShrink: 0,
+              }}
+            >
+              <PersonOutlined sx={{ fontSize: 18 }} />
+            </Box>
             <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.firstName} {user?.lastName}
             </Box>

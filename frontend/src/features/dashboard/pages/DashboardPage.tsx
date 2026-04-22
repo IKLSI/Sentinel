@@ -188,10 +188,11 @@ const PanelHead: React.FC<{
   title: string;
   action?: React.ReactNode;
   badge?: React.ReactNode;
-}> = ({ title, action, badge }) => (
+  compact?: boolean;
+}> = ({ title, action, badge, compact = false }) => (
   <Box sx={{
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    px: "16px", py: "12px", minHeight: "46px",
+    px: "16px", py: compact ? "6px" : "12px", minHeight: compact ? "34px" : "46px",
     flexShrink: 0, gap: "8px",
     background: "linear-gradient(180deg, var(--s2) 0%, transparent 100%)",
   }}>
@@ -231,6 +232,7 @@ export const DashboardPage: React.FC = () => {
   const [stats, setStats]               = useState<StatsData>(EMPTY_STATS);
   const [techProjects, setTechProjects] = useState<ProjectDto[]>([]);
   const [loaded, setLoaded]             = useState(false);
+  const urgentTicketsPreview = stats.urgentTickets.slice(0, 5);
 
   useEffect(() => {
     Promise.all([
@@ -279,13 +281,14 @@ export const DashboardPage: React.FC = () => {
           <PanelHead
             title="Tickets urgents"
             action={<ViewBtn onClick={() => navigate("/tickets")} />}
+            compact
           />
-          <Box sx={{ p: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {stats.urgentTickets.length === 0 ? (
+          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "3px", flex: 1, overflowY: "auto", minHeight: 0 }}>
+            {urgentTicketsPreview.length === 0 ? (
               <EmptyState text="Aucun ticket critique ou élevé en cours." />
             ) : (
-              stats.urgentTickets.map((t) => (
-                <TicketRow key={t.id} ticket={t} onClick={() => navigate(`/tickets/${t.id}`)} />
+              urgentTicketsPreview.map((t) => (
+                <TicketRow key={t.id} ticket={t} compact onClick={() => navigate(`/tickets/${t.id}`)} />
               ))
             )}
           </Box>
@@ -294,8 +297,9 @@ export const DashboardPage: React.FC = () => {
         <Panel delay={300}>
           <PanelHead
             title="Activité récente"
+            compact
           />
-          <Box sx={{ p: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
+          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
             {stats.recentActivity.length === 0 ? (
               <EmptyState text="Aucune activité récente." />
             ) : (
@@ -325,7 +329,7 @@ export const DashboardPage: React.FC = () => {
             badge={undefined}
             action={<ViewBtn onClick={() => navigate("/projects")} />}
           />
-          <Box sx={{ p: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
+          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
             {techProjects.length === 0 ? (
               <EmptyState text="Aucun projet configuré." />
             ) : (
@@ -443,7 +447,7 @@ const KpiCard: React.FC<{
 
 // ── Ticket Row ─────────────────────────────────────────────────────────
 
-const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ticket, onClick }) => {
+const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void; compact?: boolean }> = ({ ticket, onClick, compact = false }) => {
   const key = ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1);
   const p   = PRIORITY_CONFIG[key] ?? PRIORITY_CONFIG.Medium;
   return (
@@ -451,9 +455,9 @@ const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ti
       component="button"
       onClick={onClick}
       sx={{
-        all: "unset", display: "flex", alignItems: "center", gap: "10px",
+        all: "unset", display: "flex", alignItems: "center", gap: compact ? "8px" : "10px",
         background: "var(--s2)", border: "1px solid var(--border)",
-        borderRadius: "8px", p: "6px 12px", cursor: "pointer", flex: 1,
+        borderRadius: "8px", p: compact ? "4px 10px" : "6px 12px", cursor: "pointer", flex: 1,
         transition: "border-color 0.15s, background 0.15s, transform 0.15s",
         "&:hover": {
           borderColor: `color-mix(in srgb, ${p.color} 35%, transparent)`,
@@ -494,7 +498,7 @@ const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void }> = ({ ti
       </Box>
 
       {/* Right */}
-      <ChevronRightOutlined sx={{ fontSize: 13, color: "var(--muted)", opacity: 0.35, flexShrink: 0 }} />
+      <ChevronRightOutlined sx={{ fontSize: compact ? 12 : 13, color: "var(--muted)", opacity: 0.35, flexShrink: 0 }} />
     </Box>
   );
 };

@@ -487,10 +487,24 @@ const ProjectRow: React.FC<{
       }}
     >
       {/* Nom */}
-      <Box component="td" sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
+      <Box
+        component="td"
+        sx={{
+          padding: "10px 14px",
+          borderBottom: "1px solid var(--border)",
+          fontSize: "12.5px",
+          maxWidth: "260px",
+        }}
+      >
         <Box sx={{
-          fontWeight: 600, color: "var(--text)", lineHeight: 1.3, fontSize: "12.5px",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontFamily: "inherit",
+          fontWeight: 500,
+          color: "var(--text)",
+          lineHeight: 1.3,
+          letterSpacing: "-0.01em",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
         }}>
           {project.name}
         </Box>
