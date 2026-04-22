@@ -251,15 +251,17 @@ function ProjectPicker({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: "var(--s1)",
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          maxHeight: "600px",
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: "var(--s1)",
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            maxHeight: "600px",
+          },
         },
       }}
     >

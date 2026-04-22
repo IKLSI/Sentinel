@@ -26,7 +26,7 @@ export const AppModal: React.FC<AppModalProps> = ({
     onClose={onClose}
     maxWidth={maxWidth}
     fullWidth
-    PaperProps={{ sx: { bgcolor: 'var(--s1)', border: '1px solid', borderColor: 'divider' } }}
+    slotProps={{ paper: { sx: { bgcolor: 'var(--s1)', border: '1px solid', borderColor: 'divider' } } }}
   >
     <DialogTitle sx={{
       fontSize: '14px',
