@@ -196,7 +196,7 @@ public class TechHealthService
 
             if (newVulns.Count > 0)
             {
-                await _context.Vulnerabilities.AddRangeAsync(newVulns);
+                foreach (Vulnerability v in newVulns) dependency.Vulnerabilities.Add(v);
                 dependency.Status = DependencyStatus.Vulnerable;
             }
         }

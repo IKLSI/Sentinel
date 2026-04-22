@@ -166,7 +166,7 @@ const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
     <TR>
       <TD>
         <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: cfg.color }}>
-          {vuln.cvssScore.toFixed(1)}
+          {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : "—"}
         </Box>
       </TD>
       <TD>{vuln.description}</TD>

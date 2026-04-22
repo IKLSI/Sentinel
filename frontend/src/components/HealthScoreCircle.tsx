@@ -13,6 +13,7 @@ const gradeColor: Record<HealthGrade, string> = {
   B: 'var(--cyan)',
   C: 'var(--yellow)',
   D: 'var(--orange)',
+  E: '#f97316',
   F: 'var(--red)',
 }
 

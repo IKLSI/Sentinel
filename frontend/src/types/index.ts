@@ -69,7 +69,7 @@ export interface Ticket {
   resolvedAt?: string
 }
 
-export type HealthGrade = 'A' | 'B' | 'C' | 'D' | 'F'
+export type HealthGrade = 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 
 export interface PaginatedResponse<T> {
   items: T[]
