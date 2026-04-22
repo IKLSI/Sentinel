@@ -11,7 +11,7 @@ jobs:
     name: Frontend — lint & build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: pnpm/action-setup@v4
         with:
@@ -36,12 +36,12 @@ jobs:
     name: Backend — build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-          include-prerelease: true
+          dotnet-quality: preview
 
       - name: Restore
         run: dotnet restore Sentinel.sln

@@ -203,7 +203,7 @@ export const SettingsPage: React.FC = () => {
     const obs = new ResizeObserver(measure)
     obs.observe(el)
     return () => obs.disconnect()
-  }, [])
+  }, [showToast])
 
   const loadMembers = useCallback(async () => {
     setLoadingMembers(true)
@@ -224,7 +224,7 @@ export const SettingsPage: React.FC = () => {
       })
       .catch(() => showToast('Impossible de charger les paramètres', 'error'))
       .finally(() => { setLoadingOrg(false); setLoadingSla(false) })
-  }, [])
+  }, [showToast])
 
   useEffect(() => { setPage(1) }, [memberSearch, memberRoleFilter])
 

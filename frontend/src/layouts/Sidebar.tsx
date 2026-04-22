@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined'
 import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined'
@@ -100,17 +100,21 @@ export const Sidebar: React.FC = () => {
 
   const isAdmin = user?.role === 'Admin'
   const isDeveloper = user?.role === 'Developer'
-  const filteredSections = navSections
-    .map((section) => {
-      if (section.title === 'Temps & Facturation') {
-        const items = isDeveloper
-          ? section.items.filter((i) => i.to !== '/invoices')
-          : section.items
-        return { ...section, title: section.title, items }
-      }
-      return section
-    })
-    .filter((s) => s.items.length > 0)
+  const filteredSections = useMemo(
+    () =>
+      navSections
+        .map((section) => {
+          if (section.title === 'Temps & Facturation') {
+            const items = isDeveloper
+              ? section.items.filter((i) => i.to !== '/invoices')
+              : section.items
+            return { ...section, title: section.title, items }
+          }
+          return section
+        })
+        .filter((s) => s.items.length > 0),
+    [isDeveloper],
+  )
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {}
@@ -122,7 +126,7 @@ export const Sidebar: React.FC = () => {
 
   useEffect(() => {
     if (isMobile) close()
-  }, [location.pathname, isMobile])
+  }, [location.pathname, isMobile, close])
 
   useEffect(() => {
     if (isMobile && isOpen) {
@@ -139,7 +143,7 @@ export const Sidebar: React.FC = () => {
         setOpenGroups((prev) => prev[s.title] ? prev : { ...prev, [s.title]: true })
       }
     }
-  }, [location.pathname])
+  }, [location.pathname, filteredSections])
 
   if (isMobile && !isOpen) return null
 

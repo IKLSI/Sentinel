@@ -366,7 +366,7 @@ export const TicketsPage: React.FC = () => {
     fetchTickets(params).catch(() => {
       showToast('Erreur lors du chargement des tickets', 'error');
     });
-  }, [page, pageSize, debouncedSearch, filters]);
+  }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast]);
 
   useEffect(() => {
     if (tickets?.items !== undefined) {

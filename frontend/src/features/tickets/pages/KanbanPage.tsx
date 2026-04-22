@@ -222,7 +222,7 @@ function ProjectPicker({
       setSearch("");
       setTimeout(() => inputRef.current?.focus(), 80);
     }
-  }, [open]);
+  }, [open, selected]);
 
   const visible = allProjects.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()),

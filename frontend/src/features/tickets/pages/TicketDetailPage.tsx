@@ -210,7 +210,7 @@ export const TicketDetailPage: React.FC = () => {
         showToast("Ticket introuvable", "error");
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, showToast]);
 
   const handleEditComment = async () => {
     if (!ticket || !editCommentTarget || !editCommentValue.trim()) return;
