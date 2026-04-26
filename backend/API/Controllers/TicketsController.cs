@@ -97,8 +97,8 @@ public class TicketsController : BaseController
         });
     }
 
-    [HttpGet("export/csv")]
-    public async Task<IActionResult> ExportCsv(
+    [HttpGet("export/excel")]
+    public async Task<IActionResult> ExportExcel(
         [FromQuery] string? priority,
         [FromQuery] string? status,
         [FromQuery] Guid? assignedTo,
@@ -109,10 +109,10 @@ public class TicketsController : BaseController
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
-        byte[] bytes = await _exportService.ExportTicketsCsvAsync(
+        byte[] bytes = await _exportService.ExportTicketsExcelAsync(
             organizationId.Value, status, priority, assignedTo, type, slaBreached, search);
-        string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.csv";
-        return File(bytes, "text/csv; charset=utf-8", filename);
+        string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }
 
     [HttpPost]

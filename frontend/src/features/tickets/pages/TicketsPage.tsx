@@ -25,7 +25,7 @@ import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import { useToast } from "../../../hooks/useToast";
 import { useTickets } from "../hooks/useTickets";
-import { deleteTicket, createTicket, updateTicket, exportTicketsCsv } from "../api/tickets";
+import { deleteTicket, createTicket, updateTicket, exportTicketsExcel } from "../api/tickets";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
 import { getUsers } from "../../users/api/users";
 import {
@@ -235,7 +235,7 @@ export const TicketsPage: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportTicketsCsv({
+      await exportTicketsExcel({
         priority: filters.priority || undefined,
         status: filters.status || undefined,
         type: filters.type || undefined,
@@ -509,6 +509,22 @@ export const TicketsPage: React.FC = () => {
           <Box sx={{ flex: 1 }} />
 
           <Button
+            variant="contained"
+            size="small"
+            disableElevation
+            sx={{
+              display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+              textTransform: "none",
+              "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
+              "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
+            }}
+            onClick={openCreateModal}
+          >
+            <AddOutlined sx={{ fontSize: 14 }} />
+            Nouveau ticket
+          </Button>
+
+          <Button
             variant="outlined"
             size="small"
             disabled={exporting}
@@ -518,32 +534,19 @@ export const TicketsPage: React.FC = () => {
               gap: "6px",
               flexShrink: 0,
               textTransform: "none",
-              background: "var(--accent-subtle)",
-              borderColor: "var(--accent-border)",
-              color: "var(--accent)",
+              background: "#6366f1",
+              borderColor: "#6366f1",
+              color: "#fff",
               "&:hover": {
-                background: "var(--accent-border)",
-                borderColor: "var(--accent-border)",
-                color: "var(--accent)",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 20px rgba(99,102,241,0.15)",
+                background: "#5254cc",
+                borderColor: "#5254cc",
+                color: "#fff",
               },
-              "&:active": { transform: "translateY(0)", boxShadow: "none" },
             }}
             onClick={handleExport}
           >
             {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
             Exporter
-          </Button>
-
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
-            onClick={openCreateModal}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-            Nouveau ticket
           </Button>
         </Box>
 

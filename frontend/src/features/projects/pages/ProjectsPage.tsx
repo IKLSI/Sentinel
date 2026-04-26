@@ -304,7 +304,11 @@ export const ProjectsPage: React.FC = () => {
           </Box>
           <Button
             variant="contained" size="small"
-            sx={{ textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+            sx={{
+              textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+              "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
+              "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
+            }}
             onClick={openModal}
           >
             <AddOutlined sx={{ fontSize: 14 }} />

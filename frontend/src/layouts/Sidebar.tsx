@@ -272,7 +272,7 @@ export const Sidebar: React.FC = () => {
                                 mx: '4px',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                background: active ? 'var(--accent-subtle)' : 'transparent',
+                                background: 'transparent',
                                 '&:hover .nav-label': !active ? { color: 'var(--text)' } : {},
                               }}
                             >

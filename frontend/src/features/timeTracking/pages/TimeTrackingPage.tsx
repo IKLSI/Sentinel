@@ -11,7 +11,7 @@ import {
   createTimeEntry,
   updateTimeEntry,
   deleteTimeEntry,
-  exportTimeEntriesCsv,
+  exportTimeEntriesExcel,
   TimeEntryDto,
   CreateTimeEntryDto,
 } from "../api/timeEntries";
@@ -141,7 +141,7 @@ export const TimeTrackingPage: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportTimeEntriesCsv({
+      await exportTimeEntriesExcel({
         from: format(weekStart, "yyyy-MM-dd"),
         to: format(weekEnd, "yyyy-MM-dd"),
       });
@@ -511,6 +511,23 @@ export const TimeTrackingPage: React.FC = () => {
             <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Box
                 component="button"
+                onClick={() => openCreate()}
+                title="Ajouter une saisie"
+                sx={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: "24px", height: "24px",
+                  background: "transparent", border: "1px solid transparent",
+                  borderRadius: "6px", cursor: "pointer",
+                  color: "var(--muted2)",
+                  transition: "background 0.12s, color 0.12s, border-color 0.12s",
+                  "&:hover": { background: "var(--s3)", color: "var(--text)", borderColor: "var(--border)" },
+                }}
+              >
+                <AddOutlined sx={{ fontSize: 14 }} />
+              </Box>
+
+              <Box
+                component="button"
                 onClick={handleExport}
                 disabled={exporting}
                 title="Exporter en CSV"
@@ -525,26 +542,6 @@ export const TimeTrackingPage: React.FC = () => {
                 }}
               >
                 {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
-              </Box>
-
-              <Box
-                component="button"
-                onClick={() => openCreate()}
-                sx={{
-                  display: "flex", alignItems: "center", gap: "4px",
-                  background: "var(--accent-subtle)",
-                  border: "1px solid var(--accent-border)",
-                  borderRadius: "6px",
-                  px: "8px", height: "24px",
-                  cursor: "pointer", color: "var(--accent)",
-                  fontSize: "11px", fontWeight: 600,
-                  fontFamily: "var(--font-ui)",
-                  transition: "background 0.12s",
-                  "&:hover": { background: "rgba(99,102,241,0.15)" },
-                }}
-              >
-                <AddOutlined sx={{ fontSize: 12 }} />
-                Ajouter
               </Box>
             </Box>
           </Box>

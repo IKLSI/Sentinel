@@ -1,6 +1,6 @@
 import apiClient from '../../../services/client'
 import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TicketStatus, User } from '../../../types'
-import { downloadCsv } from '../../../utils/download'
+import { downloadExcel } from '../../../utils/download'
 
 function createPartialUser(name: string, id: string, createdAt: string): User {
   const [firstName, ...rest] = name.split(' ')
@@ -132,7 +132,7 @@ export const changeStatus = async (ticketId: string, status: TicketStatus): Prom
   return mapTicketDto(response.data)
 }
 
-export const exportTicketsCsv = async (params?: {
+export const exportTicketsExcel = async (params?: {
   status?: string
   priority?: string
   assignedTo?: string
@@ -141,6 +141,6 @@ export const exportTicketsCsv = async (params?: {
   search?: string
 }): Promise<void> => {
   const date = new Date().toISOString().slice(0, 10)
-  await downloadCsv('/api/tickets/export/csv', `tickets-${date}.csv`, params as Record<string, unknown>)
+  await downloadExcel('/api/tickets/export/excel', `tickets-${date}.xlsx`, params as Record<string, unknown>)
 }
 

@@ -1,5 +1,5 @@
 import apiClient from '../../../services/client'
-import { downloadCsv } from '../../../utils/download'
+import { downloadExcel } from '../../../utils/download'
 
 export interface TimeEntryDto {
   id: string
@@ -50,8 +50,8 @@ export const deleteTimeEntry = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/time-entries/${id}`)
 }
 
-export const exportTimeEntriesCsv = async (params?: { from?: string; to?: string }): Promise<void> => {
+export const exportTimeEntriesExcel = async (params?: { from?: string; to?: string }): Promise<void> => {
   const from = params?.from ?? 'debut'
   const to = params?.to ?? 'fin'
-  await downloadCsv('/api/time-entries/export/csv', `temps-${from}-${to}.csv`, params as Record<string, unknown>)
+  await downloadExcel('/api/time-entries/export/excel', `temps-${from}-${to}.xlsx`, params as Record<string, unknown>)
 }

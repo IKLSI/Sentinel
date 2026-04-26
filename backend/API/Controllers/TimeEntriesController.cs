@@ -38,8 +38,8 @@ public class TimeEntriesController : BaseController
         return Ok(entries);
     }
 
-    [HttpGet("export/csv")]
-    public async Task<IActionResult> ExportCsv(
+    [HttpGet("export/excel")]
+    public async Task<IActionResult> ExportExcel(
         [FromQuery] Guid? userId,
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to)
@@ -49,10 +49,10 @@ public class TimeEntriesController : BaseController
 
         Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
 
-        byte[] bytes = await _exportService.ExportTimeEntriesCsvAsync(organizationId.Value, filterUserId, from, to);
+        byte[] bytes = await _exportService.ExportTimeEntriesExcelAsync(organizationId.Value, filterUserId, from, to);
         string fromStr = from?.ToString("yyyy-MM-dd") ?? "debut";
         string toStr = to?.ToString("yyyy-MM-dd") ?? "fin";
-        return File(bytes, "text/csv; charset=utf-8", $"temps-{fromStr}-{toStr}.csv");
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"temps-{fromStr}-{toStr}.xlsx");
     }
 
     [HttpPost]

@@ -19,7 +19,7 @@ import {
   updateInvoiceStatus,
   deleteInvoice,
   generateInvoice,
-  exportInvoicesCsv,
+  exportInvoicesExcel,
   InvoiceDto,
 } from "../api/invoices";
 import { getProjects, ProjectDto } from "../../techHealth/api/projects";
@@ -387,7 +387,7 @@ export const InvoicesPage: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportInvoicesCsv(filters.status ? { status: filters.status } : undefined);
+      await exportInvoicesExcel(filters.status ? { status: filters.status } : undefined);
     } catch {
       showToast("Impossible d'exporter les factures", "error");
     } finally {
@@ -714,6 +714,22 @@ export const InvoicesPage: React.FC = () => {
           <Box sx={{ flex: 1 }} />
 
           <Button
+            variant="contained"
+            size="small"
+            disableElevation
+            sx={{
+              display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+              textTransform: "none",
+              "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
+              "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
+            }}
+            onClick={openNewModal}
+          >
+            <AddOutlined sx={{ fontSize: 14 }} />
+            Nouvelle facture
+          </Button>
+
+          <Button
             variant="outlined"
             size="small"
             disabled={exporting}
@@ -723,38 +739,19 @@ export const InvoicesPage: React.FC = () => {
               gap: "6px",
               flexShrink: 0,
               textTransform: "none",
-              background: "var(--accent-subtle)",
-              borderColor: "var(--accent-border)",
-              color: "var(--accent)",
+              background: "#6366f1",
+              borderColor: "#6366f1",
+              color: "#fff",
               "&:hover": {
-                background: "var(--accent-border)",
-                borderColor: "var(--accent-border)",
-                color: "var(--accent)",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 20px rgba(99,102,241,0.15)",
+                background: "#5254cc",
+                borderColor: "#5254cc",
+                color: "#fff",
               },
-              "&:active": { transform: "translateY(0)", boxShadow: "none" },
             }}
             onClick={handleExport}
           >
             {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
             Exporter
-          </Button>
-
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              flexShrink: 0,
-              textTransform: "none",
-            }}
-            onClick={openNewModal}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-            Nouvelle facture
           </Button>
         </Box>
 

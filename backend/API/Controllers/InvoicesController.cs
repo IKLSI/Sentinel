@@ -140,15 +140,15 @@ public class InvoicesController : BaseController
         return Ok(MapToDto(result));
     }
 
-    [HttpGet("export/csv")]
-    public async Task<IActionResult> ExportCsv([FromQuery] string? status, [FromQuery] string? period)
+    [HttpGet("export/excel")]
+    public async Task<IActionResult> ExportExcel([FromQuery] string? status, [FromQuery] string? period)
     {
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
-        byte[] bytes = await _exportService.ExportInvoicesCsvAsync(organizationId.Value, status, period);
-        string filename = string.IsNullOrEmpty(period) ? "factures.csv" : $"factures-{period}.csv";
-        return File(bytes, "text/csv; charset=utf-8", filename);
+        byte[] bytes = await _exportService.ExportInvoicesExcelAsync(organizationId.Value, status, period);
+        string filename = string.IsNullOrEmpty(period) ? "factures.xlsx" : $"factures-{period}.xlsx";
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }
 
     [HttpGet("{id:guid}/pdf")]

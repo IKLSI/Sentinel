@@ -1,5 +1,5 @@
 import apiClient from '../../../services/client'
-import { downloadCsv } from '../../../utils/download'
+import { downloadExcel } from '../../../utils/download'
 
 export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid'
 
@@ -74,7 +74,7 @@ export const openInvoicePdf = async (id: string): Promise<void> => {
   window.open(url, '_blank')
 }
 
-export const exportInvoicesCsv = async (params?: { status?: string; period?: string }): Promise<void> => {
-  const filename = params?.period ? `factures-${params.period}.csv` : 'factures.csv'
-  await downloadCsv('/api/invoices/export/csv', filename, params as Record<string, unknown>)
+export const exportInvoicesExcel = async (params?: { status?: string; period?: string }): Promise<void> => {
+  const filename = params?.period ? `factures-${params.period}.xlsx` : 'factures.xlsx'
+  await downloadExcel('/api/invoices/export/excel', filename, params as Record<string, unknown>)
 }
