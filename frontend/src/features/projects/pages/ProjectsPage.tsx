@@ -280,8 +280,8 @@ const data = await getProjects();
               variant="contained" size="small"
               sx={{
                 textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
-                "&.MuiButton-root": { background: "#4f46e5", boxShadow: "none", height: "32px", px: "14px" },
-                "&.MuiButton-root:hover": { background: "#4338ca", boxShadow: "none", transform: "none" },
+                "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none", height: "32px", px: "14px" },
+                "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
               }}
               onClick={openModal}
             >
@@ -293,9 +293,8 @@ const data = await getProjects();
               sx={{
                 display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
                 textTransform: "none",
-                background: "#8b84e3", borderColor: "#8b84e3", color: "#fff",
-                height: "32px", px: "14px",
-                "&:hover": { background: "#786fd8", borderColor: "#786fd8", color: "#fff" },
+                background: "#6366f1", borderColor: "#6366f1", color: "#fff",
+                "&:hover": { background: "#5254cc", borderColor: "#5254cc", color: "#fff" },
               }}
               onClick={handleExport}
             >
