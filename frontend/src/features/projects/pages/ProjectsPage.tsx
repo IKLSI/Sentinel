@@ -8,7 +8,6 @@ import { RowActions } from "../../../components/RowActions";
 import { useToast } from "../../../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -275,17 +274,6 @@ const data = await getProjects();
                 }}
               />
             </Box>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
-                height: "32px", px: "14px",
-              }}
-            >
-              <TuneOutlined sx={{ fontSize: 15 }} />
-              Filtres
-            </Button>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Button
