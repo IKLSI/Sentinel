@@ -32,6 +32,7 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import LockOutlined from "@mui/icons-material/LockOutlined";
 
 type KanbanType =
   | "bug"
@@ -56,6 +57,7 @@ interface KanbanTicket {
   assigneeName?: string;
   slaDeadline?: string;
   slaBreached: boolean;
+  isInternal: boolean;
   commentCount: number;
 }
 
@@ -154,6 +156,7 @@ function ticketToKanban(t: Ticket): KanbanTicket {
     assigneeName: a ? `${a.firstName} ${a.lastName}` : undefined,
     slaDeadline: t.slaDeadline,
     slaBreached: t.slaBreached,
+    isInternal: t.isInternal,
     commentCount: t.comments.length,
   };
 }
@@ -700,6 +703,12 @@ function TicketCard({
             flexShrink: 0,
           }}
         >
+          {ticket.isInternal && (
+            <Tooltip title="Ticket interne" placement="top" arrow>
+              <LockOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
+            </Tooltip>
+          )}
+
           {ticket.commentCount > 0 && (
             <Tooltip
               title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}

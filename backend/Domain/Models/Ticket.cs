@@ -44,6 +44,7 @@ public class Ticket
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SlaDeadline { get; set; }
     public bool SlaBreached { get; set; } = false;
+    public bool IsInternal { get; set; } = false;
     public string Tags { get; set; } = "[]";
     public DateTime? SlaWarningNotifiedAt { get; set; }
     public Organization Organization { get; set; } = null!;

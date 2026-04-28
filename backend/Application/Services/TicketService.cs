@@ -44,6 +44,7 @@ public class TicketService
             CreatedById = createdById,
             SlaDeadline = slaDeadline,
             Tags = JsonSerializer.Serialize(dto.Tags),
+            IsInternal = dto.IsInternal,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -110,6 +111,12 @@ public class TicketService
             string newTagsJson = JsonSerializer.Serialize(dto.Tags);
             changes.Add(CreateHistory(ticketId, userId, "Tags", ticket.Tags, newTagsJson));
             ticket.Tags = newTagsJson;
+        }
+
+        if (dto.IsInternal.HasValue && dto.IsInternal.Value != ticket.IsInternal)
+        {
+            changes.Add(CreateHistory(ticketId, userId, "IsInternal", ticket.IsInternal.ToString(), dto.IsInternal.Value.ToString()));
+            ticket.IsInternal = dto.IsInternal.Value;
         }
 
         ticket.UpdatedAt = DateTime.UtcNow;
@@ -217,6 +224,7 @@ public class TicketService
             UpdatedAt = ticket.UpdatedAt,
             SlaDeadline = ticket.SlaDeadline,
             SlaBreached = ticket.SlaBreached,
+            IsInternal = ticket.IsInternal,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto

@@ -268,6 +268,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 

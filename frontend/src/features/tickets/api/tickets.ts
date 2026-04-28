@@ -35,6 +35,7 @@ interface TicketDto {
   updatedAt: string
   slaDeadline?: string
   slaBreached: boolean
+  isInternal: boolean
   tags: string[]
   comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }[]
   history: { id: string; userId: string; userName: string; field: string; oldValue?: string; newValue?: string; createdAt: string }[]
@@ -65,6 +66,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
     status: dto.status as TicketStatus,
     slaDeadline: dto.slaDeadline,
     slaBreached: dto.slaBreached,
+    isInternal: dto.isInternal ?? false,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({

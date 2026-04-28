@@ -60,6 +60,7 @@ export interface Ticket {
   status: TicketStatus
   slaDeadline?: string
   slaBreached: boolean
+  isInternal: boolean
   estimatedHours?: number
   timeSpentMinutes?: number
   comments: TicketComment[]

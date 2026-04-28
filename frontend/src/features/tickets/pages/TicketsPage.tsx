@@ -21,6 +21,8 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
+import LockOutlined from "@mui/icons-material/LockOutlined";
+import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
 import { useToast } from "../../../hooks/useToast";
 import { useTickets } from "../hooks/useTickets";
 import { deleteTicket, createTicket, updateTicket, exportTicketsExcel } from "../api/tickets";
@@ -42,6 +44,7 @@ interface CreateTicketPayload {
   techProjectId?: string
   assignedToId?: string
   estimatedHours?: number
+  isInternal: boolean
 }
 
 function getPageNumbers(page: number, totalPages: number): (number | "...")[] {
@@ -228,13 +231,13 @@ export const TicketsPage: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; reference: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateTicketPayload>({ title: '', description: '', priority: 'Medium', type: 'Bug' });
+  const [createForm, setCreateForm] = useState<CreateTicketPayload>({ title: '', description: '', priority: 'Medium', type: 'Bug', isInternal: false });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', techProjectId: '', assignedToId: '', estimatedMinutes: 0 });
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', techProjectId: '', assignedToId: '', estimatedMinutes: 0, isInternal: false });
   const [editSaving, setEditSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -255,7 +258,7 @@ export const TicketsPage: React.FC = () => {
   };
 
   const openCreateModal = () => {
-    setCreateForm({ title: '', description: '', priority: 'Medium', type: 'Bug' });
+    setCreateForm({ title: '', description: '', priority: 'Medium', type: 'Bug', isInternal: false });
     setCreateEstMinutes(0);
     setShowCreateModal(true);
     Promise.all([
@@ -291,6 +294,7 @@ export const TicketsPage: React.FC = () => {
       techProjectId: ticket.projectId ?? '',
       assignedToId: ticket.assignee?.id ?? '',
       estimatedMinutes: ticket.estimatedHours != null ? Math.round(ticket.estimatedHours * 60) : 0,
+      isInternal: ticket.isInternal,
     });
     setEditTarget(ticket);
     Promise.all([
@@ -306,6 +310,7 @@ export const TicketsPage: React.FC = () => {
       const payload: Record<string, unknown> = {
         title: editForm.title, description: editForm.description,
         priority: editForm.priority, type: editForm.type,
+        isInternal: editForm.isInternal,
       };
       if (editForm.techProjectId) payload.techProjectId = editForm.techProjectId;
       if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
@@ -836,6 +841,27 @@ export const TicketsPage: React.FC = () => {
               </Box>
               <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} width="100%" />
             </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Visibilité</Box>
+              <Box
+                onClick={() => setCreateForm((f) => ({ ...f, isInternal: !f.isInternal }))}
+                sx={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  px: "12px", py: "7px", borderRadius: "var(--r)",
+                  border: createForm.isInternal ? "1px solid var(--accent-border)" : "1px solid var(--border)",
+                  background: createForm.isInternal ? "var(--accent-subtle)" : "var(--s1)",
+                  cursor: "pointer", userSelect: "none", transition: "all 0.15s",
+                }}
+              >
+                {createForm.isInternal
+                  ? <LockOutlined sx={{ fontSize: 14, color: "var(--accent)" }} />
+                  : <LockOpenOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
+                }
+                <Box component="span" sx={{ fontSize: "13px", color: createForm.isInternal ? "var(--accent)" : "var(--muted)", fontWeight: createForm.isInternal ? 600 : 400 }}>
+                  {createForm.isInternal ? "Interne" : "Public"}
+                </Box>
+              </Box>
+            </Box>
           </Box>
           <Box>
             <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
@@ -903,7 +929,7 @@ export const TicketsPage: React.FC = () => {
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">— Aucun projet —</option>
+                <option value="">Aucun projet</option>
                 {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Box>
             </Box>
@@ -927,6 +953,27 @@ export const TicketsPage: React.FC = () => {
                 </Tooltip>
               </Box>
               <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} width="100%" />
+            </Box>
+            <Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Visibilité</Box>
+              <Box
+                onClick={() => setEditForm((f) => ({ ...f, isInternal: !f.isInternal }))}
+                sx={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  px: "12px", py: "7px", borderRadius: "var(--r)",
+                  border: editForm.isInternal ? "1px solid var(--accent-border)" : "1px solid var(--border)",
+                  background: editForm.isInternal ? "var(--accent-subtle)" : "var(--s1)",
+                  cursor: "pointer", userSelect: "none", transition: "all 0.15s",
+                }}
+              >
+                {editForm.isInternal
+                  ? <LockOutlined sx={{ fontSize: 14, color: "var(--accent)" }} />
+                  : <LockOpenOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
+                }
+                <Box component="span" sx={{ fontSize: "13px", color: editForm.isInternal ? "var(--accent)" : "var(--muted)", fontWeight: editForm.isInternal ? 600 : 400 }}>
+                  {editForm.isInternal ? "Interne" : "Public"}
+                </Box>
+              </Box>
             </Box>
           </Box>
           <Box>
