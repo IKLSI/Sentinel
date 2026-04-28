@@ -10,8 +10,10 @@ import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
+import KeyboardDoubleArrowLeftOutlined from '@mui/icons-material/KeyboardDoubleArrowLeftOutlined'
 import PersonOutlined from '@mui/icons-material/PersonOutlined'
 import Box from '@mui/material/Box'
+import Tooltip from '@mui/material/Tooltip'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
 import { SentinelLogo } from './SentinelLogo'
@@ -91,7 +93,9 @@ export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const { isOpen, isMobile, close } = useSidebar()
+  const { isOpen, isMobile, isCollapsed, close, toggleCollapse } = useSidebar()
+
+  const collapsed = isCollapsed && !isMobile
 
   const handleLogout = async () => {
     await logout()
@@ -161,7 +165,7 @@ export const Sidebar: React.FC = () => {
 
       <Box
         sx={{
-          width: '220px',
+          width: collapsed ? '56px' : '220px',
           flexShrink: 0,
           height: '100vh',
           background: 'var(--s1)',
@@ -174,32 +178,85 @@ export const Sidebar: React.FC = () => {
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollbarWidth: 'none',
+          transition: 'width 0.2s cubic-bezier(0.4,0,0.2,1)',
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
 
         {/* ── Logo ─────────────────────────────────────────── */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            px: '14px',
-            height: '56px',
-            flexShrink: 0,
-            borderBottom: '1px solid var(--border)',
-          }}
-        >
-          <SentinelLogo />
-          <Box>
-            <Box sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>
-              SENTINEL
+        {collapsed && !isMobile ? (
+          <Tooltip title="Développer" placement="right" arrow>
+            <Box
+              component="button"
+              onClick={toggleCollapse}
+              sx={{
+                all: 'unset',
+                cursor: 'pointer',
+                height: '56px',
+                flexShrink: 0,
+                borderBottom: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                transition: 'background 0.12s',
+                '&:hover': { background: 'var(--s3)' },
+              }}
+            >
+              <SentinelLogo />
             </Box>
-            <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '3px' }}>
-              workspace
+          </Tooltip>
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: '14px',
+              height: '56px',
+              flexShrink: 0,
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, overflow: 'hidden' }}>
+              <SentinelLogo />
+              <Box>
+                <Box sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>
+                  SENTINEL
+                </Box>
+                <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '3px' }}>
+                  workspace
+                </Box>
+              </Box>
             </Box>
+
+            {!isMobile && (
+              <Tooltip title="Réduire" placement="right" arrow>
+                <Box
+                  component="button"
+                  onClick={toggleCollapse}
+                  sx={{
+                    all: 'unset',
+                    cursor: 'pointer',
+                    width: 22,
+                    height: 22,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '5px',
+                    color: 'var(--muted)',
+                    flexShrink: 0,
+                    ml: '4px',
+                    transition: 'color 0.12s, background 0.12s',
+                    '&:hover': { color: 'var(--text)', background: 'var(--s3)' },
+                  }}
+                >
+                  <KeyboardDoubleArrowLeftOutlined sx={{ fontSize: 14 }} />
+                </Box>
+              </Tooltip>
+            )}
           </Box>
-        </Box>
+        )}
 
         {/* ── Nav ──────────────────────────────────────────── */}
         <Box component="nav" sx={{ flex: 1, p: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -208,6 +265,36 @@ export const Sidebar: React.FC = () => {
             const isGroupOpen = openGroups[section.title] ?? false
             const sectionActive = isSectionActive(section, location.pathname)
             const GroupIcon = section.icon
+
+            if (collapsed) {
+              const targetTo = section.items.find(i => isItemActive(i, location.pathname))?.to ?? section.items[0].to
+              return (
+                <React.Fragment key={section.title}>
+                  {si > 0 && <Divider />}
+                  <Tooltip title={section.title} placement="right" arrow>
+                    <Box
+                      component="button"
+                      onClick={() => navigate(targetTo)}
+                      sx={{
+                        all: 'unset',
+                        height: '34px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'background 0.12s',
+                        '&:hover': { background: 'var(--s3)' },
+                      }}
+                    >
+                      <GroupIcon sx={{ fontSize: 16, color: sectionActive ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.12s' }} />
+                    </Box>
+                  </Tooltip>
+                </React.Fragment>
+              )
+            }
 
             return (
               <React.Fragment key={section.title}>
@@ -321,56 +408,87 @@ export const Sidebar: React.FC = () => {
           sx={{
             flexShrink: 0,
             borderTop: '1px solid var(--border)',
-            px: '10px',
+            px: collapsed ? '0' : '10px',
             py: '10px',
             display: 'flex',
+            flexDirection: collapsed ? 'column' : 'row',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: collapsed ? '4px' : '8px',
           }}
         >
-          {/* Profil (avatar + nom) */}
-          <Box
-            component="button"
-            onClick={() => navigate('/profile')}
-            sx={{
-              all: 'unset',
-              cursor: 'pointer',
-              flex: 1,
-              minWidth: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              overflow: 'hidden',
-              transition: 'opacity 0.12s',
-              '&:hover': { opacity: 0.7 },
-            }}
-          >
-            <Box
-              sx={{
-                width: 30,
-                height: 30,
-                borderRadius: '50%',
-                background: 'var(--s3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--muted)',
-                flexShrink: 0,
-              }}
-            >
-              <PersonOutlined sx={{ fontSize: 18 }} />
-            </Box>
-            <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {user?.firstName} {user?.lastName}
-            </Box>
-          </Box>
-
-          {/* Actions */}
-          {isAdmin && (
+          {/* Avatar */}
+          <Tooltip title={collapsed ? `${user?.firstName} ${user?.lastName}` : ''} placement="right" arrow>
             <Box
               component="button"
-              onClick={() => navigate('/settings')}
-              title="Paramètres"
+              onClick={() => navigate('/profile')}
+              sx={{
+                all: 'unset',
+                cursor: 'pointer',
+                flex: collapsed ? 'none' : 1,
+                minWidth: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                overflow: 'hidden',
+                transition: 'opacity 0.12s',
+                '&:hover': { opacity: 0.7 },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  background: 'var(--s3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--muted)',
+                  flexShrink: 0,
+                }}
+              >
+                <PersonOutlined sx={{ fontSize: 18 }} />
+              </Box>
+              {!collapsed && (
+                <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.firstName} {user?.lastName}
+                </Box>
+              )}
+            </Box>
+          </Tooltip>
+
+          {/* Settings */}
+          {isAdmin && (
+            <Tooltip title="Paramètres" placement="right" arrow>
+              <Box
+                component="button"
+                onClick={() => navigate('/settings')}
+                sx={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  width: 26,
+                  height: 26,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px',
+                  color: 'var(--muted)',
+                  flexShrink: 0,
+                  transition: 'color 0.12s, background 0.12s',
+                  '&:hover': { color: 'var(--accent)', background: 'var(--accent-subtle)' },
+                }}
+              >
+                <SettingsOutlined sx={{ fontSize: 14 }} />
+              </Box>
+            </Tooltip>
+          )}
+
+          {/* Logout */}
+          <Tooltip title="Déconnexion" placement="right" arrow>
+            <Box
+              component="button"
+              onClick={handleLogout}
               sx={{
                 all: 'unset',
                 cursor: 'pointer',
@@ -383,33 +501,12 @@ export const Sidebar: React.FC = () => {
                 color: 'var(--muted)',
                 flexShrink: 0,
                 transition: 'color 0.12s, background 0.12s',
-                '&:hover': { color: 'var(--accent)', background: 'var(--accent-subtle)' },
+                '&:hover': { color: '#ef4444', background: 'rgba(239,68,68,0.08)' },
               }}
             >
-              <SettingsOutlined sx={{ fontSize: 14 }} />
+              <LogoutOutlined sx={{ fontSize: 14 }} />
             </Box>
-          )}
-          <Box
-            component="button"
-            onClick={handleLogout}
-            title="Déconnexion"
-            sx={{
-              all: 'unset',
-              cursor: 'pointer',
-              width: 26,
-              height: 26,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '6px',
-              color: 'var(--muted)',
-              flexShrink: 0,
-              transition: 'color 0.12s, background 0.12s',
-              '&:hover': { color: '#ef4444', background: 'rgba(239,68,68,0.08)' },
-            }}
-          >
-            <LogoutOutlined sx={{ fontSize: 14 }} />
-          </Box>
+          </Tooltip>
         </Box>
 
       </Box>
