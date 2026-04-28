@@ -1,4 +1,5 @@
 import apiClient from '../../../services/client'
+import { downloadExcel } from '../../../utils/download'
 
 export interface ProjectDto {
   id: string
@@ -86,4 +87,11 @@ export const createProject = async (data: CreateProjectDto): Promise<ProjectDto>
     scanFrequency: 'Weekly',
   })
   return response.data
+}
+
+export const exportProjectsExcel = async (): Promise<void> => {
+  await downloadExcel(
+    '/api/tech-health/projects/export/excel',
+    `techhealth-${new Date().toISOString().split('T')[0]}.xlsx`,
+  )
 }

@@ -17,12 +17,24 @@ public class TechHealthController : BaseController
     private readonly SentinelContext _context;
     private readonly TechHealthService _techHealthService;
     private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly ExportService _exportService;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService)
     {
         _context = context;
         _techHealthService = techHealthService;
         _backgroundJobs = backgroundJobs;
+        _exportService = exportService;
+    }
+
+    [HttpGet("projects/export/excel")]
+    public async Task<IActionResult> ExportExcel()
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+        byte[] bytes = await _exportService.ExportTechHealthExcelAsync(organizationId.Value);
+        string filename = $"techhealth-{DateTime.Now:yyyy-MM-dd}.xlsx";
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }
 
     [HttpGet("projects")]

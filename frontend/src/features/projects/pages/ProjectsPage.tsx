@@ -13,6 +13,7 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import {
   getProjects,
   getProject,
@@ -20,6 +21,7 @@ import {
   updateProject,
   deleteProject,
   scanProject,
+  exportProjectsExcel,
   ProjectDto,
 } from "../../techHealth/api/projects";
 
@@ -136,6 +138,7 @@ export const ProjectsPage: React.FC = () => {
   const [editRepoUrl, setEditRepoUrl] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (scanPollRef.current) clearTimeout(scanPollRef.current); }, []);
@@ -154,6 +157,13 @@ export const ProjectsPage: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [search]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try { await exportProjectsExcel(); }
+    catch { showToast("Erreur lors de l'export Excel", "error"); }
+    finally { setExporting(false); }
+  };
 
   const openModal = () => { setFormName(""); setFormRepoUrl(""); setShowModal(true); };
 
@@ -302,18 +312,33 @@ export const ProjectsPage: React.FC = () => {
               }}
             />
           </Box>
-          <Button
-            variant="contained" size="small"
-            sx={{
-              textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
-              "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
-              "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
-            }}
-            onClick={openModal}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-            Nouveau projet
-          </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Button
+              variant="contained" size="small"
+              sx={{
+                textTransform: "none", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+                "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
+                "&.MuiButton-root:hover": { background: "#1e3a8a", boxShadow: "none", transform: "none" },
+              }}
+              onClick={openModal}
+            >
+              <AddOutlined sx={{ fontSize: 14 }} />
+              Nouveau projet
+            </Button>
+            <Button
+              variant="outlined" size="small" disabled={exporting}
+              sx={{
+                display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+                textTransform: "none",
+                background: "#6366f1", borderColor: "#6366f1", color: "#fff",
+                "&:hover": { background: "#5254cc", borderColor: "#5254cc", color: "#fff" },
+              }}
+              onClick={handleExport}
+            >
+              {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
+              Exporter
+            </Button>
+          </Box>
         </Box>
 
         {/* Tableau */}
