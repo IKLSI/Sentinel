@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { StatusChip } from "../../../components/StatusChip";
-import { SlaTimer } from "../../../components/SlaTimer";
 import { DurationPicker } from "../../../components/DurationPicker";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -141,14 +139,6 @@ const priorityLabels: Record<TicketPriority, string> = {
   low: "Basse",
 };
 
-const statusVariant: Record<TicketStatus, "blue" | "orange" | "purple" | "green" | "gray" | "cyan"> = {
-  new:         "blue",
-  in_progress: "orange",
-  testing:     "cyan",
-  resolved:    "green",
-  closed:      "gray",
-};
-
 const statusLabels: Record<TicketStatus, string> = {
   new: "Nouveau",
   in_progress: "En cours",
@@ -157,38 +147,54 @@ const statusLabels: Record<TicketStatus, string> = {
   closed: "Fermé",
 };
 
-const typeLabels: Record<TicketType, string> = {
-  bug: "Bug",
-  feature: "Évolution",
-  security: "Sécurité",
-  performance: "Perf",
-  maintenance: "Maintenance",
-  question: "Question",
+
+const typeBadgeStyle: Record<TicketType, { bg: string; color: string }> = {
+  bug:         { bg: "rgba(239,68,68,0.12)",   color: "var(--red)" },
+  feature:     { bg: "var(--accent-subtle)",   color: "var(--accent)" },
+  security:    { bg: "rgba(249,115,22,0.12)",  color: "var(--orange)" },
+  performance: { bg: "rgba(6,182,212,0.12)",   color: "var(--cyan)" },
+  maintenance: { bg: "rgba(116,136,170,0.10)", color: "var(--muted2)" },
+  question:    { bg: "rgba(245,158,11,0.12)",  color: "var(--yellow)" },
 };
 
 const typeIcons: Record<TicketType, React.ReactElement> = {
-  bug:         <BugReportOutlined sx={{ fontSize: 10 }} />,
-  feature:     <AutoFixHighOutlined sx={{ fontSize: 10 }} />,
-  security:    <SecurityOutlined sx={{ fontSize: 10 }} />,
-  performance: <SpeedOutlined sx={{ fontSize: 10 }} />,
-  maintenance: <BuildOutlined sx={{ fontSize: 10 }} />,
-  question:    <HelpOutlineOutlined sx={{ fontSize: 10 }} />,
+  bug:         <BugReportOutlined sx={{ fontSize: 12 }} />,
+  feature:     <AutoFixHighOutlined sx={{ fontSize: 12 }} />,
+  security:    <SecurityOutlined sx={{ fontSize: 12 }} />,
+  performance: <SpeedOutlined sx={{ fontSize: 12 }} />,
+  maintenance: <BuildOutlined sx={{ fontSize: 12 }} />,
+  question:    <HelpOutlineOutlined sx={{ fontSize: 12 }} />,
 };
 
-const priorityLevels: Record<string, number> = {
-  critical: 4,
-  high:     3,
-  medium:   2,
-  low:      1,
+const typeTooltip: Record<TicketType, string> = {
+  bug: "Bug", feature: "Évolution", security: "Sécurité",
+  performance: "Performance", maintenance: "Maintenance", question: "Question",
 };
 
-const LevelBars: React.FC<{ level: number }> = ({ level }) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: '10px', flexShrink: 0 }}>
-    {[1, 2, 3, 4].map(i => (
-      <Box key={i} sx={{ width: '3px', height: `${4 + i * 1.5}px`, borderRadius: '1px', background: 'currentColor', opacity: i <= level ? 1 : 0.2 }} />
-    ))}
-  </Box>
-);
+const statusDotColor: Record<TicketStatus, string> = {
+  new:         "var(--accent)",
+  in_progress: "var(--orange)",
+  testing:     "var(--cyan)",
+  resolved:    "var(--green)",
+  closed:      "var(--muted)",
+};
+
+const priorityColor: Record<TicketPriority, string> = {
+  critical: "var(--red)",
+  high:     "var(--orange)",
+  medium:   "var(--accent)",
+  low:      "var(--green)",
+};
+
+const avatarPalette = [
+  { bg: "rgba(99,102,241,0.18)", color: "var(--accent)" },
+  { bg: "rgba(34,197,94,0.15)",  color: "var(--green)" },
+  { bg: "rgba(168,85,247,0.15)", color: "var(--purple)" },
+  { bg: "rgba(6,182,212,0.15)",  color: "var(--cyan)" },
+  { bg: "rgba(249,115,22,0.15)", color: "var(--orange)" },
+];
+
+const getAvatarStyle = (id: string) => avatarPalette[id.charCodeAt(0) % avatarPalette.length];
 
 const selectSx = {
   appearance: "none",
@@ -383,14 +389,10 @@ export const TicketsPage: React.FC = () => {
       if (!sort) return 0;
       const mul = sort.dir === "asc" ? 1 : -1;
       switch (sort.col) {
-        case "Référence": return mul * a.reference.localeCompare(b.reference);
-        case "Titre":     return mul * a.title.localeCompare(b.title);
-        case "Projet":    return mul * (a.projectName ?? "").localeCompare(b.projectName ?? "");
+        case "Ticket":    return mul * a.title.localeCompare(b.title);
         case "Priorité":  return mul * ((PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
-        case "Type":      return mul * a.type.localeCompare(b.type);
         case "Statut":    return mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
         case "Assigné":   return mul * (`${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`).localeCompare(`${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`);
-        case "Échéance":  return mul * ((a.slaDeadline ?? "").localeCompare(b.slaDeadline ?? ""));
         default: return 0;
       }
     });
@@ -586,13 +588,13 @@ export const TicketsPage: React.FC = () => {
               <>
               <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", flexShrink: 0 }}>
                 <Box component="colgroup">
-                  {(["8%","32%","13%","9%","8%","10%","10%","7%"] as const).map((w, i) => (
+                  {(["58%","10%","11%","15%","6%"] as const).map((w, i) => (
                     <Box key={i} component="col" sx={{ width: w }} />
                   ))}
                 </Box>
                 <Box component="thead">
                   <Box component="tr">
-                    {["Référence", "Titre", "Projet", "Priorité", "Statut", "Échéance", "Assigné", ""].map((h) => {
+                    {["Ticket", "Priorité", "Statut", "Assigné", ""].map((h) => {
                         const sortable = h !== "";
                         const isActive = sort?.col === h;
                         return (
@@ -635,7 +637,7 @@ export const TicketsPage: React.FC = () => {
               <Box ref={tableWrapRef} sx={{ flex: 1, overflowY: "auto" }}>
                 <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
                   <Box component="colgroup">
-                    {(["8%","32%","13%","9%","8%","10%","10%","7%"] as const).map((w, i) => (
+                    {(["58%","10%","11%","15%","6%"] as const).map((w, i) => (
                       <Box key={i} component="col" sx={{ width: w }} />
                     ))}
                   </Box>
@@ -651,106 +653,84 @@ export const TicketsPage: React.FC = () => {
                           "&:hover .row-actions": { opacity: "1 !important" },
                         }}
                       >
-                        <Box
-                          component="td"
-                          sx={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}
-                        >
-                          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)", lineHeight: 1 }}>
-                              {ticket.reference}
-                            </Box>
-                            <Tooltip title={typeLabels[ticket.type]} arrow placement="top">
-                              <Box sx={{ display: "inline-flex", alignItems: "center", color: "var(--muted)", flexShrink: 0, lineHeight: 1 }}>
+                        {/* Ticket — 2 lignes */}
+                        <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "4px" }}>
+                            <Tooltip title={typeTooltip[ticket.type]} arrow placement="top">
+                              <Box sx={{
+                                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                color: typeBadgeStyle[ticket.type].color,
+                                flexShrink: 0,
+                              }}>
                                 {typeIcons[ticket.type]}
                               </Box>
                             </Tooltip>
+                            <Box sx={{
+                              fontSize: "13px", fontWeight: 600, color: "var(--text)",
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            }}>
+                              {ticket.title}
+                            </Box>
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                            <Box>{ticket.reference}</Box>
+                            {ticket.projectName && (
+                              <>
+                                <Box sx={{ color: "var(--border2)" }}>·</Box>
+                                <Box>{ticket.projectName}</Box>
+                              </>
+                            )}
                           </Box>
                         </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            fontSize: "12.5px",
-                            maxWidth: "300px",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {ticket.title}
-                          </Box>
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            fontSize: "12px",
-                            color: "var(--muted2)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {ticket.projectName ?? "—"}
-                        </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                          }}
-                        >
-                          <StatusChip
-                            startAdornment={<LevelBars level={priorityLevels[ticket.priority] ?? 1} />}
-                          >
+
+                        {/* Priorité */}
+                        <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "12px", color: "var(--text-secondary)" }}>
+                            <Box sx={{ width: "7px", height: "7px", borderRadius: "50%", background: priorityColor[ticket.priority], flexShrink: 0, boxShadow: `0 0 5px ${priorityColor[ticket.priority]}` }} />
                             {priorityLabels[ticket.priority]}
-                          </StatusChip>
+                          </Box>
                         </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                          }}
-                        >
-                          <StatusChip variant={statusVariant[ticket.status]} pill>
+
+                        {/* Statut */}
+                        <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "12px", color: "var(--text-secondary)" }}>
+                            <Box sx={{
+                              width: "7px", height: "7px", borderRadius: "50%",
+                              background: statusDotColor[ticket.status], flexShrink: 0,
+                              boxShadow: ticket.status !== "closed" ? `0 0 5px ${statusDotColor[ticket.status]}` : "none",
+                            }} />
                             {statusLabels[ticket.status]}
-                          </StatusChip>
+                          </Box>
                         </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                          }}
-                        >
-                          <SlaTimer
-                            deadline={ticket.slaDeadline}
-                            breached={ticket.slaBreached}
-                            compact
-                          />
+
+                        {/* Assigné */}
+                        <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
+                          {ticket.assignee ? (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <Box sx={{
+                                width: "22px", height: "22px", borderRadius: "50%",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: "8px", fontWeight: 700, fontFamily: "var(--font-mono)",
+                                background: getAvatarStyle(ticket.assignee.id).bg,
+                                color: getAvatarStyle(ticket.assignee.id).color,
+                                flexShrink: 0,
+                              }}>
+                                {ticket.assignee.firstName?.[0]?.toUpperCase()}{ticket.assignee.lastName?.[0]?.toUpperCase()}
+                              </Box>
+                              <Box sx={{ fontSize: "12px", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {ticket.assignee.firstName} {ticket.assignee.lastName?.[0]?.toUpperCase()}.
+                              </Box>
+                            </Box>
+                          ) : (
+                            <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>—</Box>
+                          )}
                         </Box>
-                        <Box
-                          component="td"
-                          sx={{
-                            padding: "10px 14px",
-                            borderBottom: "1px solid var(--border)",
-                            fontSize: "12px",
-                            color: "var(--muted2)",
-                          }}
-                        >
-                          {ticket.assignee
-                            ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
-                            : "—"}
-                        </Box>
+
+                        {/* Actions */}
                         <Box
                           component="td"
                           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                          sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", textAlign: "center" }}
+                          sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", textAlign: "center", verticalAlign: "middle" }}
                         >
                           <RowActions actions={[
                             { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: "Modifier", onClick: (e) => { e.stopPropagation(); openEditModal(ticket); }, color: "accent" },
