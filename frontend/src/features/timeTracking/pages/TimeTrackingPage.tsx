@@ -124,7 +124,7 @@ export const TimeTrackingPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getTimeEntries(
+const data = await getTimeEntries(
         format(weekStart, "yyyy-MM-dd"),
         format(weekEnd, "yyyy-MM-dd"),
       );
@@ -547,8 +547,8 @@ export const TimeTrackingPage: React.FC = () => {
           </Box>
 
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: "40px", flex: 1 }}>
-              <CircularProgress size={22} />
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
+              <CircularProgress size={24} />
             </Box>
           ) : weekEntries.length === 0 ? (
             <Box className="empty-state" sx={{ flex: 1 }}>

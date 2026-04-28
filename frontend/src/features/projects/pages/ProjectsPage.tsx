@@ -146,7 +146,7 @@ export const ProjectsPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getProjects();
+const data = await getProjects();
       setProjects(data);
     } catch {
       showToast("Impossible de charger les projets", "error");
@@ -343,8 +343,8 @@ export const ProjectsPage: React.FC = () => {
 
         {/* Tableau */}
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", padding: "40px" }}>
-            <CircularProgress />
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
+            <CircularProgress size={24} />
           </Box>
         ) : (
           <Box sx={{

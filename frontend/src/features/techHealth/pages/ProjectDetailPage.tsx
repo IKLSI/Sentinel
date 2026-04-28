@@ -234,7 +234,7 @@ export const ProjectDetailPage: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const data = await getProject(id);
+const data = await getProject(id);
       setProject(data);
     } catch {
       showToast("Impossible de charger le projet", "error");

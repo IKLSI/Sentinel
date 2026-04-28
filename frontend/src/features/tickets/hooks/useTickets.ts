@@ -13,7 +13,7 @@ export const useTickets = () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await getTickets(filters)
+const data = await getTickets(filters)
       if (reqId === reqIdRef.current) setTickets(data)
     } catch {
       if (reqId === reqIdRef.current) setError('Erreur lors du chargement des tickets')

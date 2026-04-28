@@ -306,7 +306,7 @@ export const InvoicesPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getInvoices(
+const data = await getInvoices(
         filters.status ? { status: filters.status } : undefined,
       );
       setInvoices(data);
@@ -757,9 +757,7 @@ export const InvoicesPage: React.FC = () => {
 
         {/* ── Tableau ── */}
         {loading ? (
-          <Box
-            sx={{ display: "flex", justifyContent: "center", padding: "48px" }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
             <CircularProgress size={24} />
           </Box>
         ) : (

@@ -551,14 +551,8 @@ export const TicketsPage: React.FC = () => {
         </Box>
 
         {loading && displayTickets.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "40px",
-            }}
-          >
-            <CircularProgress />
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
+            <CircularProgress size={24} />
           </Box>
         ) : (
           <Box
