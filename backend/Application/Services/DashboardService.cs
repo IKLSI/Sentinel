@@ -75,18 +75,6 @@ public class DashboardService
             .Where(te => te.User.OrganizationId == organizationId && te.Date >= monthStartDate && te.Date <= todayDate)
             .SumAsync(te => (int?)te.DurationMinutes) ?? 0;
 
-        List<Invoice> invoices = await _context.Invoices
-            .Where(i => i.OrganizationId == organizationId && i.IssuedAt >= monthStart)
-            .ToListAsync();
-
-        decimal billableRevenue = invoices
-            .Where(i => i.Status == InvoiceStatus.Sent || i.Status == InvoiceStatus.Paid)
-            .Sum(i => i.TotalAmount);
-
-        decimal unbilledRevenue = invoices
-            .Where(i => i.Status == InvoiceStatus.Draft)
-            .Sum(i => i.TotalAmount);
-
         int criticalVulnerabilities = await _context.Vulnerabilities
             .Include(v => v.Dependency).ThenInclude(d => d.TechProject)
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
@@ -118,13 +106,6 @@ public class DashboardService
             .CountAsync(t => t.OrganizationId == organizationId
                 && openStatuses.Contains(t.Status)
                 && t.AssignedToId == null);
-
-        List<Invoice> overdueInvoices = await _context.Invoices
-            .Where(i => i.OrganizationId == organizationId
-                && i.Status == InvoiceStatus.Sent
-                && i.DueAt != null
-                && i.DueAt < now)
-            .ToListAsync();
 
         List<Ticket> rawUrgentTickets = await _context.Tickets
             .Include(t => t.Project)
@@ -160,16 +141,12 @@ public class DashboardService
             ResolvedThisMonth = resolvedThisMonth,
             ResolvedThisMonthDelta = resolvedThisMonth - resolvedLastMonth,
             HoursThisMonth = hoursThisMonth / 60,
-            BillableRevenue = billableRevenue,
-            UnbilledRevenue = unbilledRevenue,
             CriticalVulnerabilities = criticalVulnerabilities,
             SlaRespected = slaRespected,
             SlaRespectedDelta = slaRespected - slaRespectedLastMonth,
             TicketsByStatus = ticketsByStatus,
             TicketsByPriority = ticketsByPriority,
             UnassignedOpenTickets = unassignedOpenTickets,
-            OverdueInvoicesCount = overdueInvoices.Count,
-            OverdueInvoicesAmount = overdueInvoices.Sum(i => i.TotalAmount),
             UrgentTickets = urgentTickets,
             RecentActivity = recentActivity,
         };
@@ -229,27 +206,6 @@ public class DashboardService
                 Text = $"Vuln critique détectée — {v.CveId} sur {v.Dependency.TechProject.Name}",
                 Timestamp = v.DetectedAt,
                 Detail = "Scanner automatique",
-            });
-        }
-
-        List<Invoice> recentInvoices = await _context.Invoices
-            .Include(i => i.TechProject)
-            .Where(i => i.OrganizationId == organizationId
-                && (i.Status == InvoiceStatus.Sent || i.Status == InvoiceStatus.Paid)
-                && i.IssuedAt >= since)
-            .OrderByDescending(i => i.IssuedAt)
-            .Take(2)
-            .ToListAsync();
-
-        foreach (Invoice? inv in recentInvoices)
-        {
-            string projectLabel = inv.TechProject?.Name ?? inv.Label;
-            items.Add(new ActivityItemDto
-            {
-                Color = "green",
-                Text = $"Facture FAC-{inv.InvoiceNumber:D4} émise — {projectLabel} — {inv.TotalAmount:N0} €",
-                Timestamp = inv.IssuedAt,
-                Detail = string.Empty,
             });
         }
 

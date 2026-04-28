@@ -6,7 +6,6 @@ import ViewKanbanOutlined from '@mui/icons-material/ViewKanbanOutlined'
 import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined'
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined'
 import AssessmentOutlined from '@mui/icons-material/AssessmentOutlined'
-import ReceiptOutlined from '@mui/icons-material/ReceiptOutlined'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined'
@@ -59,7 +58,6 @@ const navSections: NavSection[] = [
     icon: AssessmentOutlined,
     items: [
       { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Pointage' },
-      { to: '/invoices', icon: ReceiptOutlined, label: 'Factures' },
     ],
   },
 ]
@@ -103,21 +101,9 @@ export const Sidebar: React.FC = () => {
   }
 
   const isAdmin = user?.role === 'Admin'
-  const isDeveloper = user?.role === 'Developer'
   const filteredSections = useMemo(
-    () =>
-      navSections
-        .map((section) => {
-          if (section.title === 'Temps & Facturation') {
-            const items = isDeveloper
-              ? section.items.filter((i) => i.to !== '/invoices')
-              : section.items
-            return { ...section, title: section.title, items }
-          }
-          return section
-        })
-        .filter((s) => s.items.length > 0),
-    [isDeveloper],
+    () => navSections.filter((s) => s.items.length > 0),
+    [],
   )
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {

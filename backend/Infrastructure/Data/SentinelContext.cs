@@ -13,7 +13,6 @@ public class SentinelContext : DbContext
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
     public DbSet<TicketHistory> TicketHistories => Set<TicketHistory>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
-    public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<TechProject> TechProjects => Set<TechProject>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
@@ -32,7 +31,6 @@ public class SentinelContext : DbContext
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
         ConfigureTimeEntry(modelBuilder);
-        ConfigureInvoice(modelBuilder);
         ConfigureTechProject(modelBuilder);
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
@@ -223,35 +221,6 @@ public class SentinelContext : DbContext
                 .WithMany(u => u.TimeEntries)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-    }
-
-    private static void ConfigureInvoice(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Invoice>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Period).HasMaxLength(7).IsRequired();
-            entity.Property(e => e.Label).HasMaxLength(300).IsRequired();
-            entity.Property(e => e.TotalHours).HasPrecision(10, 2);
-            entity.Property(e => e.DailyRate).HasPrecision(10, 2);
-            entity.Property(e => e.TotalAmount).HasPrecision(12, 2);
-            entity.Property(e => e.TaxRate).HasPrecision(5, 2);
-            entity.Property(e => e.Status).HasConversion<string>();
-            entity.HasIndex(e => e.OrganizationId);
-            entity.HasIndex(e => e.Status);
-            entity.HasIndex(e => e.Period);
-
-            entity.HasOne(e => e.Organization)
-                .WithMany()
-                .HasForeignKey(e => e.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.TechProject)
-                .WithMany()
-                .HasForeignKey(e => e.TechProjectId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

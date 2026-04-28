@@ -14,8 +14,6 @@ import { TicketsPage } from '../features/tickets/pages/TicketsPage'
 import { KanbanPage } from '../features/tickets/pages/KanbanPage'
 import { TicketDetailPage } from '../features/tickets/pages/TicketDetailPage'
 import { TimeTrackingPage } from '../features/timeTracking/pages/TimeTrackingPage'
-import { InvoicesPage } from '../features/invoices/pages/InvoicesPage'
-import { InvoiceDetailPage } from '../features/invoices/pages/InvoiceDetailPage'
 import { ProjectsPage } from '../features/projects/pages/ProjectsPage'
 import { ProjectDetailPage } from '../features/techHealth/pages/ProjectDetailPage'
 import { ProfilePage } from '../features/users/pages/ProfilePage'
@@ -34,12 +32,6 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
-  return <>{children}</>
-}
-
-const NonDeveloperRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth()
-  if (user?.role === 'Developer') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -63,8 +55,6 @@ export const AppRoutes: React.FC = () => (
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
       <Route path="/time-tracking" element={<TimeTrackingPage />} />
-      <Route path="/invoices" element={<NonDeveloperRoute><InvoicesPage /></NonDeveloperRoute>} />
-      <Route path="/invoices/:id" element={<NonDeveloperRoute><InvoiceDetailPage /></NonDeveloperRoute>} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />

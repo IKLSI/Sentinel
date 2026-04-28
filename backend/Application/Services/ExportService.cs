@@ -29,22 +29,6 @@ public class ExportService
         _context = context;
     }
 
-    public async Task<byte[]> ExportInvoicesExcelAsync(Guid organizationId, string? status, string? period)
-    {
-        IQueryable<Invoice> query = _context.Invoices
-            .Include(i => i.TechProject)
-            .Where(i => i.OrganizationId == organizationId);
-
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<InvoiceStatus>(status, true, out InvoiceStatus parsedStatus))
-            query = query.Where(i => i.Status == parsedStatus);
-
-        if (!string.IsNullOrEmpty(period))
-            query = query.Where(i => i.Period == period);
-
-        List<Invoice> invoices = await query.OrderByDescending(i => i.IssuedAt).ToListAsync();
-        return WriteInvoicesExcel(invoices);
-    }
-
     public async Task<byte[]> ExportTimeEntriesExcelAsync(Guid organizationId, Guid? userId, DateOnly? from, DateOnly? to)
     {
         IQueryable<TimeEntry> query = _context.TimeEntries
@@ -110,54 +94,6 @@ public class ExportService
 
         List<Ticket> tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
         return WriteTicketsExcel(tickets);
-    }
-
-    private static byte[] WriteInvoicesExcel(List<Invoice> invoices)
-    {
-        string[] headers = ["Numéro", "Période", "Client", "Projet", "Heures", "TJM", "Montant HT", "TVA %", "Montant TTC", "Statut", "Émise le", "Échéance", "Payée le"];
-
-        using XLWorkbook workbook = new();
-        IXLWorksheet ws = workbook.Worksheets.Add("Factures");
-
-        ApplyTitle(ws, $"SENTINEL — Export Factures — {DateTime.Now:dd/MM/yyyy}", headers.Length);
-        ApplyHeaders(ws, headers);
-
-        for (int i = 0; i < invoices.Count; i++)
-        {
-            Invoice inv = invoices[i];
-            int row = i + 3;
-
-            SetRowBackground(ws, row, headers.Length, i % 2 == 1 ? AltRowColor : XLColor.White);
-
-            ws.Cell(row, 1).Value = $"FAC-{inv.IssuedAt.Year}-{inv.InvoiceNumber:D3}";
-            ws.Cell(row, 2).Value = inv.Period;
-            ws.Cell(row, 3).Value = inv.Label;
-            ws.Cell(row, 4).Value = inv.TechProject?.Name ?? string.Empty;
-
-            ws.Cell(row, 5).Value = (double)Math.Round(inv.TotalHours, 2);
-            ws.Cell(row, 5).Style.NumberFormat.Format = "0.00 \"h\"";
-
-            ws.Cell(row, 6).Value = (double)inv.DailyRate;
-            ws.Cell(row, 6).Style.NumberFormat.Format = "# ##0.00 \"€\"";
-
-            ws.Cell(row, 7).Value = (double)Math.Round(inv.TotalAmount / (1 + inv.TaxRate / 100), 2);
-            ws.Cell(row, 7).Style.NumberFormat.Format = "# ##0.00 \"€\"";
-
-            ws.Cell(row, 8).Value = (double)inv.TaxRate;
-            ws.Cell(row, 8).Style.NumberFormat.Format = "0.00\\%";
-
-            ws.Cell(row, 9).Value = (double)inv.TotalAmount;
-            ws.Cell(row, 9).Style.NumberFormat.Format = "# ##0.00 \"€\"";
-
-            ApplyStatusCell(ws.Cell(row, 10), TranslateInvoiceStatus(inv.Status.ToString()), InvoiceStatusColor);
-
-            SetDateCell(ws.Cell(row, 11), inv.IssuedAt);
-            if (inv.DueAt.HasValue) SetDateCell(ws.Cell(row, 12), inv.DueAt.Value);
-            if (inv.PaidAt.HasValue) SetDateCell(ws.Cell(row, 13), inv.PaidAt.Value);
-        }
-
-        FinalizeSheet(ws, headers.Length);
-        return SaveWorkbook(workbook);
     }
 
     private static byte[] WriteTimeEntriesExcel(List<TimeEntry> entries)
@@ -314,13 +250,6 @@ public class ExportService
         cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
     }
 
-    private static (XLColor bg, XLColor fg) InvoiceStatusColor(string status) => status switch
-    {
-        "Payée" => (GreenBg, GreenFg),
-        "Envoyée" => (OrangeBg, OrangeFg),
-        _ => (GrayBg, GrayFg),
-    };
-
     private static (XLColor bg, XLColor fg) TicketStatusColor(string status) => status switch
     {
         "Résolu" or "Fermé" => (GreenBg, GreenFg),
@@ -334,14 +263,6 @@ public class ExportService
         "Élevé" => (OrangeBg, OrangeFg),
         "Moyen" => (YellowBg, YellowFg),
         _ => (GrayBg, GrayFg),
-    };
-
-    private static string TranslateInvoiceStatus(string status) => status switch
-    {
-        "Draft" => "Brouillon",
-        "Sent" => "Envoyée",
-        "Paid" => "Payée",
-        _ => status,
     };
 
     private static string TranslateTicketStatus(string status) => status switch

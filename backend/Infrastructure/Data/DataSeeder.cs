@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -23,15 +22,6 @@ public class DataSeeder
             return;
 
         var now = DateTime.UtcNow;
-        var fr = CultureInfo.GetCultureInfo("fr-FR");
-
-        string FrPeriodLabel(DateTime d)
-        {
-            var m = d.ToString("MMMM", fr);
-            return char.ToUpper(m[0]) + m[1..] + " " + d.Year;
-        }
-
-        string Period(DateTime d) => d.ToString("yyyy-MM");
 
         var org = new Organization
         {
@@ -263,15 +253,13 @@ public class DataSeeder
         var t11 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Import CSV bloqué au-delà de 500 contacts", Description = "L'import échoue silencieusement au-delà de 500 lignes. Pas de feedback utilisateur.", Priority = TicketPriority.High, Type = TicketType.Bug, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 5, CreatedById = julien.Id, CreatedAt = now.AddHours(-11), UpdatedAt = now.AddHours(-11), SlaDeadline = now.AddDays(3), SlaBreached = false, Tags = Tags("import", "csv", "contacts") };
         var t12 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Pipeline e-mail — 45 min pour 10 000 destinataires", Description = "Optimisation des workers Laravel Horizon pour réduire le temps de traitement du pipeline marketing.", Priority = TicketPriority.Medium, Type = TicketType.Performance, Status = TicketStatus.InProgress, AssignedToId = antoine.Id, EstimatedHours = 8, CreatedById = julien.Id, CreatedAt = now.AddDays(-7), UpdatedAt = now.AddDays(-1), SlaDeadline = now.AddDays(7), SlaBreached = false, Tags = Tags("performance", "horizon", "email") };
         var t13 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Widget «Deals en cours» toujours à zéro depuis la v2.4", Description = "Champ renommé pipeline_stage → deal_stage non répercuté dans le contrôleur de tableau de bord.", Priority = TicketPriority.Medium, Type = TicketType.Bug, Status = TicketStatus.Resolved, AssignedToId = antoine.Id, EstimatedHours = 2, CreatedById = julien.Id, CreatedAt = now.AddDays(-11), UpdatedAt = now.AddDays(-5), SlaDeadline = now.AddDays(-4), SlaBreached = false, Tags = Tags("dashboard", "widget", "deals") };
-        var t20 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Intégration webhook Stripe — abonnements pro", Description = "Développer la réception des événements subscription.updated et invoice.payment_failed.", Priority = TicketPriority.Medium, Type = TicketType.Feature, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 15, CreatedById = julien.Id, CreatedAt = now.AddDays(1), UpdatedAt = now.AddDays(1), SlaDeadline = now.AddDays(22), SlaBreached = false, Tags = Tags("stripe", "webhook", "subscription") };
-
         var t14 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Module congés — jours fériés non pris en compte", Description = "Les demandes chevauchant un jour férié décomptent des jours ouvrés incorrects. Table non mise à jour.", Priority = TicketPriority.High, Type = TicketType.Bug, Status = TicketStatus.InProgress, AssignedToId = camille.Id, EstimatedHours = 6, CreatedById = sophie.Id, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-3), SlaDeadline = now.AddDays(2), SlaBreached = false, Tags = Tags("conges", "jours-feries", "rh") };
         var t15 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Export SILAE — intégration paie automatisée", Description = "Développer l'export SILAE (CSV v3.1) pour automatiser la transmission des éléments variables de paie.", Priority = TicketPriority.Medium, Type = TicketType.Feature, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = 20, CreatedById = julien.Id, CreatedAt = now.AddDays(1), UpdatedAt = now.AddDays(1), SlaDeadline = now.AddDays(27), SlaBreached = false, Tags = Tags("paie", "silae", "export", "rh") };
         var t16 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = crm.Id, Title = "Mise à jour .NET 8.0.3 → 8.0.5 (patch sécurité)", Description = "Aucun breaking change identifié. Tests de régression à valider.", Priority = TicketPriority.Low, Type = TicketType.Maintenance, Status = TicketStatus.Testing, AssignedToId = antoine.Id, EstimatedHours = 3, CreatedById = sophie.Id, CreatedAt = now.AddDays(-13), UpdatedAt = now, SlaDeadline = now.AddDays(8), SlaBreached = false, Tags = Tags("maintenance", "dotnet", "update") };
 
         var t17 = new Ticket { Id = Guid.NewGuid(), OrganizationId = org.Id, ProjectId = null, Title = "Mise en place d'un environnement de staging mutualisé", Description = "Besoin d'un staging commun aux 4 projets. Devis et procédure CI/CD à définir.", Priority = TicketPriority.Medium, Type = TicketType.Question, Status = TicketStatus.New, AssignedToId = null, EstimatedHours = null, CreatedById = julien.Id, CreatedAt = now.AddDays(-1), UpdatedAt = now.AddDays(-1), SlaDeadline = null, SlaBreached = false, Tags = Tags("infra", "staging", "devops") };
 
-        await _context.Tickets.AddRangeAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20);
+        await _context.Tickets.AddRangeAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19);
 
         await _context.TicketComments.AddRangeAsync(
             new TicketComment { Id = Guid.NewGuid(), TicketId = t1.Id, AuthorId = sophie.Id, Content = "Confirmé en prod. Vecteur : champ «recommander ce produit». Patch sous 24 h max.", CreatedAt = now.AddDays(-5).AddHours(1.5), UpdatedAt = now.AddDays(-5).AddHours(1.5) },
@@ -344,19 +332,6 @@ public class DataSeeder
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t13.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 120, Comment = "Fix champ deal_stage", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-13), DurationMinutes = 180, Comment = "Update .NET 8.0.5 + tests de régression", IsManual = true },
             new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(0), DurationMinutes = 120, Comment = "Recette finale + validation QA", IsManual = true }
-        );
-
-        var p3ago = now.AddMonths(-3);
-        var p2ago = now.AddMonths(-2);
-
-        await _context.Invoices.AddRangeAsync(
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = eshop.Id, Label = $"TMA E-Shop Luxe — {FrPeriodLabel(p3ago)}", Period = Period(p3ago), TotalHours = 92.50m, DailyRate = 650m, TotalAmount = 60125m, TaxRate = 20m, InvoiceNumber = 1, Status = InvoiceStatus.Paid, IssuedAt = now.AddDays(-44), DueAt = now.AddDays(-19), PaidAt = now.AddDays(-27) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = bankcore.Id, Label = $"TMA BankCore API — {FrPeriodLabel(p3ago)}", Period = Period(p3ago), TotalHours = 108m, DailyRate = 750m, TotalAmount = 81000m, TaxRate = 20m, InvoiceNumber = 2, Status = InvoiceStatus.Paid, IssuedAt = now.AddDays(-44), DueAt = now.AddDays(-19), PaidAt = now.AddDays(-22) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = crm.Id, Label = $"TMA CRM SaaS — {FrPeriodLabel(p3ago)}", Period = Period(p3ago), TotalHours = 76m, DailyRate = 600m, TotalAmount = 45600m, TaxRate = 20m, InvoiceNumber = 3, Status = InvoiceStatus.Paid, IssuedAt = now.AddDays(-44), DueAt = now.AddDays(-19), PaidAt = now.AddDays(-17) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = eshop.Id, Label = $"TMA E-Shop Luxe — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 87m, DailyRate = 650m, TotalAmount = 56550m, TaxRate = 20m, InvoiceNumber = 4, Status = InvoiceStatus.Sent, IssuedAt = now.AddDays(-16), DueAt = now.AddDays(-5) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = crm.Id, Label = $"TMA CRM SaaS — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 94.50m, DailyRate = 600m, TotalAmount = 56700m, TaxRate = 20m, InvoiceNumber = 5, Status = InvoiceStatus.Sent, IssuedAt = now.AddDays(-16), DueAt = now.AddDays(-4) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = bankcore.Id, Label = $"TMA BankCore API — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 115m, DailyRate = 750m, TotalAmount = 86250m, TaxRate = 20m, InvoiceNumber = 6, Status = InvoiceStatus.Draft, IssuedAt = now.AddDays(1) },
-            new Invoice { Id = Guid.NewGuid(), OrganizationId = org.Id, TechProjectId = crm.Id, Label = $"TMA Portail RH — {FrPeriodLabel(p2ago)}", Period = Period(p2ago), TotalHours = 62m, DailyRate = 700m, TotalAmount = 43400m, TaxRate = 20m, InvoiceNumber = 7, Status = InvoiceStatus.Draft, IssuedAt = now.AddDays(1) }
         );
 
         await _context.SaveChangesAsync();

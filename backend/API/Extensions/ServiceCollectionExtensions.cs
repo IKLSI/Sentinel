@@ -123,7 +123,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ExportService>();
 services.AddScoped<SlaService>();
         services.AddScoped<TimeTrackingService>();
-        services.AddScoped<InvoiceService>();
         services.AddScoped<RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<DependencyRegistryClient>();

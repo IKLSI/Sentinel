@@ -65,14 +65,11 @@ interface StatsData {
   openTickets: number; openTicketsDelta: number;
   resolvedThisMonth: number; resolvedThisMonthDelta: number;
   hoursThisMonth: number;
-  billableRevenue: number; unbilledRevenue: number;
   criticalVulnerabilities: number;
   slaRespected: number; slaRespectedDelta: number;
   ticketsByStatus: Record<string, number>;
   ticketsByPriority: Record<string, number>;
   unassignedOpenTickets: number;
-  overdueInvoicesCount: number;
-  overdueInvoicesAmount: number;
   urgentTickets: UrgentTicket[];
   recentActivity: ActivityItem[];
 }
@@ -81,12 +78,10 @@ const EMPTY_STATS: StatsData = {
   openTickets: 0, openTicketsDelta: 0,
   resolvedThisMonth: 0, resolvedThisMonthDelta: 0,
   hoursThisMonth: 0,
-  billableRevenue: 0, unbilledRevenue: 0,
   criticalVulnerabilities: 0,
   slaRespected: 0, slaRespectedDelta: 0,
   ticketsByStatus: {}, ticketsByPriority: {},
   unassignedOpenTickets: 0,
-  overdueInvoicesCount: 0, overdueInvoicesAmount: 0,
   urgentTickets: [], recentActivity: [],
 };
 
