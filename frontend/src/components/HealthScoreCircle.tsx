@@ -1,5 +1,9 @@
 import React from 'react'
 import Box from '@mui/material/Box'
+import type { SvgIconComponent } from '@mui/icons-material'
+import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined'
+import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined'
+import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
 import { HealthGrade } from '../types'
 
 interface HealthScoreCircleProps {
@@ -8,20 +12,22 @@ interface HealthScoreCircleProps {
   size?: number
 }
 
-const gradeColor: Record<HealthGrade, string> = {
-  A: 'var(--green)',
-  B: 'var(--cyan)',
-  C: 'var(--yellow)',
-  D: 'var(--orange)',
-  E: '#f97316',
-  F: 'var(--red)',
+const gradeConfig: Record<HealthGrade, { color: string; Icon: SvgIconComponent }> = {
+  F: { color: '#dc2626', Icon: WarningAmberOutlined },
+  E: { color: '#ea580c', Icon: WarningAmberOutlined },
+  D: { color: '#d97706', Icon: ErrorOutlineOutlined },
+  C: { color: '#ca8a04', Icon: ErrorOutlineOutlined },
+  B: { color: '#4f46e5', Icon: CheckCircleOutlineOutlined },
+  A: { color: '#10b981', Icon: CheckCircleOutlineOutlined },
 }
 
 export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({ score, grade, size = 44 }) => {
   const radius = (size - 6) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
-  const color = gradeColor[grade]
+  const cfg = gradeConfig[grade] ?? gradeConfig['F']
+  const { color, Icon } = cfg
+  const iconSize = Math.round(size * 0.38)
 
   return (
     <Box className="position-relative" sx={{ width: size, height: size }}>
@@ -31,9 +37,9 @@ export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({ score, gra
       </svg>
       <Box
         className="position-absolute d-flex align-items-center justify-content-center"
-        sx={{ inset: 0, fontFamily: 'var(--font-mono)', fontSize: size > 44 ? '14px' : '12px', fontWeight: 700, color }}
+        sx={{ inset: 0, color }}
       >
-        {grade}
+        <Icon sx={{ fontSize: iconSize }} />
       </Box>
     </Box>
   )

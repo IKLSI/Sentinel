@@ -310,7 +310,7 @@ const data = await getTimeEntries(
                 <Box sx={{
                   fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 800,
                   color: "var(--accent)", letterSpacing: "-0.04em", lineHeight: 1,
-                  background: "var(--accent-subtle)", borderRadius: "4px", px: "8px", py: "4px",
+                  borderRadius: "4px", px: "8px", py: "4px",
                 }}>
                   {formatDuration(totalMinutes)}
                 </Box>
