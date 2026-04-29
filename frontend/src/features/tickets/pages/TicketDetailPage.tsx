@@ -1,43 +1,59 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { AppModal } from "../../../components/AppModal";
-import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import AddOutlined from "@mui/icons-material/AddOutlined";
-import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
-import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
-import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
-import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
-import BuildOutlined from "@mui/icons-material/BuildOutlined";
-import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { getTicket, addComment, updateComment, deleteComment } from "../api/tickets";
-import { Ticket, TicketStatus } from "../../../types";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useToast } from "../../../hooks/useToast";
-import { useAuth } from "../../auth/hooks/useAuth";
+import ForumOutlined from "@mui/icons-material/ForumOutlined";
+import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
+import LinkRounded from "@mui/icons-material/LinkRounded";
+import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
+import KeyboardArrowDownRounded from "@mui/icons-material/KeyboardArrowDownRounded";
+import LockOutlined from "@mui/icons-material/LockOutlined";
+import MessageOutlined from "@mui/icons-material/MessageOutlined";
+import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
+import SendRounded from "@mui/icons-material/SendRounded";
+import FormatBoldRounded from "@mui/icons-material/FormatBoldRounded";
+import FormatItalicRounded from "@mui/icons-material/FormatItalicRounded";
+import CodeRounded from "@mui/icons-material/CodeRounded";
+import LinkOutlined from "@mui/icons-material/LinkOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { AppModal } from "../../../components/AppModal";
+import { DeleteModal } from "../../../components/DeleteModal";
+import { useToast } from "../../../hooks/useToast";
+import { useAuth } from "../../auth/hooks/useAuth";
+import {
+  addComment,
+  deleteComment,
+  getTicket,
+  updateComment,
+} from "../api/tickets";
+import { Ticket, TicketHistory, TicketStatus } from "../../../types";
 
-const statusConfig: Record<TicketStatus, { label: string; color: string; bg: string }> = {
-  new:         { label: "Nouveau",  color: "#818cf8", bg: "rgba(99,102,241,0.10)"   },
-  in_progress: { label: "En cours", color: "#f97316", bg: "rgba(249,115,22,0.10)"   },
-  testing:     { label: "En test",  color: "#06b6d4", bg: "rgba(6,182,212,0.10)"    },
-  resolved:    { label: "Résolu",   color: "#22c55e", bg: "rgba(34,197,94,0.10)"    },
-  closed:      { label: "Fermé",    color: "#7488aa", bg: "rgba(116,136,170,0.10)"  },
+const statusConfig: Record<
+  TicketStatus,
+  { label: string; color: string; dot: string }
+> = {
+  new: { label: "Nouveau", color: "#4f46e5", dot: "#818cf8" },
+  in_progress: { label: "En cours", color: "#c2410c", dot: "#f97316" },
+  testing: { label: "En test", color: "#0e7490", dot: "#06b6d4" },
+  resolved: { label: "Résolu", color: "#15803d", dot: "#22c55e" },
+  closed: { label: "Fermé", color: "#475569", dot: "#64748b" },
 };
 
 const priorityConfig: Record<
   string,
-  { label: string; color: string; bg: string }
+  { label: string; color: string; dot: string }
 > = {
-  critical: { label: "Critique", color: "#ef4444", bg: "rgba(239,68,68,0.08)" },
-  high: { label: "Haute", color: "#f97316", bg: "rgba(249,115,22,0.08)" },
-  medium: { label: "Moyenne", color: "#eab308", bg: "rgba(234,179,8,0.08)" },
-  low: { label: "Basse", color: "#22c55e", bg: "rgba(34,197,94,0.08)" },
+  critical: { label: "Critique", color: "#be123c", dot: "#f43f5e" },
+  high: { label: "Haute", color: "#b45309", dot: "#f59e0b" },
+  medium: { label: "Moyenne", color: "#ca8a04", dot: "#eab308" },
+  low: { label: "Basse", color: "#15803d", dot: "#22c55e" },
 };
 
 const typeLabels: Record<string, string> = {
@@ -49,130 +65,136 @@ const typeLabels: Record<string, string> = {
   question: "Question",
 };
 
-const typeIcons: Record<string, React.ReactElement> = {
-  bug:         <BugReportOutlined sx={{ fontSize: 11 }} />,
-  feature:     <AutoFixHighOutlined sx={{ fontSize: 11 }} />,
-  security:    <SecurityOutlined sx={{ fontSize: 11 }} />,
-  performance: <SpeedOutlined sx={{ fontSize: 11 }} />,
-  maintenance: <BuildOutlined sx={{ fontSize: 11 }} />,
-  question:    <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
-};
-
-const priorityLevels: Record<string, number> = {
-  critical: 4,
-  high:     3,
-  medium:   2,
-  low:      1,
-};
-
-const Card: React.FC<{ title: string; action?: React.ReactNode; noPadding?: boolean; children: React.ReactNode }> = ({ title, action, noPadding, children }) => (
-  <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
-    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: "16px", py: "11px", borderBottom: "1px solid var(--border)" }}>
-      <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>{title}</Box>
-      {action}
-    </Box>
-    <Box sx={noPadding ? {} : { p: "16px 18px" }}>{children}</Box>
-  </Box>
-);
-
-const fieldSx = {
-  background: "var(--s2)",
-  border: "1px solid var(--border)",
-  borderRadius: "8px",
-  px: "12px",
-  py: "9px",
-  fontSize: "13px",
-  color: "var(--text)",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
-  boxSizing: "border-box",
-  transition: "border-color 0.12s",
-  "&:focus": { borderColor: "var(--accent)" },
-} as const;
-
-const mdSx = {
-  fontSize: "13px",
-  color: "var(--text-secondary)",
+const markdownSx = {
+  fontSize: "14px",
+  color: "#334155",
   lineHeight: 1.8,
   "& p": { m: 0, mb: "10px" },
   "& p:last-child": { mb: 0 },
   "& code": {
     fontFamily: "var(--font-mono)",
     fontSize: "12px",
-    background: "var(--s2)",
-    border: "1px solid var(--border)",
-    borderRadius: "4px",
-    px: "4px",
-    py: "1px",
+    background: "#f1f5f9",
+    border: "1px solid #e2e8f0",
+    borderRadius: "7px",
+    px: "6px",
+    py: "2px",
+    color: "#0f172a",
   },
   "& pre": {
-    background: "var(--s2)",
-    border: "1px solid var(--border)",
-    borderRadius: "8px",
-    p: "14px",
+    mt: "14px",
+    mb: "6px",
+    borderRadius: "14px",
+    border: "1px solid #0f172a",
+    background: "#020617",
     overflow: "auto",
-    fontSize: "12px",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
   },
-  "& ul, & ol": { pl: "20px", mb: "10px" },
-  "& li": { mb: "3px" },
-  "& h1, & h2, & h3": {
-    fontWeight: 700,
-    lineHeight: 1.3,
-    mt: "16px",
-    mb: "8px",
-    color: "var(--text)",
+  "& pre code": {
+    display: "block",
+    background: "transparent",
+    border: "none",
+    fontSize: "13px",
+    lineHeight: 1.7,
+    color: "#e2e8f0",
+    p: "14px 18px",
   },
-  "& strong": { color: "var(--text)", fontWeight: 700 },
-  "& blockquote": {
-    borderLeft: "3px solid var(--border2)",
-    pl: "14px",
-    m: 0,
-    color: "var(--muted)",
-  },
+  "& strong": { color: "#0f172a", fontWeight: 700 },
+  "& ul, & ol": { pl: "20px", m: 0 },
 } as const;
 
-const actionBtnSx = {
-  all: "unset" as const,
-  cursor: "pointer",
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "var(--accent)",
-  px: "10px",
-  py: "5px",
-  borderRadius: "6px",
-  background: "var(--accent-subtle)",
-  border: "1px solid var(--accent-border)",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  transition: "background 0.12s, border-color 0.12s",
-  "&:hover": {
-    background: "color-mix(in srgb, var(--accent-subtle) 180%, transparent)",
-    borderColor: "var(--accent)",
+const fieldSx = {
+  background: "#ffffff",
+  border: "1px solid #dbe3ef",
+  borderRadius: "14px",
+  px: "18px",
+  py: "14px",
+  fontSize: "14px",
+  color: "#0f172a",
+  width: "100%",
+  outline: "none",
+  fontFamily: "var(--font-ui)",
+  boxSizing: "border-box",
+  transition: "border-color 0.12s, box-shadow 0.12s",
+  "&:focus": {
+    borderColor: "#a5b4fc",
+    boxShadow: "0 0 0 3px rgba(99,102,241,0.15)",
   },
-};
-
+} as const;
 
 function getInitials(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 }
 
-function fmtDuration(
-  hours: number | null | undefined,
-  minutes: number | null | undefined,
-) {
-  if (hours != null) {
-    const h = Math.floor(hours);
-    const m = Math.round((hours % 1) * 60);
-    return m > 0 ? `${h}h${m}` : `${h}h`;
+function getRelativeShort(date: string) {
+  const diff = Math.max(0, Date.now() - new Date(date).getTime());
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  const hours = Math.floor(min / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `il y a ${days} j`;
+  return format(new Date(date), "dd MMM", { locale: fr });
+}
+
+function normalizeStatusKey(value?: string) {
+  if (!value) return "";
+  const compact = value.trim().toLowerCase().replace(/[\s-]/g, "_");
+  if (compact === "inprogress") return "in_progress";
+  return compact;
+}
+
+function normalizePriorityKey(value?: string) {
+  if (!value) return "";
+  return value.trim().toLowerCase().replace(/[\s-]/g, "_");
+}
+
+function mapStatusLabel(value?: string) {
+  if (!value) return "—";
+  const key = normalizeStatusKey(value) as TicketStatus;
+  return statusConfig[key]?.label ?? value;
+}
+
+function mapPriorityLabel(value?: string) {
+  if (!value) return "—";
+  const key = normalizePriorityKey(value);
+  return priorityConfig[key]?.label ?? value;
+}
+
+function historyPresentation(entry: TicketHistory) {
+  const field = entry.field.toLowerCase();
+  if (field === "created" || field === "creation" || field.includes("create")) {
+    return {
+      tone: { dot: "#fda4af", ring: "#ffe4e6" },
+      message: "Ticket créé",
+    };
   }
-  if (minutes) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
+  if (field.includes("status")) {
+    return {
+      tone: { dot: "#fbbf24", ring: "#fef3c7" },
+      message: `Statut ${mapStatusLabel(entry.oldValue)} → ${mapStatusLabel(entry.newValue)}`,
+    };
   }
-  return "—";
+  if (field.includes("assign")) {
+    return {
+      tone: { dot: "#a78bfa", ring: "#ede9fe" },
+      message: `Assigné·e à ${entry.newValue ?? "Non assigné"}`,
+    };
+  }
+  if (field.includes("priority")) {
+    return {
+      tone: { dot: "#fb7185", ring: "#ffe4e6" },
+      message: `Priorité ${mapPriorityLabel(entry.oldValue)} → ${mapPriorityLabel(entry.newValue)}`,
+    };
+  }
+  return {
+    tone: { dot: "#86efac", ring: "#dcfce7" },
+    message:
+      entry.oldValue || entry.newValue
+        ? `${entry.field} ${entry.oldValue ?? "—"} → ${entry.newValue ?? "—"}`
+        : `${entry.field} mis à jour`,
+  };
 }
 
 export const TicketDetailPage: React.FC = () => {
@@ -184,16 +206,22 @@ export const TicketDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [commentModal, setCommentModal] = useState(false);
-  const [comment, setComment] = useState("");
-  const [commentPreview, setCommentPreview] = useState(false);
+  const [composerMode, setComposerMode] = useState<"reply" | "internal">(
+    "reply",
+  );
+  const [composerValue, setComposerValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [editCommentTarget, setEditCommentTarget] = useState<{ id: string; content: string } | null>(null);
+  const [editCommentTarget, setEditCommentTarget] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
   const [editCommentValue, setEditCommentValue] = useState("");
   const [editCommentPreview, setEditCommentPreview] = useState(false);
   const [editCommentSaving, setEditCommentSaving] = useState(false);
-  const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(null);
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(
+    null,
+  );
   const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
 
   useEffect(() => {
@@ -201,9 +229,7 @@ export const TicketDetailPage: React.FC = () => {
     setLoading(true);
     setNotFound(false);
     getTicket(id)
-      .then((t) => {
-        setTicket(t);
-      })
+      .then((t) => setTicket(t))
       .catch(() => {
         setNotFound(true);
         showToast("Ticket introuvable", "error");
@@ -211,12 +237,70 @@ export const TicketDetailPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [id, showToast]);
 
+  const endpointMatch = useMemo(() => {
+    if (!ticket) return null;
+    const merged = `${ticket.title} ${ticket.description}`;
+    return merged.match(/(\/api\/[a-z0-9/_-]+)/i)?.[1] ?? null;
+  }, [ticket]);
+
+  const titleBeforeEndpoint = useMemo(() => {
+    if (!ticket || !endpointMatch) return ticket?.title ?? "";
+    if (ticket.title.includes(endpointMatch)) {
+      return ticket.title.replace(endpointMatch, "").trim();
+    }
+    return ticket.title;
+  }, [ticket, endpointMatch]);
+
+  const handleAddComment = async () => {
+    if (!ticket || !composerValue.trim()) return;
+    setSubmitting(true);
+    try {
+      const isInternal = composerMode === "internal";
+      const created = await addComment(ticket.id, composerValue, isInternal);
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              comments: [
+                ...prev.comments,
+                { ...created, isInternal: created.isInternal || isInternal },
+              ],
+            }
+          : prev,
+      );
+      setComposerValue("");
+      showToast(
+        isInternal ? "Note interne ajoutée" : "Réponse envoyée",
+        "success",
+      );
+    } catch {
+      showToast("Erreur lors de l'ajout du commentaire", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleEditComment = async () => {
     if (!ticket || !editCommentTarget || !editCommentValue.trim()) return;
     setEditCommentSaving(true);
     try {
-      const updated = await updateComment(ticket.id, editCommentTarget.id, editCommentValue);
-      setTicket((prev) => prev ? { ...prev, comments: prev.comments.map((c) => c.id === updated.id ? updated : c) } : prev);
+      const updated = await updateComment(
+        ticket.id,
+        editCommentTarget.id,
+        editCommentValue,
+      );
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              comments: prev.comments.map((c) =>
+                c.id === updated.id
+                  ? { ...updated, isInternal: c.isInternal }
+                  : c,
+              ),
+            }
+          : prev,
+      );
       setEditCommentTarget(null);
       showToast("Commentaire modifié", "success");
     } catch {
@@ -231,7 +315,16 @@ export const TicketDetailPage: React.FC = () => {
     setDeleteCommentLoading(true);
     try {
       await deleteComment(ticket.id, deleteCommentTarget);
-      setTicket((prev) => prev ? { ...prev, comments: prev.comments.filter((c) => c.id !== deleteCommentTarget) } : prev);
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              comments: prev.comments.filter(
+                (c) => c.id !== deleteCommentTarget,
+              ),
+            }
+          : prev,
+      );
       setDeleteCommentTarget(null);
       showToast("Commentaire supprimé", "success");
     } catch {
@@ -241,243 +334,906 @@ export const TicketDetailPage: React.FC = () => {
     }
   };
 
-  const openCommentModal = () => {
-    setComment("");
-    setCommentPreview(false);
-    setCommentModal(true);
-  };
-
-  const handleAddComment = async () => {
-    if (!ticket || !comment.trim()) return;
-    setSubmitting(true);
-    try {
-      const newComment = await addComment(ticket.id, comment, false);
-      setTicket((prev) =>
-        prev ? { ...prev, comments: [...prev.comments, newComment] } : prev,
-      );
-      setComment("");
-      setCommentModal(false);
-      showToast("Commentaire ajouté", "success");
-    } catch {
-      showToast("Erreur lors de l'ajout du commentaire", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading)
+  if (loading) {
     return (
-      <>
-
-        <Box sx={{ display: "flex", justifyContent: "center", p: "80px" }}>
-          <CircularProgress size={28} />
-        </Box>
-      </>
+      <Box sx={{ display: "flex", justifyContent: "center", p: "80px" }}>
+        <CircularProgress size={28} />
+      </Box>
     );
+  }
 
-  if (notFound || !ticket)
+  if (notFound || !ticket) {
     return (
-      <>
-
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          p: "80px",
+          gap: "8px",
+        }}
+      >
         <Box
           sx={{
+            fontSize: "40px",
+            fontWeight: 800,
+            color: "var(--border2)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          404
+        </Box>
+        <Box sx={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
+          Ticket introuvable
+        </Box>
+        <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
+          Ce ticket n'existe pas ou vous n'y avez pas accès.
+        </Box>
+      </Box>
+    );
+  }
+
+  const status = statusConfig[ticket.status];
+  const priority = priorityConfig[ticket.priority] ?? priorityConfig.medium;
+
+  return (
+    <>
+      <Box
+        className="page-enter"
+        sx={{
+          p: { xs: "20px 10px 14px", md: "20px 16px 14px" },
+          height: "100vh",
+          display: "flex",
+          gap: "16px",
+          alignItems: "stretch",
+          flexDirection: { xs: "column", lg: "row" },
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "24px",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            p: "80px",
-            gap: "8px",
+            overflow: "hidden",
+            boxShadow:
+              "0 1px 2px rgba(15,23,42,0.04), 0 12px 30px -18px rgba(15,23,42,0.18)",
           }}
         >
           <Box
             sx={{
-              fontSize: "40px",
-              fontWeight: 800,
-              color: "var(--border2)",
-              fontFamily: "var(--font-mono)",
+              px: { xs: "20px", md: "30px" },
+              pt: { xs: "20px", md: "28px" },
+              pb: { xs: "18px", md: "24px" },
+              borderBottom: "1px solid #e2e8f0",
             }}
           >
-            404
-          </Box>
-          <Box sx={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
-            Ticket introuvable
-          </Box>
-          <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
-            Ce ticket n'existe pas ou vous n'y avez pas accès.
-          </Box>
-        </Box>
-      </>
-    );
-
-  const pc = priorityConfig[ticket.priority] ?? priorityConfig.medium;
-  const sc = statusConfig[ticket.status];
-
-  const rowSx = {
-    display: "flex", alignItems: "flex-start", gap: "12px",
-    py: "10px", borderBottom: "1px solid var(--border)",
-    "&:last-child": { borderBottom: "none" },
-  };
-  const rowLabelSx = { fontSize: "12px", color: "var(--muted)", fontWeight: 500, flexShrink: 0, width: "100px", pt: "1px" };
-  const rowValueSx = { fontSize: "13px", color: "var(--text-secondary)", fontWeight: 500, flex: 1, minWidth: 0 };
-
-  return (
-    <>
-
-
-      <Box className="page-enter" sx={{ p: { xs: "36px 16px 20px", md: "36px 32px 28px" }, display: "flex", gap: "24px", alignItems: "flex-start", flexDirection: { xs: "column", lg: "row" } }}>
-
-        {/* ── COLONNE GAUCHE ── */}
-        <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
-
-          {/* Card en-tête */}
-          <Box sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "12px", p: "20px 22px" }}>
-            <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--muted2)", letterSpacing: "0.06em", mb: "10px" }}>
-              {ticket.reference}
-            </Box>
-            <Box component="h1" sx={{ m: 0, mb: "14px", fontSize: { xs: "20px", md: "22px" }, fontWeight: 700, lineHeight: 1.3, color: "var(--text)", letterSpacing: "-0.025em" }}>
-              {ticket.title}
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
-              {/* Priorité — barres de niveau */}
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.15)", fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)" }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: '10px' }}>
-                  {[1,2,3,4].map(i => (
-                    <Box key={i} sx={{ width: '3px', height: `${4 + i * 1.5}px`, borderRadius: '1px', background: "currentColor", opacity: i <= (priorityLevels[ticket.priority] ?? 1) ? 1 : 0.2 }} />
-                  ))}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                mb: "14px",
+                color: "#64748b",
+                fontSize: "13px",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontWeight: 600,
+                }}
+              >
+                <FolderOutlined sx={{ fontSize: 16, color: "#7c3aed" }} />
+                {ticket.projectName ?? "Projet"}
+              </Box>
+              <ChevronRightOutlined sx={{ fontSize: 14, color: "#cbd5e1" }} />
+              <Box
+                sx={{
+                  fontFamily: "var(--font-mono)",
+                  letterSpacing: "0.08em",
+                  fontSize: "13px",
+                  color: "#475569",
+                  fontWeight: 700,
+                }}
+              >
+                {ticket.reference}
+              </Box>
+              <Box sx={{ ml: "8px", color: "#94a3b8", fontSize: "13px" }}>
+                Ouvert{" "}
+                <Box
+                  component="span"
+                  sx={{ color: "#334155", fontWeight: 700 }}
+                >
+                  {getRelativeShort(ticket.createdAt)}
                 </Box>
-                {pc.label}
               </Box>
-              {/* Type — icône */}
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: "5px", px: "8px", py: "3px", borderRadius: "5px", background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.15)", fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)" }}>
-                {typeIcons[ticket.type]}
-                {typeLabels[ticket.type] ?? ticket.type}
-              </Box>
-              {/* Statut */}
-              <Box sx={{ display: "inline-flex", alignItems: "center", px: "8px", py: "3px", borderRadius: "5px", background: sc.bg, border: `1px solid ${sc.color}38`, fontSize: "11px", fontWeight: 700, color: sc.color }}>
-                {sc.label}
-              </Box>
+            </Box>
+
+            <Box
+              component="h1"
+              sx={{
+                m: 0,
+                fontSize: { xs: "24px", md: "38px" },
+                lineHeight: 1.14,
+                letterSpacing: "-0.03em",
+                color: "#0f172a",
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              {titleBeforeEndpoint}
+              {endpointMatch && (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: { xs: "17px", md: "30px" },
+                    color: "#5b3dd1",
+                    background:
+                      "linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)",
+                    border: "1px solid #d8ccff",
+                    borderRadius: "16px",
+                    px: "14px",
+                    py: "8px",
+                    fontWeight: 700,
+                  }}
+                >
+                  <LinkRounded sx={{ fontSize: 18, color: "#8b5cf6" }} />
+                  {endpointMatch}
+                </Box>
+              )}
             </Box>
           </Box>
 
-          {/* Card Description */}
-          <Card title="Description">
-            <Box sx={{ ...mdSx }}>
-              {ticket.description
-                ? <ReactMarkdown>{ticket.description}</ReactMarkdown>
-                : <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 400 }}>Aucune description fournie.</Box>
-              }
-            </Box>
-          </Card>
-
-          {/* Card Activité */}
-          <Card
-            title="Activité"
-            action={
-              <Box component="button" sx={actionBtnSx} onClick={openCommentModal}>
-                <AddOutlined sx={{ fontSize: 12 }} />
-                Ajouter
-              </Box>
-            }
-            noPadding
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              px: { xs: "20px", md: "30px" },
+              py: { xs: "18px", md: "24px" },
+            }}
           >
-            {ticket.comments.length === 0 ? (
-              <Box sx={{ p: "18px", fontSize: "13px", color: "var(--muted)", fontWeight: 400 }}>
-                Aucun commentaire pour l'instant.
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                mb: "10px",
+              }}
+            >
+              <DescriptionOutlined sx={{ fontSize: 16, color: "#94a3b8" }} />
+              <Box
+                sx={{
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  color: "#64748b",
+                  fontWeight: 800,
+                }}
+              >
+                Description
               </Box>
-            ) : (
-              <Box sx={{ p: "12px 16px" }}>
-                {ticket.comments.map((c, idx) => (
-                  <Box key={c.id} sx={{ display: "flex", gap: "10px", position: "relative", pb: idx < ticket.comments.length - 1 ? "14px" : "0" }}>
-                    {idx < ticket.comments.length - 1 && (
-                      <Box sx={{ position: "absolute", left: "12px", top: "26px", bottom: "0", width: "1px", background: "var(--border)" }} />
-                    )}
-                    <Box sx={{ flexShrink: 0, width: 26, height: 26, borderRadius: "6px", background: "linear-gradient(135deg, var(--accent), #818cf8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)", zIndex: 1 }}>
+            </Box>
+
+            <Box
+              sx={{
+                border: "1px solid #e2e8f0",
+                borderRadius: "24px",
+                background: "#ffffff",
+                overflow: "hidden",
+                mb: "30px",
+              }}
+            >
+              <Box sx={{ p: "20px 24px" }}>
+                {ticket.description ? (
+                  <Box sx={markdownSx}>
+                    <ReactMarkdown>{ticket.description}</ReactMarkdown>
+                  </Box>
+                ) : (
+                  <Box sx={{ color: "#94a3b8", fontSize: "13px" }}>
+                    Aucune description fournie.
+                  </Box>
+                )}
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                mb: "18px",
+              }}
+            >
+              <ForumOutlined sx={{ fontSize: 16, color: "#94a3b8" }} />
+              <Box
+                sx={{
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  color: "#64748b",
+                  fontWeight: 800,
+                }}
+              >
+                Conversation
+              </Box>
+            </Box>
+
+            <Box sx={{ position: "relative" }}>
+              {ticket.comments.length > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: "19px",
+                    top: "50px",
+                    bottom: "120px",
+                    width: "2px",
+                    background: "#e2e8f0",
+                  }}
+                />
+              )}
+
+              {ticket.comments.map((c) => {
+                const own = user?.id === c.authorId;
+                return (
+                  <Box
+                    key={c.id}
+                    sx={{
+                      display: "flex",
+                      gap: "14px",
+                      mb: "18px",
+                      position: "relative",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "16px",
+                        background: c.isInternal
+                          ? "linear-gradient(140deg, #c4b5fd 0%, #818cf8 100%)"
+                          : "linear-gradient(140deg, #fda4af 0%, #fb7185 100%)",
+                        color: "#fff",
+                        fontFamily: "var(--font-mono)",
+                        fontWeight: 800,
+                        fontSize: "14px",
+                        display: "grid",
+                        placeItems: "center",
+                        zIndex: 1,
+                      }}
+                    >
                       {getInitials(c.author.firstName, c.author.lastName)}
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box sx={{ display: "flex", alignItems: "baseline", gap: "6px", mb: "4px" }}>
-                        <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>{c.author.firstName} {c.author.lastName}</Box>
-                        <Box sx={{ fontSize: "10px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-                          {format(new Date(c.createdAt), "dd MMM yyyy · HH:mm", { locale: fr })}
-                        </Box>
-                        {user?.id === c.authorId && (
-                          <Box sx={{ display: "flex", gap: "2px", ml: "auto" }}>
-                            <Box component="button" onClick={() => { setEditCommentTarget({ id: c.id, content: c.content }); setEditCommentValue(c.content); setEditCommentPreview(false); }}
-                              sx={{ all: "unset", cursor: "pointer", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", color: "var(--muted)", transition: "background 0.12s, color 0.12s", "&:hover": { background: "var(--accent-subtle)", color: "var(--accent)" } }}>
-                              <EditOutlined sx={{ fontSize: 12 }} />
-                            </Box>
 
-                            <Box component="button" onClick={() => setDeleteCommentTarget(c.id)}
-                              sx={{ all: "unset", cursor: "pointer", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "5px", color: "var(--muted)", transition: "background 0.12s, color 0.12s", "&:hover": { background: "var(--red-subtle)", color: "var(--red)" } }}>
-                              <DeleteOutlineOutlined sx={{ fontSize: 12 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          mb: "8px",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            fontSize: "14px",
+                            color: "#0f172a",
+                            fontWeight: 800,
+                          }}
+                        >
+                          {c.author.firstName} {c.author.lastName}
+                        </Box>
+
+                        {c.isInternal && (
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.08em",
+                              fontSize: "11px",
+                              color: "#b45309",
+                              fontWeight: 800,
+                              px: "10px",
+                              py: "4px",
+                              borderRadius: "8px",
+                            }}
+                          >
+                            <LockOutlined sx={{ fontSize: 14 }} />
+                            Note interne
+                          </Box>
+                        )}
+
+                        <Box sx={{ color: "#cbd5e1", fontSize: "11px" }}>·</Box>
+                        <Box
+                          sx={{
+                            fontFamily: "var(--font-mono)",
+                            color: "#94a3b8",
+                            fontSize: "11px",
+                          }}
+                        >
+                          {format(new Date(c.createdAt), "HH:mm", {
+                            locale: fr,
+                          })}
+                        </Box>
+
+                        {own && (
+                          <Box sx={{ ml: "auto", display: "flex", gap: "4px" }}>
+                            <Box
+                              component="button"
+                              onClick={() => {
+                                setEditCommentTarget({
+                                  id: c.id,
+                                  content: c.content,
+                                });
+                                setEditCommentValue(c.content);
+                                setEditCommentPreview(false);
+                              }}
+                              sx={{
+                                all: "unset",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                color: "#94a3b8",
+                                display: "grid",
+                                placeItems: "center",
+                                "&:hover": {
+                                  background: "#f1f5f9",
+                                  color: "#0f172a",
+                                },
+                              }}
+                            >
+                              <EditOutlined sx={{ fontSize: 15 }} />
+                            </Box>
+                            <Box
+                              component="button"
+                              onClick={() => setDeleteCommentTarget(c.id)}
+                              sx={{
+                                all: "unset",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                color: "#94a3b8",
+                                display: "grid",
+                                placeItems: "center",
+                                "&:hover": {
+                                  background: "#fee2e2",
+                                  color: "#dc2626",
+                                },
+                              }}
+                            >
+                              <DeleteOutlineOutlined sx={{ fontSize: 15 }} />
                             </Box>
                           </Box>
                         )}
                       </Box>
-                      <Box sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "0 8px 8px 8px", p: "8px 12px", ...mdSx, fontSize: "12px" }}>
-                        <ReactMarkdown>{c.content}</ReactMarkdown>
+
+                      <Box
+                        sx={{
+                          border: c.isInternal
+                            ? "1px solid #fde68a"
+                            : "1px solid #e2e8f0",
+                          borderRadius: "22px",
+                          background: c.isInternal ? "#fffbeb" : "#ffffff",
+                        }}
+                      >
+                        <Box sx={{ p: "18px 22px" }}>
+                          <Box sx={markdownSx}>
+                            <ReactMarkdown>{c.content}</ReactMarkdown>
+                          </Box>
+                        </Box>
                       </Box>
                     </Box>
                   </Box>
-                ))}
+                );
+              })}
+
+              {ticket.comments.length === 0 && (
+                <Box sx={{ color: "#94a3b8", fontSize: "13px", py: "8px" }}>
+                  Aucun message pour le moment.
+                </Box>
+              )}
+            </Box>
+
+            <Box sx={{ mt: "24px" }}>
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  p: "4px",
+                  background: "#f1f5f9",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  mb: "12px",
+                  gap: "4px",
+                }}
+              >
+                {[
+                  {
+                    key: "reply",
+                    label: "Réponse",
+                    icon: <MessageOutlined sx={{ fontSize: 16 }} />,
+                  },
+                  {
+                    key: "internal",
+                    label: "Note interne",
+                    icon: <LockOutlined sx={{ fontSize: 16 }} />,
+                  },
+                ].map((tab) => {
+                  const active = composerMode === tab.key;
+                  return (
+                    <Box
+                      key={tab.key}
+                      component="button"
+                      onClick={() =>
+                        setComposerMode(tab.key as "reply" | "internal")
+                      }
+                      sx={{
+                        all: "unset",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        px: "14px",
+                        height: "40px",
+                        borderRadius: "12px",
+                        color: active ? "#0f172a" : "#64748b",
+                        background: active ? "#ffffff" : "transparent",
+                        boxShadow: active
+                          ? "0 1px 2px rgba(15,23,42,0.08)"
+                          : "none",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </Box>
+                  );
+                })}
               </Box>
-            )}
-          </Card>
+
+              <Box
+                sx={{
+                  border: "1px solid #dbe3ef",
+                  borderRadius: "22px",
+                  overflow: "hidden",
+                  background: "#ffffff",
+                }}
+              >
+                <Box
+                  component="textarea"
+                  value={composerValue}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setComposerValue(e.target.value)
+                  }
+                  onKeyDown={(e: React.KeyboardEvent) => {
+                    if (
+                      e.key === "Enter" &&
+                      (e.metaKey || e.ctrlKey) &&
+                      composerValue.trim()
+                    )
+                      handleAddComment();
+                  }}
+                  rows={4}
+                  placeholder={
+                    composerMode === "internal"
+                      ? "Rédigez une note interne..."
+                      : "Tapez votre réponse..."
+                  }
+                  sx={{
+                    ...fieldSx,
+                    border: "none",
+                    borderRadius: 0,
+                    boxShadow: "none !important",
+                    px: "20px",
+                    py: "16px",
+                    resize: "vertical",
+                    minHeight: "140px",
+                  }}
+                />
+                <Box sx={{ height: "1px", background: "#e2e8f0" }} />
+                <Box
+                  sx={{
+                    px: "12px",
+                    py: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  {[
+                    <FormatBoldRounded key="b" sx={{ fontSize: 18 }} />,
+                    <FormatItalicRounded key="i" sx={{ fontSize: 18 }} />,
+                    <CodeRounded key="c" sx={{ fontSize: 18 }} />,
+                    <LinkOutlined key="l" sx={{ fontSize: 18 }} />,
+                    <AttachFileOutlined key="a" sx={{ fontSize: 18 }} />,
+                  ].map((icon, idx) => (
+                    <Box
+                      key={idx}
+                      component="button"
+                      sx={{
+                        all: "unset",
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        color: "#94a3b8",
+                        display: "grid",
+                        placeItems: "center",
+                        "&:hover": { background: "#f1f5f9", color: "#334155" },
+                      }}
+                    >
+                      {icon}
+                    </Box>
+                  ))}
+                  <Box sx={{ flex: 1 }} />
+                  <Button
+                    variant="contained"
+                    onClick={handleAddComment}
+                    disabled={!composerValue.trim() || submitting}
+                    sx={{
+                      minWidth: "152px",
+                      height: "44px",
+                      borderRadius: "14px",
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      background:
+                        "linear-gradient(180deg,#6d5ef7 0%, #4f46e5 100%)",
+                    }}
+                    startIcon={<SendRounded sx={{ fontSize: 18 }} />}
+                  >
+                    {submitting ? (
+                      <CircularProgress size={18} sx={{ color: "#fff" }} />
+                    ) : (
+                      "Envoyer"
+                    )}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         </Box>
 
-        {/* ── COLONNE DROITE ── */}
-        <Box sx={{ width: { lg: "268px" }, flexShrink: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
-
-          {/* Card Détails (statut en première ligne) */}
-          <Card title="Détails">
-            <Box sx={{ mx: "-18px", px: "18px" }}>
-
-              <Box sx={rowSx}>
-                <Box sx={rowLabelSx}>Assigné à</Box>
-                <Box sx={rowValueSx}>
-                  {ticket.assignee
-                    ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
-                    : <Box component="span" sx={{ color: "var(--muted)" }}>Non assigné</Box>
-                  }
-                </Box>
-              </Box>
-
-              <Box sx={rowSx}>
-                <Box sx={rowLabelSx}>Projet</Box>
-                <Box sx={rowValueSx}>{ticket.projectName ?? <Box component="span" sx={{ color: "var(--muted)" }}>—</Box>}</Box>
-              </Box>
-
-              <Box sx={rowSx}>
-                <Box sx={rowLabelSx}>Estimation</Box>
-                <Box sx={{ ...rowValueSx, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--cyan)" }}>
-                  {fmtDuration(ticket.estimatedHours, null)}
-                </Box>
-              </Box>
-
-              <Box sx={rowSx}>
-                <Box sx={rowLabelSx}>Temps passé</Box>
-                <Box sx={{ ...rowValueSx, fontFamily: "var(--font-mono)", fontWeight: 600 }}>
-                  {fmtDuration(null, ticket.timeSpentMinutes)}
-                </Box>
-              </Box>
-
-              <Box sx={rowSx}>
-                <Box sx={rowLabelSx}>Créé le</Box>
-                <Box sx={{ ...rowValueSx, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
-                  {format(new Date(ticket.createdAt), "dd MMM yyyy", { locale: fr })}
-                </Box>
-              </Box>
-
+        <Box
+          sx={{
+            width: { xs: "100%", lg: "330px" },
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            minHeight: 0,
+          }}
+        >
+          <Box
+            sx={{
+              border: "1px solid #e2e8f0",
+              borderRadius: "24px",
+              background: "#ffffff",
+              boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              p: "12px 10px 8px",
+            }}
+          >
+            <Box
+              sx={{
+                px: "12px",
+                pt: "4px",
+                pb: "6px",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                fontWeight: 800,
+                color: "#94a3b8",
+                fontSize: "11px",
+              }}
+            >
+              Propriétés
             </Box>
-          </Card>
+            {[
+              {
+                label: "Statut",
+                value: (
+                  <>
+                    <Box
+                      sx={{
+                        width: "10px",
+                        height: "10px",
+                        borderRadius: "999px",
+                        background: status.dot,
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        color: status.color,
+                        fontWeight: 400,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {status.label}
+                    </Box>
+                  </>
+                ),
+              },
+              {
+                label: "Priorité",
+                value: (
+                  <>
+                    <Box
+                      sx={{
+                        width: "10px",
+                        height: "10px",
+                        borderRadius: "999px",
+                        background: priority.dot,
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        color: priority.color,
+                        fontWeight: 400,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {priority.label}
+                    </Box>
+                  </>
+                ),
+              },
+              {
+                label: "Type",
+                value: (
+                  <>
+                    <ShieldOutlined sx={{ fontSize: 18, color: "#64748b" }} />
+                    <Box
+                      sx={{
+                        color: "#0f172a",
+                        fontWeight: 400,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {typeLabels[ticket.type] ?? ticket.type}
+                    </Box>
+                  </>
+                ),
+              },
+              {
+                label: "Assigné",
+                value: ticket.assignee ? (
+                  <>
+                    <Box
+                      sx={{
+                        width: "34px",
+                        height: "34px",
+                        borderRadius: "10px",
+                        background: "linear-gradient(140deg,#c4b5fd,#818cf8)",
+                        color: "#fff",
+                        fontFamily: "var(--font-mono)",
+                        fontWeight: 800,
+                        fontSize: "10px",
+                        display: "grid",
+                        placeItems: "center",
+                      }}
+                    >
+                      {getInitials(
+                        ticket.assignee.firstName,
+                        ticket.assignee.lastName,
+                      )}
+                    </Box>
+                    <Box
+                      sx={{
+                        color: "#0f172a",
+                        fontWeight: 400,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {ticket.assignee.firstName} {ticket.assignee.lastName}
+                    </Box>
+                  </>
+                ) : (
+                  <Box
+                    sx={{ color: "#94a3b8", fontWeight: 400, fontSize: "13px" }}
+                  >
+                    Non assigné
+                  </Box>
+                ),
+              },
+              {
+                label: "Projet",
+                value: (
+                  <>
+                    <FolderOutlined sx={{ fontSize: 18, color: "#7c3aed" }} />
+                    <Box
+                      sx={{
+                        color: "#0f172a",
+                        fontWeight: 400,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {ticket.projectName ?? "—"}
+                    </Box>
+                  </>
+                ),
+              },
+            ].map((row, idx, arr) => (
+              <Box key={row.label}>
+                <Box
+                  component="button"
+                  sx={{
+                    all: "unset",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    py: "14px",
+                    px: "12px",
+                    display: "grid",
+                    gridTemplateColumns: "96px 1fr",
+                    alignItems: "center",
+                    gap: "10px",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    "&:hover": { background: "#f8fafc" },
+                  }}
+                >
+                  <Box
+                    sx={{ color: "#94a3b8", fontSize: "12px", fontWeight: 400 }}
+                  >
+                    {row.label}
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {row.value}
+                    {row.label !== "Projet" && (
+                      <KeyboardArrowDownRounded
+                        sx={{ ml: "auto", color: "#cbd5e1" }}
+                      />
+                    )}
+                  </Box>
+                </Box>
+                {idx < arr.length - 1 && (
+                  <Box
+                    sx={{ mx: "10px", height: "1px", background: "#eef2f7" }}
+                  />
+                )}
+              </Box>
+            ))}
+          </Box>
 
+          <Box
+            sx={{
+              border: "1px solid #e2e8f0",
+              borderRadius: "24px",
+              background: "#ffffff",
+              boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              p: "12px 10px 8px",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box
+              sx={{
+                px: "12px",
+                pt: "4px",
+                pb: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                fontWeight: 800,
+                color: "#94a3b8",
+                fontSize: "11px",
+              }}
+            >
+              Historique
+            </Box>
+            <Box
+              sx={{
+                position: "relative",
+                px: "12px",
+                pb: "8px",
+                overflowY: "auto",
+              }}
+            >
+              {ticket.history.length > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: "18px",
+                    top: "16px",
+                    bottom: "16px",
+                    width: "2px",
+                    background:
+                      "linear-gradient(180deg, #e2e8f0 0%, #e2e8f0 80%, transparent 100%)",
+                  }}
+                />
+              )}
+
+              {[...ticket.history]
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .map((h) => {
+                  const event = historyPresentation(h);
+                  return (
+                    <Box
+                      key={h.id}
+                      sx={{
+                        display: "flex",
+                        gap: "10px",
+                        mb: "12px",
+                        position: "relative",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: "12px",
+                          height: "12px",
+                          mt: "10px",
+                          borderRadius: "999px",
+                          background: event.tone.dot,
+                          border: "2px solid #fff",
+                          boxShadow: `0 0 0 3px ${event.tone.ring}`,
+                          zIndex: 1,
+                        }}
+                      />
+                      <Box sx={{ flex: 1, minWidth: 0, pt: "3px" }}>
+                        <Box
+                          sx={{
+                            fontSize: "12px",
+                            color: "#0f172a",
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {event.message}
+                        </Box>
+                        <Box
+                          sx={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            color: "#94a3b8",
+                            mt: "6px",
+                          }}
+                        >
+                          {getRelativeShort(h.createdAt)} · {h.author.firstName}{" "}
+                          {h.author.lastName}
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })}
+
+              {ticket.history.length === 0 && (
+                <Box sx={{ color: "#94a3b8", fontSize: "13px", py: "4px" }}>
+                  Aucun événement d'historique.
+                </Box>
+              )}
+            </Box>
+          </Box>
         </Box>
       </Box>
 
-      {/* Modale commentaire */}
       <AppModal
-        open={commentModal}
-        onClose={() => !submitting && setCommentModal(false)}
-        title="Nouveau commentaire"
+        open={!!editCommentTarget}
+        onClose={() => !editCommentSaving && setEditCommentTarget(null)}
+        title="Modifier le commentaire"
         actions={
           <>
             <Button
@@ -485,8 +1241,8 @@ export const TicketDetailPage: React.FC = () => {
               size="small"
               className="btn-cancel"
               sx={{ textTransform: "none" }}
-              onClick={() => setCommentModal(false)}
-              disabled={submitting}
+              onClick={() => setEditCommentTarget(null)}
+              disabled={editCommentSaving}
             >
               Annuler
             </Button>
@@ -494,13 +1250,13 @@ export const TicketDetailPage: React.FC = () => {
               variant="contained"
               size="small"
               sx={{ textTransform: "none" }}
-              onClick={handleAddComment}
-              disabled={!comment.trim() || submitting}
+              onClick={handleEditComment}
+              disabled={!editCommentValue.trim() || editCommentSaving}
             >
-              {submitting ? (
+              {editCommentSaving ? (
                 <CircularProgress size={14} sx={{ color: "#fff" }} />
               ) : (
-                "Publier"
+                "Enregistrer"
               )}
             </Button>
           </>
@@ -526,12 +1282,12 @@ export const TicketDetailPage: React.FC = () => {
             >
               {(["Éditer", "Aperçu"] as const).map((tab) => {
                 const active =
-                  tab === "Éditer" ? !commentPreview : commentPreview;
+                  tab === "Éditer" ? !editCommentPreview : editCommentPreview;
                 return (
                   <Box
                     key={tab}
                     component="button"
-                    onClick={() => setCommentPreview(tab === "Aperçu")}
+                    onClick={() => setEditCommentPreview(tab === "Aperçu")}
                     sx={{
                       all: "unset",
                       cursor: "pointer",
@@ -563,7 +1319,7 @@ export const TicketDetailPage: React.FC = () => {
               Markdown supporté
             </Box>
           </Box>
-          {commentPreview ? (
+          {editCommentPreview ? (
             <Box
               sx={{
                 background: "var(--s2)",
@@ -571,71 +1327,34 @@ export const TicketDetailPage: React.FC = () => {
                 borderRadius: "10px",
                 p: "14px 16px",
                 minHeight: "150px",
-                ...mdSx,
+                ...markdownSx,
               }}
             >
-              {comment ? <ReactMarkdown>{comment}</ReactMarkdown> : <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>Aperçu vide</Box>}
+              {editCommentValue ? (
+                <ReactMarkdown>{editCommentValue}</ReactMarkdown>
+              ) : (
+                <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
+                  Aperçu vide
+                </Box>
+              )}
             </Box>
           ) : (
             <Box
               component="textarea"
               autoFocus
-              value={comment}
+              value={editCommentValue}
               rows={7}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setComment(e.target.value)
+                setEditCommentValue(e.target.value)
               }
               onKeyDown={(e: React.KeyboardEvent) => {
                 if (
                   e.key === "Enter" &&
                   (e.metaKey || e.ctrlKey) &&
-                  comment.trim()
+                  editCommentValue.trim()
                 )
-                  handleAddComment();
+                  handleEditComment();
               }}
-              placeholder="Partagez une mise à jour, une information ou une question..."
-              sx={{ ...fieldSx, resize: "none", lineHeight: 1.65 }}
-            />
-          )}
-        </Box>
-      </AppModal>
-
-      <AppModal
-        open={!!editCommentTarget}
-        onClose={() => !editCommentSaving && setEditCommentTarget(null)}
-        title="Modifier le commentaire"
-        actions={
-          <>
-            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditCommentTarget(null)} disabled={editCommentSaving}>Annuler</Button>
-            <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEditComment} disabled={!editCommentValue.trim() || editCommentSaving}>
-              {editCommentSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
-            </Button>
-          </>
-        }
-      >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box sx={{ display: "flex", gap: "4px", background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "8px", p: "3px" }}>
-              {(["Éditer", "Aperçu"] as const).map((tab) => {
-                const active = tab === "Éditer" ? !editCommentPreview : editCommentPreview;
-                return (
-                  <Box key={tab} component="button" onClick={() => setEditCommentPreview(tab === "Aperçu")}
-                    sx={{ all: "unset", cursor: "pointer", px: "12px", height: "26px", fontSize: "11px", fontWeight: 600, borderRadius: "6px", display: "flex", alignItems: "center", background: active ? "var(--s1)" : "transparent", color: active ? "var(--text)" : "var(--muted)", boxShadow: active ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.12s" }}>
-                    {tab}
-                  </Box>
-                );
-              })}
-            </Box>
-            <Box sx={{ fontSize: "10px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Markdown supporté</Box>
-          </Box>
-          {editCommentPreview ? (
-            <Box sx={{ background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "10px", p: "14px 16px", minHeight: "150px", ...mdSx }}>
-              {editCommentValue ? <ReactMarkdown>{editCommentValue}</ReactMarkdown> : <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>Aperçu vide</Box>}
-            </Box>
-          ) : (
-            <Box component="textarea" autoFocus value={editCommentValue} rows={7}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditCommentValue(e.target.value)}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && editCommentValue.trim()) handleEditComment(); }}
               sx={{ ...fieldSx, resize: "none", lineHeight: 1.65 }}
             />
           )}
@@ -649,9 +1368,9 @@ export const TicketDetailPage: React.FC = () => {
         loading={deleteCommentLoading}
         title="Supprimer ce commentaire ?"
       >
-        Cette action est irréversible. Le commentaire sera définitivement supprimé.
+        Cette action est irréversible. Le commentaire sera définitivement
+        supprimé.
       </DeleteModal>
-
     </>
   );
 };

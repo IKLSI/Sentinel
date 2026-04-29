@@ -35,7 +35,7 @@ interface TicketDto {
   updatedAt: string
   isInternal: boolean
   tags: string[]
-  comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }[]
+  comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string; isInternal?: boolean }[]
   history: { id: string; userId: string; userName: string; field: string; oldValue?: string; newValue?: string; createdAt: string }[]
 }
 
@@ -68,7 +68,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
     comments: dto.comments.map((c) => ({
       id: c.id, ticketId: dto.id, authorId: c.authorId,
       author: createPartialUser(c.authorName, c.authorId, c.createdAt),
-      content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt,
+      content: c.content, isInternal: c.isInternal ?? false, createdAt: c.createdAt, updatedAt: c.updatedAt,
     })),
     history: dto.history.map((h) => ({
       id: h.id, ticketId: dto.id, authorId: h.userId,
@@ -106,19 +106,19 @@ export const deleteTicket = async (id: string): Promise<void> => {
 }
 
 export const addComment = async (ticketId: string, content: string, isInternal = false): Promise<TicketComment> => {
-  const response = await apiClient.post<{ id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }>(
+  const response = await apiClient.post<{ id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string; isInternal?: boolean }>(
     `/api/tickets/${ticketId}/comments`, { content, isInternal }
   )
   const c = response.data
-  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: c.isInternal ?? isInternal, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
 export const updateComment = async (ticketId: string, commentId: string, content: string): Promise<TicketComment> => {
-  const response = await apiClient.put<{ id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }>(
+  const response = await apiClient.put<{ id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string; isInternal?: boolean }>(
     `/api/tickets/${ticketId}/comments/${commentId}`, { content }
   )
   const c = response.data
-  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: false, createdAt: c.createdAt, updatedAt: c.updatedAt }
+  return { id: c.id, ticketId, authorId: c.authorId, author: createPartialUser(c.authorName, c.authorId, c.createdAt), content: c.content, isInternal: c.isInternal ?? false, createdAt: c.createdAt, updatedAt: c.updatedAt }
 }
 
 export const deleteComment = async (ticketId: string, commentId: string): Promise<void> => {
@@ -140,4 +140,3 @@ export const exportTicketsExcel = async (params?: {
   const date = new Date().toISOString().slice(0, 10)
   await downloadExcel('/api/tickets/export/excel', `tickets-${date}.xlsx`, params as Record<string, unknown>)
 }
-
