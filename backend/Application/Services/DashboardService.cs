@@ -91,14 +91,26 @@ public class DashboardService
                 && openStatuses.Contains(t.Status)
                 && t.AssignedToId == null);
 
-        List<Ticket> rawUrgentTickets = await _context.Tickets
-            .Include(t => t.Project)
+        var rawUrgentTickets = await _context.Tickets
             .Where(t => t.OrganizationId == organizationId
-                && openStatuses.Contains(t.Status)
-                && (t.Priority == TicketPriority.Critical || t.Priority == TicketPriority.High))
-            .OrderByDescending(t => t.Priority)
+                && openStatuses.Contains(t.Status))
+            .OrderByDescending(t =>
+                t.Priority == TicketPriority.Critical ? 4 :
+                t.Priority == TicketPriority.High ? 3 :
+                t.Priority == TicketPriority.Medium ? 2 : 1)
             .ThenBy(t => t.CreatedAt)
-            .Take(5)
+            .Take(8)
+            .Select(t => new
+            {
+                t.Id,
+                t.Title,
+                Priority = t.Priority.ToString().ToLower(),
+                Type = t.Type.ToString().ToLower(),
+                Status = t.Status.ToString(),
+                ProjectName = t.Project != null ? t.Project.Name : null,
+                AssignedToName = t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
+                CommentCount = t.Comments.Count
+            })
             .ToListAsync();
 
         List<UrgentTicketDto> urgentTickets = rawUrgentTickets
@@ -107,9 +119,12 @@ public class DashboardService
                 Id = t.Id.ToString(),
                 Reference = $"TKT-{t.Id.ToString()[..6].ToUpper()}",
                 Title = t.Title,
-                Priority = t.Priority.ToString().ToLower(),
-                Type = t.Type.ToString().ToLower(),
-                ProjectName = t.Project?.Name,
+                Priority = t.Priority,
+                Type = t.Type,
+                Status = t.Status,
+                ProjectName = t.ProjectName,
+                AssignedToName = t.AssignedToName,
+                CommentCount = t.CommentCount,
             })
             .ToList();
 
@@ -142,29 +157,26 @@ public class DashboardService
 
         List<Ticket> closedTickets = await _context.Tickets
             .Include(t => t.Project)
+            .Include(t => t.AssignedTo)
             .Where(t => t.OrganizationId == organizationId
                 && (t.Status == TicketStatus.Resolved || t.Status == TicketStatus.Closed)
                 && t.UpdatedAt >= since)
             .OrderByDescending(t => t.UpdatedAt)
-            .Take(3)
+            .Take(8)
             .ToListAsync();
 
         foreach (Ticket? t in closedTickets)
         {
-            string proj = t.Project?.Name is string pn ? $" — {pn}" : "";
+            string title = t.Title.Length > 45 ? t.Title[..45] + "…" : t.Title;
+            List<string> detailParts = [];
+            if (t.Project?.Name is string pn) detailParts.Add(pn);
+            if (t.AssignedTo is { } u) detailParts.Add($"{u.FirstName} {u.LastName}");
             items.Add(new ActivityItemDto
             {
                 Color = "accent",
-                Text = $"Ticket {(t.Title.Length > 40 ? t.Title[..40] + "…" : t.Title)} résolu{proj}",
+                Text = $"Ticket résolu — {title}",
                 Timestamp = t.UpdatedAt,
-                Detail = t.Priority switch
-                {
-                    TicketPriority.Critical => "Critique",
-                    TicketPriority.High     => "Haute",
-                    TicketPriority.Medium   => "Moyenne",
-                    TicketPriority.Low      => "Basse",
-                    _                       => t.Priority.ToString(),
-                },
+                Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
             });
         }
 
@@ -174,7 +186,7 @@ public class DashboardService
                 && v.Dependency.TechProject.OrganizationId == organizationId
                 && v.DetectedAt >= since)
             .OrderByDescending(v => v.DetectedAt)
-            .Take(2)
+            .Take(8)
             .ToListAsync();
 
         foreach (Vulnerability? v in recentVulns)
@@ -182,12 +194,12 @@ public class DashboardService
             items.Add(new ActivityItemDto
             {
                 Color = "red",
-                Text = $"Vuln critique détectée — {v.CveId} sur {v.Dependency.TechProject.Name}",
+                Text = $"Vulnérabilité critique détectée sur {v.Dependency.TechProject.Name}",
                 Timestamp = v.DetectedAt,
-                Detail = "Scanner automatique",
+                Detail = $"{v.CveId} · Scanner auto",
             });
         }
 
-        return [.. items.OrderByDescending(a => a.Timestamp).Take(5)];
+        return [.. items.OrderByDescending(a => a.Timestamp).Take(8)];
     }
 }

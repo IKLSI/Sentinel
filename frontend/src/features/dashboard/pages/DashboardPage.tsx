@@ -1,52 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HealthScoreCircle } from "../../../components/HealthScoreCircle";
 import Box from "@mui/material/Box";
+import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
+import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
+import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
+import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
+import TrendingUpOutlined from "@mui/icons-material/TrendingUpOutlined";
+import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
+import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
+import BoltOutlined from "@mui/icons-material/BoltOutlined";
+import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
+import MessageOutlined from "@mui/icons-material/MessageOutlined";
+import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 import { getDashboardStats } from "../api/dashboard";
 import { getProjects } from "../../techHealth/api/projects";
 import type { ProjectDto } from "../../techHealth/api/projects";
-import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
-import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
-import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
-import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
-import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
-import InfoOutlined from "@mui/icons-material/InfoOutlined";
-import StorageOutlined from "@mui/icons-material/StorageOutlined";
-import type { HealthGrade } from "../../../types";
-
-// ── Constants ──────────────────────────────────────────────────────────
-
-const TICKET_STATUS_CONFIG = [
-  { key: "New",        label: "Nouveau",  color: "var(--accent)" },
-  { key: "InProgress", label: "En cours", color: "var(--cyan)" },
-  { key: "Testing",    label: "Tests",    color: "var(--yellow)" },
-  { key: "Resolved",   label: "Résolu",   color: "var(--green)" },
-  { key: "Closed",     label: "Clôturé",  color: "var(--muted)" },
-];
-
-const PRIORITY_CONFIG: Record<string, { color: string; bg: string }> = {
-  Critical: { color: "var(--red)",    bg: "var(--red-subtle)"    },
-  High:     { color: "var(--orange)", bg: "var(--orange-subtle)" },
-  Medium:   { color: "var(--yellow)", bg: "var(--yellow-subtle)" },
-  Low:      { color: "var(--green)",  bg: "var(--green-subtle)"  },
-};
-
-const PRIORITY_LEVEL: Record<string, number> = {
-  Critical: 4, High: 3, Medium: 2, Low: 1,
-};
-
-
-const ACTIVITY_CONFIG: Record<string, { color: string; Icon: React.ElementType }> = {
-  accent: { color: "var(--accent)", Icon: InfoOutlined          },
-  red:    { color: "var(--red)",    Icon: ErrorOutlined         },
-  green:  { color: "var(--green)",  Icon: TaskAltOutlined       },
-  yellow: { color: "var(--yellow)", Icon: WarningAmberOutlined  },
-  blue:   { color: "var(--blue)",   Icon: StorageOutlined       },
-};
-
-// ── Types ──────────────────────────────────────────────────────────────
+import { useToast } from "../../../hooks/useToast";
 
 interface ActivityItem {
   color: string;
@@ -56,13 +31,22 @@ interface ActivityItem {
 }
 
 interface UrgentTicket {
-  id: string; reference: string; title: string;
-  priority: string; type: string; projectName?: string;
+  id: string;
+  reference: string;
+  title: string;
+  priority: string;
+  type: string;
+  status: string;
+  projectName?: string;
+  assignedToName?: string;
+  commentCount: number;
 }
 
 interface StatsData {
-  openTickets: number; openTicketsDelta: number;
-  resolvedThisMonth: number; resolvedThisMonthDelta: number;
+  openTickets: number;
+  openTicketsDelta: number;
+  resolvedThisMonth: number;
+  resolvedThisMonthDelta: number;
   hoursThisMonth: number;
   criticalVulnerabilities: number;
   ticketsByStatus: Record<string, number>;
@@ -73,559 +57,916 @@ interface StatsData {
 }
 
 const EMPTY_STATS: StatsData = {
-  openTickets: 0, openTicketsDelta: 0,
-  resolvedThisMonth: 0, resolvedThisMonthDelta: 0,
+  openTickets: 0,
+  openTicketsDelta: 0,
+  resolvedThisMonth: 0,
+  resolvedThisMonthDelta: 0,
   hoursThisMonth: 0,
   criticalVulnerabilities: 0,
-  ticketsByStatus: {}, ticketsByPriority: {},
+  ticketsByStatus: {},
+  ticketsByPriority: {},
   unassignedOpenTickets: 0,
-  urgentTickets: [], recentActivity: [],
+  urgentTickets: [],
+  recentActivity: [],
+};
+
+const STATUS = [
+  { key: "New", label: "Nouveau", color: "#6366f1" },
+  { key: "InProgress", label: "En cours", color: "#58aee8" },
+  { key: "Testing", label: "Tests", color: "#e8bb3a" },
+  { key: "Resolved", label: "Résolu", color: "#5dc895" },
+  { key: "Closed", label: "Clôturé", color: "#94a3b8" },
+];
+
+const panelSx = {
+  background: "#fff",
+  borderRadius: "20px",
+  border: "1px solid rgba(226,232,240,0.9)",
+  boxShadow: "0 4px 14px rgba(15,23,42,0.08)",
+  overflow: "hidden",
+  minHeight: 0,
+} as const;
+
+const avatars = [
+  { bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)", text: "#8b1c38" },
+  { bg: "linear-gradient(135deg,#d9cef9,#bbb2ef)", text: "#3b2ea2" },
+  { bg: "linear-gradient(135deg,#c5e1f7,#9ec8e8)", text: "#1f4c80" },
+  { bg: "linear-gradient(135deg,#c3edd8,#9ee0bf)", text: "#1e6b46" },
+  { bg: "linear-gradient(135deg,#e6ecf4,#d5deeb)", text: "#64748b" },
+];
+
+const initials = (s: string) => {
+  const parts = s.split(/[\s-_]+/).filter(Boolean);
+  const fromWords = parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+  if (fromWords.length >= 2) return fromWords.slice(0, 2);
+
+  const compact = s.replace(/[\s-_]+/g, "").toUpperCase();
+  if (compact.length >= 2) return compact.slice(0, 2);
+  return compact.padEnd(2, "A").slice(0, 2);
 };
 
 
-// ── SVG: Donut Chart ────────────────────────────────────────────────────
+const ticketIcon = (type: string) => {
+  if (type === "security") return SecurityOutlined;
+  if (type === "performance") return BoltOutlined;
+  return BugReportOutlined;
+};
 
-const DonutChart: React.FC<{
-  segments: { color: string; value: number; key: string }[];
-  size?: number;
-}> = ({ segments, size = 96 }) => {
-  const sw = 10;
-  const r = (size - sw) / 2;
-  const circ = 2 * Math.PI * r;
-  const total = segments.reduce((s, seg) => s + seg.value, 0);
 
-  if (total === 0) return (
-    <Box sx={{
-      width: size, height: size, flexShrink: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <Box sx={{
-        width: size - sw * 2, height: size - sw * 2,
-        borderRadius: "50%", border: `${sw}px solid var(--s3)`,
-      }} />
-    </Box>
-  );
+const ticketPriority = (priority: string) => {
+  if (priority === "critical") return { label: "Critique", color: "#c7364f" };
+  if (priority === "high") return { label: "Haute", color: "#c56a1a" };
+  if (priority === "medium") return { label: "Moyenne", color: "#1f6fb2" };
+  return { label: "Basse", color: "#2f8f63" };
+};
 
-  let cumPct = 0;
+const PRIORITY_ORDER: Record<string, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+
+const repoPath = (repositoryUrl?: string, repositoryType?: string): string => {
+  if (repositoryUrl) {
+    try {
+      const path = new URL(repositoryUrl).pathname
+        .replace(/^\//, "")
+        .replace(/\.git$/, "");
+      if (path) return path;
+    } catch {}
+  }
+  return (repositoryType ?? "git").toLowerCase();
+};
+
+const projectTone = (project: ProjectDto) => {
+  if (project.criticalVulnerabilities > 0)
+    return {
+      label: "À risque",
+      color: "#c7364f",
+      dot: "#e74660",
+      Icon: WarningAmberOutlined,
+    };
+  if (project.healthScore >= 85)
+    return {
+      label: "Sain",
+      color: "#2f8f63",
+      dot: "#56c58f",
+      Icon: CheckCircleOutlineOutlined,
+    };
+  return {
+    label: "Surveillance",
+    color: "#ad6f2f",
+    dot: "#e6a94c",
+    Icon: InfoOutlined,
+  };
+};
+
+const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
+  const total = STATUS.reduce((sum, s) => sum + (map[s.key] ?? 0), 0);
+  const r = 40;
+  const c = 2 * Math.PI * r;
+  let offset = 0;
   return (
-    <Box sx={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--s3)" strokeWidth={sw} />
-        {segments.map((seg) => {
-          if (seg.value === 0) return null;
-          const pct = seg.value / total;
-          const dash = pct * circ - 1.5;
-          const offset = circ * (1 - cumPct);
-          cumPct += pct;
-          return (
+    <Box sx={{ position: "relative", width: "140px", height: "140px" }}>
+      <svg
+        viewBox="0 0 100 100"
+        style={{ width: "140px", height: "140px", transform: "rotate(-90deg)" }}
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          stroke="#eef3fa"
+          strokeWidth="10"
+          fill="none"
+        />
+        {STATUS.map((s) => {
+          const value = map[s.key] ?? 0;
+          if (!value || !total) return null;
+          const seg = (value / total) * c;
+          const out = (
             <circle
-              key={seg.key}
-              cx={size / 2} cy={size / 2} r={r}
-              fill="none" stroke={seg.color} strokeWidth={sw}
-              strokeDasharray={`${Math.max(dash, 0)} ${circ - Math.max(dash, 0)}`}
-              strokeDashoffset={offset}
-              style={{ transition: "stroke-dasharray 0.9s cubic-bezier(0.16,1,0.3,1)" }}
+              key={s.key}
+              cx="50"
+              cy="50"
+              r={r}
+              stroke={s.color}
+              strokeWidth="10"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${Math.max(seg - 1.5, 0)} ${c}`}
+              strokeDashoffset={-offset}
             />
           );
+          offset += seg;
+          return out;
         })}
       </svg>
-      <Box sx={{
-        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        zIndex: 1,
-      }}>
-        <Box sx={{
-          fontSize: "18px", fontWeight: 800, color: "var(--text)",
-          fontFamily: "var(--font-mono)", lineHeight: 1, letterSpacing: "-0.04em",
-        }}>
-          {total}
-        </Box>
-        <Box sx={{
-          fontSize: "8px", color: "var(--muted)", mt: "3px",
-          textTransform: "uppercase", letterSpacing: "0.1em",
-        }}>
-          total
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <Box
+            sx={{
+              fontSize: "36px",
+              fontWeight: 800,
+              lineHeight: 1,
+              letterSpacing: "-0.04em",
+              color: "#111827",
+            }}
+          >
+            {total}
+          </Box>
+          <Box
+            sx={{
+              mt: "3px",
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              letterSpacing: "0.18em",
+              color: "#6b7a95",
+            }}
+          >
+            TOTAL
+          </Box>
         </Box>
       </Box>
     </Box>
   );
 };
-
-// ── Shared primitives ──────────────────────────────────────────────────
-
-const Panel: React.FC<{ children: React.ReactNode; sx?: object; delay?: number }> = ({
-  children, sx, delay = 0,
-}) => (
-  <Box sx={{
-    background: "var(--s1)",
-    border: "1px solid var(--border)",
-    borderRadius: "14px",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    minHeight: 0,
-    animation: "fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) both",
-    animationDelay: `${delay}ms`,
-    willChange: "opacity, transform",
-    transition: "border-color 0.2s",
-    "&:hover": { borderColor: "var(--border2)" },
-    ...sx,
-  }}>
-    {children}
-  </Box>
-);
-
-const PanelHead: React.FC<{
-  title: string;
-  action?: React.ReactNode;
-  badge?: React.ReactNode;
-  compact?: boolean;
-}> = ({ title, action, badge, compact = false }) => (
-  <Box sx={{
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    px: "16px", py: compact ? "6px" : "12px", minHeight: compact ? "34px" : "46px",
-    flexShrink: 0, gap: "8px",
-    background: "linear-gradient(180deg, var(--s2) 0%, transparent 100%)",
-  }}>
-    <Box sx={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-      <Box sx={{
-        fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em",
-        textTransform: "uppercase", color: "var(--muted2)", flexShrink: 0,
-      }}>
-        {title}
-      </Box>
-      {badge}
-    </Box>
-    {action}
-  </Box>
-);
-
-const ViewBtn: React.FC<{ onClick: () => void; label?: string }> = ({ onClick, label = "Voir tout" }) => (
-  <Box
-    component="button" onClick={onClick}
-    sx={{
-      all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: "2px",
-      fontSize: "10px", fontWeight: 600, color: "var(--muted2)",
-      px: "8px", py: "4px", borderRadius: "6px",
-      transition: "color 0.12s, background 0.12s", flexShrink: 0,
-      "&:hover": { color: "var(--accent)", background: "var(--accent-subtle)" },
-    }}
-  >
-    {label}
-    <ChevronRightOutlined sx={{ fontSize: 12 }} />
-  </Box>
-);
-
-// ── Page ───────────────────────────────────────────────────────────────
-
-export const DashboardPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [stats, setStats]               = useState<StatsData>(EMPTY_STATS);
-  const [techProjects, setTechProjects] = useState<ProjectDto[]>([]);
-  const [loaded, setLoaded]             = useState(false);
-  const urgentTicketsPreview = stats.urgentTickets.slice(0, 5);
-
-  useEffect(() => {
-    Promise.all([
-      getDashboardStats().then(setStats).catch(() => {}),
-      getProjects().then(setTechProjects).catch(() => {}),
-    ]).finally(() => setLoaded(true));
-  }, []);
-
-  return (
-    <Box sx={{
-      p: "20px",
-      display: "flex", flexDirection: "column", gap: "12px",
-      height: "100vh", boxSizing: "border-box", overflow: "hidden",
-    }}>
-
-      {/* ── KPIs ───────────────────────────────────────────────── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", flexShrink: 0 }}>
-        <KpiCard
-          delay={60} loaded={loaded}
-          label="Tickets ouverts" value={stats.openTickets}
-          color="var(--accent)" icon={<ConfirmationNumberOutlined sx={{ fontSize: 16 }} />}
-          delta={stats.openTicketsDelta}
-        />
-        <KpiCard
-          delay={110} loaded={loaded}
-          label="Résolus ce mois" value={stats.resolvedThisMonth}
-          color="var(--green)" icon={<TaskAltOutlined sx={{ fontSize: 16 }} />}
-          delta={stats.resolvedThisMonthDelta}
-        />
-        <KpiCard
-          delay={160} loaded={loaded}
-          label="Non assignés" value={stats.unassignedOpenTickets}
-          color="var(--yellow)" icon={<AccessTimeOutlined sx={{ fontSize: 16 }} />}
-        />
-        <KpiCard
-          delay={210} loaded={loaded}
-          label="Vulnérabilités critiques" value={stats.criticalVulnerabilities}
-          color="var(--red)" icon={<BugReportOutlined sx={{ fontSize: 16 }} />}
-        />
-      </Box>
-
-      {/* ── Milieu : tickets urgents + activité ────────────────── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", flex: 1, minHeight: 0 }}>
-        <Panel delay={260}>
-          <PanelHead
-            title="Tickets urgents"
-            action={<ViewBtn onClick={() => navigate("/tickets")} />}
-            compact
-          />
-          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "3px", flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {urgentTicketsPreview.length === 0 ? (
-              <EmptyState text="Aucun ticket critique ou élevé en cours." />
-            ) : (
-              urgentTicketsPreview.map((t) => (
-                <TicketRow key={t.id} ticket={t} compact onClick={() => navigate(`/tickets/${t.id}`)} />
-              ))
-            )}
-          </Box>
-        </Panel>
-
-        <Panel delay={300}>
-          <PanelHead
-            title="Activité récente"
-            compact
-          />
-          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {stats.recentActivity.length === 0 ? (
-              <EmptyState text="Aucune activité récente." />
-            ) : (
-              stats.recentActivity.map((item, idx) => (
-                <ActivityCard key={idx} item={item} />
-              ))
-            )}
-          </Box>
-        </Panel>
-      </Box>
-
-      {/* ── Bas : statuts | santé ──────────────────────────────── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", flex: 1, minHeight: 0 }}>
-
-        <Panel delay={340}>
-          <PanelHead
-            title="Répartition par statut"
-          />
-          <Box sx={{ p: "20px 22px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <StatusDistribution ticketsByStatus={stats.ticketsByStatus} />
-          </Box>
-        </Panel>
-
-        <Panel delay={420}>
-          <PanelHead
-            title="Projets"
-            badge={undefined}
-            action={<ViewBtn onClick={() => navigate("/projects")} />}
-          />
-          <Box sx={{ pt: "6px", px: "8px", pb: "8px", display: "flex", flexDirection: "column", gap: "4px", flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {techProjects.length === 0 ? (
-              <EmptyState text="Aucun projet configuré." />
-            ) : (
-              techProjects.slice(0, 4).map((p) => (
-                <TechProjectRow key={p.id} project={p} onClick={() => navigate(`/projects/${p.id}`)} />
-              ))
-            )}
-          </Box>
-        </Panel>
-
-      </Box>
-    </Box>
-  );
-};
-
-// ── Empty State ────────────────────────────────────────────────────────
-
-const EmptyState: React.FC<{ text: string }> = ({ text }) => (
-  <Box sx={{
-    flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-    py: "20px",
-  }}>
-    <Box sx={{ fontSize: "11px", color: "var(--muted)", textAlign: "center" }}>
-      {text}
-    </Box>
-  </Box>
-);
-
-// ── KPI Card ──────────────────────────────────────────────────────────
 
 const KpiCard: React.FC<{
   label: string;
-  value: number | string;
-  unit?: string;
-  color: string;
+  value: number;
+  valueColor: string;
   icon: React.ReactNode;
-  delay?: number;
-  loaded?: boolean;
   delta?: number;
-}> = ({ label, value, unit, color, icon, delay = 0, loaded = true, delta }) => (
-  <Box sx={{
-    background: "var(--s1)",
-    border: "1px solid var(--border)",
-    borderRadius: "14px",
-    p: "20px 22px 18px",
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    overflow: "hidden",
-    animation: "fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) both",
-    animationDelay: `${delay}ms`,
-    willChange: "opacity, transform",
-    cursor: "default",
-    "&::after": {
-      content: '""',
-      position: "absolute", bottom: "-32px", right: "-32px",
-      width: "110px", height: "110px", borderRadius: "50%",
-      background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-      opacity: 0.08, pointerEvents: "none",
-    },
-  }}>
-    {/* Icon + delta row */}
-    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: "14px" }}>
-      <Box sx={{
-        width: "32px", height: "32px", borderRadius: "9px", flexShrink: 0,
-        background: `color-mix(in srgb, ${color} 14%, transparent)`,
-        border: `1px solid color-mix(in srgb, ${color} 22%, transparent)`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color,
-      }}>
-        {icon}
-      </Box>
-      {loaded && delta !== undefined && delta !== 0 && (
-        <Box sx={{
-          fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-mono)",
-          color: delta > 0 ? "var(--green)" : "var(--red)",
-          background: delta > 0 ? "var(--green-subtle)" : "var(--red-subtle)",
-          border: `1px solid color-mix(in srgb, ${delta > 0 ? "var(--green)" : "var(--red)"} 28%, transparent)`,
-          px: "6px", py: "2px", borderRadius: "5px",
-        }}>
-          {delta > 0 ? "+" : ""}{delta}
-        </Box>
-      )}
-    </Box>
-
-    {/* Value */}
-    <Box sx={{ display: "flex", alignItems: "baseline", gap: "2px", mb: "6px" }}>
-      <Box sx={{
-        fontFamily: "var(--font-mono)", fontSize: "36px", fontWeight: 800,
-        color: loaded ? "var(--text)" : "var(--s3)",
-        letterSpacing: "-0.06em", lineHeight: 1,
-        transition: "color 0.3s",
-      }}>
-        {loaded ? value : "—"}
-      </Box>
-      {unit && loaded && (
-        <Box component="span" sx={{
-          fontSize: "14px", color: "var(--muted)", fontWeight: 500, ml: "2px",
-        }}>
-          {unit}
-        </Box>
-      )}
-    </Box>
-
-    {/* Label */}
-    <Box sx={{
-      fontSize: "10px", fontWeight: 600, letterSpacing: "0.07em",
-      textTransform: "uppercase", color: "var(--muted)",
-    }}>
-      {label}
-    </Box>
-
-  </Box>
-);
-
-// ── Ticket Row ─────────────────────────────────────────────────────────
-
-const TicketRow: React.FC<{ ticket: UrgentTicket; onClick: () => void; compact?: boolean }> = ({ ticket, onClick, compact = false }) => {
-  const key = ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1);
-  const p   = PRIORITY_CONFIG[key] ?? PRIORITY_CONFIG.Medium;
+  inverse?: boolean;
+  badge?: boolean;
+}> = ({
+  label,
+  value,
+  valueColor,
+  icon,
+  delta,
+  inverse = false,
+  badge = false,
+}) => {
+  const positive = (delta ?? 0) >= 0;
+  const good = inverse ? !positive : positive;
   return (
     <Box
-      component="button"
-      onClick={onClick}
       sx={{
-        all: "unset", display: "flex", alignItems: "center", gap: compact ? "8px" : "10px",
-        background: "var(--s2)", border: "1px solid var(--border)",
-        borderRadius: "8px", p: compact ? "4px 10px" : "6px 12px", cursor: "pointer", flex: 1,
-        transition: "border-color 0.15s, background 0.15s, transform 0.15s",
-        "&:hover": {
-          borderColor: `color-mix(in srgb, ${p.color} 35%, transparent)`,
-          background: p.bg,
-          transform: "translateX(2px)",
-        },
+        ...panelSx,
+        p: "12px 15px",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* Level bars */}
-      <Box sx={{ display: "flex", alignItems: "flex-end", gap: "1.5px", height: "10px", flexShrink: 0, color: p.color }}>
-        {[1, 2, 3, 4].map(i => (
-          <Box key={i} sx={{ width: "3px", height: `${4 + i * 1.5}px`, borderRadius: "1px", background: "currentColor", opacity: i <= (PRIORITY_LEVEL[key] ?? 1) ? 1 : 0.15 }} />
-        ))}
-      </Box>
-
-      {/* Titre + méta */}
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
-        <Box sx={{
-          fontSize: "12px", fontWeight: 600, color: "var(--text)",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          letterSpacing: "-0.02em",
-        }}>
-          {ticket.title}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box
+          sx={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "10px",
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "#6f829f",
+          }}
+        >
+          {label}
         </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mt: "2px" }}>
-          <Box sx={{ fontSize: "9px", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-            {ticket.reference}
-          </Box>
-          {ticket.projectName && (
-            <>
-              <Box sx={{ width: "2px", height: "2px", borderRadius: "50%", background: "var(--border2)", flexShrink: 0 }} />
-              <Box sx={{ fontSize: "9px", color: "var(--muted2)", fontFamily: "var(--font-mono)" }}>
-                {ticket.projectName}
-              </Box>
-            </>
-          )}
+        <Box
+          sx={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "12px",
+            display: "grid",
+            placeItems: "center",
+            color: valueColor,
+            bgcolor: `${valueColor}18`,
+          }}
+        >
+          {icon}
         </Box>
       </Box>
-
-      {/* Right */}
-      <ChevronRightOutlined sx={{ fontSize: compact ? 12 : 13, color: "var(--muted)", opacity: 0.35, flexShrink: 0 }} />
+      <Box
+        sx={{ mt: "8px", display: "flex", alignItems: "baseline", gap: "7px" }}
+      >
+        <Box
+          sx={{
+            fontSize: "34px",
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: "-0.04em",
+            color: valueColor,
+          }}
+        >
+          {value}
+        </Box>
+        {delta !== undefined &&
+          delta !== 0 &&
+          (badge ? (
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px",
+                color: "#c7364f",
+                fontWeight: 700,
+                fontSize: "16px",
+              }}
+            >
+              <TrendingUpOutlined sx={{ fontSize: 14 }} />
+              {Math.abs(delta)}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px",
+                color: good ? "#2f8f63" : "#c7364f",
+                fontWeight: 700,
+                fontSize: "16px",
+              }}
+            >
+              {good ? (
+                <TrendingUpOutlined sx={{ fontSize: 14 }} />
+              ) : (
+                <TrendingDownOutlined sx={{ fontSize: 14 }} />
+              )}
+              {Math.abs(delta)}
+            </Box>
+          ))}
+      </Box>
     </Box>
   );
 };
 
-// ── Activity Card ──────────────────────────────────────────────────────
+export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [stats, setStats] = useState<StatsData>(EMPTY_STATS);
+  const [projects, setProjects] = useState<ProjectDto[]>([]);
 
-const ActivityCard: React.FC<{ item: ActivityItem }> = ({ item }) => {
-  const cfg = ACTIVITY_CONFIG[item.color] ?? ACTIVITY_CONFIG.accent;
-  return (
-    <Box sx={{
-      display: "flex", alignItems: "center", gap: "10px",
-      background: "var(--s2)", border: "1px solid var(--border)",
-      borderRadius: "8px", p: "6px 12px", cursor: "default",
-    }}>
-      <Box sx={{
-        width: "28px", height: "28px", borderRadius: "8px", flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: cfg.color,
-      }}>
-        <cfg.Icon sx={{ fontSize: 14 }} />
-      </Box>
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
-        <Box sx={{
-          fontSize: "12px", fontWeight: 600, color: "var(--text)",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          letterSpacing: "-0.02em",
-        }}>
-          {item.text}
-        </Box>
-        {item.detail && (
-          <Box sx={{ fontSize: "9px", color: "var(--muted)", fontFamily: "var(--font-mono)", mt: "2px" }}>
-            {item.detail}
-          </Box>
-        )}
-      </Box>
-    </Box>
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const [statsRes, projectsRes] = await Promise.allSettled([
+        getDashboardStats(),
+        getProjects(),
+      ]);
+      if (!mounted) return;
+      if (statsRes.status === "fulfilled") setStats(statsRes.value);
+      else
+        showToast(
+          "Impossible de charger les statistiques du dashboard.",
+          "error",
+        );
+      if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
+      else showToast("Impossible de charger les projets.", "error");
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [showToast]);
+
+  const urgent = useMemo(
+    () =>
+      [...stats.urgentTickets]
+        .sort(
+          (a, b) =>
+            (PRIORITY_ORDER[b.priority] ?? 0) -
+            (PRIORITY_ORDER[a.priority] ?? 0),
+        )
+        .slice(0, 8),
+    [stats.urgentTickets],
   );
-};
+  const activity = stats.recentActivity.slice(0, 8);
+  const projectRows = projects.slice(0, 4);
 
-// ── Status Distribution ────────────────────────────────────────────────
+  const bugCount = urgent.filter((t) => t.type === "bug").length;
+  const secCount = urgent.filter((t) => t.type === "security").length;
+  const totalStatuses = STATUS.reduce(
+    (sum, s) => sum + (stats.ticketsByStatus[s.key] ?? 0),
+    0,
+  );
+  const urgentSummary = useMemo(() => {
+    if (urgent.length === 0) return "Aucun ticket urgent pour le moment";
+    const parts: string[] = [];
+    if (bugCount > 0) parts.push(`${bugCount} ${bugCount > 1 ? "bugs" : "bug"}`);
+    if (secCount > 0)
+      parts.push(`${secCount} ${secCount > 1 ? "failles de sécurité" : "faille de sécurité"}`);
+    const otherCount = urgent.length - bugCount - secCount;
+    if (otherCount > 0)
+      parts.push(`${otherCount} ${otherCount > 1 ? "autres" : "autre"}`);
+    return parts.join(" · ");
+  }, [bugCount, secCount, urgent]);
 
-const StatusDistribution: React.FC<{ ticketsByStatus: Record<string, number> }> = ({ ticketsByStatus }) => {
-  const safeStatus = ticketsByStatus ?? {};
-  const total = TICKET_STATUS_CONFIG.reduce((s, { key }) => s + (safeStatus[key] ?? 0), 0);
-  const segments = TICKET_STATUS_CONFIG.map(({ key, color }) => ({
-    key, color, value: safeStatus[key] ?? 0,
-  }));
+
+
+  const projectsSyncText = useMemo(() => {
+    const latestScan = projects
+      .map((project) => project.lastScanAt)
+      .filter((value): value is string => Boolean(value))
+      .map((value) => new Date(value))
+      .filter((date) => !Number.isNaN(date.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+
+    if (!latestScan) return "Aucune synchronisation disponible";
+    return `Dernière synchronisation ${formatDistanceToNow(latestScan, { addSuffix: true, locale: fr })}`;
+  }, [projects]);
+
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: "28px" }}>
-      <DonutChart segments={segments} size={136} />
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-        {TICKET_STATUS_CONFIG.map(({ key, label, color }) => {
-          const count = safeStatus[key] ?? 0;
-          const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
-          return (
-            <Box key={key}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "5px" }}>
-                <Box sx={{
-                  width: "8px", height: "8px", borderRadius: "3px",
-                  background: color, flexShrink: 0,
-                }} />
-                <Box sx={{ flex: 1, fontSize: "11px", color: "var(--muted2)", letterSpacing: "-0.01em" }}>
-                  {label}
-                </Box>
-                <Box sx={{
-                  fontFamily: "var(--font-mono)", fontSize: "11px",
-                  fontWeight: 700, color: "var(--text)",
-                }}>
-                  {count}
-                </Box>
-                <Box sx={{
-                  fontFamily: "var(--font-mono)", fontSize: "9px",
-                  color: "var(--muted)", minWidth: "28px", textAlign: "right",
-                }}>
-                  {pct}%
-                </Box>
+    <Box sx={{ p: "16px 20px", minHeight: "100vh" }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
+          gridTemplateRows: "auto 1.1fr 1fr",
+          gap: "14px",
+          height: "calc(100vh - 32px)",
+          minHeight: "720px",
+        }}
+      >
+        <Box sx={{ gridColumn: "span 3" }}>
+          <KpiCard
+            label="Tickets ouverts"
+            value={stats.openTickets}
+            valueColor="#5c50d8"
+            icon={<ConfirmationNumberOutlined sx={{ fontSize: 17 }} />}
+            delta={stats.openTicketsDelta}
+            inverse
+          />
+        </Box>
+        <Box sx={{ gridColumn: "span 3" }}>
+          <KpiCard
+            label="Résolus / mois"
+            value={stats.resolvedThisMonth}
+            valueColor="#3a9578"
+            icon={<CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />}
+            delta={stats.resolvedThisMonthDelta}
+          />
+        </Box>
+        <Box sx={{ gridColumn: "span 3" }}>
+          <KpiCard
+            label="Non assignés"
+            value={stats.unassignedOpenTickets}
+            valueColor="#cd7422"
+            icon={<PersonOffOutlined sx={{ fontSize: 17 }} />}
+          />
+        </Box>
+        <Box sx={{ gridColumn: "span 3" }}>
+          <KpiCard
+            label="Vulns critiques"
+            value={stats.criticalVulnerabilities}
+            valueColor="#c7364f"
+            icon={<ShieldOutlined sx={{ fontSize: 17 }} />}
+            delta={stats.criticalVulnerabilities}
+            badge
+          />
+        </Box>
+
+        <Box
+          sx={{
+            ...panelSx,
+            gridColumn: "span 7",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            sx={{
+              px: "18px",
+              py: "12px",
+              borderBottom: "1px solid #e6ebf3",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "15px",
+                  lineHeight: 1.1,
+                  fontWeight: 700,
+                  color: "#121829",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Tickets urgents
               </Box>
-              <Box sx={{ height: "3px", background: "var(--s3)", borderRadius: "99px", overflow: "hidden" }}>
-                <Box sx={{
-                  height: "100%", width: `${pct}%`, background: color,
-                  borderRadius: "99px",
-                  transition: "width 0.9s cubic-bezier(0.16,1,0.3,1)",
-                }} />
+              <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+                {urgentSummary}
               </Box>
             </Box>
-          );
-        })}
+            <Box
+              component="button"
+              onClick={() => navigate("/tickets")}
+              sx={{
+                all: "unset",
+                cursor: "pointer",
+                color: "#5a3ee1",
+                fontSize: "11px",
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px",
+              }}
+            >
+              Voir tout <ChevronRightOutlined sx={{ fontSize: 18 }} />
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              p: "8px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "7px",
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "transparent transparent",
+              "&::-webkit-scrollbar": { width: "4px" },
+              "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" },
+              "&::-webkit-scrollbar-track": { background: "transparent" },
+              "&:hover": { scrollbarColor: "#c8d1e0 transparent" },
+              "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" },
+            }}
+          >
+            {Array.from({ length: 8 }).map((_, i) => {
+              const t = urgent[i];
+              if (!t) {
+                return (
+                  <Box key={`urgent-empty-${i}`} sx={{ minHeight: "48px" }} />
+                );
+              }
+              const Icon = ticketIcon(t.type);
+              const badge = ticketPriority(t.priority);
+              const av = avatars[i % avatars.length];
+              return (
+                <Box
+                  key={t.id}
+                  component="button"
+                  onClick={() => navigate(`/tickets/${t.id}`)}
+                  sx={{
+                    all: "unset",
+                    cursor: "pointer",
+                    borderRadius: "12px",
+                    minHeight: "48px",
+                    px: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "#fff",
+                    transition: "background 120ms ease, box-shadow 120ms ease",
+                    "&:hover": {
+                      background: "#f0f4ff",
+                      boxShadow: "0 0 0 1.5px #6366f122",
+                    },
+                    "&:active": {
+                      background: "#e8eeff",
+                    },
+                  }}
+                >
+                  <Icon
+                    sx={{
+                      fontSize: 16,
+                      color:
+                        t.type === "security"
+                          ? "#cf2943"
+                          : t.type === "performance"
+                            ? "#ca7825"
+                            : "#61708b",
+                    }}
+                  />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "#131a2b",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {t.title}
+                    </Box>
+                    <Box
+                      sx={{
+                        mt: "2px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "10px",
+                        color: "#5d6d87",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span>{t.projectName ?? t.reference}</span>
+                      <span
+                        style={{
+                          color: badge.color,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          fontWeight: 700,
+                        }}
+                      >
+                        • {badge.label}
+                      </span>
+                      <span style={{ color: "#c8d1e0" }}>•</span>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
+                        <MessageOutlined
+                          sx={{ fontSize: 12, color: "#7c8ca4" }}
+                        />
+                        {t.commentCount ?? 0}
+                      </span>
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "999px",
+                      background: av.bg,
+                      color: av.text,
+                      fontWeight: 700,
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: "10px",
+                    }}
+                  >
+                    {t.assignedToName ? initials(t.assignedToName) : "?"}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            ...panelSx,
+            gridColumn: "span 5",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            sx={{ px: "18px", py: "12px", borderBottom: "1px solid #e6ebf3" }}
+          >
+            <Box
+              sx={{
+                fontSize: "15px",
+                lineHeight: 1.1,
+                fontWeight: 700,
+                color: "#121829",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Activité récente
+            </Box>
+            <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+              Mise à jour temps réel
+            </Box>
+          </Box>
+          <Box sx={{ p: "8px 14px", flex: 1, minHeight: 0, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "transparent transparent", "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" }, "&::-webkit-scrollbar-track": { background: "transparent" }, "&:hover": { scrollbarColor: "#c8d1e0 transparent" }, "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" } }}>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              {activity.map((a, idx) => {
+                const danger = a.color === "red";
+                const accentColor = danger ? "#c7364f" : "#2f8f63";
+                const boldPrefix = danger ? "Vulnérabilité critique" : "Ticket résolu";
+                const rest = a.text.startsWith(boldPrefix)
+                  ? a.text.slice(boldPrefix.length)
+                  : a.text;
+                const hasBoldPrefix = a.text.startsWith(boldPrefix);
+                return (
+                  <React.Fragment key={`${a.timestamp}-${a.text}`}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      minHeight: "48px",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: "999px",
+                        bgcolor: danger ? "#f8dce3" : "#c7efd9",
+                        color: accentColor,
+                        display: "grid",
+                        placeItems: "center",
+                        flexShrink: 0,
+                        zIndex: 1,
+                      }}
+                    >
+                      {danger ? (
+                        <ErrorOutlineOutlined sx={{ fontSize: 14 }} />
+                      ) : (
+                        <CheckOutlined sx={{ fontSize: 14 }} />
+                      )}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          fontSize: "11px",
+                          color: "#131a2b",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {hasBoldPrefix ? (
+                          <>
+                            <Box
+                              component="span"
+                              sx={{ fontWeight: 700, color: accentColor }}
+                            >
+                              {boldPrefix}
+                            </Box>
+                            <span>{rest}</span>
+                          </>
+                        ) : (
+                          <Box component="span" sx={{ fontWeight: 700 }}>{a.text}</Box>
+                        )}
+                      </Box>
+                      <Box
+                        sx={{
+                          mt: "1px",
+                          fontSize: "10px",
+                          color: "#60728f",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {a.detail}
+                      </Box>
+                    </Box>
+                  </Box>
+                  {idx < activity.length - 1 && (
+                    <Box
+                      sx={{
+                        width: "1px",
+                        height: "16px",
+                        bgcolor: "#d9e2ef",
+                        ml: "13px",
+                        flexShrink: 0,
+                        my: "-4.5px",
+                      }}
+                    />
+                  )}
+                  </React.Fragment>
+                );
+              })}
+            </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{ ...panelSx, gridColumn: "span 4", p: "16px 18px", display: "flex", flexDirection: "column" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <Box>
+              <Box sx={{ fontSize: "15px", fontWeight: 700, color: "#131a2b", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                Répartition
+              </Box>
+              <Box sx={{ mt: "4px", color: "#5f718d", fontSize: "11px" }}>
+                Statut des tickets actifs
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "20px",
+              mt: "12px",
+            }}
+          >
+            <Donut map={stats.ticketsByStatus} />
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
+              {STATUS.map((s) => {
+                const count = stats.ticketsByStatus[s.key] ?? 0;
+                const pct =
+                  totalStatuses > 0
+                    ? Math.round((count / totalStatuses) * 100)
+                    : 0;
+                return (
+                  <Box
+                    key={s.key}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      fontSize: "13px",
+                      color: "#131a2b",
+                    }}
+                  >
+                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                      <Box sx={{ width: 9, height: 9, borderRadius: "999px", bgcolor: s.color, flexShrink: 0 }} />
+                      <span>{s.label}</span>
+                    </Box>
+                    <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+                      <strong>{count}</strong>{" "}
+                      <span style={{ color: "#7f8ea7" }}>{pct}%</span>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            ...panelSx,
+            gridColumn: "span 8",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            sx={{
+              px: "18px",
+              py: "12px",
+              borderBottom: "1px solid #e6ebf3",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "15px",
+                  lineHeight: 1.1,
+                  fontWeight: 700,
+                  color: "#131a2b",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Projets
+              </Box>
+              <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+                {projectsSyncText}
+              </Box>
+            </Box>
+            <Box
+              component="button"
+              onClick={() => navigate("/projects")}
+              sx={{
+                all: "unset",
+                cursor: "pointer",
+                color: "#5a3ee1",
+                fontSize: "11px",
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px",
+              }}
+            >
+              Voir tout <ChevronRightOutlined sx={{ fontSize: 18 }} />
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              p: "10px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "transparent transparent",
+              "&::-webkit-scrollbar": { width: "4px" },
+              "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" },
+              "&::-webkit-scrollbar-track": { background: "transparent" },
+              "&:hover": { scrollbarColor: "#c8d1e0 transparent" },
+              "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" },
+            }}
+          >
+            {projectRows.map((p) => {
+              const t = projectTone(p);
+              const totalTickets = p.totalTickets;
+              return (
+                <Box
+                  key={p.id}
+                  component="button"
+                  onClick={() => navigate(`/projects/${p.id}`)}
+                  sx={{
+                    all: "unset",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    minHeight: "48px",
+                    px: "10px",
+                    gap: "10px",
+                    borderRadius: "12px",
+                    background: "#fff",
+                    transition: "background 120ms ease, box-shadow 120ms ease",
+                    "&:hover": {
+                      background: "#f0f4ff",
+                      boxShadow: "0 0 0 1.5px #6366f122",
+                    },
+                    "&:active": {
+                      background: "#e8eeff",
+                    },
+                  }}
+                >
+                  <t.Icon sx={{ fontSize: 18, color: t.color, flexShrink: 0 }} />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box sx={{ fontSize: "12px", fontWeight: 700, color: "#131a2b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {p.name}
+                    </Box>
+                    <Box sx={{ mt: "2px", fontSize: "10px", fontFamily: "var(--font-mono)", color: "#7a8faa", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {repoPath(p.repositoryUrl, p.repositoryType)}
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: "#4a5a72" }}>
+                      <ConfirmationNumberOutlined sx={{ fontSize: 14, color: "#687a95" }} />
+                      <span>{totalTickets}</span>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: p.criticalVulnerabilities > 0 ? "#c7364f" : "#4a5a72" }}>
+                      <ShieldOutlined sx={{ fontSize: 14 }} />
+                      <span>{p.criticalVulnerabilities}</span>
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
 };
-
-// ── Tech Project Row ───────────────────────────────────────────────────
-
-const TechProjectRow: React.FC<{ project: ProjectDto; onClick: () => void }> = ({ project, onClick }) => (
-  <Box
-    component="button" onClick={onClick}
-    sx={{
-      all: "unset", display: "flex", alignItems: "center", gap: "10px",
-      background: "var(--s2)", border: "1px solid var(--border)",
-      borderRadius: "8px", p: "6px 12px", cursor: "pointer", flex: 1,
-      transition: "border-color 0.15s, background 0.15s, transform 0.15s",
-      "&:hover": {
-        borderColor: "var(--accent-border)",
-        background: "var(--accent-subtle)",
-        transform: "translateX(2px)",
-      },
-    }}
-  >
-    <HealthScoreCircle score={project.healthScore} grade={project.healthGrade as HealthGrade} size={36} />
-    <Box sx={{ flex: 1, overflow: "hidden" }}>
-      <Box sx={{
-        fontSize: "12px", fontWeight: 600, color: "var(--text)",
-        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        letterSpacing: "-0.02em",
-      }}>
-        {project.name}
-      </Box>
-      <Box sx={{
-        fontSize: "9px", color: "var(--muted)", mt: "2px",
-        fontFamily: "var(--font-mono)",
-      }}>
-        {project.repositoryType}
-      </Box>
-    </Box>
-    {project.criticalVulnerabilities > 0 && (
-      <Box sx={{
-        display: "flex", alignItems: "center", gap: "4px",
-        fontSize: "9px", color: "var(--red)", fontFamily: "var(--font-mono)", fontWeight: 700,
-        flexShrink: 0, background: "var(--red-subtle)", px: "6px", py: "3px", borderRadius: "5px",
-        border: "1px solid color-mix(in srgb, var(--red) 25%, transparent)",
-      }}>
-        <WarningAmberOutlined sx={{ fontSize: 10 }} />
-        {project.criticalVulnerabilities} critique{project.criticalVulnerabilities > 1 ? 's' : ''}
-      </Box>
-    )}
-    <ChevronRightOutlined sx={{ fontSize: 14, color: "var(--muted)", opacity: 0.4, flexShrink: 0 }} />
-  </Box>
-);

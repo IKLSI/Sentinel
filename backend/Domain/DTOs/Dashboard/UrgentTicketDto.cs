@@ -8,4 +8,7 @@ public class UrgentTicketDto
     public string Priority { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string? ProjectName { get; set; }
+    public string? AssignedToName { get; set; }
+    public int CommentCount { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
