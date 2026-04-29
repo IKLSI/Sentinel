@@ -7,19 +7,17 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
+
 public class TicketService
 {
     private readonly SentinelContext _context;
-    private readonly SlaService _slaService;
     private readonly IMemoryCache _cache;
 
     public TicketService(
         SentinelContext context,
-        SlaService slaService,
         IMemoryCache cache)
     {
         _context = context;
-        _slaService = slaService;
         _cache = cache;
     }
 
@@ -28,8 +26,6 @@ public class TicketService
 
     public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto, Guid createdById, Guid organizationId)
     {
-        DateTime? slaDeadline = await _slaService.CalculateSlaDeadlineAsync(dto.Priority, organizationId);
-
         Ticket ticket = new Ticket
         {
             OrganizationId = organizationId,
@@ -42,7 +38,6 @@ public class TicketService
             AssignedToId = dto.AssignedToId,
             EstimatedHours = dto.EstimatedHours,
             CreatedById = createdById,
-            SlaDeadline = slaDeadline,
             Tags = JsonSerializer.Serialize(dto.Tags),
             IsInternal = dto.IsInternal,
             CreatedAt = DateTime.UtcNow,
@@ -82,8 +77,6 @@ public class TicketService
         {
             changes.Add(CreateHistory(ticketId, userId, "Priority", ticket.Priority.ToString(), dto.Priority.Value.ToString()));
             ticket.Priority = dto.Priority.Value;
-            DateTime? newDeadline = await _slaService.CalculateSlaDeadlineAsync(ticket.Priority, ticket.OrganizationId);
-            ticket.SlaDeadline = newDeadline;
         }
 
         if (dto.Type.HasValue && dto.Type.Value != ticket.Type)
@@ -222,8 +215,6 @@ public class TicketService
             CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
-            SlaDeadline = ticket.SlaDeadline,
-            SlaBreached = ticket.SlaBreached,
             IsInternal = ticket.IsInternal,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,

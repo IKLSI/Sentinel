@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { SlaTimer } from "../../../components/SlaTimer";
 import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
 import Box from "@mui/material/Box";
@@ -460,15 +459,6 @@ export const TicketDetailPage: React.FC = () => {
                   {fmtDuration(null, ticket.timeSpentMinutes)}
                 </Box>
               </Box>
-
-              {ticket.slaDeadline && (
-                <Box sx={rowSx}>
-                  <Box sx={rowLabelSx}>Échéance</Box>
-                  <Box sx={rowValueSx}>
-                    <SlaTimer deadline={ticket.slaDeadline} breached={ticket.slaBreached} />
-                  </Box>
-                </Box>
-              )}
 
               <Box sx={rowSx}>
                 <Box sx={rowLabelSx}>Créé le</Box>

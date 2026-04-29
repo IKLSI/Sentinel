@@ -94,26 +94,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("SlaCriticalHours")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(4);
-
-                    b.Property<int>("SlaHighHours")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(8);
-
-                    b.Property<int>("SlaLowHours")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(48);
-
-                    b.Property<int>("SlaMediumHours")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(24);
-
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -281,15 +261,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("SlaBreached")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("SlaDeadline")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("SlaWarningNotifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -323,8 +294,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("Priority");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("SlaBreached");
 
                     b.HasIndex("Status");
 

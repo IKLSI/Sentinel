@@ -8,7 +8,6 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { useToast } from '../../../hooks/useToast'
 import { inviteUser, getUsers, toggleUserActive } from '../../users/api/users'
 import {
-  getSlaSettings, updateSlaSettings, SlaSettings,
   getOrganizationSettings, updateOrganizationSettings, OrganizationSettings,
   getIntegrationSettings, connectGithub, connectGitlab, IntegrationSettings,
 } from '../api/settings'
@@ -20,7 +19,6 @@ import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOu
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined'
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined'
-import InfoOutlined from '@mui/icons-material/InfoOutlined'
 import EmailOutlined from '@mui/icons-material/EmailOutlined'
 
 import { formatDistanceToNow } from 'date-fns'
@@ -143,13 +141,6 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <Box sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', mb: '5px', letterSpacing: '0.01em' }}>{children}</Box>
 }
 
-const SLA_PRIORITIES = [
-  { key: 'criticalHours' as keyof SlaSettings, label: 'Critique', color: '#ef4444', bg: 'rgba(239,68,68,0.07)', desc: 'Service bloqué' },
-  { key: 'highHours'     as keyof SlaSettings, label: 'Haute',    color: '#f97316', bg: 'rgba(249,115,22,0.07)', desc: 'Impact majeur' },
-  { key: 'mediumHours'   as keyof SlaSettings, label: 'Moyenne',  color: '#eab308', bg: 'rgba(234,179,8,0.07)',  desc: 'Gêne fonctionnelle' },
-  { key: 'lowHours'      as keyof SlaSettings, label: 'Basse',    color: '#22c55e', bg: 'rgba(34,197,94,0.07)',  desc: 'Amélioration' },
-]
-
 type Tab = 'members' | 'organisation'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
@@ -182,12 +173,6 @@ export const SettingsPage: React.FC = () => {
   const [loadingOrg, setLoadingOrg] = useState(true)
   const [savingOrg, setSavingOrg] = useState(false)
 
-  // ── SLA
-  const [sla, setSla] = useState<SlaSettings>({ criticalHours: 4, highHours: 8, mediumHours: 24, lowHours: 48 })
-  const [savedSla, setSavedSla] = useState<SlaSettings>({ criticalHours: 4, highHours: 8, mediumHours: 24, lowHours: 48 })
-  const [loadingSla, setLoadingSla] = useState(true)
-  const [savingSla, setSavingSla] = useState(false)
-
   // ── Intégrations
   const [integrations, setIntegrations] = useState<IntegrationSettings>({ hasGithubToken: false, hasGitlabToken: false })
   const [githubToken, setGithubToken] = useState('')
@@ -215,15 +200,14 @@ export const SettingsPage: React.FC = () => {
   useEffect(() => { loadMembers() }, [loadMembers])
 
   useEffect(() => {
-    Promise.all([getOrganizationSettings(), getSlaSettings(), getIntegrationSettings()])
-      .then(([o, s, i]) => {
+    Promise.all([getOrganizationSettings(), getIntegrationSettings()])
+      .then(([o, i]) => {
         setOrg(o)
         setOrgForm({ name: o.name, timezone: o.timezone })
-        setSla(s); setSavedSla(s)
         setIntegrations(i)
       })
       .catch(() => showToast('Impossible de charger les paramètres', 'error'))
-      .finally(() => { setLoadingOrg(false); setLoadingSla(false) })
+      .finally(() => { setLoadingOrg(false) })
   }, [showToast])
 
   useEffect(() => { setPage(1) }, [memberSearch, memberRoleFilter])
@@ -278,16 +262,6 @@ export const SettingsPage: React.FC = () => {
     finally { setSavingOrg(false) }
   }
 
-  const handleSaveSla = async () => {
-    setSavingSla(true)
-    try {
-      const updated = await updateSlaSettings(sla)
-      setSla(updated); setSavedSla(updated)
-      showToast('Paramètres SLA sauvegardés', 'success')
-    } catch { showToast('Erreur lors de la sauvegarde', 'error') }
-    finally { setSavingSla(false) }
-  }
-
   const handleConnectGithub = async () => {
     if (!githubToken.trim()) { showToast('Le token est requis', 'warning'); return }
     setConnectingGithub(true)
@@ -312,7 +286,6 @@ export const SettingsPage: React.FC = () => {
     finally { setConnectingGitlab(false) }
   }
 
-  const slaUnchanged = sla.criticalHours === savedSla.criticalHours && sla.highHours === savedSla.highHours && sla.mediumHours === savedSla.mediumHours && sla.lowHours === savedSla.lowHours
   const orgUnchanged = org ? (orgForm.name === org.name && orgForm.timezone === org.timezone) : true
 
   return (
@@ -490,88 +463,6 @@ export const SettingsPage: React.FC = () => {
                     </>
                   )}
                 </Box>
-
-                {/* ── Card SLA ── */}
-                <Box sx={CARD_SX}>
-                  <CardHeader label="Délais par priorité" />
-                  {loadingSla ? (
-                    <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
-                  ) : (
-                    <>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', p: '8px' }}>
-                        {SLA_PRIORITIES.map(({ key, label, color, bg, desc }) => {
-                          const hours = sla[key]
-                          const dec = () => setSla(p => ({ ...p, [key]: Math.max(1, p[key] - 1) }))
-                          const inc = () => setSla(p => ({ ...p, [key]: Math.min(999, p[key] + 1) }))
-                          return (
-                            <Box key={key} sx={{ background: 'var(--s1)', px: '16px', py: '9px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <Box sx={{ width: 3, height: 24, borderRadius: 2, background: color, flexShrink: 0, opacity: 0.7 }} />
-                              <Box sx={{ flex: 1 }}>
-                                <Box sx={{ fontSize: '12px', fontWeight: 700, color, mb: '1px' }}>{label}</Box>
-                                <Box sx={{ fontSize: '11px', color: 'var(--muted)' }}>{desc}</Box>
-                              </Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Box component="button" type="button" onClick={dec} sx={{
-                                  all: 'unset', cursor: 'pointer',
-                                  width: 22, height: 22, borderRadius: '50%',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  border: `1.5px solid ${color}35`, color, fontSize: '14px', lineHeight: 1,
-                                  transition: 'all 0.15s',
-                                  '&:hover': { background: bg, borderColor: color, boxShadow: `0 0 0 3px ${color}12` },
-                                  '&:active': { transform: 'scale(0.9)' },
-                                }}>−</Box>
-                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '2px', minWidth: '36px', justifyContent: 'center' }}>
-                                  <Box component="input" type="number" min={1} max={999}
-                                    sx={{
-                                      width: '28px', background: 'transparent', border: 'none', outline: 'none', p: 0,
-                                      fontSize: '14px', fontWeight: 800, color, fontFamily: 'var(--font-mono)', textAlign: 'center',
-                                      'MozAppearance': 'textfield',
-                                      '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': { display: 'none' },
-                                    }}
-                                    value={hours}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                      const v = parseInt(e.target.value)
-                                      if (!isNaN(v) && v > 0) setSla(prev => ({ ...prev, [key]: v }))
-                                    }}
-                                  />
-                                  <Box sx={{ fontSize: '10px', fontWeight: 600, color, opacity: 0.4, fontFamily: 'var(--font-mono)' }}>h</Box>
-                                </Box>
-                                <Box component="button" type="button" onClick={inc} sx={{
-                                  all: 'unset', cursor: 'pointer',
-                                  width: 22, height: 22, borderRadius: '50%',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  border: `1.5px solid ${color}35`, color, fontSize: '14px', lineHeight: 1,
-                                  transition: 'all 0.15s',
-                                  '&:hover': { background: bg, borderColor: color, boxShadow: `0 0 0 3px ${color}12` },
-                                  '&:active': { transform: 'scale(0.9)' },
-                                }}>+</Box>
-                              </Box>
-                            </Box>
-                          )
-                        })}
-                      </Box>
-
-                      <Box sx={{ px: '16px', py: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <InfoOutlined sx={{ fontSize: 13, color: 'var(--muted2)' }} />
-                          <Box sx={{
-                            fontSize: '11px', fontWeight: 700,
-                            color: 'var(--muted2)',
-                            fontFamily: 'var(--font-mono)',
-                            letterSpacing: '0.04em',
-                          }}>
-                            S'applique uniquement aux nouveaux tickets
-                          </Box>
-                        </Box>
-                        <Button variant="contained" size="small" onClick={handleSaveSla} disabled={savingSla || slaUnchanged} sx={{ minWidth: '110px' }}>
-                          {savingSla ? 'Sauvegarde…' : 'Sauvegarder'}
-                        </Button>
-                      </Box>
-                    </>
-                  )}
-                </Box>
-
-
 
                 {/* ── Card Intégrations ── */}
                 <Box sx={CARD_SX}>

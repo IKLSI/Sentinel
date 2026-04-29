@@ -121,7 +121,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuthService>();
         services.AddScoped<TicketService>();
         services.AddScoped<ExportService>();
-services.AddScoped<SlaService>();
         services.AddScoped<TimeTrackingService>();
         services.AddScoped<RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
@@ -131,7 +130,6 @@ services.AddScoped<SlaService>();
         services.AddScoped<DashboardService>();
         services.AddScoped<DataSeeder>();
 
-        services.AddTransient<SlaCheckJob>();
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<SendInvitationEmailJob>();
 

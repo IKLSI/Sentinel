@@ -51,7 +51,7 @@ public class ExportService
     }
 
     public async Task<byte[]> ExportTicketsExcelAsync(
-        Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, bool? slaBreached, string? search)
+        Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search)
     {
         IQueryable<Ticket> query = _context.Tickets
             .Include(t => t.Project)
@@ -80,9 +80,6 @@ public class ExportService
 
         if (!string.IsNullOrEmpty(type) && Enum.TryParse<TicketType>(type, true, out TicketType parsedType))
             query = query.Where(t => t.Type == parsedType);
-
-        if (slaBreached.HasValue)
-            query = query.Where(t => t.SlaBreached == slaBreached.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -131,7 +128,7 @@ public class ExportService
 
     private static byte[] WriteTicketsExcel(List<Ticket> tickets)
     {
-        string[] headers = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "Deadline SLA", "SLA dépassée", "H. estimées", "H. saisies"];
+        string[] headers = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "H. estimées", "H. saisies"];
 
         using XLWorkbook workbook = new();
         IXLWorksheet ws = workbook.Worksheets.Add("Tickets");
@@ -160,30 +157,14 @@ public class ExportService
             SetDateCell(ws.Cell(row, 9), t.CreatedAt);
             SetDateCell(ws.Cell(row, 10), t.UpdatedAt);
 
-            if (t.SlaDeadline.HasValue)
-            {
-                ws.Cell(row, 11).Value = t.SlaDeadline.Value;
-                ws.Cell(row, 11).Style.NumberFormat.Format = "dd/mm/yyyy hh:mm";
-            }
-
-            IXLCell slaCell = ws.Cell(row, 12);
-            slaCell.Value = t.SlaBreached ? "Oui" : "Non";
-            slaCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (t.SlaBreached)
-            {
-                slaCell.Style.Fill.BackgroundColor = RedBg;
-                slaCell.Style.Font.FontColor = RedFg;
-                slaCell.Style.Font.Bold = true;
-            }
-
             if (t.EstimatedHours.HasValue)
             {
-                ws.Cell(row, 13).Value = (double)t.EstimatedHours.Value;
-                ws.Cell(row, 13).Style.NumberFormat.Format = "0.00 \"h\"";
+                ws.Cell(row, 11).Value = (double)t.EstimatedHours.Value;
+                ws.Cell(row, 11).Style.NumberFormat.Format = "0.00 \"h\"";
             }
 
-            ws.Cell(row, 14).Value = (double)Math.Round(t.TimeEntries.Sum(te => te.DurationMinutes) / 60m, 2);
-            ws.Cell(row, 14).Style.NumberFormat.Format = "0.00 \"h\"";
+            ws.Cell(row, 12).Value = (double)Math.Round(t.TimeEntries.Sum(te => te.DurationMinutes) / 60m, 2);
+            ws.Cell(row, 12).Style.NumberFormat.Format = "0.00 \"h\"";
         }
 
         FinalizeSheet(ws, headers.Length);

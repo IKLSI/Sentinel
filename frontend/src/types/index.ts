@@ -58,8 +58,6 @@ export interface Ticket {
   priority: TicketPriority
   type: TicketType
   status: TicketStatus
-  slaDeadline?: string
-  slaBreached: boolean
   isInternal: boolean
   estimatedHours?: number
   timeSpentMinutes?: number
@@ -85,7 +83,6 @@ export interface TicketFilters {
   status?: TicketStatus
   assigneeId?: string
   type?: TicketType
-  slaBreached?: boolean
   search?: string
   page?: number
   pageSize?: number

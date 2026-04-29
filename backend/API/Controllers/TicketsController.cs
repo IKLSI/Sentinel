@@ -31,7 +31,6 @@ public class TicketsController : BaseController
         [FromQuery] string? status,
         [FromQuery] Guid? assignedTo,
         [FromQuery] string? type,
-        [FromQuery] bool? slaBreached,
         [FromQuery] string? search,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -67,9 +66,6 @@ public class TicketsController : BaseController
         if (!string.IsNullOrEmpty(type) && Enum.TryParse<TicketType>(type, true, out TicketType parsedType))
             query = query.Where(t => t.Type == parsedType);
 
-        if (slaBreached.HasValue)
-            query = query.Where(t => t.SlaBreached == slaBreached.Value);
-
         if (!string.IsNullOrWhiteSpace(search))
         {
             string pattern = $"%{search}%";
@@ -103,14 +99,13 @@ public class TicketsController : BaseController
         [FromQuery] string? status,
         [FromQuery] Guid? assignedTo,
         [FromQuery] string? type,
-        [FromQuery] bool? slaBreached,
         [FromQuery] string? search)
     {
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
         byte[] bytes = await _exportService.ExportTicketsExcelAsync(
-            organizationId.Value, status, priority, assignedTo, type, slaBreached, search);
+            organizationId.Value, status, priority, assignedTo, type, search);
         string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }

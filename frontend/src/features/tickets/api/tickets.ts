@@ -33,8 +33,6 @@ interface TicketDto {
   createdByName: string
   createdAt: string
   updatedAt: string
-  slaDeadline?: string
-  slaBreached: boolean
   isInternal: boolean
   tags: string[]
   comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string }[]
@@ -64,8 +62,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
     priority: dto.priority as Ticket['priority'],
     type: dto.type as Ticket['type'],
     status: dto.status as TicketStatus,
-    slaDeadline: dto.slaDeadline,
-    slaBreached: dto.slaBreached,
     isInternal: dto.isInternal ?? false,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
@@ -139,7 +135,6 @@ export const exportTicketsExcel = async (params?: {
   priority?: string
   assignedTo?: string
   type?: string
-  slaBreached?: boolean
   search?: string
 }): Promise<void> => {
   const date = new Date().toISOString().slice(0, 10)

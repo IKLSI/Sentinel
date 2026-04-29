@@ -19,8 +19,6 @@ public class TicketDto
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public DateTime? SlaDeadline { get; set; }
-    public bool SlaBreached { get; set; }
     public bool IsInternal { get; set; }
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();

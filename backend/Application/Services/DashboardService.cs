@@ -52,23 +52,15 @@ public class DashboardService
                 && openStatuses.Contains(t.Status)
                 && t.CreatedAt >= weekAgo);
 
-        List<bool> closedThisMonthSla = await _context.Tickets
-            .Where(t => t.OrganizationId == organizationId
+        int resolvedThisMonth = await _context.Tickets
+            .CountAsync(t => t.OrganizationId == organizationId
                 && closedStatuses.Contains(t.Status)
-                && t.UpdatedAt >= monthStart)
-            .Select(t => t.SlaBreached)
-            .ToListAsync();
-        int resolvedThisMonth = closedThisMonthSla.Count;
-        int slaRespectedThisMonthCount = closedThisMonthSla.Count(b => !b);
+                && t.UpdatedAt >= monthStart);
 
-        List<bool> closedLastMonthSla = await _context.Tickets
-            .Where(t => t.OrganizationId == organizationId
+        int resolvedLastMonth = await _context.Tickets
+            .CountAsync(t => t.OrganizationId == organizationId
                 && closedStatuses.Contains(t.Status)
-                && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd)
-            .Select(t => t.SlaBreached)
-            .ToListAsync();
-        int resolvedLastMonth = closedLastMonthSla.Count;
-        int slaRespectedLastMonthCount = closedLastMonthSla.Count(b => !b);
+                && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd);
 
         int hoursThisMonth = await _context.TimeEntries
             .Include(te => te.User)
@@ -79,14 +71,6 @@ public class DashboardService
             .Include(v => v.Dependency).ThenInclude(d => d.TechProject)
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
-
-        int slaRespected = resolvedThisMonth > 0
-            ? (int)Math.Round((double)slaRespectedThisMonthCount / resolvedThisMonth * 100)
-            : 100;
-
-        int slaRespectedLastMonth = resolvedLastMonth > 0
-            ? (int)Math.Round((double)slaRespectedLastMonthCount / resolvedLastMonth * 100)
-            : 100;
 
         Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(
             s => s.ToString(),
@@ -112,9 +96,8 @@ public class DashboardService
             .Where(t => t.OrganizationId == organizationId
                 && openStatuses.Contains(t.Status)
                 && (t.Priority == TicketPriority.Critical || t.Priority == TicketPriority.High))
-            .OrderByDescending(t => t.SlaBreached)
-            .ThenByDescending(t => t.Priority)
-            .ThenBy(t => t.SlaDeadline ?? DateTime.MaxValue)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.CreatedAt)
             .Take(5)
             .ToListAsync();
 
@@ -127,8 +110,6 @@ public class DashboardService
                 Priority = t.Priority.ToString().ToLower(),
                 Type = t.Type.ToString().ToLower(),
                 ProjectName = t.Project?.Name,
-                SlaBreached = t.SlaBreached,
-                SlaDeadline = t.SlaDeadline,
             })
             .ToList();
 
@@ -142,8 +123,6 @@ public class DashboardService
             ResolvedThisMonthDelta = resolvedThisMonth - resolvedLastMonth,
             HoursThisMonth = hoursThisMonth / 60,
             CriticalVulnerabilities = criticalVulnerabilities,
-            SlaRespected = slaRespected,
-            SlaRespectedDelta = slaRespected - slaRespectedLastMonth,
             TicketsByStatus = ticketsByStatus,
             TicketsByPriority = ticketsByPriority,
             UnassignedOpenTickets = unassignedOpenTickets,

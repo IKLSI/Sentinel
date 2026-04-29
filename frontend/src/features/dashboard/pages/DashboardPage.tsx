@@ -9,7 +9,6 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import GppGoodOutlined from "@mui/icons-material/GppGoodOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
@@ -58,7 +57,6 @@ interface ActivityItem {
 interface UrgentTicket {
   id: string; reference: string; title: string;
   priority: string; type: string; projectName?: string;
-  slaBreached: boolean; slaDeadline?: string;
 }
 
 interface StatsData {
@@ -66,7 +64,6 @@ interface StatsData {
   resolvedThisMonth: number; resolvedThisMonthDelta: number;
   hoursThisMonth: number;
   criticalVulnerabilities: number;
-  slaRespected: number; slaRespectedDelta: number;
   ticketsByStatus: Record<string, number>;
   ticketsByPriority: Record<string, number>;
   unassignedOpenTickets: number;
@@ -79,7 +76,6 @@ const EMPTY_STATS: StatsData = {
   resolvedThisMonth: 0, resolvedThisMonthDelta: 0,
   hoursThisMonth: 0,
   criticalVulnerabilities: 0,
-  slaRespected: 0, slaRespectedDelta: 0,
   ticketsByStatus: {}, ticketsByPriority: {},
   unassignedOpenTickets: 0,
   urgentTickets: [], recentActivity: [],
@@ -261,12 +257,6 @@ export const DashboardPage: React.FC = () => {
           delay={160} loaded={loaded}
           label="Non assignés" value={stats.unassignedOpenTickets}
           color="var(--yellow)" icon={<AccessTimeOutlined sx={{ fontSize: 16 }} />}
-        />
-        <KpiCard
-          delay={210} loaded={loaded}
-          label="Délai respecté" value={`${stats.slaRespected}%`}
-          color="var(--cyan)" icon={<GppGoodOutlined sx={{ fontSize: 16 }} />}
-          delta={stats.slaRespectedDelta}
         />
       </Box>
 

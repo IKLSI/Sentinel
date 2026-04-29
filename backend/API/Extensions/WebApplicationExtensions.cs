@@ -13,11 +13,6 @@ public static class WebApplicationExtensions
             Authorization = [new HangfireDashboardAuthorizationFilter(app.Configuration)]
         });
 
-        RecurringJob.AddOrUpdate<SlaCheckJob>(
-            "sla-check",
-            job => job.ExecuteAsync(),
-            "*/15 * * * *");
-
         RecurringJob.AddOrUpdate<TechHealthScanJob>(
             "tech-health-scan",
             job => job.ExecuteAsync(),

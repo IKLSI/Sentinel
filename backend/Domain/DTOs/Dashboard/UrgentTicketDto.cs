@@ -8,6 +8,4 @@ public class UrgentTicketDto
     public string Priority { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string? ProjectName { get; set; }
-    public bool SlaBreached { get; set; }
-    public DateTime? SlaDeadline { get; set; }
 }

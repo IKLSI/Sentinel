@@ -55,8 +55,6 @@ interface KanbanTicket {
   type: KanbanType;
   assigneeInitials?: string;
   assigneeName?: string;
-  slaDeadline?: string;
-  slaBreached: boolean;
   isInternal: boolean;
   commentCount: number;
 }
@@ -154,8 +152,6 @@ function ticketToKanban(t: Ticket): KanbanTicket {
     type: t.type as KanbanType,
     assigneeInitials: initials,
     assigneeName: a ? `${a.firstName} ${a.lastName}` : undefined,
-    slaDeadline: t.slaDeadline,
-    slaBreached: t.slaBreached,
     isInternal: t.isInternal,
     commentCount: t.comments.length,
   };
