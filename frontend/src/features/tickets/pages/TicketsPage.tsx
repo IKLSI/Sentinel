@@ -41,7 +41,7 @@ interface CreateTicketPayload {
   description: string
   priority: 'Critical' | 'High' | 'Medium' | 'Low'
   type: 'Bug' | 'Feature' | 'Security' | 'Performance' | 'Maintenance' | 'Question'
-  techProjectId?: string
+  projectId?: string
   assignedToId?: string
   estimatedHours?: number
   isInternal: boolean
@@ -237,7 +237,7 @@ export const TicketsPage: React.FC = () => {
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', techProjectId: '', assignedToId: '', estimatedMinutes: 0, isInternal: false });
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', type: 'bug', projectId: '', assignedToId: '', estimatedMinutes: 0, isInternal: false });
   const [editSaving, setEditSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -272,7 +272,7 @@ export const TicketsPage: React.FC = () => {
     setCreateSubmitting(true);
     try {
       const payload: CreateTicketPayload = { ...createForm };
-      if (!payload.techProjectId) delete payload.techProjectId;
+      if (!payload.projectId) delete payload.projectId;
       if (!payload.assignedToId) delete payload.assignedToId;
       if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
       const created = await createTicket(payload as unknown as Partial<Ticket>);
@@ -291,7 +291,7 @@ export const TicketsPage: React.FC = () => {
       description: ticket.description ?? '',
       priority: ticket.priority,
       type: ticket.type,
-      techProjectId: ticket.projectId ?? '',
+      projectId: ticket.projectId ?? '',
       assignedToId: ticket.assignee?.id ?? '',
       estimatedMinutes: ticket.estimatedHours != null ? Math.round(ticket.estimatedHours * 60) : 0,
       isInternal: ticket.isInternal,
@@ -312,7 +312,7 @@ export const TicketsPage: React.FC = () => {
         priority: editForm.priority, type: editForm.type,
         isInternal: editForm.isInternal,
       };
-      if (editForm.techProjectId) payload.techProjectId = editForm.techProjectId;
+      if (editForm.projectId) payload.projectId = editForm.projectId;
       if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
       if (editForm.estimatedMinutes > 0) payload.estimatedHours = editForm.estimatedMinutes / 60;
       const updated = await updateTicket(editTarget.id, payload as Partial<Ticket>);
@@ -812,8 +812,8 @@ export const TicketsPage: React.FC = () => {
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
-              <Box component="select" value={createForm.techProjectId ?? ''}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, techProjectId: e.target.value || undefined }))}
+              <Box component="select" value={createForm.projectId ?? ''}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, projectId: e.target.value || undefined }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">Aucun projet</option>
@@ -925,8 +925,8 @@ export const TicketsPage: React.FC = () => {
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
               <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
-              <Box component="select" value={editForm.techProjectId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, techProjectId: e.target.value }))}
+              <Box component="select" value={editForm.projectId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, projectId: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
                 <option value="">Aucun projet</option>

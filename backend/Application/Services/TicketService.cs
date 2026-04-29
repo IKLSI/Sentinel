@@ -85,6 +85,13 @@ public class TicketService
             ticket.Type = dto.Type.Value;
         }
 
+        if (dto.ProjectId != ticket.ProjectId)
+        {
+            changes.Add(CreateHistory(ticketId, userId, "ProjectId",
+                ticket.ProjectId?.ToString(), dto.ProjectId?.ToString()));
+            ticket.ProjectId = dto.ProjectId;
+        }
+
         if (dto.AssignedToId != ticket.AssignedToId)
         {
             changes.Add(CreateHistory(ticketId, userId, "AssignedTo",
