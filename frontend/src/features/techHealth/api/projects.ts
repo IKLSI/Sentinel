@@ -12,6 +12,7 @@ export interface ProjectDto {
   totalDependencies: number
   vulnerableDependencies: number
   criticalVulnerabilities: number
+  totalTickets: number
 }
 
 export interface VulnerabilityDto {

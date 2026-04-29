@@ -47,10 +47,24 @@ public class TechHealthController : BaseController
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId.Value)
-            .OrderBy(p => p.Name)
+            .OrderByDescending(p => p.Dependencies.Any(d => d.Vulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical)))
+            .ThenBy(p => p.HealthScore)
+            .ThenBy(p => p.Name)
             .ToListAsync();
 
-        return Ok(projects.Select(TechHealthService.MapToDto));
+        List<Guid> projectIds = projects.Select(p => p.Id).ToList();
+        Dictionary<Guid, int> ticketCounts = await _context.Tickets
+            .Where(t => t.ProjectId != null && projectIds.Contains(t.ProjectId.Value))
+            .GroupBy(t => t.ProjectId!.Value)
+            .Select(g => new { ProjectId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
+
+        return Ok(projects.Select(p =>
+        {
+            TechProjectDto dto = TechHealthService.MapToDto(p);
+            dto.TotalTickets = ticketCounts.GetValueOrDefault(p.Id);
+            return dto;
+        }));
     }
 
     [HttpGet("projects/{id:guid}")]

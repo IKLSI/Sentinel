@@ -13,6 +13,7 @@ public class TechProjectDto
     public int TotalDependencies { get; set; }
     public int VulnerableDependencies { get; set; }
     public int CriticalVulnerabilities { get; set; }
+    public int TotalTickets { get; set; }
     public List<DependencyDto> Dependencies { get; set; } = new();
     public List<RuntimeDto> Runtimes { get; set; } = new();
 }
