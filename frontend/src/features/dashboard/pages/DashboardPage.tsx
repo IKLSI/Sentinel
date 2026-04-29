@@ -9,6 +9,7 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
+import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
@@ -257,6 +258,11 @@ export const DashboardPage: React.FC = () => {
           delay={160} loaded={loaded}
           label="Non assignés" value={stats.unassignedOpenTickets}
           color="var(--yellow)" icon={<AccessTimeOutlined sx={{ fontSize: 16 }} />}
+        />
+        <KpiCard
+          delay={210} loaded={loaded}
+          label="Vulnérabilités critiques" value={stats.criticalVulnerabilities}
+          color="var(--red)" icon={<BugReportOutlined sx={{ fontSize: 16 }} />}
         />
       </Box>
 
