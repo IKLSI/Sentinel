@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -177,6 +178,12 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
         viewBox="0 0 100 100"
         style={{ width: "140px", height: "140px", transform: "rotate(-90deg)" }}
       >
+        <defs>
+          <style>{`
+            @keyframes donut-draw { from { stroke-dashoffset: ${c.toFixed(1)}; } }
+            .donut-seg { animation: donut-draw 0.8s ease-out both; }
+          `}</style>
+        </defs>
         <circle
           cx="50"
           cy="50"
@@ -185,13 +192,15 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
           strokeWidth="10"
           fill="none"
         />
-        {STATUS.map((s) => {
+        {STATUS.map((s, i) => {
           const value = map[s.key] ?? 0;
           if (!value || !total) return null;
           const seg = (value / total) * c;
+          const dashOffset = -offset;
           const out = (
             <circle
               key={s.key}
+              className="donut-seg"
               cx="50"
               cy="50"
               r={r}
@@ -200,7 +209,8 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
               fill="none"
               strokeLinecap="round"
               strokeDasharray={`${Math.max(seg - 1.5, 0)} ${c}`}
-              strokeDashoffset={-offset}
+              strokeDashoffset={dashOffset}
+              style={{ animationDelay: `${i * 0.1}s` }}
             />
           );
           offset += seg;
@@ -363,6 +373,7 @@ export const DashboardPage: React.FC = () => {
   const { showToast } = useToast();
   const [stats, setStats] = useState<StatsData>(EMPTY_STATS);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -380,6 +391,7 @@ export const DashboardPage: React.FC = () => {
         );
       if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
       else showToast("Impossible de charger les projets.", "error");
+      setLoading(false);
     };
     void load();
     return () => {
@@ -432,6 +444,14 @@ export const DashboardPage: React.FC = () => {
     if (!latestScan) return "Aucune synchronisation disponible";
     return `Dernière synchronisation ${formatDistanceToNow(latestScan, { addSuffix: true, locale: fr })}`;
   }, [projects]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+        <CircularProgress size={36} thickness={3} sx={{ color: "#6366f1" }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: "16px 20px", minHeight: "100vh" }}>
@@ -789,6 +809,7 @@ export const DashboardPage: React.FC = () => {
               })}
             </Box>
           </Box>
+
         </Box>
 
         <Box sx={{ ...panelSx, gridColumn: "span 4", p: "16px 18px", display: "flex", flexDirection: "column" }}>
