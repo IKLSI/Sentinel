@@ -76,9 +76,9 @@ export const pageBtnSx = (active: boolean) => ({
   borderRadius: "8px",
   fontSize: "12px",
   fontWeight: active ? 700 : 500,
-  color: active ? "#fff" : "var(--text-secondary)",
+  color: active ? "var(--s1)" : "var(--text-secondary)",
   background: active ? "var(--accent)" : "transparent",
-  boxShadow: active ? "0 2px 8px rgba(99,102,241,0.35)" : "none",
+  boxShadow: active ? "0 2px 8px var(--accent-border)" : "none",
   transition: "background 0.12s, color 0.12s, box-shadow 0.12s",
   ...(!active && {
     "&:hover": { background: "var(--s2)", color: "var(--text)" },
@@ -102,12 +102,12 @@ export const statusLabelKeys: Record<TicketStatus, string> = {
 
 export const typeBadgeStyle: Record<TicketType, { bg: string; color: string }> =
   {
-    bug: { bg: "rgba(239,68,68,0.12)", color: "var(--red)" },
+    bug: { bg: "color-mix(in srgb, var(--red) 12%, transparent)", color: "var(--red)" },
     feature: { bg: "var(--accent-subtle)", color: "var(--accent)" },
-    security: { bg: "rgba(249,115,22,0.12)", color: "var(--orange)" },
-    performance: { bg: "rgba(6,182,212,0.12)", color: "var(--cyan)" },
-    maintenance: { bg: "rgba(116,136,170,0.10)", color: "var(--muted2)" },
-    question: { bg: "rgba(245,158,11,0.12)", color: "var(--yellow)" },
+    security: { bg: "color-mix(in srgb, var(--orange) 12%, transparent)", color: "var(--orange)" },
+    performance: { bg: "color-mix(in srgb, var(--cyan) 12%, transparent)", color: "var(--cyan)" },
+    maintenance: { bg: "color-mix(in srgb, var(--muted2) 10%, transparent)", color: "var(--muted2)" },
+    question: { bg: "color-mix(in srgb, var(--yellow) 12%, transparent)", color: "var(--yellow)" },
   };
 
 export const typeIcons: Record<TicketType, React.ReactElement> = {
@@ -144,11 +144,11 @@ export const priorityColor: Record<TicketPriority, string> = {
 };
 
 export const avatarPalette = [
-  { bg: "rgba(99,102,241,0.18)", color: "var(--accent)" },
-  { bg: "rgba(34,197,94,0.15)", color: "var(--green)" },
-  { bg: "rgba(168,85,247,0.15)", color: "var(--purple)" },
-  { bg: "rgba(6,182,212,0.15)", color: "var(--cyan)" },
-  { bg: "rgba(249,115,22,0.15)", color: "var(--orange)" },
+  { bg: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" },
+  { bg: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)" },
+  { bg: "color-mix(in srgb, var(--purple) 15%, transparent)", color: "var(--purple)" },
+  { bg: "color-mix(in srgb, var(--cyan) 15%, transparent)", color: "var(--cyan)" },
+  { bg: "color-mix(in srgb, var(--orange) 15%, transparent)", color: "var(--orange)" },
 ];
 
 export const getAvatarStyle = (id: string) =>

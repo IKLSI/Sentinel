@@ -70,7 +70,7 @@ export const IntegrationRow: React.FC<Props> = ({
           </Box>
           {isConnected && (
             <CheckCircleOutlineOutlined
-              sx={{ fontSize: 13, color: "#22c55e" }}
+              sx={{ fontSize: 13, color: "var(--green)" }}
             />
           )}
         </Box>

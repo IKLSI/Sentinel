@@ -76,7 +76,7 @@ export const TicketsToolbar: React.FC<Props> = ({
           transition: "border-color 0.15s, box-shadow 0.15s",
           "&:focus-within": {
             borderColor: "var(--accent-border)",
-            boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+            boxShadow: "0 0 0 3px var(--accent-subtle)",
           },
         }}
       >
@@ -281,13 +281,13 @@ export const TicketsToolbar: React.FC<Props> = ({
                     fontWeight: 600,
                     color: "var(--red)",
                     background: "var(--red-subtle)",
-                    border: "1px solid rgba(239,68,68,0.2)",
+                    border: "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
                     borderRadius: "7px",
                     py: "8px",
                     transition: "background 0.12s, border-color 0.12s",
                     "&:hover": {
-                      background: "rgba(239,68,68,0.14)",
-                      borderColor: "rgba(239,68,68,0.35)",
+                      background: "color-mix(in srgb, var(--red) 14%, transparent)",
+                      borderColor: "color-mix(in srgb, var(--red) 35%, transparent)",
                     },
                   }}
                 >
@@ -311,9 +311,9 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          "&.MuiButton-root": { background: "#1e3d9c", boxShadow: "none" },
+          "&.MuiButton-root": { background: "var(--accent2)", boxShadow: "none" },
           "&.MuiButton-root:hover": {
-            background: "#1e3a8a",
+            background: "color-mix(in srgb, var(--accent2) 85%, black)",
             boxShadow: "none",
             transform: "none",
           },
@@ -334,13 +334,13 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          background: "#6366f1",
-          borderColor: "#6366f1",
-          color: "#fff",
+          background: "var(--accent)",
+          borderColor: "var(--accent)",
+          color: "var(--s1)",
           "&:hover": {
-            background: "#5254cc",
-            borderColor: "#5254cc",
-            color: "#fff",
+            background: "var(--accent2)",
+            borderColor: "var(--accent2)",
+            color: "var(--s1)",
           },
         }}
         onClick={onExport}

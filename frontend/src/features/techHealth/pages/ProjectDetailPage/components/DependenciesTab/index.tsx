@@ -74,7 +74,7 @@ export const DependenciesTab: React.FC<Props> = ({
             transition: "border-color 0.15s",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              boxShadow: "0 0 0 3px var(--accent-subtle)",
             },
           }}
         >

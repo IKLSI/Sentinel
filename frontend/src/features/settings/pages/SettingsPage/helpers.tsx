@@ -69,9 +69,9 @@ export const pageBtnSx = (active: boolean) => ({
   borderRadius: "7px",
   fontSize: "12px",
   fontWeight: active ? 700 : 500,
-  color: active ? "#fff" : "var(--text-secondary)",
+  color: active ? "var(--s1)" : "var(--text-secondary)",
   background: active ? "var(--accent)" : "transparent",
-  boxShadow: active ? "0 2px 8px rgba(99,102,241,0.3)" : "none",
+  boxShadow: active ? "0 2px 8px var(--accent-border)" : "none",
   transition: "background 0.12s, color 0.12s",
   ...(!active && {
     "&:hover": { background: "var(--s2)", color: "var(--text)" },
@@ -93,7 +93,7 @@ export const inp = {
   transition: "border-color 0.15s, box-shadow 0.15s",
   "&:focus": {
     borderColor: "var(--accent-border)",
-    boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+    boxShadow: "0 0 0 3px var(--accent-subtle)",
   },
 } as const;
 

@@ -49,7 +49,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           p: "16px 24px",
           borderBottom: "1px solid var(--border)",
           background:
-            "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, var(--s2) 60%)",
+            "linear-gradient(135deg, var(--red-subtle) 0%, var(--s2) 60%)",
         }}
       >
         {title}
@@ -84,9 +84,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           size="small"
           sx={{
             textTransform: "none",
-            background: "#ef4444",
-            "&:hover": { background: "#dc2626" },
-            "&:disabled": { background: "#ef4444", opacity: 0.6 },
+            background: "var(--red)",
+            "&:hover": { background: "color-mix(in srgb, var(--red) 88%, black)" },
+            "&:disabled": { background: "var(--red)", opacity: 0.6 },
           }}
           onClick={onConfirm}
           disabled={loading}

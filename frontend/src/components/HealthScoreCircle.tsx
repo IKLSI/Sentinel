@@ -16,12 +16,12 @@ const gradeConfig: Record<
   HealthGrade,
   { color: string; Icon: SvgIconComponent }
 > = {
-  F: { color: "#dc2626", Icon: WarningAmberOutlined },
-  E: { color: "#ea580c", Icon: WarningAmberOutlined },
-  D: { color: "#d97706", Icon: ErrorOutlineOutlined },
-  C: { color: "#ca8a04", Icon: ErrorOutlineOutlined },
-  B: { color: "#4f46e5", Icon: CheckCircleOutlineOutlined },
-  A: { color: "#10b981", Icon: CheckCircleOutlineOutlined },
+  F: { color: "var(--red)", Icon: WarningAmberOutlined },
+  E: { color: "var(--orange)", Icon: WarningAmberOutlined },
+  D: { color: "var(--yellow)", Icon: ErrorOutlineOutlined },
+  C: { color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: ErrorOutlineOutlined },
+  B: { color: "var(--accent)", Icon: CheckCircleOutlineOutlined },
+  A: { color: "var(--green)", Icon: CheckCircleOutlineOutlined },
 };
 
 export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({

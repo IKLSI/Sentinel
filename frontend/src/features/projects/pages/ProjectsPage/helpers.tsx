@@ -13,12 +13,12 @@ export const GRADE_VISUAL: Record<
   GradeKey,
   { iconColor: string; Icon: SvgIconComponent }
 > = {
-  F: { iconColor: "#dc2626", Icon: WarningAmberOutlined },
-  E: { iconColor: "#ea580c", Icon: WarningAmberOutlined },
-  D: { iconColor: "#d97706", Icon: ErrorOutlineOutlined },
-  C: { iconColor: "#ca8a04", Icon: ErrorOutlineOutlined },
-  B: { iconColor: "#4f46e5", Icon: CheckCircleOutlineOutlined },
-  A: { iconColor: "#10b981", Icon: CheckCircleOutlineOutlined },
+  F: { iconColor: "var(--red)", Icon: WarningAmberOutlined },
+  E: { iconColor: "var(--orange)", Icon: WarningAmberOutlined },
+  D: { iconColor: "var(--yellow)", Icon: ErrorOutlineOutlined },
+  C: { iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: ErrorOutlineOutlined },
+  B: { iconColor: "var(--accent)", Icon: CheckCircleOutlineOutlined },
+  A: { iconColor: "var(--green)", Icon: CheckCircleOutlineOutlined },
 };
 
 export const getGrade = (grade: string | null | undefined): GradeKey => {

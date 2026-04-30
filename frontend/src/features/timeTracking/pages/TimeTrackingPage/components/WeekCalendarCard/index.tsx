@@ -127,7 +127,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
                 fontWeight: 600,
                 fontFamily: "var(--font-ui)",
                 transition: "background 0.12s",
-                "&:hover": { background: "rgba(99,102,241,0.15)" },
+                "&:hover": { background: "color-mix(in srgb, var(--accent) 15%, transparent)" },
               }}
             >
               <TodayOutlined sx={{ fontSize: 15 }} />
@@ -192,7 +192,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
               onClick={() => onCreateForDate(dayStr)}
               sx={{
                 background: today
-                  ? "linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)"
+                  ? "linear-gradient(180deg, var(--accent-subtle) 0%, transparent 100%)"
                   : isWeekend
                     ? "rgba(0,0,0,0.03)"
                     : "transparent",
@@ -213,7 +213,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
                 transition: "background 0.15s",
                 "&:hover": {
                   background: today
-                    ? "rgba(99,102,241,0.12)"
+                    ? "color-mix(in srgb, var(--accent) 12%, transparent)"
                     : isWeekend
                       ? "rgba(0,0,0,0.07)"
                       : "var(--s2)",
@@ -242,14 +242,14 @@ export const WeekCalendarCard: React.FC<Props> = ({
                   height: "30px",
                   borderRadius: "50%",
                   background: today ? "var(--accent)" : "transparent",
-                  boxShadow: today ? "0 2px 10px rgba(99,102,241,0.4)" : "none",
+                  boxShadow: today ? "0 2px 10px var(--accent-border)" : "none",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "13px",
                   fontWeight: 700,
                   color: today
-                    ? "#fff"
+                    ? "var(--s1)"
                     : isWeekend
                       ? "var(--muted)"
                       : "var(--text)",

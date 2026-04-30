@@ -183,7 +183,7 @@ export const CommentComposer: React.FC<Props> = ({
             }
           >
             {submitting ? (
-              <CircularProgress size={14} sx={{ color: "#fff" }} />
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
             ) : (
               t("tickets.detail.send")
             )}

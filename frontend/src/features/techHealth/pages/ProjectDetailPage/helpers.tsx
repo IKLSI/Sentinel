@@ -68,17 +68,17 @@ export const EOL_COLOR: Record<
   eol: {
     text: "var(--red)",
     stripe: "var(--red)",
-    border: "rgba(239,68,68,0.3)",
+    border: "color-mix(in srgb, var(--red) 30%, transparent)",
   },
   danger: {
     text: "var(--orange)",
     stripe: "var(--orange)",
-    border: "rgba(249,115,22,0.25)",
+    border: "color-mix(in srgb, var(--orange) 25%, transparent)",
   },
   warn: {
     text: "var(--yellow)",
     stripe: "var(--yellow)",
-    border: "rgba(234,179,8,0.25)",
+    border: "color-mix(in srgb, var(--yellow) 25%, transparent)",
   },
   ok: {
     text: "var(--green)",

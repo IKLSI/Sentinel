@@ -112,7 +112,7 @@ export const ProjectPicker: React.FC<Props> = ({
             transition: "border-color 0.15s, box-shadow 0.15s",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              boxShadow: "0 0 0 3px var(--accent-subtle)",
             },
           }}
         >
@@ -237,13 +237,13 @@ export const ProjectPicker: React.FC<Props> = ({
                   borderRadius: "10px",
                   mb: "2px",
                   background: isSelected
-                    ? "rgba(99,102,241,0.08)"
+                    ? "var(--accent-subtle)"
                     : "transparent",
                   cursor: "pointer",
                   userSelect: "none",
                   "&:hover": {
                     background: isSelected
-                      ? "rgba(99,102,241,0.11)"
+                      ? "color-mix(in srgb, var(--accent) 11%, transparent)"
                       : "var(--s2)",
                   },
                   transition: "background 0.1s",
@@ -261,7 +261,7 @@ export const ProjectPicker: React.FC<Props> = ({
                     justifyContent: "center",
                     fontSize: "11px",
                     fontWeight: 700,
-                    color: "#fff",
+                    color: "var(--s1)",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.04em",
                   }}
@@ -314,7 +314,7 @@ export const ProjectPicker: React.FC<Props> = ({
                   }}
                 >
                   {isSelected && (
-                    <CheckOutlined sx={{ fontSize: "11px", color: "#fff" }} />
+                    <CheckOutlined sx={{ fontSize: "11px", color: "var(--s1)" }} />
                   )}
                 </Box>
               </Box>

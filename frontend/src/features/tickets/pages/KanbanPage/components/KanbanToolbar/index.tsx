@@ -45,7 +45,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           transition: "border-color 0.15s, box-shadow 0.15s",
           "&:focus-within": {
             borderColor: "var(--accent-border)",
-            boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+            boxShadow: "0 0 0 3px var(--accent-subtle)",
           },
         }}
       >
@@ -112,7 +112,7 @@ export const KanbanToolbar: React.FC<Props> = ({
               height: "16px",
               borderRadius: "50%",
               background: "var(--accent)",
-              color: "#fff",
+              color: "var(--s1)",
               fontSize: "9px",
               fontWeight: 700,
               fontFamily: "var(--font-mono)",

@@ -212,7 +212,7 @@ export const JournalCard: React.FC<Props> = ({
                       px: "16px",
                       py: "8px",
                       background: isCurrentDay
-                        ? "rgba(99,102,241,0.04)"
+                        ? "color-mix(in srgb, var(--accent) 4%, transparent)"
                         : "var(--s2)",
                       border: "none",
                       borderTop: "1px solid var(--border)",
@@ -221,7 +221,7 @@ export const JournalCard: React.FC<Props> = ({
                       transition: "background 0.1s",
                       "&:hover": {
                         background: isCurrentDay
-                          ? "rgba(99,102,241,0.07)"
+                          ? "color-mix(in srgb, var(--accent) 7%, transparent)"
                           : "var(--s3)",
                       },
                     }}
@@ -337,7 +337,7 @@ export const JournalCard: React.FC<Props> = ({
                                   flexShrink: 0,
                                   fontSize: "10px",
                                   fontWeight: 700,
-                                  color: "#fff",
+                                  color: "var(--s1)",
                                   letterSpacing: "0.02em",
                                 }}
                               >
@@ -392,8 +392,8 @@ export const JournalCard: React.FC<Props> = ({
                                       px: "6px",
                                       py: "2px",
                                       borderRadius: "4px",
-                                      background: `${projColor}18`,
-                                      border: `1px solid ${projColor}40`,
+                                      background: `color-mix(in srgb, ${projColor} 9%, transparent)`,
+                                      border: `1px solid color-mix(in srgb, ${projColor} 25%, transparent)`,
                                     }}
                                   >
                                     <Box
@@ -487,8 +487,8 @@ export const JournalCard: React.FC<Props> = ({
                                 fontSize: "13px",
                                 fontWeight: 800,
                                 color: projColor,
-                                background: `${projColor}18`,
-                                border: `1px solid ${projColor}35`,
+                                background: `color-mix(in srgb, ${projColor} 9%, transparent)`,
+                                border: `1px solid color-mix(in srgb, ${projColor} 21%, transparent)`,
                                 px: "8px",
                                 py: "3px",
                                 borderRadius: "6px",

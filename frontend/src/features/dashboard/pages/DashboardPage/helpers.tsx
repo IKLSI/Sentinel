@@ -55,15 +55,15 @@ export const EMPTY_STATS: StatsData = {
 };
 
 export const STATUS = [
-  { key: "New", labelKey: "dashboard.status.new", color: "#6366f1" },
+  { key: "New", labelKey: "dashboard.status.new", color: "var(--accent)" },
   {
     key: "InProgress",
     labelKey: "dashboard.status.in_progress",
-    color: "#58aee8",
+    color: "var(--cyan)",
   },
-  { key: "Testing", labelKey: "dashboard.status.testing", color: "#e8bb3a" },
-  { key: "Resolved", labelKey: "dashboard.status.resolved", color: "#5dc895" },
-  { key: "Closed", labelKey: "dashboard.status.closed", color: "#94a3b8" },
+  { key: "Testing", labelKey: "dashboard.status.testing", color: "var(--yellow)" },
+  { key: "Resolved", labelKey: "dashboard.status.resolved", color: "var(--green)" },
+  { key: "Closed", labelKey: "dashboard.status.closed", color: "var(--muted2)" },
 ];
 
 export interface DashPalette {
@@ -107,88 +107,46 @@ export interface DashPalette {
   loader: string;
 }
 
-export const buildPalette = (isDark: boolean): DashPalette =>
-  isDark
-    ? {
-        panelBg: "#0d1120",
-        panelBorder: "#1e2a42",
-        panelShadow: "0 4px 14px rgba(0,0,0,0.45)",
-        headerBorder: "#1e2a42",
-        textPrimary: "#e6eaf6",
-        textHeading: "#e6eaf6",
-        textSecondary: "#a0aec9",
-        textMuted: "#7488aa",
-        textMuted2: "#7488aa",
-        kpiLabel: "#a0aec9",
-        donutTrack: "#192036",
-        donutCenter: "#e6eaf6",
-        donutCenterLabel: "#a0aec9",
-        donutPct: "#7488aa",
-        seeAll: "#818cf8",
-        rowBg: "transparent",
-        rowHoverBg: "rgba(99,102,241,0.10)",
-        rowActiveBg: "rgba(99,102,241,0.18)",
-        rowHoverRing: "rgba(129,140,248,0.30)",
-        rowTitle: "#e6eaf6",
-        rowSub: "#a0aec9",
-        bullet: "#263352",
-        commentIcon: "#7488aa",
-        typeIconDefault: "#94a3b8",
-        typeIconSecurity: "#f87171",
-        typeIconPerformance: "#f59e0b",
-        activityDangerBg: "rgba(239,68,68,0.18)",
-        activityDangerFg: "#f87171",
-        activityOkBg: "rgba(34,197,94,0.18)",
-        activityOkFg: "#4ade80",
-        activityDetail: "#a0aec9",
-        activityDivider: "#1e2a42",
-        scrollThumb: "#263352",
-        vulnDanger: "#f87171",
-        vulnNeutral: "#a0aec9",
-        vulnIcon: "#7488aa",
-        badgeCritical: "#f87171",
-        loader: "#818cf8",
-      }
-    : {
-        panelBg: "#fff",
-        panelBorder: "rgba(226,232,240,0.9)",
-        panelShadow: "0 4px 14px rgba(15,23,42,0.08)",
-        headerBorder: "#e6ebf3",
-        textPrimary: "#131a2b",
-        textHeading: "#121829",
-        textSecondary: "#5f718d",
-        textMuted: "#6b7a95",
-        textMuted2: "#7f8ea7",
-        kpiLabel: "#6f829f",
-        donutTrack: "#eef3fa",
-        donutCenter: "#111827",
-        donutCenterLabel: "#6b7a95",
-        donutPct: "#7f8ea7",
-        seeAll: "#5a3ee1",
-        rowBg: "#fff",
-        rowHoverBg: "#f0f4ff",
-        rowActiveBg: "#e8eeff",
-        rowHoverRing: "#6366f122",
-        rowTitle: "#131a2b",
-        rowSub: "#5d6d87",
-        bullet: "#c8d1e0",
-        commentIcon: "#7c8ca4",
-        typeIconDefault: "#61708b",
-        typeIconSecurity: "#cf2943",
-        typeIconPerformance: "#ca7825",
-        activityDangerBg: "#f8dce3",
-        activityDangerFg: "#c7364f",
-        activityOkBg: "#c7efd9",
-        activityOkFg: "#2f8f63",
-        activityDetail: "#60728f",
-        activityDivider: "#d9e2ef",
-        scrollThumb: "#c8d1e0",
-        vulnDanger: "#c7364f",
-        vulnNeutral: "#4a5a72",
-        vulnIcon: "#687a95",
-        badgeCritical: "#c7364f",
-        loader: "#6366f1",
-      };
+export const buildPalette = (_isDark: boolean): DashPalette => ({
+  panelBg: "var(--s1)",
+  panelBorder: "var(--border)",
+  panelShadow: "0 4px 14px rgba(0,0,0,0.18)",
+  headerBorder: "var(--border)",
+  textPrimary: "var(--text)",
+  textHeading: "var(--text)",
+  textSecondary: "var(--text-secondary)",
+  textMuted: "var(--muted2)",
+  textMuted2: "var(--muted2)",
+  kpiLabel: "var(--text-secondary)",
+  donutTrack: "var(--s3)",
+  donutCenter: "var(--text)",
+  donutCenterLabel: "var(--text-secondary)",
+  donutPct: "var(--muted2)",
+  seeAll: "var(--accent)",
+  rowBg: "transparent",
+  rowHoverBg: "var(--accent-subtle)",
+  rowActiveBg: "color-mix(in srgb, var(--accent) 18%, transparent)",
+  rowHoverRing: "var(--accent-border)",
+  rowTitle: "var(--text)",
+  rowSub: "var(--text-secondary)",
+  bullet: "var(--border2)",
+  commentIcon: "var(--muted2)",
+  typeIconDefault: "var(--muted2)",
+  typeIconSecurity: "var(--red)",
+  typeIconPerformance: "var(--yellow)",
+  activityDangerBg: "color-mix(in srgb, var(--red) 18%, transparent)",
+  activityDangerFg: "var(--red)",
+  activityOkBg: "color-mix(in srgb, var(--green) 18%, transparent)",
+  activityOkFg: "var(--green)",
+  activityDetail: "var(--text-secondary)",
+  activityDivider: "var(--border)",
+  scrollThumb: "var(--border2)",
+  vulnDanger: "var(--red)",
+  vulnNeutral: "var(--text-secondary)",
+  vulnIcon: "var(--muted2)",
+  badgeCritical: "var(--red)",
+  loader: "var(--accent)",
+});
 
 export const buildPanelSx = (p: DashPalette) =>
   ({
@@ -240,25 +198,25 @@ export const ticketIcon = (type: string) => {
   return BugReportOutlined;
 };
 
-export const ticketPriority = (priority: string, isDark: boolean) => {
+export const ticketPriority = (priority: string, _isDark: boolean) => {
   if (priority === "critical")
     return {
       labelKey: "dashboard.priority.critical",
-      color: isDark ? "#f87171" : "#c7364f",
+      color: "var(--red)",
     };
   if (priority === "high")
     return {
       labelKey: "dashboard.priority.high",
-      color: isDark ? "#fb923c" : "#c56a1a",
+      color: "var(--orange)",
     };
   if (priority === "medium")
     return {
       labelKey: "dashboard.priority.medium",
-      color: isDark ? "#60a5fa" : "#1f6fb2",
+      color: "var(--blue)",
     };
   return {
     labelKey: "dashboard.priority.low",
-    color: isDark ? "#4ade80" : "#2f8f63",
+    color: "var(--green)",
   };
 };
 
@@ -279,30 +237,32 @@ export const repoPath = (
         .replace(/^\//, "")
         .replace(/\.git$/, "");
       if (path) return path;
-    } catch {}
+    } catch {
+      // URL invalide, fallback sur repositoryType
+    }
   }
   return (repositoryType ?? "git").toLowerCase();
 };
 
-export const projectTone = (project: ProjectDto, isDark: boolean) => {
+export const projectTone = (project: ProjectDto, _isDark: boolean) => {
   if (project.criticalVulnerabilities > 0)
     return {
       labelKey: "dashboard.project_tone.at_risk",
-      color: isDark ? "#f87171" : "#c7364f",
-      dot: isDark ? "#f87171" : "#e74660",
+      color: "var(--red)",
+      dot: "var(--red)",
       Icon: WarningAmberOutlined,
     };
   if (project.healthScore >= 85)
     return {
       labelKey: "dashboard.project_tone.healthy",
-      color: isDark ? "#4ade80" : "#2f8f63",
-      dot: isDark ? "#4ade80" : "#56c58f",
+      color: "var(--green)",
+      dot: "var(--green)",
       Icon: CheckCircleOutlineOutlined,
     };
   return {
     labelKey: "dashboard.project_tone.monitoring",
-    color: isDark ? "#fbbf24" : "#ad6f2f",
-    dot: isDark ? "#fbbf24" : "#e6a94c",
+    color: "var(--yellow)",
+    dot: "var(--yellow)",
     Icon: InfoOutlined,
   };
 };

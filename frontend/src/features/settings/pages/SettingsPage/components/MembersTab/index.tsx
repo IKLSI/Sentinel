@@ -142,7 +142,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             height: "32px",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              boxShadow: "0 0 0 3px var(--accent-subtle)",
             },
           }}
         >

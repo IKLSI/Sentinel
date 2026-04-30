@@ -67,25 +67,25 @@ export const columnMeta: Record<
     labelKey: "tickets.kanban.status.in_progress",
     color: "var(--orange)",
     subtle: "var(--orange-subtle)",
-    border: "rgba(249,115,22,0.28)",
+    border: "color-mix(in srgb, var(--orange) 28%, transparent)",
   },
   testing: {
     labelKey: "tickets.kanban.status.testing",
     color: "var(--cyan)",
     subtle: "var(--cyan-subtle)",
-    border: "rgba(6,182,212,0.28)",
+    border: "color-mix(in srgb, var(--cyan) 28%, transparent)",
   },
   resolved: {
     labelKey: "tickets.kanban.status.resolved",
     color: "var(--green)",
     subtle: "var(--green-subtle)",
-    border: "rgba(34,197,94,0.28)",
+    border: "color-mix(in srgb, var(--green) 28%, transparent)",
   },
   closed: {
     labelKey: "tickets.kanban.status.closed",
     color: "var(--muted2)",
-    subtle: "rgba(116,136,170,0.10)",
-    border: "rgba(116,136,170,0.22)",
+    subtle: "color-mix(in srgb, var(--muted2) 10%, transparent)",
+    border: "color-mix(in srgb, var(--muted2) 22%, transparent)",
   },
 };
 
@@ -146,16 +146,16 @@ export function projectInitials(name: string): string {
 }
 
 export const avatarPalette = [
-  "#7c3aed",
-  "#059669",
-  "#dc2626",
-  "#b45309",
-  "#0891b2",
-  "#be185d",
-  "#4f46e5",
-  "#16a34a",
-  "#9333ea",
-  "#d97706",
+  "var(--purple)",
+  "var(--green)",
+  "var(--red)",
+  "var(--orange)",
+  "var(--cyan)",
+  "var(--accent2)",
+  "var(--accent)",
+  "var(--green)",
+  "var(--purple)",
+  "var(--yellow)",
 ];
 
 export function getAvatarColor(name: string): string {

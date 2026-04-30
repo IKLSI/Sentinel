@@ -88,7 +88,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             p: "16px",
             borderRadius: "12px",
             background:
-              "linear-gradient(135deg, rgba(99,102,241,0.09) 0%, rgba(99,102,241,0.03) 100%)",
+              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent) 0%, color-mix(in srgb, var(--accent) 3%, transparent) 100%)",
             border: "1px solid var(--accent-border)",
           }}
         >
@@ -99,14 +99,14 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
               borderRadius: "11px",
               flexShrink: 0,
               background:
-                "linear-gradient(135deg, var(--accent) 0%, #818cf8 100%)",
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, white) 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 6px 16px rgba(99,102,241,0.30)",
+              boxShadow: "0 6px 16px var(--accent-border)",
             }}
           >
-            <EmailOutlined sx={{ fontSize: 20, color: "#fff" }} />
+            <EmailOutlined sx={{ fontSize: 20, color: "var(--s1)" }} />
           </Box>
           <Box>
             <Box
@@ -201,7 +201,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                   transition: "border-color 0.15s, box-shadow 0.15s",
                   "&:focus": {
                     borderColor: "var(--accent-border)",
-                    boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+                    boxShadow: "0 0 0 3px var(--accent-subtle)",
                   },
                 }}
                 value={inv.role}

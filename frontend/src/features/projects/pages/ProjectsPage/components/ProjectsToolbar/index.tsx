@@ -51,7 +51,7 @@ export const ProjectsToolbar: React.FC<Props> = ({
             transition: "border-color 0.15s, box-shadow 0.15s",
             "&:focus-within": {
               borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+              boxShadow: "0 0 0 3px var(--accent-subtle)",
             },
           }}
         >
@@ -89,13 +89,13 @@ export const ProjectsToolbar: React.FC<Props> = ({
             gap: "6px",
             flexShrink: 0,
             "&.MuiButton-root": {
-              background: "#1e3d9c",
+              background: "var(--accent2)",
               boxShadow: "none",
               height: "32px",
               px: "14px",
             },
             "&.MuiButton-root:hover": {
-              background: "#1e3a8a",
+              background: "color-mix(in srgb, var(--accent2) 85%, black)",
               boxShadow: "none",
               transform: "none",
             },
@@ -115,13 +115,13 @@ export const ProjectsToolbar: React.FC<Props> = ({
             gap: "6px",
             flexShrink: 0,
             textTransform: "none",
-            background: "#6366f1",
-            borderColor: "#6366f1",
-            color: "#fff",
+            background: "var(--accent)",
+            borderColor: "var(--accent)",
+            color: "var(--s1)",
             "&:hover": {
-              background: "#5254cc",
-              borderColor: "#5254cc",
-              color: "#fff",
+              background: "var(--accent2)",
+              borderColor: "var(--accent2)",
+              color: "var(--s1)",
             },
           }}
           onClick={onExport}

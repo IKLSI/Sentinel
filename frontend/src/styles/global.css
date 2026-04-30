@@ -26,7 +26,7 @@ body {
 
 
 ::selection {
-  background: rgba(99, 102, 241, 0.25);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
   color: var(--text);
 }
 
@@ -56,7 +56,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -135,7 +135,7 @@ a:hover { text-decoration: underline; }
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #4f46e5 0%, #818cf8 50%, #c4b5fd 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, white) 50%, color-mix(in srgb, var(--accent) 30%, white) 100%);
   transform-origin: left center;
   animation: pageProgress 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   z-index: 9999;
@@ -198,8 +198,8 @@ a:hover { text-decoration: underline; }
 
 
 .btn-cancel.MuiButton-outlined:hover {
-  border-color: rgba(239, 68, 68, 0.4) !important;
-  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: color-mix(in srgb, var(--red) 40%, transparent) !important;
+  background: var(--red-subtle) !important;
   color: var(--red) !important;
 }
 
@@ -210,8 +210,8 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: color-mix(in srgb, var(--red) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 18%, transparent);
   border-left: 3px solid var(--red);
   border-radius: var(--r);
   cursor: pointer;
@@ -219,7 +219,7 @@ a:hover { text-decoration: underline; }
 }
 
 .alert-banner:hover {
-  background: rgba(239, 68, 68, 0.10);
+  background: var(--red-subtle);
   border-left-color: var(--red);
 }
 
@@ -232,7 +232,7 @@ a:hover { text-decoration: underline; }
 
 .alert-btn {
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  border: 1px solid color-mix(in srgb, var(--red) 28%, transparent);
   border-radius: var(--r-sm);
   padding: 5px 12px;
   font-size: 11px;
@@ -246,8 +246,8 @@ a:hover { text-decoration: underline; }
 }
 
 .alert-btn:hover {
-  background: rgba(239, 68, 68, 0.10);
-  border-color: rgba(239, 68, 68, 0.4);
+  background: var(--red-subtle);
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
 }
 
 

@@ -22,24 +22,24 @@ type Variant =
 const colorMap: Record<Variant, { bg: string; color: string; border: string }> =
   {
     red: {
-      bg: "rgba(239,68,68,0.12)",
-      color: "#ef4444",
-      border: "rgba(239,68,68,0.25)",
+      bg: "color-mix(in srgb, var(--red) 12%, transparent)",
+      color: "var(--red)",
+      border: "color-mix(in srgb, var(--red) 25%, transparent)",
     },
     orange: {
       bg: "var(--orange-subtle)",
       color: "var(--orange)",
-      border: "rgba(249,115,22,0.28)",
+      border: "color-mix(in srgb, var(--orange) 28%, transparent)",
     },
     yellow: {
-      bg: "rgba(234,179,8,0.10)",
+      bg: "var(--yellow-subtle)",
       color: "var(--yellow)",
-      border: "rgba(234,179,8,0.25)",
+      border: "color-mix(in srgb, var(--yellow) 25%, transparent)",
     },
     green: {
       bg: "var(--green-subtle)",
       color: "var(--green)",
-      border: "rgba(34,197,94,0.28)",
+      border: "color-mix(in srgb, var(--green) 28%, transparent)",
     },
     blue: {
       bg: "var(--accent-subtle)",
@@ -47,19 +47,19 @@ const colorMap: Record<Variant, { bg: string; color: string; border: string }> =
       border: "var(--accent-border)",
     },
     cyan: {
-      bg: "rgba(6,182,212,0.12)",
+      bg: "color-mix(in srgb, var(--cyan) 12%, transparent)",
       color: "var(--cyan)",
-      border: "rgba(6,182,212,0.25)",
+      border: "color-mix(in srgb, var(--cyan) 25%, transparent)",
     },
     purple: {
       bg: "var(--purple-subtle)",
       color: "var(--purple)",
-      border: "rgba(168,85,247,0.28)",
+      border: "color-mix(in srgb, var(--purple) 28%, transparent)",
     },
     gray: {
-      bg: "rgba(116,136,170,0.10)",
+      bg: "color-mix(in srgb, var(--muted2) 10%, transparent)",
       color: "var(--muted2)",
-      border: "rgba(116,136,170,0.22)",
+      border: "color-mix(in srgb, var(--muted2) 22%, transparent)",
     },
     sky: {
       bg: "rgba(56,189,248,0.12)",
@@ -67,9 +67,9 @@ const colorMap: Record<Variant, { bg: string; color: string; border: string }> =
       border: "rgba(56,189,248,0.25)",
     },
     amber: {
-      bg: "rgba(245,158,11,0.12)",
-      color: "#f59e0b",
-      border: "rgba(245,158,11,0.25)",
+      bg: "color-mix(in srgb, var(--yellow) 12%, transparent)",
+      color: "var(--yellow)",
+      border: "color-mix(in srgb, var(--yellow) 25%, transparent)",
     },
     violet: {
       bg: "rgba(139,92,246,0.12)",

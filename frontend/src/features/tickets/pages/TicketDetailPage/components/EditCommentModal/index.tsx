@@ -57,7 +57,7 @@ export const EditCommentModal: React.FC<Props> = ({
             disabled={!value.trim() || saving}
           >
             {saving ? (
-              <CircularProgress size={14} sx={{ color: "#fff" }} />
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
             ) : (
               t("common.save")
             )}

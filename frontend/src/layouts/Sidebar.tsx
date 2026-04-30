@@ -683,8 +683,8 @@ export const Sidebar: React.FC = () => {
                 flexShrink: 0,
                 transition: "color 0.12s, background 0.12s",
                 "&:hover": {
-                  color: "#ef4444",
-                  background: "rgba(239,68,68,0.08)",
+                  color: "var(--red)",
+                  background: "var(--red-subtle)",
                 },
               }}
             >

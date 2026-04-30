@@ -11,28 +11,28 @@ export interface RowAction {
 const COLOR_MAP = {
   accent: {
     color: "var(--accent)",
-    bg: "rgba(99,102,241,0.14)",
-    border: "rgba(99,102,241,0.28)",
+    bg: "color-mix(in srgb, var(--accent) 14%, transparent)",
+    border: "color-mix(in srgb, var(--accent) 28%, transparent)",
   },
   red: {
     color: "var(--red)",
-    bg: "rgba(239,68,68,0.14)",
-    border: "rgba(239,68,68,0.28)",
+    bg: "color-mix(in srgb, var(--red) 14%, transparent)",
+    border: "color-mix(in srgb, var(--red) 28%, transparent)",
   },
   green: {
     color: "var(--green)",
-    bg: "rgba(34,197,94,0.14)",
-    border: "rgba(34,197,94,0.28)",
+    bg: "color-mix(in srgb, var(--green) 14%, transparent)",
+    border: "color-mix(in srgb, var(--green) 28%, transparent)",
   },
   yellow: {
     color: "var(--yellow)",
-    bg: "rgba(245,158,11,0.14)",
-    border: "rgba(245,158,11,0.28)",
+    bg: "color-mix(in srgb, var(--yellow) 14%, transparent)",
+    border: "color-mix(in srgb, var(--yellow) 28%, transparent)",
   },
   orange: {
     color: "var(--orange)",
-    bg: "rgba(249,115,22,0.14)",
-    border: "rgba(249,115,22,0.28)",
+    bg: "color-mix(in srgb, var(--orange) 14%, transparent)",
+    border: "color-mix(in srgb, var(--orange) 28%, transparent)",
   },
 } as const;
 

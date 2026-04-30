@@ -101,7 +101,7 @@ export const DashboardPage: React.FC = () => {
           <KpiCard
             label={t("dashboard.kpi.open_tickets")}
             value={stats.openTickets}
-            valueColor="#5c50d8"
+            valueColor="var(--accent2)"
             icon={<ConfirmationNumberOutlined sx={{ fontSize: 17 }} />}
             delta={stats.openTicketsDelta}
             inverse
@@ -112,7 +112,7 @@ export const DashboardPage: React.FC = () => {
           <KpiCard
             label={t("dashboard.kpi.resolved_per_month")}
             value={stats.resolvedThisMonth}
-            valueColor="#3a9578"
+            valueColor="var(--green)"
             icon={<CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />}
             delta={stats.resolvedThisMonthDelta}
             palette={palette}
@@ -122,7 +122,7 @@ export const DashboardPage: React.FC = () => {
           <KpiCard
             label={t("dashboard.kpi.unassigned")}
             value={stats.unassignedOpenTickets}
-            valueColor="#cd7422"
+            valueColor="var(--orange)"
             icon={<PersonOffOutlined sx={{ fontSize: 17 }} />}
             palette={palette}
           />
@@ -131,7 +131,7 @@ export const DashboardPage: React.FC = () => {
           <KpiCard
             label={t("dashboard.kpi.critical_vulns")}
             value={stats.criticalVulnerabilities}
-            valueColor="#c7364f"
+            valueColor="var(--red)"
             icon={<ShieldOutlined sx={{ fontSize: 17 }} />}
             delta={stats.criticalVulnerabilities}
             badge

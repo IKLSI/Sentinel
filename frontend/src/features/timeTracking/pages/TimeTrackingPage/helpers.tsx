@@ -5,16 +5,16 @@ import { format } from "date-fns";
 export const WORK_HOURS_TARGET = 7 * 60;
 
 export const PROJECT_PALETTE = [
-  "#6366f1",
-  "#8b5cf6",
-  "#06b6d4",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#ec4899",
-  "#14b8a6",
-  "#3b82f6",
-  "#f97316",
+  "var(--accent)",
+  "var(--purple)",
+  "var(--cyan)",
+  "var(--green)",
+  "var(--yellow)",
+  "var(--red)",
+  "var(--accent2)",
+  "var(--cyan)",
+  "var(--blue)",
+  "var(--orange)",
 ];
 
 export const getProjectColor = (name: string): string => {

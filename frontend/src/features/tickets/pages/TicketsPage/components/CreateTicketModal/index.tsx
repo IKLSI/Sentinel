@@ -89,7 +89,7 @@ export const CreateTicketModal: React.FC<Props> = ({
             disabled={!form.title.trim() || submitting}
           >
             {submitting ? (
-              <CircularProgress size={14} sx={{ color: "#fff" }} />
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
             ) : (
               t("tickets.list.create_submit")
             )}

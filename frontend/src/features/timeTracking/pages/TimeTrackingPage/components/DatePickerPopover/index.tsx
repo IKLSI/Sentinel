@@ -250,7 +250,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                     fontSize: "11px",
                     fontWeight: todayDay ? 800 : isSelected ? 700 : 400,
                     color: isSelected
-                      ? "#fff"
+                      ? "var(--s1)"
                       : todayDay
                         ? "var(--accent)"
                         : isCurrentMonth

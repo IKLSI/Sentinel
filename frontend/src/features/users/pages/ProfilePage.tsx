@@ -379,7 +379,7 @@ export const ProfilePage: React.FC = () => {
                         justifyContent: "center",
                       }}
                     >
-                      <CheckOutlined sx={{ fontSize: 7, color: "#fff" }} />
+                      <CheckOutlined sx={{ fontSize: 7, color: "var(--s1)" }} />
                     </Box>
                   )}
                 </Box>
