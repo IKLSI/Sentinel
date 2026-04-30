@@ -26,4 +26,10 @@
     <ProjectReference Include="../Application/Sentinel.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Resources\Locales\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

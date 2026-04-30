@@ -5,6 +5,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
+import { useT } from '../i18n/I18nContext'
 
 interface DeleteModalProps {
   open: boolean
@@ -22,7 +23,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
   loading = false,
   title,
   children,
-}) => (
+}) => {
+  const t = useT()
+  return (
   <Dialog
     open={open}
     onClose={loading ? undefined : onClose}
@@ -61,7 +64,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
         onClick={onClose}
         disabled={loading}
       >
-        Annuler
+        {t('common.cancel')}
       </Button>
       <Button
         variant="contained"
@@ -70,8 +73,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
         onClick={onConfirm}
         disabled={loading}
       >
-        {loading ? 'Suppression…' : 'Supprimer'}
+        {loading ? t('common.deleting') : t('common.delete')}
       </Button>
     </DialogActions>
   </Dialog>
-)
+  )
+}

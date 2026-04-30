@@ -33,6 +33,7 @@ import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import LockOutlined from "@mui/icons-material/LockOutlined";
+import { useT } from "../../../i18n/I18nContext";
 
 type KanbanType =
   | "bug"
@@ -61,13 +62,13 @@ interface KanbanTicket {
 
 type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
 
-const typeLabels: Record<KanbanType, string> = {
-  bug: "Bug",
-  feature: "Feature",
-  security: "Sécurité",
-  performance: "Performance",
-  maintenance: "Maintenance",
-  question: "Question",
+const typeLabelKeys: Record<KanbanType, string> = {
+  bug: "tickets.kanban.type.bug",
+  feature: "tickets.kanban.type.feature",
+  security: "tickets.kanban.type.security",
+  performance: "tickets.kanban.type.performance",
+  maintenance: "tickets.kanban.type.maintenance",
+  question: "tickets.kanban.type.question",
 };
 
 const typeIcons: Record<KanbanType, React.ReactElement> = {
@@ -81,34 +82,34 @@ const typeIcons: Record<KanbanType, React.ReactElement> = {
 
 const columnMeta: Record<
   TicketStatus,
-  { label: string; color: string; subtle: string; border: string }
+  { labelKey: string; color: string; subtle: string; border: string }
 > = {
   new: {
-    label: "Nouveau",
+    labelKey: "tickets.kanban.status.new",
     color: "var(--accent)",
     subtle: "var(--accent-subtle)",
     border: "var(--accent-border)",
   },
   in_progress: {
-    label: "En cours",
+    labelKey: "tickets.kanban.status.in_progress",
     color: "var(--orange)",
     subtle: "var(--orange-subtle)",
     border: "rgba(249,115,22,0.28)",
   },
   testing: {
-    label: "En test",
+    labelKey: "tickets.kanban.status.testing",
     color: "var(--cyan)",
     subtle: "var(--cyan-subtle)",
     border: "rgba(6,182,212,0.28)",
   },
   resolved: {
-    label: "Résolu",
+    labelKey: "tickets.kanban.status.resolved",
     color: "var(--green)",
     subtle: "var(--green-subtle)",
     border: "rgba(34,197,94,0.28)",
   },
   closed: {
-    label: "Fermé",
+    labelKey: "tickets.kanban.status.closed",
     color: "var(--muted2)",
     subtle: "rgba(116,136,170,0.10)",
     border: "rgba(116,136,170,0.22)",
@@ -211,6 +212,7 @@ function ProjectPicker({
   selected: string[];
   onApply: (projects: string[]) => void;
 }) {
+  const t = useT();
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -278,7 +280,7 @@ function ProjectPicker({
           color: "var(--text)",
         }}
       >
-        Filtrer par projet
+        {t("tickets.kanban.picker.title")}
       </Box>
 
       {/* ── Search ── */}
@@ -306,7 +308,7 @@ function ProjectPicker({
           <Box
             component="input"
             ref={inputRef}
-            placeholder="Rechercher..."
+            placeholder={t("tickets.kanban.search_placeholder")}
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setSearch(e.target.value)
@@ -314,7 +316,7 @@ function ProjectPicker({
             onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === "Escape") onClose();
             }}
-            aria-label="Rechercher un projet"
+            aria-label={t("tickets.kanban.picker.search_aria")}
             sx={{
               all: "unset",
               flex: 1,
@@ -349,7 +351,7 @@ function ProjectPicker({
               textTransform: "uppercase",
             }}
           >
-            Projets
+            {t("tickets.kanban.picker.projects_label")}
           </Box>
           <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
             {visible.length}
@@ -369,7 +371,7 @@ function ProjectPicker({
             "&:hover": { textDecoration: "underline" },
           }}
         >
-          Tout sélectionner
+          {t("tickets.kanban.picker.select_all")}
         </Box>
       </Box>
 
@@ -401,7 +403,7 @@ function ProjectPicker({
             <Box
               sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}
             >
-              Aucun résultat
+              {t("tickets.kanban.no_results")}
             </Box>
           </Box>
         ) : (
@@ -479,8 +481,7 @@ function ProjectPicker({
                     }}
                   >
                     <Box sx={{ fontSize: "11.5px", color: "var(--muted2)" }}>
-                      {project.ticketCount} ticket
-                      {project.ticketCount !== 1 ? "s" : ""}
+                      {project.ticketCount} {project.ticketCount !== 1 ? t("tickets.kanban.picker.tickets_plural") : t("tickets.kanban.picker.tickets_singular")}
                     </Box>
                   </Box>
                 </Box>
@@ -526,8 +527,9 @@ function ProjectPicker({
         <Box
           sx={{ fontSize: "12.5px", color: "var(--muted2)", fontWeight: 500 }}
         >
-          {pending.length} projet{pending.length !== 1 ? "s" : ""} sélectionné
-          {pending.length !== 1 ? "s" : ""}
+          {pending.length !== 1
+            ? t("tickets.kanban.picker.selected_plural", { count: pending.length })
+            : t("tickets.kanban.picker.selected_singular", { count: pending.length })}
         </Box>
         <Box sx={{ display: "flex", gap: "8px" }}>
           <Button
@@ -537,7 +539,7 @@ function ProjectPicker({
             sx={{ textTransform: "none" }}
             onClick={() => setPending([])}
           >
-            Réinitialiser
+            {t("tickets.kanban.picker.reset")}
           </Button>
           <Button
             variant="contained"
@@ -545,7 +547,7 @@ function ProjectPicker({
             sx={{ textTransform: "none" }}
             onClick={handleApply}
           >
-            Appliquer les filtres
+            {t("tickets.kanban.picker.apply")}
           </Button>
         </Box>
       </Box>
@@ -566,6 +568,7 @@ function TicketCard({
   updatingId: string | null;
   onClick: () => void;
 }) {
+  const t = useT();
   const isUpdating = updatingId === ticket.id;
 
   return (
@@ -611,7 +614,7 @@ function TicketCard({
           }}
         >
           {typeIcons[ticket.type]}
-          {typeLabels[ticket.type]}
+          {t(typeLabelKeys[ticket.type])}
         </Box>
       </Box>
 
@@ -700,14 +703,16 @@ function TicketCard({
           }}
         >
           {ticket.isInternal && (
-            <Tooltip title="Ticket interne" placement="top" arrow>
+            <Tooltip title={t("tickets.kanban.card.internal_tooltip")} placement="top" arrow>
               <LockOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
             </Tooltip>
           )}
 
           {ticket.commentCount > 0 && (
             <Tooltip
-              title={`${ticket.commentCount} commentaire${ticket.commentCount > 1 ? "s" : ""}`}
+              title={ticket.commentCount > 1
+                ? t("tickets.kanban.card.comments_plural", { count: ticket.commentCount })
+                : t("tickets.kanban.card.comments_singular", { count: ticket.commentCount })}
               placement="top"
               arrow
             >
@@ -821,6 +826,7 @@ function SkeletonCard() {
 export const KanbanPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const t = useT();
   const [columns, setColumns] = useState<KanbanColumns>(emptyColumns());
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -860,11 +866,11 @@ export const KanbanPage: React.FC = () => {
       const result = await getTickets({ pageSize: 200 });
       setColumns(ticketsToColumns(result.items));
     } catch {
-      showToast("Impossible de charger les tickets", "error");
+      showToast(t("tickets.kanban.error.load_failed"), "error");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   useEffect(() => {
     load();
@@ -946,13 +952,13 @@ export const KanbanPage: React.FC = () => {
       try {
         await changeStatus(draggableId, destCol);
       } catch {
-        showToast("Erreur lors du changement de statut", "error");
+        showToast(t("tickets.kanban.error.status_change_failed"), "error");
         load();
       } finally {
         setUpdatingId(null);
       }
     },
-    [columns, filteredColumns, showToast, load],
+    [columns, filteredColumns, showToast, load, t],
   );
 
   return (
@@ -1018,7 +1024,7 @@ export const KanbanPage: React.FC = () => {
             />
             <Box
               component="input"
-              placeholder="Rechercher..."
+              placeholder={t("tickets.kanban.search_placeholder")}
               value={search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setSearch(e.target.value)
@@ -1069,7 +1075,7 @@ export const KanbanPage: React.FC = () => {
             }}
           >
             <TuneOutlined sx={{ fontSize: "14px" }} />
-            Filtres
+            {t("tickets.kanban.filters_button")}
             {activeFilterCount > 0 && (
               <Box
                 component="span"
@@ -1172,7 +1178,7 @@ export const KanbanPage: React.FC = () => {
                             textTransform: "uppercase",
                           }}
                         >
-                          {meta.label}
+                          {t(meta.labelKey)}
                         </Box>
                       </Box>
                       <Box
@@ -1294,7 +1300,7 @@ export const KanbanPage: React.FC = () => {
                                 textTransform: "uppercase",
                               }}
                             >
-                              {meta.label}
+                              {t(meta.labelKey)}
                             </Box>
                           </Box>
                           <Box

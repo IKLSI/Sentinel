@@ -24,6 +24,7 @@ import { getDashboardStats } from "../api/dashboard";
 import { getProjects } from "../../techHealth/api/projects";
 import type { ProjectDto } from "../../techHealth/api/projects";
 import { useToast } from "../../../hooks/useToast";
+import { useT } from "../../../i18n/I18nContext";
 
 interface ActivityItem {
   color: string;
@@ -74,11 +75,11 @@ const EMPTY_STATS: StatsData = {
 };
 
 const STATUS = [
-  { key: "New", label: "Nouveau", color: "#6366f1" },
-  { key: "InProgress", label: "En cours", color: "#58aee8" },
-  { key: "Testing", label: "Tests", color: "#e8bb3a" },
-  { key: "Resolved", label: "Résolu", color: "#5dc895" },
-  { key: "Closed", label: "Clôturé", color: "#94a3b8" },
+  { key: "New", labelKey: "dashboard.status.new", color: "#6366f1" },
+  { key: "InProgress", labelKey: "dashboard.status.in_progress", color: "#58aee8" },
+  { key: "Testing", labelKey: "dashboard.status.testing", color: "#e8bb3a" },
+  { key: "Resolved", labelKey: "dashboard.status.resolved", color: "#5dc895" },
+  { key: "Closed", labelKey: "dashboard.status.closed", color: "#94a3b8" },
 ];
 
 const panelSx = {
@@ -120,10 +121,10 @@ const ticketIcon = (type: string) => {
 
 
 const ticketPriority = (priority: string) => {
-  if (priority === "critical") return { label: "Critique", color: "#c7364f" };
-  if (priority === "high") return { label: "Haute", color: "#c56a1a" };
-  if (priority === "medium") return { label: "Moyenne", color: "#1f6fb2" };
-  return { label: "Basse", color: "#2f8f63" };
+  if (priority === "critical") return { labelKey: "dashboard.priority.critical", color: "#c7364f" };
+  if (priority === "high") return { labelKey: "dashboard.priority.high", color: "#c56a1a" };
+  if (priority === "medium") return { labelKey: "dashboard.priority.medium", color: "#1f6fb2" };
+  return { labelKey: "dashboard.priority.low", color: "#2f8f63" };
 };
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -149,20 +150,20 @@ const repoPath = (repositoryUrl?: string, repositoryType?: string): string => {
 const projectTone = (project: ProjectDto) => {
   if (project.criticalVulnerabilities > 0)
     return {
-      label: "À risque",
+      labelKey: "dashboard.project_tone.at_risk",
       color: "#c7364f",
       dot: "#e74660",
       Icon: WarningAmberOutlined,
     };
   if (project.healthScore >= 85)
     return {
-      label: "Sain",
+      labelKey: "dashboard.project_tone.healthy",
       color: "#2f8f63",
       dot: "#56c58f",
       Icon: CheckCircleOutlineOutlined,
     };
   return {
-    label: "Surveillance",
+    labelKey: "dashboard.project_tone.monitoring",
     color: "#ad6f2f",
     dot: "#e6a94c",
     Icon: InfoOutlined,
@@ -170,6 +171,7 @@ const projectTone = (project: ProjectDto) => {
 };
 
 const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
+  const t = useT();
   const total = STATUS.reduce((sum, s) => sum + (map[s.key] ?? 0), 0);
   const r = 40;
   const c = 2 * Math.PI * r;
@@ -248,7 +250,7 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
               color: "#6b7a95",
             }}
           >
-            TOTAL
+            {t('dashboard.donut.total')}
           </Box>
         </Box>
       </Box>
@@ -373,6 +375,7 @@ const KpiCard: React.FC<{
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const t = useT();
   const [stats, setStats] = useState<StatsData>(EMPTY_STATS);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -388,18 +391,18 @@ export const DashboardPage: React.FC = () => {
       if (statsRes.status === "fulfilled") setStats(statsRes.value);
       else
         showToast(
-          "Impossible de charger les statistiques du dashboard.",
+          t('dashboard.toast.stats_load_error'),
           "error",
         );
       if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
-      else showToast("Impossible de charger les projets.", "error");
+      else showToast(t('dashboard.toast.projects_load_error'), "error");
       setLoading(false);
     };
     void load();
     return () => {
       mounted = false;
     };
-  }, [showToast]);
+  }, [showToast, t]);
 
   const urgent = useMemo(
     () =>
@@ -415,23 +418,23 @@ export const DashboardPage: React.FC = () => {
   const activity = stats.recentActivity.slice(0, 8);
   const projectRows = projects.slice(0, 4);
 
-  const bugCount = urgent.filter((t) => t.type === "bug").length;
-  const secCount = urgent.filter((t) => t.type === "security").length;
+  const bugCount = urgent.filter((u) => u.type === "bug").length;
+  const secCount = urgent.filter((u) => u.type === "security").length;
   const totalStatuses = STATUS.reduce(
     (sum, s) => sum + (stats.ticketsByStatus[s.key] ?? 0),
     0,
   );
   const urgentSummary = useMemo(() => {
-    if (urgent.length === 0) return "Aucun ticket urgent pour le moment";
+    if (urgent.length === 0) return t('dashboard.urgent_summary.empty');
     const parts: string[] = [];
-    if (bugCount > 0) parts.push(`${bugCount} ${bugCount > 1 ? "bugs" : "bug"}`);
+    if (bugCount > 0) parts.push(`${bugCount} ${t(bugCount > 1 ? 'dashboard.urgent_summary.bug_other' : 'dashboard.urgent_summary.bug_one')}`);
     if (secCount > 0)
-      parts.push(`${secCount} ${secCount > 1 ? "failles de sécurité" : "faille de sécurité"}`);
+      parts.push(`${secCount} ${t(secCount > 1 ? 'dashboard.urgent_summary.security_other' : 'dashboard.urgent_summary.security_one')}`);
     const otherCount = urgent.length - bugCount - secCount;
     if (otherCount > 0)
-      parts.push(`${otherCount} ${otherCount > 1 ? "autres" : "autre"}`);
+      parts.push(`${otherCount} ${t(otherCount > 1 ? 'dashboard.urgent_summary.other_other' : 'dashboard.urgent_summary.other_one')}`);
     return parts.join(" · ");
-  }, [bugCount, secCount, urgent]);
+  }, [bugCount, secCount, urgent, t]);
 
 
 
@@ -443,9 +446,9 @@ export const DashboardPage: React.FC = () => {
       .filter((date) => !Number.isNaN(date.getTime()))
       .sort((a, b) => b.getTime() - a.getTime())[0];
 
-    if (!latestScan) return "Aucune synchronisation disponible";
-    return `Dernière synchronisation ${formatDistanceToNow(latestScan, { addSuffix: true, locale: fr })}`;
-  }, [projects]);
+    if (!latestScan) return t('dashboard.projects_sync.none');
+    return t('dashboard.projects_sync.last', { value: formatDistanceToNow(latestScan, { addSuffix: true, locale: fr }) });
+  }, [projects, t]);
 
   if (loading) {
     return (
@@ -469,7 +472,7 @@ export const DashboardPage: React.FC = () => {
       >
         <Box sx={{ gridColumn: "span 3" }}>
           <KpiCard
-            label="Tickets ouverts"
+            label={t('dashboard.kpi.open_tickets')}
             value={stats.openTickets}
             valueColor="#5c50d8"
             icon={<ConfirmationNumberOutlined sx={{ fontSize: 17 }} />}
@@ -479,7 +482,7 @@ export const DashboardPage: React.FC = () => {
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
           <KpiCard
-            label="Résolus / mois"
+            label={t('dashboard.kpi.resolved_per_month')}
             value={stats.resolvedThisMonth}
             valueColor="#3a9578"
             icon={<CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />}
@@ -488,7 +491,7 @@ export const DashboardPage: React.FC = () => {
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
           <KpiCard
-            label="Non assignés"
+            label={t('dashboard.kpi.unassigned')}
             value={stats.unassignedOpenTickets}
             valueColor="#cd7422"
             icon={<PersonOffOutlined sx={{ fontSize: 17 }} />}
@@ -496,7 +499,7 @@ export const DashboardPage: React.FC = () => {
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
           <KpiCard
-            label="Vulns critiques"
+            label={t('dashboard.kpi.critical_vulns')}
             value={stats.criticalVulnerabilities}
             valueColor="#c7364f"
             icon={<ShieldOutlined sx={{ fontSize: 17 }} />}
@@ -533,7 +536,7 @@ export const DashboardPage: React.FC = () => {
                   letterSpacing: "-0.02em",
                 }}
               >
-                Tickets urgents
+                {t('dashboard.urgent.title')}
               </Box>
               <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
                 {urgentSummary}
@@ -553,7 +556,7 @@ export const DashboardPage: React.FC = () => {
                 gap: "2px",
               }}
             >
-              Voir tout <ChevronRightOutlined sx={{ fontSize: 18 }} />
+              {t('dashboard.see_all')} <ChevronRightOutlined sx={{ fontSize: 18 }} />
             </Box>
           </Box>
           <Box
@@ -575,20 +578,20 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             {Array.from({ length: 8 }).map((_, i) => {
-              const t = urgent[i];
-              if (!t) {
+              const ticket = urgent[i];
+              if (!ticket) {
                 return (
                   <Box key={`urgent-empty-${i}`} sx={{ minHeight: "48px" }} />
                 );
               }
-              const Icon = ticketIcon(t.type);
-              const badge = ticketPriority(t.priority);
+              const Icon = ticketIcon(ticket.type);
+              const badge = ticketPriority(ticket.priority);
               const av = avatars[i % avatars.length];
               return (
                 <Box
-                  key={t.id}
+                  key={ticket.id}
                   component="button"
-                  onClick={() => navigate(`/tickets/${t.id}`)}
+                  onClick={() => navigate(`/tickets/${ticket.id}`)}
                   sx={{
                     all: "unset",
                     cursor: "pointer",
@@ -613,9 +616,9 @@ export const DashboardPage: React.FC = () => {
                     sx={{
                       fontSize: 16,
                       color:
-                        t.type === "security"
+                        ticket.type === "security"
                           ? "#cf2943"
-                          : t.type === "performance"
+                          : ticket.type === "performance"
                             ? "#ca7825"
                             : "#61708b",
                     }}
@@ -631,7 +634,7 @@ export const DashboardPage: React.FC = () => {
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {t.title}
+                      {ticket.title}
                     </Box>
                     <Box
                       sx={{
@@ -644,7 +647,7 @@ export const DashboardPage: React.FC = () => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      <span>{t.projectName ?? t.reference}</span>
+                      <span>{ticket.projectName ?? ticket.reference}</span>
                       <span
                         style={{
                           color: badge.color,
@@ -653,7 +656,7 @@ export const DashboardPage: React.FC = () => {
                           fontWeight: 700,
                         }}
                       >
-                        • {badge.label}
+                        • {t(badge.labelKey)}
                       </span>
                       <span style={{ color: "#c8d1e0" }}>•</span>
                       <span
@@ -666,7 +669,7 @@ export const DashboardPage: React.FC = () => {
                         <MessageOutlined
                           sx={{ fontSize: 12, color: "#7c8ca4" }}
                         />
-                        {t.commentCount ?? 0}
+                        {ticket.commentCount ?? 0}
                       </span>
                     </Box>
                   </Box>
@@ -683,7 +686,7 @@ export const DashboardPage: React.FC = () => {
                       fontSize: "10px",
                     }}
                   >
-                    {t.assignedToName ? initials(t.assignedToName) : "?"}
+                    {ticket.assignedToName ? initials(ticket.assignedToName) : "?"}
                   </Box>
                 </Box>
               );
@@ -711,10 +714,10 @@ export const DashboardPage: React.FC = () => {
                 letterSpacing: "-0.02em",
               }}
             >
-              Activité récente
+              {t('dashboard.activity.title')}
             </Box>
             <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
-              Mise à jour temps réel
+              {t('dashboard.activity.realtime')}
             </Box>
           </Box>
           <Box sx={{ p: "8px 14px", flex: 1, minHeight: 0, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "transparent transparent", "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" }, "&::-webkit-scrollbar-track": { background: "transparent" }, "&:hover": { scrollbarColor: "#c8d1e0 transparent" }, "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" } }}>
@@ -722,7 +725,7 @@ export const DashboardPage: React.FC = () => {
               {activity.map((a, idx) => {
                 const danger = a.color === "red";
                 const accentColor = danger ? "#c7364f" : "#2f8f63";
-                const boldPrefix = danger ? "Vulnérabilité critique" : "Ticket résolu";
+                const boldPrefix = danger ? t('dashboard.activity.bold_critical') : t('dashboard.activity.bold_resolved');
                 const rest = a.text.startsWith(boldPrefix)
                   ? a.text.slice(boldPrefix.length)
                   : a.text;
@@ -825,10 +828,10 @@ export const DashboardPage: React.FC = () => {
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <Box>
               <Box sx={{ fontSize: "15px", fontWeight: 700, color: "#131a2b", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-                Répartition
+                {t('dashboard.distribution.title')}
               </Box>
               <Box sx={{ mt: "4px", color: "#5f718d", fontSize: "11px" }}>
-                Statut des tickets actifs
+                {t('dashboard.distribution.subtitle')}
               </Box>
             </Box>
           </Box>
@@ -862,7 +865,7 @@ export const DashboardPage: React.FC = () => {
                   >
                     <Box sx={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
                       <Box sx={{ width: 9, height: 9, borderRadius: "999px", bgcolor: s.color, flexShrink: 0 }} />
-                      <span>{s.label}</span>
+                      <span>{t(s.labelKey)}</span>
                     </Box>
                     <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                       <strong>{count}</strong>{" "}
@@ -903,7 +906,7 @@ export const DashboardPage: React.FC = () => {
                   letterSpacing: "-0.02em",
                 }}
               >
-                Projets
+                {t('dashboard.projects.title')}
               </Box>
               <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
                 {projectsSyncText}
@@ -923,7 +926,7 @@ export const DashboardPage: React.FC = () => {
                 gap: "2px",
               }}
             >
-              Voir tout <ChevronRightOutlined sx={{ fontSize: 18 }} />
+              {t('dashboard.see_all')} <ChevronRightOutlined sx={{ fontSize: 18 }} />
             </Box>
           </Box>
           <Box
@@ -945,7 +948,7 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             {projectRows.map((p) => {
-              const t = projectTone(p);
+              const tone = projectTone(p);
               const totalTickets = p.totalTickets;
               return (
                 <Box
@@ -972,7 +975,7 @@ export const DashboardPage: React.FC = () => {
                     },
                   }}
                 >
-                  <t.Icon sx={{ fontSize: 18, color: t.color, flexShrink: 0 }} />
+                  <tone.Icon sx={{ fontSize: 18, color: tone.color, flexShrink: 0 }} />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Box sx={{ fontSize: "12px", fontWeight: 700, color: "#131a2b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {p.name}

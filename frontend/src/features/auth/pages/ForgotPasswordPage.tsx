@@ -4,10 +4,12 @@ import Box from '@mui/material/Box'
 import { forgotPassword } from '../api/auth'
 import { useToast } from '../../../hooks/useToast'
 import { SentinelLogo } from '../../../layouts/SentinelLogo'
+import { useT } from '../../../i18n/I18nContext'
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const t = useT()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -15,8 +17,8 @@ export const ForgotPasswordPage: React.FC = () => {
   const emailRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50)
-    return () => clearTimeout(t)
+    const id = setTimeout(() => setMounted(true), 50)
+    return () => clearTimeout(id)
   }, [])
 
   useEffect(() => {
@@ -25,13 +27,13 @@ export const ForgotPasswordPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email) { showToast('Veuillez saisir votre adresse email.', 'warning'); return }
+    if (!email) { showToast(t('auth.forgot_password.error_email_required'), 'warning'); return }
     setLoading(true)
     try {
       await forgotPassword(email)
       setDone(true)
     } catch {
-      showToast('Une erreur est survenue. Veuillez réessayer.', 'error')
+      showToast(t('auth.forgot_password.error_generic'), 'error')
     } finally {
       setLoading(false)
     }
@@ -64,17 +66,17 @@ export const ForgotPasswordPage: React.FC = () => {
             <Box className="lp-logo-mark">
               <SentinelLogo width={20} height={23} />
             </Box>
-            <Box className="lp-logo-wordmark">SENTINEL</Box>
+            <Box className="lp-logo-wordmark">{t('auth.forgot_password.brand')}</Box>
           </Box>
 
           <Box className="lp-left-body">
             <Box className="lp-left-headline">
               <Box component="h1">
-                Mot de passe<br />
-                <Box component="span" className="lp-headline-accent">oublié ?</Box>
+                {t('auth.forgot_password.headline_part1')}<br />
+                <Box component="span" className="lp-headline-accent">{t('auth.forgot_password.headline_accent')}</Box>
               </Box>
               <Box component="p" className="lp-headline-sub">
-                Saisissez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                {t('auth.forgot_password.headline_sub')}
               </Box>
             </Box>
 
@@ -87,8 +89,8 @@ export const ForgotPasswordPage: React.FC = () => {
                       <path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   ),
-                  title: 'Lien sécurisé',
-                  desc: 'Le lien de réinitialisation expire dans 1 heure.',
+                  title: t('auth.forgot_password.feature1_title'),
+                  desc: t('auth.forgot_password.feature1_desc'),
                   iconBg: 'rgba(165,180,252,0.11)',
                   iconColor: 'rgba(165,180,252,0.9)',
                 },
@@ -99,8 +101,8 @@ export const ForgotPasswordPage: React.FC = () => {
                       <path d="M1.5 3.5v7a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5v-7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   ),
-                  title: 'Réception rapide',
-                  desc: 'Le lien vous parvient en quelques secondes.',
+                  title: t('auth.forgot_password.feature2_title'),
+                  desc: t('auth.forgot_password.feature2_desc'),
                   iconBg: 'rgba(249,168,212,0.11)',
                   iconColor: 'rgba(249,168,212,0.85)',
                 },
@@ -111,8 +113,8 @@ export const ForgotPasswordPage: React.FC = () => {
                       <path d="M4.5 7l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   ),
-                  title: 'Usage unique',
-                  desc: 'Le lien expire après utilisation.',
+                  title: t('auth.forgot_password.feature3_title'),
+                  desc: t('auth.forgot_password.feature3_desc'),
                   iconBg: 'rgba(251,191,36,0.11)',
                   iconColor: 'rgba(251,191,36,0.85)',
                 },
@@ -141,9 +143,9 @@ export const ForgotPasswordPage: React.FC = () => {
                     <path d="M6 14l6 6 10-10" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Box>
-                <Box component="p" className="aip-success-title">Email envoyé !</Box>
+                <Box component="p" className="aip-success-title">{t('auth.forgot_password.success_title')}</Box>
                 <Box component="p" className="aip-success-sub">
-                  Si un compte existe pour cet email, vous recevrez un lien de réinitialisation dans quelques instants.
+                  {t('auth.forgot_password.success_sub')}
                 </Box>
                 <button
                   type="button"
@@ -151,20 +153,20 @@ export const ForgotPasswordPage: React.FC = () => {
                   style={{ marginTop: '24px' }}
                   onClick={() => navigate('/login')}
                 >
-                  Retour à la connexion
+                  {t('auth.forgot_password.back_to_login')}
                 </button>
               </Box>
             ) : (
               <>
                 <Box className="lp-form-header">
-                  <Box component="h2" className="lp-form-title">Réinitialisation</Box>
-                  <Box component="p" className="lp-form-sub">Entrez l'email associé à votre compte</Box>
+                  <Box component="h2" className="lp-form-title">{t('auth.forgot_password.form_title')}</Box>
+                  <Box component="p" className="lp-form-sub">{t('auth.forgot_password.form_sub')}</Box>
                 </Box>
 
                 <form onSubmit={handleSubmit} noValidate>
                   <Box className="lp-field">
                     <Box component="label" className="lp-label" htmlFor="fp-email">
-                      Adresse email
+                      {t('auth.forgot_password.email_label')}
                     </Box>
                     <input
                       id="fp-email"
@@ -173,7 +175,7 @@ export const ForgotPasswordPage: React.FC = () => {
                       className="lp-input"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="utilisateur@entreprise.com"
+                      placeholder={t('auth.forgot_password.email_placeholder')}
                       autoComplete="email"
                       required
                     />
@@ -184,7 +186,7 @@ export const ForgotPasswordPage: React.FC = () => {
                       <Box className="lp-submit-loader" />
                     ) : (
                       <>
-                        Envoyer le lien
+                        {t('auth.forgot_password.submit')}
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -194,7 +196,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 </form>
 
                 <Box className="lp-forgot-wrap">
-                  <Link to="/login" className="lp-forgot">Retour à la connexion</Link>
+                  <Link to="/login" className="lp-forgot">{t('auth.forgot_password.back_to_login')}</Link>
                 </Box>
               </>
             )}

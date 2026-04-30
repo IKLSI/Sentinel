@@ -35,6 +35,7 @@ import {
   TicketType,
   User,
 } from "../../../types";
+import { useT } from "../../../i18n/I18nContext";
 
 interface CreateTicketPayload {
   title: string
@@ -94,6 +95,7 @@ const Pagination: React.FC<{
   total: number
   onChange: (p: number) => void
 }> = ({ page, totalPages, total, onChange }) => {
+  const t = useT()
   const pages = getPageNumbers(page, totalPages)
   return (
     <Box sx={{
@@ -104,12 +106,12 @@ const Pagination: React.FC<{
       background: "var(--s2)",
     }}>
       <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
-        {total} ticket{total > 1 ? "s" : ""}
+        {total} {total > 1 ? t('tickets.list.count_plural') : t('tickets.list.count_singular')}
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>
-          ← Précédent
+          {t('tickets.list.previous')}
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}>
@@ -127,7 +129,7 @@ const Pagination: React.FC<{
         </Box>
 
         <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>
-          Suivant →
+          {t('tickets.list.next')}
         </Box>
       </Box>
     </Box>
@@ -135,19 +137,19 @@ const Pagination: React.FC<{
 }
 
 
-const priorityLabels: Record<TicketPriority, string> = {
-  critical: "Critique",
-  high: "Haute",
-  medium: "Moyenne",
-  low: "Basse",
+const priorityLabelKeys: Record<TicketPriority, string> = {
+  critical: "tickets.list.priority_critical",
+  high: "tickets.list.priority_high",
+  medium: "tickets.list.priority_medium",
+  low: "tickets.list.priority_low",
 };
 
-const statusLabels: Record<TicketStatus, string> = {
-  new: "Nouveau",
-  in_progress: "En cours",
-  testing: "En test",
-  resolved: "Résolu",
-  closed: "Fermé",
+const statusLabelKeys: Record<TicketStatus, string> = {
+  new: "tickets.list.status_new",
+  in_progress: "tickets.list.status_in_progress",
+  testing: "tickets.list.status_testing",
+  resolved: "tickets.list.status_resolved",
+  closed: "tickets.list.status_closed",
 };
 
 
@@ -169,9 +171,13 @@ const typeIcons: Record<TicketType, React.ReactElement> = {
   question:    <HelpOutlineOutlined sx={{ fontSize: 12 }} />,
 };
 
-const typeTooltip: Record<TicketType, string> = {
-  bug: "Bug", feature: "Évolution", security: "Sécurité",
-  performance: "Performance", maintenance: "Maintenance", question: "Question",
+const typeTooltipKeys: Record<TicketType, string> = {
+  bug: "tickets.list.type_bug",
+  feature: "tickets.list.type_feature",
+  security: "tickets.list.type_security",
+  performance: "tickets.list.type_performance",
+  maintenance: "tickets.list.type_maintenance",
+  question: "tickets.list.type_question",
 };
 
 const statusDotColor: Record<TicketStatus, string> = {
@@ -219,6 +225,7 @@ const selectSx = {
 };
 
 export const TicketsPage: React.FC = () => {
+  const t = useT();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { tickets, loading, fetchTickets } = useTickets();
@@ -251,7 +258,7 @@ export const TicketsPage: React.FC = () => {
         search: debouncedSearch || undefined,
       });
     } catch {
-      showToast("Impossible d'exporter les tickets", "error");
+      showToast(t('tickets.list.export_error'), "error");
     } finally {
       setExporting(false);
     }
@@ -279,7 +286,7 @@ export const TicketsPage: React.FC = () => {
       setShowCreateModal(false);
       navigate(`/tickets/${created.id}`);
     } catch {
-      showToast('Erreur lors de la création du ticket', 'error');
+      showToast(t('tickets.list.create_error'), 'error');
     } finally {
       setCreateSubmitting(false);
     }
@@ -319,7 +326,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) => prev.map((t) => t.id === updated.id ? updated : t));
       setEditTarget(null);
     } catch {
-      showToast('Erreur lors de la modification du ticket', 'error');
+      showToast(t('tickets.list.edit_error'), 'error');
     } finally {
       setEditSaving(false);
     }
@@ -350,7 +357,7 @@ export const TicketsPage: React.FC = () => {
 
   const pageSize = 20;
 
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({ col: "Priorité", dir: "asc" });
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({ col: "priority", dir: "asc" });
 
   const toggleSort = (col: string) => {
     setSort((s) => {
@@ -375,9 +382,9 @@ export const TicketsPage: React.FC = () => {
     if (filters.status) params.status = filters.status;
     if (filters.type) params.type = filters.type;
     fetchTickets(params).catch(() => {
-      showToast('Erreur lors du chargement des tickets', 'error');
+      showToast(t('tickets.list.load_error'), 'error');
     });
-  }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast]);
+  }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast, t]);
 
   useEffect(() => {
     if (tickets?.items !== undefined) {
@@ -394,10 +401,10 @@ export const TicketsPage: React.FC = () => {
       if (!sort) return 0;
       const mul = sort.dir === "asc" ? 1 : -1;
       switch (sort.col) {
-        case "Ticket":    return mul * a.title.localeCompare(b.title);
-        case "Priorité":  return mul * ((PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
-        case "Statut":    return mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
-        case "Assigné":   return mul * (`${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`).localeCompare(`${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`);
+        case "title":    return mul * a.title.localeCompare(b.title);
+        case "priority": return mul * ((PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
+        case "status":   return mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+        case "assignee": return mul * (`${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`).localeCompare(`${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`);
         default: return 0;
       }
     });
@@ -417,7 +424,7 @@ export const TicketsPage: React.FC = () => {
             <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
             <Box
               component="input"
-              placeholder="Rechercher..."
+              placeholder={t('tickets.list.search_placeholder')}
               value={search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               sx={{
@@ -454,7 +461,7 @@ export const TicketsPage: React.FC = () => {
               }}
             >
               <TuneOutlined sx={{ fontSize: 15 }} />
-              Filtres
+              {t('tickets.list.filters')}
             </Box>
 
             {filtersOpen && (
@@ -470,9 +477,9 @@ export const TicketsPage: React.FC = () => {
                   animation: "fadeInUp 0.12s ease forwards",
                 }}>
                   {[
-                    { label: "Priorité", key: "priority", value: filters.priority, options: [["", "Toutes"], ["critical", "Critique"], ["high", "Haute"], ["medium", "Moyenne"], ["low", "Basse"]] },
-                    { label: "Statut",   key: "status",   value: filters.status,   options: [["", "Tous"], ["new", "Nouveau"], ["in_progress", "En cours"], ["testing", "En test"], ["resolved", "Résolu"], ["closed", "Fermé"]] },
-                    { label: "Type",     key: "type",     value: filters.type,     options: [["", "Tous"], ["bug", "Bug"], ["feature", "Évolution"], ["security", "Sécurité"], ["performance", "Perf"]] },
+                    { label: t('tickets.list.filter_priority'), key: "priority", value: filters.priority, options: [["", t('tickets.list.filter_all_feminine')], ["critical", t('tickets.list.priority_critical')], ["high", t('tickets.list.priority_high')], ["medium", t('tickets.list.priority_medium')], ["low", t('tickets.list.priority_low')]] },
+                    { label: t('tickets.list.filter_status'),   key: "status",   value: filters.status,   options: [["", t('tickets.list.filter_all_masculine')], ["new", t('tickets.list.status_new')], ["in_progress", t('tickets.list.status_in_progress')], ["testing", t('tickets.list.status_testing')], ["resolved", t('tickets.list.status_resolved')], ["closed", t('tickets.list.status_closed')]] },
+                    { label: t('tickets.list.filter_type'),     key: "type",     value: filters.type,     options: [["", t('tickets.list.filter_all_masculine')], ["bug", t('tickets.list.type_bug')], ["feature", t('tickets.list.type_feature')], ["security", t('tickets.list.type_security')], ["performance", t('tickets.list.type_performance_short')]] },
                   ].map(({ label, key, value, options }) => (
                     <Box key={key}>
                       <Box sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase", mb: "5px" }}>
@@ -505,7 +512,7 @@ export const TicketsPage: React.FC = () => {
                         "&:hover": { background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.35)" },
                       }}
                     >
-                      Réinitialiser
+                      {t('tickets.list.reset')}
                     </Box>
                   )}
                 </Box>
@@ -528,7 +535,7 @@ export const TicketsPage: React.FC = () => {
             onClick={openCreateModal}
           >
             <AddOutlined sx={{ fontSize: 14 }} />
-            Nouveau ticket
+            {t('tickets.list.new_ticket')}
           </Button>
 
           <Button
@@ -553,7 +560,7 @@ export const TicketsPage: React.FC = () => {
             onClick={handleExport}
           >
             {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
-            Exporter
+            {t('tickets.list.export')}
           </Button>
         </Box>
 
@@ -581,11 +588,11 @@ export const TicketsPage: React.FC = () => {
                   <Box className="empty-state-icon">
                     <ConfirmationNumberOutlined sx={{ fontSize: 40 }} />
                   </Box>
-                  <Box className="empty-state-title">Aucun ticket trouvé</Box>
+                  <Box className="empty-state-title">{t('tickets.list.empty_title')}</Box>
                   <Box className="empty-state-subtitle">
                     {!debouncedSearch && !filters.priority && !filters.status && !filters.type
-                      ? "Créez votre premier ticket"
-                      : "Aucun résultat pour cette recherche"}
+                      ? t('tickets.list.empty_subtitle_create')
+                      : t('tickets.list.empty_subtitle_search')}
                   </Box>
                 </Box>
               </Box>
@@ -599,14 +606,20 @@ export const TicketsPage: React.FC = () => {
                 </Box>
                 <Box component="thead">
                   <Box component="tr">
-                    {["Ticket", "Priorité", "Statut", "Assigné", ""].map((h) => {
-                        const sortable = h !== "";
-                        const isActive = sort?.col === h;
+                    {([
+                      { col: "title",    label: t('tickets.list.col_ticket') },
+                      { col: "priority", label: t('tickets.list.col_priority') },
+                      { col: "status",   label: t('tickets.list.col_status') },
+                      { col: "assignee", label: t('tickets.list.col_assignee') },
+                      { col: "",         label: "" },
+                    ]).map(({ col, label }) => {
+                        const sortable = col !== "";
+                        const isActive = sort?.col === col;
                         return (
                           <Box
                             component="th"
-                            key={h}
-                            onClick={() => sortable && toggleSort(h)}
+                            key={col || "actions"}
+                            onClick={() => sortable && toggleSort(col)}
                             sx={{
                               fontFamily: "var(--font-mono)",
                               fontSize: "10px",
@@ -626,7 +639,7 @@ export const TicketsPage: React.FC = () => {
                             }}
                           >
                             <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                              {h}
+                              {label}
                               {sortable && isActive && (
                                 <Box sx={{ fontSize: "12px", color: "var(--accent)", lineHeight: 1, display: "flex", alignItems: "center" }}>
                                   {sort?.dir === "asc" ? "↑" : "↓"}
@@ -661,7 +674,7 @@ export const TicketsPage: React.FC = () => {
                         {/* Ticket — 2 lignes */}
                         <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
                           <Box sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "4px" }}>
-                            <Tooltip title={typeTooltip[ticket.type]} arrow placement="top">
+                            <Tooltip title={t(typeTooltipKeys[ticket.type])} arrow placement="top">
                               <Box sx={{
                                 display: "inline-flex", alignItems: "center", justifyContent: "center",
                                 color: typeBadgeStyle[ticket.type].color,
@@ -692,7 +705,7 @@ export const TicketsPage: React.FC = () => {
                         <Box component="td" sx={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", verticalAlign: "middle" }}>
                           <Box sx={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "12px", color: "var(--text-secondary)" }}>
                             <Box sx={{ width: "7px", height: "7px", borderRadius: "50%", background: priorityColor[ticket.priority], flexShrink: 0, boxShadow: `0 0 5px ${priorityColor[ticket.priority]}` }} />
-                            {priorityLabels[ticket.priority]}
+                            {t(priorityLabelKeys[ticket.priority])}
                           </Box>
                         </Box>
 
@@ -704,7 +717,7 @@ export const TicketsPage: React.FC = () => {
                               background: statusDotColor[ticket.status], flexShrink: 0,
                               boxShadow: ticket.status !== "closed" ? `0 0 5px ${statusDotColor[ticket.status]}` : "none",
                             }} />
-                            {statusLabels[ticket.status]}
+                            {t(statusLabelKeys[ticket.status])}
                           </Box>
                         </Box>
 
@@ -738,8 +751,8 @@ export const TicketsPage: React.FC = () => {
                           sx={{ padding: "6px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", textAlign: "center", verticalAlign: "middle" }}
                         >
                           <RowActions actions={[
-                            { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: "Modifier", onClick: (e) => { e.stopPropagation(); openEditModal(ticket); }, color: "accent" },
-                            { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: "Supprimer", onClick: (e) => { e.stopPropagation(); setDeleteTarget({ id: ticket.id, reference: ticket.reference }); }, color: "red" },
+                            { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: t('common.edit'), onClick: (e) => { e.stopPropagation(); openEditModal(ticket); }, color: "accent" },
+                            { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: t('common.delete'), onClick: (e) => { e.stopPropagation(); setDeleteTarget({ id: ticket.id, reference: ticket.reference }); }, color: "red" },
                           ]} />
                         </Box>
                       </Box>
@@ -763,70 +776,70 @@ export const TicketsPage: React.FC = () => {
       <AppModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Nouveau ticket"
+        title={t('tickets.list.create_title')}
         actions={
           <>
-            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setShowCreateModal(false)}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setShowCreateModal(false)}>{t('common.cancel')}</Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleCreate} disabled={!createForm.title.trim() || createSubmitting}>
-              {createSubmitting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Créer le ticket"}
+              {createSubmitting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : t('tickets.list.create_submit')}
             </Button>
           </>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
-            <Box component="input" autoFocus type="text" placeholder="Description courte du problème" value={createForm.title}
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_title')} <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
+            <Box component="input" autoFocus type="text" placeholder={t('tickets.list.title_placeholder')} value={createForm.title}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
             />
           </Box>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_priority')}</Box>
               <Box component="select" value={createForm.priority}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, priority: e.target.value as CreateTicketPayload['priority'] }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="Critical">Critique</option>
-                <option value="High">Haute</option>
-                <option value="Medium">Moyenne</option>
-                <option value="Low">Basse</option>
+                <option value="Critical">{t('tickets.list.priority_critical')}</option>
+                <option value="High">{t('tickets.list.priority_high')}</option>
+                <option value="Medium">{t('tickets.list.priority_medium')}</option>
+                <option value="Low">{t('tickets.list.priority_low')}</option>
               </Box>
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_type')}</Box>
               <Box component="select" value={createForm.type}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, type: e.target.value as CreateTicketPayload['type'] }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="Bug">Bug</option>
-                <option value="Feature">Évolution</option>
-                <option value="Security">Sécurité</option>
-                <option value="Performance">Performance</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Question">Question</option>
+                <option value="Bug">{t('tickets.list.type_bug')}</option>
+                <option value="Feature">{t('tickets.list.type_feature')}</option>
+                <option value="Security">{t('tickets.list.type_security')}</option>
+                <option value="Performance">{t('tickets.list.type_performance')}</option>
+                <option value="Maintenance">{t('tickets.list.type_maintenance')}</option>
+                <option value="Question">{t('tickets.list.type_question')}</option>
               </Box>
             </Box>
           </Box>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_project')}</Box>
               <Box component="select" value={createForm.projectId ?? ''}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, projectId: e.target.value || undefined }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Aucun projet</option>
+                <option value="">{t('tickets.list.no_project')}</option>
                 {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Box>
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_assignee')}</Box>
               <Box component="select" value={createForm.assignedToId ?? ''}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateForm((f) => ({ ...f, assignedToId: e.target.value || undefined }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Non assigné</option>
+                <option value="">{t('tickets.list.unassigned')}</option>
                 {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
               </Box>
             </Box>
@@ -834,15 +847,15 @@ export const TicketsPage: React.FC = () => {
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
-                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
-                <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_estimation')}</Box>
+                <Tooltip title={t('tickets.list.estimation_tooltip')} placement="right" arrow>
                   <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
                 </Tooltip>
               </Box>
               <DurationPicker value={createEstMinutes} onChange={setCreateEstMinutes} width="100%" />
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Visibilité</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_visibility')}</Box>
               <Box
                 onClick={() => setCreateForm((f) => ({ ...f, isInternal: !f.isInternal }))}
                 sx={{
@@ -858,14 +871,14 @@ export const TicketsPage: React.FC = () => {
                   : <LockOpenOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
                 }
                 <Box component="span" sx={{ fontSize: "13px", color: createForm.isInternal ? "var(--accent)" : "var(--muted)", fontWeight: createForm.isInternal ? 600 : 400 }}>
-                  {createForm.isInternal ? "Interne" : "Public"}
+                  {createForm.isInternal ? t('tickets.list.visibility_internal') : t('tickets.list.visibility_public')}
                 </Box>
               </Box>
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
-            <Box component="textarea" rows={5} placeholder="Décrivez le problème..." value={createForm.description}
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_description')}</Box>
+            <Box component="textarea" rows={5} placeholder={t('tickets.list.description_placeholder')} value={createForm.description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", maxWidth: "100%", minHeight: "80px", maxHeight: "300px" }}
             />
@@ -876,19 +889,19 @@ export const TicketsPage: React.FC = () => {
       <AppModal
         open={!!editTarget}
         onClose={() => !editSaving && setEditTarget(null)}
-        title="Modifier le ticket"
+        title={t('tickets.list.edit_title')}
         actions={
           <>
-            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)} disabled={editSaving}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)} disabled={editSaving}>{t('common.cancel')}</Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEdit} disabled={!editForm.title.trim() || editSaving}>
-              {editSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : "Enregistrer"}
+              {editSaving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : t('common.save')}
             </Button>
           </>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Titre <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_title')} <Box component="span" sx={{ color: "var(--red)" }}>*</Box></Box>
             <Box component="input" autoFocus type="text" value={editForm.title}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, title: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
@@ -896,50 +909,50 @@ export const TicketsPage: React.FC = () => {
           </Box>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Priorité</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_priority')}</Box>
               <Box component="select" value={editForm.priority}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, priority: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="critical">Critique</option>
-                <option value="high">Haute</option>
-                <option value="medium">Moyenne</option>
-                <option value="low">Basse</option>
+                <option value="critical">{t('tickets.list.priority_critical')}</option>
+                <option value="high">{t('tickets.list.priority_high')}</option>
+                <option value="medium">{t('tickets.list.priority_medium')}</option>
+                <option value="low">{t('tickets.list.priority_low')}</option>
               </Box>
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Type</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_type')}</Box>
               <Box component="select" value={editForm.type}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, type: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="bug">Bug</option>
-                <option value="feature">Évolution</option>
-                <option value="security">Sécurité</option>
-                <option value="performance">Performance</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="question">Question</option>
+                <option value="bug">{t('tickets.list.type_bug')}</option>
+                <option value="feature">{t('tickets.list.type_feature')}</option>
+                <option value="security">{t('tickets.list.type_security')}</option>
+                <option value="performance">{t('tickets.list.type_performance')}</option>
+                <option value="maintenance">{t('tickets.list.type_maintenance')}</option>
+                <option value="question">{t('tickets.list.type_question')}</option>
               </Box>
             </Box>
           </Box>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Projet</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_project')}</Box>
               <Box component="select" value={editForm.projectId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, projectId: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Aucun projet</option>
+                <option value="">{t('tickets.list.no_project')}</option>
                 {modalProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Box>
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Assigné à</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_assignee')}</Box>
               <Box component="select" value={editForm.assignedToId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm((f) => ({ ...f, assignedToId: e.target.value }))}
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Non assigné</option>
+                <option value="">{t('tickets.list.unassigned')}</option>
                 {modalUsers.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
               </Box>
             </Box>
@@ -947,15 +960,15 @@ export const TicketsPage: React.FC = () => {
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "8px" }}>
-                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>Estimation</Box>
-                <Tooltip title="Formats acceptés : 2h30, 1h, 90m, 1.5" placement="right" arrow>
+                <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_estimation')}</Box>
+                <Tooltip title={t('tickets.list.estimation_tooltip')} placement="right" arrow>
                   <Box sx={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", cursor: "default", lineHeight: 1, flexShrink: 0 }}>i</Box>
                 </Tooltip>
               </Box>
               <DurationPicker value={editForm.estimatedMinutes} onChange={(v) => setEditForm((f) => ({ ...f, estimatedMinutes: v }))} width="100%" />
             </Box>
             <Box>
-              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Visibilité</Box>
+              <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "8px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_visibility')}</Box>
               <Box
                 onClick={() => setEditForm((f) => ({ ...f, isInternal: !f.isInternal }))}
                 sx={{
@@ -971,13 +984,13 @@ export const TicketsPage: React.FC = () => {
                   : <LockOpenOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
                 }
                 <Box component="span" sx={{ fontSize: "13px", color: editForm.isInternal ? "var(--accent)" : "var(--muted)", fontWeight: editForm.isInternal ? 600 : 400 }}>
-                  {editForm.isInternal ? "Interne" : "Public"}
+                  {editForm.isInternal ? t('tickets.list.visibility_internal') : t('tickets.list.visibility_public')}
                 </Box>
               </Box>
             </Box>
           </Box>
           <Box>
-            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>Description (Markdown supporté)</Box>
+            <Box component="label" sx={{ display: "block", fontSize: "11px", fontWeight: 600, mb: "5px", color: "var(--muted2)", letterSpacing: "0.04em" }}>{t('tickets.list.field_description')}</Box>
             <Box component="textarea" rows={5} value={editForm.description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm((f) => ({ ...f, description: e.target.value }))}
               sx={{ background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "8px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", maxWidth: "100%", minHeight: "80px", maxHeight: "300px" }}
@@ -991,9 +1004,9 @@ export const TicketsPage: React.FC = () => {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleting}
-        title="Supprimer ce ticket ?"
+        title={t('tickets.list.delete_title')}
       >
-        Cette action est irréversible. Le ticket <strong>{deleteTarget?.reference}</strong> sera définitivement supprimé.
+        {t('tickets.list.delete_message_prefix')} <strong>{deleteTarget?.reference}</strong> {t('tickets.list.delete_message_suffix')}
       </DeleteModal>
     </>
   );

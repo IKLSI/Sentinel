@@ -6,6 +6,7 @@ import { AppModal } from "../../../components/AppModal";
 import { DeleteModal } from "../../../components/DeleteModal";
 import { RowActions } from "../../../components/RowActions";
 import { useToast } from "../../../hooks/useToast";
+import { useT } from "../../../i18n/I18nContext";
 import { useNavigate } from "react-router-dom";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
@@ -34,48 +35,13 @@ type GradeKey = "F" | "E" | "D" | "C" | "B" | "A";
 
 const GRADE_ORDER: GradeKey[] = ["F", "E", "D", "C", "B", "A"];
 
-const GRADE_CONFIG: Record<GradeKey, {
-  label: string;
-  subtitle: string;
-  iconColor: string;
-  Icon: SvgIconComponent;
-}> = {
-  F: {
-    label: "Risque critique",
-    subtitle: "Intervention immédiate requise",
-    iconColor: "#dc2626",
-    Icon: WarningAmberOutlined,
-  },
-  E: {
-    label: "Risque sévère",
-    subtitle: "Exposition critique confirmée",
-    iconColor: "#ea580c",
-    Icon: WarningAmberOutlined,
-  },
-  D: {
-    label: "Risque modéré",
-    subtitle: "Correctifs recommandés",
-    iconColor: "#d97706",
-    Icon: ErrorOutlineOutlined,
-  },
-  C: {
-    label: "Risque faible",
-    subtitle: "Anomalies mineures détectées",
-    iconColor: "#ca8a04",
-    Icon: ErrorOutlineOutlined,
-  },
-  B: {
-    label: "Satisfaisant",
-    subtitle: "Légères améliorations possibles",
-    iconColor: "#4f46e5",
-    Icon: CheckCircleOutlineOutlined,
-  },
-  A: {
-    label: "Conforme",
-    subtitle: "Aucune vulnérabilité détectée",
-    iconColor: "#10b981",
-    Icon: CheckCircleOutlineOutlined,
-  },
+const GRADE_VISUAL: Record<GradeKey, { iconColor: string; Icon: SvgIconComponent }> = {
+  F: { iconColor: "#dc2626", Icon: WarningAmberOutlined },
+  E: { iconColor: "#ea580c", Icon: WarningAmberOutlined },
+  D: { iconColor: "#d97706", Icon: ErrorOutlineOutlined },
+  C: { iconColor: "#ca8a04", Icon: ErrorOutlineOutlined },
+  B: { iconColor: "#4f46e5", Icon: CheckCircleOutlineOutlined },
+  A: { iconColor: "#10b981", Icon: CheckCircleOutlineOutlined },
 };
 
 const getGrade = (grade: string | null | undefined): GradeKey => {
@@ -85,6 +51,7 @@ const getGrade = (grade: string | null | undefined): GradeKey => {
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
+  const t = useT();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -113,18 +80,18 @@ export const ProjectsPage: React.FC = () => {
 const data = await getProjects();
       setProjects(data);
     } catch {
-      showToast("Impossible de charger les projets", "error");
+      showToast(t("projects.toast.load_error"), "error");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   useEffect(() => { load(); }, [load]);
 
   const handleExport = async () => {
     setExporting(true);
     try { await exportProjectsExcel(); }
-    catch { showToast("Erreur lors de l'export Excel", "error"); }
+    catch { showToast(t("projects.toast.export_error"), "error"); }
     finally { setExporting(false); }
   };
 
@@ -136,10 +103,10 @@ const data = await getProjects();
     try {
       await createProject({ name: formName.trim(), repositoryUrl: formRepoUrl || undefined });
       setShowModal(false);
-      showToast("Projet créé avec succès", "success");
+      showToast(t("projects.toast.create_success"), "success");
       await load();
     } catch {
-      showToast("Erreur lors de la création du projet", "error");
+      showToast(t("projects.toast.create_error"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -161,9 +128,9 @@ const data = await getProjects();
       });
       setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       setEditTarget(null);
-      showToast("Projet mis à jour", "success");
+      showToast(t("projects.toast.update_success"), "success");
     } catch {
-      showToast("Erreur lors de la mise à jour", "error");
+      showToast(t("projects.toast.update_error"), "error");
     } finally {
       setEditSaving(false);
     }
@@ -175,10 +142,10 @@ const data = await getProjects();
     try {
       await deleteProject(deleteTarget.id);
       setDeleteTarget(null);
-      showToast("Projet supprimé", "success");
+      showToast(t("projects.toast.delete_success"), "success");
       await load();
     } catch {
-      showToast("Erreur lors de la suppression", "error");
+      showToast(t("projects.toast.delete_error"), "error");
     } finally {
       setDeleting(false);
     }
@@ -191,11 +158,11 @@ const data = await getProjects();
     const deadline = Date.now() + 10 * 60 * 1000;
     try {
       await scanProject(id);
-      showToast("Scan lancé, analyse en cours…", "info");
+      showToast(t("projects.toast.scan_started"), "info");
       const poll = async () => {
         if (Date.now() > deadline) {
           setScanningId(null);
-          showToast("Timeout : le scan prend plus de temps que prévu", "warning");
+          showToast(t("projects.toast.scan_timeout"), "warning");
           return;
         }
         try {
@@ -203,7 +170,7 @@ const data = await getProjects();
           if (updated.lastScanAt !== previousLastScanAt) {
             setProjects((prev) => prev.map((p) => p.id === id ? { ...p, healthScore: updated.healthScore, healthGrade: updated.healthGrade, totalDependencies: updated.totalDependencies, vulnerableDependencies: updated.vulnerableDependencies, criticalVulnerabilities: updated.criticalVulnerabilities } : p));
             setScanningId(null);
-            showToast("Scan terminé", "success");
+            showToast(t("projects.toast.scan_done"), "success");
           } else {
             scanPollRef.current = setTimeout(poll, 3000);
           }
@@ -213,7 +180,7 @@ const data = await getProjects();
       };
       scanPollRef.current = setTimeout(poll, 2000);
     } catch {
-      showToast("Impossible de lancer le scan", "error");
+      showToast(t("projects.toast.scan_start_error"), "error");
       setScanningId(null);
     }
   };
@@ -263,7 +230,7 @@ const data = await getProjects();
             }}>
               <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
               <Box
-                component="input" type="text" placeholder="Rechercher..."
+                component="input" type="text" placeholder={t("projects.search_placeholder")}
                 value={search}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
                 sx={{
@@ -286,7 +253,7 @@ const data = await getProjects();
               onClick={openModal}
             >
               <AddOutlined sx={{ fontSize: 14 }} />
-              Nouveau projet
+              {t("projects.new_project")}
             </Button>
             <Button
               variant="outlined" size="small" disabled={exporting}
@@ -299,7 +266,7 @@ const data = await getProjects();
               onClick={handleExport}
             >
               {exporting ? <CircularProgress size={12} sx={{ color: "var(--text-secondary)" }} /> : <FileDownloadOutlined sx={{ fontSize: 14 }} />}
-              Exporter
+              {t("projects.export")}
             </Button>
           </Box>
         </Box>
@@ -326,9 +293,9 @@ const data = await getProjects();
               <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r)" }}>
                 <Box className="empty-state">
                   <Box className="empty-state-icon"><AccountTreeOutlined sx={{ fontSize: 40 }} /></Box>
-                  <Box className="empty-state-title">Aucun projet trouvé</Box>
+                  <Box className="empty-state-title">{t("projects.empty.title")}</Box>
                   <Box className="empty-state-subtitle">
-                    {projects.length === 0 ? "Créez votre premier projet" : "Modifiez votre recherche"}
+                    {projects.length === 0 ? t("projects.empty.create_first") : t("projects.empty.adjust_search")}
                   </Box>
                 </Box>
               </Box>
@@ -336,7 +303,7 @@ const data = await getProjects();
               <Box sx={{ minWidth: "1060px", display: "flex", flexDirection: "column", gap: "10px" }}>
                 {visibleSections.map((grade) => {
                   const items = grouped[grade];
-                  const cfg = GRADE_CONFIG[grade];
+                  const cfg = GRADE_VISUAL[grade];
 
                   return (
                     <Box
@@ -379,16 +346,16 @@ const data = await getProjects();
                           </Box>
                           <Box sx={{ minWidth: 0 }}>
                             <Box sx={{ fontSize: "13px", fontWeight: 700, color: cfg.iconColor, lineHeight: 1.2, letterSpacing: "-0.01em", fontFamily: "var(--font-ui)" }}>
-                              {cfg.label}
+                              {t(`projects.grade.${grade}.label`)}
                             </Box>
                             <Box sx={{ fontSize: "11px", color: "var(--muted2)", mt: "2px", lineHeight: 1.2 }}>
-                              {cfg.subtitle}
+                              {t(`projects.grade.${grade}.subtitle`)}
                             </Box>
                           </Box>
                         </Box>
                         <Box
                           component="button"
-                          aria-label={isCollapsed ? "Déplier la section" : "Replier la section"}
+                          aria-label={isCollapsed ? t("projects.section.expand") : t("projects.section.collapse")}
                           onClick={() => setCollapsedSections((prev) => ({ ...prev, [grade]: !prev[grade] }))}
                           sx={{
                             all: "unset",
@@ -425,10 +392,10 @@ const data = await getProjects();
                             </Box>
                             <Box component="thead">
                               <Box component="tr">
-                                <HeadCell>Projet</HeadCell>
-                                <HeadCell align="center">Vulnérabilités</HeadCell>
-                                <HeadCell align="center">Critiques</HeadCell>
-                                <HeadCell align="center">Tickets</HeadCell>
+                                <HeadCell>{t("projects.table.project")}</HeadCell>
+                                <HeadCell align="center">{t("projects.table.vulnerabilities")}</HeadCell>
+                                <HeadCell align="center">{t("projects.table.critical")}</HeadCell>
+                                <HeadCell align="center">{t("projects.table.tickets")}</HeadCell>
                                 <HeadCell />
                               </Box>
                             </Box>
@@ -459,42 +426,42 @@ const data = await getProjects();
       <AppModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title="Nouveau projet"
+        title={t("projects.modal.create_title")}
         actions={
           <>
             <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setShowModal(false)}>
-              Annuler
+              {t("projects.modal.cancel")}
             </Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleSubmit} disabled={!formName.trim() || submitting}>
-              {submitting ? "Création..." : "Créer"}
+              {submitting ? t("projects.modal.creating") : t("projects.modal.create")}
             </Button>
           </>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <ModalField label={<>Nom du projet <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} placeholder="Ex : API Paiement v2" value={formName} onChange={setFormName} autoFocus />
-          <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={formRepoUrl} onChange={setFormRepoUrl} />
+          <ModalField label={<>{t("projects.field.name_label")} <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} placeholder={t("projects.field.name_placeholder")} value={formName} onChange={setFormName} autoFocus />
+          <ModalField label={t("projects.field.repo_url_label")} placeholder={t("projects.field.repo_url_placeholder")} value={formRepoUrl} onChange={setFormRepoUrl} />
         </Box>
       </AppModal>
 
       <AppModal
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
-        title="Modifier le projet"
+        title={t("projects.modal.edit_title")}
         actions={
           <>
             <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setEditTarget(null)}>
-              Annuler
+              {t("projects.modal.cancel")}
             </Button>
             <Button variant="contained" size="small" sx={{ textTransform: "none" }} onClick={handleEdit} disabled={!editName.trim() || editSaving}>
-              {editSaving ? "Enregistrement..." : "Enregistrer"}
+              {editSaving ? t("projects.modal.saving") : t("projects.modal.save")}
             </Button>
           </>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <ModalField label={<>Nom du projet <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} value={editName} onChange={setEditName} />
-          <ModalField label="URL dépôt" placeholder="https://github.com/org/repo" value={editRepoUrl} onChange={setEditRepoUrl} />
+          <ModalField label={<>{t("projects.field.name_label")} <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>} value={editName} onChange={setEditName} />
+          <ModalField label={t("projects.field.repo_url_label")} placeholder={t("projects.field.repo_url_placeholder")} value={editRepoUrl} onChange={setEditRepoUrl} />
         </Box>
       </AppModal>
 
@@ -503,9 +470,9 @@ const data = await getProjects();
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleting}
-        title="Supprimer ce projet ?"
+        title={t("projects.delete.title")}
       >
-        Supprimer <strong>{deleteTarget?.name}</strong> supprimera aussi toutes les dépendances et vulnérabilités associées. Cette action est irréversible.
+        {t("projects.delete.prefix")} <strong>{deleteTarget?.name}</strong>{t("projects.delete.suffix")}
       </DeleteModal>
     </>
   );
@@ -541,6 +508,7 @@ const ProjectRow: React.FC<{
   isScanning: boolean;
 }> = ({ project, onEdit, onDelete, onScan, isScanning }) => {
   const navigate = useNavigate();
+  const t = useT();
   const ticketCount = 0;
 
   return (
@@ -592,7 +560,7 @@ const ProjectRow: React.FC<{
                 whiteSpace: "nowrap",
               }}
             >
-              {project.totalDependencies} dépendance{project.totalDependencies > 1 ? "s" : ""}
+              {project.totalDependencies} {project.totalDependencies > 1 ? t("projects.dependencies_plural") : t("projects.dependency_singular")}
             </Box>
           </Box>
         </Box>
@@ -638,9 +606,9 @@ const ProjectRow: React.FC<{
 
       <Box component="td" onClick={(e: React.MouseEvent) => e.stopPropagation()} sx={{ padding: "8px 4px 8px 0", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", overflow: "visible", textAlign: "right" }}>
         <RowActions actions={[
-          { icon: <RefreshOutlined sx={{ fontSize: 12, animation: isScanning ? "spin 1s linear infinite" : "none" }} />, label: "Lancer un scan", onClick: (e) => { e.stopPropagation(); onScan(); }, color: "yellow", disabled: isScanning },
-          { icon: <EditOutlined sx={{ fontSize: 12 }} />, label: "Modifier", onClick: (e) => { e.stopPropagation(); onEdit(); }, color: "accent" },
-          { icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />, label: "Supprimer", onClick: (e) => { e.stopPropagation(); onDelete(); }, color: "red" },
+          { icon: <RefreshOutlined sx={{ fontSize: 12, animation: isScanning ? "spin 1s linear infinite" : "none" }} />, label: t("projects.action.scan"), onClick: (e) => { e.stopPropagation(); onScan(); }, color: "yellow", disabled: isScanning },
+          { icon: <EditOutlined sx={{ fontSize: 12 }} />, label: t("projects.action.edit"), onClick: (e) => { e.stopPropagation(); onEdit(); }, color: "accent" },
+          { icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />, label: t("projects.action.delete"), onClick: (e) => { e.stopPropagation(); onDelete(); }, color: "red" },
         ]} />
       </Box>
     </Box>

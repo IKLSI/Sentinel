@@ -6,30 +6,32 @@ import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined'
 import { acceptInvitation } from '../../users/api/users'
 import { useToast } from '../../../hooks/useToast'
 import { SentinelLogo } from '../../../layouts/SentinelLogo'
-
-const STEPS = [
-  {
-    num: '1',
-    title: 'Complétez votre profil',
-    desc: 'Saisissez votre prénom, nom et un mot de passe.',
-  },
-  {
-    num: '2',
-    title: "Accédez à l'espace de travail",
-    desc: 'Tickets, suivi du temps et projets techniques.',
-  },
-  {
-    num: '3',
-    title: 'Collaborez avec votre équipe',
-    desc: 'Commentez, assignez et suivez vos demandes.',
-  },
-]
+import { useT } from '../../../i18n/I18nContext'
 
 export const AcceptInvitationPage: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const t = useT()
   const token = searchParams.get('token') ?? ''
+
+  const STEPS = [
+    {
+      num: '1',
+      title: t('auth.accept_invitation.step1_title'),
+      desc: t('auth.accept_invitation.step1_desc'),
+    },
+    {
+      num: '2',
+      title: t('auth.accept_invitation.step2_title'),
+      desc: t('auth.accept_invitation.step2_desc'),
+    },
+    {
+      num: '3',
+      title: t('auth.accept_invitation.step3_title'),
+      desc: t('auth.accept_invitation.step3_desc'),
+    },
+  ]
 
   const [form, setForm] = useState({ firstName: '', lastName: '', password: '', confirm: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -40,8 +42,8 @@ export const AcceptInvitationPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) navigate('/login', { replace: true })
-    const t = setTimeout(() => setMounted(true), 50)
-    return () => clearTimeout(t)
+    const id = setTimeout(() => setMounted(true), 50)
+    return () => clearTimeout(id)
   }, [token, navigate])
 
   useEffect(() => {
@@ -53,16 +55,16 @@ export const AcceptInvitationPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.firstName.trim()) { showToast('Le prénom est requis', 'warning'); return }
-    if (form.password.length < 8) { showToast('Le mot de passe doit contenir au moins 8 caractères', 'warning'); return }
-    if (form.password !== form.confirm) { showToast('Les mots de passe ne correspondent pas', 'warning'); return }
+    if (!form.firstName.trim()) { showToast(t('auth.accept_invitation.error_firstname_required'), 'warning'); return }
+    if (form.password.length < 8) { showToast(t('auth.accept_invitation.error_password_min_length'), 'warning'); return }
+    if (form.password !== form.confirm) { showToast(t('auth.accept_invitation.error_passwords_mismatch'), 'warning'); return }
     setLoading(true)
     try {
       await acceptInvitation({ token, firstName: form.firstName, lastName: form.lastName, password: form.password })
       setDone(true)
       setTimeout(() => navigate('/login', { replace: true }), 3500)
     } catch {
-      showToast('Invitation invalide ou expirée', 'error')
+      showToast(t('auth.accept_invitation.error_invalid_token'), 'error')
     } finally {
       setLoading(false)
     }
@@ -97,17 +99,17 @@ export const AcceptInvitationPage: React.FC = () => {
             <Box className="aip-logo-mark">
               <SentinelLogo width={20} height={23} />
             </Box>
-            <Box className="aip-logo-text">SENTINEL</Box>
+            <Box className="aip-logo-text">{t('auth.accept_invitation.brand')}</Box>
           </Box>
 
           <Box className="aip-body">
             <Box className="aip-headline">
               <Box component="h1">
-                Rejoignez<br />
-                <Box component="span" className="aip-headline-accent">votre équipe.</Box>
+                {t('auth.accept_invitation.headline_part1')}<br />
+                <Box component="span" className="aip-headline-accent">{t('auth.accept_invitation.headline_accent')}</Box>
               </Box>
               <Box component="p" className="aip-headline-sub">
-                Créez votre compte en quelques secondes.
+                {t('auth.accept_invitation.headline_sub')}
               </Box>
             </Box>
 
@@ -135,22 +137,22 @@ export const AcceptInvitationPage: React.FC = () => {
                     <path d="M6 14l6 6 10-10" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Box>
-                <Box component="p" className="aip-success-title">Compte créé !</Box>
+                <Box component="p" className="aip-success-title">{t('auth.accept_invitation.success_title')}</Box>
                 <Box component="p" className="aip-success-sub">
-                  Bienvenue sur Sentinel.<br />Redirection vers la connexion…
+                  {t('auth.accept_invitation.success_line1')}<br />{t('auth.accept_invitation.success_line2')}
                 </Box>
               </Box>
             ) : (
               <>
                 <Box className="aip-form-header">
-                  <Box component="h2" className="aip-form-title">Créez votre compte</Box>
-                  <Box component="p" className="aip-form-sub">Complétez votre profil pour accéder à l'espace de travail</Box>
+                  <Box component="h2" className="aip-form-title">{t('auth.accept_invitation.form_title')}</Box>
+                  <Box component="p" className="aip-form-sub">{t('auth.accept_invitation.form_sub')}</Box>
                 </Box>
 
                 <form onSubmit={handleSubmit} noValidate>
                   <Box className="lp-field aip-row">
                     <Box>
-                      <Box component="label" className="lp-label" htmlFor="aip-firstname">Prénom <span style={{ color: '#ef4444' }}>*</span></Box>
+                      <Box component="label" className="lp-label" htmlFor="aip-firstname">{t('auth.accept_invitation.firstname_label')} <span style={{ color: '#ef4444' }}>*</span></Box>
                       <input
                         id="aip-firstname"
                         ref={firstNameRef}
@@ -158,27 +160,27 @@ export const AcceptInvitationPage: React.FC = () => {
                         className="lp-input"
                         value={form.firstName}
                         onChange={set('firstName')}
-                        placeholder="Votre prénom"
+                        placeholder={t('auth.accept_invitation.firstname_placeholder')}
                         autoComplete="given-name"
                         required
                       />
                     </Box>
                     <Box>
-                      <Box component="label" className="lp-label" htmlFor="aip-lastname">Nom</Box>
+                      <Box component="label" className="lp-label" htmlFor="aip-lastname">{t('auth.accept_invitation.lastname_label')}</Box>
                       <input
                         id="aip-lastname"
                         type="text"
                         className="lp-input"
                         value={form.lastName}
                         onChange={set('lastName')}
-                        placeholder="Votre nom"
+                        placeholder={t('auth.accept_invitation.lastname_placeholder')}
                         autoComplete="family-name"
                       />
                     </Box>
                   </Box>
 
                   <Box className="lp-field">
-                    <Box component="label" className="lp-label" htmlFor="aip-password">Mot de passe <span style={{ color: '#ef4444' }}>*</span></Box>
+                    <Box component="label" className="lp-label" htmlFor="aip-password">{t('auth.accept_invitation.password_label')} <span style={{ color: '#ef4444' }}>*</span></Box>
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
@@ -187,7 +189,7 @@ export const AcceptInvitationPage: React.FC = () => {
                         className="lp-input"
                         value={form.password}
                         onChange={set('password')}
-                        placeholder="Min. 8 caractères"
+                        placeholder={t('auth.accept_invitation.password_placeholder')}
                         autoComplete="new-password"
                         sx={{ paddingRight: '44px' }}
                         required
@@ -197,7 +199,7 @@ export const AcceptInvitationPage: React.FC = () => {
                         className="lp-pw-toggle"
                         onClick={() => setShowPassword(v => !v)}
                         tabIndex={-1}
-                        aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                        aria-label={showPassword ? t('auth.accept_invitation.password_hide') : t('auth.accept_invitation.password_show')}
                       >
                         {showPassword
                           ? <VisibilityOffOutlined sx={{ fontSize: 16 }} />
@@ -207,7 +209,7 @@ export const AcceptInvitationPage: React.FC = () => {
                   </Box>
 
                   <Box className="lp-field">
-                    <Box component="label" className="lp-label" htmlFor="aip-confirm">Confirmation <span style={{ color: '#ef4444' }}>*</span></Box>
+                    <Box component="label" className="lp-label" htmlFor="aip-confirm">{t('auth.accept_invitation.confirm_label')} <span style={{ color: '#ef4444' }}>*</span></Box>
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
@@ -216,7 +218,7 @@ export const AcceptInvitationPage: React.FC = () => {
                         className="lp-input"
                         value={form.confirm}
                         onChange={set('confirm')}
-                        placeholder="Répétez le mot de passe"
+                        placeholder={t('auth.accept_invitation.confirm_placeholder')}
                         autoComplete="new-password"
                         required
                       />
@@ -228,7 +230,7 @@ export const AcceptInvitationPage: React.FC = () => {
                       <Box className="lp-submit-loader" />
                     ) : (
                       <>
-                        Créer mon compte
+                        {t('auth.accept_invitation.submit')}
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>

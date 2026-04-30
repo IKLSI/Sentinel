@@ -22,21 +22,22 @@ import {
   VulnerabilityDto,
   RuntimeDto,
 } from "../api/projects";
+import { useT } from "../../../i18n/I18nContext";
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const DEP_STATUS: Record<string, { label: string; variant: "green" | "blue" | "orange" | "red" | "gray" }> = {
-  UpToDate:    { label: "À jour",       variant: "green"  },
-  MinorUpdate: { label: "MAJ mineure",  variant: "blue"   },
-  MajorUpdate: { label: "MAJ majeure",  variant: "orange" },
-  EOL:         { label: "Fin de vie",   variant: "red"    },
-  Vulnerable:  { label: "Vulnérable",   variant: "red"    },
+const DEP_STATUS: Record<string, { labelKey: string; variant: "green" | "blue" | "orange" | "red" | "gray" }> = {
+  UpToDate:    { labelKey: "tech_health.dep_status.up_to_date",    variant: "green"  },
+  MinorUpdate: { labelKey: "tech_health.dep_status.minor_update",  variant: "blue"   },
+  MajorUpdate: { labelKey: "tech_health.dep_status.major_update",  variant: "orange" },
+  EOL:         { labelKey: "tech_health.dep_status.eol",           variant: "red"    },
+  Vulnerable:  { labelKey: "tech_health.dep_status.vulnerable",    variant: "red"    },
 };
 
-const SEV_CONFIG: Record<string, { label: string; variant: "red" | "orange" | "blue" | "gray"; color: string; bg: string }> = {
-  Critical: { label: "CRITIQUE", variant: "red",    color: "var(--red)",    bg: "var(--red-subtle)"    },
-  High:     { label: "HAUTE",    variant: "orange", color: "var(--orange)", bg: "var(--orange-subtle)" },
-  Medium:   { label: "MOYENNE",  variant: "blue",   color: "var(--yellow)", bg: "var(--yellow-subtle)" },
-  Low:      { label: "FAIBLE",   variant: "gray",   color: "var(--green)",  bg: "var(--green-subtle)"  },
+const SEV_CONFIG: Record<string, { labelKey: string; variant: "red" | "orange" | "blue" | "gray"; color: string; bg: string }> = {
+  Critical: { labelKey: "tech_health.severity.critical", variant: "red",    color: "var(--red)",    bg: "var(--red-subtle)"    },
+  High:     { labelKey: "tech_health.severity.high",     variant: "orange", color: "var(--orange)", bg: "var(--orange-subtle)" },
+  Medium:   { labelKey: "tech_health.severity.medium",   variant: "blue",   color: "var(--yellow)", bg: "var(--yellow-subtle)" },
+  Low:      { labelKey: "tech_health.severity.low",      variant: "gray",   color: "var(--green)",  bg: "var(--green-subtle)"  },
 };
 
 const EOL_COLOR: Record<string, { text: string; stripe: string; border: string }> = {
@@ -58,11 +59,11 @@ function getRuntimeUrgency(r: RuntimeDto): keyof typeof EOL_COLOR {
   return "ok";
 }
 
-function getDaysLabel(r: RuntimeDto): string {
-  if (!r.eolDate) return r.isEol ? "Expiré" : "—";
+function getDaysLabel(r: RuntimeDto, t: (key: string, vars?: Record<string, string | number>) => string): string {
+  if (!r.eolDate) return r.isEol ? t("tech_health.runtime.expired") : "—";
   const days = Math.round((new Date(r.eolDate).getTime() - Date.now()) / 86400000);
-  if (days < 0) return `Expiré depuis ${Math.abs(days)}j`;
-  return `${days}j restants`;
+  if (days < 0) return t("tech_health.runtime.expired_since", { days: Math.abs(days) });
+  return t("tech_health.runtime.days_remaining", { days });
 }
 
 // ─── Tab bar ─────────────────────────────────────────────────────────────────
@@ -194,9 +195,10 @@ const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
 // ─── Runtime row ─────────────────────────────────────────────────────────────
 
 const RuntimeRow: React.FC<{ runtime: RuntimeDto }> = ({ runtime: r }) => {
+  const t = useT();
   const urgency = getRuntimeUrgency(r);
   const uc = EOL_COLOR[urgency];
-  const daysLabel = getDaysLabel(r);
+  const daysLabel = getDaysLabel(r, t);
 
   return (
     <TR accent={uc.stripe}>
@@ -222,6 +224,7 @@ export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const t = useT();
 
   const [project, setProject] = useState<ProjectDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -237,12 +240,12 @@ export const ProjectDetailPage: React.FC = () => {
 const data = await getProject(id);
       setProject(data);
     } catch {
-      showToast("Impossible de charger le projet", "error");
+      showToast(t("tech_health.error.load_failed"), "error");
       navigate("/projects");
     } finally {
       setLoading(false);
     }
-  }, [id, showToast, navigate]);
+  }, [id, showToast, navigate, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -251,10 +254,10 @@ const data = await getProject(id);
     setDeleting(true);
     try {
       await deleteProject(id);
-      showToast("Projet supprimé", "success");
+      showToast(t("tech_health.toast.deleted"), "success");
       navigate("/projects");
     } catch {
-      showToast("Erreur lors de la suppression", "error");
+      showToast(t("tech_health.toast.delete_error"), "error");
       setDeleting(false);
     }
   };
@@ -321,9 +324,9 @@ const data = await getProject(id);
   const runtimeAccent = project.runtimes.some((r) => r.isEol) ? "var(--red)" : undefined;
 
   const tabDefs: TabDef[] = [
-    { icon: <GppBadOutlined sx={{ fontSize: 14 }} />,      label: "Vulnérabilités", count: allVulns.length,            accentColor: vulnAccent },
-    { icon: <InventoryOutlined sx={{ fontSize: 14 }} />,   label: "Dépendances",   count: project.dependencies.length },
-    { icon: <StorageOutlined sx={{ fontSize: 14 }} />,     label: "Runtimes",      count: project.runtimes.length,    accentColor: runtimeAccent },
+    { icon: <GppBadOutlined sx={{ fontSize: 14 }} />,      label: t("tech_health.tab.vulnerabilities"), count: allVulns.length,            accentColor: vulnAccent },
+    { icon: <InventoryOutlined sx={{ fontSize: 14 }} />,   label: t("tech_health.tab.dependencies"),   count: project.dependencies.length },
+    { icon: <StorageOutlined sx={{ fontSize: 14 }} />,     label: t("tech_health.tab.runtimes"),       count: project.runtimes.length,    accentColor: runtimeAccent },
   ];
 
   return (
@@ -376,7 +379,7 @@ const data = await getProject(id);
                   }}>
                     <RefreshOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
                     <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
-                      {project.scanFrequency === "Daily" ? "Quotidien" : "Hebdomadaire"}
+                      {project.scanFrequency === "Daily" ? t("tech_health.scan_frequency.daily") : t("tech_health.scan_frequency.weekly")}
                     </Box>
                   </Box>
                 )}
@@ -406,10 +409,10 @@ const data = await getProject(id);
           {/* Stats bar */}
           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--border)" }}>
             {([
-              { label: "Dépendances",   value: project.totalDependencies,       icon: <InventoryOutlined sx={{ fontSize: 13 }} />, alert: null },
-              { label: "À mettre à jour", value: depsToUpdate,                  icon: <RefreshOutlined sx={{ fontSize: 13 }} />,   alert: depsToUpdate > 0 ? "orange" : null },
-              { label: "Critiques",     value: project.criticalVulnerabilities, icon: <GppBadOutlined sx={{ fontSize: 13 }} />,   alert: project.criticalVulnerabilities > 0 ? "red" : null },
-              { label: "Fin de support",  value: eolRuntimes,                     icon: <StorageOutlined sx={{ fontSize: 13 }} />,  alert: eolRuntimes > 0 ? "red" : null },
+              { label: t("tech_health.stats.dependencies"),   value: project.totalDependencies,       icon: <InventoryOutlined sx={{ fontSize: 13 }} />, alert: null },
+              { label: t("tech_health.stats.to_update"),      value: depsToUpdate,                    icon: <RefreshOutlined sx={{ fontSize: 13 }} />,   alert: depsToUpdate > 0 ? "orange" : null },
+              { label: t("tech_health.stats.critical"),       value: project.criticalVulnerabilities, icon: <GppBadOutlined sx={{ fontSize: 13 }} />,    alert: project.criticalVulnerabilities > 0 ? "red" : null },
+              { label: t("tech_health.stats.eol"),            value: eolRuntimes,                     icon: <StorageOutlined sx={{ fontSize: 13 }} />,   alert: eolRuntimes > 0 ? "red" : null },
             ] as const).map((s, i) => (
               <Box key={i} sx={{
                 p: "14px 20px",
@@ -488,8 +491,8 @@ const data = await getProject(id);
               allVulns.length === 0 ? (
                 <Box className="empty-state">
                   <CheckCircleOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-                  <Box className="empty-state-title">Aucune vulnérabilité détectée</Box>
-                  <Box className="empty-state-subtitle">Aucune vulnérabilité connue n'a été détectée sur ce projet.</Box>
+                  <Box className="empty-state-title">{t("tech_health.empty.no_vulns_title")}</Box>
+                  <Box className="empty-state-subtitle">{t("tech_health.empty.no_vulns_subtitle")}</Box>
                 </Box>
               ) : (
                 <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -503,10 +506,10 @@ const data = await getProject(id);
                       </Box>
                       <Box component="thead">
                         <Box component="tr">
-                          <TH>Score</TH>
-                          <TH>Vulnérabilité</TH>
-                          <TH>Référence CVE</TH>
-                          <TH>Version corrigée</TH>
+                          <TH>{t("tech_health.table.vuln.score")}</TH>
+                          <TH>{t("tech_health.table.vuln.vulnerability")}</TH>
+                          <TH>{t("tech_health.table.vuln.cve_ref")}</TH>
+                          <TH>{t("tech_health.table.vuln.fixed_version")}</TH>
                         </Box>
                       </Box>
                     </Box>
@@ -533,8 +536,8 @@ const data = await getProject(id);
               project.dependencies.length === 0 ? (
                 <Box className="empty-state">
                   <InventoryOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-                  <Box className="empty-state-title">Aucune dépendance détectée</Box>
-                  <Box className="empty-state-subtitle">Lancez un scan pour analyser les dépendances du projet.</Box>
+                  <Box className="empty-state-title">{t("tech_health.empty.no_deps_title")}</Box>
+                  <Box className="empty-state-subtitle">{t("tech_health.empty.no_deps_subtitle")}</Box>
                 </Box>
               ) : <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {/* Search bar */}
@@ -549,7 +552,7 @@ const data = await getProject(id);
                     <SearchOutlined sx={{ color: "var(--muted)", fontSize: "13px", flexShrink: 0 }} />
                     <Box
                       component="input"
-                      placeholder="Rechercher..."
+                      placeholder={t("tech_health.search_placeholder")}
                       value={depSearch}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDepSearch(e.target.value)}
                       sx={{ all: "unset", flex: 1, fontSize: "12px", color: "var(--text)", "&::placeholder": { color: "var(--muted)" }, "&:focus": { outline: "none", boxShadow: "none !important" } }}
@@ -573,12 +576,12 @@ const data = await getProject(id);
                     </Box>
                     <Box component="thead">
                       <Box component="tr">
-                        <TH>Librairie</TH>
-                        <TH>Écosystème</TH>
-                        <TH>Type</TH>
-                        <TH>Version</TH>
-                        <TH>Statut</TH>
-                        <TH>Vulnérabilités</TH>
+                        <TH>{t("tech_health.table.dep.library")}</TH>
+                        <TH>{t("tech_health.table.dep.ecosystem")}</TH>
+                        <TH>{t("tech_health.table.dep.type")}</TH>
+                        <TH>{t("tech_health.table.dep.version")}</TH>
+                        <TH>{t("tech_health.table.dep.status")}</TH>
+                        <TH>{t("tech_health.table.dep.vulns")}</TH>
                       </Box>
                     </Box>
                   </Box>
@@ -597,12 +600,12 @@ const data = await getProject(id);
                       {filteredDeps.length === 0 ? (
                         <Box component="tr">
                           <Box component="td" colSpan={6} sx={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px", borderBottom: "none" }}>
-                            Aucun résultat
+                            {t("tech_health.no_results")}
                           </Box>
                         </Box>
                       ) : (
                         filteredDeps.map((d: DependencyDto) => {
-                          const s = DEP_STATUS[d.status] ?? { label: d.status, variant: "gray" as const };
+                          const s = DEP_STATUS[d.status] ?? { labelKey: "", variant: "gray" as const };
                           return (
                             <TR key={d.id}>
                               <TD>
@@ -617,7 +620,7 @@ const data = await getProject(id);
                                 </Box>
                               </TD>
                               <TD>
-                                <StatusChip variant="gray">{d.type === "Prod" ? "Prod" : "Dev"}</StatusChip>
+                                <StatusChip variant="gray">{d.type === "Prod" ? t("tech_health.dep.type_prod") : t("tech_health.dep.type_dev")}</StatusChip>
                               </TD>
                               <TD mono muted>
                                 <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -630,7 +633,7 @@ const data = await getProject(id);
                                   )}
                                 </Box>
                               </TD>
-                              <TD><StatusChip variant={s.variant}>{s.label}</StatusChip></TD>
+                              <TD><StatusChip variant={s.variant}>{s.labelKey ? t(s.labelKey) : d.status}</StatusChip></TD>
                               <TD>
                                 {d.vulnerabilities.length > 0
                                   ? <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
@@ -652,8 +655,8 @@ const data = await getProject(id);
               project.runtimes.length === 0 ? (
                 <Box className="empty-state">
                   <StorageOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-                  <Box className="empty-state-title">Aucun runtime détecté</Box>
-                  <Box className="empty-state-subtitle">Lancez un scan pour détecter les runtimes du projet.</Box>
+                  <Box className="empty-state-title">{t("tech_health.empty.no_runtimes_title")}</Box>
+                  <Box className="empty-state-subtitle">{t("tech_health.empty.no_runtimes_subtitle")}</Box>
                 </Box>
               ) : (
                 <Box sx={{ flex: 1, minHeight: 0, border: "1px solid var(--border)", borderRadius: "var(--r)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -666,9 +669,9 @@ const data = await getProject(id);
                       </Box>
                       <Box component="thead">
                         <Box component="tr">
-                          <TH>Runtime</TH>
-                          <TH>Version</TH>
-                          <TH>Fin de support</TH>
+                          <TH>{t("tech_health.table.runtime.runtime")}</TH>
+                          <TH>{t("tech_health.table.runtime.version")}</TH>
+                          <TH>{t("tech_health.table.runtime.eol")}</TH>
                         </Box>
                       </Box>
                     </Box>
@@ -697,9 +700,9 @@ const data = await getProject(id);
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         loading={deleting}
-        title="Supprimer ce projet ?"
+        title={t("tech_health.delete.title")}
       >
-        Supprimer <strong>{project.name}</strong> supprimera aussi toutes les dépendances et vulnérabilités associées. Cette action est irréversible.
+        {t("tech_health.delete.message_prefix")}<strong>{project.name}</strong>{t("tech_health.delete.message_suffix")}
       </DeleteModal>
 
     </>

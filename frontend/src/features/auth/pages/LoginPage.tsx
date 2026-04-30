@@ -6,11 +6,13 @@ import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
+import { useT } from "../../../i18n/I18nContext";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,8 +22,8 @@ export const LoginPage: React.FC = () => {
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(t);
+    const id = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      showToast("Veuillez remplir tous les champs.", "warning");
+      showToast(t('auth.login.fill_all_fields'), "warning");
       return;
     }
     setLoading(true);
@@ -40,7 +42,7 @@ export const LoginPage: React.FC = () => {
       navigate("/");
     } catch {
       setHasError(true);
-      showToast("Identifiants incorrects.", "error");
+      showToast(t('auth.login.invalid_credentials'), "error");
     } finally {
       setLoading(false);
     }
@@ -81,21 +83,21 @@ export const LoginPage: React.FC = () => {
           <Box className="lp-logo-mark">
             <SentinelLogo width={20} height={23} />
           </Box>
-          <Box className="lp-logo-wordmark">SENTINEL</Box>
+          <Box className="lp-logo-wordmark">{t('auth.login.brand')}</Box>
         </Box>
 
         {/* Titre + features */}
         <Box className="lp-left-body">
           <Box className="lp-left-headline">
             <Box component="h1">
-              Gardez une<br />
+              {t('auth.login.headline_part1')}<br />
               <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-                longueur{" "}
-                <Box component="span" className="lp-headline-accent">d'avance.</Box>
+                {t('auth.login.headline_part2')}{" "}
+                <Box component="span" className="lp-headline-accent">{t('auth.login.headline_accent')}</Box>
               </Box>
             </Box>
             <Box component="p" className="lp-headline-sub">
-              L'outil pensé pour les équipes support qui ne laissent rien au hasard.
+              {t('auth.login.headline_sub')}
             </Box>
           </Box>
 
@@ -108,8 +110,8 @@ export const LoginPage: React.FC = () => {
                     <path d="M7 4v3.5l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ),
-                title: "Délais tenus, alertes immédiates",
-                desc: "Chaque dépassement détecté avant qu'il arrive.",
+                title: t('auth.login.feature1_title'),
+                desc: t('auth.login.feature1_desc'),
                 iconBg: "rgba(165,180,252,0.11)",
                 iconColor: "rgba(165,180,252,0.9)",
               },
@@ -120,8 +122,8 @@ export const LoginPage: React.FC = () => {
                     <path d="M3.5 5.5h4M3.5 8h5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                   </svg>
                 ),
-                title: "Facturation sans ressaisie",
-                desc: "Du temps saisi à la facture, en un clic.",
+                title: t('auth.login.feature2_title'),
+                desc: t('auth.login.feature2_desc'),
                 iconBg: "rgba(249,168,212,0.11)",
                 iconColor: "rgba(249,168,212,0.85)",
               },
@@ -132,8 +134,8 @@ export const LoginPage: React.FC = () => {
                     <path d="M4.5 7l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ),
-                title: "Santé technique suivie",
-                desc: "Score de santé, vulnérabilités et dépendances.",
+                title: t('auth.login.feature3_title'),
+                desc: t('auth.login.feature3_desc'),
                 iconBg: "rgba(251,191,36,0.11)",
                 iconColor: "rgba(251,191,36,0.85)",
               },
@@ -161,14 +163,14 @@ export const LoginPage: React.FC = () => {
         <Box className="lp-form-wrap">
           {/* En-tête formulaire */}
           <Box className="lp-form-header">
-            <Box component="h2" className="lp-form-title">Bienvenue</Box>
-            <Box component="p" className="lp-form-sub">Connectez-vous à votre espace de pilotage</Box>
+            <Box component="h2" className="lp-form-title">{t('auth.login.form_title')}</Box>
+            <Box component="p" className="lp-form-sub">{t('auth.login.form_sub')}</Box>
           </Box>
 
           <form onSubmit={handleSubmit} noValidate>
             <Box className="lp-field">
               <Box component="label" className="lp-label" htmlFor="lp-email">
-                Adresse email
+                {t('auth.login.email_label')}
               </Box>
               <input
                 id="lp-email"
@@ -177,7 +179,7 @@ export const LoginPage: React.FC = () => {
                 className={`lp-input${hasError ? " lp-input--error" : ""}`}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setHasError(false); }}
-                placeholder="utilisateur@entreprise.com"
+                placeholder={t('auth.login.email_placeholder')}
                 autoComplete="email"
                 required
               />
@@ -185,7 +187,7 @@ export const LoginPage: React.FC = () => {
 
             <Box className="lp-field">
               <Box component="label" className="lp-label" htmlFor="lp-password">
-                Mot de passe
+                {t('auth.login.password_label')}
               </Box>
               <Box className="lp-input-wrap">
                 <Box
@@ -208,7 +210,7 @@ export const LoginPage: React.FC = () => {
                   className="lp-pw-toggle"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
-                  aria-label={showPassword ? "Masquer" : "Afficher"}
+                  aria-label={showPassword ? t('auth.login.password_hide') : t('auth.login.password_show')}
                 >
                   {showPassword
                     ? <VisibilityOffOutlined sx={{ fontSize: 16 }} />
@@ -221,14 +223,14 @@ export const LoginPage: React.FC = () => {
               {loading ? (
                 <Box className="lp-submit-loader" />
               ) : (
-                "Se connecter"
+                t('auth.login.submit')
               )}
             </button>
           </form>
 
           <Box className="lp-forgot-wrap">
             <Link to="/forgot-password" className="lp-forgot">
-              Mot de passe oublié ?
+              {t('auth.login.forgot_password_link')}
             </Link>
           </Box>
 

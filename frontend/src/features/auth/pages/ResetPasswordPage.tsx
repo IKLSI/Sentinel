@@ -6,11 +6,13 @@ import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined'
 import { resetPassword } from '../api/auth'
 import { useToast } from '../../../hooks/useToast'
 import { SentinelLogo } from '../../../layouts/SentinelLogo'
+import { useT } from '../../../i18n/I18nContext'
 
 export const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const t = useT()
   const token = searchParams.get('token') ?? ''
 
   const [password, setPassword] = useState('')
@@ -23,8 +25,8 @@ export const ResetPasswordPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) navigate('/login', { replace: true })
-    const t = setTimeout(() => setMounted(true), 50)
-    return () => clearTimeout(t)
+    const id = setTimeout(() => setMounted(true), 50)
+    return () => clearTimeout(id)
   }, [token, navigate])
 
   useEffect(() => {
@@ -33,15 +35,15 @@ export const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password.length < 8) { showToast('Le mot de passe doit contenir au moins 8 caractères.', 'warning'); return }
-    if (password !== confirm) { showToast('Les mots de passe ne correspondent pas.', 'warning'); return }
+    if (password.length < 8) { showToast(t('auth.reset_password.error_password_min_length'), 'warning'); return }
+    if (password !== confirm) { showToast(t('auth.reset_password.error_passwords_mismatch'), 'warning'); return }
     setLoading(true)
     try {
       await resetPassword(token, password)
       setDone(true)
       setTimeout(() => navigate('/login', { replace: true }), 3500)
     } catch {
-      showToast('Le lien de réinitialisation est invalide ou expiré.', 'error')
+      showToast(t('auth.reset_password.error_invalid_token'), 'error')
     } finally {
       setLoading(false)
     }
@@ -74,17 +76,17 @@ export const ResetPasswordPage: React.FC = () => {
             <Box className="lp-logo-mark">
               <SentinelLogo width={20} height={23} />
             </Box>
-            <Box className="lp-logo-wordmark">SENTINEL</Box>
+            <Box className="lp-logo-wordmark">{t('auth.reset_password.brand')}</Box>
           </Box>
 
           <Box className="lp-left-body">
             <Box className="lp-left-headline">
               <Box component="h1">
-                Nouveau<br />
-                <Box component="span" className="lp-headline-accent">mot de passe.</Box>
+                {t('auth.reset_password.headline_part1')}<br />
+                <Box component="span" className="lp-headline-accent">{t('auth.reset_password.headline_accent')}</Box>
               </Box>
               <Box component="p" className="lp-headline-sub">
-                Définissez votre nouveau mot de passe.
+                {t('auth.reset_password.headline_sub')}
               </Box>
             </Box>
 
@@ -97,8 +99,8 @@ export const ResetPasswordPage: React.FC = () => {
                       <path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   ),
-                  title: 'Minimum 8 caractères',
-                  desc: 'Combinez lettres, chiffres et symboles.',
+                  title: t('auth.reset_password.feature1_title'),
+                  desc: t('auth.reset_password.feature1_desc'),
                   iconBg: 'rgba(165,180,252,0.11)',
                   iconColor: 'rgba(165,180,252,0.9)',
                 },
@@ -109,8 +111,8 @@ export const ResetPasswordPage: React.FC = () => {
                       <path d="M4.5 7l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   ),
-                  title: 'Sessions invalidées',
-                  desc: 'Toutes vos sessions actives seront déconnectées.',
+                  title: t('auth.reset_password.feature2_title'),
+                  desc: t('auth.reset_password.feature2_desc'),
                   iconBg: 'rgba(251,191,36,0.11)',
                   iconColor: 'rgba(251,191,36,0.85)',
                 },
@@ -139,22 +141,22 @@ export const ResetPasswordPage: React.FC = () => {
                     <path d="M6 14l6 6 10-10" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Box>
-                <Box component="p" className="aip-success-title">Mot de passe mis à jour !</Box>
+                <Box component="p" className="aip-success-title">{t('auth.reset_password.success_title')}</Box>
                 <Box component="p" className="aip-success-sub">
-                  Votre mot de passe a été réinitialisé.<br />Redirection vers la connexion…
+                  {t('auth.reset_password.success_line1')}<br />{t('auth.reset_password.success_line2')}
                 </Box>
               </Box>
             ) : (
               <>
                 <Box className="lp-form-header">
-                  <Box component="h2" className="lp-form-title">Nouveau mot de passe</Box>
-                  <Box component="p" className="lp-form-sub">Choisissez un mot de passe sécurisé</Box>
+                  <Box component="h2" className="lp-form-title">{t('auth.reset_password.form_title')}</Box>
+                  <Box component="p" className="lp-form-sub">{t('auth.reset_password.form_sub')}</Box>
                 </Box>
 
                 <form onSubmit={handleSubmit} noValidate>
                   <Box className="lp-field">
                     <Box component="label" className="lp-label" htmlFor="rp-password">
-                      Nouveau mot de passe
+                      {t('auth.reset_password.password_label')}
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
@@ -165,7 +167,7 @@ export const ResetPasswordPage: React.FC = () => {
                         className="lp-input"
                         value={password}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                        placeholder="Min. 8 caractères"
+                        placeholder={t('auth.reset_password.password_placeholder')}
                         autoComplete="new-password"
                         sx={{ paddingRight: '44px' }}
                         required
@@ -175,7 +177,7 @@ export const ResetPasswordPage: React.FC = () => {
                         className="lp-pw-toggle"
                         onClick={() => setShowPassword(v => !v)}
                         tabIndex={-1}
-                        aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                        aria-label={showPassword ? t('auth.reset_password.password_hide') : t('auth.reset_password.password_show')}
                       >
                         {showPassword
                           ? <VisibilityOffOutlined sx={{ fontSize: 16 }} />
@@ -186,7 +188,7 @@ export const ResetPasswordPage: React.FC = () => {
 
                   <Box className="lp-field">
                     <Box component="label" className="lp-label" htmlFor="rp-confirm">
-                      Confirmation
+                      {t('auth.reset_password.confirm_label')}
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
@@ -196,7 +198,7 @@ export const ResetPasswordPage: React.FC = () => {
                         className="lp-input"
                         value={confirm}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirm(e.target.value)}
-                        placeholder="Répétez le mot de passe"
+                        placeholder={t('auth.reset_password.confirm_placeholder')}
                         autoComplete="new-password"
                         required
                       />
@@ -207,7 +209,7 @@ export const ResetPasswordPage: React.FC = () => {
                     {loading ? (
                       <Box className="lp-submit-loader" />
                     ) : (
-                      "Réinitialiser le mot de passe"
+                      t('auth.reset_password.submit')
                     )}
                   </button>
                 </form>

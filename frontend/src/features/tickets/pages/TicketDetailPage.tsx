@@ -34,35 +34,36 @@ import {
   updateComment,
 } from "../api/tickets";
 import { Ticket, TicketHistory, TicketStatus } from "../../../types";
+import { useT } from "../../../i18n/I18nContext";
 
 const statusConfig: Record<
   TicketStatus,
-  { label: string; color: string; dot: string }
+  { labelKey: string; color: string; dot: string }
 > = {
-  new: { label: "Nouveau", color: "#4f46e5", dot: "#818cf8" },
-  in_progress: { label: "En cours", color: "#c2410c", dot: "#f97316" },
-  testing: { label: "En test", color: "#0e7490", dot: "#06b6d4" },
-  resolved: { label: "Résolu", color: "#15803d", dot: "#22c55e" },
-  closed: { label: "Fermé", color: "#475569", dot: "#64748b" },
+  new: { labelKey: "tickets.detail.status_new", color: "#4f46e5", dot: "#818cf8" },
+  in_progress: { labelKey: "tickets.detail.status_in_progress", color: "#c2410c", dot: "#f97316" },
+  testing: { labelKey: "tickets.detail.status_testing", color: "#0e7490", dot: "#06b6d4" },
+  resolved: { labelKey: "tickets.detail.status_resolved", color: "#15803d", dot: "#22c55e" },
+  closed: { labelKey: "tickets.detail.status_closed", color: "#475569", dot: "#64748b" },
 };
 
 const priorityConfig: Record<
   string,
-  { label: string; color: string; dot: string }
+  { labelKey: string; color: string; dot: string }
 > = {
-  critical: { label: "Critique", color: "#be123c", dot: "#f43f5e" },
-  high: { label: "Haute", color: "#b45309", dot: "#f59e0b" },
-  medium: { label: "Moyenne", color: "#ca8a04", dot: "#eab308" },
-  low: { label: "Basse", color: "#15803d", dot: "#22c55e" },
+  critical: { labelKey: "tickets.detail.priority_critical", color: "#be123c", dot: "#f43f5e" },
+  high: { labelKey: "tickets.detail.priority_high", color: "#b45309", dot: "#f59e0b" },
+  medium: { labelKey: "tickets.detail.priority_medium", color: "#ca8a04", dot: "#eab308" },
+  low: { labelKey: "tickets.detail.priority_low", color: "#15803d", dot: "#22c55e" },
 };
 
-const typeLabels: Record<string, string> = {
-  bug: "Bug",
-  feature: "Évolution",
-  security: "Sécurité",
-  performance: "Performance",
-  maintenance: "Maintenance",
-  question: "Question",
+const typeLabelKeys: Record<string, string> = {
+  bug: "tickets.detail.type_bug",
+  feature: "tickets.detail.type_feature",
+  security: "tickets.detail.type_security",
+  performance: "tickets.detail.type_performance",
+  maintenance: "tickets.detail.type_maintenance",
+  question: "tickets.detail.type_question",
 };
 
 const markdownSx = {
@@ -126,15 +127,15 @@ function getInitials(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 }
 
-function getRelativeShort(date: string) {
+function getRelativeShort(date: string, t: (k: string, v?: Record<string, string | number>) => string) {
   const diff = Math.max(0, Date.now() - new Date(date).getTime());
   const min = Math.floor(diff / 60000);
-  if (min < 1) return "à l'instant";
-  if (min < 60) return `il y a ${min} min`;
+  if (min < 1) return t('tickets.detail.relative_now');
+  if (min < 60) return t('tickets.detail.relative_minutes', { n: min });
   const hours = Math.floor(min / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return t('tickets.detail.relative_hours', { n: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `il y a ${days} j`;
+  if (days < 7) return t('tickets.detail.relative_days', { n: days });
   return format(new Date(date), "dd MMM", { locale: fr });
 }
 
@@ -150,42 +151,46 @@ function normalizePriorityKey(value?: string) {
   return value.trim().toLowerCase().replace(/[\s-]/g, "_");
 }
 
-function mapStatusLabel(value?: string) {
+type TFn = (k: string, v?: Record<string, string | number>) => string;
+
+function mapStatusLabel(value: string | undefined, t: TFn) {
   if (!value) return "—";
   const key = normalizeStatusKey(value) as TicketStatus;
-  return statusConfig[key]?.label ?? value;
+  const labelKey = statusConfig[key]?.labelKey;
+  return labelKey ? t(labelKey) : value;
 }
 
-function mapPriorityLabel(value?: string) {
+function mapPriorityLabel(value: string | undefined, t: TFn) {
   if (!value) return "—";
   const key = normalizePriorityKey(value);
-  return priorityConfig[key]?.label ?? value;
+  const labelKey = priorityConfig[key]?.labelKey;
+  return labelKey ? t(labelKey) : value;
 }
 
-function historyPresentation(entry: TicketHistory) {
+function historyPresentation(entry: TicketHistory, t: TFn) {
   const field = entry.field.toLowerCase();
   if (field === "created" || field === "creation" || field.includes("create")) {
     return {
       tone: { dot: "#fda4af", ring: "#ffe4e6" },
-      message: "Ticket créé",
+      message: t('tickets.detail.history_created'),
     };
   }
   if (field.includes("status")) {
     return {
       tone: { dot: "#fbbf24", ring: "#fef3c7" },
-      message: `Statut ${mapStatusLabel(entry.oldValue)} → ${mapStatusLabel(entry.newValue)}`,
+      message: t('tickets.detail.history_status_change', { from: mapStatusLabel(entry.oldValue, t), to: mapStatusLabel(entry.newValue, t) }),
     };
   }
   if (field.includes("assign")) {
     return {
       tone: { dot: "#a78bfa", ring: "#ede9fe" },
-      message: `Assigné·e à ${entry.newValue ?? "Non assigné"}`,
+      message: t('tickets.detail.history_assigned', { name: entry.newValue ?? t('tickets.detail.unassigned') }),
     };
   }
   if (field.includes("priority")) {
     return {
       tone: { dot: "#fb7185", ring: "#ffe4e6" },
-      message: `Priorité ${mapPriorityLabel(entry.oldValue)} → ${mapPriorityLabel(entry.newValue)}`,
+      message: t('tickets.detail.history_priority_change', { from: mapPriorityLabel(entry.oldValue, t), to: mapPriorityLabel(entry.newValue, t) }),
     };
   }
   return {
@@ -193,11 +198,12 @@ function historyPresentation(entry: TicketHistory) {
     message:
       entry.oldValue || entry.newValue
         ? `${entry.field} ${entry.oldValue ?? "—"} → ${entry.newValue ?? "—"}`
-        : `${entry.field} mis à jour`,
+        : t('tickets.detail.history_field_updated', { field: entry.field }),
   };
 }
 
 export const TicketDetailPage: React.FC = () => {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -232,10 +238,10 @@ export const TicketDetailPage: React.FC = () => {
       .then((t) => setTicket(t))
       .catch(() => {
         setNotFound(true);
-        showToast("Ticket introuvable", "error");
+        showToast(t('tickets.detail.not_found_toast'), "error");
       })
       .finally(() => setLoading(false));
-  }, [id, showToast]);
+  }, [id, showToast, t]);
 
   const endpointMatch = useMemo(() => {
     if (!ticket) return null;
@@ -270,11 +276,11 @@ export const TicketDetailPage: React.FC = () => {
       );
       setComposerValue("");
       showToast(
-        isInternal ? "Note interne ajoutée" : "Réponse envoyée",
+        isInternal ? t('tickets.detail.internal_note_added') : t('tickets.detail.reply_sent'),
         "success",
       );
     } catch {
-      showToast("Erreur lors de l'ajout du commentaire", "error");
+      showToast(t('tickets.detail.add_comment_error'), "error");
     } finally {
       setSubmitting(false);
     }
@@ -302,9 +308,9 @@ export const TicketDetailPage: React.FC = () => {
           : prev,
       );
       setEditCommentTarget(null);
-      showToast("Commentaire modifié", "success");
+      showToast(t('tickets.detail.comment_updated'), "success");
     } catch {
-      showToast("Erreur lors de la modification", "error");
+      showToast(t('tickets.detail.update_error'), "error");
     } finally {
       setEditCommentSaving(false);
     }
@@ -326,9 +332,9 @@ export const TicketDetailPage: React.FC = () => {
           : prev,
       );
       setDeleteCommentTarget(null);
-      showToast("Commentaire supprimé", "success");
+      showToast(t('tickets.detail.comment_deleted'), "success");
     } catch {
-      showToast("Erreur lors de la suppression", "error");
+      showToast(t('tickets.detail.delete_error'), "error");
     } finally {
       setDeleteCommentLoading(false);
     }
@@ -364,10 +370,10 @@ export const TicketDetailPage: React.FC = () => {
           404
         </Box>
         <Box sx={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
-          Ticket introuvable
+          {t('tickets.detail.not_found_title')}
         </Box>
         <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
-          Ce ticket n'existe pas ou vous n'y avez pas accès.
+          {t('tickets.detail.not_found_subtitle')}
         </Box>
       </Box>
     );
@@ -430,7 +436,7 @@ export const TicketDetailPage: React.FC = () => {
                 }}
               >
                 <FolderOutlined sx={{ fontSize: 13, color: "#7c3aed" }} />
-                {ticket.projectName ?? "Projet"}
+                {ticket.projectName ?? t('tickets.detail.project_label')}
               </Box>
               <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
               <Box
@@ -446,12 +452,12 @@ export const TicketDetailPage: React.FC = () => {
               </Box>
               <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
               <Box sx={{ color: "#94a3b8", fontSize: "12px" }}>
-                Ouvert{" "}
+                {t('tickets.detail.opened_label')}{" "}
                 <Box
                   component="span"
                   sx={{ color: "#334155", fontWeight: 700 }}
                 >
-                  {getRelativeShort(ticket.createdAt)}
+                  {getRelativeShort(ticket.createdAt, t)}
                 </Box>
               </Box>
             </Box>
@@ -533,7 +539,7 @@ export const TicketDetailPage: React.FC = () => {
                 }}
               >
                 <DescriptionOutlined sx={{ fontSize: 13 }} />
-                Description
+                {t('tickets.detail.section_description')}
               </Box>
               <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
             </Box>
@@ -545,7 +551,7 @@ export const TicketDetailPage: React.FC = () => {
                 </Box>
               ) : (
                 <Box sx={{ color: "#94a3b8", fontSize: "13px" }}>
-                  Aucune description fournie.
+                  {t('tickets.detail.no_description')}
                 </Box>
               )}
             </Box>
@@ -573,7 +579,7 @@ export const TicketDetailPage: React.FC = () => {
                 }}
               >
                 <ForumOutlined sx={{ fontSize: 13 }} />
-                Conversation{ticket.comments.length > 0 ? ` · ${ticket.comments.length}` : ""}
+                {t('tickets.detail.section_conversation')}{ticket.comments.length > 0 ? ` · ${ticket.comments.length}` : ""}
               </Box>
               <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
             </Box>
@@ -663,7 +669,7 @@ export const TicketDetailPage: React.FC = () => {
                             }}
                           >
                             <LockOutlined sx={{ fontSize: 14 }} />
-                            Note interne
+                            {t('tickets.detail.internal_note_badge')}
                           </Box>
                         )}
 
@@ -765,8 +771,8 @@ export const TicketDetailPage: React.FC = () => {
                   }}
                 >
                   <ForumOutlined sx={{ fontSize: 28, opacity: 0.4 }} />
-                  <Box sx={{ fontSize: "13px", fontWeight: 500 }}>Aucun commentaire pour le moment</Box>
-                  <Box sx={{ fontSize: "12px", color: "#cbd5e1" }}>Soyez le premier à répondre</Box>
+                  <Box sx={{ fontSize: "13px", fontWeight: 500 }}>{t('tickets.detail.no_comments_title')}</Box>
+                  <Box sx={{ fontSize: "12px", color: "#cbd5e1" }}>{t('tickets.detail.no_comments_subtitle')}</Box>
                 </Box>
               )}
             </Box>
@@ -786,12 +792,12 @@ export const TicketDetailPage: React.FC = () => {
                 {[
                   {
                     key: "reply",
-                    label: "Réponse",
+                    label: t('tickets.detail.tab_reply'),
                     icon: <MessageOutlined sx={{ fontSize: 14 }} />,
                   },
                   {
                     key: "internal",
-                    label: "Note interne",
+                    label: t('tickets.detail.tab_internal_note'),
                     icon: <LockOutlined sx={{ fontSize: 14 }} />,
                   },
                 ].map((tab) => {
@@ -853,8 +859,8 @@ export const TicketDetailPage: React.FC = () => {
                   rows={4}
                   placeholder={
                     composerMode === "internal"
-                      ? "Rédigez une note interne..."
-                      : "Tapez votre réponse..."
+                      ? t('tickets.detail.composer_internal_placeholder')
+                      : t('tickets.detail.composer_reply_placeholder')
                   }
                   sx={{
                     ...fieldSx,
@@ -921,7 +927,7 @@ export const TicketDetailPage: React.FC = () => {
                     {submitting ? (
                       <CircularProgress size={14} sx={{ color: "#fff" }} />
                     ) : (
-                      "Envoyer"
+                      t('tickets.detail.send')
                     )}
                   </Button>
                 </Box>
@@ -962,11 +968,12 @@ export const TicketDetailPage: React.FC = () => {
                 fontSize: "10px",
               }}
             >
-              Propriétés
+              {t('tickets.detail.section_properties')}
             </Box>
             {[
               {
-                label: "Statut",
+                key: "status",
+                label: t('tickets.detail.field_status'),
                 value: (
                   <>
                     <Box
@@ -985,13 +992,14 @@ export const TicketDetailPage: React.FC = () => {
                         fontSize: "12px",
                       }}
                     >
-                      {status.label}
+                      {t(status.labelKey)}
                     </Box>
                   </>
                 ),
               },
               {
-                label: "Priorité",
+                key: "priority",
+                label: t('tickets.detail.field_priority'),
                 value: (
                   <>
                     <Box
@@ -1010,13 +1018,14 @@ export const TicketDetailPage: React.FC = () => {
                         fontSize: "12px",
                       }}
                     >
-                      {priority.label}
+                      {t(priority.labelKey)}
                     </Box>
                   </>
                 ),
               },
               {
-                label: "Type",
+                key: "type",
+                label: t('tickets.detail.field_type'),
                 value: (
                   <>
                     <ShieldOutlined sx={{ fontSize: 14, color: "#64748b" }} />
@@ -1027,13 +1036,14 @@ export const TicketDetailPage: React.FC = () => {
                         fontSize: "12px",
                       }}
                     >
-                      {typeLabels[ticket.type] ?? ticket.type}
+                      {typeLabelKeys[ticket.type] ? t(typeLabelKeys[ticket.type]) : ticket.type}
                     </Box>
                   </>
                 ),
               },
               {
-                label: "Assigné",
+                key: "assignee",
+                label: t('tickets.detail.field_assignee'),
                 value: ticket.assignee ? (
                   <Box sx={{ color: "#0f172a", fontWeight: 400, fontSize: "12px" }}>
                     {ticket.assignee.firstName} {ticket.assignee.lastName}
@@ -1042,12 +1052,13 @@ export const TicketDetailPage: React.FC = () => {
                   <Box
                     sx={{ color: "#94a3b8", fontWeight: 400, fontSize: "12px" }}
                   >
-                    Non assigné
+                    {t('tickets.detail.unassigned')}
                   </Box>
                 ),
               },
               {
-                label: "Projet",
+                key: "project",
+                label: t('tickets.detail.field_project'),
                 value: (
                   <>
                     <FolderOutlined sx={{ fontSize: 14, color: "#7c3aed" }} />
@@ -1064,7 +1075,7 @@ export const TicketDetailPage: React.FC = () => {
                 ),
               },
             ].map((row, idx, arr) => (
-              <Box key={row.label}>
+              <Box key={row.key}>
                 <Box
                   component="button"
                   sx={{
@@ -1096,7 +1107,7 @@ export const TicketDetailPage: React.FC = () => {
                     }}
                   >
                     {row.value}
-                    {row.label !== "Projet" && (
+                    {row.key !== "project" && (
                       <KeyboardArrowDownRounded
                         sx={{ ml: "auto", color: "#cbd5e1" }}
                       />
@@ -1136,7 +1147,7 @@ export const TicketDetailPage: React.FC = () => {
                 fontSize: "10px",
               }}
             >
-              Historique
+              {t('tickets.detail.section_history')}
             </Box>
             <Box
               sx={{
@@ -1167,7 +1178,7 @@ export const TicketDetailPage: React.FC = () => {
                     new Date(a.createdAt).getTime(),
                 )
                 .map((h) => {
-                  const event = historyPresentation(h);
+                  const event = historyPresentation(h, t);
                   return (
                     <Box
                       key={h.id}
@@ -1209,7 +1220,7 @@ export const TicketDetailPage: React.FC = () => {
                             mt: "4px",
                           }}
                         >
-                          {getRelativeShort(h.createdAt)} · {h.author.firstName}{" "}
+                          {getRelativeShort(h.createdAt, t)} · {h.author.firstName}{" "}
                           {h.author.lastName}
                         </Box>
                       </Box>
@@ -1219,7 +1230,7 @@ export const TicketDetailPage: React.FC = () => {
 
               {ticket.history.length === 0 && (
                 <Box sx={{ color: "#94a3b8", fontSize: "13px", py: "4px" }}>
-                  Aucun événement d'historique.
+                  {t('tickets.detail.no_history')}
                 </Box>
               )}
             </Box>
@@ -1230,7 +1241,7 @@ export const TicketDetailPage: React.FC = () => {
       <AppModal
         open={!!editCommentTarget}
         onClose={() => !editCommentSaving && setEditCommentTarget(null)}
-        title="Modifier le commentaire"
+        title={t('tickets.detail.edit_comment_title')}
         actions={
           <>
             <Button
@@ -1241,7 +1252,7 @@ export const TicketDetailPage: React.FC = () => {
               onClick={() => setEditCommentTarget(null)}
               disabled={editCommentSaving}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               variant="contained"
@@ -1253,7 +1264,7 @@ export const TicketDetailPage: React.FC = () => {
               {editCommentSaving ? (
                 <CircularProgress size={14} sx={{ color: "#fff" }} />
               ) : (
-                "Enregistrer"
+                t('common.save')
               )}
             </Button>
           </>
@@ -1277,14 +1288,17 @@ export const TicketDetailPage: React.FC = () => {
                 p: "3px",
               }}
             >
-              {(["Éditer", "Aperçu"] as const).map((tab) => {
+              {([
+                { key: "edit", label: t('tickets.detail.tab_edit') },
+                { key: "preview", label: t('tickets.detail.tab_preview') },
+              ] as const).map((tab) => {
                 const active =
-                  tab === "Éditer" ? !editCommentPreview : editCommentPreview;
+                  tab.key === "edit" ? !editCommentPreview : editCommentPreview;
                 return (
                   <Box
-                    key={tab}
+                    key={tab.key}
                     component="button"
-                    onClick={() => setEditCommentPreview(tab === "Aperçu")}
+                    onClick={() => setEditCommentPreview(tab.key === "preview")}
                     sx={{
                       all: "unset",
                       cursor: "pointer",
@@ -1301,7 +1315,7 @@ export const TicketDetailPage: React.FC = () => {
                       transition: "all 0.12s",
                     }}
                   >
-                    {tab}
+                    {tab.label}
                   </Box>
                 );
               })}
@@ -1313,7 +1327,7 @@ export const TicketDetailPage: React.FC = () => {
                 fontFamily: "var(--font-mono)",
               }}
             >
-              Markdown supporté
+              {t('tickets.detail.markdown_supported')}
             </Box>
           </Box>
           {editCommentPreview ? (
@@ -1331,7 +1345,7 @@ export const TicketDetailPage: React.FC = () => {
                 <ReactMarkdown>{editCommentValue}</ReactMarkdown>
               ) : (
                 <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>
-                  Aperçu vide
+                  {t('tickets.detail.preview_empty')}
                 </Box>
               )}
             </Box>
@@ -1363,10 +1377,9 @@ export const TicketDetailPage: React.FC = () => {
         onClose={() => setDeleteCommentTarget(null)}
         onConfirm={handleDeleteComment}
         loading={deleteCommentLoading}
-        title="Supprimer ce commentaire ?"
+        title={t('tickets.detail.delete_comment_title')}
       >
-        Cette action est irréversible. Le commentaire sera définitivement
-        supprimé.
+        {t('tickets.detail.delete_comment_message')}
       </DeleteModal>
     </>
   );

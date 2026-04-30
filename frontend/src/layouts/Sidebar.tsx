@@ -16,54 +16,59 @@ import Tooltip from '@mui/material/Tooltip'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSidebar } from './SidebarContext'
 import { SentinelLogo } from './SentinelLogo'
+import { useT } from '../i18n/I18nContext'
 
 interface NavItem {
   to: string
   icon: React.ElementType
-  label: string
+  labelKey: string
   end?: boolean
 }
 
 interface NavSection {
-  title: string
+  titleKey: string
   icon: React.ElementType
   items: NavItem[]
 }
 
 const navSections: NavSection[] = [
   {
-    title: 'Tableau de bord',
+    titleKey: 'sidebar.section.dashboard',
     icon: DashboardOutlined,
     items: [
-      { to: '/', icon: DashboardOutlined, label: 'Tableau de bord', end: true },
+      { to: '/', icon: DashboardOutlined, labelKey: 'sidebar.item.dashboard', end: true },
     ],
   },
   {
-    title: 'Tickets',
+    titleKey: 'sidebar.section.tickets',
     icon: ConfirmationNumberOutlined,
     items: [
-      { to: '/tickets', icon: ConfirmationNumberOutlined, label: 'Liste', end: true },
-      { to: '/tickets/kanban', icon: ViewKanbanOutlined, label: 'Kanban' },
+      { to: '/tickets', icon: ConfirmationNumberOutlined, labelKey: 'sidebar.item.list', end: true },
+      { to: '/tickets/kanban', icon: ViewKanbanOutlined, labelKey: 'sidebar.item.kanban' },
     ],
   },
   {
-    title: 'Projets',
+    titleKey: 'sidebar.section.projects',
     icon: AccountTreeOutlined,
     items: [
-      { to: '/projects', icon: AccountTreeOutlined, label: 'Projets' },
+      { to: '/projects', icon: AccountTreeOutlined, labelKey: 'sidebar.item.projects' },
     ],
   },
   {
-    title: 'Ressources',
+    titleKey: 'sidebar.section.resources',
     icon: AssessmentOutlined,
     items: [
-      { to: '/time-tracking', icon: AccessTimeOutlined, label: 'Pointage' },
+      { to: '/time-tracking', icon: AccessTimeOutlined, labelKey: 'sidebar.item.time_tracking' },
     ],
   },
 ]
 
 function isSectionActive(section: NavSection, pathname: string): boolean {
   return section.items.some((item) => isItemActive(item, pathname))
+}
+
+function sectionKey(section: NavSection): string {
+  return section.titleKey
 }
 
 function isItemActive(item: NavItem, pathname: string): boolean {
@@ -92,6 +97,7 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isOpen, isMobile, isCollapsed, close, toggleCollapse } = useSidebar()
+  const t = useT()
 
   const collapsed = isCollapsed && !isMobile
 
@@ -109,7 +115,7 @@ export const Sidebar: React.FC = () => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {}
     for (const s of filteredSections) {
-      if (s.items.length > 1) init[s.title] = isSectionActive(s, location.pathname)
+      if (s.items.length > 1) init[sectionKey(s)] = isSectionActive(s, location.pathname)
     }
     return init
   })
@@ -130,15 +136,15 @@ export const Sidebar: React.FC = () => {
   useEffect(() => {
     for (const s of filteredSections) {
       if (s.items.length > 1 && isSectionActive(s, location.pathname)) {
-        setOpenGroups((prev) => prev[s.title] ? prev : { ...prev, [s.title]: true })
+        setOpenGroups((prev) => prev[sectionKey(s)] ? prev : { ...prev, [sectionKey(s)]: true })
       }
     }
   }, [location.pathname, filteredSections])
 
   if (isMobile && !isOpen) return null
 
-  const toggleGroup = (title: string) =>
-    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }))
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }))
 
   return (
     <>
@@ -171,7 +177,7 @@ export const Sidebar: React.FC = () => {
 
         {/* ── Logo ─────────────────────────────────────────── */}
         {collapsed && !isMobile ? (
-          <Tooltip title="Développer" placement="right" arrow>
+          <Tooltip title={t('sidebar.expand')} placement="right" arrow>
             <Box
               component="button"
               onClick={toggleCollapse}
@@ -208,16 +214,16 @@ export const Sidebar: React.FC = () => {
               <SentinelLogo />
               <Box>
                 <Box sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>
-                  SENTINEL
+                  {t('sidebar.brand')}
                 </Box>
                 <Box sx={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', mt: '3px' }}>
-                  workspace
+                  {t('sidebar.workspace')}
                 </Box>
               </Box>
             </Box>
 
             {!isMobile && (
-              <Tooltip title="Réduire" placement="right" arrow>
+              <Tooltip title={t('sidebar.collapse')} placement="right" arrow>
                 <Box
                   component="button"
                   onClick={toggleCollapse}
@@ -248,16 +254,17 @@ export const Sidebar: React.FC = () => {
         <Box component="nav" sx={{ flex: 1, p: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {filteredSections.map((section, si) => {
             const isMulti = section.items.length > 1
-            const isGroupOpen = openGroups[section.title] ?? false
+            const isGroupOpen = openGroups[sectionKey(section)] ?? false
             const sectionActive = isSectionActive(section, location.pathname)
             const GroupIcon = section.icon
+            const sectionTitle = t(section.titleKey)
 
             if (collapsed) {
               const targetTo = section.items.find(i => isItemActive(i, location.pathname))?.to ?? section.items[0].to
               return (
-                <React.Fragment key={section.title}>
+                <React.Fragment key={section.titleKey}>
                   {si > 0 && <Divider />}
-                  <Tooltip title={section.title} placement="right" arrow>
+                  <Tooltip title={sectionTitle} placement="right" arrow>
                     <Box
                       component="button"
                       onClick={() => navigate(targetTo)}
@@ -283,7 +290,7 @@ export const Sidebar: React.FC = () => {
             }
 
             return (
-              <React.Fragment key={section.title}>
+              <React.Fragment key={section.titleKey}>
                 {si > 0 && <Divider />}
 
                 {isMulti ? (
@@ -291,7 +298,7 @@ export const Sidebar: React.FC = () => {
                     {/* Trigger */}
                     <Box
                       component="button"
-                      onClick={() => toggleGroup(section.title)}
+                      onClick={() => toggleGroup(sectionKey(section))}
                       sx={{
                         all: 'unset',
                         ...ITEM_SX,
@@ -303,7 +310,7 @@ export const Sidebar: React.FC = () => {
                     >
                       <GroupIcon sx={{ fontSize: 16, color: sectionActive ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, transition: 'color 0.12s' }} />
                       <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: sectionActive ? 'var(--text)' : 'var(--muted2)', transition: 'color 0.15s' }}>
-                        {section.title}
+                        {sectionTitle}
                       </Box>
                       <ChevronRightOutlined
                         sx={{
@@ -350,7 +357,7 @@ export const Sidebar: React.FC = () => {
                               }}
                             >
                               <Box component="span" className="nav-label" sx={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: active ? 700 : 500, letterSpacing: '0.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: active ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.15s' }}>
-                                {item.label}
+                                {t(item.labelKey)}
                               </Box>
                             </Box>
                           </NavLink>
@@ -377,7 +384,7 @@ export const Sidebar: React.FC = () => {
                         >
                           <Icon sx={{ fontSize: 16, flexShrink: 0, color: isActive ? 'var(--accent)' : 'var(--muted)', transition: 'color 0.12s' }} />
                           <Box component="span" className="nav-label" sx={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isActive ? 'var(--text)' : 'var(--muted2)', transition: 'color 0.15s' }}>
-                            {section.items[0].label}
+                            {t(section.items[0].labelKey)}
                           </Box>
                         </Box>
                       )
@@ -446,7 +453,7 @@ export const Sidebar: React.FC = () => {
 
           {/* Settings */}
           {isAdmin && (
-            <Tooltip title="Paramètres" placement="right" arrow>
+            <Tooltip title={t('sidebar.settings')} placement="right" arrow>
               <Box
                 component="button"
                 onClick={() => navigate('/settings')}
@@ -471,7 +478,7 @@ export const Sidebar: React.FC = () => {
           )}
 
           {/* Logout */}
-          <Tooltip title="Déconnexion" placement="right" arrow>
+          <Tooltip title={t('sidebar.logout')} placement="right" arrow>
             <Box
               component="button"
               onClick={handleLogout}

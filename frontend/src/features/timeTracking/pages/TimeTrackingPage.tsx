@@ -41,6 +41,7 @@ import Popover from "@mui/material/Popover";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
 import { DurationPicker } from "../../../components/DurationPicker";
+import { useT } from "../../../i18n/I18nContext";
 
 const WORK_HOURS_TARGET = 7 * 60;
 const PROJECT_PALETTE = [
@@ -90,6 +91,7 @@ const emptyForm = (date?: string): FormState => ({
 });
 
 export const TimeTrackingPage: React.FC = () => {
+  const t = useT();
   const { showToast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
@@ -130,11 +132,11 @@ const data = await getTimeEntries(
       );
       setEntries(data);
     } catch {
-      showToast("Impossible de charger les saisies", "error");
+      showToast(t("time_tracking.error_load_entries"), "error");
     } finally {
       setLoading(false);
     }
-  }, [weekStart, weekEnd, showToast]);
+  }, [weekStart, weekEnd, showToast, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -146,7 +148,7 @@ const data = await getTimeEntries(
         to: format(weekEnd, "yyyy-MM-dd"),
       });
     } catch {
-      showToast("Impossible d'exporter les saisies", "error");
+      showToast(t("time_tracking.error_export_entries"), "error");
     } finally {
       setExporting(false);
     }
@@ -172,10 +174,10 @@ const data = await getTimeEntries(
   const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
   const contributors = useMemo(() => new Set(weekEntries.map((e) => e.userId)).size, [weekEntries]);
   const statsByProject = useMemo(() => {
-    const map = new Map<string, { name: string; minutes: number }>();
+    const map = new Map<string, { name: string | null; minutes: number }>();
     weekEntries.forEach((e) => {
       const key = e.techProjectId ?? "__none__";
-      const name = e.techProjectName ?? "Sans projet";
+      const name = e.techProjectName ?? null;
       const ex = map.get(key);
       if (ex) ex.minutes += e.durationMinutes;
       else map.set(key, { name, minutes: e.durationMinutes });
@@ -213,7 +215,7 @@ const data = await getTimeEntries(
           techProjectId: form.techProjectId || null,
           ticketId: form.ticketId || null,
         });
-        showToast("Saisie modifiée", "success");
+        showToast(t("time_tracking.toast_entry_updated"), "success");
       } else {
         const payload: CreateTimeEntryDto = {
           date: form.date, durationMinutes: form.durationMinutes, comment: form.comment.trim(),
@@ -221,12 +223,12 @@ const data = await getTimeEntries(
         if (form.techProjectId) payload.techProjectId = form.techProjectId;
         if (form.ticketId) payload.ticketId = form.ticketId;
         await createTimeEntry(payload);
-        showToast("Saisie enregistrée", "success");
+        showToast(t("time_tracking.toast_entry_created"), "success");
       }
       setModalOpen(false);
       await load();
     } catch {
-      showToast("Erreur lors de la saisie", "error");
+      showToast(t("time_tracking.error_save_entry"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -238,10 +240,10 @@ const data = await getTimeEntries(
     try {
       await deleteTimeEntry(deleteTarget.id);
       setDeleteTarget(null);
-      showToast("Saisie supprimée", "success");
+      showToast(t("time_tracking.toast_entry_deleted"), "success");
       await load();
     } catch {
-      showToast("Erreur lors de la suppression", "error");
+      showToast(t("time_tracking.error_delete_entry"), "error");
     } finally {
       setDeleting(false);
     }
@@ -297,7 +299,7 @@ const data = await getTimeEntries(
           }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Semaine
+                {t("time_tracking.week_label")}
               </Box>
               <Box sx={{
                 fontSize: "12px", fontWeight: 600, color: "var(--text)",
@@ -335,7 +337,7 @@ const data = await getTimeEntries(
                   }}
                 >
                   <TodayOutlined sx={{ fontSize: 15 }} />
-                  Aujourd'hui
+                  {t("time_tracking.today")}
                 </Box>
               )}
               <IconNavBtn onClick={() => setWeekOffset((o) => o - 1)}>
@@ -441,7 +443,7 @@ const data = await getTimeEntries(
         </Box>
 
         {/* ── Répartition par projet ── */}
-        {statsByProject.some((p) => p.name !== "Sans projet") && (
+        {statsByProject.some((p) => p.name !== null) && (
           <Box sx={{
             background: "var(--s1)",
             border: "1px solid var(--border)",
@@ -451,21 +453,22 @@ const data = await getTimeEntries(
             flexShrink: 0,
           }}>
             <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", mb: "2px" }}>
-              Par projet
+              {t("time_tracking.by_project")}
             </Box>
             <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {statsByProject.map((p) => {
                 const pct = totalMinutes > 0 ? Math.round((p.minutes / totalMinutes) * 100) : 0;
-                const color = getProjectColor(p.name);
+                const displayName = p.name ?? t("time_tracking.no_project_label");
+                const color = getProjectColor(displayName);
                 return (
-                  <Box key={p.name} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Box key={displayName} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <Box sx={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />
                     <Box sx={{
                       fontSize: "12.5px", color: "var(--text)", fontWeight: 500,
                       letterSpacing: "-0.01em", minWidth: "120px",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
-                      {p.name === "Sans projet" ? "Non attribué" : p.name}
+                      {displayName}
                     </Box>
                     <Box sx={{ flex: 1, height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
                       <Box sx={{
@@ -505,14 +508,14 @@ const data = await getTimeEntries(
           }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Journal
+                {t("time_tracking.journal_label")}
               </Box>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Box
                 component="button"
                 onClick={() => openCreate()}
-                title="Ajouter une saisie"
+                title={t("time_tracking.add_entry_title")}
                 sx={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: "24px", height: "24px",
@@ -530,7 +533,7 @@ const data = await getTimeEntries(
                 component="button"
                 onClick={handleExport}
                 disabled={exporting}
-                title="Exporter en CSV"
+                title={t("time_tracking.export_csv_title")}
                 sx={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: "24px", height: "24px",
@@ -553,8 +556,8 @@ const data = await getTimeEntries(
           ) : weekEntries.length === 0 ? (
             <Box className="empty-state" sx={{ flex: 1 }}>
               <Box className="empty-state-icon"><AccessTimeOutlined sx={{ fontSize: 36 }} /></Box>
-              <Box className="empty-state-title">Aucune saisie cette semaine</Box>
-              <Box className="empty-state-subtitle">Cliquez sur un jour dans le calendrier pour ajouter du temps</Box>
+              <Box className="empty-state-title">{t("time_tracking.empty_title")}</Box>
+              <Box className="empty-state-subtitle">{t("time_tracking.empty_subtitle")}</Box>
             </Box>
           ) : (
             <Box sx={{ flex: 1, overflowY: "auto" }}>
@@ -617,7 +620,7 @@ const data = await getTimeEntries(
                               px: "6px", py: "1px", borderRadius: "4px",
                               letterSpacing: "0.02em",
                             }}>
-                              Aujourd'hui
+                              {t("time_tracking.today")}
                             </Box>
                           )}
                         </Box>
@@ -653,7 +656,7 @@ const data = await getTimeEntries(
 
                             {/* Avatar initiales (admin uniquement) */}
                             {isAdmin && (
-                              <Tooltip title={isOwn ? "Vous" : entry.userName} placement="top" arrow>
+                              <Tooltip title={isOwn ? t("time_tracking.you") : entry.userName} placement="top" arrow>
                                 <Box sx={{
                                   width: "28px", height: "28px", borderRadius: "50%",
                                   background: isOwn ? "var(--accent)" : getProjectColor(entry.userName),
@@ -718,8 +721,8 @@ const data = await getTimeEntries(
                                 }}
                               >
                                 {canEdit && <>
-                                  <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title="Modifier" />
-                                  <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title="Supprimer" danger />
+                                  <RowActionBtn icon={<EditOutlined sx={{ fontSize: 13 }} />} onClick={() => openEdit(entry)} title={t("time_tracking.action_edit")} />
+                                  <RowActionBtn icon={<DeleteOutlineOutlined sx={{ fontSize: 13 }} />} onClick={() => setDeleteTarget(entry)} title={t("time_tracking.action_delete")} danger />
                                 </>}
                               </Box>
                               <Box sx={{
@@ -753,7 +756,7 @@ const data = await getTimeEntries(
           }}>
             {contributors > 0 && (
               <Box sx={{ fontSize: "11px", color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
-                {contributors} membre{contributors > 1 ? "s" : ""}
+                {contributors} {contributors > 1 ? t("time_tracking.member_plural") : t("time_tracking.member_singular")}
               </Box>
             )}
           </Box>
@@ -848,7 +851,7 @@ const data = await getTimeEntries(
         ) : (
         <>
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", mb: "4px" }}>
-          {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+          {[t("time_tracking.weekday_initial_mon"), t("time_tracking.weekday_initial_tue"), t("time_tracking.weekday_initial_wed"), t("time_tracking.weekday_initial_thu"), t("time_tracking.weekday_initial_fri"), t("time_tracking.weekday_initial_sat"), t("time_tracking.weekday_initial_sun")].map((d, i) => (
             <Box key={i} sx={{ textAlign: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", py: "3px" }}>
               {d}
             </Box>
@@ -911,25 +914,25 @@ const data = await getTimeEntries(
       <AppModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingId ? "Modifier la saisie" : "Saisir du temps"}
+        title={editingId ? t("time_tracking.modal_edit_title") : t("time_tracking.modal_create_title")}
         actions={
           <>
             <Button variant="outlined" size="small" className="btn-cancel" sx={{ textTransform: "none" }} onClick={() => setModalOpen(false)}>
-              Annuler
+              {t("time_tracking.cancel")}
             </Button>
             <Button
               variant="contained" size="small" sx={{ textTransform: "none" }}
               onClick={handleSubmit}
               disabled={!form.comment.trim() || submitting || form.durationMinutes <= 0}
             >
-              {submitting ? "Enregistrement..." : editingId ? "Modifier" : "Enregistrer"}
+              {submitting ? t("time_tracking.saving") : editingId ? t("time_tracking.save_edit") : t("time_tracking.save_create")}
             </Button>
           </>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <FormField label="Date">
+            <FormField label={t("time_tracking.field_date")}>
               <Box
                 component="button"
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => setFormCalendarAnchor(e.currentTarget)}
@@ -938,7 +941,7 @@ const data = await getTimeEntries(
                   cursor: "pointer", textAlign: "left",
                 }}
               >
-                {form.date ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: fr }) : "Choisir une date"}
+                {form.date ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: fr }) : t("time_tracking.choose_date")}
                 <CalendarTodayOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
               </Box>
               <Popover
@@ -1014,7 +1017,7 @@ const data = await getTimeEntries(
                 ) : (
                   <>
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", mb: "4px" }}>
-                    {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+                    {[t("time_tracking.weekday_initial_mon"), t("time_tracking.weekday_initial_tue"), t("time_tracking.weekday_initial_wed"), t("time_tracking.weekday_initial_thu"), t("time_tracking.weekday_initial_fri"), t("time_tracking.weekday_initial_sat"), t("time_tracking.weekday_initial_sun")].map((d, i) => (
                       <Box key={i} sx={{ textAlign: "center", fontSize: "9px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", py: "3px" }}>
                         {d}
                       </Box>
@@ -1056,9 +1059,9 @@ const data = await getTimeEntries(
               </Popover>
             </FormField>
             <FormField
-              label="Durée"
+              label={t("time_tracking.field_duration")}
               labelSuffix={
-                <Tooltip title="Formats acceptés : 2h, 1h30, 45m" placement="top" arrow>
+                <Tooltip title={t("time_tracking.duration_help")} placement="top" arrow>
                   <InfoOutlined sx={{ fontSize: 12, color: "var(--muted)", cursor: "help", verticalAlign: "middle" }} />
                 </Tooltip>
               }
@@ -1067,19 +1070,19 @@ const data = await getTimeEntries(
             </FormField>
           </Box>
 
-          <FormField label={<>Description <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>}>
+          <FormField label={<>{t("time_tracking.field_description")} <Box component="span" sx={{ color: "var(--red)" }}>*</Box></>}>
             <Box component="input" type="text" sx={inputSx}
               value={form.comment}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setForm((f) => ({ ...f, comment: e.target.value }))
               }
-              placeholder="Ce que vous avez fait..."
+              placeholder={t("time_tracking.description_placeholder")}
               autoFocus
             />
           </FormField>
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <FormField label="Ticket">
+            <FormField label={t("time_tracking.field_ticket")}>
               <Box component="select"
                 value={form.ticketId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1087,13 +1090,13 @@ const data = await getTimeEntries(
                 }
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Aucun ticket</option>
-                {tickets.map((t) => (
-                  <option key={t.id} value={t.id}>{t.reference} — {t.title}</option>
+                <option value="">{t("time_tracking.no_ticket_option")}</option>
+                {tickets.map((tk) => (
+                  <option key={tk.id} value={tk.id}>{tk.reference} — {tk.title}</option>
                 ))}
               </Box>
             </FormField>
-            <FormField label="Projet">
+            <FormField label={t("time_tracking.field_project")}>
               <Box component="select"
                 value={form.techProjectId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1101,7 +1104,7 @@ const data = await getTimeEntries(
                 }
                 sx={{ appearance: "none", WebkitAppearance: "none", background: "var(--s1)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", border: "1px solid var(--border)", borderRadius: "var(--r)", px: "12px", py: "7px", pr: "36px", fontSize: "13px", color: "var(--text)", width: "100%", outline: "none", fontFamily: "inherit" }}
               >
-                <option value="">Aucun projet</option>
+                <option value="">{t("time_tracking.no_project_option")}</option>
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -1116,11 +1119,11 @@ const data = await getTimeEntries(
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleting}
-        title="Supprimer cette saisie ?"
+        title={t("time_tracking.delete_modal_title")}
       >
         {deleteTarget?.comment && <><strong>"{deleteTarget.comment}"</strong> — </>}
         {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""}
-        <br />Cette action est irréversible.
+        <br />{t("time_tracking.delete_modal_warning")}
       </DeleteModal>
     </>
   );

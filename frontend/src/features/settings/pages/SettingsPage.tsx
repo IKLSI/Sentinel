@@ -6,6 +6,7 @@ import { AppModal } from '../../../components/AppModal'
 import { RowActions } from '../../../components/RowActions'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useToast } from '../../../hooks/useToast'
+import { useT } from '../../../i18n/I18nContext'
 import { inviteUser, getUsers, toggleUserActive } from '../../users/api/users'
 import {
   getOrganizationSettings, updateOrganizationSettings, OrganizationSettings,
@@ -24,27 +25,23 @@ import EmailOutlined from '@mui/icons-material/EmailOutlined'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-const ROLE_LABELS: Record<string, string> = {
-  Admin: 'Administrateur', Developer: 'Développeur',
-}
-
-const TIMEZONES = [
-  { value: 'Europe/Paris',    label: 'Europe / Paris (CET)' },
-  { value: 'Europe/London',   label: 'Europe / Londres (GMT)' },
-  { value: 'Europe/Berlin',   label: 'Europe / Berlin (CET)' },
-  { value: 'Europe/Madrid',   label: 'Europe / Madrid (CET)' },
-  { value: 'Europe/Rome',     label: 'Europe / Rome (CET)' },
-  { value: 'Europe/Zurich',   label: 'Europe / Zurich (CET)' },
-  { value: 'America/New_York',    label: 'Amérique / New York (EST)' },
-  { value: 'America/Chicago',     label: 'Amérique / Chicago (CST)' },
-  { value: 'America/Los_Angeles', label: 'Amérique / Los Angeles (PST)' },
-  { value: 'America/Sao_Paulo',   label: 'Amérique / São Paulo (BRT)' },
-  { value: 'Asia/Tokyo',      label: 'Asie / Tokyo (JST)' },
-  { value: 'Asia/Shanghai',   label: 'Asie / Shanghai (CST)' },
-  { value: 'Asia/Dubai',      label: 'Asie / Dubaï (GST)' },
-  { value: 'Australia/Sydney', label: 'Australie / Sydney (AEST)' },
-  { value: 'UTC',             label: 'UTC' },
-]
+const TIMEZONE_VALUES = [
+  'Europe/Paris',
+  'Europe/London',
+  'Europe/Berlin',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Zurich',
+  'America/New_York',
+  'America/Chicago',
+  'America/Los_Angeles',
+  'America/Sao_Paulo',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Dubai',
+  'Australia/Sydney',
+  'UTC',
+] as const
 
 function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
   if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -85,13 +82,14 @@ const pageBtnSx = (active: boolean) => ({
 
 const MemberPagination: React.FC<{ page: number; totalPages: number; total: number; onChange: (p: number) => void }> = ({ page, totalPages, total, onChange }) => {
   const pages = getPageNumbers(page, totalPages)
+  const t = useT()
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderTop: '1px solid var(--border)', flexShrink: 0, background: 'var(--s2)' }}>
       <Box sx={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-        {total} membre{total > 1 ? 's' : ''}
+        {total} {total > 1 ? t('settings.members.count_plural') : t('settings.members.count_singular')}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>← Précédent</Box>
+        <Box component="button" sx={navBtnSx(page === 1)} onClick={() => onChange(page - 1)}>{t('settings.pagination.previous')}</Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', mx: '2px' }}>
           {pages.map((p, i) =>
             p === '...'
@@ -99,7 +97,7 @@ const MemberPagination: React.FC<{ page: number; totalPages: number; total: numb
               : <Box key={p} component="button" sx={pageBtnSx(p === page)} onClick={() => p !== page && onChange(p as number)}>{p}</Box>
           )}
         </Box>
-        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>Suivant →</Box>
+        <Box component="button" sx={navBtnSx(page === totalPages)} onClick={() => onChange(page + 1)}>{t('settings.pagination.next')}</Box>
       </Box>
     </Box>
   )
@@ -143,14 +141,25 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 type Tab = 'members' | 'organisation'
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: 'organisation', label: 'Organisation', icon: BusinessOutlined },
-  { id: 'members',      label: 'Membres',      icon: PeopleOutlined   },
-]
-
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth()
   const { showToast } = useToast()
+  const t = useT()
+
+  const ROLE_LABELS: Record<string, string> = useMemo(() => ({
+    Admin: t('settings.role.admin'),
+    Developer: t('settings.role.developer'),
+  }), [t])
+
+  const TIMEZONES = useMemo(() => TIMEZONE_VALUES.map((value) => ({
+    value,
+    label: t(`settings.timezone.${value}`),
+  })), [t])
+
+  const TABS: { id: Tab; label: string; icon: React.ElementType }[] = useMemo(() => ([
+    { id: 'organisation', label: t('settings.tab.organisation'), icon: BusinessOutlined },
+    { id: 'members',      label: t('settings.tab.members'),      icon: PeopleOutlined   },
+  ]), [t])
 
   const [activeTab, setActiveTab] = useState<Tab>('organisation')
 
@@ -193,9 +202,9 @@ export const SettingsPage: React.FC = () => {
   const loadMembers = useCallback(async () => {
     setLoadingMembers(true)
     try { setMembers((await getUsers()).items) }
-    catch { showToast('Impossible de charger les membres', 'error') }
+    catch { showToast(t('settings.toast.members_load_error'), 'error') }
     finally { setLoadingMembers(false) }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => { loadMembers() }, [loadMembers])
 
@@ -206,9 +215,9 @@ export const SettingsPage: React.FC = () => {
         setOrgForm({ name: o.name, timezone: o.timezone })
         setIntegrations(i)
       })
-      .catch(() => showToast('Impossible de charger les paramètres', 'error'))
+      .catch(() => showToast(t('settings.toast.settings_load_error'), 'error'))
       .finally(() => { setLoadingOrg(false) })
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => { setPage(1) }, [memberSearch, memberRoleFilter])
 
@@ -233,56 +242,56 @@ export const SettingsPage: React.FC = () => {
     try {
       await toggleUserActive(memberId, !currentlyActive)
       setMembers(prev => prev.map(m => m.id === memberId ? { ...m, isActive: !currentlyActive } : m))
-    } catch { showToast('Erreur lors de la modification', 'error') }
+    } catch { showToast(t('settings.toast.toggle_error'), 'error') }
     finally { setTogglingId(null) }
   }
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inv.email) { showToast('Champs obligatoires manquants', 'warning'); return }
+    if (!inv.email) { showToast(t('settings.toast.required_fields'), 'warning'); return }
     setSubmitting(true)
     try {
       await inviteUser(inv)
-      showToast('Invitation envoyée', 'success')
+      showToast(t('settings.toast.invite_sent'), 'success')
       setInviteOpen(false)
       setInv({ email: '', role: 'Developer' })
-    } catch { showToast("Erreur lors de l'invitation", 'error') }
+    } catch { showToast(t('settings.toast.invite_error'), 'error') }
     finally { setSubmitting(false) }
   }
 
   const handleSaveOrg = async () => {
-    if (!orgForm.name.trim()) { showToast('Le nom est requis', 'warning'); return }
+    if (!orgForm.name.trim()) { showToast(t('settings.toast.name_required'), 'warning'); return }
     setSavingOrg(true)
     try {
       const updated = await updateOrganizationSettings(orgForm)
       setOrg(updated)
       setOrgForm({ name: updated.name, timezone: updated.timezone })
-      showToast('Organisation mise à jour', 'success')
-    } catch { showToast('Erreur lors de la mise à jour', 'error') }
+      showToast(t('settings.toast.org_updated'), 'success')
+    } catch { showToast(t('settings.toast.org_update_error'), 'error') }
     finally { setSavingOrg(false) }
   }
 
   const handleConnectGithub = async () => {
-    if (!githubToken.trim()) { showToast('Le token est requis', 'warning'); return }
+    if (!githubToken.trim()) { showToast(t('settings.toast.token_required'), 'warning'); return }
     setConnectingGithub(true)
     try {
       const result = await connectGithub(githubToken.trim())
       setIntegrations(prev => ({ ...prev, hasGithubToken: true }))
       setGithubToken('')
-      showToast(`GitHub connecté — ${result.importedCount} projet(s) importé(s)`, 'success')
-    } catch { showToast('Erreur lors de la connexion GitHub', 'error') }
+      showToast(`${t('settings.toast.github_connected')} — ${result.importedCount} ${t('settings.toast.projects_imported')}`, 'success')
+    } catch { showToast(t('settings.toast.github_error'), 'error') }
     finally { setConnectingGithub(false) }
   }
 
   const handleConnectGitlab = async () => {
-    if (!gitlabToken.trim()) { showToast('Le token est requis', 'warning'); return }
+    if (!gitlabToken.trim()) { showToast(t('settings.toast.token_required'), 'warning'); return }
     setConnectingGitlab(true)
     try {
       const result = await connectGitlab(gitlabToken.trim())
       setIntegrations(prev => ({ ...prev, hasGitlabToken: true }))
       setGitlabToken('')
-      showToast(`GitLab connecté — ${result.importedCount} projet(s) importé(s)`, 'success')
-    } catch { showToast('Erreur lors de la connexion GitLab', 'error') }
+      showToast(`${t('settings.toast.gitlab_connected')} — ${result.importedCount} ${t('settings.toast.projects_imported')}`, 'success')
+    } catch { showToast(t('settings.toast.gitlab_error'), 'error') }
     finally { setConnectingGitlab(false) }
   }
 
@@ -334,7 +343,7 @@ export const SettingsPage: React.FC = () => {
                 '&:focus-within': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
               }}>
                 <SearchOutlined sx={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }} />
-                <Box component="input" placeholder="Rechercher…"
+                <Box component="input" placeholder={t('settings.members.search_placeholder')}
                   sx={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '12px', color: 'var(--text)', fontFamily: 'inherit' }}
                   value={memberSearch}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMemberSearch(e.target.value)} />
@@ -350,13 +359,13 @@ export const SettingsPage: React.FC = () => {
                 }}
                 value={memberRoleFilter}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMemberRoleFilter(e.target.value)}>
-                <option value="all">Tous les rôles</option>
-                <option value="Admin">Administrateur</option>
-                <option value="Developer">Développeur</option>
+                <option value="all">{t('settings.members.filter_all_roles')}</option>
+                <option value="Admin">{t('settings.role.admin')}</option>
+                <option value="Developer">{t('settings.role.developer')}</option>
               </Box>
               <Box sx={{ flex: 1 }} />
               <Button variant="contained" size="small" onClick={() => setInviteOpen(true)} startIcon={<PersonAddOutlined sx={{ fontSize: '13px !important' }} />}>
-                Ajouter un membre
+                {t('settings.members.add_member')}
               </Button>
             </Box>
 
@@ -364,7 +373,7 @@ export const SettingsPage: React.FC = () => {
               {loadingMembers ? (
                 <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
               ) : filteredMembers.length === 0 ? (
-                <Box className="empty-state"><Box className="empty-state-title">Aucun membre trouvé</Box></Box>
+                <Box className="empty-state"><Box className="empty-state-title">{t('settings.members.empty')}</Box></Box>
               ) : (
                 <>
                   <Box sx={{ flex: 1, overflow: 'hidden' }}>
@@ -372,13 +381,13 @@ export const SettingsPage: React.FC = () => {
                       <Box component="thead">
                         <Box component="tr" sx={{ borderBottom: '1px solid var(--border)', background: 'var(--s2)' }}>
                           {[
-                            { label: 'Membre', width: 'auto' },
-                            { label: 'Rôle', width: '90px' },
-                            { label: 'Statut', width: '110px' },
-                            { label: 'Dernière connexion', width: '160px' },
-                            { label: '', width: '48px' },
-                          ].map(({ label, width }) => (
-                            <Box component="th" key={label} sx={{ px: '16px', py: '10px', textAlign: 'left', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', width }}>{label}</Box>
+                            { key: 'member', label: t('settings.members.col_member'), width: 'auto' },
+                            { key: 'role', label: t('settings.members.col_role'), width: '90px' },
+                            { key: 'status', label: t('settings.members.col_status'), width: '110px' },
+                            { key: 'last_login', label: t('settings.members.col_last_login'), width: '160px' },
+                            { key: 'actions', label: '', width: '48px' },
+                          ].map(({ key, label, width }) => (
+                            <Box component="th" key={key} sx={{ px: '16px', py: '10px', textAlign: 'left', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', width }}>{label}</Box>
                           ))}
                         </Box>
                       </Box>
@@ -397,7 +406,7 @@ export const SettingsPage: React.FC = () => {
                               <Box sx={{ fontWeight: 400, color: 'var(--text)', lineHeight: 1.3 }}>{ROLE_LABELS[m.role] ?? m.role}</Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px' }}>
-                              <Box sx={{ fontWeight: 400, color: 'var(--text)', lineHeight: 1.3 }}>{m.isActive ? 'Actif' : 'Inactif'}</Box>
+                              <Box sx={{ fontWeight: 400, color: 'var(--text)', lineHeight: 1.3 }}>{m.isActive ? t('settings.members.status_active') : t('settings.members.status_inactive')}</Box>
                             </Box>
                             <Box component="td" sx={{ px: '16px', py: '10px', color: 'var(--muted2)', fontSize: '11px' }}>
                               {m.lastLoginAt ? formatDistanceToNow(new Date(m.lastLoginAt), { addSuffix: true, locale: fr }) : '—'}
@@ -406,7 +415,7 @@ export const SettingsPage: React.FC = () => {
                               {m.id !== user?.id && (
                                 togglingId === m.id ? <CircularProgress size={13} /> :
                                 <RowActions actions={[
-                                  { icon: m.isActive ? <BlockOutlined sx={{ fontSize: 13 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />, label: m.isActive ? 'Désactiver' : 'Activer', onClick: () => handleToggleActive(m.id, m.isActive), color: m.isActive ? 'red' : 'green' },
+                                  { icon: m.isActive ? <BlockOutlined sx={{ fontSize: 13 }} /> : <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />, label: m.isActive ? t('settings.members.deactivate') : t('settings.members.activate'), onClick: () => handleToggleActive(m.id, m.isActive), color: m.isActive ? 'red' : 'green' },
                                 ]} />
                               )}
                             </Box>
@@ -428,20 +437,20 @@ export const SettingsPage: React.FC = () => {
 
                 {/* ── Card Identité ── */}
                 <Box sx={CARD_SX}>
-                  <CardHeader label="Identité" />
+                  <CardHeader label={t('settings.org.identity')} />
                   {loadingOrg ? (
                     <Box sx={{ p: '24px', display: 'flex', justifyContent: 'center' }}><CircularProgress size={20} /></Box>
                   ) : (
                     <>
                       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', px: '16px', py: '12px' }}>
                         <Box>
-                          <FieldLabel>Nom de l'organisation</FieldLabel>
+                          <FieldLabel>{t('settings.org.name_label')}</FieldLabel>
                           <Box component="input" type="text" sx={inp}
                             value={orgForm.name}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgForm(f => ({ ...f, name: e.target.value }))} />
                         </Box>
                         <Box>
-                          <FieldLabel>Fuseau horaire</FieldLabel>
+                          <FieldLabel>{t('settings.org.timezone_label')}</FieldLabel>
                           <Box sx={{ position: 'relative' }}>
                             <Box component="select" sx={{ ...inp, pr: '28px', cursor: 'pointer', appearance: 'none' }}
                               value={orgForm.timezone}
@@ -457,7 +466,7 @@ export const SettingsPage: React.FC = () => {
 
                       <Box sx={{ px: '16px', py: '10px', display: 'flex', justifyContent: 'flex-end' }}>
                         <Button variant="contained" size="small" onClick={handleSaveOrg} disabled={savingOrg || orgUnchanged} sx={{ minWidth: '110px' }}>
-                          {savingOrg ? 'Sauvegarde…' : 'Sauvegarder'}
+                          {savingOrg ? t('settings.org.saving') : t('settings.org.save')}
                         </Button>
                       </Box>
                     </>
@@ -466,7 +475,7 @@ export const SettingsPage: React.FC = () => {
 
                 {/* ── Card Intégrations ── */}
                 <Box sx={CARD_SX}>
-                  <CardHeader label="Intégrations" />
+                  <CardHeader label={t('settings.integrations.title')} />
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)' }}>
 
                     {/* GitHub */}
@@ -488,17 +497,17 @@ export const SettingsPage: React.FC = () => {
                         </Box>
                         <Box sx={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {integrations.hasGithubToken
-                            ? "Token configuré, saisissez-en un nouveau pour le remplacer."
-                            : "Personal Access Token pour importer vos dépôts GitHub."}
+                            ? t('settings.integrations.github_token_set')
+                            : t('settings.integrations.github_token_help')}
                         </Box>
                       </Box>
                       <Box sx={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                        <Box component="input" type="password" placeholder="ghp_…" sx={{ ...inp, width: '180px' }}
+                        <Box component="input" type="password" placeholder={t('settings.integrations.github_placeholder')} sx={{ ...inp, width: '180px' }}
                           value={githubToken}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithubToken(e.target.value)} />
                         <Button variant="contained" size="small" onClick={handleConnectGithub}
                           disabled={connectingGithub || !githubToken.trim()} sx={{ flexShrink: 0 }}>
-                          {connectingGithub ? 'Import…' : 'Connecter'}
+                          {connectingGithub ? t('settings.integrations.importing') : t('settings.integrations.connect')}
                         </Button>
                       </Box>
                     </Box>
@@ -525,17 +534,17 @@ export const SettingsPage: React.FC = () => {
                         </Box>
                         <Box sx={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {integrations.hasGitlabToken
-                            ? "Token configuré, saisissez-en un nouveau pour le remplacer."
-                            : "Personal Access Token pour importer vos projets GitLab."}
+                            ? t('settings.integrations.gitlab_token_set')
+                            : t('settings.integrations.gitlab_token_help')}
                         </Box>
                       </Box>
                       <Box sx={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                        <Box component="input" type="password" placeholder="glpat-…" sx={{ ...inp, width: '180px' }}
+                        <Box component="input" type="password" placeholder={t('settings.integrations.gitlab_placeholder')} sx={{ ...inp, width: '180px' }}
                           value={gitlabToken}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGitlabToken(e.target.value)} />
                         <Button variant="contained" size="small" onClick={handleConnectGitlab}
                           disabled={connectingGitlab || !gitlabToken.trim()} sx={{ flexShrink: 0 }}>
-                          {connectingGitlab ? 'Import…' : 'Connecter'}
+                          {connectingGitlab ? t('settings.integrations.importing') : t('settings.integrations.connect')}
                         </Button>
                       </Box>
                     </Box>
@@ -551,12 +560,12 @@ export const SettingsPage: React.FC = () => {
       </Box>
 
       {/* ════ MODAL INVITATION ════ */}
-      <AppModal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Inviter un membre"
+      <AppModal open={inviteOpen} onClose={() => setInviteOpen(false)} title={t('settings.invite.title')}
         actions={
           <>
-            <Button variant="outlined" size="small" className="btn-cancel" onClick={() => setInviteOpen(false)}>Annuler</Button>
+            <Button variant="outlined" size="small" className="btn-cancel" onClick={() => setInviteOpen(false)}>{t('settings.invite.cancel')}</Button>
             <Button variant="contained" size="small" type="submit" form="invite-form" disabled={submitting || !inv.email.trim()}>
-              {submitting ? 'Envoi…' : "Envoyer l'invitation"}
+              {submitting ? t('settings.invite.sending') : t('settings.invite.send')}
             </Button>
           </>
         }>
@@ -579,10 +588,10 @@ export const SettingsPage: React.FC = () => {
             </Box>
             <Box>
               <Box sx={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em', mb: '3px' }}>
-                Invitation par email
+                {t('settings.invite.banner_title')}
               </Box>
               <Box sx={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.55 }}>
-                Un lien d'activation sera envoyé.<br />Le membre définira son mot de passe à l'inscription.
+                {t('settings.invite.banner_line1')}<br />{t('settings.invite.banner_line2')}
               </Box>
             </Box>
           </Box>
@@ -591,16 +600,16 @@ export const SettingsPage: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Box>
               <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', mb: '7px' }}>
-                Adresse e-mail <Box component="span" sx={{ color: 'var(--red)' }}>*</Box>
+                {t('settings.invite.email_label')} <Box component="span" sx={{ color: 'var(--red)' }}>*</Box>
               </Box>
               <Box component="input" type="email" sx={{ ...inp, py: '9px', px: '12px', fontSize: '13px' }}
-                value={inv.email} placeholder="prenom.nom@exemple.com"
+                value={inv.email} placeholder={t('settings.invite.email_placeholder')}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInv(f => ({ ...f, email: e.target.value }))} />
             </Box>
 
             <Box>
               <Box component="label" sx={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', mb: '7px' }}>
-                Rôle
+                {t('settings.invite.role_label')}
               </Box>
               <Box sx={{ position: 'relative' }}>
                 <Box component="select" sx={{
@@ -613,8 +622,8 @@ export const SettingsPage: React.FC = () => {
                   '&:focus': { borderColor: 'var(--accent-border)', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
                 }} value={inv.role}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInv(f => ({ ...f, role: e.target.value as UserRole }))}>
-                  <option value="Admin">Administrateur</option>
-                  <option value="Developer">Développeur</option>
+                  <option value="Admin">{t('settings.role.admin')}</option>
+                  <option value="Developer">{t('settings.role.developer')}</option>
                 </Box>
                 <KeyboardArrowDownOutlined sx={{
                   position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
