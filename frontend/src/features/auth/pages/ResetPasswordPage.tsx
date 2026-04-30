@@ -7,6 +7,7 @@ import { resetPassword } from "../api/auth";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
+import { extractApiError } from "../../../utils/apiError";
 
 export const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -48,8 +49,8 @@ export const ResetPasswordPage: React.FC = () => {
       await resetPassword(token, password);
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 3500);
-    } catch {
-      showToast(t("auth.reset_password.error_invalid_token"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("auth.reset_password.error_invalid_token")), "error");
     } finally {
       setLoading(false);
     }

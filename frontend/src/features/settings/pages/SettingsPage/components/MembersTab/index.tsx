@@ -21,6 +21,7 @@ import { useT } from "@/i18n/I18nContext";
 import { getUsers, toggleUserActive } from "@/features/users/api/users";
 import { User } from "@/types";
 import { MemberPagination } from "../MemberPagination";
+import { extractApiError } from "@/utils/apiError";
 
 interface Props {
   onInviteClick: () => void;
@@ -111,8 +112,8 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           m.id === memberId ? { ...m, isActive: !currentlyActive } : m,
         ),
       );
-    } catch {
-      showToast(t("settings.toast.toggle_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("settings.toast.toggle_error")), "error");
     } finally {
       setTogglingId(null);
     }

@@ -18,7 +18,6 @@ const darkCssVars = `
     --accent-subtle: rgba(99, 102, 241, 0.10);
     --accent-border: rgba(99, 102, 241, 0.30);
     --blue: #6366f1;
-    --blue2: #4f52cf;
     --green: #22c55e;
     --green-subtle: rgba(34, 197, 94, 0.10);
     --yellow: #f59e0b;
@@ -33,14 +32,8 @@ const darkCssVars = `
     --purple-subtle: rgba(168, 85, 247, 0.10);
     --r: 8px;
     --r-sm: 5px;
-    --r-lg: 14px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
-    --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
     --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
   }
   body { scrollbar-width: thin; }
 `
@@ -63,7 +56,6 @@ const lightCssVars = `
     --accent-subtle: rgba(79, 70, 229, 0.08);
     --accent-border: rgba(79, 70, 229, 0.25);
     --blue: #4f46e5;
-    --blue2: #3730a3;
     --green: #16a34a;
     --green-subtle: rgba(22, 163, 74, 0.08);
     --yellow: #d97706;
@@ -78,14 +70,8 @@ const lightCssVars = `
     --purple-subtle: rgba(147, 51, 234, 0.08);
     --r: 8px;
     --r-sm: 5px;
-    --r-lg: 14px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
-    --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
     --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
   }
   body { scrollbar-width: thin; }
 `
@@ -105,11 +91,11 @@ const baseComponents = {
         transition: 'all 0.15s ease',
       },
       contained: {
-        background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #818cf8) 100%)',
-        boxShadow: '0 2px 12px rgba(99,102,241,0.25)',
+        background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, white) 100%)',
+        boxShadow: '0 2px 12px color-mix(in srgb, var(--accent) 25%, transparent)',
         '&:hover': {
           background: 'linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%)',
-          boxShadow: '0 4px 20px rgba(99,102,241,0.35)',
+          boxShadow: '0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent)',
           transform: 'translateY(-1px)',
         },
         '&:active': { transform: 'translateY(0)' },
@@ -270,7 +256,7 @@ export const darkTheme = createTheme({
     divider: '#1e2a42',
     action: {
       hover: 'rgba(255,255,255,0.04)',
-      selected: 'rgba(99,102,241,0.12)',
+      selected: 'color-mix(in srgb, var(--accent) 12%, transparent)',
     },
   },
   shape: { borderRadius: 8 },
@@ -296,7 +282,7 @@ export const lightTheme = createTheme({
     divider: '#dde3f2',
     action: {
       hover: 'rgba(0,0,0,0.03)',
-      selected: 'rgba(79,70,229,0.08)',
+      selected: 'color-mix(in srgb, var(--accent) 8%, transparent)',
     },
   },
   shape: { borderRadius: 8 },

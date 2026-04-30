@@ -7,6 +7,7 @@ import { acceptInvitation } from "../../users/api/users";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
+import { extractApiError } from "../../../utils/apiError";
 
 export const AcceptInvitationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -92,8 +93,8 @@ export const AcceptInvitationPage: React.FC = () => {
       });
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 3500);
-    } catch {
-      showToast(t("auth.accept_invitation.error_invalid_token"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("auth.accept_invitation.error_invalid_token")), "error");
     } finally {
       setLoading(false);
     }

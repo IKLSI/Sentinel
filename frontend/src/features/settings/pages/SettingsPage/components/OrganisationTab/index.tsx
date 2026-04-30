@@ -22,6 +22,7 @@ import {
   inp,
 } from "../../helpers";
 import { IntegrationRow } from "../IntegrationRow";
+import { extractApiError } from "@/utils/apiError";
 
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
@@ -77,8 +78,8 @@ export const OrganisationTab: React.FC = () => {
       setOrg(updated);
       setOrgForm({ name: updated.name, timezone: updated.timezone });
       showToast(t("settings.toast.org_updated"), "success");
-    } catch {
-      showToast(t("settings.toast.org_update_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("settings.toast.org_update_error")), "error");
     } finally {
       setSavingOrg(false);
     }
@@ -98,8 +99,8 @@ export const OrganisationTab: React.FC = () => {
         `${t("settings.toast.github_connected")} — ${result.importedCount} ${t("settings.toast.projects_imported")}`,
         "success",
       );
-    } catch {
-      showToast(t("settings.toast.github_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("settings.toast.github_error")), "error");
     } finally {
       setConnectingGithub(false);
     }
@@ -119,8 +120,8 @@ export const OrganisationTab: React.FC = () => {
         `${t("settings.toast.gitlab_connected")} — ${result.importedCount} ${t("settings.toast.projects_imported")}`,
         "success",
       );
-    } catch {
-      showToast(t("settings.toast.gitlab_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("settings.toast.gitlab_error")), "error");
     } finally {
       setConnectingGitlab(false);
     }

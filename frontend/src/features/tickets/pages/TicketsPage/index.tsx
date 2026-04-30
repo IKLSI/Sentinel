@@ -21,6 +21,7 @@ import { TicketsTable, SortState } from "./components/TicketsTable";
 import { Pagination } from "./components/Pagination";
 import { CreateTicketModal } from "./components/CreateTicketModal";
 import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
+import { extractApiError } from "@/utils/apiError";
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
@@ -123,8 +124,8 @@ export const TicketsPage: React.FC = () => {
       const created = await createTicket(payload as unknown as Partial<Ticket>);
       setShowCreateModal(false);
       navigate(`/tickets/${created.id}`);
-    } catch {
-      showToast(t("tickets.list.create_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.list.create_error")), "error");
     } finally {
       setCreateSubmitting(false);
     }
@@ -171,8 +172,8 @@ export const TicketsPage: React.FC = () => {
         prev.map((tk) => (tk.id === updated.id ? updated : tk)),
       );
       setEditTarget(null);
-    } catch {
-      showToast(t("tickets.list.edit_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.list.edit_error")), "error");
     } finally {
       setEditSaving(false);
     }

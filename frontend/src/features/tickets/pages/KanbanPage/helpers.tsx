@@ -112,7 +112,7 @@ export function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   return result;
 }
 
-export function ticketToKanban(t: Ticket): KanbanTicket {
+function ticketToKanban(t: Ticket): KanbanTicket {
   const a = t.assignee;
   const initials = a
     ? `${a.firstName[0] ?? ""}${a.lastName[0] ?? ""}`.toUpperCase()
@@ -145,7 +145,7 @@ export function projectInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-export const avatarPalette = [
+const avatarPalette = [
   "var(--purple)",
   "var(--green)",
   "var(--red)",

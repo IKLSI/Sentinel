@@ -27,6 +27,7 @@ import { WeekCalendarCard } from "./components/WeekCalendarCard";
 import { ProjectStatsCard } from "./components/ProjectStatsCard";
 import { JournalCard } from "./components/JournalCard";
 import { TimeEntryModal } from "./components/TimeEntryModal";
+import { extractApiError } from "@/utils/apiError";
 
 export const TimeTrackingPage: React.FC = () => {
   const t = useT();
@@ -181,8 +182,8 @@ export const TimeTrackingPage: React.FC = () => {
       }
       setModalOpen(false);
       await load();
-    } catch {
-      showToast(t("time_tracking.error_save_entry"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("time_tracking.error_save_entry")), "error");
     } finally {
       setSubmitting(false);
     }
@@ -196,8 +197,8 @@ export const TimeTrackingPage: React.FC = () => {
       setDeleteTarget(null);
       showToast(t("time_tracking.toast_entry_deleted"), "success");
       await load();
-    } catch {
-      showToast(t("time_tracking.error_delete_entry"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("time_tracking.error_delete_entry")), "error");
     } finally {
       setDeleting(false);
     }
