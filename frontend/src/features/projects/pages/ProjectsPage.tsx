@@ -320,7 +320,16 @@ const data = await getProjects();
                         const { Icon } = cfg;
                         return (
                       <Box
+                        component="button"
+                        type="button"
+                        aria-expanded={!isCollapsed}
+                        aria-label={isCollapsed ? t("projects.section.expand") : t("projects.section.collapse")}
+                        onClick={() => setCollapsedSections((prev) => ({ ...prev, [grade]: !prev[grade] }))}
                         sx={{
+                          all: "unset",
+                          width: "100%",
+                          boxSizing: "border-box",
+                          cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
@@ -328,6 +337,9 @@ const data = await getProjects();
                           p: "11px 14px",
                           background: "var(--s2)",
                           borderBottom: "1px solid var(--border)",
+                          transition: "background 0.12s",
+                          "&:hover": { background: "var(--s3)" },
+                          "&:focus-visible": { outline: "2px solid var(--accent)", outlineOffset: "-2px" },
                         }}
                       >
                         <Box sx={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
@@ -354,18 +366,11 @@ const data = await getProjects();
                           </Box>
                         </Box>
                         <Box
-                          component="button"
-                          aria-label={isCollapsed ? t("projects.section.expand") : t("projects.section.collapse")}
-                          onClick={() => setCollapsedSections((prev) => ({ ...prev, [grade]: !prev[grade] }))}
                           sx={{
-                            all: "unset",
-                            cursor: "pointer",
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
                             color: "var(--muted2)",
-                            transition: "color 0.12s",
-                            "&:hover": { color: "var(--text-secondary)" },
                           }}
                         >
                           <KeyboardArrowDownOutlined
