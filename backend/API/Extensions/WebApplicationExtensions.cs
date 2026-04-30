@@ -7,7 +7,8 @@ public static class WebApplicationExtensions
 {
     public static WebApplication ConfigureHangfire(this WebApplication app)
     {
-        RecurringJob.AddOrUpdate<TechHealthScanJob>(
+        IRecurringJobManager recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+        recurringJobs.AddOrUpdate<TechHealthScanJob>(
             "tech-health-scan",
             job => job.ExecuteAsync(),
             Cron.Daily(2));
