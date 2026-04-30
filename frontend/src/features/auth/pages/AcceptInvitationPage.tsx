@@ -94,7 +94,10 @@ export const AcceptInvitationPage: React.FC = () => {
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 3500);
     } catch (err) {
-      showToast(extractApiError(err, t("auth.accept_invitation.error_invalid_token")), "error");
+      showToast(
+        extractApiError(err, t("auth.accept_invitation.error_invalid_token")),
+        "error",
+      );
     } finally {
       setLoading(false);
     }

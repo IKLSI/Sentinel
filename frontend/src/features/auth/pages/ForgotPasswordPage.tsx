@@ -37,7 +37,10 @@ export const ForgotPasswordPage: React.FC = () => {
       await forgotPassword(email);
       setDone(true);
     } catch (err) {
-      showToast(extractApiError(err, t("auth.forgot_password.error_generic")), "error");
+      showToast(
+        extractApiError(err, t("auth.forgot_password.error_generic")),
+        "error",
+      );
     } finally {
       setLoading(false);
     }

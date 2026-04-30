@@ -85,7 +85,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           sx={{
             textTransform: "none",
             background: "var(--red)",
-            "&:hover": { background: "color-mix(in srgb, var(--red) 88%, black)" },
+            "&:hover": {
+              background: "color-mix(in srgb, var(--red) 88%, black)",
+            },
             "&:disabled": { background: "var(--red)", opacity: 0.6 },
           }}
           onClick={onConfirm}

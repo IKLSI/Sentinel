@@ -50,7 +50,10 @@ export const ResetPasswordPage: React.FC = () => {
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 3500);
     } catch (err) {
-      showToast(extractApiError(err, t("auth.reset_password.error_invalid_token")), "error");
+      showToast(
+        extractApiError(err, t("auth.reset_password.error_invalid_token")),
+        "error",
+      );
     } finally {
       setLoading(false);
     }

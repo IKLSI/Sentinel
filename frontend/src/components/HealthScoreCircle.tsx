@@ -19,7 +19,10 @@ const gradeConfig: Record<
   F: { color: "var(--red)", Icon: WarningAmberOutlined },
   E: { color: "var(--orange)", Icon: WarningAmberOutlined },
   D: { color: "var(--yellow)", Icon: ErrorOutlineOutlined },
-  C: { color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: ErrorOutlineOutlined },
+  C: {
+    color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)",
+    Icon: ErrorOutlineOutlined,
+  },
   B: { color: "var(--accent)", Icon: CheckCircleOutlineOutlined },
   A: { color: "var(--green)", Icon: CheckCircleOutlineOutlined },
 };

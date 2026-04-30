@@ -202,6 +202,15 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           size="small"
           onClick={onInviteClick}
           startIcon={<PersonAddOutlined sx={{ fontSize: "13px !important" }} />}
+          sx={{
+            textTransform: "none",
+            "&.MuiButton-root": { background: "var(--accent2)", boxShadow: "none" },
+            "&.MuiButton-root:hover": {
+              background: "color-mix(in srgb, var(--accent2) 85%, black)",
+              boxShadow: "none",
+              transform: "none",
+            },
+          }}
         >
           {t("settings.members.add_member")}
         </Button>

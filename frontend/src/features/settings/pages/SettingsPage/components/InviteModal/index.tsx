@@ -62,11 +62,22 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             {t("settings.invite.cancel")}
           </Button>
           <Button
-            variant="contained"
+            variant="outlined"
             size="small"
             type="submit"
             form="invite-form"
             disabled={submitting || !inv.email.trim()}
+            sx={{
+              textTransform: "none",
+              background: "var(--accent)",
+              borderColor: "var(--accent)",
+              color: "#fff",
+              "&:hover": {
+                background: "var(--accent2)",
+                borderColor: "var(--accent2)",
+                color: "#fff",
+              },
+            }}
           >
             {submitting
               ? t("settings.invite.sending")

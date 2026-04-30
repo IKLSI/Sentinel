@@ -117,19 +117,20 @@ export const ProjectsToolbar: React.FC<Props> = ({
             textTransform: "none",
             background: "var(--accent)",
             borderColor: "var(--accent)",
-            color: "var(--s1)",
+            color: "#fff",
             "&:hover": {
               background: "var(--accent2)",
               borderColor: "var(--accent2)",
-              color: "var(--s1)",
+              color: "#fff",
             },
+            "&.Mui-disabled": { color: "#fff", opacity: 0.7 },
           }}
           onClick={onExport}
         >
           {exporting ? (
             <CircularProgress
               size={12}
-              sx={{ color: "var(--text-secondary)" }}
+              sx={{ color: "#fff" }}
             />
           ) : (
             <FileDownloadOutlined sx={{ fontSize: 14 }} />
