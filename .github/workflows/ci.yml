@@ -46,6 +46,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Dead code (knip)
+        run: pnpm lint:dead
+
       - name: Audit dependencies
         run: pnpm audit --audit-level high
 

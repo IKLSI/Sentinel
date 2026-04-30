@@ -1,6 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -13,13 +16,16 @@ namespace Sentinel.API.Controllers;
 public class AuthController : BaseController
 {
     private readonly AuthService _authService;
+    private readonly ITokenBlacklistService _blacklist;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, ITokenBlacklistService blacklist)
     {
         _authService = authService;
+        _blacklist = blacklist;
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         LoginResponse? result = await _authService.LoginAsync(request.Email, request.Password);
@@ -33,6 +39,7 @@ public class AuthController : BaseController
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<LoginResponse>> Refresh([FromBody] RefreshTokenRequest request)
     {
         LoginResponse? result = await _authService.RefreshTokenAsync(request.RefreshToken);
@@ -56,12 +63,21 @@ public class AuthController : BaseController
             return Unauthorized();
         }
 
+        string? jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        string? expClaim = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+        if (!string.IsNullOrEmpty(jti) && long.TryParse(expClaim, out long expSeconds))
+        {
+            DateTime expUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
+            _blacklist.Revoke(jti, expUtc);
+        }
+
         await _authService.LogoutAsync(userId.Value);
 
         return NoContent();
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("password-reset")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         PasswordResetToken? resetToken = await _authService.CreatePasswordResetTokenAsync(request.Email);
@@ -75,6 +91,7 @@ public class AuthController : BaseController
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting("password-reset")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
         bool success = await _authService.ResetPasswordAsync(request.Token, request.Password);

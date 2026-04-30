@@ -25,6 +25,7 @@ import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { ProjectFormModal } from "./components/ProjectFormModal";
+import { extractApiError } from "@/utils/apiError";
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
@@ -107,8 +108,8 @@ export const ProjectsPage: React.FC = () => {
       setShowModal(false);
       showToast(t("projects.toast.create_success"), "success");
       await load();
-    } catch {
-      showToast(t("projects.toast.create_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("projects.toast.create_error")), "error");
     } finally {
       setSubmitting(false);
     }
@@ -133,8 +134,8 @@ export const ProjectsPage: React.FC = () => {
       );
       setEditTarget(null);
       showToast(t("projects.toast.update_success"), "success");
-    } catch {
-      showToast(t("projects.toast.update_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("projects.toast.update_error")), "error");
     } finally {
       setEditSaving(false);
     }
@@ -148,8 +149,8 @@ export const ProjectsPage: React.FC = () => {
       setDeleteTarget(null);
       showToast(t("projects.toast.delete_success"), "success");
       await load();
-    } catch {
-      showToast(t("projects.toast.delete_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("projects.toast.delete_error")), "error");
     } finally {
       setDeleting(false);
     }
@@ -196,8 +197,8 @@ export const ProjectsPage: React.FC = () => {
         }
       };
       scanPollRef.current = setTimeout(poll, 2000);
-    } catch {
-      showToast(t("projects.toast.scan_start_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("projects.toast.scan_start_error")), "error");
       setScanningId(null);
     }
   };

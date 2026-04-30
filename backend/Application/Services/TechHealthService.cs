@@ -15,6 +15,7 @@ public class TechHealthService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
+    private readonly TokenProtector _tokenProtector;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
     {
@@ -45,13 +46,15 @@ public class TechHealthService
         SentinelContext context,
         IHttpClientFactory httpClientFactory,
         ILogger<TechHealthService> logger,
-        RepositoryScannerService repositoryScanner)
+        RepositoryScannerService repositoryScanner,
+        TokenProtector tokenProtector)
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
         _osvClient = httpClientFactory.CreateClient("OSV");
         _logger = logger;
         _repositoryScanner = repositoryScanner;
+        _tokenProtector = tokenProtector;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
@@ -67,9 +70,10 @@ public class TechHealthService
             Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
             if (org != null)
             {
-                tokenOverride = project.RepositoryType == RepositoryType.GitLab
+                string? stored = project.RepositoryType == RepositoryType.GitLab
                     ? org.GitlabToken
                     : org.GithubToken;
+                tokenOverride = _tokenProtector.Unprotect(stored);
             }
 
             (List<Dependency> newDeps, List<Runtime> newRuntimes) =

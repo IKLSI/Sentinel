@@ -9,8 +9,6 @@ public class TimeEntry
     public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public int DurationMinutes { get; set; }
     public string? Comment { get; set; }
-    public bool IsManual { get; set; } = true;
-    public DateTime? TimerStartedAt { get; set; }
 
     public Ticket? Ticket { get; set; }
     public TechProject? TechProject { get; set; }

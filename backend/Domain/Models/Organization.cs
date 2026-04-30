@@ -5,7 +5,6 @@ public class Organization
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
-    public string? LogoUrl { get; set; }
     public string Timezone { get; set; } = "Europe/Paris";
     public string? GithubToken { get; set; }
     public string? GitlabToken { get; set; }

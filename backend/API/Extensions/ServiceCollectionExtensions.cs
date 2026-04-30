@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -37,6 +38,9 @@ public static class ServiceCollectionExtensions
         string jwtSecret = jwtSettings["Secret"]
             ?? throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
 
+        if (Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+            throw new InvalidOperationException("La clé JWT doit contenir au moins 256 bits (32 octets UTF-8)");
+
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -52,6 +56,20 @@ public static class ServiceCollectionExtensions
                     ClockSkew = TimeSpan.Zero
                 };
 
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        ITokenBlacklistService? blacklist = context.HttpContext.RequestServices
+                            .GetService<ITokenBlacklistService>();
+                        string? jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+                        if (blacklist != null && !string.IsNullOrEmpty(jti) && blacklist.IsRevoked(jti))
+                        {
+                            context.Fail("Token révoqué");
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization();
@@ -60,15 +78,18 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
-        string frontendUrl = configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+        string? frontendUrl = configuration["Frontend:BaseUrl"];
+        if (string.IsNullOrWhiteSpace(frontendUrl))
+            frontendUrl = "http://localhost:3000";
+
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
             {
                 policy
                     .WithOrigins(frontendUrl)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
+                    .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With")
+                    .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                     .AllowCredentials();
             });
         });
@@ -129,9 +150,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TechHealthService>();
         services.AddScoped<DashboardService>();
         services.AddScoped<DataSeeder>();
+        services.AddScoped<TokenProtector>();
+
+        services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<SendInvitationEmailJob>();
+        services.AddTransient<SendPasswordResetEmailJob>();
 
         services.AddSingleton<IEmailService, EmailService>();
 
@@ -197,12 +222,34 @@ public static class ServiceCollectionExtensions
                         QueueLimit = 0
                     }));
 
+            options.AddPolicy("password-reset", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 3,
+                        Window = TimeSpan.FromMinutes(60),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
+            options.AddPolicy("invitation", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(15),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
             options.OnRejected = async (context, cancellationToken) =>
             {
                 context.HttpContext.Response.StatusCode = 429;
                 context.HttpContext.Response.ContentType = "application/json";
                 await context.HttpContext.Response.WriteAsJsonAsync(
-                    new { message = "Trop de tentatives de connexion. Réessayez dans 15 minutes." },
+                    new { message = "Trop de requêtes. Veuillez réessayer plus tard." },
                     cancellationToken);
             };
         });

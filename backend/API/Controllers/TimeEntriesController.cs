@@ -59,9 +59,10 @@ public class TimeEntriesController : BaseController
     public async Task<ActionResult<TimeEntryDto>> CreateEntry([FromBody] CreateTimeEntryDto dto)
     {
         Guid? currentUserId = GetCurrentUserId();
-        if (currentUserId == null) return Unauthorized();
+        Guid? organizationId = GetOrganizationId();
+        if (currentUserId == null || organizationId == null) return Unauthorized();
 
-        TimeEntry entry = await _timeTrackingService.CreateManualEntryAsync(dto, currentUserId.Value);
+        TimeEntry entry = await _timeTrackingService.CreateManualEntryAsync(dto, currentUserId.Value, organizationId.Value);
         TimeEntryDto entryDto = TimeTrackingService.MapToDto(entry);
 
         return CreatedAtAction(nameof(GetEntries), entryDto);
@@ -71,9 +72,10 @@ public class TimeEntriesController : BaseController
     public async Task<ActionResult<TimeEntryDto>> UpdateEntry(Guid id, [FromBody] UpdateTimeEntryDto dto)
     {
         Guid? currentUserId = GetCurrentUserId();
-        if (currentUserId == null) return Unauthorized();
+        Guid? organizationId = GetOrganizationId();
+        if (currentUserId == null || organizationId == null) return Unauthorized();
 
-        TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value, IsAdmin());
+        TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value, organizationId.Value, IsAdmin());
         if (entry == null) return NotFound(new { message = "Saisie introuvable" });
 
         return Ok(TimeTrackingService.MapToDto(entry));
@@ -83,9 +85,10 @@ public class TimeEntriesController : BaseController
     public async Task<IActionResult> DeleteEntry(Guid id)
     {
         Guid? currentUserId = GetCurrentUserId();
-        if (currentUserId == null) return Unauthorized();
+        Guid? organizationId = GetOrganizationId();
+        if (currentUserId == null || organizationId == null) return Unauthorized();
 
-        bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value, IsAdmin());
+        bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value, organizationId.Value, IsAdmin());
         if (!deleted) return NotFound(new { message = "Saisie introuvable" });
 
         return NoContent();

@@ -9,8 +9,6 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
         string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -26,9 +24,15 @@ public static class Program
             .AddSwaggerWithJwt()
             .AddControllersWithJsonOptions()
             .AddLoginRateLimiting()
-            .AddMemoryCache();
+            .AddMemoryCache()
+            .AddDataProtection();
 
         WebApplication app = builder.Build();
+
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+        }
 
         app.UseMiddleware<ErrorHandlingMiddleware>();
         app.UseRouting();
@@ -37,7 +41,9 @@ public static class Program
         {
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
             context.Response.Headers.Append("X-Frame-Options", "DENY");
-            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+            context.Response.Headers.Append("Referrer-Policy", "no-referrer");
+            context.Response.Headers.Append("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()");
+            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'");
             await next();
         });
 
@@ -67,7 +73,6 @@ public static class Program
         app.UseCors();
         app.UseRateLimiter();
         app.UseAuthentication();
-        app.UseMiddleware<JwtMiddleware>();
         app.UseAuthorization();
         app.ConfigureHangfire();
         app.MapControllers();

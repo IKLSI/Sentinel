@@ -205,64 +205,6 @@ a:hover { text-decoration: underline; }
 
 
 
-.alert-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: color-mix(in srgb, var(--red) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--red) 18%, transparent);
-  border-left: 3px solid var(--red);
-  border-radius: var(--r);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.alert-banner:hover {
-  background: var(--red-subtle);
-  border-left-color: var(--red);
-}
-
-.alert-text {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.alert-btn {
-  background: none;
-  border: 1px solid color-mix(in srgb, var(--red) 28%, transparent);
-  border-radius: var(--r-sm);
-  padding: 5px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--red);
-  cursor: pointer;
-  font-family: var(--font-ui);
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-  transition: background 0.12s, border-color 0.12s;
-}
-
-.alert-btn:hover {
-  background: var(--red-subtle);
-  border-color: color-mix(in srgb, var(--red) 40%, transparent);
-}
-
-
-
-.topbar-glow {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent-border), transparent);
-}
-
-
-
 @media (max-width: 767px) {
   .empty-state {
     padding: 40px 20px;
@@ -323,11 +265,6 @@ a:hover { text-decoration: underline; }
 .lp-right { flex:0 0 50%; background:#fff; display:flex; align-items:center; justify-content:center; padding:44px 64px; position:relative; }
 .lp-form-wrap { width:100%; max-width:360px; display:flex; flex-direction:column; position:relative; z-index:1; }
 
-/* Logo droit */
-.lp-right-logo { display:flex; align-items:center; gap:8px; margin-bottom:40px; opacity:0; animation:lp-up 0.5s 0.35s forwards; }
-.lp-right-logo-mark { width:26px; height:26px; background:#eef2ff; border-radius:6px; display:flex; align-items:center; justify-content:center; }
-.lp-right-logo-text { font-family:var(--font-ui); font-size:13px; font-weight:700; color:#4f46e5; letter-spacing:-0.02em; }
-
 /* En-tête form */
 .lp-form-header { margin-bottom:32px; opacity:0; animation:lp-up 0.5s 0.44s forwards; }
 .lp-form-title { font-family:var(--font-ui); font-size:26px; font-weight:800; color:#111827; letter-spacing:-0.04em; margin:0 0 5px; }
@@ -360,13 +297,9 @@ a:hover { text-decoration: underline; }
 .lp-forgot { font-size:13px; color:#c4c9d4; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; text-decoration-color:rgba(196,201,212,0.4); transition:color 0.22s, text-decoration-color 0.22s; }
 .lp-forgot:hover { color:#4b5563; text-decoration-color:rgba(75,85,99,0.6); }
 
-/* Footer form */
-.lp-form-footer { margin-top:28px; font-size:10.5px; color:#e5e7eb; text-align:center; font-family:var(--font-mono); letter-spacing:0.04em; opacity:0; animation:lp-up 0.4s 0.78s forwards; }
-
 /* ── Keyframes ── */
 @keyframes lp-up { to{opacity:1;transform:translateY(0) scale(1)} }
 @keyframes lp-spin { to{transform:rotate(360deg)} }
-@keyframes fadeup { to{opacity:1;transform:translateY(0)} }
 
 /* ══════════════════════════════════════
    Accept Invitation page

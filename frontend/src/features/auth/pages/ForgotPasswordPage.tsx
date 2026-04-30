@@ -5,6 +5,7 @@ import { forgotPassword } from "../api/auth";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
+import { extractApiError } from "../../../utils/apiError";
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,8 +36,8 @@ export const ForgotPasswordPage: React.FC = () => {
     try {
       await forgotPassword(email);
       setDone(true);
-    } catch {
-      showToast(t("auth.forgot_password.error_generic"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("auth.forgot_password.error_generic")), "error");
     } finally {
       setLoading(false);
     }

@@ -31,6 +31,7 @@ import { CommentComposer } from "./components/CommentComposer";
 import { PropertiesCard } from "./components/PropertiesCard";
 import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
+import { extractApiError } from "@/utils/apiError";
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
@@ -118,8 +119,8 @@ export const TicketDetailPage: React.FC = () => {
           : t("tickets.detail.reply_sent"),
         "success",
       );
-    } catch {
-      showToast(t("tickets.detail.add_comment_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.detail.add_comment_error")), "error");
     } finally {
       setSubmitting(false);
     }
@@ -148,8 +149,8 @@ export const TicketDetailPage: React.FC = () => {
       );
       setEditCommentTarget(null);
       showToast(t("tickets.detail.comment_updated"), "success");
-    } catch {
-      showToast(t("tickets.detail.update_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.detail.update_error")), "error");
     } finally {
       setEditCommentSaving(false);
     }
@@ -172,8 +173,8 @@ export const TicketDetailPage: React.FC = () => {
       );
       setDeleteCommentTarget(null);
       showToast(t("tickets.detail.comment_deleted"), "success");
-    } catch {
-      showToast(t("tickets.detail.delete_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.detail.delete_error")), "error");
     } finally {
       setDeleteCommentLoading(false);
     }

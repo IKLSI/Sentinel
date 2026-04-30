@@ -19,6 +19,7 @@ import { TabBar } from "./components/TabBar";
 import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
 import { DependenciesTab } from "./components/DependenciesTab";
 import { RuntimesTab } from "./components/RuntimesTab";
+import { extractApiError } from "@/utils/apiError";
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,8 +59,8 @@ export const ProjectDetailPage: React.FC = () => {
       await deleteProject(id);
       showToast(t("tech_health.toast.deleted"), "success");
       navigate("/projects");
-    } catch {
-      showToast(t("tech_health.toast.delete_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("tech_health.toast.delete_error")), "error");
       setDeleting(false);
     }
   };

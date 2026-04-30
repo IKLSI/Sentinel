@@ -31,12 +31,12 @@ public class ErrorHandlingMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        (HttpStatusCode statusCode, string? message) = exception switch
+        (HttpStatusCode statusCode, string message) = exception switch
         {
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Accès non autorisé"),
             KeyNotFoundException => (HttpStatusCode.NotFound, "Ressource introuvable"),
-            InvalidOperationException invalidOp => (HttpStatusCode.BadRequest, invalidOp.Message),
-            ArgumentException arg => (HttpStatusCode.BadRequest, arg.Message),
+            InvalidOperationException => (HttpStatusCode.BadRequest, "Opération invalide"),
+            ArgumentException => (HttpStatusCode.BadRequest, "Requête invalide"),
             _ => (HttpStatusCode.InternalServerError, "Une erreur interne s'est produite")
         };
 

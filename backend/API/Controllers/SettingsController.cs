@@ -15,11 +15,13 @@ public class SettingsController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly RepositoryHostClient _repositoryHostClient;
+    private readonly TokenProtector _tokenProtector;
 
-    public SettingsController(SentinelContext context, RepositoryHostClient repositoryHostClient)
+    public SettingsController(SentinelContext context, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector)
     {
         _context = context;
         _repositoryHostClient = repositoryHostClient;
+        _tokenProtector = tokenProtector;
     }
 
     [HttpGet("integrations")]
@@ -52,7 +54,7 @@ public class SettingsController : BaseController
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
         if (org == null) return NotFound();
 
-        org.GithubToken = dto.Token;
+        org.GithubToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
@@ -99,7 +101,7 @@ public class SettingsController : BaseController
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
         if (org == null) return NotFound();
 
-        org.GitlabToken = dto.Token;
+        org.GitlabToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 

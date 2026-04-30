@@ -4,7 +4,7 @@ import { format } from "date-fns";
 
 export const WORK_HOURS_TARGET = 7 * 60;
 
-export const PROJECT_PALETTE = [
+const PROJECT_PALETTE = [
   "var(--accent)",
   "var(--purple)",
   "var(--cyan)",

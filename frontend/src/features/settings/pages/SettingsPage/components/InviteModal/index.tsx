@@ -9,6 +9,7 @@ import { useT } from "@/i18n/I18nContext";
 import { inviteUser } from "@/features/users/api/users";
 import { UserRole } from "@/types";
 import { inp } from "../../helpers";
+import { extractApiError } from "@/utils/apiError";
 
 interface Props {
   open: boolean;
@@ -38,8 +39,8 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
       await inviteUser(inv);
       showToast(t("settings.toast.invite_sent"), "success");
       handleClose();
-    } catch {
-      showToast(t("settings.toast.invite_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("settings.toast.invite_error")), "error");
     } finally {
       setSubmitting(false);
     }

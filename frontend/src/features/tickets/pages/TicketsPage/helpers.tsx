@@ -143,7 +143,7 @@ export const priorityColor: Record<TicketPriority, string> = {
   low: "var(--green)",
 };
 
-export const avatarPalette = [
+const avatarPalette = [
   { bg: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" },
   { bg: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)" },
   { bg: "color-mix(in srgb, var(--purple) 15%, transparent)", color: "var(--purple)" },

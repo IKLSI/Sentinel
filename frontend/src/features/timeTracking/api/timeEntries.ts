@@ -12,7 +12,6 @@ export interface TimeEntryDto {
   date: string
   durationMinutes: number
   comment?: string
-  isManual: boolean
 }
 
 export interface CreateTimeEntryDto {

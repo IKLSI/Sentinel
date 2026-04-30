@@ -6,6 +6,7 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import { useTheme } from "../../../store/ThemeContext";
 import { useToast } from "../../../hooks/useToast";
 import { updateMyProfile, updatePreferences } from "../api/users";
+import { extractApiError } from "@/utils/apiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
@@ -95,8 +96,8 @@ export const ProfilePage: React.FC = () => {
       const updated = await updateMyProfile(pf);
       setUser({ ...user!, ...updated });
       showToast(t("profile.toast.updated"), "success");
-    } catch {
-      showToast(t("profile.toast.update_error"), "error");
+    } catch (err) {
+      showToast(extractApiError(err, t("profile.toast.update_error")), "error");
     } finally {
       setSavingPf(false);
     }

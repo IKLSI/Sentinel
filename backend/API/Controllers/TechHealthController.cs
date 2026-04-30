@@ -9,6 +9,25 @@ using Sentinel.Application.Services;
 
 namespace Sentinel.API.Controllers;
 
+internal static class RepositoryUrlGuard
+{
+    private static readonly HashSet<string> AllowedHosts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "github.com",
+        "www.github.com",
+        "gitlab.com",
+        "www.gitlab.com",
+    };
+
+    public static bool IsValid(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return true;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)) return false;
+        if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
+        return AllowedHosts.Contains(uri.Host);
+    }
+}
+
 [ApiController]
 [Route("api/tech-health")]
 [Authorize]
@@ -93,6 +112,9 @@ public class TechHealthController : BaseController
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
+        if (!RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
+            return BadRequest(new { message = "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com" });
+
         if (!Enum.TryParse<RepositoryType>(dto.RepositoryType, true, out RepositoryType repoType))
             repoType = RepositoryType.GitHub;
 
@@ -129,6 +151,9 @@ public class TechHealthController : BaseController
 
         if (project == null)
             return NotFound(new { message = "Projet introuvable" });
+
+        if (dto.RepositoryUrl != null && !string.IsNullOrEmpty(dto.RepositoryUrl) && !RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
+            return BadRequest(new { message = "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com" });
 
         if (!string.IsNullOrEmpty(dto.Name)) project.Name = dto.Name;
         if (dto.RepositoryUrl != null) project.RepositoryUrl = string.IsNullOrEmpty(dto.RepositoryUrl) ? null : dto.RepositoryUrl;

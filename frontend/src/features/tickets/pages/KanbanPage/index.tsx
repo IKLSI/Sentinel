@@ -26,6 +26,7 @@ import {
 import { KanbanToolbar } from "./components/KanbanToolbar";
 import { ProjectPicker } from "./components/ProjectPicker";
 import { KanbanBoard } from "./components/KanbanBoard";
+import { extractApiError } from "@/utils/apiError";
 
 export const KanbanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -159,8 +160,8 @@ export const KanbanPage: React.FC = () => {
       setUpdatingId(draggableId);
       try {
         await changeStatus(draggableId, destCol);
-      } catch {
-        showToast(t("tickets.kanban.error.status_change_failed"), "error");
+      } catch (err) {
+        showToast(extractApiError(err, t("tickets.kanban.error.status_change_failed")), "error");
         load();
       } finally {
         setUpdatingId(null);
