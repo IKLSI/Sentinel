@@ -68,7 +68,13 @@ public class TicketsController : BaseController
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            string pattern = $"%{search}%";
+            if (search.Length > 100)
+                return BadRequest(new { message = "Recherche limitée à 100 caractères" });
+            string escaped = search
+                .Replace("\\", "\\\\")
+                .Replace("%", "\\%")
+                .Replace("_", "\\_");
+            string pattern = $"%{escaped}%";
             query = query.Where(t =>
                 EF.Functions.ILike(t.Title, pattern) ||
                 EF.Functions.ILike(t.Description, pattern) ||

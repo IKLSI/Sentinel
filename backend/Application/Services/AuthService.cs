@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Auth;
@@ -10,14 +11,19 @@ public class AuthService
 {
     private readonly SentinelContext _context;
     private readonly TokenService _tokenService;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(SentinelContext context, TokenService tokenService, ILogger<AuthService> logger)
+    public AuthService(SentinelContext context, TokenService tokenService, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _context = context;
         _tokenService = tokenService;
+        _configuration = configuration;
         _logger = logger;
     }
+
+    private int RefreshTokenExpirationDays =>
+        int.TryParse(_configuration["Jwt:RefreshTokenExpirationDays"], out int days) && days > 0 ? days : 30;
 
     public async Task<PasswordResetToken?> CreatePasswordResetTokenAsync(string email)
     {
@@ -83,7 +89,7 @@ public class AuthService
         string refreshToken = _tokenService.GenerateRefreshToken();
 
         user.RefreshToken = _tokenService.HashRefreshToken(refreshToken);
-        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenExpirationDays);
         user.LastLoginAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -137,7 +143,7 @@ public class AuthService
 
         user.PreviousRefreshTokenHash = user.RefreshToken;
         user.RefreshToken = _tokenService.HashRefreshToken(newRefreshToken);
-        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenExpirationDays);
 
         await _context.SaveChangesAsync();
 

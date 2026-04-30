@@ -307,31 +307,31 @@ public class DataSeeder
         DateOnly D(int offsetDays) => DateOnly.FromDateTime(now.AddDays(offsetDays));
 
         await _context.TimeEntries.AddRangeAsync(
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t5.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-11), DurationMinutes = 480, Comment = "Résolution N+1 — eager loading + deploy", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t19.Id, TechProjectId = bankcore.Id, UserId = thomas.Id, Date = D(-17), DurationMinutes = 360, Comment = "EXPLAIN ANALYZE + création des 3 index", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t19.Id, TechProjectId = bankcore.Id, UserId = thomas.Id, Date = D(-16), DurationMinutes = 120, Comment = "Tests de charge + validation métriques", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t3.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-4), DurationMinutes = 180, Comment = "Debug pagination côté serveur", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t3.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-3), DurationMinutes = 210, Comment = "Fix requête SQL + tests unitaires", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t1.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-5), DurationMinutes = 240, Comment = "Analyse vecteur XSS + reproduction", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t1.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-4), DurationMinutes = 300, Comment = "Intégration DOMPurify + tests regression", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t10.Id, TechProjectId = crm.Id, UserId = thomas.Id, Date = D(-2), DurationMinutes = 240, Comment = "Fix scope Eloquent + déploiement patch prod", IsManual = true },
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t5.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-11), DurationMinutes = 480, Comment = "Résolution N+1 — eager loading + deploy"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t19.Id, TechProjectId = bankcore.Id, UserId = thomas.Id, Date = D(-17), DurationMinutes = 360, Comment = "EXPLAIN ANALYZE + création des 3 index"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t19.Id, TechProjectId = bankcore.Id, UserId = thomas.Id, Date = D(-16), DurationMinutes = 120, Comment = "Tests de charge + validation métriques"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t3.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-4), DurationMinutes = 180, Comment = "Debug pagination côté serveur"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t3.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-3), DurationMinutes = 210, Comment = "Fix requête SQL + tests unitaires"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t1.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-5), DurationMinutes = 240, Comment = "Analyse vecteur XSS + reproduction"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t1.Id, TechProjectId = eshop.Id, UserId = thomas.Id, Date = D(-4), DurationMinutes = 300, Comment = "Intégration DOMPurify + tests regression"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t10.Id, TechProjectId = crm.Id, UserId = thomas.Id, Date = D(-2), DurationMinutes = 240, Comment = "Fix scope Eloquent + déploiement patch prod"},
 
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 300, Comment = "Fix injection SQL — PreparedStatement + PR", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(0), DurationMinutes = 120, Comment = "Tests de sécurité — validation sqlmap", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t2.Id, TechProjectId = eshop.Id, UserId = camille.Id, Date = D(-2), DurationMinutes = 120, Comment = "Reproduction bug paiement AMEX", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-3), DurationMinutes = 240, Comment = "Mise à jour table jours fériés", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 180, Comment = "Tests module congés + déploiement staging", IsManual = true },
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 300, Comment = "Fix injection SQL — PreparedStatement + PR"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t6.Id, TechProjectId = bankcore.Id, UserId = camille.Id, Date = D(0), DurationMinutes = 120, Comment = "Tests de sécurité — validation sqlmap"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t2.Id, TechProjectId = eshop.Id, UserId = camille.Id, Date = D(-2), DurationMinutes = 120, Comment = "Reproduction bug paiement AMEX"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-3), DurationMinutes = 240, Comment = "Mise à jour table jours fériés"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t14.Id, TechProjectId = crm.Id, UserId = camille.Id, Date = D(-1), DurationMinutes = 180, Comment = "Tests module congés + déploiement staging"},
 
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t18.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-32), DurationMinutes = 180, Comment = "Ajout balises Open Graph — fiches produit", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-9), DurationMinutes = 480, Comment = "Développement composant filtre multi-sélection", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-8), DurationMinutes = 360, Comment = "Compatibilité SEO + mise à jour URL canonique", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-7), DurationMinutes = 240, Comment = "Tests d'intégration filtre", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t8.Id, TechProjectId = bankcore.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 300, Comment = "Investigation bug export CSV décembre", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t8.Id, TechProjectId = bankcore.Id, UserId = antoine.Id, Date = D(-2), DurationMinutes = 180, Comment = "Fix timezone UTC + recette client", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t12.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-7), DurationMinutes = 420, Comment = "Profiling Horizon + optimisation workers", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t13.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 120, Comment = "Fix champ deal_stage", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-13), DurationMinutes = 180, Comment = "Update .NET 8.0.5 + tests de régression", IsManual = true },
-            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(0), DurationMinutes = 120, Comment = "Recette finale + validation QA", IsManual = true }
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t18.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-32), DurationMinutes = 180, Comment = "Ajout balises Open Graph — fiches produit"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-9), DurationMinutes = 480, Comment = "Développement composant filtre multi-sélection"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-8), DurationMinutes = 360, Comment = "Compatibilité SEO + mise à jour URL canonique"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t4.Id, TechProjectId = eshop.Id, UserId = antoine.Id, Date = D(-7), DurationMinutes = 240, Comment = "Tests d'intégration filtre"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t8.Id, TechProjectId = bankcore.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 300, Comment = "Investigation bug export CSV décembre"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t8.Id, TechProjectId = bankcore.Id, UserId = antoine.Id, Date = D(-2), DurationMinutes = 180, Comment = "Fix timezone UTC + recette client"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t12.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-7), DurationMinutes = 420, Comment = "Profiling Horizon + optimisation workers"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t13.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-5), DurationMinutes = 120, Comment = "Fix champ deal_stage"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(-13), DurationMinutes = 180, Comment = "Update .NET 8.0.5 + tests de régression"},
+            new TimeEntry { Id = Guid.NewGuid(), TicketId = t16.Id, TechProjectId = crm.Id, UserId = antoine.Id, Date = D(0), DurationMinutes = 120, Comment = "Recette finale + validation QA"}
         );
 
         await _context.SaveChangesAsync();

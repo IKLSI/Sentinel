@@ -11,6 +11,7 @@ public class CreateTicketDto
     [MaxLength(500, ErrorMessage = "Le titre ne peut pas dépasser 500 caractères")]
     public string Title { get; set; } = string.Empty;
 
+    [MaxLength(10000, ErrorMessage = "La description ne peut pas dépasser 10000 caractères")]
     public string Description { get; set; } = string.Empty;
 
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;

@@ -17,7 +17,7 @@ namespace Sentinel.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -85,9 +85,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("GitlabToken")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -386,17 +383,11 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsManual")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid?>("TechProjectId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("TicketId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("TimerStartedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

@@ -14,8 +14,10 @@ public class TimeTrackingService
         _context = context;
     }
 
-    public async Task<TimeEntry> CreateManualEntryAsync(CreateTimeEntryDto dto, Guid userId)
+    public async Task<TimeEntry> CreateManualEntryAsync(CreateTimeEntryDto dto, Guid userId, Guid organizationId)
     {
+        await EnsureBelongsToOrganizationAsync(dto.TicketId, dto.TechProjectId, organizationId);
+
         TimeEntry entry = new TimeEntry
         {
             TicketId = dto.TicketId,
@@ -23,8 +25,7 @@ public class TimeTrackingService
             UserId = userId,
             Date = dto.Date,
             DurationMinutes = dto.DurationMinutes,
-            Comment = dto.Comment,
-            IsManual = true
+            Comment = dto.Comment
         };
 
         await _context.TimeEntries.AddAsync(entry);
@@ -33,15 +34,21 @@ public class TimeTrackingService
         return entry;
     }
 
-    public async Task<TimeEntry?> UpdateEntryAsync(Guid id, UpdateTimeEntryDto dto, Guid userId, bool isAdmin = false)
+    public async Task<TimeEntry?> UpdateEntryAsync(Guid id, UpdateTimeEntryDto dto, Guid userId, Guid organizationId, bool isAdmin = false)
     {
         TimeEntry? entry = await _context.TimeEntries
             .Include(e => e.User)
             .Include(e => e.Ticket)
             .Include(e => e.TechProject)
-            .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.UserId == userId));
+            .FirstOrDefaultAsync(e => e.Id == id
+                && e.User.OrganizationId == organizationId
+                && (isAdmin || e.UserId == userId));
 
         if (entry == null) return null;
+
+        Guid? newTicketId = dto.TicketId != null && dto.TicketId != Guid.Empty ? dto.TicketId : entry.TicketId;
+        Guid? newProjectId = dto.TechProjectId != null && dto.TechProjectId != Guid.Empty ? dto.TechProjectId : entry.TechProjectId;
+        await EnsureBelongsToOrganizationAsync(newTicketId, newProjectId, organizationId);
 
         if (dto.Date.HasValue) entry.Date = dto.Date.Value;
         if (dto.DurationMinutes.HasValue) entry.DurationMinutes = dto.DurationMinutes.Value;
@@ -53,10 +60,30 @@ public class TimeTrackingService
         return entry;
     }
 
-    public async Task<bool> DeleteEntryAsync(Guid id, Guid userId, bool isAdmin = false)
+    private async Task EnsureBelongsToOrganizationAsync(Guid? ticketId, Guid? projectId, Guid organizationId)
+    {
+        if (ticketId.HasValue && ticketId.Value != Guid.Empty)
+        {
+            bool ok = await _context.Tickets
+                .AnyAsync(t => t.Id == ticketId.Value && t.OrganizationId == organizationId);
+            if (!ok) throw new InvalidOperationException("Ticket invalide");
+        }
+
+        if (projectId.HasValue && projectId.Value != Guid.Empty)
+        {
+            bool ok = await _context.TechProjects
+                .AnyAsync(p => p.Id == projectId.Value && p.OrganizationId == organizationId);
+            if (!ok) throw new InvalidOperationException("Projet invalide");
+        }
+    }
+
+    public async Task<bool> DeleteEntryAsync(Guid id, Guid userId, Guid organizationId, bool isAdmin = false)
     {
         TimeEntry? entry = await _context.TimeEntries
-            .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.UserId == userId));
+            .Include(e => e.User)
+            .FirstOrDefaultAsync(e => e.Id == id
+                && e.User.OrganizationId == organizationId
+                && (isAdmin || e.UserId == userId));
 
         if (entry == null) return false;
 
@@ -122,9 +149,7 @@ public class TimeTrackingService
             UserName = entry.User?.FullName ?? string.Empty,
             Date = entry.Date,
             DurationMinutes = entry.DurationMinutes,
-            Comment = entry.Comment,
-            IsManual = entry.IsManual,
-            TimerStartedAt = entry.TimerStartedAt
+            Comment = entry.Comment
         };
     }
 

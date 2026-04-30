@@ -81,9 +81,13 @@ public class ExportService
         if (!string.IsNullOrEmpty(type) && Enum.TryParse<TicketType>(type, true, out TicketType parsedType))
             query = query.Where(t => t.Type == parsedType);
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(search) && search.Length <= 100)
         {
-            string pattern = $"%{search}%";
+            string escaped = search
+                .Replace("\\", "\\\\")
+                .Replace("%", "\\%")
+                .Replace("_", "\\_");
+            string pattern = $"%{escaped}%";
             query = query.Where(t =>
                 EF.Functions.ILike(t.Title, pattern) ||
                 EF.Functions.ILike(t.Description, pattern));
@@ -95,7 +99,7 @@ public class ExportService
 
     private static byte[] WriteTimeEntriesExcel(List<TimeEntry> entries)
     {
-        string[] headers = ["Date", "Utilisateur", "Projet", "Ticket", "Durée", "Commentaire", "Saisie manuelle"];
+        string[] headers = ["Date", "Utilisateur", "Projet", "Ticket", "Durée", "Commentaire"];
 
         using XLWorkbook workbook = new();
         IXLWorksheet ws = workbook.Worksheets.Add("Saisies de temps");
@@ -119,7 +123,6 @@ public class ExportService
             ws.Cell(row, 5).Style.NumberFormat.Format = "0.00 \"h\"";
 
             ws.Cell(row, 6).Value = te.Comment ?? string.Empty;
-            ws.Cell(row, 7).Value = te.IsManual ? "Oui" : "Non";
         }
 
         FinalizeSheet(ws, headers.Length);

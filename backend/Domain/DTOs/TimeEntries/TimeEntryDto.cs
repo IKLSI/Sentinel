@@ -14,8 +14,6 @@ public class TimeEntryDto
     public DateOnly Date { get; set; }
     public int DurationMinutes { get; set; }
     public string? Comment { get; set; }
-    public bool IsManual { get; set; }
-    public DateTime? TimerStartedAt { get; set; }
 }
 
 public class CreateTimeEntryDto
@@ -29,6 +27,7 @@ public class CreateTimeEntryDto
     [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int DurationMinutes { get; set; }
 
+    [MaxLength(2000)]
     public string? Comment { get; set; }
 }
 
@@ -39,6 +38,7 @@ public class UpdateTimeEntryDto
     [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int? DurationMinutes { get; set; }
 
+    [MaxLength(2000)]
     public string? Comment { get; set; }
     public Guid? TechProjectId { get; set; }
     public Guid? TicketId { get; set; }

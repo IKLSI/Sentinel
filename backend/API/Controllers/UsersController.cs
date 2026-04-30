@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Users;
@@ -104,6 +105,7 @@ public class UsersController : BaseController
 
     [HttpPost("accept-invitation")]
     [AllowAnonymous]
+    [EnableRateLimiting("invitation")]
     public async Task<IActionResult> AcceptInvitation([FromBody] AcceptInvitationDto dto)
     {
         UserInvitation? invitation = await _context.UserInvitations
@@ -154,6 +156,23 @@ public class UsersController : BaseController
 
         if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
         if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
+
+        bool willDeactivate = dto.IsActive.HasValue && !dto.IsActive.Value;
+        bool willDemote = !string.IsNullOrEmpty(dto.Role)
+            && Enum.TryParse<UserRole>(dto.Role, true, out UserRole parsedRole)
+            && parsedRole != UserRole.Admin
+            && user.Role == UserRole.Admin;
+
+        if (id == currentUserId.Value && (willDeactivate || willDemote))
+        {
+            int activeAdmins = await _context.Users.CountAsync(u =>
+                u.OrganizationId == organizationId.Value
+                && u.Role == UserRole.Admin
+                && u.IsActive);
+            if (activeAdmins <= 1)
+                return BadRequest(new { message = "Au moins un administrateur actif est requis" });
+        }
+
         if (dto.IsActive.HasValue) user.IsActive = dto.IsActive.Value;
 
         if (!string.IsNullOrEmpty(dto.Role))
