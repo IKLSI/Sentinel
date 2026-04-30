@@ -256,7 +256,7 @@ export const darkTheme = createTheme({
     divider: '#1e2a42',
     action: {
       hover: 'rgba(255,255,255,0.04)',
-      selected: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+      selected: 'rgba(99, 102, 241, 0.12)',
     },
   },
   shape: { borderRadius: 8 },
@@ -282,7 +282,7 @@ export const lightTheme = createTheme({
     divider: '#dde3f2',
     action: {
       hover: 'rgba(0,0,0,0.03)',
-      selected: 'color-mix(in srgb, var(--accent) 8%, transparent)',
+      selected: 'rgba(79, 70, 229, 0.08)',
     },
   },
   shape: { borderRadius: 8 },
