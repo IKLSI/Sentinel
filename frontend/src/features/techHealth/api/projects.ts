@@ -52,7 +52,7 @@ export interface ProjectDetailDto extends ProjectDto {
   runtimes: RuntimeDto[]
 }
 
-export interface CreateProjectDto {
+interface CreateProjectDto {
   name: string
   repositoryUrl?: string
 }

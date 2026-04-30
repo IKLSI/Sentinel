@@ -22,7 +22,7 @@ export interface CreateTimeEntryDto {
   comment?: string
 }
 
-export interface UpdateTimeEntryDto {
+interface UpdateTimeEntryDto {
   date?: string
   durationMinutes?: number
   comment?: string

@@ -274,7 +274,7 @@ export function getInitials(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 }
 
-export type TFn = (k: string, v?: Record<string, string | number>) => string;
+type TFn = (k: string, v?: Record<string, string | number>) => string;
 
 export function getRelativeShort(date: string, t: TFn) {
   const diff = Math.max(0, Date.now() - new Date(date).getTime());
@@ -288,19 +288,19 @@ export function getRelativeShort(date: string, t: TFn) {
   return format(new Date(date), "dd MMM", { locale: fr });
 }
 
-export function normalizeStatusKey(value?: string) {
+function normalizeStatusKey(value?: string) {
   if (!value) return "";
   const compact = value.trim().toLowerCase().replace(/[\s-]/g, "_");
   if (compact === "inprogress") return "in_progress";
   return compact;
 }
 
-export function normalizePriorityKey(value?: string) {
+function normalizePriorityKey(value?: string) {
   if (!value) return "";
   return value.trim().toLowerCase().replace(/[\s-]/g, "_");
 }
 
-export function mapStatusLabel(
+function mapStatusLabel(
   value: string | undefined,
   t: TFn,
   statusConfig: ReturnType<typeof buildStatusConfig>,
@@ -311,7 +311,7 @@ export function mapStatusLabel(
   return labelKey ? t(labelKey) : value;
 }
 
-export function mapPriorityLabel(
+function mapPriorityLabel(
   value: string | undefined,
   t: TFn,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,

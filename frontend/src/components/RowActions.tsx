@@ -1,6 +1,6 @@
 import { Box, Tooltip } from "@mui/material";
 
-export interface RowAction {
+interface RowAction {
   icon: React.ReactNode;
   label: string;
   onClick: (e: React.MouseEvent) => void;

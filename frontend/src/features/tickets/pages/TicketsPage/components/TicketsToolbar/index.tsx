@@ -9,7 +9,7 @@ import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { selectSx } from "../../helpers";
 
-export interface FiltersState {
+interface FiltersState {
   priority: string;
   status: string;
   type: string;

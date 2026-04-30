@@ -7,7 +7,7 @@ import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import { Ticket, TicketPriority, TicketStatus } from "@/types";
 
-export type KanbanType =
+type KanbanType =
   | "bug"
   | "feature"
   | "security"

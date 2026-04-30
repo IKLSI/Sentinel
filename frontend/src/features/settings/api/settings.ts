@@ -22,7 +22,7 @@ export interface IntegrationSettings {
   hasGitlabToken: boolean
 }
 
-export interface ImportResult {
+interface ImportResult {
   importedCount: number
   skippedCount: number
 }
