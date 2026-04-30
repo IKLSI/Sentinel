@@ -66,4 +66,3 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useT = () => useContext(I18nContext).t;
 
-const useI18n = () => useContext(I18nContext);
