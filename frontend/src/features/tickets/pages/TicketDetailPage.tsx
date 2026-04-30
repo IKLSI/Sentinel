@@ -35,27 +35,259 @@ import {
 } from "../api/tickets";
 import { Ticket, TicketHistory, TicketStatus } from "../../../types";
 import { useT } from "../../../i18n/I18nContext";
+import { useTheme } from "../../../store/ThemeContext";
 
-const statusConfig: Record<
-  TicketStatus,
-  { labelKey: string; color: string; dot: string }
-> = {
-  new: { labelKey: "tickets.detail.status_new", color: "#4f46e5", dot: "#818cf8" },
-  in_progress: { labelKey: "tickets.detail.status_in_progress", color: "#c2410c", dot: "#f97316" },
-  testing: { labelKey: "tickets.detail.status_testing", color: "#0e7490", dot: "#06b6d4" },
-  resolved: { labelKey: "tickets.detail.status_resolved", color: "#15803d", dot: "#22c55e" },
-  closed: { labelKey: "tickets.detail.status_closed", color: "#475569", dot: "#64748b" },
-};
+interface DetailPalette {
+  panelBg: string;
+  panelBorder: string;
+  panelShadow: string;
+  breadcrumbText: string;
+  folderIcon: string;
+  chevron: string;
+  referenceText: string;
+  muted: string;
+  strongText: string;
+  title: string;
+  endpointFg: string;
+  endpointBg: string;
+  endpointBorder: string;
+  endpointIcon: string;
+  sectionDivider: string;
+  sectionLabel: string;
+  descFallback: string;
+  threadLine: string;
+  commentAuthor: string;
+  internalBadgeFg: string;
+  commentTime: string;
+  iconBtnIdle: string;
+  iconBtnEditHoverBg: string;
+  iconBtnEditHoverFg: string;
+  iconBtnDelHoverBg: string;
+  iconBtnDelHoverFg: string;
+  commentBorderInternal: string;
+  commentBorderExternal: string;
+  commentBgInternal: string;
+  commentBgExternal: string;
+  emptyFg: string;
+  emptySub: string;
+  tabStripBg: string;
+  tabStripBorder: string;
+  tabActiveFg: string;
+  tabIdleFg: string;
+  tabActiveBg: string;
+  tabActiveShadow: string;
+  composerBorder: string;
+  composerBg: string;
+  composerDivider: string;
+  toolbarIdle: string;
+  toolbarHoverBg: string;
+  toolbarHoverFg: string;
+  sendBtnGradient: string;
+  fieldRowHover: string;
+  fieldLabel: string;
+  fieldValue: string;
+  fieldSep: string;
+  discChevron: string;
+  typeIcon: string;
+  historyTimeline: string;
+  historyDotBorder: string;
+  historyMsg: string;
+  historySub: string;
+  inputBg: string;
+  inputBorder: string;
+  inputText: string;
+  inputFocusBorder: string;
+  inputFocusRing: string;
+  // markdown
+  mdText: string;
+  mdInlineCodeBg: string;
+  mdInlineCodeBorder: string;
+  mdInlineCodeFg: string;
+  mdPreBg: string;
+  mdPreBorder: string;
+  mdPreFg: string;
+  mdStrong: string;
+}
 
-const priorityConfig: Record<
-  string,
-  { labelKey: string; color: string; dot: string }
-> = {
-  critical: { labelKey: "tickets.detail.priority_critical", color: "#be123c", dot: "#f43f5e" },
-  high: { labelKey: "tickets.detail.priority_high", color: "#b45309", dot: "#f59e0b" },
-  medium: { labelKey: "tickets.detail.priority_medium", color: "#ca8a04", dot: "#eab308" },
-  low: { labelKey: "tickets.detail.priority_low", color: "#15803d", dot: "#22c55e" },
-};
+const buildPalette = (isDark: boolean): DetailPalette =>
+  isDark
+    ? {
+        panelBg: "#0d1120",
+        panelBorder: "#1e2a42",
+        panelShadow:
+          "0 1px 2px rgba(0,0,0,0.4), 0 12px 30px -18px rgba(0,0,0,0.6)",
+        breadcrumbText: "#a0aec9",
+        folderIcon: "#a78bfa",
+        chevron: "#4d5e82",
+        referenceText: "#cbd5e1",
+        muted: "#7488aa",
+        strongText: "#cbd5e1",
+        title: "#e6eaf6",
+        endpointFg: "#c4b5fd",
+        endpointBg:
+          "linear-gradient(180deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.10) 100%)",
+        endpointBorder: "rgba(168,85,247,0.35)",
+        endpointIcon: "#a78bfa",
+        sectionDivider: "#1e2a42",
+        sectionLabel: "#7488aa",
+        descFallback: "#7488aa",
+        threadLine: "#1e2a42",
+        commentAuthor: "#e6eaf6",
+        internalBadgeFg: "#fbbf24",
+        commentTime: "#7488aa",
+        iconBtnIdle: "#7488aa",
+        iconBtnEditHoverBg: "rgba(255,255,255,0.05)",
+        iconBtnEditHoverFg: "#e6eaf6",
+        iconBtnDelHoverBg: "rgba(239,68,68,0.18)",
+        iconBtnDelHoverFg: "#f87171",
+        commentBorderInternal: "rgba(245,158,11,0.35)",
+        commentBorderExternal: "#1e2a42",
+        commentBgInternal: "rgba(245,158,11,0.08)",
+        commentBgExternal: "#121829",
+        emptyFg: "#7488aa",
+        emptySub: "#4d5e82",
+        tabStripBg: "#192036",
+        tabStripBorder: "#1e2a42",
+        tabActiveFg: "#e6eaf6",
+        tabIdleFg: "#a0aec9",
+        tabActiveBg: "#0d1120",
+        tabActiveShadow: "0 1px 2px rgba(0,0,0,0.5)",
+        composerBorder: "#1e2a42",
+        composerBg: "#0d1120",
+        composerDivider: "#1e2a42",
+        toolbarIdle: "#7488aa",
+        toolbarHoverBg: "rgba(255,255,255,0.05)",
+        toolbarHoverFg: "#cbd5e1",
+        sendBtnGradient: "linear-gradient(180deg,#818cf8 0%, #6366f1 100%)",
+        fieldRowHover: "rgba(255,255,255,0.04)",
+        fieldLabel: "#7488aa",
+        fieldValue: "#e6eaf6",
+        fieldSep: "#1e2a42",
+        discChevron: "#4d5e82",
+        typeIcon: "#a0aec9",
+        historyTimeline:
+          "linear-gradient(180deg, #1e2a42 0%, #1e2a42 80%, transparent 100%)",
+        historyDotBorder: "#0d1120",
+        historyMsg: "#e6eaf6",
+        historySub: "#7488aa",
+        inputBg: "#0d1120",
+        inputBorder: "#1e2a42",
+        inputText: "#e6eaf6",
+        inputFocusBorder: "#818cf8",
+        inputFocusRing: "rgba(99,102,241,0.25)",
+        mdText: "#cbd5e1",
+        mdInlineCodeBg: "#192036",
+        mdInlineCodeBorder: "#1e2a42",
+        mdInlineCodeFg: "#e6eaf6",
+        mdPreBg: "#020617",
+        mdPreBorder: "#1e2a42",
+        mdPreFg: "#e2e8f0",
+        mdStrong: "#e6eaf6",
+      }
+    : {
+        panelBg: "#ffffff",
+        panelBorder: "#e2e8f0",
+        panelShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 12px 30px -18px rgba(15,23,42,0.18)",
+        breadcrumbText: "#64748b",
+        folderIcon: "#7c3aed",
+        chevron: "#cbd5e1",
+        referenceText: "#475569",
+        muted: "#94a3b8",
+        strongText: "#334155",
+        title: "#0f172a",
+        endpointFg: "#5b3dd1",
+        endpointBg: "linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)",
+        endpointBorder: "#d8ccff",
+        endpointIcon: "#8b5cf6",
+        sectionDivider: "#e2e8f0",
+        sectionLabel: "#94a3b8",
+        descFallback: "#94a3b8",
+        threadLine: "#e2e8f0",
+        commentAuthor: "#0f172a",
+        internalBadgeFg: "#b45309",
+        commentTime: "#94a3b8",
+        iconBtnIdle: "#94a3b8",
+        iconBtnEditHoverBg: "#f1f5f9",
+        iconBtnEditHoverFg: "#0f172a",
+        iconBtnDelHoverBg: "#fee2e2",
+        iconBtnDelHoverFg: "#dc2626",
+        commentBorderInternal: "#fde68a",
+        commentBorderExternal: "#e2e8f0",
+        commentBgInternal: "#fffbeb",
+        commentBgExternal: "#f8fafc",
+        emptyFg: "#94a3b8",
+        emptySub: "#cbd5e1",
+        tabStripBg: "#f1f5f9",
+        tabStripBorder: "#e2e8f0",
+        tabActiveFg: "#0f172a",
+        tabIdleFg: "#64748b",
+        tabActiveBg: "#ffffff",
+        tabActiveShadow: "0 1px 2px rgba(15,23,42,0.08)",
+        composerBorder: "#dbe3ef",
+        composerBg: "#ffffff",
+        composerDivider: "#e2e8f0",
+        toolbarIdle: "#94a3b8",
+        toolbarHoverBg: "#f1f5f9",
+        toolbarHoverFg: "#334155",
+        sendBtnGradient: "linear-gradient(180deg,#6d5ef7 0%, #4f46e5 100%)",
+        fieldRowHover: "#f8fafc",
+        fieldLabel: "#94a3b8",
+        fieldValue: "#0f172a",
+        fieldSep: "#eef2f7",
+        discChevron: "#cbd5e1",
+        typeIcon: "#64748b",
+        historyTimeline:
+          "linear-gradient(180deg, #e2e8f0 0%, #e2e8f0 80%, transparent 100%)",
+        historyDotBorder: "#fff",
+        historyMsg: "#0f172a",
+        historySub: "#94a3b8",
+        inputBg: "#ffffff",
+        inputBorder: "#dbe3ef",
+        inputText: "#0f172a",
+        inputFocusBorder: "#a5b4fc",
+        inputFocusRing: "rgba(99,102,241,0.15)",
+        mdText: "#334155",
+        mdInlineCodeBg: "#f1f5f9",
+        mdInlineCodeBorder: "#e2e8f0",
+        mdInlineCodeFg: "#0f172a",
+        mdPreBg: "#020617",
+        mdPreBorder: "#0f172a",
+        mdPreFg: "#e2e8f0",
+        mdStrong: "#0f172a",
+      };
+
+const buildStatusConfig = (isDark: boolean): Record<TicketStatus, { labelKey: string; color: string; dot: string }> =>
+  isDark
+    ? {
+        new: { labelKey: "tickets.detail.status_new", color: "#a5b4fc", dot: "#818cf8" },
+        in_progress: { labelKey: "tickets.detail.status_in_progress", color: "#fb923c", dot: "#f97316" },
+        testing: { labelKey: "tickets.detail.status_testing", color: "#22d3ee", dot: "#06b6d4" },
+        resolved: { labelKey: "tickets.detail.status_resolved", color: "#4ade80", dot: "#22c55e" },
+        closed: { labelKey: "tickets.detail.status_closed", color: "#94a3b8", dot: "#64748b" },
+      }
+    : {
+        new: { labelKey: "tickets.detail.status_new", color: "#4f46e5", dot: "#818cf8" },
+        in_progress: { labelKey: "tickets.detail.status_in_progress", color: "#c2410c", dot: "#f97316" },
+        testing: { labelKey: "tickets.detail.status_testing", color: "#0e7490", dot: "#06b6d4" },
+        resolved: { labelKey: "tickets.detail.status_resolved", color: "#15803d", dot: "#22c55e" },
+        closed: { labelKey: "tickets.detail.status_closed", color: "#475569", dot: "#64748b" },
+      };
+
+const buildPriorityConfig = (isDark: boolean): Record<string, { labelKey: string; color: string; dot: string }> =>
+  isDark
+    ? {
+        critical: { labelKey: "tickets.detail.priority_critical", color: "#fb7185", dot: "#f43f5e" },
+        high: { labelKey: "tickets.detail.priority_high", color: "#fbbf24", dot: "#f59e0b" },
+        medium: { labelKey: "tickets.detail.priority_medium", color: "#facc15", dot: "#eab308" },
+        low: { labelKey: "tickets.detail.priority_low", color: "#4ade80", dot: "#22c55e" },
+      }
+    : {
+        critical: { labelKey: "tickets.detail.priority_critical", color: "#be123c", dot: "#f43f5e" },
+        high: { labelKey: "tickets.detail.priority_high", color: "#b45309", dot: "#f59e0b" },
+        medium: { labelKey: "tickets.detail.priority_medium", color: "#ca8a04", dot: "#eab308" },
+        low: { labelKey: "tickets.detail.priority_low", color: "#15803d", dot: "#22c55e" },
+      };
 
 const typeLabelKeys: Record<string, string> = {
   bug: "tickets.detail.type_bug",
@@ -66,62 +298,64 @@ const typeLabelKeys: Record<string, string> = {
   question: "tickets.detail.type_question",
 };
 
-const markdownSx = {
-  fontSize: "13px",
-  color: "#334155",
-  lineHeight: 1.7,
-  "& p": { m: 0, mb: "10px" },
-  "& p:last-child": { mb: 0 },
-  "& code": {
-    fontFamily: "var(--font-mono)",
-    fontSize: "12px",
-    background: "#f1f5f9",
-    border: "1px solid #e2e8f0",
-    borderRadius: "7px",
-    px: "6px",
-    py: "2px",
-    color: "#0f172a",
-  },
-  "& pre": {
-    mt: "14px",
-    mb: "6px",
-    borderRadius: "14px",
-    border: "1px solid #0f172a",
-    background: "#020617",
-    overflow: "auto",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
-  },
-  "& pre code": {
-    display: "block",
-    background: "transparent",
-    border: "none",
+const buildMarkdownSx = (p: DetailPalette) =>
+  ({
     fontSize: "13px",
+    color: p.mdText,
     lineHeight: 1.7,
-    color: "#e2e8f0",
-    p: "14px 18px",
-  },
-  "& strong": { color: "#0f172a", fontWeight: 700 },
-  "& ul, & ol": { pl: "20px", m: 0 },
-} as const;
+    "& p": { m: 0, mb: "10px" },
+    "& p:last-child": { mb: 0 },
+    "& code": {
+      fontFamily: "var(--font-mono)",
+      fontSize: "12px",
+      background: p.mdInlineCodeBg,
+      border: `1px solid ${p.mdInlineCodeBorder}`,
+      borderRadius: "7px",
+      px: "6px",
+      py: "2px",
+      color: p.mdInlineCodeFg,
+    },
+    "& pre": {
+      mt: "14px",
+      mb: "6px",
+      borderRadius: "14px",
+      border: `1px solid ${p.mdPreBorder}`,
+      background: p.mdPreBg,
+      overflow: "auto",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+    },
+    "& pre code": {
+      display: "block",
+      background: "transparent",
+      border: "none",
+      fontSize: "13px",
+      lineHeight: 1.7,
+      color: p.mdPreFg,
+      p: "14px 18px",
+    },
+    "& strong": { color: p.mdStrong, fontWeight: 700 },
+    "& ul, & ol": { pl: "20px", m: 0 },
+  }) as const;
 
-const fieldSx = {
-  background: "#ffffff",
-  border: "1px solid #dbe3ef",
-  borderRadius: "14px",
-  px: "18px",
-  py: "14px",
-  fontSize: "14px",
-  color: "#0f172a",
-  width: "100%",
-  outline: "none",
-  fontFamily: "var(--font-ui)",
-  boxSizing: "border-box",
-  transition: "border-color 0.12s, box-shadow 0.12s",
-  "&:focus": {
-    borderColor: "#a5b4fc",
-    boxShadow: "0 0 0 3px rgba(99,102,241,0.15)",
-  },
-} as const;
+const buildFieldSx = (p: DetailPalette) =>
+  ({
+    background: p.inputBg,
+    border: `1px solid ${p.inputBorder}`,
+    borderRadius: "14px",
+    px: "18px",
+    py: "14px",
+    fontSize: "14px",
+    color: p.inputText,
+    width: "100%",
+    outline: "none",
+    fontFamily: "var(--font-ui)",
+    boxSizing: "border-box",
+    transition: "border-color 0.12s, box-shadow 0.12s",
+    "&:focus": {
+      borderColor: p.inputFocusBorder,
+      boxShadow: `0 0 0 3px ${p.inputFocusRing}`,
+    },
+  }) as const;
 
 function getInitials(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
@@ -153,48 +387,69 @@ function normalizePriorityKey(value?: string) {
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
 
-function mapStatusLabel(value: string | undefined, t: TFn) {
+function mapStatusLabel(value: string | undefined, t: TFn, statusConfig: ReturnType<typeof buildStatusConfig>) {
   if (!value) return "—";
   const key = normalizeStatusKey(value) as TicketStatus;
   const labelKey = statusConfig[key]?.labelKey;
   return labelKey ? t(labelKey) : value;
 }
 
-function mapPriorityLabel(value: string | undefined, t: TFn) {
+function mapPriorityLabel(value: string | undefined, t: TFn, priorityConfig: ReturnType<typeof buildPriorityConfig>) {
   if (!value) return "—";
   const key = normalizePriorityKey(value);
   const labelKey = priorityConfig[key]?.labelKey;
   return labelKey ? t(labelKey) : value;
 }
 
-function historyPresentation(entry: TicketHistory, t: TFn) {
+function historyPresentation(
+  entry: TicketHistory,
+  t: TFn,
+  isDark: boolean,
+  statusConfig: ReturnType<typeof buildStatusConfig>,
+  priorityConfig: ReturnType<typeof buildPriorityConfig>,
+) {
+  const tones = isDark
+    ? {
+        created: { dot: "#fda4af", ring: "rgba(244,114,182,0.20)" },
+        status: { dot: "#fbbf24", ring: "rgba(251,191,36,0.20)" },
+        assign: { dot: "#a78bfa", ring: "rgba(167,139,250,0.22)" },
+        priority: { dot: "#fb7185", ring: "rgba(251,113,133,0.22)" },
+        default: { dot: "#86efac", ring: "rgba(134,239,172,0.20)" },
+      }
+    : {
+        created: { dot: "#fda4af", ring: "#ffe4e6" },
+        status: { dot: "#fbbf24", ring: "#fef3c7" },
+        assign: { dot: "#a78bfa", ring: "#ede9fe" },
+        priority: { dot: "#fb7185", ring: "#ffe4e6" },
+        default: { dot: "#86efac", ring: "#dcfce7" },
+      };
   const field = entry.field.toLowerCase();
   if (field === "created" || field === "creation" || field.includes("create")) {
     return {
-      tone: { dot: "#fda4af", ring: "#ffe4e6" },
+      tone: tones.created,
       message: t('tickets.detail.history_created'),
     };
   }
   if (field.includes("status")) {
     return {
-      tone: { dot: "#fbbf24", ring: "#fef3c7" },
-      message: t('tickets.detail.history_status_change', { from: mapStatusLabel(entry.oldValue, t), to: mapStatusLabel(entry.newValue, t) }),
+      tone: tones.status,
+      message: t('tickets.detail.history_status_change', { from: mapStatusLabel(entry.oldValue, t, statusConfig), to: mapStatusLabel(entry.newValue, t, statusConfig) }),
     };
   }
   if (field.includes("assign")) {
     return {
-      tone: { dot: "#a78bfa", ring: "#ede9fe" },
+      tone: tones.assign,
       message: t('tickets.detail.history_assigned', { name: entry.newValue ?? t('tickets.detail.unassigned') }),
     };
   }
   if (field.includes("priority")) {
     return {
-      tone: { dot: "#fb7185", ring: "#ffe4e6" },
-      message: t('tickets.detail.history_priority_change', { from: mapPriorityLabel(entry.oldValue, t), to: mapPriorityLabel(entry.newValue, t) }),
+      tone: tones.priority,
+      message: t('tickets.detail.history_priority_change', { from: mapPriorityLabel(entry.oldValue, t, priorityConfig), to: mapPriorityLabel(entry.newValue, t, priorityConfig) }),
     };
   }
   return {
-    tone: { dot: "#86efac", ring: "#dcfce7" },
+    tone: tones.default,
     message:
       entry.oldValue || entry.newValue
         ? `${entry.field} ${entry.oldValue ?? "—"} → ${entry.newValue ?? "—"}`
@@ -207,6 +462,13 @@ export const TicketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const palette = useMemo(() => buildPalette(isDark), [isDark]);
+  const statusConfig = useMemo(() => buildStatusConfig(isDark), [isDark]);
+  const priorityConfig = useMemo(() => buildPriorityConfig(isDark), [isDark]);
+  const markdownSx = useMemo(() => buildMarkdownSx(palette), [palette]);
+  const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
@@ -400,14 +662,13 @@ export const TicketDetailPage: React.FC = () => {
             flex: 1,
             minWidth: 0,
             maxHeight: { xs: "calc(100vh - 22px)", md: "calc(100vh - 36px)" },
-            background: "#ffffff",
-            border: "1px solid #e2e8f0",
+            background: palette.panelBg,
+            border: `1px solid ${palette.panelBorder}`,
             borderRadius: "20px",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            boxShadow:
-              "0 1px 2px rgba(15,23,42,0.04), 0 12px 30px -18px rgba(15,23,42,0.18)",
+            boxShadow: palette.panelShadow,
           }}
         >
           <Box
@@ -423,7 +684,7 @@ export const TicketDetailPage: React.FC = () => {
                 alignItems: "center",
                 gap: "10px",
                 mb: "24px",
-                color: "#64748b",
+                color: palette.breadcrumbText,
                 fontSize: "13px",
               }}
             >
@@ -435,27 +696,27 @@ export const TicketDetailPage: React.FC = () => {
                   fontWeight: 600,
                 }}
               >
-                <FolderOutlined sx={{ fontSize: 13, color: "#7c3aed" }} />
+                <FolderOutlined sx={{ fontSize: 13, color: palette.folderIcon }} />
                 {ticket.projectName ?? t('tickets.detail.project_label')}
               </Box>
-              <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
+              <ChevronRightOutlined sx={{ fontSize: 12, color: palette.chevron }} />
               <Box
                 sx={{
                   fontFamily: "var(--font-mono)",
                   letterSpacing: "0.08em",
                   fontSize: "12px",
-                  color: "#475569",
+                  color: palette.referenceText,
                   fontWeight: 700,
                 }}
               >
                 {ticket.reference}
               </Box>
-              <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
-              <Box sx={{ color: "#94a3b8", fontSize: "12px" }}>
+              <ChevronRightOutlined sx={{ fontSize: 12, color: palette.chevron }} />
+              <Box sx={{ color: palette.muted, fontSize: "12px" }}>
                 {t('tickets.detail.opened_label')}{" "}
                 <Box
                   component="span"
-                  sx={{ color: "#334155", fontWeight: 700 }}
+                  sx={{ color: palette.strongText, fontWeight: 700 }}
                 >
                   {getRelativeShort(ticket.createdAt, t)}
                 </Box>
@@ -471,7 +732,7 @@ export const TicketDetailPage: React.FC = () => {
                 fontSize: { xs: "18px", md: "24px" },
                 lineHeight: 1.2,
                 letterSpacing: "-0.02em",
-                color: "#0f172a",
+                color: palette.title,
                 fontWeight: 700,
                 display: "flex",
                 alignItems: "center",
@@ -485,20 +746,19 @@ export const TicketDetailPage: React.FC = () => {
                   sx={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     fontFamily: "var(--font-mono)",
-                    fontSize: { xs: "17px", md: "28px" },
-                    color: "#5b3dd1",
-                    background:
-                      "linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)",
-                    border: "1px solid #d8ccff",
-                    borderRadius: "14px",
-                    px: "16px",
-                    py: "8px",
+                    fontSize: { xs: "15px", md: "20px" },
+                    color: palette.endpointFg,
+                    background: palette.endpointBg,
+                    border: `1px solid ${palette.endpointBorder}`,
+                    borderRadius: "11px",
+                    px: "11px",
+                    py: "5px",
                     fontWeight: 600,
                   }}
                 >
-                  <LinkRounded sx={{ fontSize: 20, color: "#8b5cf6" }} />
+                  <LinkRounded sx={{ fontSize: 16, color: palette.endpointIcon }} />
                   {endpointMatch}
                 </Box>
               )}
@@ -524,7 +784,7 @@ export const TicketDetailPage: React.FC = () => {
                 mb: "22px",
               }}
             >
-              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+              <Box sx={{ flex: 1, height: "1px", background: palette.sectionDivider }} />
               <Box
                 sx={{
                   display: "inline-flex",
@@ -532,7 +792,7 @@ export const TicketDetailPage: React.FC = () => {
                   gap: "6px",
                   fontSize: "11px",
                   fontWeight: 600,
-                  color: "#94a3b8",
+                  color: palette.sectionLabel,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                   whiteSpace: "nowrap",
@@ -541,7 +801,7 @@ export const TicketDetailPage: React.FC = () => {
                 <DescriptionOutlined sx={{ fontSize: 13 }} />
                 {t('tickets.detail.section_description')}
               </Box>
-              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+              <Box sx={{ flex: 1, height: "1px", background: palette.sectionDivider }} />
             </Box>
 
             <Box>
@@ -550,7 +810,7 @@ export const TicketDetailPage: React.FC = () => {
                   <ReactMarkdown>{ticket.description}</ReactMarkdown>
                 </Box>
               ) : (
-                <Box sx={{ color: "#94a3b8", fontSize: "13px" }}>
+                <Box sx={{ color: palette.descFallback, fontSize: "13px" }}>
                   {t('tickets.detail.no_description')}
                 </Box>
               )}
@@ -564,7 +824,7 @@ export const TicketDetailPage: React.FC = () => {
                 my: "28px",
               }}
             >
-              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+              <Box sx={{ flex: 1, height: "1px", background: palette.sectionDivider }} />
               <Box
                 sx={{
                   display: "inline-flex",
@@ -572,7 +832,7 @@ export const TicketDetailPage: React.FC = () => {
                   gap: "6px",
                   fontSize: "11px",
                   fontWeight: 600,
-                  color: "#94a3b8",
+                  color: palette.sectionLabel,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                   whiteSpace: "nowrap",
@@ -581,7 +841,7 @@ export const TicketDetailPage: React.FC = () => {
                 <ForumOutlined sx={{ fontSize: 13 }} />
                 {t('tickets.detail.section_conversation')}{ticket.comments.length > 0 ? ` · ${ticket.comments.length}` : ""}
               </Box>
-              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+              <Box sx={{ flex: 1, height: "1px", background: palette.sectionDivider }} />
             </Box>
 
             <>
@@ -607,7 +867,7 @@ export const TicketDetailPage: React.FC = () => {
                           top: "36px",
                           height: "calc(100% - 30px)",
                           width: "1px",
-                          background: "#e2e8f0",
+                          background: palette.threadLine,
                           zIndex: 0,
                         }}
                       />
@@ -645,7 +905,7 @@ export const TicketDetailPage: React.FC = () => {
                         <Box
                           sx={{
                             fontSize: "13px",
-                            color: "#0f172a",
+                            color: palette.commentAuthor,
                             fontWeight: 700,
                           }}
                         >
@@ -661,7 +921,7 @@ export const TicketDetailPage: React.FC = () => {
                               textTransform: "uppercase",
                               letterSpacing: "0.08em",
                               fontSize: "11px",
-                              color: "#b45309",
+                              color: palette.internalBadgeFg,
                               fontWeight: 800,
                               px: "10px",
                               py: "4px",
@@ -673,11 +933,11 @@ export const TicketDetailPage: React.FC = () => {
                           </Box>
                         )}
 
-                        <Box sx={{ color: "#cbd5e1", fontSize: "11px" }}>·</Box>
+                        <Box sx={{ color: palette.chevron, fontSize: "11px" }}>·</Box>
                         <Box
                           sx={{
                             fontFamily: "var(--font-mono)",
-                            color: "#94a3b8",
+                            color: palette.commentTime,
                             fontSize: "11px",
                           }}
                         >
@@ -704,12 +964,12 @@ export const TicketDetailPage: React.FC = () => {
                                 height: "28px",
                                 borderRadius: "8px",
                                 cursor: "pointer",
-                                color: "#94a3b8",
+                                color: palette.iconBtnIdle,
                                 display: "grid",
                                 placeItems: "center",
                                 "&:hover": {
-                                  background: "#f1f5f9",
-                                  color: "#0f172a",
+                                  background: palette.iconBtnEditHoverBg,
+                                  color: palette.iconBtnEditHoverFg,
                                 },
                               }}
                             >
@@ -724,12 +984,12 @@ export const TicketDetailPage: React.FC = () => {
                                 height: "28px",
                                 borderRadius: "8px",
                                 cursor: "pointer",
-                                color: "#94a3b8",
+                                color: palette.iconBtnIdle,
                                 display: "grid",
                                 placeItems: "center",
                                 "&:hover": {
-                                  background: "#fee2e2",
-                                  color: "#dc2626",
+                                  background: palette.iconBtnDelHoverBg,
+                                  color: palette.iconBtnDelHoverFg,
                                 },
                               }}
                             >
@@ -742,10 +1002,10 @@ export const TicketDetailPage: React.FC = () => {
                       <Box
                         sx={{
                           border: c.isInternal
-                            ? "1px solid #fde68a"
-                            : "1px solid #e2e8f0",
+                            ? `1px solid ${palette.commentBorderInternal}`
+                            : `1px solid ${palette.commentBorderExternal}`,
                           borderRadius: "14px",
-                          background: c.isInternal ? "#fffbeb" : "#f8fafc",
+                          background: c.isInternal ? palette.commentBgInternal : palette.commentBgExternal,
                         }}
                       >
                         <Box sx={{ p: "12px 16px" }}>
@@ -767,12 +1027,12 @@ export const TicketDetailPage: React.FC = () => {
                     alignItems: "center",
                     gap: "8px",
                     py: "32px",
-                    color: "#94a3b8",
+                    color: palette.emptyFg,
                   }}
                 >
                   <ForumOutlined sx={{ fontSize: 28, opacity: 0.4 }} />
                   <Box sx={{ fontSize: "13px", fontWeight: 500 }}>{t('tickets.detail.no_comments_title')}</Box>
-                  <Box sx={{ fontSize: "12px", color: "#cbd5e1" }}>{t('tickets.detail.no_comments_subtitle')}</Box>
+                  <Box sx={{ fontSize: "12px", color: palette.emptySub }}>{t('tickets.detail.no_comments_subtitle')}</Box>
                 </Box>
               )}
             </Box>
@@ -782,8 +1042,8 @@ export const TicketDetailPage: React.FC = () => {
                 sx={{
                   display: "inline-flex",
                   p: "3px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
+                  background: palette.tabStripBg,
+                  border: `1px solid ${palette.tabStripBorder}`,
                   borderRadius: "12px",
                   mb: "8px",
                   gap: "3px",
@@ -818,11 +1078,9 @@ export const TicketDetailPage: React.FC = () => {
                         px: "12px",
                         height: "34px",
                         borderRadius: "10px",
-                        color: active ? "#0f172a" : "#64748b",
-                        background: active ? "#ffffff" : "transparent",
-                        boxShadow: active
-                          ? "0 1px 2px rgba(15,23,42,0.08)"
-                          : "none",
+                        color: active ? palette.tabActiveFg : palette.tabIdleFg,
+                        background: active ? palette.tabActiveBg : "transparent",
+                        boxShadow: active ? palette.tabActiveShadow : "none",
                         fontSize: "12px",
                         fontWeight: 700,
                       }}
@@ -836,10 +1094,10 @@ export const TicketDetailPage: React.FC = () => {
 
               <Box
                 sx={{
-                  border: "1px solid #dbe3ef",
+                  border: `1px solid ${palette.composerBorder}`,
                   borderRadius: "16px",
                   overflow: "hidden",
-                  background: "#ffffff",
+                  background: palette.composerBg,
                 }}
               >
                 <Box
@@ -873,7 +1131,7 @@ export const TicketDetailPage: React.FC = () => {
                     minHeight: "90px",
                   }}
                 />
-                <Box sx={{ height: "1px", background: "#e2e8f0" }} />
+                <Box sx={{ height: "1px", background: palette.composerDivider }} />
                 <Box
                   sx={{
                     px: "12px",
@@ -899,10 +1157,10 @@ export const TicketDetailPage: React.FC = () => {
                         height: "28px",
                         borderRadius: "7px",
                         cursor: "pointer",
-                        color: "#94a3b8",
+                        color: palette.toolbarIdle,
                         display: "grid",
                         placeItems: "center",
-                        "&:hover": { background: "#f1f5f9", color: "#334155" },
+                        "&:hover": { background: palette.toolbarHoverBg, color: palette.toolbarHoverFg },
                       }}
                     >
                       {icon}
@@ -919,8 +1177,7 @@ export const TicketDetailPage: React.FC = () => {
                       borderRadius: "10px",
                       fontWeight: 700,
                       fontSize: "13px",
-                      background:
-                        "linear-gradient(180deg,#6d5ef7 0%, #4f46e5 100%)",
+                      background: palette.sendBtnGradient,
                     }}
                     endIcon={!submitting ? <SendRounded sx={{ fontSize: 15 }} /> : undefined}
                   >
@@ -949,10 +1206,10 @@ export const TicketDetailPage: React.FC = () => {
         >
           <Box
             sx={{
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${palette.panelBorder}`,
               borderRadius: "20px",
-              background: "#ffffff",
-              boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              background: palette.panelBg,
+              boxShadow: palette.panelShadow,
               p: "8px 6px 4px",
             }}
           >
@@ -964,7 +1221,7 @@ export const TicketDetailPage: React.FC = () => {
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 fontWeight: 800,
-                color: "#94a3b8",
+                color: palette.muted,
                 fontSize: "10px",
               }}
             >
@@ -1028,10 +1285,10 @@ export const TicketDetailPage: React.FC = () => {
                 label: t('tickets.detail.field_type'),
                 value: (
                   <>
-                    <ShieldOutlined sx={{ fontSize: 14, color: "#64748b" }} />
+                    <ShieldOutlined sx={{ fontSize: 14, color: palette.typeIcon }} />
                     <Box
                       sx={{
-                        color: "#0f172a",
+                        color: palette.fieldValue,
                         fontWeight: 400,
                         fontSize: "12px",
                       }}
@@ -1045,12 +1302,12 @@ export const TicketDetailPage: React.FC = () => {
                 key: "assignee",
                 label: t('tickets.detail.field_assignee'),
                 value: ticket.assignee ? (
-                  <Box sx={{ color: "#0f172a", fontWeight: 400, fontSize: "12px" }}>
+                  <Box sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}>
                     {ticket.assignee.firstName} {ticket.assignee.lastName}
                   </Box>
                 ) : (
                   <Box
-                    sx={{ color: "#94a3b8", fontWeight: 400, fontSize: "12px" }}
+                    sx={{ color: palette.muted, fontWeight: 400, fontSize: "12px" }}
                   >
                     {t('tickets.detail.unassigned')}
                   </Box>
@@ -1061,10 +1318,10 @@ export const TicketDetailPage: React.FC = () => {
                 label: t('tickets.detail.field_project'),
                 value: (
                   <>
-                    <FolderOutlined sx={{ fontSize: 14, color: "#7c3aed" }} />
+                    <FolderOutlined sx={{ fontSize: 14, color: palette.folderIcon }} />
                     <Box
                       sx={{
-                        color: "#0f172a",
+                        color: palette.fieldValue,
                         fontWeight: 400,
                         fontSize: "12px",
                       }}
@@ -1090,11 +1347,11 @@ export const TicketDetailPage: React.FC = () => {
                     gap: "8px",
                     borderRadius: "8px",
                     cursor: "pointer",
-                    "&:hover": { background: "#f8fafc" },
+                    "&:hover": { background: palette.fieldRowHover },
                   }}
                 >
                   <Box
-                    sx={{ color: "#94a3b8", fontSize: "11px", fontWeight: 400 }}
+                    sx={{ color: palette.fieldLabel, fontSize: "11px", fontWeight: 400 }}
                   >
                     {row.label}
                   </Box>
@@ -1109,14 +1366,14 @@ export const TicketDetailPage: React.FC = () => {
                     {row.value}
                     {row.key !== "project" && (
                       <KeyboardArrowDownRounded
-                        sx={{ ml: "auto", color: "#cbd5e1" }}
+                        sx={{ ml: "auto", color: palette.discChevron }}
                       />
                     )}
                   </Box>
                 </Box>
                 {idx < arr.length - 1 && (
                   <Box
-                    sx={{ mx: "8px", height: "1px", background: "#eef2f7" }}
+                    sx={{ mx: "8px", height: "1px", background: palette.fieldSep }}
                   />
                 )}
               </Box>
@@ -1125,10 +1382,10 @@ export const TicketDetailPage: React.FC = () => {
 
           <Box
             sx={{
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${palette.panelBorder}`,
               borderRadius: "20px",
-              background: "#ffffff",
-              boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              background: palette.panelBg,
+              boxShadow: palette.panelShadow,
               p: "8px 6px 4px",
               minHeight: 0,
               display: "flex",
@@ -1143,7 +1400,7 @@ export const TicketDetailPage: React.FC = () => {
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 fontWeight: 800,
-                color: "#94a3b8",
+                color: palette.muted,
                 fontSize: "10px",
               }}
             >
@@ -1165,8 +1422,7 @@ export const TicketDetailPage: React.FC = () => {
                     top: "14px",
                     bottom: "14px",
                     width: "2px",
-                    background:
-                      "linear-gradient(180deg, #e2e8f0 0%, #e2e8f0 80%, transparent 100%)",
+                    background: palette.historyTimeline,
                   }}
                 />
               )}
@@ -1178,7 +1434,7 @@ export const TicketDetailPage: React.FC = () => {
                     new Date(a.createdAt).getTime(),
                 )
                 .map((h) => {
-                  const event = historyPresentation(h, t);
+                  const event = historyPresentation(h, t, isDark, statusConfig, priorityConfig);
                   return (
                     <Box
                       key={h.id}
@@ -1196,7 +1452,7 @@ export const TicketDetailPage: React.FC = () => {
                           mt: "8px",
                           borderRadius: "999px",
                           background: event.tone.dot,
-                          border: "2px solid #fff",
+                          border: `2px solid ${palette.historyDotBorder}`,
                           boxShadow: `0 0 0 2px ${event.tone.ring}`,
                           zIndex: 1,
                           flexShrink: 0,
@@ -1206,7 +1462,7 @@ export const TicketDetailPage: React.FC = () => {
                         <Box
                           sx={{
                             fontSize: "11px",
-                            color: "#0f172a",
+                            color: palette.historyMsg,
                             lineHeight: 1.35,
                           }}
                         >
@@ -1216,7 +1472,7 @@ export const TicketDetailPage: React.FC = () => {
                           sx={{
                             fontFamily: "var(--font-mono)",
                             fontSize: "10px",
-                            color: "#94a3b8",
+                            color: palette.historySub,
                             mt: "4px",
                           }}
                         >
@@ -1229,7 +1485,7 @@ export const TicketDetailPage: React.FC = () => {
                 })}
 
               {ticket.history.length === 0 && (
-                <Box sx={{ color: "#94a3b8", fontSize: "13px", py: "4px" }}>
+                <Box sx={{ color: palette.muted, fontSize: "13px", py: "4px" }}>
                   {t('tickets.detail.no_history')}
                 </Box>
               )}

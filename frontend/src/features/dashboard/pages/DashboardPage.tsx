@@ -25,6 +25,7 @@ import { getProjects } from "../../techHealth/api/projects";
 import type { ProjectDto } from "../../techHealth/api/projects";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
+import { useTheme } from "../../../store/ThemeContext";
 
 interface ActivityItem {
   color: string;
@@ -82,14 +83,139 @@ const STATUS = [
   { key: "Closed", labelKey: "dashboard.status.closed", color: "#94a3b8" },
 ];
 
-const panelSx = {
-  background: "#fff",
-  borderRadius: "20px",
-  border: "1px solid rgba(226,232,240,0.9)",
-  boxShadow: "0 4px 14px rgba(15,23,42,0.08)",
-  overflow: "hidden",
-  minHeight: 0,
-} as const;
+interface DashPalette {
+  panelBg: string;
+  panelBorder: string;
+  panelShadow: string;
+  headerBorder: string;
+  textPrimary: string;
+  textHeading: string;
+  textSecondary: string;
+  textMuted: string;
+  textMuted2: string;
+  kpiLabel: string;
+  donutTrack: string;
+  donutCenter: string;
+  donutCenterLabel: string;
+  donutPct: string;
+  seeAll: string;
+  rowBg: string;
+  rowHoverBg: string;
+  rowActiveBg: string;
+  rowHoverRing: string;
+  rowTitle: string;
+  rowSub: string;
+  bullet: string;
+  commentIcon: string;
+  typeIconDefault: string;
+  typeIconSecurity: string;
+  typeIconPerformance: string;
+  activityDangerBg: string;
+  activityDangerFg: string;
+  activityOkBg: string;
+  activityOkFg: string;
+  activityDetail: string;
+  activityDivider: string;
+  scrollThumb: string;
+  vulnDanger: string;
+  vulnNeutral: string;
+  vulnIcon: string;
+  badgeCritical: string;
+  loader: string;
+}
+
+const buildPalette = (isDark: boolean): DashPalette =>
+  isDark
+    ? {
+        panelBg: "#0d1120",
+        panelBorder: "#1e2a42",
+        panelShadow: "0 4px 14px rgba(0,0,0,0.45)",
+        headerBorder: "#1e2a42",
+        textPrimary: "#e6eaf6",
+        textHeading: "#e6eaf6",
+        textSecondary: "#a0aec9",
+        textMuted: "#7488aa",
+        textMuted2: "#7488aa",
+        kpiLabel: "#a0aec9",
+        donutTrack: "#192036",
+        donutCenter: "#e6eaf6",
+        donutCenterLabel: "#a0aec9",
+        donutPct: "#7488aa",
+        seeAll: "#818cf8",
+        rowBg: "transparent",
+        rowHoverBg: "rgba(99,102,241,0.10)",
+        rowActiveBg: "rgba(99,102,241,0.18)",
+        rowHoverRing: "rgba(129,140,248,0.30)",
+        rowTitle: "#e6eaf6",
+        rowSub: "#a0aec9",
+        bullet: "#263352",
+        commentIcon: "#7488aa",
+        typeIconDefault: "#94a3b8",
+        typeIconSecurity: "#f87171",
+        typeIconPerformance: "#f59e0b",
+        activityDangerBg: "rgba(239,68,68,0.18)",
+        activityDangerFg: "#f87171",
+        activityOkBg: "rgba(34,197,94,0.18)",
+        activityOkFg: "#4ade80",
+        activityDetail: "#a0aec9",
+        activityDivider: "#1e2a42",
+        scrollThumb: "#263352",
+        vulnDanger: "#f87171",
+        vulnNeutral: "#a0aec9",
+        vulnIcon: "#7488aa",
+        badgeCritical: "#f87171",
+        loader: "#818cf8",
+      }
+    : {
+        panelBg: "#fff",
+        panelBorder: "rgba(226,232,240,0.9)",
+        panelShadow: "0 4px 14px rgba(15,23,42,0.08)",
+        headerBorder: "#e6ebf3",
+        textPrimary: "#131a2b",
+        textHeading: "#121829",
+        textSecondary: "#5f718d",
+        textMuted: "#6b7a95",
+        textMuted2: "#7f8ea7",
+        kpiLabel: "#6f829f",
+        donutTrack: "#eef3fa",
+        donutCenter: "#111827",
+        donutCenterLabel: "#6b7a95",
+        donutPct: "#7f8ea7",
+        seeAll: "#5a3ee1",
+        rowBg: "#fff",
+        rowHoverBg: "#f0f4ff",
+        rowActiveBg: "#e8eeff",
+        rowHoverRing: "#6366f122",
+        rowTitle: "#131a2b",
+        rowSub: "#5d6d87",
+        bullet: "#c8d1e0",
+        commentIcon: "#7c8ca4",
+        typeIconDefault: "#61708b",
+        typeIconSecurity: "#cf2943",
+        typeIconPerformance: "#ca7825",
+        activityDangerBg: "#f8dce3",
+        activityDangerFg: "#c7364f",
+        activityOkBg: "#c7efd9",
+        activityOkFg: "#2f8f63",
+        activityDetail: "#60728f",
+        activityDivider: "#d9e2ef",
+        scrollThumb: "#c8d1e0",
+        vulnDanger: "#c7364f",
+        vulnNeutral: "#4a5a72",
+        vulnIcon: "#687a95",
+        badgeCritical: "#c7364f",
+        loader: "#6366f1",
+      };
+
+const buildPanelSx = (p: DashPalette) =>
+  ({
+    background: p.panelBg,
+    borderRadius: "20px",
+    border: `1px solid ${p.panelBorder}`,
+    boxShadow: p.panelShadow,
+    overflow: "hidden",
+    minHeight: 0,
+  }) as const;
 
 const avatars = [
   { bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)", text: "#8b1c38" },
@@ -120,11 +246,14 @@ const ticketIcon = (type: string) => {
 };
 
 
-const ticketPriority = (priority: string) => {
-  if (priority === "critical") return { labelKey: "dashboard.priority.critical", color: "#c7364f" };
-  if (priority === "high") return { labelKey: "dashboard.priority.high", color: "#c56a1a" };
-  if (priority === "medium") return { labelKey: "dashboard.priority.medium", color: "#1f6fb2" };
-  return { labelKey: "dashboard.priority.low", color: "#2f8f63" };
+const ticketPriority = (priority: string, isDark: boolean) => {
+  if (priority === "critical")
+    return { labelKey: "dashboard.priority.critical", color: isDark ? "#f87171" : "#c7364f" };
+  if (priority === "high")
+    return { labelKey: "dashboard.priority.high", color: isDark ? "#fb923c" : "#c56a1a" };
+  if (priority === "medium")
+    return { labelKey: "dashboard.priority.medium", color: isDark ? "#60a5fa" : "#1f6fb2" };
+  return { labelKey: "dashboard.priority.low", color: isDark ? "#4ade80" : "#2f8f63" };
 };
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -147,30 +276,30 @@ const repoPath = (repositoryUrl?: string, repositoryType?: string): string => {
   return (repositoryType ?? "git").toLowerCase();
 };
 
-const projectTone = (project: ProjectDto) => {
+const projectTone = (project: ProjectDto, isDark: boolean) => {
   if (project.criticalVulnerabilities > 0)
     return {
       labelKey: "dashboard.project_tone.at_risk",
-      color: "#c7364f",
-      dot: "#e74660",
+      color: isDark ? "#f87171" : "#c7364f",
+      dot: isDark ? "#f87171" : "#e74660",
       Icon: WarningAmberOutlined,
     };
   if (project.healthScore >= 85)
     return {
       labelKey: "dashboard.project_tone.healthy",
-      color: "#2f8f63",
-      dot: "#56c58f",
+      color: isDark ? "#4ade80" : "#2f8f63",
+      dot: isDark ? "#4ade80" : "#56c58f",
       Icon: CheckCircleOutlineOutlined,
     };
   return {
     labelKey: "dashboard.project_tone.monitoring",
-    color: "#ad6f2f",
-    dot: "#e6a94c",
+    color: isDark ? "#fbbf24" : "#ad6f2f",
+    dot: isDark ? "#fbbf24" : "#e6a94c",
     Icon: InfoOutlined,
   };
 };
 
-const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
+const Donut: React.FC<{ map: Record<string, number>; palette: DashPalette }> = ({ map, palette }) => {
   const t = useT();
   const total = STATUS.reduce((sum, s) => sum + (map[s.key] ?? 0), 0);
   const r = 40;
@@ -192,7 +321,7 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
           cx="50"
           cy="50"
           r={r}
-          stroke="#eef3fa"
+          stroke={palette.donutTrack}
           strokeWidth="10"
           fill="none"
         />
@@ -236,7 +365,7 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
               fontWeight: 800,
               lineHeight: 1,
               letterSpacing: "-0.04em",
-              color: "#111827",
+              color: palette.donutCenter,
             }}
           >
             {total}
@@ -247,7 +376,7 @@ const Donut: React.FC<{ map: Record<string, number> }> = ({ map }) => {
               fontFamily: "var(--font-mono)",
               fontSize: "12px",
               letterSpacing: "0.18em",
-              color: "#6b7a95",
+              color: palette.donutCenterLabel,
             }}
           >
             {t('dashboard.donut.total')}
@@ -266,6 +395,7 @@ const KpiCard: React.FC<{
   delta?: number;
   inverse?: boolean;
   badge?: boolean;
+  palette: DashPalette;
 }> = ({
   label,
   value,
@@ -274,13 +404,16 @@ const KpiCard: React.FC<{
   delta,
   inverse = false,
   badge = false,
+  palette,
 }) => {
   const positive = (delta ?? 0) >= 0;
   const good = inverse ? !positive : positive;
+  const upColor = palette.activityOkFg;
+  const downColor = palette.activityDangerFg;
   return (
     <Box
       sx={{
-        ...panelSx,
+        ...buildPanelSx(palette),
         p: "12px 15px",
         display: "flex",
         flexDirection: "column",
@@ -299,7 +432,7 @@ const KpiCard: React.FC<{
             fontSize: "10px",
             letterSpacing: "0.16em",
             textTransform: "uppercase",
-            color: "#6f829f",
+            color: palette.kpiLabel,
           }}
         >
           {label}
@@ -340,7 +473,7 @@ const KpiCard: React.FC<{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "2px",
-                color: "#c7364f",
+                color: palette.badgeCritical,
                 fontWeight: 700,
                 fontSize: "16px",
               }}
@@ -354,7 +487,7 @@ const KpiCard: React.FC<{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "2px",
-                color: good ? "#2f8f63" : "#c7364f",
+                color: good ? upColor : downColor,
                 fontWeight: 700,
                 fontSize: "16px",
               }}
@@ -376,6 +509,10 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const t = useT();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const palette = useMemo(() => buildPalette(isDark), [isDark]);
+  const panelSx = useMemo(() => buildPanelSx(palette), [palette]);
   const [stats, setStats] = useState<StatsData>(EMPTY_STATS);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -453,10 +590,20 @@ export const DashboardPage: React.FC = () => {
   if (loading) {
     return (
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
-        <CircularProgress size={36} thickness={3} sx={{ color: "#6366f1" }} />
+        <CircularProgress size={36} thickness={3} sx={{ color: palette.loader }} />
       </Box>
     );
   }
+
+  const scrollSx = {
+    scrollbarWidth: "thin" as const,
+    scrollbarColor: "transparent transparent",
+    "&::-webkit-scrollbar": { width: "4px" },
+    "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" },
+    "&::-webkit-scrollbar-track": { background: "transparent" },
+    "&:hover": { scrollbarColor: `${palette.scrollThumb} transparent` },
+    "&:hover::-webkit-scrollbar-thumb": { background: palette.scrollThumb },
+  };
 
   return (
     <Box sx={{ p: "16px 20px", minHeight: "100vh" }}>
@@ -478,6 +625,7 @@ export const DashboardPage: React.FC = () => {
             icon={<ConfirmationNumberOutlined sx={{ fontSize: 17 }} />}
             delta={stats.openTicketsDelta}
             inverse
+            palette={palette}
           />
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
@@ -487,6 +635,7 @@ export const DashboardPage: React.FC = () => {
             valueColor="#3a9578"
             icon={<CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />}
             delta={stats.resolvedThisMonthDelta}
+            palette={palette}
           />
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
@@ -495,6 +644,7 @@ export const DashboardPage: React.FC = () => {
             value={stats.unassignedOpenTickets}
             valueColor="#cd7422"
             icon={<PersonOffOutlined sx={{ fontSize: 17 }} />}
+            palette={palette}
           />
         </Box>
         <Box sx={{ gridColumn: "span 3" }}>
@@ -505,6 +655,7 @@ export const DashboardPage: React.FC = () => {
             icon={<ShieldOutlined sx={{ fontSize: 17 }} />}
             delta={stats.criticalVulnerabilities}
             badge
+            palette={palette}
           />
         </Box>
 
@@ -520,7 +671,7 @@ export const DashboardPage: React.FC = () => {
             sx={{
               px: "18px",
               py: "12px",
-              borderBottom: "1px solid #e6ebf3",
+              borderBottom: `1px solid ${palette.headerBorder}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -532,13 +683,13 @@ export const DashboardPage: React.FC = () => {
                   fontSize: "15px",
                   lineHeight: 1.1,
                   fontWeight: 700,
-                  color: "#121829",
+                  color: palette.textHeading,
                   letterSpacing: "-0.02em",
                 }}
               >
                 {t('dashboard.urgent.title')}
               </Box>
-              <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+              <Box sx={{ mt: "6px", color: palette.textSecondary, fontSize: "11px" }}>
                 {urgentSummary}
               </Box>
             </Box>
@@ -548,7 +699,7 @@ export const DashboardPage: React.FC = () => {
               sx={{
                 all: "unset",
                 cursor: "pointer",
-                color: "#5a3ee1",
+                color: palette.seeAll,
                 fontSize: "11px",
                 fontWeight: 700,
                 display: "inline-flex",
@@ -568,13 +719,7 @@ export const DashboardPage: React.FC = () => {
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
-              scrollbarWidth: "thin",
-              scrollbarColor: "transparent transparent",
-              "&::-webkit-scrollbar": { width: "4px" },
-              "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" },
-              "&::-webkit-scrollbar-track": { background: "transparent" },
-              "&:hover": { scrollbarColor: "#c8d1e0 transparent" },
-              "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" },
+              ...scrollSx,
             }}
           >
             {Array.from({ length: 8 }).map((_, i) => {
@@ -585,7 +730,7 @@ export const DashboardPage: React.FC = () => {
                 );
               }
               const Icon = ticketIcon(ticket.type);
-              const badge = ticketPriority(ticket.priority);
+              const badge = ticketPriority(ticket.priority, isDark);
               const av = avatars[i % avatars.length];
               return (
                 <Box
@@ -601,14 +746,14 @@ export const DashboardPage: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    background: "#fff",
+                    background: palette.rowBg,
                     transition: "background 120ms ease, box-shadow 120ms ease",
                     "&:hover": {
-                      background: "#f0f4ff",
-                      boxShadow: "0 0 0 1.5px #6366f122",
+                      background: palette.rowHoverBg,
+                      boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
                     },
                     "&:active": {
-                      background: "#e8eeff",
+                      background: palette.rowActiveBg,
                     },
                   }}
                 >
@@ -617,10 +762,10 @@ export const DashboardPage: React.FC = () => {
                       fontSize: 16,
                       color:
                         ticket.type === "security"
-                          ? "#cf2943"
+                          ? palette.typeIconSecurity
                           : ticket.type === "performance"
-                            ? "#ca7825"
-                            : "#61708b",
+                            ? palette.typeIconPerformance
+                            : palette.typeIconDefault,
                     }}
                   />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -628,7 +773,7 @@ export const DashboardPage: React.FC = () => {
                       sx={{
                         fontSize: "12px",
                         fontWeight: 700,
-                        color: "#131a2b",
+                        color: palette.rowTitle,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -643,7 +788,7 @@ export const DashboardPage: React.FC = () => {
                         alignItems: "center",
                         gap: "6px",
                         fontSize: "10px",
-                        color: "#5d6d87",
+                        color: palette.rowSub,
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -658,7 +803,7 @@ export const DashboardPage: React.FC = () => {
                       >
                         • {t(badge.labelKey)}
                       </span>
-                      <span style={{ color: "#c8d1e0" }}>•</span>
+                      <span style={{ color: palette.bullet }}>•</span>
                       <span
                         style={{
                           display: "inline-flex",
@@ -667,7 +812,7 @@ export const DashboardPage: React.FC = () => {
                         }}
                       >
                         <MessageOutlined
-                          sx={{ fontSize: 12, color: "#7c8ca4" }}
+                          sx={{ fontSize: 12, color: palette.commentIcon }}
                         />
                         {ticket.commentCount ?? 0}
                       </span>
@@ -703,28 +848,28 @@ export const DashboardPage: React.FC = () => {
           }}
         >
           <Box
-            sx={{ px: "18px", py: "12px", borderBottom: "1px solid #e6ebf3" }}
+            sx={{ px: "18px", py: "12px", borderBottom: `1px solid ${palette.headerBorder}` }}
           >
             <Box
               sx={{
                 fontSize: "15px",
                 lineHeight: 1.1,
                 fontWeight: 700,
-                color: "#121829",
+                color: palette.textHeading,
                 letterSpacing: "-0.02em",
               }}
             >
               {t('dashboard.activity.title')}
             </Box>
-            <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+            <Box sx={{ mt: "6px", color: palette.textSecondary, fontSize: "11px" }}>
               {t('dashboard.activity.realtime')}
             </Box>
           </Box>
-          <Box sx={{ p: "8px 14px", flex: 1, minHeight: 0, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "transparent transparent", "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" }, "&::-webkit-scrollbar-track": { background: "transparent" }, "&:hover": { scrollbarColor: "#c8d1e0 transparent" }, "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" } }}>
+          <Box sx={{ p: "8px 14px", flex: 1, minHeight: 0, overflowY: "auto", ...scrollSx }}>
             <Box sx={{ display: "flex", flexDirection: "column" }}>
               {activity.map((a, idx) => {
                 const danger = a.color === "red";
-                const accentColor = danger ? "#c7364f" : "#2f8f63";
+                const accentColor = danger ? palette.activityDangerFg : palette.activityOkFg;
                 const boldPrefix = danger ? t('dashboard.activity.bold_critical') : t('dashboard.activity.bold_resolved');
                 const rest = a.text.startsWith(boldPrefix)
                   ? a.text.slice(boldPrefix.length)
@@ -745,7 +890,7 @@ export const DashboardPage: React.FC = () => {
                         width: 26,
                         height: 26,
                         borderRadius: "999px",
-                        bgcolor: danger ? "#f8dce3" : "#c7efd9",
+                        bgcolor: danger ? palette.activityDangerBg : palette.activityOkBg,
                         color: accentColor,
                         display: "grid",
                         placeItems: "center",
@@ -769,7 +914,7 @@ export const DashboardPage: React.FC = () => {
                       <Box
                         sx={{
                           fontSize: "11px",
-                          color: "#131a2b",
+                          color: palette.textPrimary,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -794,7 +939,7 @@ export const DashboardPage: React.FC = () => {
                         sx={{
                           mt: "1px",
                           fontSize: "10px",
-                          color: "#60728f",
+                          color: palette.activityDetail,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -809,7 +954,7 @@ export const DashboardPage: React.FC = () => {
                       sx={{
                         width: "1px",
                         height: "16px",
-                        bgcolor: "#d9e2ef",
+                        bgcolor: palette.activityDivider,
                         ml: "13px",
                         flexShrink: 0,
                         my: "-4.5px",
@@ -827,10 +972,10 @@ export const DashboardPage: React.FC = () => {
         <Box sx={{ ...panelSx, gridColumn: "span 4", p: "16px 18px", display: "flex", flexDirection: "column" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <Box>
-              <Box sx={{ fontSize: "15px", fontWeight: 700, color: "#131a2b", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+              <Box sx={{ fontSize: "15px", fontWeight: 700, color: palette.textPrimary, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
                 {t('dashboard.distribution.title')}
               </Box>
-              <Box sx={{ mt: "4px", color: "#5f718d", fontSize: "11px" }}>
+              <Box sx={{ mt: "4px", color: palette.textSecondary, fontSize: "11px" }}>
                 {t('dashboard.distribution.subtitle')}
               </Box>
             </Box>
@@ -844,7 +989,7 @@ export const DashboardPage: React.FC = () => {
               mt: "12px",
             }}
           >
-            <Donut map={stats.ticketsByStatus} />
+            <Donut map={stats.ticketsByStatus} palette={palette} />
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
               {STATUS.map((s) => {
                 const count = stats.ticketsByStatus[s.key] ?? 0;
@@ -860,7 +1005,7 @@ export const DashboardPage: React.FC = () => {
                       alignItems: "center",
                       justifyContent: "space-between",
                       fontSize: "13px",
-                      color: "#131a2b",
+                      color: palette.textPrimary,
                     }}
                   >
                     <Box sx={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
@@ -869,7 +1014,7 @@ export const DashboardPage: React.FC = () => {
                     </Box>
                     <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                       <strong>{count}</strong>{" "}
-                      <span style={{ color: "#7f8ea7" }}>{pct}%</span>
+                      <span style={{ color: palette.donutPct }}>{pct}%</span>
                     </Box>
                   </Box>
                 );
@@ -890,7 +1035,7 @@ export const DashboardPage: React.FC = () => {
             sx={{
               px: "18px",
               py: "12px",
-              borderBottom: "1px solid #e6ebf3",
+              borderBottom: `1px solid ${palette.headerBorder}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -902,13 +1047,13 @@ export const DashboardPage: React.FC = () => {
                   fontSize: "15px",
                   lineHeight: 1.1,
                   fontWeight: 700,
-                  color: "#131a2b",
+                  color: palette.textPrimary,
                   letterSpacing: "-0.02em",
                 }}
               >
                 {t('dashboard.projects.title')}
               </Box>
-              <Box sx={{ mt: "6px", color: "#5f718d", fontSize: "11px" }}>
+              <Box sx={{ mt: "6px", color: palette.textSecondary, fontSize: "11px" }}>
                 {projectsSyncText}
               </Box>
             </Box>
@@ -918,7 +1063,7 @@ export const DashboardPage: React.FC = () => {
               sx={{
                 all: "unset",
                 cursor: "pointer",
-                color: "#5a3ee1",
+                color: palette.seeAll,
                 fontSize: "11px",
                 fontWeight: 700,
                 display: "inline-flex",
@@ -938,17 +1083,11 @@ export const DashboardPage: React.FC = () => {
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
-              scrollbarWidth: "thin",
-              scrollbarColor: "transparent transparent",
-              "&::-webkit-scrollbar": { width: "4px" },
-              "&::-webkit-scrollbar-thumb": { background: "transparent", borderRadius: "4px" },
-              "&::-webkit-scrollbar-track": { background: "transparent" },
-              "&:hover": { scrollbarColor: "#c8d1e0 transparent" },
-              "&:hover::-webkit-scrollbar-thumb": { background: "#c8d1e0" },
+              ...scrollSx,
             }}
           >
             {projectRows.map((p) => {
-              const tone = projectTone(p);
+              const tone = projectTone(p, isDark);
               const totalTickets = p.totalTickets;
               return (
                 <Box
@@ -964,32 +1103,32 @@ export const DashboardPage: React.FC = () => {
                     px: "10px",
                     gap: "10px",
                     borderRadius: "12px",
-                    background: "#fff",
+                    background: palette.rowBg,
                     transition: "background 120ms ease, box-shadow 120ms ease",
                     "&:hover": {
-                      background: "#f0f4ff",
-                      boxShadow: "0 0 0 1.5px #6366f122",
+                      background: palette.rowHoverBg,
+                      boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
                     },
                     "&:active": {
-                      background: "#e8eeff",
+                      background: palette.rowActiveBg,
                     },
                   }}
                 >
                   <tone.Icon sx={{ fontSize: 18, color: tone.color, flexShrink: 0 }} />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Box sx={{ fontSize: "12px", fontWeight: 700, color: "#131a2b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <Box sx={{ fontSize: "12px", fontWeight: 700, color: palette.rowTitle, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {p.name}
                     </Box>
-                    <Box sx={{ mt: "2px", fontSize: "10px", fontFamily: "var(--font-mono)", color: "#7a8faa", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <Box sx={{ mt: "2px", fontSize: "10px", fontFamily: "var(--font-mono)", color: palette.textMuted2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {repoPath(p.repositoryUrl, p.repositoryType)}
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: "#4a5a72" }}>
-                      <ConfirmationNumberOutlined sx={{ fontSize: 14, color: "#687a95" }} />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: palette.vulnNeutral }}>
+                      <ConfirmationNumberOutlined sx={{ fontSize: 14, color: palette.vulnIcon }} />
                       <span>{totalTickets}</span>
                     </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: p.criticalVulnerabilities > 0 ? "#c7364f" : "#4a5a72" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: p.criticalVulnerabilities > 0 ? palette.vulnDanger : palette.vulnNeutral }}>
                       <ShieldOutlined sx={{ fontSize: 14 }} />
                       <span>{p.criticalVulnerabilities}</span>
                     </Box>
