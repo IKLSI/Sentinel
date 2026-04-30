@@ -1,0 +1,378 @@
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import { DeleteModal } from "@/components/DeleteModal";
+import { useToast } from "@/hooks/useToast";
+import { useT } from "@/i18n/I18nContext";
+import {
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  scanProject,
+  exportProjectsExcel,
+  ProjectDto,
+} from "@/features/techHealth/api/projects";
+import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
+import { ProjectsToolbar } from "./components/ProjectsToolbar";
+import { ProjectsSection } from "./components/ProjectsSection";
+import { ProjectFormModal } from "./components/ProjectFormModal";
+
+export const ProjectsPage: React.FC = () => {
+  const { showToast } = useToast();
+  const t = useT();
+  const [projects, setProjects] = useState<ProjectDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formRepoUrl, setFormRepoUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [editTarget, setEditTarget] = useState<ProjectDto | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRepoUrl, setEditRepoUrl] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [scanningId, setScanningId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<
+    Record<GradeKey, boolean>
+  >({
+    F: false,
+    E: false,
+    D: false,
+    C: false,
+    B: false,
+    A: false,
+  });
+  const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (scanPollRef.current) clearTimeout(scanPollRef.current);
+    },
+    [],
+  );
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getProjects();
+      setProjects(data);
+    } catch {
+      showToast(t("projects.toast.load_error"), "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast, t]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportProjectsExcel();
+    } catch {
+      showToast(t("projects.toast.export_error"), "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const openModal = () => {
+    setFormName("");
+    setFormRepoUrl("");
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!formName.trim()) return;
+    setSubmitting(true);
+    try {
+      await createProject({
+        name: formName.trim(),
+        repositoryUrl: formRepoUrl || undefined,
+      });
+      setShowModal(false);
+      showToast(t("projects.toast.create_success"), "success");
+      await load();
+    } catch {
+      showToast(t("projects.toast.create_error"), "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEdit = (project: ProjectDto) => {
+    setEditTarget(project);
+    setEditName(project.name);
+    setEditRepoUrl(project.repositoryUrl ?? "");
+  };
+
+  const handleEdit = async () => {
+    if (!editTarget || !editName.trim()) return;
+    setEditSaving(true);
+    try {
+      const updated = await updateProject(editTarget.id, {
+        name: editName.trim(),
+        repositoryUrl: editRepoUrl || undefined,
+      });
+      setProjects((prev) =>
+        prev.map((p) => (p.id === updated.id ? updated : p)),
+      );
+      setEditTarget(null);
+      showToast(t("projects.toast.update_success"), "success");
+    } catch {
+      showToast(t("projects.toast.update_error"), "error");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteProject(deleteTarget.id);
+      setDeleteTarget(null);
+      showToast(t("projects.toast.delete_success"), "success");
+      await load();
+    } catch {
+      showToast(t("projects.toast.delete_error"), "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleScan = async (id: string) => {
+    if (scanningId) return;
+    setScanningId(id);
+    const previousLastScanAt = projects.find((p) => p.id === id)?.lastScanAt;
+    const deadline = Date.now() + 10 * 60 * 1000;
+    try {
+      await scanProject(id);
+      showToast(t("projects.toast.scan_started"), "info");
+      const poll = async () => {
+        if (Date.now() > deadline) {
+          setScanningId(null);
+          showToast(t("projects.toast.scan_timeout"), "warning");
+          return;
+        }
+        try {
+          const updated = await getProject(id);
+          if (updated.lastScanAt !== previousLastScanAt) {
+            setProjects((prev) =>
+              prev.map((p) =>
+                p.id === id
+                  ? {
+                      ...p,
+                      healthScore: updated.healthScore,
+                      healthGrade: updated.healthGrade,
+                      totalDependencies: updated.totalDependencies,
+                      vulnerableDependencies: updated.vulnerableDependencies,
+                      criticalVulnerabilities: updated.criticalVulnerabilities,
+                    }
+                  : p,
+              ),
+            );
+            setScanningId(null);
+            showToast(t("projects.toast.scan_done"), "success");
+          } else {
+            scanPollRef.current = setTimeout(poll, 3000);
+          }
+        } catch {
+          scanPollRef.current = setTimeout(poll, 5000);
+        }
+      };
+      scanPollRef.current = setTimeout(poll, 2000);
+    } catch {
+      showToast(t("projects.toast.scan_start_error"), "error");
+      setScanningId(null);
+    }
+  };
+
+  const filtered = useMemo(
+    () =>
+      projects.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [projects, search],
+  );
+
+  const grouped = useMemo(() => {
+    const map: Record<GradeKey, ProjectDto[]> = {
+      F: [],
+      E: [],
+      D: [],
+      C: [],
+      B: [],
+      A: [],
+    };
+    filtered.forEach((project) => {
+      map[getGrade(project.healthGrade)].push(project);
+    });
+    return map;
+  }, [filtered]);
+
+  const visibleSections = useMemo(
+    () => GRADE_ORDER.filter((grade) => grouped[grade].length > 0),
+    [grouped],
+  );
+
+  return (
+    <>
+      <Box
+        className="page-enter"
+        sx={{
+          p: "36px 28px 24px",
+          height: "100vh",
+          maxHeight: "100vh",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        <ProjectsToolbar
+          search={search}
+          onSearchChange={setSearch}
+          onCreate={openModal}
+          onExport={handleExport}
+          exporting={exporting}
+        />
+
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: 1,
+            }}
+          >
+            <CircularProgress size={24} />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: "auto",
+              pr: "4px",
+              pb: "2px",
+              "&::-webkit-scrollbar": { width: "6px" },
+              "&::-webkit-scrollbar-thumb": {
+                background: "var(--border2)",
+                borderRadius: "99px",
+              },
+              "&::-webkit-scrollbar-track": { background: "transparent" },
+            }}
+          >
+            {filtered.length === 0 ? (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                }}
+              >
+                <Box className="empty-state">
+                  <Box className="empty-state-icon">
+                    <AccountTreeOutlined sx={{ fontSize: 40 }} />
+                  </Box>
+                  <Box className="empty-state-title">
+                    {t("projects.empty.title")}
+                  </Box>
+                  <Box className="empty-state-subtitle">
+                    {projects.length === 0
+                      ? t("projects.empty.create_first")
+                      : t("projects.empty.adjust_search")}
+                  </Box>
+                </Box>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  minWidth: "1060px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                {visibleSections.map((grade) => (
+                  <ProjectsSection
+                    key={grade}
+                    grade={grade}
+                    items={grouped[grade]}
+                    collapsed={collapsedSections[grade]}
+                    onToggleCollapsed={() =>
+                      setCollapsedSections((prev) => ({
+                        ...prev,
+                        [grade]: !prev[grade],
+                      }))
+                    }
+                    scanningId={scanningId}
+                    onEdit={openEdit}
+                    onDelete={setDeleteTarget}
+                    onScan={handleScan}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      <ProjectFormModal
+        open={showModal}
+        mode="create"
+        name={formName}
+        repoUrl={formRepoUrl}
+        onNameChange={setFormName}
+        onRepoUrlChange={setFormRepoUrl}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleSubmit}
+        saving={submitting}
+      />
+
+      <ProjectFormModal
+        open={!!editTarget}
+        mode="edit"
+        name={editName}
+        repoUrl={editRepoUrl}
+        onNameChange={setEditName}
+        onRepoUrlChange={setEditRepoUrl}
+        onClose={() => setEditTarget(null)}
+        onSubmit={handleEdit}
+        saving={editSaving}
+      />
+
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title={t("projects.delete.title")}
+      >
+        {t("projects.delete.prefix")} <strong>{deleteTarget?.name}</strong>
+        {t("projects.delete.suffix")}
+      </DeleteModal>
+    </>
+  );
+};

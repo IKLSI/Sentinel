@@ -1,0 +1,246 @@
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
+import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { AppModal } from "@/components/AppModal";
+import { DurationPicker } from "@/components/DurationPicker";
+import { useT } from "@/i18n/I18nContext";
+import { ProjectDto } from "@/features/techHealth/api/projects";
+import { Ticket } from "@/types";
+import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
+import { DatePickerPopover } from "../DatePickerPopover";
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  isEditing: boolean;
+  form: FormState;
+  onFormChange: (updater: (f: FormState) => FormState) => void;
+  submitting: boolean;
+  onSubmit: () => void;
+  projects: ProjectDto[];
+  tickets: Ticket[];
+}
+
+export const TimeEntryModal: React.FC<Props> = ({
+  open,
+  onClose,
+  isEditing,
+  form,
+  onFormChange,
+  submitting,
+  onSubmit,
+  projects,
+  tickets,
+}) => {
+  const t = useT();
+  const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(
+    null,
+  );
+
+  return (
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={
+        isEditing
+          ? t("time_tracking.modal_edit_title")
+          : t("time_tracking.modal_create_title")
+      }
+      actions={
+        <>
+          <Button
+            variant="outlined"
+            size="small"
+            className="btn-cancel"
+            sx={{ textTransform: "none" }}
+            onClick={onClose}
+          >
+            {t("time_tracking.cancel")}
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ textTransform: "none" }}
+            onClick={onSubmit}
+            disabled={
+              !form.comment.trim() || submitting || form.durationMinutes <= 0
+            }
+          >
+            {submitting
+              ? t("time_tracking.saving")
+              : isEditing
+                ? t("time_tracking.save_edit")
+                : t("time_tracking.save_create")}
+          </Button>
+        </>
+      }
+    >
+      <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
+        >
+          <FormField label={t("time_tracking.field_date")}>
+            <Box
+              component="button"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                setDatePickerAnchor(e.currentTarget)
+              }
+              sx={{
+                ...inputSx,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              {form.date
+                ? format(parseDateLocal(form.date), "d MMMM yyyy", {
+                    locale: fr,
+                  })
+                : t("time_tracking.choose_date")}
+              <CalendarTodayOutlined
+                sx={{ fontSize: 13, color: "var(--muted2)" }}
+              />
+            </Box>
+            <DatePickerPopover
+              anchor={datePickerAnchor}
+              onClose={() => setDatePickerAnchor(null)}
+              selectedDate={form.date}
+              onSelect={(d) => onFormChange((f) => ({ ...f, date: d }))}
+            />
+          </FormField>
+          <FormField
+            label={t("time_tracking.field_duration")}
+            labelSuffix={
+              <Tooltip
+                title={t("time_tracking.duration_help")}
+                placement="top"
+                arrow
+              >
+                <InfoOutlined
+                  sx={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    cursor: "help",
+                    verticalAlign: "middle",
+                  }}
+                />
+              </Tooltip>
+            }
+          >
+            <DurationPicker
+              value={form.durationMinutes}
+              onChange={(v) =>
+                onFormChange((f) => ({ ...f, durationMinutes: v }))
+              }
+            />
+          </FormField>
+        </Box>
+
+        <FormField
+          label={
+            <>
+              {t("time_tracking.field_description")}{" "}
+              <Box component="span" sx={{ color: "var(--red)" }}>
+                *
+              </Box>
+            </>
+          }
+        >
+          <Box
+            component="input"
+            type="text"
+            sx={inputSx}
+            value={form.comment}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onFormChange((f) => ({ ...f, comment: e.target.value }))
+            }
+            placeholder={t("time_tracking.description_placeholder")}
+            autoFocus
+          />
+        </FormField>
+
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
+        >
+          <FormField label={t("time_tracking.field_ticket")}>
+            <Box
+              component="select"
+              value={form.ticketId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onFormChange((f) => ({ ...f, ticketId: e.target.value }))
+              }
+              sx={{
+                appearance: "none",
+                WebkitAppearance: "none",
+                background: "var(--s1)",
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "7px",
+                pr: "36px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            >
+              <option value="">{t("time_tracking.no_ticket_option")}</option>
+              {tickets.map((tk) => (
+                <option key={tk.id} value={tk.id}>
+                  {tk.reference} — {tk.title}
+                </option>
+              ))}
+            </Box>
+          </FormField>
+          <FormField label={t("time_tracking.field_project")}>
+            <Box
+              component="select"
+              value={form.techProjectId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onFormChange((f) => ({ ...f, techProjectId: e.target.value }))
+              }
+              sx={{
+                appearance: "none",
+                WebkitAppearance: "none",
+                background: "var(--s1)",
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                px: "12px",
+                py: "7px",
+                pr: "36px",
+                fontSize: "13px",
+                color: "var(--text)",
+                width: "100%",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            >
+              <option value="">{t("time_tracking.no_project_option")}</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Box>
+          </FormField>
+        </Box>
+      </Box>
+    </AppModal>
+  );
+};

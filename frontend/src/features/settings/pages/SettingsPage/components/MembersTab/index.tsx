@@ -1,0 +1,425 @@
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import BlockOutlined from "@mui/icons-material/BlockOutlined";
+import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { RowActions } from "@/components/RowActions";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
+import { useT } from "@/i18n/I18nContext";
+import { getUsers, toggleUserActive } from "@/features/users/api/users";
+import { User } from "@/types";
+import { MemberPagination } from "../MemberPagination";
+
+interface Props {
+  onInviteClick: () => void;
+}
+
+export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const t = useT();
+
+  const ROLE_LABELS: Record<string, string> = useMemo(
+    () => ({
+      Admin: t("settings.role.admin"),
+      Developer: t("settings.role.developer"),
+    }),
+    [t],
+  );
+
+  const [members, setMembers] = useState<User[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberRoleFilter, setMemberRoleFilter] = useState("all");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const measure = () =>
+      setPageSize(Math.max(1, Math.floor((el.clientHeight - 52 - 41) / 52)));
+    measure();
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const loadMembers = useCallback(async () => {
+    setLoadingMembers(true);
+    try {
+      setMembers((await getUsers()).items);
+    } catch {
+      showToast(t("settings.toast.members_load_error"), "error");
+    } finally {
+      setLoadingMembers(false);
+    }
+  }, [showToast, t]);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [memberSearch, memberRoleFilter]);
+
+  const filteredMembers = useMemo(() => {
+    let list = members;
+    if (memberSearch.trim()) {
+      const q = memberSearch.toLowerCase();
+      list = list.filter(
+        (m) =>
+          `${m.firstName} ${m.lastName}`.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q),
+      );
+    }
+    if (memberRoleFilter !== "all")
+      list = list.filter((m) => m.role === memberRoleFilter);
+    return list;
+  }, [members, memberSearch, memberRoleFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
+  const paginatedMembers = filteredMembers.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
+
+  const handleToggleActive = async (
+    memberId: string,
+    currentlyActive: boolean,
+  ) => {
+    setTogglingId(memberId);
+    try {
+      await toggleUserActive(memberId, !currentlyActive);
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === memberId ? { ...m, isActive: !currentlyActive } : m,
+        ),
+      );
+    } catch {
+      showToast(t("settings.toast.toggle_error"), "error");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  return (
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          mb: "12px",
+          flexShrink: 0,
+        }}
+      >
+        <Box
+          sx={{
+            flex: "0 0 240px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "var(--s1)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            px: "10px",
+            height: "32px",
+            "&:focus-within": {
+              borderColor: "var(--accent-border)",
+              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+            },
+          }}
+        >
+          <SearchOutlined
+            sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}
+          />
+          <Box
+            component="input"
+            placeholder={t("settings.members.search_placeholder")}
+            sx={{
+              flex: 1,
+              background: "none",
+              border: "none",
+              outline: "none",
+              fontSize: "12px",
+              color: "var(--text)",
+              fontFamily: "inherit",
+            }}
+            value={memberSearch}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setMemberSearch(e.target.value)
+            }
+          />
+        </Box>
+        <Box
+          component="select"
+          sx={{
+            appearance: "none",
+            WebkitAppearance: "none",
+            background:
+              "var(--s1) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\") no-repeat right 12px center",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r)",
+            px: "12px",
+            height: "32px",
+            pr: "36px",
+            boxSizing: "border-box",
+            fontSize: "13px",
+            color: "var(--text)",
+            outline: "none",
+            fontFamily: "inherit",
+            cursor: "pointer",
+          }}
+          value={memberRoleFilter}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            setMemberRoleFilter(e.target.value)
+          }
+        >
+          <option value="all">{t("settings.members.filter_all_roles")}</option>
+          <option value="Admin">{t("settings.role.admin")}</option>
+          <option value="Developer">{t("settings.role.developer")}</option>
+        </Box>
+        <Box sx={{ flex: 1 }} />
+        <Button
+          variant="contained"
+          size="small"
+          onClick={onInviteClick}
+          startIcon={<PersonAddOutlined sx={{ fontSize: "13px !important" }} />}
+        >
+          {t("settings.members.add_member")}
+        </Button>
+      </Box>
+
+      <Box
+        ref={tableWrapRef}
+        sx={{
+          flex: 1,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "10px",
+        }}
+      >
+        {loadingMembers ? (
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CircularProgress size={20} />
+          </Box>
+        ) : filteredMembers.length === 0 ? (
+          <Box className="empty-state">
+            <Box className="empty-state-title">
+              {t("settings.members.empty")}
+            </Box>
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ flex: 1, overflow: "hidden" }}>
+              <Box
+                component="table"
+                sx={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "12px",
+                }}
+              >
+                <Box component="thead">
+                  <Box
+                    component="tr"
+                    sx={{
+                      borderBottom: "1px solid var(--border)",
+                      background: "var(--s2)",
+                    }}
+                  >
+                    {[
+                      {
+                        key: "member",
+                        label: t("settings.members.col_member"),
+                        width: "auto",
+                      },
+                      {
+                        key: "role",
+                        label: t("settings.members.col_role"),
+                        width: "90px",
+                      },
+                      {
+                        key: "status",
+                        label: t("settings.members.col_status"),
+                        width: "110px",
+                      },
+                      {
+                        key: "last_login",
+                        label: t("settings.members.col_last_login"),
+                        width: "160px",
+                      },
+                      { key: "actions", label: "", width: "48px" },
+                    ].map(({ key, label, width }) => (
+                      <Box
+                        component="th"
+                        key={key}
+                        sx={{
+                          px: "16px",
+                          py: "10px",
+                          textAlign: "left",
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: "var(--muted)",
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                          width,
+                        }}
+                      >
+                        {label}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+                <Box component="tbody">
+                  {paginatedMembers.map((m) => (
+                    <Box
+                      component="tr"
+                      key={m.id}
+                      sx={{
+                        borderBottom: "1px solid var(--border)",
+                        "&:last-child": { borderBottom: "none" },
+                        "&:hover": { background: "var(--s2)" },
+                        "&:hover .row-actions": { opacity: "1 !important" },
+                        transition: "background 0.1s",
+                      }}
+                    >
+                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <Box>
+                            <Box
+                              sx={{
+                                fontWeight: 600,
+                                color: "var(--text)",
+                                lineHeight: 1.3,
+                              }}
+                            >
+                              {m.firstName} {m.lastName}
+                            </Box>
+                            <Box
+                              sx={{ color: "var(--muted2)", fontSize: "11px" }}
+                            >
+                              {m.email}
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
+                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+                        <Box
+                          sx={{
+                            fontWeight: 400,
+                            color: "var(--text)",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {ROLE_LABELS[m.role] ?? m.role}
+                        </Box>
+                      </Box>
+                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+                        <Box
+                          sx={{
+                            fontWeight: 400,
+                            color: "var(--text)",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {m.isActive
+                            ? t("settings.members.status_active")
+                            : t("settings.members.status_inactive")}
+                        </Box>
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
+                          px: "16px",
+                          py: "10px",
+                          color: "var(--muted2)",
+                          fontSize: "11px",
+                        }}
+                      >
+                        {m.lastLoginAt
+                          ? formatDistanceToNow(new Date(m.lastLoginAt), {
+                              addSuffix: true,
+                              locale: fr,
+                            })
+                          : "—"}
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{ px: "16px", py: "10px", textAlign: "right" }}
+                      >
+                        {m.id !== user?.id &&
+                          (togglingId === m.id ? (
+                            <CircularProgress size={13} />
+                          ) : (
+                            <RowActions
+                              actions={[
+                                {
+                                  icon: m.isActive ? (
+                                    <BlockOutlined sx={{ fontSize: 13 }} />
+                                  ) : (
+                                    <CheckCircleOutlineOutlined
+                                      sx={{ fontSize: 13 }}
+                                    />
+                                  ),
+                                  label: m.isActive
+                                    ? t("settings.members.deactivate")
+                                    : t("settings.members.activate"),
+                                  onClick: () =>
+                                    handleToggleActive(m.id, m.isActive),
+                                  color: m.isActive ? "red" : "green",
+                                },
+                              ]}
+                            />
+                          ))}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+            <MemberPagination
+              page={page}
+              totalPages={totalPages}
+              total={filteredMembers.length}
+              onChange={setPage}
+            />
+          </>
+        )}
+      </Box>
+    </>
+  );
+};
