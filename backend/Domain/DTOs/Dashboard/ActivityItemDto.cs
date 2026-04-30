@@ -6,4 +6,5 @@ public class ActivityItemDto
     public string Text { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public string? Detail { get; set; }
+    public string? TooltipText { get; set; }
 }

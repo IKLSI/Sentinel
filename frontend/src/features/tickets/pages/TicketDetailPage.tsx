@@ -4,9 +4,9 @@ import ReactMarkdown from "react-markdown";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import ForumOutlined from "@mui/icons-material/ForumOutlined";
-import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
+import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import LinkRounded from "@mui/icons-material/LinkRounded";
 import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
@@ -66,9 +66,9 @@ const typeLabels: Record<string, string> = {
 };
 
 const markdownSx = {
-  fontSize: "14px",
+  fontSize: "13px",
   color: "#334155",
-  lineHeight: 1.8,
+  lineHeight: 1.7,
   "& p": { m: 0, mb: "10px" },
   "& p:last-child": { mb: 0 },
   "& code": {
@@ -381,22 +381,22 @@ export const TicketDetailPage: React.FC = () => {
       <Box
         className="page-enter"
         sx={{
-          p: { xs: "20px 10px 14px", md: "20px 16px 14px" },
-          height: "100vh",
+          p: { xs: "12px 8px 10px", md: "20px 28px 16px" },
+          minHeight: "100vh",
           display: "flex",
-          gap: "16px",
-          alignItems: "stretch",
+          gap: "14px",
+          alignItems: "flex-start",
           flexDirection: { xs: "column", lg: "row" },
-          overflow: "hidden",
         }}
       >
         <Box
           sx={{
             flex: 1,
             minWidth: 0,
+            maxHeight: { xs: "calc(100vh - 22px)", md: "calc(100vh - 36px)" },
             background: "#ffffff",
             border: "1px solid #e2e8f0",
-            borderRadius: "24px",
+            borderRadius: "20px",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -406,10 +406,9 @@ export const TicketDetailPage: React.FC = () => {
         >
           <Box
             sx={{
-              px: { xs: "20px", md: "30px" },
-              pt: { xs: "20px", md: "28px" },
-              pb: { xs: "18px", md: "24px" },
-              borderBottom: "1px solid #e2e8f0",
+              px: { xs: "24px", md: "40px" },
+              pt: { xs: "24px", md: "36px" },
+              pb: 0,
             }}
           >
             <Box
@@ -417,7 +416,7 @@ export const TicketDetailPage: React.FC = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                mb: "14px",
+                mb: "24px",
                 color: "#64748b",
                 fontSize: "13px",
               }}
@@ -430,22 +429,23 @@ export const TicketDetailPage: React.FC = () => {
                   fontWeight: 600,
                 }}
               >
-                <FolderOutlined sx={{ fontSize: 16, color: "#7c3aed" }} />
+                <FolderOutlined sx={{ fontSize: 13, color: "#7c3aed" }} />
                 {ticket.projectName ?? "Projet"}
               </Box>
-              <ChevronRightOutlined sx={{ fontSize: 14, color: "#cbd5e1" }} />
+              <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
               <Box
                 sx={{
                   fontFamily: "var(--font-mono)",
                   letterSpacing: "0.08em",
-                  fontSize: "13px",
+                  fontSize: "12px",
                   color: "#475569",
                   fontWeight: 700,
                 }}
               >
                 {ticket.reference}
               </Box>
-              <Box sx={{ ml: "8px", color: "#94a3b8", fontSize: "13px" }}>
+              <ChevronRightOutlined sx={{ fontSize: 12, color: "#cbd5e1" }} />
+              <Box sx={{ color: "#94a3b8", fontSize: "12px" }}>
                 Ouvert{" "}
                 <Box
                   component="span"
@@ -460,11 +460,13 @@ export const TicketDetailPage: React.FC = () => {
               component="h1"
               sx={{
                 m: 0,
-                fontSize: { xs: "24px", md: "38px" },
-                lineHeight: 1.14,
-                letterSpacing: "-0.03em",
+                mt: "4px",
+                mb: "0px",
+                fontSize: { xs: "18px", md: "24px" },
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
                 color: "#0f172a",
-                fontWeight: 800,
+                fontWeight: 700,
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
@@ -479,22 +481,23 @@ export const TicketDetailPage: React.FC = () => {
                     alignItems: "center",
                     gap: "8px",
                     fontFamily: "var(--font-mono)",
-                    fontSize: { xs: "17px", md: "30px" },
+                    fontSize: { xs: "17px", md: "28px" },
                     color: "#5b3dd1",
                     background:
                       "linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)",
                     border: "1px solid #d8ccff",
-                    borderRadius: "16px",
-                    px: "14px",
+                    borderRadius: "14px",
+                    px: "16px",
                     py: "8px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                   }}
                 >
-                  <LinkRounded sx={{ fontSize: 18, color: "#8b5cf6" }} />
+                  <LinkRounded sx={{ fontSize: 20, color: "#8b5cf6" }} />
                   {endpointMatch}
                 </Box>
               )}
             </Box>
+
           </Box>
 
           <Box
@@ -502,117 +505,123 @@ export const TicketDetailPage: React.FC = () => {
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
-              px: { xs: "20px", md: "30px" },
-              py: { xs: "18px", md: "24px" },
+              px: { xs: "24px", md: "40px" },
+              pt: { xs: "24px", md: "36px" },
+              pb: { xs: "18px", md: "24px" },
             }}
           >
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                mb: "10px",
+                gap: "14px",
+                mb: "22px",
               }}
             >
-              <DescriptionOutlined sx={{ fontSize: 16, color: "#94a3b8" }} />
+              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
               <Box
                 sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                   fontSize: "11px",
+                  fontWeight: 600,
+                  color: "#94a3b8",
                   textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  color: "#64748b",
-                  fontWeight: 800,
+                  letterSpacing: "0.1em",
+                  whiteSpace: "nowrap",
                 }}
               >
+                <DescriptionOutlined sx={{ fontSize: 13 }} />
                 Description
               </Box>
+              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
             </Box>
 
-            <Box
-              sx={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "24px",
-                background: "#ffffff",
-                overflow: "hidden",
-                mb: "30px",
-              }}
-            >
-              <Box sx={{ p: "20px 24px" }}>
-                {ticket.description ? (
-                  <Box sx={markdownSx}>
-                    <ReactMarkdown>{ticket.description}</ReactMarkdown>
-                  </Box>
-                ) : (
-                  <Box sx={{ color: "#94a3b8", fontSize: "13px" }}>
-                    Aucune description fournie.
-                  </Box>
-                )}
-              </Box>
+            <Box>
+              {ticket.description ? (
+                <Box sx={markdownSx}>
+                  <ReactMarkdown>{ticket.description}</ReactMarkdown>
+                </Box>
+              ) : (
+                <Box sx={{ color: "#94a3b8", fontSize: "13px" }}>
+                  Aucune description fournie.
+                </Box>
+              )}
             </Box>
 
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                mb: "18px",
+                gap: "14px",
+                my: "28px",
               }}
             >
-              <ForumOutlined sx={{ fontSize: 16, color: "#94a3b8" }} />
+              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
               <Box
                 sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                   fontSize: "11px",
+                  fontWeight: 600,
+                  color: "#94a3b8",
                   textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  color: "#64748b",
-                  fontWeight: 800,
+                  letterSpacing: "0.1em",
+                  whiteSpace: "nowrap",
                 }}
               >
-                Conversation
+                <ForumOutlined sx={{ fontSize: 13 }} />
+                Conversation{ticket.comments.length > 0 ? ` · ${ticket.comments.length}` : ""}
               </Box>
+              <Box sx={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
             </Box>
 
-            <Box sx={{ position: "relative" }}>
-              {ticket.comments.length > 0 && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    left: "19px",
-                    top: "50px",
-                    bottom: "120px",
-                    width: "2px",
-                    background: "#e2e8f0",
-                  }}
-                />
-              )}
+            <>
+              <Box sx={{ position: "relative" }}>
 
-              {ticket.comments.map((c) => {
+              {ticket.comments.map((c, idx) => {
                 const own = user?.id === c.authorId;
                 return (
                   <Box
                     key={c.id}
                     sx={{
                       display: "flex",
-                      gap: "14px",
-                      mb: "18px",
+                      gap: "10px",
+                      mb: "12px",
                       position: "relative",
                     }}
                   >
+                    {idx < ticket.comments.length - 1 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: "14px",
+                          top: "36px",
+                          height: "calc(100% - 30px)",
+                          width: "1px",
+                          background: "#e2e8f0",
+                          zIndex: 0,
+                        }}
+                      />
+                    )}
                     <Box
                       sx={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "16px",
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "8px",
                         background: c.isInternal
                           ? "linear-gradient(140deg, #c4b5fd 0%, #818cf8 100%)"
                           : "linear-gradient(140deg, #fda4af 0%, #fb7185 100%)",
                         color: "#fff",
                         fontFamily: "var(--font-mono)",
                         fontWeight: 800,
-                        fontSize: "14px",
+                        fontSize: "11px",
                         display: "grid",
                         placeItems: "center",
                         zIndex: 1,
+                        flexShrink: 0,
                       }}
                     >
                       {getInitials(c.author.firstName, c.author.lastName)}
@@ -623,15 +632,15 @@ export const TicketDetailPage: React.FC = () => {
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "10px",
-                          mb: "8px",
+                          gap: "8px",
+                          mb: "6px",
                         }}
                       >
                         <Box
                           sx={{
-                            fontSize: "14px",
+                            fontSize: "13px",
                             color: "#0f172a",
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           {c.author.firstName} {c.author.lastName}
@@ -729,11 +738,11 @@ export const TicketDetailPage: React.FC = () => {
                           border: c.isInternal
                             ? "1px solid #fde68a"
                             : "1px solid #e2e8f0",
-                          borderRadius: "22px",
-                          background: c.isInternal ? "#fffbeb" : "#ffffff",
+                          borderRadius: "14px",
+                          background: c.isInternal ? "#fffbeb" : "#f8fafc",
                         }}
                       >
-                        <Box sx={{ p: "18px 22px" }}>
+                        <Box sx={{ p: "12px 16px" }}>
                           <Box sx={markdownSx}>
                             <ReactMarkdown>{c.content}</ReactMarkdown>
                           </Box>
@@ -745,34 +754,45 @@ export const TicketDetailPage: React.FC = () => {
               })}
 
               {ticket.comments.length === 0 && (
-                <Box sx={{ color: "#94a3b8", fontSize: "13px", py: "8px" }}>
-                  Aucun message pour le moment.
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    py: "32px",
+                    color: "#94a3b8",
+                  }}
+                >
+                  <ForumOutlined sx={{ fontSize: 28, opacity: 0.4 }} />
+                  <Box sx={{ fontSize: "13px", fontWeight: 500 }}>Aucun commentaire pour le moment</Box>
+                  <Box sx={{ fontSize: "12px", color: "#cbd5e1" }}>Soyez le premier à répondre</Box>
                 </Box>
               )}
             </Box>
 
-            <Box sx={{ mt: "24px" }}>
+            <Box sx={{ mt: "28px" }}>
               <Box
                 sx={{
                   display: "inline-flex",
-                  p: "4px",
+                  p: "3px",
                   background: "#f1f5f9",
                   border: "1px solid #e2e8f0",
-                  borderRadius: "16px",
-                  mb: "12px",
-                  gap: "4px",
+                  borderRadius: "12px",
+                  mb: "8px",
+                  gap: "3px",
                 }}
               >
                 {[
                   {
                     key: "reply",
                     label: "Réponse",
-                    icon: <MessageOutlined sx={{ fontSize: 16 }} />,
+                    icon: <MessageOutlined sx={{ fontSize: 14 }} />,
                   },
                   {
                     key: "internal",
                     label: "Note interne",
-                    icon: <LockOutlined sx={{ fontSize: 16 }} />,
+                    icon: <LockOutlined sx={{ fontSize: 14 }} />,
                   },
                 ].map((tab) => {
                   const active = composerMode === tab.key;
@@ -788,16 +808,16 @@ export const TicketDetailPage: React.FC = () => {
                         cursor: "pointer",
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "8px",
-                        px: "14px",
-                        height: "40px",
-                        borderRadius: "12px",
+                        gap: "6px",
+                        px: "12px",
+                        height: "34px",
+                        borderRadius: "10px",
                         color: active ? "#0f172a" : "#64748b",
                         background: active ? "#ffffff" : "transparent",
                         boxShadow: active
                           ? "0 1px 2px rgba(15,23,42,0.08)"
                           : "none",
-                        fontSize: "13px",
+                        fontSize: "12px",
                         fontWeight: 700,
                       }}
                     >
@@ -811,7 +831,7 @@ export const TicketDetailPage: React.FC = () => {
               <Box
                 sx={{
                   border: "1px solid #dbe3ef",
-                  borderRadius: "22px",
+                  borderRadius: "16px",
                   overflow: "hidden",
                   background: "#ffffff",
                 }}
@@ -841,10 +861,10 @@ export const TicketDetailPage: React.FC = () => {
                     border: "none",
                     borderRadius: 0,
                     boxShadow: "none !important",
-                    px: "20px",
-                    py: "16px",
+                    px: "16px",
+                    py: "12px",
                     resize: "vertical",
-                    minHeight: "140px",
+                    minHeight: "90px",
                   }}
                 />
                 <Box sx={{ height: "1px", background: "#e2e8f0" }} />
@@ -858,20 +878,20 @@ export const TicketDetailPage: React.FC = () => {
                   }}
                 >
                   {[
-                    <FormatBoldRounded key="b" sx={{ fontSize: 18 }} />,
-                    <FormatItalicRounded key="i" sx={{ fontSize: 18 }} />,
-                    <CodeRounded key="c" sx={{ fontSize: 18 }} />,
-                    <LinkOutlined key="l" sx={{ fontSize: 18 }} />,
-                    <AttachFileOutlined key="a" sx={{ fontSize: 18 }} />,
+                    <FormatBoldRounded key="b" sx={{ fontSize: 16 }} />,
+                    <FormatItalicRounded key="i" sx={{ fontSize: 16 }} />,
+                    <CodeRounded key="c" sx={{ fontSize: 16 }} />,
+                    <LinkOutlined key="l" sx={{ fontSize: 16 }} />,
+                    <AttachFileOutlined key="a" sx={{ fontSize: 16 }} />,
                   ].map((icon, idx) => (
                     <Box
                       key={idx}
                       component="button"
                       sx={{
                         all: "unset",
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "8px",
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "7px",
                         cursor: "pointer",
                         color: "#94a3b8",
                         display: "grid",
@@ -888,18 +908,18 @@ export const TicketDetailPage: React.FC = () => {
                     onClick={handleAddComment}
                     disabled={!composerValue.trim() || submitting}
                     sx={{
-                      minWidth: "152px",
-                      height: "44px",
-                      borderRadius: "14px",
+                      minWidth: "120px",
+                      height: "36px",
+                      borderRadius: "10px",
                       fontWeight: 700,
-                      fontSize: "15px",
+                      fontSize: "13px",
                       background:
                         "linear-gradient(180deg,#6d5ef7 0%, #4f46e5 100%)",
                     }}
-                    startIcon={<SendRounded sx={{ fontSize: 18 }} />}
+                    endIcon={!submitting ? <SendRounded sx={{ fontSize: 15 }} /> : undefined}
                   >
                     {submitting ? (
-                      <CircularProgress size={18} sx={{ color: "#fff" }} />
+                      <CircularProgress size={14} sx={{ color: "#fff" }} />
                     ) : (
                       "Envoyer"
                     )}
@@ -907,12 +927,13 @@ export const TicketDetailPage: React.FC = () => {
                 </Box>
               </Box>
             </Box>
+            </>
           </Box>
         </Box>
 
         <Box
           sx={{
-            width: { xs: "100%", lg: "330px" },
+            width: { xs: "100%", lg: "290px" },
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
@@ -923,22 +944,22 @@ export const TicketDetailPage: React.FC = () => {
           <Box
             sx={{
               border: "1px solid #e2e8f0",
-              borderRadius: "24px",
+              borderRadius: "20px",
               background: "#ffffff",
               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-              p: "12px 10px 8px",
+              p: "8px 6px 4px",
             }}
           >
             <Box
               sx={{
-                px: "12px",
+                px: "10px",
                 pt: "4px",
                 pb: "6px",
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 fontWeight: 800,
                 color: "#94a3b8",
-                fontSize: "11px",
+                fontSize: "10px",
               }}
             >
               Propriétés
@@ -950,17 +971,18 @@ export const TicketDetailPage: React.FC = () => {
                   <>
                     <Box
                       sx={{
-                        width: "10px",
-                        height: "10px",
+                        width: "7px",
+                        height: "7px",
                         borderRadius: "999px",
                         background: status.dot,
+                        flexShrink: 0,
                       }}
                     />
                     <Box
                       sx={{
                         color: status.color,
                         fontWeight: 400,
-                        fontSize: "13px",
+                        fontSize: "12px",
                       }}
                     >
                       {status.label}
@@ -974,17 +996,18 @@ export const TicketDetailPage: React.FC = () => {
                   <>
                     <Box
                       sx={{
-                        width: "10px",
-                        height: "10px",
+                        width: "7px",
+                        height: "7px",
                         borderRadius: "999px",
                         background: priority.dot,
+                        flexShrink: 0,
                       }}
                     />
                     <Box
                       sx={{
                         color: priority.color,
                         fontWeight: 400,
-                        fontSize: "13px",
+                        fontSize: "12px",
                       }}
                     >
                       {priority.label}
@@ -996,12 +1019,12 @@ export const TicketDetailPage: React.FC = () => {
                 label: "Type",
                 value: (
                   <>
-                    <ShieldOutlined sx={{ fontSize: 18, color: "#64748b" }} />
+                    <ShieldOutlined sx={{ fontSize: 14, color: "#64748b" }} />
                     <Box
                       sx={{
                         color: "#0f172a",
                         fontWeight: 400,
-                        fontSize: "13px",
+                        fontSize: "12px",
                       }}
                     >
                       {typeLabels[ticket.type] ?? ticket.type}
@@ -1012,39 +1035,12 @@ export const TicketDetailPage: React.FC = () => {
               {
                 label: "Assigné",
                 value: ticket.assignee ? (
-                  <>
-                    <Box
-                      sx={{
-                        width: "34px",
-                        height: "34px",
-                        borderRadius: "10px",
-                        background: "linear-gradient(140deg,#c4b5fd,#818cf8)",
-                        color: "#fff",
-                        fontFamily: "var(--font-mono)",
-                        fontWeight: 800,
-                        fontSize: "10px",
-                        display: "grid",
-                        placeItems: "center",
-                      }}
-                    >
-                      {getInitials(
-                        ticket.assignee.firstName,
-                        ticket.assignee.lastName,
-                      )}
-                    </Box>
-                    <Box
-                      sx={{
-                        color: "#0f172a",
-                        fontWeight: 400,
-                        fontSize: "13px",
-                      }}
-                    >
-                      {ticket.assignee.firstName} {ticket.assignee.lastName}
-                    </Box>
-                  </>
+                  <Box sx={{ color: "#0f172a", fontWeight: 400, fontSize: "12px" }}>
+                    {ticket.assignee.firstName} {ticket.assignee.lastName}
+                  </Box>
                 ) : (
                   <Box
-                    sx={{ color: "#94a3b8", fontWeight: 400, fontSize: "13px" }}
+                    sx={{ color: "#94a3b8", fontWeight: 400, fontSize: "12px" }}
                   >
                     Non assigné
                   </Box>
@@ -1054,12 +1050,12 @@ export const TicketDetailPage: React.FC = () => {
                 label: "Projet",
                 value: (
                   <>
-                    <FolderOutlined sx={{ fontSize: 18, color: "#7c3aed" }} />
+                    <FolderOutlined sx={{ fontSize: 14, color: "#7c3aed" }} />
                     <Box
                       sx={{
                         color: "#0f172a",
                         fontWeight: 400,
-                        fontSize: "13px",
+                        fontSize: "12px",
                       }}
                     >
                       {ticket.projectName ?? "—"}
@@ -1075,19 +1071,19 @@ export const TicketDetailPage: React.FC = () => {
                     all: "unset",
                     width: "100%",
                     boxSizing: "border-box",
-                    py: "14px",
-                    px: "12px",
+                    py: "9px",
+                    px: "10px",
                     display: "grid",
-                    gridTemplateColumns: "96px 1fr",
+                    gridTemplateColumns: "76px 1fr",
                     alignItems: "center",
-                    gap: "10px",
-                    borderRadius: "12px",
+                    gap: "8px",
+                    borderRadius: "8px",
                     cursor: "pointer",
                     "&:hover": { background: "#f8fafc" },
                   }}
                 >
                   <Box
-                    sx={{ color: "#94a3b8", fontSize: "12px", fontWeight: 400 }}
+                    sx={{ color: "#94a3b8", fontSize: "11px", fontWeight: 400 }}
                   >
                     {row.label}
                   </Box>
@@ -1095,8 +1091,8 @@ export const TicketDetailPage: React.FC = () => {
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "10px",
-                      fontSize: "13px",
+                      gap: "8px",
+                      fontSize: "12px",
                     }}
                   >
                     {row.value}
@@ -1109,7 +1105,7 @@ export const TicketDetailPage: React.FC = () => {
                 </Box>
                 {idx < arr.length - 1 && (
                   <Box
-                    sx={{ mx: "10px", height: "1px", background: "#eef2f7" }}
+                    sx={{ mx: "8px", height: "1px", background: "#eef2f7" }}
                   />
                 )}
               </Box>
@@ -1119,10 +1115,10 @@ export const TicketDetailPage: React.FC = () => {
           <Box
             sx={{
               border: "1px solid #e2e8f0",
-              borderRadius: "24px",
+              borderRadius: "20px",
               background: "#ffffff",
               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-              p: "12px 10px 8px",
+              p: "8px 6px 4px",
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
@@ -1130,14 +1126,14 @@ export const TicketDetailPage: React.FC = () => {
           >
             <Box
               sx={{
-                px: "12px",
+                px: "10px",
                 pt: "4px",
-                pb: "8px",
+                pb: "6px",
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 fontWeight: 800,
                 color: "#94a3b8",
-                fontSize: "11px",
+                fontSize: "10px",
               }}
             >
               Historique
@@ -1145,8 +1141,8 @@ export const TicketDetailPage: React.FC = () => {
             <Box
               sx={{
                 position: "relative",
-                px: "12px",
-                pb: "8px",
+                px: "10px",
+                pb: "6px",
                 overflowY: "auto",
               }}
             >
@@ -1154,9 +1150,9 @@ export const TicketDetailPage: React.FC = () => {
                 <Box
                   sx={{
                     position: "absolute",
-                    left: "18px",
-                    top: "16px",
-                    bottom: "16px",
+                    left: "13px",
+                    top: "14px",
+                    bottom: "14px",
                     width: "2px",
                     background:
                       "linear-gradient(180deg, #e2e8f0 0%, #e2e8f0 80%, transparent 100%)",
@@ -1177,27 +1173,28 @@ export const TicketDetailPage: React.FC = () => {
                       key={h.id}
                       sx={{
                         display: "flex",
-                        gap: "10px",
-                        mb: "12px",
+                        gap: "8px",
+                        mb: "8px",
                         position: "relative",
                       }}
                     >
                       <Box
                         sx={{
-                          width: "12px",
-                          height: "12px",
-                          mt: "10px",
+                          width: "8px",
+                          height: "8px",
+                          mt: "8px",
                           borderRadius: "999px",
                           background: event.tone.dot,
                           border: "2px solid #fff",
-                          boxShadow: `0 0 0 3px ${event.tone.ring}`,
+                          boxShadow: `0 0 0 2px ${event.tone.ring}`,
                           zIndex: 1,
+                          flexShrink: 0,
                         }}
                       />
-                      <Box sx={{ flex: 1, minWidth: 0, pt: "3px" }}>
+                      <Box sx={{ flex: 1, minWidth: 0, pt: "2px" }}>
                         <Box
                           sx={{
-                            fontSize: "12px",
+                            fontSize: "11px",
                             color: "#0f172a",
                             lineHeight: 1.35,
                           }}
@@ -1209,7 +1206,7 @@ export const TicketDetailPage: React.FC = () => {
                             fontFamily: "var(--font-mono)",
                             fontSize: "10px",
                             color: "#94a3b8",
-                            mt: "6px",
+                            mt: "4px",
                           }}
                         >
                           {getRelativeShort(h.createdAt)} · {h.author.firstName}{" "}

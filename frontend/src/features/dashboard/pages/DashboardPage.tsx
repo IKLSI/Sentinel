@@ -17,6 +17,7 @@ import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import Tooltip from "@mui/material/Tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getDashboardStats } from "../api/dashboard";
@@ -29,6 +30,7 @@ interface ActivityItem {
   text: string;
   timestamp: string;
   detail?: string;
+  tooltipText?: string;
 }
 
 interface UrgentTicket {
@@ -755,6 +757,12 @@ export const DashboardPage: React.FC = () => {
                       )}
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
+                      <Tooltip
+                        title={a.tooltipText ?? ""}
+                        disableHoverListener={!a.tooltipText}
+                        placement="top"
+                        arrow
+                      >
                       <Box
                         sx={{
                           fontSize: "11px",
@@ -778,6 +786,7 @@ export const DashboardPage: React.FC = () => {
                           <Box component="span" sx={{ fontWeight: 700 }}>{a.text}</Box>
                         )}
                       </Box>
+                      </Tooltip>
                       <Box
                         sx={{
                           mt: "1px",

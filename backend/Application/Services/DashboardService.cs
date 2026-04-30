@@ -167,7 +167,15 @@ public class DashboardService
 
         foreach (Ticket? t in closedTickets)
         {
-            string title = t.Title.Length > 45 ? t.Title[..45] + "…" : t.Title;
+            string? tooltipTitle = null;
+            string title = t.Title;
+            if (t.Title.Length > 45)
+            {
+                int lastSpace = t.Title.LastIndexOf(' ', 45);
+                int cut = lastSpace > 0 ? lastSpace : 45;
+                title = t.Title[..cut] + "…";
+                tooltipTitle = t.Title;
+            }
             List<string> detailParts = [];
             if (t.Project?.Name is string pn) detailParts.Add(pn);
             if (t.AssignedTo is { } u) detailParts.Add($"{u.FirstName} {u.LastName}");
@@ -177,6 +185,7 @@ public class DashboardService
                 Text = $"Ticket résolu — {title}",
                 Timestamp = t.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
+                TooltipText = tooltipTitle,
             });
         }
 
