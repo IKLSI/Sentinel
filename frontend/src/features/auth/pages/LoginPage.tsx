@@ -51,11 +51,9 @@ export const LoginPage: React.FC = () => {
   return (
     <Box className="lp-root">
       <Box className="lp-card">
-        {/* ── Panel gauche ── */}
         <Box className="lp-left">
           <Box className="lp-left-noise" aria-hidden />
 
-          {/* Décor SVG fond */}
           <Box className="lp-decor" aria-hidden>
             <svg
               width="100%"
@@ -71,10 +69,8 @@ export const LoginPage: React.FC = () => {
                 </radialGradient>
               </defs>
 
-              {/* Cluster haut-droite — halo de lumière */}
               <circle cx="450" cy="0" r="160" fill="url(#lp-glow-tr)" />
 
-              {/* Anneaux concentriques haut-droite — du plus dense au plus fin */}
               <circle
                 cx="450"
                 cy="0"
@@ -99,7 +95,6 @@ export const LoginPage: React.FC = () => {
             </svg>
           </Box>
 
-          {/* Logo */}
           <Box className="lp-logo">
             <Box className="lp-logo-mark">
               <SentinelLogo width={20} height={23} />
@@ -107,7 +102,6 @@ export const LoginPage: React.FC = () => {
             <Box className="lp-logo-wordmark">{t("auth.login.brand")}</Box>
           </Box>
 
-          {/* Titre + features */}
           <Box className="lp-left-body">
             <Box className="lp-left-headline">
               <Box component="h1">
@@ -217,10 +211,8 @@ export const LoginPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* ── Panel droit ── */}
         <Box className="lp-right">
           <Box className="lp-form-wrap">
-            {/* En-tête formulaire */}
             <Box className="lp-form-header">
               <Box component="h2" className="lp-form-title">
                 {t("auth.login.form_title")}

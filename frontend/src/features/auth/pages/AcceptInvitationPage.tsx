@@ -104,7 +104,6 @@ export const AcceptInvitationPage: React.FC = () => {
   return (
     <Box className="aip-root">
       <Box className="aip-card">
-        {/* ── Panel gauche ── */}
         <Box className="aip-left">
           <Box className="aip-noise" aria-hidden />
 
@@ -188,7 +187,6 @@ export const AcceptInvitationPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* ── Panel droit ── */}
         <Box className="aip-right">
           <Box className="aip-form-wrap">
             {done ? (

@@ -216,7 +216,6 @@ export const Sidebar: React.FC = () => {
           "&::-webkit-scrollbar": { display: "none" },
         }}
       >
-        {/* ── Logo ─────────────────────────────────────────── */}
         {collapsed && !isMobile ? (
           <Tooltip title={t("sidebar.expand")} placement="right" arrow>
             <Box
@@ -319,7 +318,6 @@ export const Sidebar: React.FC = () => {
           </Box>
         )}
 
-        {/* ── Nav ──────────────────────────────────────────── */}
         <Box
           component="nav"
           sx={{
@@ -383,7 +381,6 @@ export const Sidebar: React.FC = () => {
 
                 {isMulti ? (
                   <>
-                    {/* Trigger */}
                     <Box
                       component="button"
                       onClick={() => toggleGroup(sectionKey(section))}
@@ -444,7 +441,6 @@ export const Sidebar: React.FC = () => {
                       />
                     </Box>
 
-                    {/* Children */}
                     <Box
                       sx={{
                         overflow: "hidden",
@@ -566,7 +562,6 @@ export const Sidebar: React.FC = () => {
           })}
         </Box>
 
-        {/* ── Footer ───────────────────────────────────────── */}
         <Box
           sx={{
             flexShrink: 0,
@@ -580,7 +575,6 @@ export const Sidebar: React.FC = () => {
             gap: collapsed ? "4px" : "8px",
           }}
         >
-          {/* Avatar */}
           <Tooltip
             title={collapsed ? `${user?.firstName} ${user?.lastName}` : ""}
             placement="right"
@@ -636,7 +630,6 @@ export const Sidebar: React.FC = () => {
             </Box>
           </Tooltip>
 
-          {/* Settings */}
           {isAdmin && (
             <Tooltip title={t("sidebar.settings")} placement="right" arrow>
               <Box
@@ -665,7 +658,6 @@ export const Sidebar: React.FC = () => {
             </Tooltip>
           )}
 
-          {/* Logout */}
           <Tooltip title={t("sidebar.logout")} placement="right" arrow>
             <Box
               component="button"

@@ -58,7 +58,6 @@ export const ResetPasswordPage: React.FC = () => {
   return (
     <Box className="lp-root">
       <Box className="lp-card">
-        {/* ── Panel gauche ── */}
         <Box className="lp-left">
           <Box className="lp-left-noise" aria-hidden />
 
@@ -196,7 +195,6 @@ export const ResetPasswordPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* ── Panel droit ── */}
         <Box className="lp-right">
           <Box className="lp-form-wrap">
             {done ? (

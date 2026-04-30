@@ -120,7 +120,6 @@ export const ProfilePage: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      {/* ── Card Informations ── */}
       <Box sx={CARD_SX}>
         <InnerDivider label={t("profile.section.info")} />
 
@@ -252,7 +251,6 @@ export const ProfilePage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* ── Card Préférences ── */}
       <Box sx={CARD_SX}>
         <InnerDivider label={t("profile.section.preferences")} />
 

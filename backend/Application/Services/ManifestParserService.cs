@@ -633,7 +633,7 @@ public class ManifestParserService
 
                     string name = key["node_modules/".Length..];
                     if (string.IsNullOrEmpty(name)) continue;
-                    // Ignorer les packages imbriqués (node_modules/a/node_modules/b)
+
                     if (name.Contains("/node_modules/")) continue;
 
                     string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
@@ -697,7 +697,6 @@ public class ManifestParserService
                     continue;
                 }
 
-                // Header : "package-name@^1.2.3, package-name@^1.2.4:"
                 if (!line.StartsWith(' ') && line.EndsWith(':'))
                 {
                     string firstEntry = line.TrimEnd(':').Split(',')[0].Trim().Trim('"');

@@ -52,7 +52,6 @@ public class RepositoryScannerService
                 }
             }
 
-            // Les versions de lock files (exactes) ont priorité sur les ranges des manifests
             HashSet<string> lockNames = lockDeps
                 .Select(d => d.Name.ToLowerInvariant())
                 .ToHashSet();

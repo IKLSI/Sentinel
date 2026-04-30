@@ -48,8 +48,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
       const next = !v;
       try {
         localStorage.setItem("sidebar-collapsed", String(next));
-      } catch {
-        // localStorage indisponible (mode privé, quota dépassé)
+      } catch (e) {
+        void e;
       }
       return next;
     });

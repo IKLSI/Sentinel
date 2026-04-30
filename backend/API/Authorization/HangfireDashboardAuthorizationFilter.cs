@@ -45,9 +45,7 @@ public class HangfireDashboardAuthorizationFilter : IDashboardAuthorizationFilte
                 return true;
         }
         catch
-        {
-            // ignored
-        }
+        {}
 
         Challenge(httpContext);
         return false;

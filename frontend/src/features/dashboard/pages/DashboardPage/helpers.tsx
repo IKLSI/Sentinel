@@ -61,9 +61,21 @@ export const STATUS = [
     labelKey: "dashboard.status.in_progress",
     color: "var(--cyan)",
   },
-  { key: "Testing", labelKey: "dashboard.status.testing", color: "var(--yellow)" },
-  { key: "Resolved", labelKey: "dashboard.status.resolved", color: "var(--green)" },
-  { key: "Closed", labelKey: "dashboard.status.closed", color: "var(--muted2)" },
+  {
+    key: "Testing",
+    labelKey: "dashboard.status.testing",
+    color: "var(--yellow)",
+  },
+  {
+    key: "Resolved",
+    labelKey: "dashboard.status.resolved",
+    color: "var(--green)",
+  },
+  {
+    key: "Closed",
+    labelKey: "dashboard.status.closed",
+    color: "var(--muted2)",
+  },
 ];
 
 export interface DashPalette {
@@ -231,15 +243,11 @@ export const repoPath = (
   repositoryUrl?: string,
   repositoryType?: string,
 ): string => {
-  if (repositoryUrl) {
-    try {
-      const path = new URL(repositoryUrl).pathname
-        .replace(/^\//, "")
-        .replace(/\.git$/, "");
-      if (path) return path;
-    } catch {
-      // URL invalide, fallback sur repositoryType
-    }
+  if (repositoryUrl && URL.canParse(repositoryUrl)) {
+    const path = new URL(repositoryUrl).pathname
+      .replace(/^\//, "")
+      .replace(/\.git$/, "");
+    if (path) return path;
   }
   return (repositoryType ?? "git").toLowerCase();
 };

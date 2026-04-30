@@ -272,8 +272,6 @@ public class ExportService
         _ => type,
     };
 
-    // ── TechHealth ─────────────────────────────────────────────────────────────
-
     public async Task<byte[]> ExportTechHealthExcelAsync(Guid organizationId)
     {
         List<TechProject> projects = await _context.TechProjects
@@ -382,7 +380,6 @@ public class ExportService
 
         int currentRow = 1;
 
-        // ── Section Runtimes ──────────────────────────────────────────────────
         string[] runtimeHeaders = ["Runtime", "Version", "Date EOL", "Statut"];
         ApplySectionTitle(ws, currentRow, runtimeHeaders.Length, "RUNTIMES");
         currentRow++;
@@ -436,9 +433,8 @@ public class ExportService
             currentRow++;
         }
 
-        currentRow++; // ligne vide
+        currentRow++;
 
-        // ── Section Dépendances ───────────────────────────────────────────────
         string[] depHeaders = ["Nom", "Version actuelle", "Dernière version", "Écosystème", "Type", "Statut", "Vulnérabilités"];
         ApplySectionTitle(ws, currentRow, depHeaders.Length, "DÉPENDANCES");
         currentRow++;
@@ -493,9 +489,8 @@ public class ExportService
             currentRow++;
         }
 
-        currentRow++; // ligne vide
+        currentRow++;
 
-        // ── Section Vulnérabilités ────────────────────────────────────────────
         string[] vulnHeaders = ["CVE", "Score CVSS", "Sévérité", "Dépendance", "Correctif", "Description"];
         ApplySectionTitle(ws, currentRow, vulnHeaders.Length, "VULNÉRABILITÉS");
         currentRow++;
