@@ -197,10 +197,17 @@ a:hover { text-decoration: underline; }
 
 
 
-.btn-cancel.MuiButton-outlined:hover {
-  border-color: color-mix(in srgb, var(--red) 40%, transparent) !important;
-  background: var(--red-subtle) !important;
-  color: var(--red) !important;
+.btn-cancel.MuiButton-contained {
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--s3) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.btn-cancel.MuiButton-contained:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--s3) 85%, black) 0%, var(--s3) 100%) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 

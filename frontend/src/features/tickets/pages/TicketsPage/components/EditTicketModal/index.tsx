@@ -73,7 +73,7 @@ export const EditTicketModal: React.FC<Props> = ({
       actions={
         <>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             className="btn-cancel"
             sx={{ textTransform: "none" }}
@@ -85,7 +85,7 @@ export const EditTicketModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none" }}
+            sx={{ textTransform: "none", background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
             onClick={onSubmit}
             disabled={!form.title.trim() || saving}
           >

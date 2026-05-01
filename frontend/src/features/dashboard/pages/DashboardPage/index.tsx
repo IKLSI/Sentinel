@@ -86,7 +86,7 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: "16px 20px", minHeight: "100vh" }}>
+    <Box sx={{ p: "16px 20px", height: "100vh", overflow: "hidden" }}>
       <Box
         sx={{
           display: "grid",

@@ -97,6 +97,7 @@
   "common.cancel": "Annuler",
   "common.delete": "Supprimer",
   "common.deleting": "Suppression…",
+  "common.save": "Enregistrer",
   "dashboard.activity.bold_critical": "Vulnérabilité critique",
   "dashboard.activity.bold_resolved": "Ticket résolu",
   "dashboard.activity.realtime": "Mise à jour temps réel",

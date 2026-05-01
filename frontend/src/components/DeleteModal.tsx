@@ -70,7 +70,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
         }}
       >
         <Button
-          variant="outlined"
+          variant="contained"
           size="small"
           className="btn-cancel"
           sx={{ textTransform: "none" }}
@@ -84,9 +84,12 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           size="small"
           sx={{
             textTransform: "none",
-            background: "var(--red)",
+            background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--red)",
+            boxShadow: "none",
             "&:hover": {
-              background: "color-mix(in srgb, var(--red) 88%, black)",
+              background: "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+              boxShadow: "none",
+              transform: "none",
             },
             "&:disabled": { background: "var(--red)", opacity: 0.6 },
           }}

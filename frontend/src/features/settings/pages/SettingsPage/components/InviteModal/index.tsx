@@ -54,7 +54,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
       actions={
         <>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             className="btn-cancel"
             onClick={handleClose}
@@ -62,22 +62,12 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             {t("settings.invite.cancel")}
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             type="submit"
             form="invite-form"
             disabled={submitting || !inv.email.trim()}
-            sx={{
-              textTransform: "none",
-              background: "var(--accent)",
-              borderColor: "var(--accent)",
-              color: "#fff",
-              "&:hover": {
-                background: "var(--accent2)",
-                borderColor: "var(--accent2)",
-                color: "#fff",
-              },
-            }}
+            sx={{ textTransform: "none", background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
           >
             {submitting
               ? t("settings.invite.sending")

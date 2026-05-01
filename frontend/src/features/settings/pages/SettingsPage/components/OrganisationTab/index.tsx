@@ -218,9 +218,22 @@ export const OrganisationTab: React.FC = () => {
                 <Button
                   variant="contained"
                   size="small"
+                  disableElevation
                   onClick={handleSaveOrg}
                   disabled={savingOrg || orgUnchanged}
-                  sx={{ minWidth: "110px" }}
+                  sx={{
+                    minWidth: "110px",
+                    textTransform: "none",
+                    background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)",
+                    color: "#fff",
+                    boxShadow: "none",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                      boxShadow: "none",
+                      transform: "none",
+                    },
+                    "&:active": { boxShadow: "none" },
+                  }}
                 >
                   {savingOrg
                     ? t("settings.org.saving")
