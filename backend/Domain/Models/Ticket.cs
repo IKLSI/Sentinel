@@ -44,6 +44,8 @@ public class Ticket
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsInternal { get; set; } = false;
     public string Tags { get; set; } = "[]";
+    public Guid? KanbanColumnId { get; set; }
+    public KanbanColumn? KanbanColumn { get; set; }
     public Organization Organization { get; set; } = null!;
     public TechProject? Project { get; set; }
     public User? AssignedTo { get; set; }

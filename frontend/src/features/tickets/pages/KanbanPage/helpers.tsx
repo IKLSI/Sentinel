@@ -6,6 +6,7 @@ import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import { Ticket, TicketPriority, TicketStatus } from "@/types";
+import type { KanbanColumnDef as CustomColumnDef } from "../../api/kanbanColumns";
 
 type KanbanType =
   | "bug"
@@ -28,11 +29,21 @@ export interface KanbanTicket {
   commentCount: number;
 }
 
-export type KanbanColumns = Record<TicketStatus, KanbanTicket[]>;
+export type KanbanColumns = Record<string, KanbanTicket[]>;
 
 export interface ProjectInfo {
   name: string;
   ticketCount: number;
+}
+
+export interface KanbanColumnDef {
+  id: string;
+  name: string;
+  color: string;
+  subtle: string;
+  border: string;
+  isSystem: boolean;
+  labelKey?: string;
 }
 
 export const typeLabelKeys: Record<KanbanType, string> = {
@@ -53,7 +64,7 @@ export const typeIcons: Record<KanbanType, React.ReactElement> = {
   question: <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
 };
 
-export const columnMeta: Record<
+export const systemColumnMeta: Record<
   TicketStatus,
   { labelKey: string; color: string; subtle: string; border: string }
 > = {
@@ -89,7 +100,9 @@ export const columnMeta: Record<
   },
 };
 
-export const columnOrder: TicketStatus[] = [
+export const columnMeta = systemColumnMeta;
+
+export const systemColumnOrder: TicketStatus[] = [
   "new",
   "in_progress",
   "testing",
@@ -97,13 +110,46 @@ export const columnOrder: TicketStatus[] = [
   "closed",
 ];
 
-export const emptyColumns = (): KanbanColumns => ({
-  new: [],
-  in_progress: [],
-  testing: [],
-  resolved: [],
-  closed: [],
-});
+export const columnOrder = systemColumnOrder;
+
+export function buildColumnDefs(customColumns: CustomColumnDef[]): KanbanColumnDef[] {
+  const system: KanbanColumnDef[] = systemColumnOrder.map((status) => {
+    const meta = systemColumnMeta[status];
+    return {
+      id: status,
+      name: status,
+      color: meta.color,
+      subtle: meta.subtle,
+      border: meta.border,
+      isSystem: true,
+      labelKey: meta.labelKey,
+    };
+  });
+
+  const custom: KanbanColumnDef[] = customColumns.map((c) => ({
+    id: c.id,
+    name: c.name,
+    color: c.color,
+    subtle: `color-mix(in srgb, ${c.color} 10%, transparent)`,
+    border: `color-mix(in srgb, ${c.color} 28%, transparent)`,
+    isSystem: false,
+  }));
+
+  return [...system, ...custom];
+}
+
+export function emptyColumns(columnDefs?: KanbanColumnDef[]): KanbanColumns {
+  if (!columnDefs) {
+    return {
+      new: [],
+      in_progress: [],
+      testing: [],
+      resolved: [],
+      closed: [],
+    };
+  }
+  return Object.fromEntries(columnDefs.map((c) => [c.id, []]));
+}
 
 export function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const result = [...arr];
@@ -131,10 +177,20 @@ function ticketToKanban(t: Ticket): KanbanTicket {
   };
 }
 
-export function ticketsToColumns(tickets: Ticket[]): KanbanColumns {
-  const cols = emptyColumns();
+export function ticketsToColumns(
+  tickets: (Ticket & { kanbanColumnId?: string })[],
+  columnDefs: KanbanColumnDef[],
+): KanbanColumns {
+  const cols = emptyColumns(columnDefs);
+  const customIds = new Set(columnDefs.filter((c) => !c.isSystem).map((c) => c.id));
+
   for (const t of tickets) {
-    if (cols[t.status]) cols[t.status].push(ticketToKanban(t));
+    const kanban = ticketToKanban(t);
+    if (t.kanbanColumnId && customIds.has(t.kanbanColumnId)) {
+      cols[t.kanbanColumnId].push(kanban);
+    } else if (cols[t.status] !== undefined) {
+      cols[t.status].push(kanban);
+    }
   }
   return cols;
 }
@@ -168,3 +224,14 @@ export function getAvatarColor(name: string): string {
 export function toggleItem<T>(arr: T[], val: T): T[] {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 }
+
+export const CUSTOM_COLUMN_COLORS = [
+  "var(--purple)",
+  "var(--cyan)",
+  "var(--orange)",
+  "var(--green)",
+  "var(--red)",
+  "var(--yellow)",
+  "var(--accent)",
+  "var(--muted2)",
+];

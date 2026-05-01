@@ -34,6 +34,7 @@ interface TicketDto {
   createdAt: string
   updatedAt: string
   isInternal: boolean
+  kanbanColumnId?: string
   tags: string[]
   comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string; isInternal?: boolean }[]
   history: { id: string; userId: string; userName: string; field: string; oldValue?: string; newValue?: string; createdAt: string }[]
@@ -63,6 +64,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
     type: dto.type as Ticket['type'],
     status: dto.status as TicketStatus,
     isInternal: dto.isInternal ?? false,
+    kanbanColumnId: dto.kanbanColumnId,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({

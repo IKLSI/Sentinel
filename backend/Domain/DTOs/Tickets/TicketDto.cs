@@ -21,6 +21,7 @@ public class TicketDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsInternal { get; set; }
+    public Guid? KanbanColumnId { get; set; }
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();

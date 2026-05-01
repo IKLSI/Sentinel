@@ -12,35 +12,55 @@ import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { changeStatus, getTickets } from "@/features/tickets/api/tickets";
+import {
+  getKanbanColumns,
+  createKanbanColumn,
+  deleteKanbanColumn,
+  moveTicketToColumn,
+} from "@/features/tickets/api/kanbanColumns";
+import type { KanbanColumnDef as CustomColumnDef } from "@/features/tickets/api/kanbanColumns";
 import { getProjects } from "@/features/techHealth/api/projects";
 import { TicketStatus } from "@/types";
 import {
   KanbanColumns,
+  KanbanColumnDef,
   KanbanTicket,
   ProjectInfo,
   arrayMove,
-  columnOrder,
+  buildColumnDefs,
   emptyColumns,
+  systemColumnOrder,
   ticketsToColumns,
 } from "./helpers";
 import { KanbanToolbar } from "./components/KanbanToolbar";
 import { ProjectPicker } from "./components/ProjectPicker";
 import { KanbanBoard } from "./components/KanbanBoard";
+import { AddColumnDialog } from "./components/AddColumnDialog";
 import { extractApiError } from "@/utils/apiError";
 
 export const KanbanPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const t = useT();
-  const [columns, setColumns] = useState<KanbanColumns>(emptyColumns());
+
+  const [customColumns, setCustomColumns] = useState<CustomColumnDef[]>([]);
+  const [columns, setColumns] = useState<KanbanColumns>(() =>
+    emptyColumns(buildColumnDefs([])),
+  );
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<string[]>([]);
+  const [addColOpen, setAddColOpen] = useState(false);
   const wasDragging = useRef(false);
 
   const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
+
+  const columnDefs = useMemo<KanbanColumnDef[]>(
+    () => buildColumnDefs(customColumns),
+    [customColumns],
+  );
 
   useEffect(() => {
     getProjects()
@@ -52,7 +72,7 @@ export const KanbanPage: React.FC = () => {
 
   const allProjects = useMemo<ProjectInfo[]>(() => {
     const counts: Record<string, number> = {};
-    for (const colId of columnOrder) {
+    for (const colId of Object.keys(columns)) {
       for (const ticket of columns[colId]) {
         counts[ticket.project] = (counts[ticket.project] ?? 0) + 1;
       }
@@ -68,8 +88,13 @@ export const KanbanPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getTickets({ pageSize: 200 });
-      setColumns(ticketsToColumns(result.items));
+      const [ticketsResult, custom] = await Promise.all([
+        getTickets({ pageSize: 200 }),
+        getKanbanColumns(),
+      ]);
+      setCustomColumns(custom);
+      const defs = buildColumnDefs(custom);
+      setColumns(ticketsToColumns(ticketsResult.items as any, defs));
     } catch {
       showToast(t("tickets.kanban.error.load_failed"), "error");
     } finally {
@@ -95,14 +120,16 @@ export const KanbanPage: React.FC = () => {
         result = result.filter((tk) => filteredProjects.includes(tk.project));
       return result;
     };
-    return {
-      new: filter(columns.new),
-      in_progress: filter(columns.in_progress),
-      testing: filter(columns.testing),
-      resolved: filter(columns.resolved),
-      closed: filter(columns.closed),
-    };
-  }, [columns, search, filteredProjects]);
+    return Object.fromEntries(
+      columnDefs.map((c) => [c.id, filter(columns[c.id] ?? [])]),
+    );
+  }, [columns, columnDefs, search, filteredProjects]);
+
+  const isSystemColumn = useCallback(
+    (id: string): id is TicketStatus =>
+      systemColumnOrder.includes(id as TicketStatus),
+    [],
+  );
 
   const onDragEnd = useCallback(
     async (result: DropResult) => {
@@ -112,8 +139,8 @@ export const KanbanPage: React.FC = () => {
 
       if (!result.destination) return;
       const { draggableId, source, destination } = result;
-      const sourceCol = source.droppableId as TicketStatus;
-      const destCol = destination.droppableId as TicketStatus;
+      const sourceCol = source.droppableId;
+      const destCol = destination.droppableId;
       if (sourceCol === destCol && source.index === destination.index) return;
 
       if (sourceCol === destCol) {
@@ -122,7 +149,7 @@ export const KanbanPage: React.FC = () => {
         const targetId = visibleItems[destination.index]?.id;
         if (!movedId || !targetId) return;
         setColumns((prev) => {
-          const items = [...prev[sourceCol]];
+          const items = [...(prev[sourceCol] ?? [])];
           return {
             ...prev,
             [sourceCol]: arrayMove(
@@ -135,17 +162,17 @@ export const KanbanPage: React.FC = () => {
         return;
       }
 
-      const movedTicket = columns[sourceCol].find(
+      const movedTicket = (columns[sourceCol] ?? []).find(
         (tk) => tk.id === draggableId,
       );
       if (!movedTicket) return;
 
-      const afterId = filteredColumns[destCol][destination.index]?.id;
+      const afterId = (filteredColumns[destCol] ?? [])[destination.index]?.id;
       setColumns((prev) => {
-        const sourceItems = prev[sourceCol].filter(
+        const sourceItems = (prev[sourceCol] ?? []).filter(
           (tk) => tk.id !== draggableId,
         );
-        const destItems = [...prev[destCol]];
+        const destItems = [...(prev[destCol] ?? [])];
         const insertAt = afterId
           ? destItems.findIndex((tk) => tk.id === afterId)
           : destItems.length;
@@ -159,15 +186,56 @@ export const KanbanPage: React.FC = () => {
 
       setUpdatingId(draggableId);
       try {
-        await changeStatus(draggableId, destCol);
+        if (isSystemColumn(destCol)) {
+          await changeStatus(draggableId, destCol);
+          if (!isSystemColumn(sourceCol)) {
+            await moveTicketToColumn(draggableId, null);
+          }
+        } else {
+          await moveTicketToColumn(draggableId, destCol);
+        }
       } catch (err) {
-        showToast(extractApiError(err, t("tickets.kanban.error.status_change_failed")), "error");
+        showToast(
+          extractApiError(err, t("tickets.kanban.error.status_change_failed")),
+          "error",
+        );
         load();
       } finally {
         setUpdatingId(null);
       }
     },
-    [columns, filteredColumns, showToast, load, t],
+    [columns, filteredColumns, isSystemColumn, showToast, load, t],
+  );
+
+  const handleAddColumn = useCallback(
+    async (name: string, color: string) => {
+      try {
+        const created = await createKanbanColumn(name, color);
+        setCustomColumns((prev) => [...prev, created]);
+        setColumns((prev) => ({ ...prev, [created.id]: [] }));
+        setAddColOpen(false);
+      } catch (err) {
+        showToast(extractApiError(err, "Impossible de créer la colonne"), "error");
+      }
+    },
+    [showToast],
+  );
+
+  const handleDeleteColumn = useCallback(
+    async (id: string) => {
+      try {
+        await deleteKanbanColumn(id);
+        setCustomColumns((prev) => prev.filter((c) => c.id !== id));
+        setColumns((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      } catch (err) {
+        showToast(extractApiError(err, "Impossible de supprimer la colonne"), "error");
+      }
+    },
+    [showToast],
   );
 
   return (
@@ -216,10 +284,19 @@ export const KanbanPage: React.FC = () => {
         <KanbanBoard
           loading={loading}
           filteredColumns={filteredColumns}
+          columnDefs={columnDefs}
           updatingId={updatingId}
           wasDraggingRef={wasDragging}
           onDragEnd={onDragEnd}
           onCardClick={(id) => navigate(`/tickets/${id}`)}
+          onDeleteColumn={handleDeleteColumn}
+          onAddColumn={() => setAddColOpen(true)}
+        />
+
+        <AddColumnDialog
+          open={addColOpen}
+          onClose={() => setAddColOpen(false)}
+          onConfirm={handleAddColumn}
         />
       </Box>
     </>

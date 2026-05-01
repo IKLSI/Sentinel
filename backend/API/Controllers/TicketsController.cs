@@ -6,6 +6,7 @@ using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
+using Sentinel.Domain.DTOs.Kanban;
 
 namespace Sentinel.API.Controllers;
 
@@ -297,6 +298,33 @@ public class TicketsController : BaseController
         await _ticketService.ChangeStatusAsync(id, ticketStatus, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
 
+        return Ok(updatedDto);
+    }
+
+    [HttpPatch("{id:guid}/column")]
+    public async Task<ActionResult<TicketDto>> MoveToColumn(Guid id, [FromBody] MoveTicketToColumnDto dto)
+    {
+        Guid? userId = GetCurrentUserId();
+        Guid? organizationId = GetOrganizationId();
+        if (userId == null || organizationId == null) return Unauthorized();
+
+        Ticket? ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == organizationId);
+        if (ticket == null)
+            return NotFound(new { message = "Ticket introuvable" });
+
+        if (dto.ColumnId.HasValue)
+        {
+            bool columnExists = await _context.KanbanColumns
+                .AnyAsync(c => c.Id == dto.ColumnId.Value && c.OrganizationId == organizationId.Value);
+            if (!columnExists)
+                return BadRequest(new { message = "Colonne introuvable" });
+        }
+
+        ticket.KanbanColumnId = dto.ColumnId;
+        ticket.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
         return Ok(updatedDto);
     }
 

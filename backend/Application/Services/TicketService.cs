@@ -224,6 +224,7 @@ public class TicketService
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
             IsInternal = ticket.IsInternal,
+            KanbanColumnId = ticket.KanbanColumnId,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto

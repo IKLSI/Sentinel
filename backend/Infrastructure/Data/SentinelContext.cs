@@ -19,6 +19,7 @@ public class SentinelContext : DbContext
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<KanbanColumn> KanbanColumns => Set<KanbanColumn>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -35,6 +36,7 @@ public class SentinelContext : DbContext
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
+        ConfigureKanbanColumn(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -146,6 +148,12 @@ public class SentinelContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.KanbanColumn)
+                .WithMany(c => c.Tickets)
+                .HasForeignKey(e => e.KanbanColumnId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
 
         });
     }
@@ -272,6 +280,22 @@ public class SentinelContext : DbContext
             entity.HasOne(e => e.Dependency)
                 .WithMany(d => d.Vulnerabilities)
                 .HasForeignKey(e => e.DependencyId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureKanbanColumn(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KanbanColumn>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Color).HasMaxLength(100);
+            entity.HasIndex(e => e.OrganizationId);
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

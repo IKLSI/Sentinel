@@ -1,31 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { TicketStatus } from "@/types";
-import { columnMeta } from "../../helpers";
+import { KanbanColumnDef } from "../../helpers";
 
 interface Props {
-  colId: TicketStatus;
+  colDef: KanbanColumnDef;
   count?: number;
   loading?: boolean;
+  onDelete?: (id: string) => void;
 }
 
 export const KanbanColumnHeader: React.FC<Props> = ({
-  colId,
+  colDef,
   count,
   loading = false,
+  onDelete,
 }) => {
   const t = useT();
-  const meta = columnMeta[colId];
+  const [hovered, setHovered] = useState(false);
+  const label = colDef.labelKey ? t(colDef.labelKey) : colDef.name;
 
   return (
     <Box
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       sx={{
         mb: "8px",
         padding: "11px 14px",
         background: "var(--s1)",
         border: "1px solid var(--border)",
-        borderTop: `2px solid ${meta.color}`,
+        borderTop: `2px solid ${colDef.color}`,
         borderRadius: "var(--r)",
         flexShrink: 0,
         ...(loading && {
@@ -43,7 +49,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                background: meta.color,
+                background: colDef.color,
               }}
             />
             <Box
@@ -55,7 +61,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                 textTransform: "uppercase",
               }}
             >
-              {t(meta.labelKey)}
+              {label}
             </Box>
           </Box>
           <Box
@@ -82,7 +88,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                 width: "7px",
                 height: "7px",
                 borderRadius: "50%",
-                background: meta.color,
+                background: colDef.color,
                 flexShrink: 0,
               }}
             />
@@ -95,28 +101,46 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                 textTransform: "uppercase",
               }}
             >
-              {t(meta.labelKey)}
+              {label}
             </Box>
           </Box>
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: "22px",
-              height: "20px",
-              padding: "0 6px",
-              borderRadius: "99px",
-              background: meta.subtle,
-              border: `1px solid ${meta.border}`,
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              fontWeight: 700,
-              color: meta.color,
-            }}
-          >
-            {count}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            {!colDef.isSystem && onDelete && (
+              <IconButton
+                size="small"
+                onClick={() => onDelete(colDef.id)}
+                sx={{
+                  opacity: hovered ? 0.7 : 0,
+                  transition: "opacity 0.15s",
+                  width: 20,
+                  height: 20,
+                  color: "var(--muted2)",
+                  "&:hover": { color: "var(--red)", opacity: 1 },
+                }}
+              >
+                <DeleteOutlined sx={{ fontSize: 13 }} />
+              </IconButton>
+            )}
+            <Box
+              component="span"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: "22px",
+                height: "20px",
+                padding: "0 6px",
+                borderRadius: "99px",
+                background: colDef.subtle,
+                border: `1px solid ${colDef.border}`,
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                fontWeight: 700,
+                color: colDef.color,
+              }}
+            >
+              {count}
+            </Box>
           </Box>
         </Box>
       )}

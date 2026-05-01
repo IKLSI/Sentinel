@@ -59,6 +59,7 @@ export interface Ticket {
   type: TicketType
   status: TicketStatus
   isInternal: boolean
+  kanbanColumnId?: string
   estimatedHours?: number
   timeSpentMinutes?: number
   comments: TicketComment[]
