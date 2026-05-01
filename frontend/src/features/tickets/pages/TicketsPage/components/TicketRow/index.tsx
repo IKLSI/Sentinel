@@ -215,10 +215,11 @@ export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         component="td"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={{
-          padding: "6px 10px",
+          padding: "6px 36px 6px 0",
           borderBottom: "1px solid var(--border)",
           whiteSpace: "nowrap",
-          textAlign: "center",
+          overflow: "visible",
+          textAlign: "right",
           verticalAlign: "middle",
         }}
       >

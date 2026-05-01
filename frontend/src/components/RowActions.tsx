@@ -74,8 +74,6 @@ export const RowActions: React.FC<{
                 transition: "background 0.12s, border 0.12s, color 0.12s",
                 ...(!action.disabled && {
                   "&:hover": {
-                    background: c.bg,
-                    outline: `1px solid ${c.border}`,
                     color: c.color,
                   },
                 }),

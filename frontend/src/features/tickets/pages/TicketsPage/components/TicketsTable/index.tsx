@@ -19,7 +19,7 @@ interface Props {
   hasFiltersApplied: boolean;
 }
 
-const COLS = ["58%", "10%", "11%", "15%", "6%"] as const;
+const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
 
 export const TicketsTable: React.FC<Props> = ({
   tickets,

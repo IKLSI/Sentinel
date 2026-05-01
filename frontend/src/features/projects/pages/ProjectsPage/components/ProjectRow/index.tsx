@@ -168,7 +168,7 @@ export const ProjectRow: React.FC<Props> = ({
         component="td"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={{
-          padding: "8px 4px 8px 0",
+          padding: "8px 20px 8px 0",
           borderBottom: "1px solid var(--border)",
           whiteSpace: "nowrap",
           overflow: "visible",
