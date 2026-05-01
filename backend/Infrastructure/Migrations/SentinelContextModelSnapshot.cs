@@ -313,6 +313,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uuid");
 

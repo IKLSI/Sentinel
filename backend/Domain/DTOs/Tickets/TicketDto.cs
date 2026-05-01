@@ -33,6 +33,7 @@ public class TicketCommentDto
     public Guid AuthorId { get; set; }
     public string AuthorName { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public bool IsInternal { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -53,6 +54,7 @@ public class CreateCommentDto
     [Required]
     [MaxLength(5000, ErrorMessage = "Le commentaire ne peut pas dépasser 5000 caractères")]
     public string Content { get; set; } = string.Empty;
+    public bool IsInternal { get; set; } = false;
 }
 
 public class ChangeStatusDto

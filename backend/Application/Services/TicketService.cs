@@ -152,7 +152,7 @@ public class TicketService
         return ticket;
     }
 
-    public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId)
+    public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId, bool isInternal = false)
     {
         Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
         if (ticket == null)
@@ -165,6 +165,7 @@ public class TicketService
             TicketId = ticketId,
             AuthorId = authorId,
             Content = content,
+            IsInternal = isInternal,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -231,6 +232,7 @@ public class TicketService
                 AuthorId = c.AuthorId,
                 AuthorName = c.Author?.FullName ?? string.Empty,
                 Content = c.Content,
+                IsInternal = c.IsInternal,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt
             }).OrderBy(c => c.CreatedAt).ToList() ?? new List<TicketCommentDto>(),
