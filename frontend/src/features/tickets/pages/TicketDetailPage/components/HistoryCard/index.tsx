@@ -81,6 +81,7 @@ export const HistoryCard: React.FC<Props> = ({
               isDark,
               statusConfig,
               priorityConfig,
+              ticket,
             );
             return (
               <Box

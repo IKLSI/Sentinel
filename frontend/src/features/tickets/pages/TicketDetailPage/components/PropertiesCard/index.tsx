@@ -2,7 +2,6 @@ import React from "react";
 import Box from "@mui/material/Box";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
-import KeyboardArrowDownRounded from "@mui/icons-material/KeyboardArrowDownRounded";
 import { useT } from "@/i18n/I18nContext";
 import { Ticket } from "@/types";
 import {
@@ -11,6 +10,8 @@ import {
   buildStatusConfig,
   typeLabelKeys,
 } from "../../helpers";
+import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
+import { priorityColor, statusDotColor } from "../../../TicketsPage/helpers";
 
 interface Props {
   ticket: Ticket;
@@ -34,42 +35,21 @@ export const PropertiesCard: React.FC<Props> = ({
       key: "status",
       label: t("tickets.detail.field_status"),
       value: (
-        <>
-          <Box
-            sx={{
-              width: "7px",
-              height: "7px",
-              borderRadius: "999px",
-              background: status.dot,
-              flexShrink: 0,
-            }}
-          />
-          <Box sx={{ color: status.color, fontWeight: 400, fontSize: "12px" }}>
-            {t(status.labelKey)}
-          </Box>
-        </>
+        <StatusPriorityBadge
+          dotColor={statusDotColor[ticket.status]}
+          label={t(status.labelKey)}
+          noGlow={ticket.status === "closed"}
+        />
       ),
     },
     {
       key: "priority",
       label: t("tickets.detail.field_priority"),
       value: (
-        <>
-          <Box
-            sx={{
-              width: "7px",
-              height: "7px",
-              borderRadius: "999px",
-              background: priority.dot,
-              flexShrink: 0,
-            }}
-          />
-          <Box
-            sx={{ color: priority.color, fontWeight: 400, fontSize: "12px" }}
-          >
-            {t(priority.labelKey)}
-          </Box>
-        </>
+        <StatusPriorityBadge
+          dotColor={priorityColor[ticket.priority]}
+          label={t(priority.labelKey)}
+        />
       ),
     },
     {
@@ -188,11 +168,6 @@ export const PropertiesCard: React.FC<Props> = ({
               }}
             >
               {row.value}
-              {row.key !== "project" && (
-                <KeyboardArrowDownRounded
-                  sx={{ ml: "auto", color: palette.discChevron }}
-                />
-              )}
             </Box>
           </Box>
           {idx < arr.length - 1 && (

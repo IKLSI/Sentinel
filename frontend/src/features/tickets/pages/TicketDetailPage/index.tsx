@@ -120,7 +120,10 @@ export const TicketDetailPage: React.FC = () => {
         "success",
       );
     } catch (err) {
-      showToast(extractApiError(err, t("tickets.detail.add_comment_error")), "error");
+      showToast(
+        extractApiError(err, t("tickets.detail.add_comment_error")),
+        "error",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +153,10 @@ export const TicketDetailPage: React.FC = () => {
       setEditCommentTarget(null);
       showToast(t("tickets.detail.comment_updated"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("tickets.detail.update_error")), "error");
+      showToast(
+        extractApiError(err, t("tickets.detail.update_error")),
+        "error",
+      );
     } finally {
       setEditCommentSaving(false);
     }
@@ -174,7 +180,10 @@ export const TicketDetailPage: React.FC = () => {
       setDeleteCommentTarget(null);
       showToast(t("tickets.detail.comment_deleted"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("tickets.detail.delete_error")), "error");
+      showToast(
+        extractApiError(err, t("tickets.detail.delete_error")),
+        "error",
+      );
     } finally {
       setDeleteCommentLoading(false);
     }
@@ -316,7 +325,7 @@ export const TicketDetailPage: React.FC = () => {
 
         <Box
           sx={{
-            width: { xs: "100%", lg: "290px" },
+            width: { xs: "100%", lg: "270px" },
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",

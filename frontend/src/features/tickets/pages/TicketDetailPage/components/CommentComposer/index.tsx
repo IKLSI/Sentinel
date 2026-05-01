@@ -121,6 +121,12 @@ export const CommentComposer: React.FC<Props> = ({
             border: "none",
             borderRadius: 0,
             boxShadow: "none !important",
+            "&:focus": {
+              outline: "none",
+              boxShadow: "none !important",
+              borderColor: "transparent",
+            },
+            "&:focus-visible": { outline: "none" },
             px: "16px",
             py: "12px",
             resize: "vertical",
@@ -168,25 +174,39 @@ export const CommentComposer: React.FC<Props> = ({
           <Box sx={{ flex: 1 }} />
           <Button
             variant="contained"
+            size="small"
+            disableElevation
             onClick={onSubmit}
             disabled={!value.trim() || submitting}
             sx={{
-              minWidth: "120px",
-              height: "36px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)",
+              color: "#fff",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+              minWidth: "100px",
+              height: "32px",
               borderRadius: "10px",
               fontWeight: 700,
-              fontSize: "13px",
-              background: palette.sendBtnGradient,
+              fontSize: "12px",
             }}
-            endIcon={
-              !submitting ? <SendRounded sx={{ fontSize: 15 }} /> : undefined
-            }
           >
-            {submitting ? (
-              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
+            {!submitting ? (
+              <SendRounded sx={{ fontSize: 15 }} />
             ) : (
-              t("tickets.detail.send")
+              <CircularProgress size={14} sx={{ color: "#fff" }} />
             )}
+            {t("tickets.detail.send")}
           </Button>
         </Box>
       </Box>

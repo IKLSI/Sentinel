@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { TicketHistory, TicketStatus } from "@/types";
+import { Ticket, TicketHistory, TicketStatus } from "@/types";
 
 export interface DetailPalette {
   panelBg: string;
@@ -76,8 +76,7 @@ export interface DetailPalette {
 export const buildPalette = (_isDark: boolean): DetailPalette => ({
   panelBg: "var(--s1)",
   panelBorder: "var(--border)",
-  panelShadow:
-    "0 1px 2px rgba(0,0,0,0.18), 0 12px 30px -18px rgba(0,0,0,0.3)",
+  panelShadow: "0 1px 2px rgba(0,0,0,0.18), 0 12px 30px -18px rgba(0,0,0,0.3)",
   breadcrumbText: "var(--text-secondary)",
   folderIcon: "var(--purple)",
   chevron: "var(--muted)",
@@ -120,7 +119,8 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   toolbarIdle: "var(--muted2)",
   toolbarHoverBg: "var(--s2)",
   toolbarHoverFg: "var(--text-secondary)",
-  sendBtnGradient: "linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%)",
+  sendBtnGradient:
+    "linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%)",
   fieldRowHover: "var(--s2)",
   fieldLabel: "var(--muted2)",
   fieldValue: "var(--text)",
@@ -328,14 +328,30 @@ export function historyPresentation(
   isDark: boolean,
   statusConfig: ReturnType<typeof buildStatusConfig>,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,
+  ticket?: Ticket,
 ) {
   void isDark;
   const tones = {
-    created: { dot: "var(--red)", ring: "color-mix(in srgb, var(--red) 20%, transparent)" },
-    status: { dot: "var(--yellow)", ring: "color-mix(in srgb, var(--yellow) 20%, transparent)" },
-    assign: { dot: "var(--purple)", ring: "color-mix(in srgb, var(--purple) 22%, transparent)" },
-    priority: { dot: "var(--red)", ring: "color-mix(in srgb, var(--red) 22%, transparent)" },
-    default: { dot: "var(--green)", ring: "color-mix(in srgb, var(--green) 20%, transparent)" },
+    created: {
+      dot: "var(--red)",
+      ring: "color-mix(in srgb, var(--red) 20%, transparent)",
+    },
+    status: {
+      dot: "var(--yellow)",
+      ring: "color-mix(in srgb, var(--yellow) 20%, transparent)",
+    },
+    assign: {
+      dot: "var(--purple)",
+      ring: "color-mix(in srgb, var(--purple) 22%, transparent)",
+    },
+    priority: {
+      dot: "var(--red)",
+      ring: "color-mix(in srgb, var(--red) 22%, transparent)",
+    },
+    default: {
+      dot: "var(--green)",
+      ring: "color-mix(in srgb, var(--green) 20%, transparent)",
+    },
   };
   const field = entry.field.toLowerCase();
   if (field === "created" || field === "creation" || field.includes("create")) {
@@ -354,10 +370,21 @@ export function historyPresentation(
     };
   }
   if (field.includes("assign")) {
+    const raw = entry.newValue ?? "";
+    const uuidLike =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    let nameLabel = raw || t("tickets.detail.unassigned");
+    if (raw && uuidLike.test(raw)) {
+      if (ticket && ticket.assignee && ticket.assignee.id === raw) {
+        nameLabel = `${ticket.assignee.firstName} ${ticket.assignee.lastName}`;
+      } else {
+        nameLabel = `${raw.slice(0, 8)}…`;
+      }
+    }
     return {
       tone: tones.assign,
       message: t("tickets.detail.history_assigned", {
-        name: entry.newValue ?? t("tickets.detail.unassigned"),
+        name: nameLabel,
       }),
     };
   }
@@ -368,6 +395,19 @@ export function historyPresentation(
         from: mapPriorityLabel(entry.oldValue, t, priorityConfig),
         to: mapPriorityLabel(entry.newValue, t, priorityConfig),
       }),
+    };
+  }
+  if (field.includes("internal") || field === "isinternal") {
+    const mapBool = (v?: string) => {
+      if (v === undefined || v === null) return "—";
+      const s = String(v).trim().toLowerCase();
+      if (s === "true" || s === "1") return "Oui";
+      if (s === "false" || s === "0") return "Non";
+      return entry.newValue ?? entry.oldValue ?? s;
+    };
+    return {
+      tone: tones.default,
+      message: `Interne ${mapBool(entry.oldValue)} → ${mapBool(entry.newValue)}`,
     };
   }
   return {
