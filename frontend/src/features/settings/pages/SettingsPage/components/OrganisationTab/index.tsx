@@ -268,7 +268,8 @@ export const OrganisationTab: React.FC = () => {
               name="GitHub"
               isConnected={integrations.hasGithubToken}
               connectedLabel={t("settings.integrations.github_token_set")}
-              helpLabel={t("settings.integrations.github_token_help")}
+              helpInstructions={t("settings.integrations.github_help_instructions")}
+              helpScopes={["repo", "read:org"]}
               placeholder={t("settings.integrations.github_placeholder")}
               token={githubToken}
               onTokenChange={setGithubToken}
@@ -306,7 +307,8 @@ export const OrganisationTab: React.FC = () => {
               name="GitLab"
               isConnected={integrations.hasGitlabToken}
               connectedLabel={t("settings.integrations.gitlab_token_set")}
-              helpLabel={t("settings.integrations.gitlab_token_help")}
+              helpInstructions={t("settings.integrations.gitlab_help_instructions")}
+              helpScopes={["read_api", "read_repository"]}
               placeholder={t("settings.integrations.gitlab_placeholder")}
               token={gitlabToken}
               onTokenChange={setGitlabToken}
