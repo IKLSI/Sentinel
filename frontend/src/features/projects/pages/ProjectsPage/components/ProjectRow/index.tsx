@@ -106,16 +106,16 @@ export const ProjectRow: React.FC<Props> = ({
         <Box
           sx={{
             color:
-              project.vulnerableDependencies > 0
+              project.totalVulnerabilities > 0
                 ? "var(--orange)"
                 : "var(--muted2)",
-            fontWeight: project.vulnerableDependencies > 0 ? 700 : 500,
+            fontWeight: project.totalVulnerabilities > 0 ? 700 : 500,
             fontSize: "13px",
             lineHeight: 1.25,
             fontFamily: "var(--font-mono)",
           }}
         >
-          {project.vulnerableDependencies}
+          {project.totalVulnerabilities}
         </Box>
       </Box>
 

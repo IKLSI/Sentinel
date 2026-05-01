@@ -458,6 +458,9 @@ public class TechHealthService
             CriticalVulnerabilities = project.Dependencies?
                 .SelectMany(d => d.Vulnerabilities)
                 .Count(v => v.Severity == VulnerabilitySeverity.Critical) ?? 0,
+            TotalVulnerabilities = project.Dependencies?
+                .SelectMany(d => d.Vulnerabilities)
+                .Count() ?? 0,
             Dependencies = project.Dependencies?.Select(d => new DependencyDto
             {
                 Id = d.Id,
