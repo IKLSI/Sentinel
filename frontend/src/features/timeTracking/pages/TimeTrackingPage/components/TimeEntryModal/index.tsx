@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
@@ -54,7 +55,7 @@ export const TimeEntryModal: React.FC<Props> = ({
       actions={
         <>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             className="btn-cancel"
             sx={{ textTransform: "none" }}
@@ -65,17 +66,19 @@ export const TimeEntryModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none" }}
+            sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
             onClick={onSubmit}
             disabled={
               !form.comment.trim() || submitting || form.durationMinutes <= 0
             }
           >
-            {submitting
-              ? t("time_tracking.saving")
-              : isEditing
-                ? t("time_tracking.save_edit")
-                : t("time_tracking.save_create")}
+            {submitting ? (
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
+            ) : isEditing ? (
+              t("time_tracking.save_edit")
+            ) : (
+              t("time_tracking.save_create")
+            )}
           </Button>
         </>
       }

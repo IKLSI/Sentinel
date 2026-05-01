@@ -245,7 +245,7 @@ export const ProfilePage: React.FC = () => {
             size="small"
             onClick={handleSave}
             disabled={savingPf || pfUnchanged}
-            sx={{ minWidth: "110px", background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
+            sx={{ minWidth: "110px", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
           >
             {savingPf ? t("profile.button.saving") : t("profile.button.save")}
           </Button>

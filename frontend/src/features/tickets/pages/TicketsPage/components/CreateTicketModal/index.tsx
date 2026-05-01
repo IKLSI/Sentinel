@@ -84,7 +84,7 @@ export const CreateTicketModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
+            sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
             onClick={onSubmit}
             disabled={!form.title.trim() || submitting}
           >

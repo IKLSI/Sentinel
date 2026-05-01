@@ -89,6 +89,9 @@ const baseComponents = {
         borderRadius: '8px',
         fontFamily: 'Inter, system-ui, sans-serif',
         transition: 'all 0.15s ease',
+        '&:hover': {
+          backgroundColor: 'transparent',
+        },
       },
       contained: {
         background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, white) 100%)',

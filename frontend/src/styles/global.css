@@ -198,7 +198,7 @@ a:hover { text-decoration: underline; }
 
 
 .btn-cancel.MuiButton-contained {
-  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--s3) !important;
+  background: linear-gradient(135deg, var(--s3) 0%, color-mix(in srgb, var(--s3) 92%, white) 100%) !important;
   color: var(--text-secondary) !important;
   box-shadow: none !important;
   border: none !important;

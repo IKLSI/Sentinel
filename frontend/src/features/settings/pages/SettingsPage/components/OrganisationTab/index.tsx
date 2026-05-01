@@ -224,7 +224,7 @@ export const OrganisationTab: React.FC = () => {
                   sx={{
                     minWidth: "110px",
                     textTransform: "none",
-                    background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)",
+                    background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
                     color: "#fff",
                     boxShadow: "none",
                     "&:hover": {

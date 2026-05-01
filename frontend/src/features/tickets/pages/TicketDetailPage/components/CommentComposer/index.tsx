@@ -185,7 +185,7 @@ export const CommentComposer: React.FC<Props> = ({
               flexShrink: 0,
               textTransform: "none",
               background:
-                "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--accent)",
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
               color: "#fff",
               boxShadow: "none",
               "&:hover": {

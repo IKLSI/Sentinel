@@ -84,7 +84,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           size="small"
           sx={{
             textTransform: "none",
-            background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.08) 100%), var(--red)",
+            background: "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
             boxShadow: "none",
             "&:hover": {
               background: "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",

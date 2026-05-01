@@ -7,7 +7,7 @@ interface Props {
   noGlow?: boolean;
 }
 
-export const StatusPriorityBadge: React.FC<Props> = ({
+const StatusPriorityBadge: React.FC<Props> = ({
   dotColor,
   label,
   noGlow = false,
