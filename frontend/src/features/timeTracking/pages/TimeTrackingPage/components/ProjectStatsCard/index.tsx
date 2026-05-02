@@ -41,7 +41,7 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
       <Box
         sx={{
           display: "flex",
-          height: "8px",
+          height: "4px",
           borderRadius: "4px",
           overflow: "hidden",
           gap: "2px",
@@ -64,10 +64,8 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
       </Box>
 
       {/* Légende — badges flex-wrap, largeur selon contenu */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "5px", mt: "4px" }}>
         {stats.map((p) => {
-          const pct =
-            totalMinutes > 0 ? Math.round((p.minutes / totalMinutes) * 100) : 0;
           const displayName = p.name ?? t("time_tracking.no_project_label");
           const color = getProjectColor(displayName);
           return (
@@ -76,28 +74,28 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
               sx={{
                 display: "inline-flex",
                 alignItems: "baseline",
-                gap: "7px",
-                px: "8px",
-                py: "6px",
+                gap: "5px",
+                px: "6px",
+                py: "3px",
                 background: "var(--s2)",
-                borderRadius: "8px",
+                borderRadius: "6px",
                 whiteSpace: "nowrap",
               }}
             >
               <Box
                 sx={{
-                  width: "7px",
-                  height: "7px",
+                  width: "6px",
+                  height: "6px",
                   borderRadius: "50%",
                   background: color,
                   flexShrink: 0,
                   alignSelf: "center",
-                  boxShadow: `0 0 5px ${color}`,
+                  boxShadow: `0 0 3px ${color}`,
                 }}
               />
               <Box
                 sx={{
-                  fontSize: "11.5px",
+                  fontSize: "10.5px",
                   fontWeight: 500,
                   color: "var(--text)",
                 }}
@@ -107,7 +105,7 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
               <Box
                 sx={{
                   fontFamily: "var(--font-mono)",
-                  fontSize: "11.5px",
+                  fontSize: "10.5px",
                   fontWeight: 600,
                   color: "var(--text)",
                   ml: "6px",

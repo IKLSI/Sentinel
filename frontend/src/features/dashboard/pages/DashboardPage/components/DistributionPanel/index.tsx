@@ -17,7 +17,6 @@ export const DistributionPanel: React.FC<Props> = ({
 }) => {
   const t = useT();
   const entries = Object.entries(ticketsByStatus);
-  const total = entries.reduce((sum, [, v]) => sum + v, 0);
 
   return (
     <Box
@@ -75,7 +74,6 @@ export const DistributionPanel: React.FC<Props> = ({
         >
           {entries.map(([name, count]) => {
             const color = ticketsByStatusColor[name] ?? "var(--muted2)";
-            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <Box
                 key={name}
@@ -106,8 +104,7 @@ export const DistributionPanel: React.FC<Props> = ({
                   <span>{name}</span>
                 </Box>
                 <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
-                  <strong>{count}</strong>{" "}
-                  <span style={{ color: palette.donutPct }}>{pct}%</span>
+                  <strong>{count}</strong>
                 </Box>
               </Box>
             );
