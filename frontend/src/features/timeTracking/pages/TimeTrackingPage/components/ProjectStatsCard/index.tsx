@@ -43,20 +43,8 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
           const displayName = p.name ?? t("time_tracking.no_project_label");
           const color = getProjectColor(displayName);
           return (
-            <Box
-              key={displayName}
-              sx={{ display: "flex", alignItems: "center", gap: "10px" }}
-            >
-              <Box
-                sx={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  background: color,
-                  flexShrink: 0,
-                }}
-              />
-              <Box
+            <Box key={displayName} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Box
                 sx={{
                   fontSize: "12.5px",
                   color: "var(--text)",
