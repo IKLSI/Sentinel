@@ -36,69 +36,85 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
       >
         {t("time_tracking.by_project")}
       </Box>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
+      {/* Stacked bar */}
+      <Box
+        sx={{
+          display: "flex",
+          height: "8px",
+          borderRadius: "4px",
+          overflow: "hidden",
+          gap: "2px",
+        }}
+      >
+        {stats.map((p) => {
+          const displayName = p.name ?? t("time_tracking.no_project_label");
+          const color = getProjectColor(displayName);
+          return (
+            <Box
+              key={displayName}
+              sx={{
+                flex: p.minutes,
+                background: color,
+                transition: "flex 0.5s cubic-bezier(0.4,0,0.2,1)",
+              }}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Légende — badges flex-wrap, largeur selon contenu */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
         {stats.map((p) => {
           const pct =
             totalMinutes > 0 ? Math.round((p.minutes / totalMinutes) * 100) : 0;
           const displayName = p.name ?? t("time_tracking.no_project_label");
           const color = getProjectColor(displayName);
           return (
-            <Box key={displayName} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Box
+            <Box
+              key={displayName}
+              sx={{
+                display: "inline-flex",
+                alignItems: "baseline",
+                gap: "7px",
+                px: "8px",
+                py: "6px",
+                background: "var(--s2)",
+                borderRadius: "8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <Box
                 sx={{
-                  fontSize: "12.5px",
-                  color: "var(--text)",
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "50%",
+                  background: color,
+                  flexShrink: 0,
+                  alignSelf: "center",
+                  boxShadow: `0 0 5px ${color}`,
+                }}
+              />
+              <Box
+                sx={{
+                  fontSize: "11.5px",
                   fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                  minWidth: "120px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  color: "var(--text)",
                 }}
               >
                 {displayName}
               </Box>
               <Box
                 sx={{
-                  flex: 1,
-                  height: "3px",
-                  background: "var(--s3)",
-                  borderRadius: "2px",
-                  overflow: "hidden",
-                }}
-              >
-                <Box
-                  sx={{
-                    height: "100%",
-                    width: `${pct}%`,
-                    background: color,
-                    borderRadius: "2px",
-                    transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
-                  }}
-                />
-              </Box>
-              <Box
-                sx={{
                   fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  fontWeight: 700,
+                  fontSize: "11.5px",
+                  fontWeight: 600,
                   color: "var(--text)",
-                  minWidth: "28px",
-                  textAlign: "right",
+                  ml: "6px",
+                  lineHeight: 1,
                 }}
               >
                 {formatDuration(p.minutes)}
-              </Box>
-              <Box
-                sx={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
-                  color: "var(--muted)",
-                  minWidth: "28px",
-                  textAlign: "right",
-                }}
-              >
-                {pct}%
               </Box>
             </Box>
           );
