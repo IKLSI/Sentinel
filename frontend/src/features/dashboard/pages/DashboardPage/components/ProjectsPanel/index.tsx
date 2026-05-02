@@ -95,6 +95,11 @@ export const ProjectsPanel: React.FC<Props> = ({
             display: "inline-flex",
             alignItems: "center",
             gap: "2px",
+            transition: "color 120ms ease",
+            textDecoration: "none",
+            "&:hover, &:focus-visible": {
+              color: "var(--accent2)",
+            },
           }}
         >
           {t("dashboard.see_all")}{" "}

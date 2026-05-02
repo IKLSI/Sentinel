@@ -86,9 +86,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                       width: 26,
                       height: 26,
                       borderRadius: "999px",
-                      bgcolor: danger
-                        ? palette.activityDangerBg
-                        : palette.activityOkBg,
+                      background: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
                       color: accentColor,
                       display: "grid",
                       placeItems: "center",
