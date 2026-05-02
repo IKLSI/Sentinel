@@ -114,60 +114,31 @@ export const IconNavBtn: React.FC<{
     enterNextDelay={0}
     disableHoverListener={!title}
   >
-    <Box
-      component="button"
-      onClick={onClick}
-      disabled={disabled}
-      sx={{
-        background: disabled ? "transparent" : "var(--s2)",
-        border: disabled ? "1px solid transparent" : "1px solid var(--border)",
-        borderRadius: "6px",
-        width: "26px",
-        height: "26px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: disabled ? "not-allowed" : "pointer",
-        color: disabled ? "var(--border2)" : "var(--muted2)",
-        fontFamily: "var(--font-ui)",
-        transition: "background 0.12s, color 0.12s",
-        ...(!disabled
-          ? { "&:hover": { background: "var(--s3)", color: "var(--text)" } }
-          : {}),
-      }}
-    >
-      {children}
+    <Box component="span" sx={{ display: "inline-flex" }}>
+      <Box
+        component="button"
+        onClick={onClick}
+        disabled={disabled}
+        sx={{
+          background: disabled ? "transparent" : "var(--s2)",
+          border: disabled ? "1px solid transparent" : "1px solid var(--border)",
+          borderRadius: "6px",
+          width: "26px",
+          height: "26px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: disabled ? "not-allowed" : "pointer",
+          color: disabled ? "var(--border2)" : "var(--muted2)",
+          fontFamily: "var(--font-ui)",
+          transition: "background 0.12s, color 0.12s",
+          ...(!disabled
+            ? { "&:hover": { background: "var(--s3)", color: "var(--text)" } }
+            : {}),
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   </Tooltip>
-);
-
-const RowActionBtn: React.FC<{
-  icon: React.ReactNode;
-  onClick: () => void;
-  title: string;
-  danger?: boolean;
-}> = ({ icon, onClick, title, danger }) => (
-  <Box
-    component="button"
-    title={title}
-    onClick={onClick}
-    sx={{
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      color: "var(--muted)",
-      padding: "5px",
-      borderRadius: "6px",
-      display: "flex",
-      alignItems: "center",
-      fontFamily: "var(--font-ui)",
-      transition: "color 0.12s, background 0.12s",
-      "&:hover": {
-        color: danger ? "var(--red)" : "var(--text)",
-        background: danger ? "var(--red-subtle)" : "var(--s3)",
-      },
-    }}
-  >
-    {icon}
-  </Box>
 );

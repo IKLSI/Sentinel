@@ -128,31 +128,33 @@ export const JournalCard: React.FC<Props> = ({
             enterDelay={0}
             enterNextDelay={0}
           >
-            <Box
-              component="button"
-              onClick={onExport}
-              disabled={exporting}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "26px",
-                height: "26px",
-                background: "var(--s2)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                cursor: exporting ? "default" : "pointer",
-                color: "var(--muted2)",
-                opacity: exporting ? 0.5 : 1,
-                transition: "background 0.12s, color 0.12s",
-                "&:hover": { background: "var(--s3)", color: "var(--text)" },
-              }}
-            >
-              {exporting ? (
-                <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
-              ) : (
-                <FileDownloadOutlined sx={{ fontSize: 12 }} />
-              )}
+            <Box component="span" sx={{ display: "inline-flex" }}>
+              <Box
+                component="button"
+                onClick={onExport}
+                disabled={exporting}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "26px",
+                  height: "26px",
+                  background: "var(--s2)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  cursor: exporting ? "default" : "pointer",
+                  color: "var(--muted2)",
+                  opacity: exporting ? 0.5 : 1,
+                  transition: "background 0.12s, color 0.12s",
+                  "&:hover": { background: "var(--s3)", color: "var(--text)" },
+                }}
+              >
+                {exporting ? (
+                  <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
+                ) : (
+                  <FileDownloadOutlined sx={{ fontSize: 12 }} />
+                )}
+              </Box>
             </Box>
           </Tooltip>
         </Box>
