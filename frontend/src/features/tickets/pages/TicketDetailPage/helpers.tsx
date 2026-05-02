@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Ticket, TicketHistory, TicketStatus } from "@/types";
+import { Ticket, TicketHistory } from "@/types";
 
 export interface DetailPalette {
   panelBg: string;
@@ -149,33 +149,7 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
 
 export const buildStatusConfig = (
   _isDark: boolean,
-): Record<TicketStatus, { labelKey: string; color: string; dot: string }> => ({
-  new: {
-    labelKey: "tickets.detail.status_new",
-    color: "var(--accent)",
-    dot: "var(--accent)",
-  },
-  in_progress: {
-    labelKey: "tickets.detail.status_in_progress",
-    color: "var(--orange)",
-    dot: "var(--orange)",
-  },
-  testing: {
-    labelKey: "tickets.detail.status_testing",
-    color: "var(--cyan)",
-    dot: "var(--cyan)",
-  },
-  resolved: {
-    labelKey: "tickets.detail.status_resolved",
-    color: "var(--green)",
-    dot: "var(--green)",
-  },
-  closed: {
-    labelKey: "tickets.detail.status_closed",
-    color: "var(--muted2)",
-    dot: "var(--muted2)",
-  },
-});
+): Record<string, { labelKey: string; color: string; dot: string }> => ({});
 
 export const buildPriorityConfig = (
   _isDark: boolean,
@@ -306,7 +280,7 @@ function mapStatusLabel(
   statusConfig: ReturnType<typeof buildStatusConfig>,
 ) {
   if (!value) return "—";
-  const key = normalizeStatusKey(value) as TicketStatus;
+  const key = normalizeStatusKey(value);
   const labelKey = statusConfig[key]?.labelKey;
   return labelKey ? t(labelKey) : value;
 }

@@ -12,11 +12,11 @@ import {
   exportTicketsExcel,
   updateTicket,
 } from "@/features/tickets/api/tickets";
-import { getKanbanColumns } from "@/features/tickets/api/kanbanColumns";
+import { getTicketStatuses } from "@/features/tickets/api/ticketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
-import { Ticket, User } from "@/types";
-import { CreateTicketPayload, PRIORITY_ORDER, STATUS_ORDER } from "./helpers";
+import { Ticket, TicketStatusDef, User } from "@/types";
+import { CreateTicketPayload, PRIORITY_ORDER } from "./helpers";
 import { TicketsToolbar } from "./components/TicketsToolbar";
 import { TicketsTable, SortState } from "./components/TicketsTable";
 import { Pagination } from "./components/Pagination";
@@ -55,9 +55,7 @@ export const TicketsPage: React.FC = () => {
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
-  const [kanbanCols, setKanbanCols] = useState<
-    Record<string, { name: string; color: string; systemStatus: string | null }>
-  >({});
+  const [statuses, setStatuses] = useState<TicketStatusDef[]>([]);
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const [editForm, setEditForm] = useState<EditFormState>({
     title: "",
@@ -225,23 +223,7 @@ export const TicketsPage: React.FC = () => {
   }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast, t]);
 
   useEffect(() => {
-    getKanbanColumns()
-      .then((cols) => {
-        const map: Record<
-          string,
-          { name: string; color: string; systemStatus: string | null }
-        > = {};
-        cols.forEach(
-          (c) =>
-            (map[c.id] = {
-              name: c.name,
-              color: c.color,
-              systemStatus: c.systemStatus,
-            }),
-        );
-        setKanbanCols(map);
-      })
-      .catch(() => {});
+    getTicketStatuses().then(setStatuses).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -263,9 +245,7 @@ export const TicketsPage: React.FC = () => {
             (PRIORITY_ORDER[b.priority] ?? 9))
         );
       case "status":
-        return (
-          mul * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
-        );
+        return mul * a.statusName.localeCompare(b.statusName);
       case "assignee":
         return (
           mul *
@@ -308,6 +288,7 @@ export const TicketsPage: React.FC = () => {
           onCreate={openCreateModal}
           onExport={handleExport}
           exporting={exporting}
+          statuses={statuses}
         />
 
         {loading && displayTickets.length === 0 ? (
@@ -341,7 +322,6 @@ export const TicketsPage: React.FC = () => {
               onToggleSort={toggleSort}
               onEdit={openEditModal}
               onDelete={(id, reference) => setDeleteTarget({ id, reference })}
-              kanbanCols={kanbanCols}
               hasFiltersApplied={hasFiltersApplied}
             />
 

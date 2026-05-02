@@ -1,23 +1,23 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
-import { DashPalette, STATUS, buildPanelSx } from "../../helpers";
+import { DashPalette, buildPanelSx } from "../../helpers";
 import { Donut } from "../Donut";
 
 interface Props {
   ticketsByStatus: Record<string, number>;
+  ticketsByStatusColor: Record<string, string>;
   palette: DashPalette;
 }
 
 export const DistributionPanel: React.FC<Props> = ({
   ticketsByStatus,
+  ticketsByStatusColor,
   palette,
 }) => {
   const t = useT();
-  const totalStatuses = STATUS.reduce(
-    (sum, s) => sum + (ticketsByStatus[s.key] ?? 0),
-    0,
-  );
+  const entries = Object.entries(ticketsByStatus);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
 
   return (
     <Box
@@ -64,7 +64,7 @@ export const DistributionPanel: React.FC<Props> = ({
           mt: "12px",
         }}
       >
-        <Donut map={ticketsByStatus} palette={palette} />
+        <Donut map={ticketsByStatus} colorMap={ticketsByStatusColor} palette={palette} />
         <Box
           sx={{
             flex: 1,
@@ -73,13 +73,12 @@ export const DistributionPanel: React.FC<Props> = ({
             gap: "10px",
           }}
         >
-          {STATUS.map((s) => {
-            const count = ticketsByStatus[s.key] ?? 0;
-            const pct =
-              totalStatuses > 0 ? Math.round((count / totalStatuses) * 100) : 0;
+          {entries.map(([name, count]) => {
+            const color = ticketsByStatusColor[name] ?? "var(--muted2)";
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <Box
-                key={s.key}
+                key={name}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -100,11 +99,11 @@ export const DistributionPanel: React.FC<Props> = ({
                       width: 9,
                       height: 9,
                       borderRadius: "999px",
-                      bgcolor: s.color,
+                      bgcolor: color,
                       flexShrink: 0,
                     }}
                   />
-                  <span>{t(s.labelKey)}</span>
+                  <span>{name}</span>
                 </Box>
                 <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                   <strong>{count}</strong>{" "}

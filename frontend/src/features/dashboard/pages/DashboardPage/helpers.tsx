@@ -34,6 +34,7 @@ export interface StatsData {
   hoursThisMonth: number;
   criticalVulnerabilities: number;
   ticketsByStatus: Record<string, number>;
+  ticketsByStatusColor: Record<string, string>;
   ticketsByPriority: Record<string, number>;
   unassignedOpenTickets: number;
   urgentTickets: UrgentTicket[];
@@ -48,35 +49,13 @@ export const EMPTY_STATS: StatsData = {
   hoursThisMonth: 0,
   criticalVulnerabilities: 0,
   ticketsByStatus: {},
+  ticketsByStatusColor: {},
   ticketsByPriority: {},
   unassignedOpenTickets: 0,
   urgentTickets: [],
   recentActivity: [],
 };
 
-export const STATUS = [
-  { key: "New", labelKey: "dashboard.status.new", color: "var(--accent)" },
-  {
-    key: "InProgress",
-    labelKey: "dashboard.status.in_progress",
-    color: "var(--cyan)",
-  },
-  {
-    key: "Testing",
-    labelKey: "dashboard.status.testing",
-    color: "var(--yellow)",
-  },
-  {
-    key: "Resolved",
-    labelKey: "dashboard.status.resolved",
-    color: "var(--green)",
-  },
-  {
-    key: "Closed",
-    labelKey: "dashboard.status.closed",
-    color: "var(--muted2)",
-  },
-];
 
 export interface DashPalette {
   panelBg: string;

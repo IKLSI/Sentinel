@@ -17,10 +17,6 @@ interface Props {
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
   hasFiltersApplied: boolean;
-  kanbanCols?: Record<
-    string,
-    { name: string; color: string; systemStatus: string | null }
-  >;
 }
 
 const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
@@ -32,7 +28,6 @@ export const TicketsTable: React.FC<Props> = ({
   onEdit,
   onDelete,
   hasFiltersApplied,
-  kanbanCols,
 }) => {
   const t = useT();
 
@@ -161,7 +156,6 @@ export const TicketsTable: React.FC<Props> = ({
                 ticket={ticket}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                kanbanCols={kanbanCols}
               />
             ))}
           </Box>

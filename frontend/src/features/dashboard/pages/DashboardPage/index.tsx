@@ -145,6 +145,7 @@ export const DashboardPage: React.FC = () => {
 
         <DistributionPanel
           ticketsByStatus={stats.ticketsByStatus}
+          ticketsByStatusColor={stats.ticketsByStatusColor ?? {}}
           palette={palette}
         />
 

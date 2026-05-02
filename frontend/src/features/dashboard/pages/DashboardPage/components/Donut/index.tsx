@@ -1,16 +1,18 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
-import { DashPalette, STATUS } from "../../helpers";
+import { DashPalette } from "../../helpers";
 
 interface Props {
   map: Record<string, number>;
+  colorMap: Record<string, string>;
   palette: DashPalette;
 }
 
-export const Donut: React.FC<Props> = ({ map, palette }) => {
+export const Donut: React.FC<Props> = ({ map, colorMap, palette }) => {
   const t = useT();
-  const total = STATUS.reduce((sum, s) => sum + (map[s.key] ?? 0), 0);
+  const entries = Object.entries(map);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
   const r = 40;
   const c = 2 * Math.PI * r;
   let offset = 0;
@@ -34,19 +36,19 @@ export const Donut: React.FC<Props> = ({ map, palette }) => {
           strokeWidth="10"
           fill="none"
         />
-        {STATUS.map((s, i) => {
-          const value = map[s.key] ?? 0;
+        {entries.map(([name, value], i) => {
+          const color = colorMap[name] ?? "var(--muted2)";
           if (!value || !total) return null;
           const seg = (value / total) * c;
           const dashOffset = -offset;
           const out = (
             <circle
-              key={s.key}
+              key={name}
               className="donut-seg"
               cx="50"
               cy="50"
               r={r}
-              stroke={s.color}
+              stroke={color}
               strokeWidth="10"
               fill="none"
               strokeLinecap="round"

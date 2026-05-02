@@ -6,7 +6,7 @@ import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import { Ticket, TicketPriority } from "@/types";
-import type { KanbanColumnDef as ApiColumnDef } from "../../api/kanbanColumns";
+import type { TicketStatusDef } from "../../api/ticketStatuses";
 
 type KanbanType =
   | "bug"
@@ -42,7 +42,8 @@ export interface KanbanColumnDef {
   color: string;
   subtle: string;
   border: string;
-  systemStatus: string | null;
+  isDefault: boolean;
+  isClosed: boolean;
 }
 
 export const typeLabelKeys: Record<KanbanType, string> = {
@@ -63,14 +64,15 @@ export const typeIcons: Record<KanbanType, React.ReactElement> = {
   question: <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
 };
 
-export function apiColToColDef(c: ApiColumnDef): KanbanColumnDef {
+export function apiColToColDef(c: TicketStatusDef): KanbanColumnDef {
   return {
     id: c.id,
     name: c.name,
     color: c.color,
     subtle: `color-mix(in srgb, ${c.color} 10%, transparent)`,
     border: `color-mix(in srgb, ${c.color} 28%, transparent)`,
-    systemStatus: c.systemStatus,
+    isDefault: c.isDefault,
+    isClosed: c.isClosed,
   };
 }
 
@@ -105,26 +107,15 @@ function ticketToKanban(t: Ticket): KanbanTicket {
 }
 
 export function ticketsToColumns(
-  tickets: (Ticket & { kanbanColumnId?: string })[],
+  tickets: Ticket[],
   columnDefs: KanbanColumnDef[],
 ): KanbanColumns {
   const cols = emptyColumns(columnDefs);
-  const colById = new Map(columnDefs.map((c) => [c.id, c]));
-  const systemColByStatus = new Map(
-    columnDefs
-      .filter((c) => c.systemStatus !== null)
-      .map((c) => [c.systemStatus!, c.id]),
-  );
+  const colIds = new Set(columnDefs.map((c) => c.id));
 
   for (const t of tickets) {
-    const kanban = ticketToKanban(t);
-    if (t.kanbanColumnId && colById.has(t.kanbanColumnId)) {
-      cols[t.kanbanColumnId].push(kanban);
-    } else {
-      const systemColId = systemColByStatus.get(t.status);
-      if (systemColId && cols[systemColId] !== undefined) {
-        cols[systemColId].push(kanban);
-      }
+    if (t.statusId && colIds.has(t.statusId)) {
+      cols[t.statusId].push(ticketToKanban(t));
     }
   }
   return cols;

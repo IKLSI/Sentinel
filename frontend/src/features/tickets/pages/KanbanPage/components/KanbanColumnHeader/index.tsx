@@ -24,7 +24,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
 
   const handleConfirmDelete = async () => {
     if (!onDelete) return;
-    if (colDef.systemStatus !== null) return;
+    if (colDef.isDefault) return;
     setDeleting(true);
     try {
       await onDelete(colDef.id);
@@ -118,7 +118,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
               </Box>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              {onDelete && colDef.systemStatus === null && (
+              {onDelete && !colDef.isDefault && (
                 <IconButton
                   size="small"
                   onClick={() => setDeleteOpen(true)}

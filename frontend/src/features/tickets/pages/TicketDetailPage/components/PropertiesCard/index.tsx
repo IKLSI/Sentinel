@@ -7,32 +7,23 @@ import { Ticket } from "@/types";
 import {
   DetailPalette,
   buildPriorityConfig,
-  buildStatusConfig,
   typeLabelKeys,
 } from "../../helpers";
 import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
-import { priorityColor, statusDotColor } from "../../../TicketsPage/helpers";
+import { priorityColor } from "../../../TicketsPage/helpers";
 
 interface Props {
   ticket: Ticket;
   palette: DetailPalette;
-  statusConfig: ReturnType<typeof buildStatusConfig>;
   priorityConfig: ReturnType<typeof buildPriorityConfig>;
-  kanbanCols?: Record<
-    string,
-    { name: string; color: string; systemStatus: string | null }
-  >;
 }
 
 export const PropertiesCard: React.FC<Props> = ({
   ticket,
   palette,
-  statusConfig,
   priorityConfig,
-  kanbanCols,
 }) => {
   const t = useT();
-  const status = statusConfig[ticket.status];
   const priority = priorityConfig[ticket.priority] ?? priorityConfig.medium;
 
   const rows = [
@@ -41,25 +32,10 @@ export const PropertiesCard: React.FC<Props> = ({
       label: t("tickets.detail.field_status"),
       value: (
         <StatusPriorityBadge
-          dotColor={statusDotColor[ticket.status]}
-          label={t(status.labelKey)}
-          noGlow={ticket.status === "closed"}
+          dotColor={ticket.statusColor}
+          label={ticket.statusName}
+          noGlow={ticket.statusIsClosed}
         />
-      ),
-    },
-    {
-      key: "kanban",
-      label: "Colonne Kanban",
-      value: (
-        <Box
-          sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
-        >
-          {ticket.kanbanColumnId &&
-          kanbanCols &&
-          kanbanCols[ticket.kanbanColumnId]
-            ? kanbanCols[ticket.kanbanColumnId].name
-            : "—"}
-        </Box>
       ),
     },
     {

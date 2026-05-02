@@ -5,7 +5,7 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { TicketPriority, TicketStatus, TicketType } from "@/types";
+import { TicketPriority, TicketType } from "@/types";
 
 export interface CreateTicketPayload {
   title: string;
@@ -92,14 +92,6 @@ export const priorityLabelKeys: Record<TicketPriority, string> = {
   low: "tickets.list.priority_low",
 };
 
-export const statusLabelKeys: Record<TicketStatus, string> = {
-  new: "tickets.list.status_new",
-  in_progress: "tickets.list.status_in_progress",
-  testing: "tickets.list.status_testing",
-  resolved: "tickets.list.status_resolved",
-  closed: "tickets.list.status_closed",
-};
-
 export const typeBadgeStyle: Record<TicketType, { bg: string; color: string }> =
   {
     bug: { bg: "color-mix(in srgb, var(--red) 12%, transparent)", color: "var(--red)" },
@@ -126,14 +118,6 @@ export const typeTooltipKeys: Record<TicketType, string> = {
   performance: "tickets.list.type_performance",
   maintenance: "tickets.list.type_maintenance",
   question: "tickets.list.type_question",
-};
-
-export const statusDotColor: Record<TicketStatus, string> = {
-  new: "var(--accent)",
-  in_progress: "var(--orange)",
-  testing: "var(--cyan)",
-  resolved: "var(--green)",
-  closed: "var(--muted)",
 };
 
 export const priorityColor: Record<TicketPriority, string> = {
@@ -221,11 +205,4 @@ export const PRIORITY_ORDER: Record<TicketPriority, number> = {
   high: 1,
   medium: 2,
   low: 3,
-};
-export const STATUS_ORDER: Record<TicketStatus, number> = {
-  new: 0,
-  in_progress: 1,
-  testing: 2,
-  resolved: 3,
-  closed: 4,
 };

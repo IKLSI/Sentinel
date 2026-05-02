@@ -22,7 +22,16 @@ export interface LoginResponse {
 
 export type TicketPriority = 'critical' | 'high' | 'medium' | 'low'
 export type TicketType = 'bug' | 'feature' | 'security' | 'performance' | 'maintenance' | 'question'
-export type TicketStatus = 'new' | 'in_progress' | 'testing' | 'resolved' | 'closed'
+
+export interface TicketStatusDef {
+  id: string
+  name: string
+  color: string
+  order: number
+  isDefault: boolean
+  isClosed: boolean
+  ticketCount: number
+}
 
 export interface TicketComment {
   id: string
@@ -57,9 +66,11 @@ export interface Ticket {
   assignee?: User
   priority: TicketPriority
   type: TicketType
-  status: TicketStatus
+  statusId: string
+  statusName: string
+  statusColor: string
+  statusIsClosed: boolean
   isInternal: boolean
-  kanbanColumnId?: string
   estimatedHours?: number
   timeSpentMinutes?: number
   comments: TicketComment[]
@@ -81,7 +92,7 @@ export interface PaginatedResponse<T> {
 
 export interface TicketFilters {
   priority?: TicketPriority
-  status?: TicketStatus
+  status?: string
   assigneeId?: string
   type?: TicketType
   search?: string

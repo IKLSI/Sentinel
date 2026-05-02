@@ -1,5 +1,5 @@
 import apiClient from '../../../services/client'
-import { Ticket, TicketComment, TicketFilters, PaginatedResponse, TicketStatus, User } from '../../../types'
+import { Ticket, TicketComment, TicketFilters, PaginatedResponse, User } from '../../../types'
 import { downloadExcel } from '../../../utils/download'
 
 function createPartialUser(name: string, id: string, createdAt: string): User {
@@ -24,7 +24,10 @@ interface TicketDto {
   description: string
   priority: string
   type: string
-  status: string
+  statusId: string
+  statusName: string
+  statusColor: string
+  statusIsClosed: boolean
   assignedToId?: string
   assignedToName?: string
   estimatedHours?: number
@@ -34,7 +37,6 @@ interface TicketDto {
   createdAt: string
   updatedAt: string
   isInternal: boolean
-  kanbanColumnId?: string
   tags: string[]
   comments: { id: string; authorId: string; authorName: string; content: string; createdAt: string; updatedAt: string; isInternal?: boolean }[]
   history: { id: string; userId: string; userName: string; field: string; oldValue?: string; newValue?: string; createdAt: string }[]
@@ -62,9 +64,11 @@ function mapTicketDto(dto: TicketDto): Ticket {
       : undefined,
     priority: dto.priority as Ticket['priority'],
     type: dto.type as Ticket['type'],
-    status: dto.status as TicketStatus,
+    statusId: dto.statusId,
+    statusName: dto.statusName,
+    statusColor: dto.statusColor,
+    statusIsClosed: dto.statusIsClosed,
     isInternal: dto.isInternal ?? false,
-    kanbanColumnId: dto.kanbanColumnId,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({
@@ -127,8 +131,8 @@ export const deleteComment = async (ticketId: string, commentId: string): Promis
   await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`)
 }
 
-export const changeStatus = async (ticketId: string, status: TicketStatus): Promise<Ticket> => {
-  const response = await apiClient.patch<TicketDto>(`/api/tickets/${ticketId}/status`, { status })
+export const changeStatus = async (ticketId: string, statusId: string): Promise<Ticket> => {
+  const response = await apiClient.patch<TicketDto>(`/api/tickets/${ticketId}/status`, { statusId })
   return mapTicketDto(response.data)
 }
 

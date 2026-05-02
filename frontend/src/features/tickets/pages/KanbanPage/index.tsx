@@ -13,12 +13,11 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { getTickets } from "@/features/tickets/api/tickets";
 import {
-  getKanbanColumns,
-  createKanbanColumn,
-  deleteKanbanColumn,
-  moveTicketToColumn,
-} from "@/features/tickets/api/kanbanColumns";
-import type { KanbanColumnDef as ApiColumnDef } from "@/features/tickets/api/kanbanColumns";
+  getTicketStatuses,
+  createTicketStatus,
+  deleteTicketStatus,
+  changeTicketStatus,
+} from "@/features/tickets/api/ticketStatuses";
 import { getProjects } from "@/features/techHealth/api/projects";
 import {
   KanbanColumns,
@@ -27,7 +26,6 @@ import {
   ProjectInfo,
   arrayMove,
   apiColToColDef,
-  emptyColumns,
   ticketsToColumns,
 } from "./helpers";
 import { KanbanToolbar } from "./components/KanbanToolbar";
@@ -81,11 +79,11 @@ export const KanbanPage: React.FC = () => {
     try {
       const [ticketsResult, apiCols] = await Promise.all([
         getTickets({ pageSize: 200 }),
-        getKanbanColumns(),
+        getTicketStatuses(),
       ]);
       const defs = apiCols.map(apiColToColDef);
       setColumnDefs(defs);
-      setColumns(ticketsToColumns(ticketsResult.items as any, defs));
+      setColumns(ticketsToColumns(ticketsResult.items, defs));
     } catch {
       showToast(t("tickets.kanban.error.load_failed"), "error");
     } finally {
@@ -171,7 +169,7 @@ export const KanbanPage: React.FC = () => {
 
       setUpdatingId(draggableId);
       try {
-        await moveTicketToColumn(draggableId, destCol);
+        await changeTicketStatus(draggableId, destCol);
       } catch (err) {
         showToast(
           extractApiError(err, t("tickets.kanban.error.status_change_failed")),
@@ -188,7 +186,7 @@ export const KanbanPage: React.FC = () => {
   const handleAddColumn = useCallback(
     async (name: string, color: string) => {
       try {
-        const created = await createKanbanColumn(name, color);
+        const created = await createTicketStatus(name, color);
         const def = apiColToColDef(created);
         setColumnDefs((prev) => [...prev, def]);
         setColumns((prev) => ({ ...prev, [def.id]: [] }));
@@ -203,7 +201,7 @@ export const KanbanPage: React.FC = () => {
   const handleDeleteColumn = useCallback(
     async (id: string) => {
       try {
-        await deleteKanbanColumn(id);
+        await deleteTicketStatus(id);
         setColumnDefs((prev) => prev.filter((c) => c.id !== id));
         setColumns((prev) => {
           const next = { ...prev };
