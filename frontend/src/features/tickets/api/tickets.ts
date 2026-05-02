@@ -221,16 +221,7 @@ export const deleteComment = async (
   await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`);
 };
 
-export const changeStatus = async (
-  ticketId: string,
-  statusId: string,
-): Promise<Ticket> => {
-  const response = await apiClient.patch<TicketDto>(
-    `/api/tickets/${ticketId}/status`,
-    { statusId },
-  );
-  return mapTicketDto(response.data);
-};
+
 
 export const exportTicketsExcel = async (params?: {
   status?: string;
