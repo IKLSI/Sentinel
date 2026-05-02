@@ -200,19 +200,24 @@ export const Sidebar: React.FC = () => {
         sx={{
           width: collapsed ? "56px" : "220px",
           flexShrink: 0,
-          height: "100vh",
+          height: isMobile ? "100vh" : "calc(100vh - 24px)",
           background: "var(--s1)",
-          borderRight: "1px solid var(--border)",
+          border: "1px solid var(--border)",
+          borderRadius: isMobile ? 0 : "14px",
+          boxShadow: isMobile
+            ? "none"
+            : "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.03)",
           display: "flex",
           flexDirection: "column",
-          position: isMobile ? "fixed" : "relative",
-          left: 0,
-          top: 0,
-          zIndex: isMobile ? 200 : "auto",
+          position: "fixed",
+          left: isMobile ? 0 : "12px",
+          top: isMobile ? 0 : "12px",
+          zIndex: isMobile ? 200 : 100,
           overflowY: "auto",
           overflowX: "hidden",
           scrollbarWidth: "none",
-          transition: "width 0.2s cubic-bezier(0.4,0,0.2,1)",
+          transition:
+            "width 0.2s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s, border-radius 0.2s",
           "&::-webkit-scrollbar": { display: "none" },
         }}
       >
