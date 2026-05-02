@@ -221,7 +221,7 @@ export const deleteComment = async (
   await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`);
 };
 
-const changeStatus = async (
+export const changeStatus = async (
   ticketId: string,
   statusId: string,
 ): Promise<Ticket> => {
