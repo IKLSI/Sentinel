@@ -8,7 +8,8 @@ public class TimeEntry
     public Guid UserId { get; set; }
     public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public int DurationMinutes { get; set; }
-    public string? Comment { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
 
     public Ticket? Ticket { get; set; }
     public TechProject? TechProject { get; set; }

@@ -9,9 +9,11 @@ export interface TimeEntryDto {
   techProjectName?: string
   userId: string
   userName: string
+  userRole?: string
   date: string
   durationMinutes: number
-  comment?: string
+  title?: string
+  description?: string
 }
 
 export interface CreateTimeEntryDto {
@@ -19,13 +21,15 @@ export interface CreateTimeEntryDto {
   techProjectId?: string
   date: string
   durationMinutes: number
-  comment?: string
+  title?: string
+  description?: string
 }
 
 interface UpdateTimeEntryDto {
   date?: string
   durationMinutes?: number
-  comment?: string
+  title?: string
+  description?: string
   techProjectId?: string | null
   ticketId?: string | null
 }

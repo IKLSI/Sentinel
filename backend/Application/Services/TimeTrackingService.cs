@@ -25,7 +25,8 @@ public class TimeTrackingService
             UserId = userId,
             Date = dto.Date,
             DurationMinutes = dto.DurationMinutes,
-            Comment = dto.Comment
+            Title = dto.Title,
+            Description = dto.Description
         };
 
         await _context.TimeEntries.AddAsync(entry);
@@ -52,7 +53,8 @@ public class TimeTrackingService
 
         if (dto.Date.HasValue) entry.Date = dto.Date.Value;
         if (dto.DurationMinutes.HasValue) entry.DurationMinutes = dto.DurationMinutes.Value;
-        if (dto.Comment != null) entry.Comment = dto.Comment;
+        if (dto.Title != null) entry.Title = dto.Title;
+        if (dto.Description != null) entry.Description = dto.Description;
         if (dto.TechProjectId != null) entry.TechProjectId = dto.TechProjectId == Guid.Empty ? null : dto.TechProjectId;
         if (dto.TicketId != null) entry.TicketId = dto.TicketId == Guid.Empty ? null : dto.TicketId;
 
@@ -147,9 +149,11 @@ public class TimeTrackingService
             TechProjectName = entry.TechProject?.Name,
             UserId = entry.UserId,
             UserName = entry.User?.FullName ?? string.Empty,
+            UserRole = entry.User?.Role.ToString() ?? string.Empty,
             Date = entry.Date,
             DurationMinutes = entry.DurationMinutes,
-            Comment = entry.Comment
+            Title = entry.Title,
+            Description = entry.Description
         };
     }
 

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -33,6 +32,7 @@ interface Props {
   onExport: () => void;
   onEdit: (entry: TimeEntryDto) => void;
   onDelete: (entry: TimeEntryDto) => void;
+  onViewDetail: (entry: TimeEntryDto) => void;
 }
 
 export const JournalCard: React.FC<Props> = ({
@@ -48,6 +48,7 @@ export const JournalCard: React.FC<Props> = ({
   onExport,
   onEdit,
   onDelete,
+  onViewDetail,
 }) => {
   const t = useT();
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
@@ -299,141 +300,116 @@ export const JournalCard: React.FC<Props> = ({
                         : "var(--border2)";
                       const isOwn = entry.userId === currentUserId;
                       const canEdit = isOwn;
+                      const userColor = isOwn ? "var(--accent)" : getProjectColor(entry.userName);
                       return (
                         <Box
                           key={entry.id}
                           sx={{
                             display: "flex",
                             alignItems: "center",
-                            pl: "16px",
-                            pr: "12px",
                             borderTop: "1px solid var(--border)",
-                            minHeight: "52px",
-                            gap: "12px",
-                            transition: "background 0.1s",
+                            cursor: "pointer",
+                            position: "relative",
+                            transition: "background 0.12s",
                             "&:hover": { background: "var(--s2)" },
                             "&:hover .tt-actions": { opacity: 1 },
                           }}
+                          onClick={(e: React.MouseEvent) => {
+                            if ((e.target as HTMLElement).closest("button")) return;
+                            onViewDetail(entry);
+                          }}
                         >
-                          {isAdmin && (
-                            <Tooltip
-                              title={
-                                isOwn ? t("time_tracking.you") : entry.userName
-                              }
-                              placement="top"
-                              arrow
-                            >
-                              <Box
-                                sx={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "50%",
-                                  background: isOwn
-                                    ? "var(--accent)"
-                                    : getProjectColor(entry.userName),
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flexShrink: 0,
-                                  fontSize: "10px",
-                                  fontWeight: 700,
-                                  color: "var(--s1)",
-                                  letterSpacing: "0.02em",
-                                }}
-                              >
-                                {getUserInitials(entry.userName)}
-                              </Box>
-                            </Tooltip>
-                          )}
 
-                          <Box sx={{ flex: 1, minWidth: 0, py: "11px" }}>
+                          {/* Bloc auteur */}
+                          {isAdmin && (
                             <Box
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "8px",
-                                mb:
-                                  entry.techProjectName || entry.ticketTitle
-                                    ? "5px"
-                                    : 0,
+                                pl: "16px",
+                                flexShrink: 0,
+                                width: "110px",
                               }}
                             >
                               <Box
                                 sx={{
-                                  fontSize: "13px",
-                                  color: "var(--text)",
-                                  fontWeight: 500,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  letterSpacing: "-0.01em",
-                                  flex: 1,
-                                  minWidth: 0,
-                                }}
-                              >
-                                {entry.comment ?? "—"}
-                              </Box>
-                            </Box>
-                            {(entry.techProjectName || entry.ticketTitle) && (
-                              <Box
-                                sx={{
+                                  width: "26px",
+                                  height: "26px",
+                                  borderRadius: "50%",
+                                  background: userColor,
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "5px",
-                                  flexWrap: "wrap",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                  fontSize: "9px",
+                                  fontWeight: 800,
+                                  color: "white",
+                                  letterSpacing: "0.01em",
                                 }}
                               >
+                                {getUserInitials(entry.userName)}
+                              </Box>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Box
+                                  sx={{
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    color: isOwn ? "var(--accent)" : "var(--muted2)",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    lineHeight: 1.3,
+                                  }}
+                                >
+                                  {isOwn ? t("time_tracking.you") : entry.userName.split(" ")[0]}
+                                </Box>
+                                <Box
+                                  sx={{
+                                    fontSize: "10px",
+                                    fontWeight: 500,
+                                    color: "var(--muted)",
+                                    lineHeight: 1.3,
+                                    mt: "3px",
+                                  }}
+                                >
+                                  {entry.userRole === "Admin" ? t("settings.role.admin") : t("settings.role.developer")}
+                                </Box>
+                              </Box>
+                            </Box>
+                          )}
+
+                          {/* Séparateur */}
+                          {isAdmin && (
+                            <Box sx={{ width: "1px", height: "28px", background: "var(--border)", flexShrink: 0, ml: "28px", mr: "16px" }} />
+                          )}
+
+                          {/* Corps */}
+                          <Box sx={{ flex: 1, minWidth: 0, py: "11px", pl: isAdmin ? 0 : "16px", pr: "8px" }}>
+                            <Box
+                              sx={{
+                                fontSize: "13px",
+                                color: "var(--text)",
+                                fontWeight: 600,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                letterSpacing: "-0.01em",
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {entry.title ?? "—"}
+                            </Box>
+
+                            {(entry.techProjectName || entry.ticketId) && (
+                              <Box sx={{ display: "flex", alignItems: "center", gap: "4px", mt: "4px", flexWrap: "wrap" }}>
                                 {entry.techProjectName && (
-                                  <Box
-                                    sx={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "4px",
-                                      px: "6px",
-                                      py: "2px",
-                                      borderRadius: "4px",
-                                      background: `color-mix(in srgb, ${projColor} 9%, transparent)`,
-                                      border: `1px solid color-mix(in srgb, ${projColor} 25%, transparent)`,
-                                    }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        width: "5px",
-                                        height: "5px",
-                                        borderRadius: "50%",
-                                        background: projColor,
-                                        flexShrink: 0,
-                                      }}
-                                    />
-                                    <Box
-                                      component="span"
-                                      sx={{
-                                        fontSize: "11px",
-                                        fontWeight: 600,
-                                        color: projColor,
-                                      }}
-                                    >
-                                      {entry.techProjectName}
-                                    </Box>
+                                  <Box component="span" sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted2)", px: "5px", py: "1px", borderRadius: "4px", border: "1px solid var(--border2)", background: "var(--s3)" }}>
+                                    {entry.techProjectName}
                                   </Box>
                                 )}
                                 {entry.ticketId && (
-                                  <Box
-                                    sx={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      fontFamily: "var(--font-mono)",
-                                      fontSize: "10px",
-                                      background: "var(--accent-subtle)",
-                                      color: "var(--accent)",
-                                      px: "6px",
-                                      py: "2px",
-                                      borderRadius: "4px",
-                                      fontWeight: 600,
-                                      letterSpacing: "0.04em",
-                                      border: "1px solid var(--accent-border)",
-                                    }}
-                                  >
+                                  <Box component="span" sx={{ fontSize: "10px", fontWeight: 600, color: "var(--accent)", px: "5px", py: "1px", borderRadius: "4px", border: "1px solid var(--accent-border)", background: "var(--accent-subtle)" }}>
                                     {`TKT-${entry.ticketId.replace(/-/g, "").substring(0, 6).toUpperCase()}`}
                                   </Box>
                                 )}
@@ -441,39 +417,21 @@ export const JournalCard: React.FC<Props> = ({
                             )}
                           </Box>
 
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              flexShrink: 0,
-                            }}
-                          >
+                          {/* Droite */}
+                          <Box sx={{ display: "flex", alignItems: "center", gap: "4px", pr: "14px", flexShrink: 0 }}>
                             <Box
                               className="tt-actions"
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "2px",
-                                opacity: 0,
-                                transition: "opacity 0.15s",
-                              }}
+                              sx={{ display: "flex", alignItems: "center", gap: "1px", opacity: 0, transition: "opacity 0.15s" }}
                             >
                               {canEdit && (
                                 <>
                                   <RowActionBtn
-                                    icon={
-                                      <EditOutlined sx={{ fontSize: 13 }} />
-                                    }
+                                    icon={<EditOutlined sx={{ fontSize: 12 }} />}
                                     onClick={() => onEdit(entry)}
                                     title={t("time_tracking.action_edit")}
                                   />
                                   <RowActionBtn
-                                    icon={
-                                      <DeleteOutlineOutlined
-                                        sx={{ fontSize: 13 }}
-                                      />
-                                    }
+                                    icon={<DeleteOutlineOutlined sx={{ fontSize: 12 }} />}
                                     onClick={() => onDelete(entry)}
                                     title={t("time_tracking.action_delete")}
                                     danger
@@ -484,16 +442,13 @@ export const JournalCard: React.FC<Props> = ({
                             <Box
                               sx={{
                                 fontFamily: "var(--font-mono)",
-                                fontSize: "13px",
-                                fontWeight: 800,
+                                fontSize: "11px",
+                                fontWeight: 600,
                                 color: projColor,
-                                background: `color-mix(in srgb, ${projColor} 9%, transparent)`,
-                                border: `1px solid color-mix(in srgb, ${projColor} 21%, transparent)`,
-                                px: "8px",
-                                py: "3px",
-                                borderRadius: "6px",
-                                letterSpacing: "-0.02em",
+                                letterSpacing: "-0.01em",
                                 flexShrink: 0,
+                                minWidth: "36px",
+                                textAlign: "right",
                               }}
                             >
                               {formatDuration(entry.durationMinutes)}

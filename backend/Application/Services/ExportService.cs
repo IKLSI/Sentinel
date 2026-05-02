@@ -91,7 +91,7 @@ public class ExportService
 
     private static byte[] WriteTimeEntriesExcel(List<TimeEntry> entries)
     {
-        string[] headers = ["Date", "Utilisateur", "Projet", "Ticket", "Durée", "Commentaire"];
+        string[] headers = ["Date", "Utilisateur", "Projet", "Ticket", "Durée", "Titre", "Description"];
 
         using XLWorkbook workbook = new();
         IXLWorksheet ws = workbook.Worksheets.Add("Saisies de temps");
@@ -114,7 +114,8 @@ public class ExportService
             ws.Cell(row, 5).Value = (double)Math.Round(te.DurationMinutes / 60m, 2);
             ws.Cell(row, 5).Style.NumberFormat.Format = "0.00 \"h\"";
 
-            ws.Cell(row, 6).Value = te.Comment ?? string.Empty;
+            ws.Cell(row, 6).Value = te.Title ?? string.Empty;
+            ws.Cell(row, 7).Value = te.Description ?? string.Empty;
         }
 
         FinalizeSheet(ws, headers.Length);

@@ -11,9 +11,11 @@ public class TimeEntryDto
     public string? TechProjectName { get; set; }
     public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
+    public string UserRole { get; set; } = string.Empty;
     public DateOnly Date { get; set; }
     public int DurationMinutes { get; set; }
-    public string? Comment { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
 }
 
 public class CreateTimeEntryDto
@@ -27,8 +29,11 @@ public class CreateTimeEntryDto
     [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int DurationMinutes { get; set; }
 
+    [MaxLength(500)]
+    public string? Title { get; set; }
+
     [MaxLength(2000)]
-    public string? Comment { get; set; }
+    public string? Description { get; set; }
 }
 
 public class UpdateTimeEntryDto
@@ -38,8 +43,11 @@ public class UpdateTimeEntryDto
     [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int? DurationMinutes { get; set; }
 
+    [MaxLength(500)]
+    public string? Title { get; set; }
+
     [MaxLength(2000)]
-    public string? Comment { get; set; }
+    public string? Description { get; set; }
     public Guid? TechProjectId { get; set; }
     public Guid? TicketId { get; set; }
 }

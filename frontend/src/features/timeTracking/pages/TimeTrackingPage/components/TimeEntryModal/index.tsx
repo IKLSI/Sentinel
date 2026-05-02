@@ -69,7 +69,7 @@ export const TimeEntryModal: React.FC<Props> = ({
             sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
             onClick={onSubmit}
             disabled={
-              !form.comment.trim() || submitting || form.durationMinutes <= 0
+              !form.title.trim() || submitting || form.durationMinutes <= 0
             }
           >
             {submitting ? (
@@ -149,7 +149,7 @@ export const TimeEntryModal: React.FC<Props> = ({
         <FormField
           label={
             <>
-              {t("time_tracking.field_description")}{" "}
+              {t("time_tracking.field_title")}{" "}
               <Box component="span" sx={{ color: "var(--red)" }}>
                 *
               </Box>
@@ -160,12 +160,25 @@ export const TimeEntryModal: React.FC<Props> = ({
             component="input"
             type="text"
             sx={inputSx}
-            value={form.comment}
+            value={form.title}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onFormChange((f) => ({ ...f, comment: e.target.value }))
+              onFormChange((f) => ({ ...f, title: e.target.value }))
+            }
+            placeholder={t("time_tracking.title_placeholder")}
+            autoFocus
+          />
+        </FormField>
+
+        <FormField label={t("time_tracking.field_description")}>
+          <Box
+            component="textarea"
+            rows={3}
+            sx={{ ...inputSx, resize: "vertical", lineHeight: "1.5" }}
+            value={form.description}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              onFormChange((f) => ({ ...f, description: e.target.value }))
             }
             placeholder={t("time_tracking.description_placeholder")}
-            autoFocus
           />
         </FormField>
 

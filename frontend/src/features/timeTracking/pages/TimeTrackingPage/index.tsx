@@ -27,6 +27,7 @@ import { WeekCalendarCard } from "./components/WeekCalendarCard";
 import { ProjectStatsCard } from "./components/ProjectStatsCard";
 import { JournalCard } from "./components/JournalCard";
 import { TimeEntryModal } from "./components/TimeEntryModal";
+import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
 import { extractApiError } from "@/utils/apiError";
 
 export const TimeTrackingPage: React.FC = () => {
@@ -47,6 +48,7 @@ export const TimeTrackingPage: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<TimeEntryDto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [detailEntry, setDetailEntry] = useState<TimeEntryDto | null>(null);
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -149,7 +151,8 @@ export const TimeTrackingPage: React.FC = () => {
     setForm({
       date: entry.date,
       durationMinutes: entry.durationMinutes,
-      comment: entry.comment ?? "",
+      title: entry.title ?? "",
+      description: entry.description ?? "",
       techProjectId: entry.techProjectId ?? "",
       ticketId: entry.ticketId ?? "",
     });
@@ -157,14 +160,15 @@ export const TimeTrackingPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!form.comment.trim() || form.durationMinutes <= 0) return;
+    if (!form.title.trim() || form.durationMinutes <= 0) return;
     setSubmitting(true);
     try {
       if (editingId) {
         await updateTimeEntry(editingId, {
           date: form.date,
           durationMinutes: form.durationMinutes,
-          comment: form.comment.trim(),
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
           techProjectId: form.techProjectId || null,
           ticketId: form.ticketId || null,
         });
@@ -173,7 +177,8 @@ export const TimeTrackingPage: React.FC = () => {
         const payload: CreateTimeEntryDto = {
           date: form.date,
           durationMinutes: form.durationMinutes,
-          comment: form.comment.trim(),
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
         };
         if (form.techProjectId) payload.techProjectId = form.techProjectId;
         if (form.ticketId) payload.ticketId = form.ticketId;
@@ -262,6 +267,7 @@ export const TimeTrackingPage: React.FC = () => {
           onExport={handleExport}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
+        onViewDetail={setDetailEntry}
         />
       </Box>
 
@@ -277,6 +283,14 @@ export const TimeTrackingPage: React.FC = () => {
         tickets={tickets}
       />
 
+      <TimeEntryDetailModal
+        open={!!detailEntry}
+        onClose={() => setDetailEntry(null)}
+        entry={detailEntry}
+        isAdmin={isAdmin}
+        currentUserId={user?.id}
+      />
+
       <DeleteModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -284,9 +298,9 @@ export const TimeTrackingPage: React.FC = () => {
         loading={deleting}
         title={t("time_tracking.delete_modal_title")}
       >
-        {deleteTarget?.comment && (
+        {deleteTarget?.title && (
           <>
-            <strong>"{deleteTarget.comment}"</strong> —{" "}
+            <strong>"{deleteTarget.title}"</strong> —{" "}
           </>
         )}
         {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""}

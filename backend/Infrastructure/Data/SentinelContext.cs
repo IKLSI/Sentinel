@@ -219,7 +219,8 @@ public class SentinelContext : DbContext
         modelBuilder.Entity<TimeEntry>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.Title).HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(2000);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.TicketId);
             entity.HasIndex(e => e.Date);
