@@ -8,7 +8,7 @@ interface Props {
   totalMinutes: number;
 }
 
-export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes }) => {
+export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes: _totalMinutes }) => {
   const t = useT();
   return (
     <Box
