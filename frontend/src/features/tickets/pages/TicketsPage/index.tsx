@@ -12,6 +12,7 @@ import {
   exportTicketsExcel,
   updateTicket,
 } from "@/features/tickets/api/tickets";
+import { getKanbanColumns } from "@/features/tickets/api/kanbanColumns";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { Ticket, User } from "@/types";
@@ -54,6 +55,9 @@ export const TicketsPage: React.FC = () => {
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
+  const [kanbanCols, setKanbanCols] = useState<
+    Record<string, { name: string; color: string; systemStatus: string | null }>
+  >({});
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const [editForm, setEditForm] = useState<EditFormState>({
     title: "",
@@ -221,6 +225,26 @@ export const TicketsPage: React.FC = () => {
   }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast, t]);
 
   useEffect(() => {
+    getKanbanColumns()
+      .then((cols) => {
+        const map: Record<
+          string,
+          { name: string; color: string; systemStatus: string | null }
+        > = {};
+        cols.forEach(
+          (c) =>
+            (map[c.id] = {
+              name: c.name,
+              color: c.color,
+              systemStatus: c.systemStatus,
+            }),
+        );
+        setKanbanCols(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (tickets?.items !== undefined) {
       setDisplayTickets(tickets.items);
     }
@@ -317,6 +341,7 @@ export const TicketsPage: React.FC = () => {
               onToggleSort={toggleSort}
               onEdit={openEditModal}
               onDelete={(id, reference) => setDeleteTarget({ id, reference })}
+              kanbanCols={kanbanCols}
               hasFiltersApplied={hasFiltersApplied}
             />
 

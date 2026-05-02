@@ -7,6 +7,7 @@ public class KanbanColumnDto
     public string Color { get; set; } = string.Empty;
     public int Order { get; set; }
     public int TicketCount { get; set; }
+    public string? SystemStatus { get; set; }
 }
 
 public class CreateKanbanColumnDto

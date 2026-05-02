@@ -154,21 +154,16 @@ export const ProjectPicker: React.FC<Props> = ({
           flexShrink: 0,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Box
-            sx={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "var(--text)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            {t("tickets.kanban.picker.projects_label")}
-          </Box>
-          <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-            {visible.length}
-          </Box>
+        <Box
+          sx={{
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "var(--text)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
+        >
+          {t("tickets.kanban.picker.projects_label")}
         </Box>
         <Box
           component="button"
@@ -314,7 +309,9 @@ export const ProjectPicker: React.FC<Props> = ({
                   }}
                 >
                   {isSelected && (
-                    <CheckOutlined sx={{ fontSize: "11px", color: "var(--s1)" }} />
+                    <CheckOutlined
+                      sx={{ fontSize: "11px", color: "var(--s1)" }}
+                    />
                   )}
                 </Box>
               </Box>
@@ -348,10 +345,20 @@ export const ProjectPicker: React.FC<Props> = ({
         </Box>
         <Box sx={{ display: "flex", gap: "8px" }}>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
-            className="btn-cancel"
-            sx={{ textTransform: "none" }}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
             onClick={() => setPending([])}
           >
             {t("tickets.kanban.picker.reset")}
@@ -359,7 +366,18 @@ export const ProjectPicker: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none" }}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
             onClick={handleApply}
           >
             {t("tickets.kanban.picker.apply")}

@@ -12,8 +12,8 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260501232228_AddKanbanColumns")]
-    partial class AddKanbanColumns
+    [Migration("20260501234303_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -93,6 +93,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SystemStatus")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

@@ -11,25 +11,23 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { changeStatus, getTickets } from "@/features/tickets/api/tickets";
+import { getTickets } from "@/features/tickets/api/tickets";
 import {
   getKanbanColumns,
   createKanbanColumn,
   deleteKanbanColumn,
   moveTicketToColumn,
 } from "@/features/tickets/api/kanbanColumns";
-import type { KanbanColumnDef as CustomColumnDef } from "@/features/tickets/api/kanbanColumns";
+import type { KanbanColumnDef as ApiColumnDef } from "@/features/tickets/api/kanbanColumns";
 import { getProjects } from "@/features/techHealth/api/projects";
-import { TicketStatus } from "@/types";
 import {
   KanbanColumns,
   KanbanColumnDef,
   KanbanTicket,
   ProjectInfo,
   arrayMove,
-  buildColumnDefs,
+  apiColToColDef,
   emptyColumns,
-  systemColumnOrder,
   ticketsToColumns,
 } from "./helpers";
 import { KanbanToolbar } from "./components/KanbanToolbar";
@@ -43,10 +41,8 @@ export const KanbanPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
 
-  const [customColumns, setCustomColumns] = useState<CustomColumnDef[]>([]);
-  const [columns, setColumns] = useState<KanbanColumns>(() =>
-    emptyColumns(buildColumnDefs([])),
-  );
+  const [columnDefs, setColumnDefs] = useState<KanbanColumnDef[]>([]);
+  const [columns, setColumns] = useState<KanbanColumns>({});
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -56,11 +52,6 @@ export const KanbanPage: React.FC = () => {
   const wasDragging = useRef(false);
 
   const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
-
-  const columnDefs = useMemo<KanbanColumnDef[]>(
-    () => buildColumnDefs(customColumns),
-    [customColumns],
-  );
 
   useEffect(() => {
     getProjects()
@@ -88,12 +79,12 @@ export const KanbanPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [ticketsResult, custom] = await Promise.all([
+      const [ticketsResult, apiCols] = await Promise.all([
         getTickets({ pageSize: 200 }),
         getKanbanColumns(),
       ]);
-      setCustomColumns(custom);
-      const defs = buildColumnDefs(custom);
+      const defs = apiCols.map(apiColToColDef);
+      setColumnDefs(defs);
       setColumns(ticketsToColumns(ticketsResult.items as any, defs));
     } catch {
       showToast(t("tickets.kanban.error.load_failed"), "error");
@@ -124,12 +115,6 @@ export const KanbanPage: React.FC = () => {
       columnDefs.map((c) => [c.id, filter(columns[c.id] ?? [])]),
     );
   }, [columns, columnDefs, search, filteredProjects]);
-
-  const isSystemColumn = useCallback(
-    (id: string): id is TicketStatus =>
-      systemColumnOrder.includes(id as TicketStatus),
-    [],
-  );
 
   const onDragEnd = useCallback(
     async (result: DropResult) => {
@@ -186,14 +171,7 @@ export const KanbanPage: React.FC = () => {
 
       setUpdatingId(draggableId);
       try {
-        if (isSystemColumn(destCol)) {
-          await changeStatus(draggableId, destCol);
-          if (!isSystemColumn(sourceCol)) {
-            await moveTicketToColumn(draggableId, null);
-          }
-        } else {
-          await moveTicketToColumn(draggableId, destCol);
-        }
+        await moveTicketToColumn(draggableId, destCol);
       } catch (err) {
         showToast(
           extractApiError(err, t("tickets.kanban.error.status_change_failed")),
@@ -204,15 +182,16 @@ export const KanbanPage: React.FC = () => {
         setUpdatingId(null);
       }
     },
-    [columns, filteredColumns, isSystemColumn, showToast, load, t],
+    [columns, filteredColumns, showToast, load, t],
   );
 
   const handleAddColumn = useCallback(
     async (name: string, color: string) => {
       try {
         const created = await createKanbanColumn(name, color);
-        setCustomColumns((prev) => [...prev, created]);
-        setColumns((prev) => ({ ...prev, [created.id]: [] }));
+        const def = apiColToColDef(created);
+        setColumnDefs((prev) => [...prev, def]);
+        setColumns((prev) => ({ ...prev, [def.id]: [] }));
         setAddColOpen(false);
       } catch (err) {
         showToast(extractApiError(err, "Impossible de créer la colonne"), "error");
@@ -225,7 +204,7 @@ export const KanbanPage: React.FC = () => {
     async (id: string) => {
       try {
         await deleteKanbanColumn(id);
-        setCustomColumns((prev) => prev.filter((c) => c.id !== id));
+        setColumnDefs((prev) => prev.filter((c) => c.id !== id));
         setColumns((prev) => {
           const next = { ...prev };
           delete next[id];

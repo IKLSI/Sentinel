@@ -236,47 +236,41 @@ export const KanbanBoard: React.FC<Props> = ({
             );
           })}
 
-          <div
-            style={{
+          <Box
+            onClick={onAddColumn}
+            sx={{
               width: "280px",
               height: "100%",
+              flexShrink: 0,
               display: "flex",
               flexDirection: "column",
-              flexShrink: 0,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              border: "1px dashed var(--border2)",
+              borderRadius: "var(--r)",
+              cursor: "pointer",
+              color: "var(--muted2)",
+              fontSize: "12px",
+              fontWeight: 600,
+              transition: "border-color 0.15s, color 0.15s, background 0.15s",
+              "&:hover": {
+                borderColor: "var(--accent)",
+                color: "var(--accent)",
+                background: "var(--s1)",
+              },
             }}
           >
-            <Box
-              onClick={onAddColumn}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                height: "44px",
-                border: "1px dashed var(--border2)",
-                borderRadius: "var(--r)",
-                cursor: "pointer",
-                color: "var(--muted2)",
-                fontSize: "12px",
-                fontWeight: 600,
-                transition: "border-color 0.15s, color 0.15s",
-                "&:hover": {
-                  borderColor: "var(--accent)",
-                  color: "var(--accent)",
-                },
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Ajouter une colonne
-            </Box>
-          </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            Ajouter une colonne
+          </Box>
         </div>
       </DragDropContext>
     </Box>

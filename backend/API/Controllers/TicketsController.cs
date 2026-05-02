@@ -314,10 +314,24 @@ public class TicketsController : BaseController
 
         if (dto.ColumnId.HasValue)
         {
-            bool columnExists = await _context.KanbanColumns
-                .AnyAsync(c => c.Id == dto.ColumnId.Value && c.OrganizationId == organizationId.Value);
-            if (!columnExists)
+            KanbanColumn? column = await _context.KanbanColumns
+                .FirstOrDefaultAsync(c => c.Id == dto.ColumnId.Value && c.OrganizationId == organizationId.Value);
+            if (column == null)
                 return BadRequest(new { message = "Colonne introuvable" });
+
+            if (column.SystemStatus != null)
+            {
+                Dictionary<string, TicketStatus> statusMap = new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["new"] = TicketStatus.New,
+                    ["in_progress"] = TicketStatus.InProgress,
+                    ["testing"] = TicketStatus.Testing,
+                    ["resolved"] = TicketStatus.Resolved,
+                    ["closed"] = TicketStatus.Closed,
+                };
+                if (statusMap.TryGetValue(column.SystemStatus, out TicketStatus mapped))
+                    ticket.Status = mapped;
+            }
         }
 
         ticket.KanbanColumnId = dto.ColumnId;

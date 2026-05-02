@@ -1,12 +1,38 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
+import CircularProgress from "@mui/material/CircularProgress";
+import { AppModal } from "@/components/AppModal";
 import { CUSTOM_COLUMN_COLORS } from "../../helpers";
+
+const modalInputSx = {
+  background: "var(--s1)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--r)",
+  px: "12px",
+  py: "8px",
+  fontSize: "13px",
+  color: "var(--text)",
+  width: "100%",
+  outline: "none",
+  fontFamily: "inherit",
+};
+
+const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Box
+    component="label"
+    sx={{
+      display: "block",
+      fontSize: "11px",
+      fontWeight: 600,
+      mb: "5px",
+      color: "var(--muted2)",
+      letterSpacing: "0.04em",
+    }}
+  >
+    {children}
+  </Box>
+);
 
 interface Props {
   open: boolean;
@@ -38,84 +64,96 @@ export const AddColumnDialog: React.FC<Props> = ({ open, onClose, onConfirm }) =
   };
 
   return (
-    <Dialog
+    <AppModal
       open={open}
       onClose={handleClose}
-      slotProps={{
-        paper: {
-          sx: {
-            background: "var(--s1)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            minWidth: 340,
-          },
-        },
-      }}
+      title="Nouvelle colonne"
+      maxWidth="xs"
+      actions={
+        <>
+          <Button
+            variant="contained"
+            size="small"
+            className="btn-cancel"
+            sx={{ textTransform: "none" }}
+            onClick={handleClose}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!name.trim() || loading}
+            onClick={handleSubmit}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
+            ) : (
+              "Créer"
+            )}
+          </Button>
+        </>
+      }
     >
-      <DialogTitle
-        sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", pb: 1 }}
-      >
-        Nouvelle colonne
-      </DialogTitle>
-      <DialogContent sx={{ pb: 1 }}>
-        <TextField
-          autoFocus
-          fullWidth
-          size="small"
-          placeholder="Nom de la colonne"
-          value={name}
-          onChange={(e) => setName(e.target.value.slice(0, 50))}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSubmit();
-          }}
-          sx={{
-            mb: 2,
-            "& .MuiOutlinedInput-root": {
-              fontSize: "13px",
-              background: "var(--s2)",
-            },
-          }}
-          slotProps={{ htmlInput: { maxLength: 50 } }}
-          helperText={`${name.length}/50`}
-        />
-        <Box sx={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          {CUSTOM_COLUMN_COLORS.map((c) => (
-            <Box
-              key={c}
-              onClick={() => setColor(c)}
-              sx={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                background: c,
-                cursor: "pointer",
-                border: color === c ? "2px solid var(--text)" : "2px solid transparent",
-                outline: color === c ? "2px solid var(--s1)" : "none",
-                outlineOffset: "-3px",
-                transition: "border-color 0.12s",
-              }}
-            />
-          ))}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <Box>
+          <Label>
+            NOM{" "}
+            <Box component="span" sx={{ color: "var(--red)" }}>
+              *
+            </Box>
+          </Label>
+          <Box
+            component="input"
+            autoFocus
+            type="text"
+            placeholder="Nom de la colonne"
+            value={name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setName(e.target.value.slice(0, 50))
+            }
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
+            maxLength={50}
+            sx={modalInputSx}
+          />
         </Box>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-        <Button
-          size="small"
-          onClick={handleClose}
-          sx={{ fontSize: "12px", color: "var(--muted2)" }}
-        >
-          Annuler
-        </Button>
-        <Button
-          size="small"
-          variant="contained"
-          disabled={!name.trim() || loading}
-          onClick={handleSubmit}
-          sx={{ fontSize: "12px" }}
-        >
-          Créer
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Box>
+          <Label>COULEUR</Label>
+          <Box sx={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {CUSTOM_COLUMN_COLORS.map((c) => (
+              <Box
+                key={c}
+                onClick={() => setColor(c)}
+                sx={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: c,
+                  cursor: "pointer",
+                  border: color === c ? "2px solid var(--text)" : "2px solid transparent",
+                  outline: color === c ? "2px solid var(--s1)" : "none",
+                  outlineOffset: "-3px",
+                  transition: "border-color 0.12s",
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      </Box>
+    </AppModal>
   );
 };

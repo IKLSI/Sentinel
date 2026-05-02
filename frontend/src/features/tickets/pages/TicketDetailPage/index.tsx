@@ -16,6 +16,7 @@ import {
   getTicket,
   updateComment,
 } from "@/features/tickets/api/tickets";
+import { getKanbanColumns } from "@/features/tickets/api/kanbanColumns";
 import { Ticket } from "@/types";
 import {
   buildFieldSx,
@@ -49,6 +50,10 @@ export const TicketDetailPage: React.FC = () => {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [kanbanCols, setKanbanCols] = useState<Record<
+    string,
+    { name: string; color: string; systemStatus: string | null }
+  > | null>(null);
 
   const [composerMode, setComposerMode] = useState<"reply" | "internal">(
     "reply",
@@ -72,11 +77,30 @@ export const TicketDetailPage: React.FC = () => {
     if (!id) return;
     setLoading(true);
     setNotFound(false);
-    getTicket(id)
-      .then((tk) => setTicket(tk))
-      .catch(() => {
-        setNotFound(true);
-        showToast(t("tickets.detail.not_found_toast"), "error");
+    Promise.all([
+      getTicket(id).catch(() => null),
+      getKanbanColumns().catch(() => []),
+    ])
+      .then(([tk, cols]) => {
+        if (!tk) {
+          setNotFound(true);
+          showToast(t("tickets.detail.not_found_toast"), "error");
+        } else {
+          setTicket(tk);
+          const map: Record<
+            string,
+            { name: string; color: string; systemStatus: string | null }
+          > = {};
+          (cols as any[]).forEach(
+            (c) =>
+              (map[c.id] = {
+                name: c.name,
+                color: c.color,
+                systemStatus: c.systemStatus,
+              }),
+          );
+          setKanbanCols(map);
+        }
       })
       .finally(() => setLoading(false));
   }, [id, showToast, t]);
@@ -338,6 +362,7 @@ export const TicketDetailPage: React.FC = () => {
             palette={palette}
             statusConfig={statusConfig}
             priorityConfig={priorityConfig}
+            kanbanCols={kanbanCols ?? undefined}
           />
 
           <HistoryCard

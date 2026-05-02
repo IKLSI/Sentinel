@@ -335,5 +335,15 @@ public class DataSeeder
         );
 
         await _context.SaveChangesAsync();
+
+        await _context.KanbanColumns.AddRangeAsync(
+            new KanbanColumn { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Nouveau", Color = "var(--accent)", Order = 0, SystemStatus = "new" },
+            new KanbanColumn { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "En cours", Color = "var(--orange)", Order = 1, SystemStatus = "in_progress" },
+            new KanbanColumn { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Tests", Color = "var(--cyan)", Order = 2, SystemStatus = "testing" },
+            new KanbanColumn { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Résolu", Color = "var(--green)", Order = 3, SystemStatus = "resolved" },
+            new KanbanColumn { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Fermé", Color = "var(--muted2)", Order = 4, SystemStatus = "closed" }
+        );
+
+        await _context.SaveChangesAsync();
     }
 }

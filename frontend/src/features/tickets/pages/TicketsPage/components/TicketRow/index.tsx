@@ -22,9 +22,18 @@ interface Props {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
+  kanbanCols?: Record<
+    string,
+    { name: string; color: string; systemStatus: string | null }
+  >;
 }
 
-export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
+export const TicketRow: React.FC<Props> = ({
+  ticket,
+  onEdit,
+  onDelete,
+  kanbanCols,
+}) => {
   const navigate = useNavigate();
   const t = useT();
 
@@ -149,18 +158,47 @@ export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         >
           <Box
             sx={{
-              width: "7px",
-              height: "7px",
-              borderRadius: "50%",
-              background: statusDotColor[ticket.status],
-              flexShrink: 0,
-              boxShadow:
-                ticket.status !== "closed"
-                  ? `0 0 5px ${statusDotColor[ticket.status]}`
-                  : "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
-          />
-          {t(statusLabelKeys[ticket.status])}
+          >
+            {ticket.kanbanColumnId &&
+            kanbanCols &&
+            kanbanCols[ticket.kanbanColumnId] ? (
+              <>
+                <Box
+                  sx={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: kanbanCols[ticket.kanbanColumnId].color,
+                    flexShrink: 0,
+                  }}
+                />
+                <Box sx={{ color: "var(--text-secondary)", fontSize: "12px" }}>
+                  {kanbanCols[ticket.kanbanColumnId].name}
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box
+                  sx={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    background: statusDotColor[ticket.status],
+                    flexShrink: 0,
+                    boxShadow:
+                      ticket.status !== "closed"
+                        ? `0 0 5px ${statusDotColor[ticket.status]}`
+                        : "none",
+                  }}
+                />
+                {t(statusLabelKeys[ticket.status])}
+              </>
+            )}
+          </Box>
         </Box>
       </Box>
 

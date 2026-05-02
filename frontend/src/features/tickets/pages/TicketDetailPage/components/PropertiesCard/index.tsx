@@ -18,6 +18,10 @@ interface Props {
   palette: DetailPalette;
   statusConfig: ReturnType<typeof buildStatusConfig>;
   priorityConfig: ReturnType<typeof buildPriorityConfig>;
+  kanbanCols?: Record<
+    string,
+    { name: string; color: string; systemStatus: string | null }
+  >;
 }
 
 export const PropertiesCard: React.FC<Props> = ({
@@ -40,6 +44,21 @@ export const PropertiesCard: React.FC<Props> = ({
           label={t(status.labelKey)}
           noGlow={ticket.status === "closed"}
         />
+      ),
+    },
+    {
+      key: "kanban",
+      label: "Colonne Kanban",
+      value: (
+        <Box
+          sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
+        >
+          {ticket.kanbanColumnId &&
+          kanbanCols &&
+          kanbanCols[ticket.kanbanColumnId]
+            ? kanbanCols[ticket.kanbanColumnId].name
+            : "—"}
+        </Box>
       ),
     },
     {

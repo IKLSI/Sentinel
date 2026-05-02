@@ -6,17 +6,17 @@ export interface KanbanColumnDef {
   color: string
   order: number
   ticketCount: number
-  isSystem: false
+  systemStatus: string | null
 }
 
 export const getKanbanColumns = async (): Promise<KanbanColumnDef[]> => {
   const response = await apiClient.get<KanbanColumnDef[]>('/api/kanban/columns')
-  return response.data.map((c) => ({ ...c, isSystem: false as const }))
+  return response.data
 }
 
 export const createKanbanColumn = async (name: string, color: string): Promise<KanbanColumnDef> => {
   const response = await apiClient.post<KanbanColumnDef>('/api/kanban/columns', { name, color })
-  return { ...response.data, isSystem: false as const }
+  return response.data
 }
 
 export const deleteKanbanColumn = async (id: string): Promise<void> => {

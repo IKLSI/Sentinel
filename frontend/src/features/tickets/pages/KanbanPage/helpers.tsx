@@ -5,8 +5,8 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { Ticket, TicketPriority, TicketStatus } from "@/types";
-import type { KanbanColumnDef as CustomColumnDef } from "../../api/kanbanColumns";
+import { Ticket, TicketPriority } from "@/types";
+import type { KanbanColumnDef as ApiColumnDef } from "../../api/kanbanColumns";
 
 type KanbanType =
   | "bug"
@@ -42,8 +42,7 @@ export interface KanbanColumnDef {
   color: string;
   subtle: string;
   border: string;
-  isSystem: boolean;
-  labelKey?: string;
+  systemStatus: string | null;
 }
 
 export const typeLabelKeys: Record<KanbanType, string> = {
@@ -64,90 +63,18 @@ export const typeIcons: Record<KanbanType, React.ReactElement> = {
   question: <HelpOutlineOutlined sx={{ fontSize: 11 }} />,
 };
 
-export const systemColumnMeta: Record<
-  TicketStatus,
-  { labelKey: string; color: string; subtle: string; border: string }
-> = {
-  new: {
-    labelKey: "tickets.kanban.status.new",
-    color: "var(--accent)",
-    subtle: "var(--accent-subtle)",
-    border: "var(--accent-border)",
-  },
-  in_progress: {
-    labelKey: "tickets.kanban.status.in_progress",
-    color: "var(--orange)",
-    subtle: "var(--orange-subtle)",
-    border: "color-mix(in srgb, var(--orange) 28%, transparent)",
-  },
-  testing: {
-    labelKey: "tickets.kanban.status.testing",
-    color: "var(--cyan)",
-    subtle: "var(--cyan-subtle)",
-    border: "color-mix(in srgb, var(--cyan) 28%, transparent)",
-  },
-  resolved: {
-    labelKey: "tickets.kanban.status.resolved",
-    color: "var(--green)",
-    subtle: "var(--green-subtle)",
-    border: "color-mix(in srgb, var(--green) 28%, transparent)",
-  },
-  closed: {
-    labelKey: "tickets.kanban.status.closed",
-    color: "var(--muted2)",
-    subtle: "color-mix(in srgb, var(--muted2) 10%, transparent)",
-    border: "color-mix(in srgb, var(--muted2) 22%, transparent)",
-  },
-};
-
-export const columnMeta = systemColumnMeta;
-
-export const systemColumnOrder: TicketStatus[] = [
-  "new",
-  "in_progress",
-  "testing",
-  "resolved",
-  "closed",
-];
-
-export const columnOrder = systemColumnOrder;
-
-export function buildColumnDefs(customColumns: CustomColumnDef[]): KanbanColumnDef[] {
-  const system: KanbanColumnDef[] = systemColumnOrder.map((status) => {
-    const meta = systemColumnMeta[status];
-    return {
-      id: status,
-      name: status,
-      color: meta.color,
-      subtle: meta.subtle,
-      border: meta.border,
-      isSystem: true,
-      labelKey: meta.labelKey,
-    };
-  });
-
-  const custom: KanbanColumnDef[] = customColumns.map((c) => ({
+export function apiColToColDef(c: ApiColumnDef): KanbanColumnDef {
+  return {
     id: c.id,
     name: c.name,
     color: c.color,
     subtle: `color-mix(in srgb, ${c.color} 10%, transparent)`,
     border: `color-mix(in srgb, ${c.color} 28%, transparent)`,
-    isSystem: false,
-  }));
-
-  return [...system, ...custom];
+    systemStatus: c.systemStatus,
+  };
 }
 
-export function emptyColumns(columnDefs?: KanbanColumnDef[]): KanbanColumns {
-  if (!columnDefs) {
-    return {
-      new: [],
-      in_progress: [],
-      testing: [],
-      resolved: [],
-      closed: [],
-    };
-  }
+export function emptyColumns(columnDefs: KanbanColumnDef[]): KanbanColumns {
   return Object.fromEntries(columnDefs.map((c) => [c.id, []]));
 }
 
@@ -182,14 +109,22 @@ export function ticketsToColumns(
   columnDefs: KanbanColumnDef[],
 ): KanbanColumns {
   const cols = emptyColumns(columnDefs);
-  const customIds = new Set(columnDefs.filter((c) => !c.isSystem).map((c) => c.id));
+  const colById = new Map(columnDefs.map((c) => [c.id, c]));
+  const systemColByStatus = new Map(
+    columnDefs
+      .filter((c) => c.systemStatus !== null)
+      .map((c) => [c.systemStatus!, c.id]),
+  );
 
   for (const t of tickets) {
     const kanban = ticketToKanban(t);
-    if (t.kanbanColumnId && customIds.has(t.kanbanColumnId)) {
+    if (t.kanbanColumnId && colById.has(t.kanbanColumnId)) {
       cols[t.kanbanColumnId].push(kanban);
-    } else if (cols[t.status] !== undefined) {
-      cols[t.status].push(kanban);
+    } else {
+      const systemColId = systemColByStatus.get(t.status);
+      if (systemColId && cols[systemColId] !== undefined) {
+        cols[systemColId].push(kanban);
+      }
     }
   }
   return cols;
