@@ -34,7 +34,7 @@ export const KpiCard: React.FC<Props> = ({
     <Box
       sx={{
         ...buildPanelSx(palette),
-        p: "12px 15px",
+        p: "8px 15px 12px 15px",
         display: "flex",
         flexDirection: "column",
       }}
@@ -42,17 +42,30 @@ export const KpiCard: React.FC<Props> = ({
       <Box
         sx={{
           display: "flex",
-          alignItems: "flex-start",
+          alignItems: "center",
           justifyContent: "space-between",
         }}
       >
         <Box
           sx={{
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-ui)",
             fontSize: "10px",
-            letterSpacing: "0.16em",
+            fontWeight: 500,
+            letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: palette.kpiLabel,
+            background: `linear-gradient(135deg, ${palette.kpiLabel} 0%, color-mix(in srgb, ${valueColor} 25%, ${palette.kpiLabel}))`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            lineHeight: 1.3,
+            fontVariantNumeric: "tabular-nums",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              background: `linear-gradient(135deg, color-mix(in srgb, ${palette.kpiLabel} 95%, white) 0%, color-mix(in srgb, ${valueColor} 35%, ${palette.kpiLabel}))`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            },
           }}
         >
           {label}
