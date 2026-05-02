@@ -14,6 +14,7 @@ import {
   ticketIcon,
   ticketPriority,
 } from "../../helpers";
+import { typeLabelKeys } from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
   urgent: UrgentTicket[];
@@ -29,25 +30,23 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
   const t = useT();
   const navigate = useNavigate();
 
-  const bugCount = urgent.filter((u) => u.type === "bug").length;
-  const secCount = urgent.filter((u) => u.type === "security").length;
-
   const summary = (() => {
     if (urgent.length === 0) return t("dashboard.urgent_summary.empty");
-    const parts: string[] = [];
-    if (bugCount > 0)
-      parts.push(
-        `${bugCount} ${t(bugCount > 1 ? "dashboard.urgent_summary.bug_other" : "dashboard.urgent_summary.bug_one")}`,
-      );
-    if (secCount > 0)
-      parts.push(
-        `${secCount} ${t(secCount > 1 ? "dashboard.urgent_summary.security_other" : "dashboard.urgent_summary.security_one")}`,
-      );
-    const otherCount = urgent.length - bugCount - secCount;
-    if (otherCount > 0)
-      parts.push(
-        `${otherCount} ${t(otherCount > 1 ? "dashboard.urgent_summary.other_other" : "dashboard.urgent_summary.other_one")}`,
-      );
+    const counts = new Map<string, number>();
+    const order: string[] = [];
+
+    urgent.forEach((ticket) => {
+      if (!counts.has(ticket.type)) order.push(ticket.type);
+      counts.set(ticket.type, (counts.get(ticket.type) ?? 0) + 1);
+    });
+
+    const parts = order.map((type) => {
+      const count = counts.get(type) ?? 0;
+      const labelKey = typeLabelKeys[type];
+      const label = labelKey ? t(labelKey) : type;
+      return `${count} ${label}`;
+    });
+
     return parts.join(" · ");
   })();
 
