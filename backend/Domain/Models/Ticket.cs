@@ -18,8 +18,6 @@ public enum TicketType
     Maintenance
 }
 
-
-
 public class Ticket
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -29,8 +27,7 @@ public class Ticket
     public string Description { get; set; } = string.Empty;
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;
     public TicketType Type { get; set; } = TicketType.Bug;
-    // Status is a dynamic string (e.g. "new", "in_progress", or custom statuses)
-    public string Status { get; set; } = "new";
+    public Guid? TicketStatusId { get; set; }
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public Guid CreatedById { get; set; }
@@ -38,8 +35,7 @@ public class Ticket
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsInternal { get; set; } = false;
     public string Tags { get; set; } = "[]";
-    public Guid? KanbanColumnId { get; set; }
-    public KanbanColumn? KanbanColumn { get; set; }
+    public TicketStatus? TicketStatus { get; set; }
     public Organization Organization { get; set; } = null!;
     public TechProject? Project { get; set; }
     public User? AssignedTo { get; set; }

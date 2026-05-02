@@ -32,34 +32,41 @@ public class DashboardService
         DateTime weekAgo = now.AddDays(-7);
         DateOnly monthStartDate = DateOnly.FromDateTime(monthStart);
         DateOnly todayDate = DateOnly.FromDateTime(now);
-
-        string[] openStatuses = new[] { "new", "in_progress", "testing" };
-        string[] closedStatuses = new[] { "resolved", "closed" };
-        string[] allStatuses = new[] { "new", "in_progress", "testing", "resolved", "closed" };
         TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
 
-        var statusCounts = await _context.Tickets
-            .Where(t => t.OrganizationId == organizationId)
-            .GroupBy(t => t.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
+        List<TicketStatus> statuses = await _context.TicketStatuses
+            .Where(s => s.OrganizationId == organizationId)
+            .OrderBy(s => s.Order)
             .ToListAsync();
-        Dictionary<string, int> statusCountDict = statusCounts.ToDictionary(x => x.Status ?? string.Empty, x => x.Count);
 
-        int openTickets = openStatuses.Sum(s => statusCountDict.GetValueOrDefault(s));
+        List<Guid> openStatusIds = statuses.Where(s => !s.IsClosed).Select(s => s.Id).ToList();
+        List<Guid> closedStatusIds = statuses.Where(s => s.IsClosed).Select(s => s.Id).ToList();
+
+        var statusCounts = await _context.Tickets
+            .Where(t => t.OrganizationId == organizationId && t.TicketStatusId != null)
+            .GroupBy(t => t.TicketStatusId!.Value)
+            .Select(g => new { StatusId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        Dictionary<Guid, int> statusCountDict = statusCounts.ToDictionary(x => x.StatusId, x => x.Count);
+
+        int openTickets = openStatusIds.Sum(id => statusCountDict.GetValueOrDefault(id));
 
         int openTicketsDelta = await _context.Tickets
             .CountAsync(t => t.OrganizationId == organizationId
-                && openStatuses.Contains(t.Status)
+                && t.TicketStatusId != null
+                && openStatusIds.Contains(t.TicketStatusId.Value)
                 && t.CreatedAt >= weekAgo);
 
         int resolvedThisMonth = await _context.Tickets
             .CountAsync(t => t.OrganizationId == organizationId
-                && closedStatuses.Contains(t.Status)
+                && t.TicketStatusId != null
+                && closedStatusIds.Contains(t.TicketStatusId.Value)
                 && t.UpdatedAt >= monthStart);
 
         int resolvedLastMonth = await _context.Tickets
             .CountAsync(t => t.OrganizationId == organizationId
-                && closedStatuses.Contains(t.Status)
+                && t.TicketStatusId != null
+                && closedStatusIds.Contains(t.TicketStatusId.Value)
                 && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd);
 
         int hoursThisMonth = await _context.TimeEntries
@@ -72,12 +79,18 @@ public class DashboardService
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
 
-        Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(
-            s => s,
-            s => statusCountDict.GetValueOrDefault(s));
+        Dictionary<string, int> ticketsByStatus = statuses.ToDictionary(
+            s => s.Name,
+            s => statusCountDict.GetValueOrDefault(s.Id));
+
+        Dictionary<string, string> ticketsByStatusColor = statuses.ToDictionary(
+            s => s.Name,
+            s => s.Color);
 
         var priorityCounts = await _context.Tickets
-            .Where(t => t.OrganizationId == organizationId && openStatuses.Contains(t.Status))
+            .Where(t => t.OrganizationId == organizationId
+                && t.TicketStatusId != null
+                && openStatusIds.Contains(t.TicketStatusId.Value))
             .GroupBy(t => t.Priority)
             .Select(g => new { Priority = g.Key, Count = g.Count() })
             .ToListAsync();
@@ -88,12 +101,14 @@ public class DashboardService
 
         int unassignedOpenTickets = await _context.Tickets
             .CountAsync(t => t.OrganizationId == organizationId
-                && openStatuses.Contains(t.Status)
+                && t.TicketStatusId != null
+                && openStatusIds.Contains(t.TicketStatusId.Value)
                 && t.AssignedToId == null);
 
         var rawUrgentTickets = await _context.Tickets
             .Where(t => t.OrganizationId == organizationId
-                && openStatuses.Contains(t.Status))
+                && t.TicketStatusId != null
+                && openStatusIds.Contains(t.TicketStatusId.Value))
             .OrderByDescending(t =>
                 t.Priority == TicketPriority.Critical ? 4 :
                 t.Priority == TicketPriority.High ? 3 :
@@ -106,7 +121,7 @@ public class DashboardService
                 t.Title,
                 Priority = t.Priority.ToString().ToLower(),
                 Type = t.Type.ToString().ToLower(),
-                Status = t.Status,
+                StatusName = t.TicketStatus != null ? t.TicketStatus.Name : string.Empty,
                 ProjectName = t.Project != null ? t.Project.Name : null,
                 AssignedToName = t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
                 CommentCount = t.Comments.Count
@@ -121,7 +136,7 @@ public class DashboardService
                 Title = t.Title,
                 Priority = t.Priority,
                 Type = t.Type,
-                Status = t.Status,
+                Status = t.StatusName,
                 ProjectName = t.ProjectName,
                 AssignedToName = t.AssignedToName,
                 CommentCount = t.CommentCount,
@@ -139,6 +154,7 @@ public class DashboardService
             HoursThisMonth = hoursThisMonth / 60,
             CriticalVulnerabilities = criticalVulnerabilities,
             TicketsByStatus = ticketsByStatus,
+            TicketsByStatusColor = ticketsByStatusColor,
             TicketsByPriority = ticketsByPriority,
             UnassignedOpenTickets = unassignedOpenTickets,
             UrgentTickets = urgentTickets,
@@ -158,8 +174,9 @@ public class DashboardService
         List<Ticket> closedTickets = await _context.Tickets
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
+            .Include(t => t.TicketStatus)
             .Where(t => t.OrganizationId == organizationId
-                && (t.Status == "resolved" || t.Status == "closed")
+                && t.TicketStatus != null && t.TicketStatus.IsClosed
                 && t.UpdatedAt >= since)
             .OrderByDescending(t => t.UpdatedAt)
             .Take(8)

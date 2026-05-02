@@ -12,7 +12,10 @@ public class TicketDto
     public string Description { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
+    public string StatusId { get; set; } = string.Empty;
+    public string StatusName { get; set; } = string.Empty;
+    public string StatusColor { get; set; } = string.Empty;
+    public bool StatusIsClosed { get; set; }
     public Guid? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
     public decimal? EstimatedHours { get; set; }
@@ -21,7 +24,6 @@ public class TicketDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsInternal { get; set; }
-    public Guid? KanbanColumnId { get; set; }
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();
@@ -61,6 +63,5 @@ public class CreateCommentDto
 public class ChangeStatusDto
 {
     [Required]
-    [MaxLength(50)]
-    public string Status { get; set; } = string.Empty;
+    public Guid StatusId { get; set; }
 }

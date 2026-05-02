@@ -46,28 +46,6 @@ namespace Sentinel.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "KanbanColumns",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Color = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Order = table.Column<int>(type: "integer", nullable: false),
-                    SystemStatus = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_KanbanColumns", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_KanbanColumns_Organizations_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TechProjects",
                 columns: table => new
                 {
@@ -86,6 +64,29 @@ namespace Sentinel.Infrastructure.Migrations
                     table.PrimaryKey("PK_TechProjects", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TechProjects_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TicketStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Color = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Order = table.Column<int>(type: "integer", nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    IsClosed = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketStatuses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TicketStatuses_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "Id",
@@ -180,25 +181,18 @@ namespace Sentinel.Infrastructure.Migrations
                     Description = table.Column<string>(type: "text", nullable: false),
                     Priority = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
+                    TicketStatusId = table.Column<Guid>(type: "uuid", nullable: true),
                     AssignedToId = table.Column<Guid>(type: "uuid", nullable: true),
                     EstimatedHours = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsInternal = table.Column<bool>(type: "boolean", nullable: false),
-                    Tags = table.Column<string>(type: "jsonb", nullable: false),
-                    KanbanColumnId = table.Column<Guid>(type: "uuid", nullable: true)
+                    Tags = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tickets", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Tickets_KanbanColumns_KanbanColumnId",
-                        column: x => x.KanbanColumnId,
-                        principalTable: "KanbanColumns",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_Tickets_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
@@ -209,6 +203,12 @@ namespace Sentinel.Infrastructure.Migrations
                         name: "FK_Tickets_TechProjects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "TechProjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Tickets_TicketStatuses_TicketStatusId",
+                        column: x => x.TicketStatusId,
+                        principalTable: "TicketStatuses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
@@ -387,11 +387,6 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "TechProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_KanbanColumns_OrganizationId",
-                table: "KanbanColumns",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_Slug",
                 table: "Organizations",
                 column: "Slug",
@@ -464,11 +459,6 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "CreatedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_KanbanColumnId",
-                table: "Tickets",
-                column: "KanbanColumnId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Tickets_OrganizationId",
                 table: "Tickets",
                 column: "OrganizationId");
@@ -484,9 +474,14 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_Status",
+                name: "IX_Tickets_TicketStatusId",
                 table: "Tickets",
-                column: "Status");
+                column: "TicketStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TicketStatuses_OrganizationId",
+                table: "TicketStatuses",
+                column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeEntries_Date",
@@ -588,7 +583,7 @@ namespace Sentinel.Infrastructure.Migrations
                 name: "Dependencies");
 
             migrationBuilder.DropTable(
-                name: "KanbanColumns");
+                name: "TicketStatuses");
 
             migrationBuilder.DropTable(
                 name: "Users");

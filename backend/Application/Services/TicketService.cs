@@ -7,15 +7,12 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
-
 public class TicketService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
 
-    public TicketService(
-        SentinelContext context,
-        IMemoryCache cache)
+    public TicketService(SentinelContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;
@@ -26,6 +23,11 @@ public class TicketService
 
     public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto, Guid createdById, Guid organizationId)
     {
+        TicketStatus? defaultStatus = await _context.TicketStatuses
+            .Where(s => s.OrganizationId == organizationId)
+            .OrderBy(s => s.Order)
+            .FirstOrDefaultAsync();
+
         Ticket ticket = new Ticket
         {
             OrganizationId = organizationId,
@@ -34,7 +36,7 @@ public class TicketService
             Description = dto.Description,
             Priority = dto.Priority,
             Type = dto.Type,
-            Status = "new",
+            TicketStatusId = defaultStatus?.Id,
             AssignedToId = dto.AssignedToId,
             EstimatedHours = dto.EstimatedHours,
             CreatedById = createdById,
@@ -55,9 +57,7 @@ public class TicketService
     {
         Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
         if (ticket == null)
-        {
             return null;
-        }
 
         List<TicketHistory> changes = new List<TicketHistory>();
 
@@ -87,22 +87,19 @@ public class TicketService
 
         if (dto.ProjectId != ticket.ProjectId)
         {
-            changes.Add(CreateHistory(ticketId, userId, "ProjectId",
-                ticket.ProjectId?.ToString(), dto.ProjectId?.ToString()));
+            changes.Add(CreateHistory(ticketId, userId, "ProjectId", ticket.ProjectId?.ToString(), dto.ProjectId?.ToString()));
             ticket.ProjectId = dto.ProjectId;
         }
 
         if (dto.AssignedToId != ticket.AssignedToId)
         {
-            changes.Add(CreateHistory(ticketId, userId, "AssignedTo",
-                ticket.AssignedToId?.ToString(), dto.AssignedToId?.ToString()));
+            changes.Add(CreateHistory(ticketId, userId, "AssignedTo", ticket.AssignedToId?.ToString(), dto.AssignedToId?.ToString()));
             ticket.AssignedToId = dto.AssignedToId;
         }
 
         if (dto.EstimatedHours.HasValue && dto.EstimatedHours != ticket.EstimatedHours)
         {
-            changes.Add(CreateHistory(ticketId, userId, "EstimatedHours",
-                ticket.EstimatedHours?.ToString(), dto.EstimatedHours.Value.ToString()));
+            changes.Add(CreateHistory(ticketId, userId, "EstimatedHours", ticket.EstimatedHours?.ToString(), dto.EstimatedHours.Value.ToString()));
             ticket.EstimatedHours = dto.EstimatedHours;
         }
 
@@ -122,9 +119,7 @@ public class TicketService
         ticket.UpdatedAt = DateTime.UtcNow;
 
         if (changes.Count > 0)
-        {
             await _context.TicketHistories.AddRangeAsync(changes);
-        }
 
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
@@ -132,17 +127,23 @@ public class TicketService
         return ticket;
     }
 
-    public async Task<Ticket?> ChangeStatusAsync(Guid ticketId, string newStatus, Guid userId)
+    public async Task<Ticket?> ChangeStatusAsync(Guid ticketId, Guid newStatusId, Guid userId)
     {
-        Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
+        Ticket? ticket = await _context.Tickets
+            .Include(t => t.TicketStatus)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
-        {
             return null;
-        }
-        string oldStatus = ticket.Status;
-        ticket.Status = newStatus;
+
+        TicketStatus? newStatus = await _context.TicketStatuses.FindAsync(newStatusId);
+        if (newStatus == null || newStatus.OrganizationId != ticket.OrganizationId)
+            return null;
+
+        string oldStatusName = ticket.TicketStatus?.Name ?? "Inconnu";
+        ticket.TicketStatusId = newStatusId;
         ticket.UpdatedAt = DateTime.UtcNow;
-        TicketHistory history = CreateHistory(ticketId, userId, "Status", oldStatus, newStatus);
+
+        TicketHistory history = CreateHistory(ticketId, userId, "Status", oldStatusName, newStatus.Name);
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
@@ -154,9 +155,7 @@ public class TicketService
     {
         Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
         if (ticket == null)
-        {
             throw new InvalidOperationException("Ticket introuvable");
-        }
 
         TicketComment comment = new TicketComment
         {
@@ -178,6 +177,7 @@ public class TicketService
     public async Task<TicketDto?> GetTicketWithDetailsAsync(Guid ticketId)
     {
         Ticket? ticket = await _context.Tickets
+            .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
@@ -187,9 +187,7 @@ public class TicketService
             .FirstOrDefaultAsync(t => t.Id == ticketId);
 
         if (ticket == null)
-        {
             return null;
-        }
 
         return MapToDto(ticket);
     }
@@ -205,8 +203,10 @@ public class TicketService
             Description = ticket.Description,
             Priority = ticket.Priority.ToString().ToLower(),
             Type = ticket.Type.ToString().ToLower(),
-            // Status stored as string already
-            Status = ticket.Status?.ToLower() ?? "",
+            StatusId = ticket.TicketStatusId?.ToString() ?? string.Empty,
+            StatusName = ticket.TicketStatus?.Name ?? string.Empty,
+            StatusColor = ticket.TicketStatus?.Color ?? string.Empty,
+            StatusIsClosed = ticket.TicketStatus?.IsClosed ?? false,
             AssignedToId = ticket.AssignedToId,
             AssignedToName = ticket.AssignedTo?.FullName,
             EstimatedHours = ticket.EstimatedHours,
@@ -215,7 +215,6 @@ public class TicketService
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
             IsInternal = ticket.IsInternal,
-            KanbanColumnId = ticket.KanbanColumnId,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto

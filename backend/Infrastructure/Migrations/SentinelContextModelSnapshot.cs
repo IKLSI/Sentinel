@@ -69,38 +69,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Dependencies");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.KanbanColumn", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("SystemStatus")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("KanbanColumns");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -280,9 +248,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<bool>("IsInternal")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid?>("KanbanColumnId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -293,13 +258,12 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Tags")
                         .IsRequired()
                         .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("TicketStatusId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -321,15 +285,13 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("KanbanColumnId");
-
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("Priority");
 
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("Status");
+                    b.HasIndex("TicketStatusId");
 
                     b.ToTable("Tickets");
                 });
@@ -405,6 +367,41 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TicketHistories");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("TicketStatuses");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
@@ -624,17 +621,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("TechProject");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.KanbanColumn", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
@@ -670,11 +656,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.KanbanColumn", "KanbanColumn")
-                        .WithMany("Tickets")
-                        .HasForeignKey("KanbanColumnId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
@@ -686,15 +667,20 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Sentinel.Domain.Models.TicketStatus", "TicketStatus")
+                        .WithMany("Tickets")
+                        .HasForeignKey("TicketStatusId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("AssignedTo");
 
                     b.Navigation("CreatedBy");
 
-                    b.Navigation("KanbanColumn");
-
                     b.Navigation("Organization");
 
                     b.Navigation("Project");
+
+                    b.Navigation("TicketStatus");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
@@ -733,6 +719,17 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Ticket");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
@@ -806,11 +803,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.KanbanColumn", b =>
-                {
-                    b.Navigation("Tickets");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Navigation("Users");
@@ -832,6 +824,11 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("History");
 
                     b.Navigation("TimeEntries");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
+                {
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>

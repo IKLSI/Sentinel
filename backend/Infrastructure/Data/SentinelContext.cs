@@ -19,7 +19,8 @@ public class SentinelContext : DbContext
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
-    public DbSet<KanbanColumn> KanbanColumns => Set<KanbanColumn>();
+    public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -28,6 +29,7 @@ public class SentinelContext : DbContext
         ConfigureUser(modelBuilder);
         ConfigureUserInvitation(modelBuilder);
         ConfigurePasswordResetToken(modelBuilder);
+        ConfigureTicketStatus(modelBuilder);
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
@@ -36,7 +38,6 @@ public class SentinelContext : DbContext
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
-        ConfigureKanbanColumn(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -110,6 +111,22 @@ public class SentinelContext : DbContext
         });
     }
 
+    private static void ConfigureTicketStatus(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TicketStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Color).HasMaxLength(100);
+            entity.HasIndex(e => e.OrganizationId);
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
     private static void ConfigureTicket(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ticket>(entity =>
@@ -118,12 +135,11 @@ public class SentinelContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Priority).HasConversion<string>();
             entity.Property(e => e.Type).HasConversion<string>();
-            entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
             entity.Property(e => e.Tags).HasColumnType("jsonb");
 
             entity.HasIndex(e => e.OrganizationId);
-            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.TicketStatusId);
             entity.HasIndex(e => e.AssignedToId);
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.Priority);
@@ -149,12 +165,11 @@ public class SentinelContext : DbContext
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.KanbanColumn)
-                .WithMany(c => c.Tickets)
-                .HasForeignKey(e => e.KanbanColumnId)
+            entity.HasOne(e => e.TicketStatus)
+                .WithMany(s => s.Tickets)
+                .HasForeignKey(e => e.TicketStatusId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
-
         });
     }
 
@@ -284,22 +299,6 @@ public class SentinelContext : DbContext
         });
     }
 
-    private static void ConfigureKanbanColumn(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<KanbanColumn>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.Color).HasMaxLength(100);
-            entity.HasIndex(e => e.OrganizationId);
-
-            entity.HasOne(e => e.Organization)
-                .WithMany()
-                .HasForeignKey(e => e.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
     private static void ConfigureRuntime(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Runtime>(entity =>
@@ -315,5 +314,4 @@ public class SentinelContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
-
 }

@@ -1,13 +1,14 @@
 namespace Sentinel.Domain.Models;
 
-public class KanbanColumn
+public class TicketStatus
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Color { get; set; } = "var(--muted2)";
     public int Order { get; set; }
-    public string? SystemStatus { get; set; }
+    public bool IsDefault { get; set; } = false;
+    public bool IsClosed { get; set; } = false;
     public Organization Organization { get; set; } = null!;
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

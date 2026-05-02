@@ -6,7 +6,6 @@ using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
-using Sentinel.Domain.DTOs.Kanban;
 
 namespace Sentinel.API.Controllers;
 
@@ -40,6 +39,7 @@ public class TicketsController : BaseController
         if (organizationId == null) return Unauthorized();
 
         IQueryable<Ticket> query = _context.Tickets
+            .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
@@ -49,8 +49,8 @@ public class TicketsController : BaseController
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
             query = query.Where(t => t.Priority == parsedPriority);
 
-        if (!string.IsNullOrEmpty(status))
-            query = query.Where(t => t.Status.ToLower() == status.ToLower());
+        if (!string.IsNullOrEmpty(status) && Guid.TryParse(status, out Guid statusGuid))
+            query = query.Where(t => t.TicketStatusId == statusGuid);
 
         if (assignedTo.HasValue)
             query = query.Where(t => t.AssignedToId == assignedTo.Value);
@@ -273,44 +273,11 @@ public class TicketsController : BaseController
         if (!ticketExists)
             return NotFound(new { message = "Ticket introuvable" });
 
-        // Accept any non-empty status string up to 50 chars
-        if (string.IsNullOrWhiteSpace(dto.Status) || dto.Status.Length > 50)
-            return BadRequest(new { message = $"Statut invalide : {dto.Status}" });
-
-        await _ticketService.ChangeStatusAsync(id, dto.Status, userId.Value);
-        TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
-
-        return Ok(updatedDto);
-    }
-
-    [HttpPatch("{id:guid}/column")]
-    public async Task<ActionResult<TicketDto>> MoveToColumn(Guid id, [FromBody] MoveTicketToColumnDto dto)
-    {
-        Guid? userId = GetCurrentUserId();
-        Guid? organizationId = GetOrganizationId();
-        if (userId == null || organizationId == null) return Unauthorized();
-
-        Ticket? ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == organizationId);
-        if (ticket == null)
-            return NotFound(new { message = "Ticket introuvable" });
-
-        if (dto.ColumnId.HasValue)
-        {
-            KanbanColumn? column = await _context.KanbanColumns
-                .FirstOrDefaultAsync(c => c.Id == dto.ColumnId.Value && c.OrganizationId == organizationId.Value);
-            if (column == null)
-                return BadRequest(new { message = "Colonne introuvable" });
-
-            // Set ticket status to the column's system status if present, otherwise use the column name
-            ticket.Status = column.SystemStatus ?? column.Name;
-        }
-
-        ticket.KanbanColumnId = dto.ColumnId;
-        ticket.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        Ticket? updated = await _ticketService.ChangeStatusAsync(id, dto.StatusId, userId.Value);
+        if (updated == null)
+            return BadRequest(new { message = "Statut invalide" });
 
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
         return Ok(updatedDto);
     }
-
 }
