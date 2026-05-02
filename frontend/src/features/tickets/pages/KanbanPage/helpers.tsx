@@ -76,7 +76,7 @@ export function apiColToColDef(c: TicketStatusDef): KanbanColumnDef {
   };
 }
 
-export function emptyColumns(columnDefs: KanbanColumnDef[]): KanbanColumns {
+function emptyColumns(columnDefs: KanbanColumnDef[]): KanbanColumns {
   return Object.fromEntries(columnDefs.map((c) => [c.id, []]));
 }
 

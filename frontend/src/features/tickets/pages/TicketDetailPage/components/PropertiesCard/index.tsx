@@ -34,7 +34,6 @@ export const PropertiesCard: React.FC<Props> = ({
         <StatusPriorityBadge
           dotColor={ticket.statusColor}
           label={ticket.statusName}
-          noGlow={ticket.statusIsClosed}
         />
       ),
     },

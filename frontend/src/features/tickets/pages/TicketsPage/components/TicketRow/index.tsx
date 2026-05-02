@@ -22,11 +22,7 @@ interface Props {
   onDelete: (id: string, reference: string) => void;
 }
 
-export const TicketRow: React.FC<Props> = ({
-  ticket,
-  onEdit,
-  onDelete,
-}) => {
+export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const t = useT();
 
@@ -163,9 +159,7 @@ export const TicketRow: React.FC<Props> = ({
                 borderRadius: "50%",
                 background: ticket.statusColor,
                 flexShrink: 0,
-                boxShadow: !ticket.statusIsClosed
-                  ? `0 0 5px ${ticket.statusColor}`
-                  : "none",
+                boxShadow: `0 0 5px ${ticket.statusColor}`,
               }}
             />
             {ticket.statusName}
