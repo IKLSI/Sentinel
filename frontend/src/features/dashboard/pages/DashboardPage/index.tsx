@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
-import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
+import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import { getDashboardStats } from "@/features/dashboard/api/dashboard";
 import { getProjects } from "@/features/techHealth/api/projects";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
@@ -129,7 +129,7 @@ export const DashboardPage: React.FC = () => {
             label={t("dashboard.kpi.resolved_per_month")}
             value={stats.resolvedThisMonth}
             valueColor="var(--green)"
-            icon={<CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />}
+            icon={<TaskAltOutlined sx={{ fontSize: 17 }} />}
             delta={stats.resolvedThisMonthDelta}
             palette={palette}
           />
@@ -148,7 +148,7 @@ export const DashboardPage: React.FC = () => {
             label={t("dashboard.kpi.critical_vulns")}
             value={stats.criticalVulnerabilities}
             valueColor="var(--red)"
-            icon={<ShieldOutlined sx={{ fontSize: 17 }} />}
+            icon={<GppBadOutlined sx={{ fontSize: 17 }} />}
             delta={stats.criticalVulnerabilities}
             badge
             palette={palette}
