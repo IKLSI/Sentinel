@@ -15,7 +15,9 @@ import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
   formatDuration,
   getProjectColor,
+  getCurrentUserAvatar,
   getUserInitials,
+  getUserAvatar,
   parseDateLocal,
 } from "../../helpers";
 import { RowActions } from "@/components/RowActions";
@@ -293,9 +295,9 @@ export const JournalCard: React.FC<Props> = ({
                         : "var(--border2)";
                       const isOwn = entry.userId === currentUserId;
                       const canEdit = isOwn;
-                      const userColor = isOwn
-                        ? "var(--accent)"
-                        : getProjectColor(entry.userName);
+                      const userAvatar = isOwn
+                        ? getCurrentUserAvatar()
+                        : getUserAvatar();
                       return (
                         <Box
                           key={entry.id}
@@ -332,14 +334,14 @@ export const JournalCard: React.FC<Props> = ({
                                   width: "26px",
                                   height: "26px",
                                   borderRadius: "50%",
-                                  background: userColor,
+                                  background: userAvatar.bg,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flexShrink: 0,
                                   fontSize: "9px",
                                   fontWeight: 800,
-                                  color: "white",
+                                  color: userAvatar.text,
                                   letterSpacing: "0.01em",
                                 }}
                               >

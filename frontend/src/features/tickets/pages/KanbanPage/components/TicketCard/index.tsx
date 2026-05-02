@@ -198,14 +198,13 @@ export const TicketCard: React.FC<Props> = ({
                   width: "22px",
                   height: "22px",
                   borderRadius: "50%",
-                  background: "var(--accent-subtle)",
-                  border: "1.5px solid var(--accent-border)",
+                  background: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "8.5px",
                   fontWeight: 700,
-                  color: "var(--accent)",
+                  color: "#8b1c38",
                   fontFamily: "var(--font-mono)",
                 }}
               >

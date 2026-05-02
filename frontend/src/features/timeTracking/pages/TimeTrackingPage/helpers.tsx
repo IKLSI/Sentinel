@@ -25,12 +25,24 @@ export const getProjectColor = (name: string): string => {
   return PROJECT_PALETTE[Math.abs(hash) % PROJECT_PALETTE.length];
 };
 
+export const getUserAvatar = () => ({
+  bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
+  text: "#8b1c38",
+});
+
+export const getCurrentUserAvatar = () => ({
+  bg: "linear-gradient(135deg,color-mix(in srgb, var(--blue) 14%, white), color-mix(in srgb, var(--blue) 26%, white))",
+  text: "var(--blue)",
+});
+
 export const getUserInitials = (name: string) => {
   const parts = name.trim().split(" ");
   if (parts.length >= 2)
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
 };
+
+
 
 export const formatDuration = (minutes: number) => {
   const h = Math.floor(minutes / 60);

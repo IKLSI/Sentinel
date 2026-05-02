@@ -127,16 +127,10 @@ export const priorityColor: Record<TicketPriority, string> = {
   low: "var(--green)",
 };
 
-const avatarPalette = [
-  { bg: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" },
-  { bg: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)" },
-  { bg: "color-mix(in srgb, var(--purple) 15%, transparent)", color: "var(--purple)" },
-  { bg: "color-mix(in srgb, var(--cyan) 15%, transparent)", color: "var(--cyan)" },
-  { bg: "color-mix(in srgb, var(--orange) 15%, transparent)", color: "var(--orange)" },
-];
-
-export const getAvatarStyle = (id: string) =>
-  avatarPalette[id.charCodeAt(0) % avatarPalette.length];
+export const getAvatarStyle = () => ({
+  bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
+  color: "#8b1c38",
+});
 
 export const selectSx = {
   appearance: "none",

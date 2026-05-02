@@ -164,10 +164,6 @@ export const buildScrollSx = (p: DashPalette) => ({
 
 export const avatars = [
   { bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)", text: "#8b1c38" },
-  { bg: "linear-gradient(135deg,#d9cef9,#bbb2ef)", text: "#3b2ea2" },
-  { bg: "linear-gradient(135deg,#c5e1f7,#9ec8e8)", text: "#1f4c80" },
-  { bg: "linear-gradient(135deg,#c3edd8,#9ee0bf)", text: "#1e6b46" },
-  { bg: "linear-gradient(135deg,#e6ecf4,#d5deeb)", text: "#64748b" },
 ];
 
 export const initials = (s: string) => {

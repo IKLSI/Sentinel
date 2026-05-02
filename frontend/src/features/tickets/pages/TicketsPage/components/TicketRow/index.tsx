@@ -188,8 +188,8 @@ export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
                 fontSize: "8px",
                 fontWeight: 700,
                 fontFamily: "var(--font-mono)",
-                background: getAvatarStyle(ticket.assignee.id).bg,
-                color: getAvatarStyle(ticket.assignee.id).color,
+                background: getAvatarStyle().bg,
+                color: getAvatarStyle().color,
                 flexShrink: 0,
               }}
             >
