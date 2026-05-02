@@ -109,60 +109,19 @@ export const WeekCalendarCard: React.FC<Props> = ({
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
           {!isCurrentWeek && (
-            <Box
-              component="button"
-              onClick={onResetToToday}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                background: "var(--accent-subtle)",
-                border: "1px solid var(--accent-border)",
-                borderRadius: "6px",
-                px: "10px",
-                height: "28px",
-                cursor: "pointer",
-                color: "var(--accent)",
-                fontSize: "12px",
-                fontWeight: 600,
-                fontFamily: "var(--font-ui)",
-                transition: "background 0.12s",
-                "&:hover": { background: "color-mix(in srgb, var(--accent) 15%, transparent)" },
-              }}
-            >
-              <TodayOutlined sx={{ fontSize: 15 }} />
-              {t("time_tracking.today")}
-            </Box>
+            <IconNavBtn onClick={onResetToToday} title={t("time_tracking.btn_today")}>
+              <TodayOutlined sx={{ fontSize: 12, color: "var(--accent)" }} />
+            </IconNavBtn>
           )}
-          <IconNavBtn onClick={onPrev}>
-            <ChevronLeftOutlined sx={{ fontSize: 18 }} />
+          <IconNavBtn onClick={onPrev} title={t("time_tracking.btn_prev_week")}>
+            <ChevronLeftOutlined sx={{ fontSize: 12 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={onNext} disabled={isCurrentWeek}>
-            <ChevronRightOutlined sx={{ fontSize: 18 }} />
+          <IconNavBtn onClick={onNext} disabled={isCurrentWeek} title={t("time_tracking.btn_next_week")}>
+            <ChevronRightOutlined sx={{ fontSize: 12 }} />
           </IconNavBtn>
-          <Box
-            component="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-              setCalendarAnchor(e.currentTarget)
-            }
-            sx={{
-              background: calendarAnchor ? "var(--accent-subtle)" : "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              width: "28px",
-              height: "28px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              color: calendarAnchor ? "var(--accent)" : "var(--muted2)",
-              fontFamily: "var(--font-ui)",
-              transition: "background 0.12s, color 0.12s",
-              "&:hover": { background: "var(--s3)", color: "var(--text)" },
-            }}
-          >
-            <CalendarTodayOutlined sx={{ fontSize: 16 }} />
-          </Box>
+          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")}>
+            <CalendarTodayOutlined sx={{ fontSize: 12, color: calendarAnchor ? "var(--accent)" : undefined }} />
+          </IconNavBtn>
         </Box>
       </Box>
 

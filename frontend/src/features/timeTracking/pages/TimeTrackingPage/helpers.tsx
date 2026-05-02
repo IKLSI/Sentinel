@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import { format } from "date-fns";
 
 export const WORK_HOURS_TARGET = 7 * 60;
@@ -100,34 +101,37 @@ export const FormField: React.FC<{
 );
 
 export const IconNavBtn: React.FC<{
-  onClick: () => void;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
+  title?: string;
   children: React.ReactNode;
-}> = ({ onClick, disabled, children }) => (
-  <Box
-    component="button"
-    onClick={onClick}
-    disabled={disabled}
-    sx={{
-      background: "var(--s1)",
-      border: "1px solid var(--border)",
-      borderRadius: "6px",
-      width: "28px",
-      height: "28px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: disabled ? "not-allowed" : "pointer",
-      color: disabled ? "var(--border2)" : "var(--muted2)",
-      fontFamily: "var(--font-ui)",
-      transition: "background 0.12s, color 0.12s",
-      ...(!disabled
-        ? { "&:hover": { background: "var(--s3)", color: "var(--text)" } }
-        : {}),
-    }}
-  >
-    {children}
-  </Box>
+}> = ({ onClick, disabled, title, children }) => (
+  <Tooltip title={title ?? ""} arrow placement="top" enterDelay={0} enterNextDelay={0} disableHoverListener={!title}>
+    <Box
+      component="button"
+      onClick={onClick}
+      disabled={disabled}
+      sx={{
+        background: disabled ? "transparent" : "var(--s2)",
+        border: disabled ? "1px solid transparent" : "1px solid var(--border)",
+        borderRadius: "6px",
+        width: "26px",
+        height: "26px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: disabled ? "not-allowed" : "pointer",
+        color: disabled ? "var(--border2)" : "var(--muted2)",
+        fontFamily: "var(--font-ui)",
+        transition: "background 0.12s, color 0.12s",
+        ...(!disabled
+          ? { "&:hover": { background: "var(--s3)", color: "var(--text)" } }
+          : {}),
+      }}
+    >
+      {children}
+    </Box>
+  </Tooltip>
 );
 
 export const RowActionBtn: React.FC<{

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
@@ -12,12 +13,12 @@ import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
 import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
-  RowActionBtn,
   formatDuration,
   getProjectColor,
   getUserInitials,
   parseDateLocal,
 } from "../../helpers";
+import { RowActions } from "@/components/RowActions";
 
 interface Props {
   loading: boolean;
@@ -92,62 +93,56 @@ export const JournalCard: React.FC<Props> = ({
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Box
-            component="button"
-            onClick={onCreate}
-            title={t("time_tracking.add_entry_title")}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "24px",
-              height: "24px",
-              background: "transparent",
-              border: "1px solid transparent",
-              borderRadius: "6px",
-              cursor: "pointer",
-              color: "var(--muted2)",
-              transition: "background 0.12s, color 0.12s, border-color 0.12s",
-              "&:hover": {
-                background: "var(--s3)",
-                color: "var(--text)",
-                borderColor: "var(--border)",
-              },
-            }}
-          >
-            <AddOutlined sx={{ fontSize: 14 }} />
-          </Box>
-          <Box
-            component="button"
-            onClick={onExport}
-            disabled={exporting}
-            title={t("time_tracking.export_csv_title")}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "24px",
-              height: "24px",
-              background: "transparent",
-              border: "1px solid transparent",
-              borderRadius: "6px",
-              cursor: exporting ? "default" : "pointer",
-              color: "var(--muted2)",
-              opacity: exporting ? 0.5 : 1,
-              transition: "background 0.12s, color 0.12s, border-color 0.12s",
-              "&:hover": {
-                background: "var(--s3)",
-                color: "var(--text)",
-                borderColor: "var(--border)",
-              },
-            }}
-          >
-            {exporting ? (
-              <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
-            ) : (
-              <FileDownloadOutlined sx={{ fontSize: 14 }} />
-            )}
-          </Box>
+          <Tooltip title={t("time_tracking.add_entry_title")} arrow placement="top" enterDelay={0} enterNextDelay={0}>
+            <Box
+              component="button"
+              onClick={onCreate}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "26px",
+                height: "26px",
+                background: "var(--s2)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                color: "var(--muted2)",
+                transition: "background 0.12s, color 0.12s",
+                "&:hover": { background: "var(--s3)", color: "var(--text)" },
+              }}
+            >
+              <AddOutlined sx={{ fontSize: 12 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title={t("time_tracking.export_csv_title")} arrow placement="top" enterDelay={0} enterNextDelay={0}>
+            <Box
+              component="button"
+              onClick={onExport}
+              disabled={exporting}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "26px",
+                height: "26px",
+                background: "var(--s2)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                cursor: exporting ? "default" : "pointer",
+                color: "var(--muted2)",
+                opacity: exporting ? 0.5 : 1,
+                transition: "background 0.12s, color 0.12s",
+                "&:hover": { background: "var(--s3)", color: "var(--text)" },
+              }}
+            >
+              {exporting ? (
+                <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
+              ) : (
+                <FileDownloadOutlined sx={{ fontSize: 12 }} />
+              )}
+            </Box>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -264,22 +259,6 @@ export const JournalCard: React.FC<Props> = ({
                       >
                         {format(dayDate, "d MMMM", { locale: fr })}
                       </Box>
-                      {isCurrentDay && (
-                        <Box
-                          sx={{
-                            fontSize: "10px",
-                            fontWeight: 600,
-                            background: "var(--accent-subtle)",
-                            color: "var(--accent)",
-                            px: "6px",
-                            py: "1px",
-                            borderRadius: "4px",
-                            letterSpacing: "0.02em",
-                          }}
-                        >
-                          {t("time_tracking.today")}
-                        </Box>
-                      )}
                     </Box>
                     <Box
                       sx={{
@@ -312,7 +291,7 @@ export const JournalCard: React.FC<Props> = ({
                             position: "relative",
                             transition: "background 0.12s",
                             "&:hover": { background: "var(--s2)" },
-                            "&:hover .tt-actions": { opacity: 1 },
+                            "&:hover .row-actions": { opacity: "1 !important" },
                           }}
                           onClick={(e: React.MouseEvent) => {
                             if ((e.target as HTMLElement).closest("button")) return;
@@ -419,26 +398,14 @@ export const JournalCard: React.FC<Props> = ({
 
                           {/* Droite */}
                           <Box sx={{ display: "flex", alignItems: "center", gap: "4px", pr: "14px", flexShrink: 0 }}>
-                            <Box
-                              className="tt-actions"
-                              sx={{ display: "flex", alignItems: "center", gap: "1px", opacity: 0, transition: "opacity 0.15s" }}
-                            >
-                              {canEdit && (
-                                <>
-                                  <RowActionBtn
-                                    icon={<EditOutlined sx={{ fontSize: 12 }} />}
-                                    onClick={() => onEdit(entry)}
-                                    title={t("time_tracking.action_edit")}
-                                  />
-                                  <RowActionBtn
-                                    icon={<DeleteOutlineOutlined sx={{ fontSize: 12 }} />}
-                                    onClick={() => onDelete(entry)}
-                                    title={t("time_tracking.action_delete")}
-                                    danger
-                                  />
-                                </>
-                              )}
-                            </Box>
+                            {canEdit && (
+                              <RowActions
+                                actions={[
+                                  { icon: <EditOutlined sx={{ fontSize: 13 }} />, label: t("time_tracking.action_edit"), onClick: (e) => { e.stopPropagation(); onEdit(entry); }, color: "accent" },
+                                  { icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />, label: t("time_tracking.action_delete"), onClick: (e) => { e.stopPropagation(); onDelete(entry); }, color: "red" },
+                                ]}
+                              />
+                            )}
                             <Box
                               sx={{
                                 fontFamily: "var(--font-mono)",
