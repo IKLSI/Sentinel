@@ -34,7 +34,7 @@ public class TicketService
             Description = dto.Description,
             Priority = dto.Priority,
             Type = dto.Type,
-            Status = TicketStatus.New,
+            Status = "new",
             AssignedToId = dto.AssignedToId,
             EstimatedHours = dto.EstimatedHours,
             CreatedById = createdById,
@@ -132,19 +132,17 @@ public class TicketService
         return ticket;
     }
 
-    public async Task<Ticket?> ChangeStatusAsync(Guid ticketId, TicketStatus newStatus, Guid userId)
+    public async Task<Ticket?> ChangeStatusAsync(Guid ticketId, string newStatus, Guid userId)
     {
         Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
         if (ticket == null)
         {
             return null;
         }
-
-        TicketStatus oldStatus = ticket.Status;
+        string oldStatus = ticket.Status;
         ticket.Status = newStatus;
         ticket.UpdatedAt = DateTime.UtcNow;
-
-        TicketHistory history = CreateHistory(ticketId, userId, "Status", oldStatus.ToString(), newStatus.ToString());
+        TicketHistory history = CreateHistory(ticketId, userId, "Status", oldStatus, newStatus);
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
@@ -207,15 +205,8 @@ public class TicketService
             Description = ticket.Description,
             Priority = ticket.Priority.ToString().ToLower(),
             Type = ticket.Type.ToString().ToLower(),
-            Status = ticket.Status switch
-            {
-                TicketStatus.New => "new",
-                TicketStatus.InProgress => "in_progress",
-                TicketStatus.Testing => "testing",
-                TicketStatus.Resolved => "resolved",
-                TicketStatus.Closed => "closed",
-                _ => ticket.Status.ToString().ToLower()
-            },
+            // Status stored as string already
+            Status = ticket.Status?.ToLower() ?? "",
             AssignedToId = ticket.AssignedToId,
             AssignedToName = ticket.AssignedTo?.FullName,
             EstimatedHours = ticket.EstimatedHours,

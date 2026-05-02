@@ -49,17 +49,8 @@ public class TicketsController : BaseController
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
             query = query.Where(t => t.Priority == parsedPriority);
 
-        Dictionary<string, TicketStatus> statusMap = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["new"] = TicketStatus.New,
-            ["in_progress"] = TicketStatus.InProgress,
-            ["inprogress"] = TicketStatus.InProgress,
-            ["testing"] = TicketStatus.Testing,
-            ["resolved"] = TicketStatus.Resolved,
-            ["closed"] = TicketStatus.Closed,
-        };
-        if (!string.IsNullOrEmpty(status) && statusMap.TryGetValue(status, out TicketStatus parsedStatus))
-            query = query.Where(t => t.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(t => t.Status.ToLower() == status.ToLower());
 
         if (assignedTo.HasValue)
             query = query.Where(t => t.AssignedToId == assignedTo.Value);
@@ -282,20 +273,11 @@ public class TicketsController : BaseController
         if (!ticketExists)
             return NotFound(new { message = "Ticket introuvable" });
 
-        Dictionary<string, TicketStatus> statusMap = new Dictionary<string, TicketStatus>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["new"] = TicketStatus.New,
-            ["in_progress"] = TicketStatus.InProgress,
-            ["inprogress"] = TicketStatus.InProgress,
-            ["testing"] = TicketStatus.Testing,
-            ["resolved"] = TicketStatus.Resolved,
-            ["closed"] = TicketStatus.Closed,
-        };
-
-        if (!statusMap.TryGetValue(dto.Status, out TicketStatus ticketStatus))
+        // Accept any non-empty status string up to 50 chars
+        if (string.IsNullOrWhiteSpace(dto.Status) || dto.Status.Length > 50)
             return BadRequest(new { message = $"Statut invalide : {dto.Status}" });
 
-        await _ticketService.ChangeStatusAsync(id, ticketStatus, userId.Value);
+        await _ticketService.ChangeStatusAsync(id, dto.Status, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
 
         return Ok(updatedDto);
@@ -319,19 +301,8 @@ public class TicketsController : BaseController
             if (column == null)
                 return BadRequest(new { message = "Colonne introuvable" });
 
-            if (column.SystemStatus != null)
-            {
-                Dictionary<string, TicketStatus> statusMap = new(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["new"] = TicketStatus.New,
-                    ["in_progress"] = TicketStatus.InProgress,
-                    ["testing"] = TicketStatus.Testing,
-                    ["resolved"] = TicketStatus.Resolved,
-                    ["closed"] = TicketStatus.Closed,
-                };
-                if (statusMap.TryGetValue(column.SystemStatus, out TicketStatus mapped))
-                    ticket.Status = mapped;
-            }
+            // Set ticket status to the column's system status if present, otherwise use the column name
+            ticket.Status = column.SystemStatus ?? column.Name;
         }
 
         ticket.KanbanColumnId = dto.ColumnId;

@@ -33,9 +33,9 @@ public class DashboardService
         DateOnly monthStartDate = DateOnly.FromDateTime(monthStart);
         DateOnly todayDate = DateOnly.FromDateTime(now);
 
-        TicketStatus[] openStatuses = [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing];
-        TicketStatus[] closedStatuses = [TicketStatus.Resolved, TicketStatus.Closed];
-        TicketStatus[] allStatuses = [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed];
+        string[] openStatuses = new[] { "new", "in_progress", "testing" };
+        string[] closedStatuses = new[] { "resolved", "closed" };
+        string[] allStatuses = new[] { "new", "in_progress", "testing", "resolved", "closed" };
         TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
 
         var statusCounts = await _context.Tickets
@@ -43,7 +43,7 @@ public class DashboardService
             .GroupBy(t => t.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync();
-        Dictionary<TicketStatus, int> statusCountDict = statusCounts.ToDictionary(x => x.Status, x => x.Count);
+        Dictionary<string, int> statusCountDict = statusCounts.ToDictionary(x => x.Status ?? string.Empty, x => x.Count);
 
         int openTickets = openStatuses.Sum(s => statusCountDict.GetValueOrDefault(s));
 
@@ -73,7 +73,7 @@ public class DashboardService
             .CountAsync();
 
         Dictionary<string, int> ticketsByStatus = allStatuses.ToDictionary(
-            s => s.ToString(),
+            s => s,
             s => statusCountDict.GetValueOrDefault(s));
 
         var priorityCounts = await _context.Tickets
@@ -106,7 +106,7 @@ public class DashboardService
                 t.Title,
                 Priority = t.Priority.ToString().ToLower(),
                 Type = t.Type.ToString().ToLower(),
-                Status = t.Status.ToString(),
+                Status = t.Status,
                 ProjectName = t.Project != null ? t.Project.Name : null,
                 AssignedToName = t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
                 CommentCount = t.Comments.Count
@@ -159,7 +159,7 @@ public class DashboardService
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Where(t => t.OrganizationId == organizationId
-                && (t.Status == TicketStatus.Resolved || t.Status == TicketStatus.Closed)
+                && (t.Status == "resolved" || t.Status == "closed")
                 && t.UpdatedAt >= since)
             .OrderByDescending(t => t.UpdatedAt)
             .Take(8)

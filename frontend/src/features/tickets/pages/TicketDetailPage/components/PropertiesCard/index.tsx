@@ -29,6 +29,7 @@ export const PropertiesCard: React.FC<Props> = ({
   palette,
   statusConfig,
   priorityConfig,
+  kanbanCols,
 }) => {
   const t = useT();
   const status = statusConfig[ticket.status];
@@ -153,9 +154,8 @@ export const PropertiesCard: React.FC<Props> = ({
       {rows.map((row, idx, arr) => (
         <Box key={row.key}>
           <Box
-            component="button"
+            component="div"
             sx={{
-              all: "unset",
               width: "100%",
               boxSizing: "border-box",
               py: "9px",
@@ -165,8 +165,6 @@ export const PropertiesCard: React.FC<Props> = ({
               alignItems: "center",
               gap: "8px",
               borderRadius: "8px",
-              cursor: "pointer",
-              "&:hover": { background: palette.fieldRowHover },
             }}
           >
             <Box

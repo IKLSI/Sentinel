@@ -18,14 +18,7 @@ public enum TicketType
     Maintenance
 }
 
-public enum TicketStatus
-{
-    New,
-    InProgress,
-    Testing,
-    Resolved,
-    Closed
-}
+
 
 public class Ticket
 {
@@ -36,7 +29,8 @@ public class Ticket
     public string Description { get; set; } = string.Empty;
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;
     public TicketType Type { get; set; } = TicketType.Bug;
-    public TicketStatus Status { get; set; } = TicketStatus.New;
+    // Status is a dynamic string (e.g. "new", "in_progress", or custom statuses)
+    public string Status { get; set; } = "new";
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public Guid CreatedById { get; set; }

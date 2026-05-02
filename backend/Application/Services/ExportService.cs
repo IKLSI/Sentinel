@@ -63,17 +63,8 @@ public class ExportService
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
             query = query.Where(t => t.Priority == parsedPriority);
 
-        Dictionary<string, TicketStatus> statusMap = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["new"] = TicketStatus.New,
-            ["in_progress"] = TicketStatus.InProgress,
-            ["inprogress"] = TicketStatus.InProgress,
-            ["testing"] = TicketStatus.Testing,
-            ["resolved"] = TicketStatus.Resolved,
-            ["closed"] = TicketStatus.Closed,
-        };
-        if (!string.IsNullOrEmpty(status) && statusMap.TryGetValue(status, out TicketStatus parsedStatus))
-            query = query.Where(t => t.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(t => t.Status.ToLower() == status.ToLower());
 
         if (assignedTo.HasValue)
             query = query.Where(t => t.AssignedToId == assignedTo.Value);
@@ -149,7 +140,7 @@ public class ExportService
             ws.Cell(row, 1).Value = $"TKT-{t.Id.ToString().Replace("-", "")[..6].ToUpper()}";
             ws.Cell(row, 2).Value = t.Title;
 
-            ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status.ToString()), TicketStatusColor);
+            ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status), TicketStatusColor);
             ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString()), TicketPriorityColor);
 
             ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString());
@@ -234,12 +225,17 @@ public class ExportService
         cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
     }
 
-    private static (XLColor bg, XLColor fg) TicketStatusColor(string status) => status switch
+    private static (XLColor bg, XLColor fg) TicketStatusColor(string status)
     {
-        "Résolu" or "Fermé" => (GreenBg, GreenFg),
-        "En cours" or "En test" => (OrangeBg, OrangeFg),
-        _ => (GrayBg, GrayFg),
-    };
+        // status is translated to display text by TranslateTicketStatus
+        string disp = TranslateTicketStatus(status);
+        return disp switch
+        {
+            "Résolu" or "Fermé" => (GreenBg, GreenFg),
+            "En cours" or "En test" => (OrangeBg, OrangeFg),
+            _ => (GrayBg, GrayFg),
+        };
+    }
 
     private static (XLColor bg, XLColor fg) TicketPriorityColor(string priority) => priority switch
     {
@@ -249,15 +245,20 @@ public class ExportService
         _ => (GrayBg, GrayFg),
     };
 
-    private static string TranslateTicketStatus(string status) => status switch
+    private static string TranslateTicketStatus(string status)
     {
-        "New" => "Nouveau",
-        "InProgress" => "En cours",
-        "Testing" => "En test",
-        "Resolved" => "Résolu",
-        "Closed" => "Fermé",
-        _ => status,
-    };
+        if (string.IsNullOrEmpty(status)) return status;
+        return status.ToLower() switch
+        {
+            "new" => "Nouveau",
+            "in_progress" => "En cours",
+            "inprogress" => "En cours",
+            "testing" => "En test",
+            "resolved" => "Résolu",
+            "closed" => "Fermé",
+            _ => status,
+        };
+    }
 
     private static string TranslateTicketPriority(string priority) => priority switch
     {
