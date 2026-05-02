@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
@@ -13,6 +14,8 @@ namespace Sentinel.API.Controllers;
 public class TicketStatusesController : BaseController
 {
     private readonly SentinelContext _context;
+    private readonly IMemoryCache _cache;
+    private const string DashboardCacheKeyPrefix = "dashboard";
 
     private static readonly (string Name, string Color, bool IsClosed, int Order, bool IsDefault)[] DefaultStatuses =
     [
@@ -23,9 +26,10 @@ public class TicketStatusesController : BaseController
         ("Fermé",    "var(--muted2)", true,  4, false),
     ];
 
-    public TicketStatusesController(SentinelContext context)
+    public TicketStatusesController(SentinelContext context, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     [HttpGet]
@@ -101,6 +105,8 @@ public class TicketStatusesController : BaseController
         await _context.TicketStatuses.AddAsync(status);
         await _context.SaveChangesAsync();
 
+        try { _cache.Remove($"{DashboardCacheKeyPrefix}:{organizationId.Value}"); } catch {}
+
         return CreatedAtAction(nameof(GetStatuses), new TicketStatusDto
         {
             Id = status.Id,
@@ -134,6 +140,8 @@ public class TicketStatusesController : BaseController
 
         _context.TicketStatuses.Remove(status);
         await _context.SaveChangesAsync();
+
+        try { _cache.Remove($"{DashboardCacheKeyPrefix}:{organizationId.Value}"); } catch {}
 
         return NoContent();
     }

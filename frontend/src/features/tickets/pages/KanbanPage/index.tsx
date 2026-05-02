@@ -170,6 +170,7 @@ export const KanbanPage: React.FC = () => {
       setUpdatingId(draggableId);
       try {
         await changeTicketStatus(draggableId, destCol);
+        window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(
           extractApiError(err, t("tickets.kanban.error.status_change_failed")),
@@ -191,6 +192,7 @@ export const KanbanPage: React.FC = () => {
         setColumnDefs((prev) => [...prev, def]);
         setColumns((prev) => ({ ...prev, [def.id]: [] }));
         setAddColOpen(false);
+        window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(extractApiError(err, "Impossible de créer la colonne"), "error");
       }
@@ -208,6 +210,7 @@ export const KanbanPage: React.FC = () => {
           delete next[id];
           return next;
         });
+        window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(extractApiError(err, "Impossible de supprimer la colonne"), "error");
       }

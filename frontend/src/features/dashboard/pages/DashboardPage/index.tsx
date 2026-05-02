@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
@@ -33,25 +33,41 @@ export const DashboardPage: React.FC = () => {
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
+  const loadData = useCallback(async () => {
+    try {
       const [statsRes, projectsRes] = await Promise.allSettled([
         getDashboardStats(),
         getProjects(),
       ]);
-      if (!mounted) return;
       if (statsRes.status === "fulfilled") setStats(statsRes.value);
       else showToast(t("dashboard.toast.stats_load_error"), "error");
       if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
       else showToast(t("dashboard.toast.projects_load_error"), "error");
+    } catch {
+      showToast(t("dashboard.toast.stats_load_error"), "error");
+    } finally {
       setLoading(false);
-    };
-    void load();
+    }
+  }, [showToast, t]);
+
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      if (!mounted) return;
+      await loadData();
+    })();
     return () => {
       mounted = false;
     };
-  }, [showToast, t]);
+  }, [loadData]);
+
+  React.useEffect(() => {
+    const handler = () => {
+      void loadData();
+    };
+    window.addEventListener("dashboard:refresh", handler);
+    return () => window.removeEventListener("dashboard:refresh", handler);
+  }, [loadData]);
 
   const urgent = useMemo(
     () =>
