@@ -72,7 +72,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               : a.text;
             const hasBoldPrefix = a.text.startsWith(boldPrefix);
             return (
-              <React.Fragment key={`${a.timestamp}-${a.text}`}>
+              <React.Fragment key={`${a.timestamp}-${a.text}-${idx}`}>
                 <Box
                   sx={{
                     display: "flex",
