@@ -217,7 +217,7 @@ export const Sidebar: React.FC = () => {
         }}
       >
         {collapsed && !isMobile ? (
-          <Tooltip title={t("sidebar.expand")} placement="right" arrow>
+          <Tooltip title={t("sidebar.expand")} placement="top" arrow>
             <Box
               component="button"
               onClick={toggleCollapse}
@@ -288,7 +288,7 @@ export const Sidebar: React.FC = () => {
             </Box>
 
             {!isMobile && (
-              <Tooltip title={t("sidebar.collapse")} placement="right" arrow>
+              <Tooltip title={t("sidebar.collapse")} placement="top" arrow>
                 <Box
                   component="button"
                   onClick={toggleCollapse}
@@ -342,7 +342,7 @@ export const Sidebar: React.FC = () => {
               return (
                 <React.Fragment key={section.titleKey}>
                   {si > 0 && <Divider />}
-                  <Tooltip title={sectionTitle} placement="right" arrow>
+                  <Tooltip title={sectionTitle} placement="top" arrow>
                     <Box
                       component="button"
                       onClick={() => navigate(targetTo)}
@@ -577,7 +577,7 @@ export const Sidebar: React.FC = () => {
         >
           <Tooltip
             title={collapsed ? `${user?.firstName} ${user?.lastName}` : ""}
-            placement="right"
+            placement="top"
             arrow
           >
             <Box
@@ -631,7 +631,7 @@ export const Sidebar: React.FC = () => {
           </Tooltip>
 
           {isAdmin && (
-            <Tooltip title={t("sidebar.settings")} placement="right" arrow>
+            <Tooltip title={t("sidebar.settings")} placement="top" arrow>
               <Box
                 component="button"
                 onClick={() => navigate("/settings")}
@@ -647,10 +647,7 @@ export const Sidebar: React.FC = () => {
                   color: "var(--muted)",
                   flexShrink: 0,
                   transition: "color 0.12s, background 0.12s",
-                  "&:hover": {
-                    color: "var(--accent)",
-                    background: "var(--accent-subtle)",
-                  },
+                  "&:hover": { color: "var(--accent)" },
                 }}
               >
                 <SettingsOutlined sx={{ fontSize: 14 }} />
@@ -658,7 +655,7 @@ export const Sidebar: React.FC = () => {
             </Tooltip>
           )}
 
-          <Tooltip title={t("sidebar.logout")} placement="right" arrow>
+          <Tooltip title={t("sidebar.logout")} placement="top" arrow>
             <Box
               component="button"
               onClick={handleLogout}
@@ -674,10 +671,7 @@ export const Sidebar: React.FC = () => {
                 color: "var(--muted)",
                 flexShrink: 0,
                 transition: "color 0.12s, background 0.12s",
-                "&:hover": {
-                  color: "var(--red)",
-                  background: "var(--red-subtle)",
-                },
+                "&:hover": { color: "var(--red)" },
               }}
             >
               <LogoutOutlined sx={{ fontSize: 14 }} />

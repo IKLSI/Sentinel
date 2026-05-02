@@ -106,7 +106,14 @@ export const IconNavBtn: React.FC<{
   title?: string;
   children: React.ReactNode;
 }> = ({ onClick, disabled, title, children }) => (
-  <Tooltip title={title ?? ""} arrow placement="top" enterDelay={0} enterNextDelay={0} disableHoverListener={!title}>
+  <Tooltip
+    title={title ?? ""}
+    arrow
+    placement="top"
+    enterDelay={0}
+    enterNextDelay={0}
+    disableHoverListener={!title}
+  >
     <Box
       component="button"
       onClick={onClick}
@@ -134,7 +141,7 @@ export const IconNavBtn: React.FC<{
   </Tooltip>
 );
 
-export const RowActionBtn: React.FC<{
+const RowActionBtn: React.FC<{
   icon: React.ReactNode;
   onClick: () => void;
   title: string;

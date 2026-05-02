@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
 import { KanbanColumnDef } from "../../helpers";
@@ -116,24 +117,6 @@ export const KanbanColumnHeader: React.FC<Props> = ({
               >
                 {colDef.name}
               </Box>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              {onDelete && !colDef.isDefault && (
-                <IconButton
-                  size="small"
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{
-                    opacity: hovered ? 0.7 : 0,
-                    transition: "opacity 0.15s",
-                    width: 20,
-                    height: 20,
-                    color: "var(--muted2)",
-                    "&:hover": { color: "var(--red)", opacity: 1 },
-                  }}
-                >
-                  <DeleteOutlined sx={{ fontSize: 13 }} />
-                </IconButton>
-              )}
               <Box
                 component="span"
                 sx={{
@@ -155,6 +138,30 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                 {count}
               </Box>
             </Box>
+            {onDelete && !colDef.isDefault && (
+              <Tooltip title="Supprimer la colonne" placement="top" arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{
+                    opacity: hovered ? 0.7 : 0,
+                    transition: "opacity 0.15s",
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "transparent",
+                    color: "var(--muted2)",
+                    flexShrink: 0,
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      color: "var(--red)",
+                      opacity: 1,
+                    },
+                  }}
+                >
+                  <DeleteOutlined sx={{ fontSize: 13 }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         )}
       </Box>
