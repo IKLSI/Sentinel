@@ -42,8 +42,6 @@ export const getUserInitials = (name: string) => {
   return name.slice(0, 2).toUpperCase();
 };
 
-
-
 export const formatDuration = (minutes: number) => {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -112,12 +110,21 @@ export const FormField: React.FC<{
   </Box>
 );
 
+const getHoverIconColor = (hoverBg?: string) => {
+  if (!hoverBg) return "var(--text)";
+
+  const match = hoverBg.match(/var\(--[a-z0-9-]+\)|#[0-9a-fA-F]{3,8}/);
+  return match?.[0] ?? "var(--text)";
+};
+
 export const IconNavBtn: React.FC<{
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   title?: string;
+  hoverBg?: string;
+  hoverColor?: string;
   children: React.ReactNode;
-}> = ({ onClick, disabled, title, children }) => (
+}> = ({ onClick, disabled, title, hoverBg, hoverColor, children }) => (
   <Tooltip
     title={title ?? ""}
     arrow
@@ -132,8 +139,8 @@ export const IconNavBtn: React.FC<{
         onClick={onClick}
         disabled={disabled}
         sx={{
-          background: disabled ? "transparent" : "var(--s2)",
-          border: disabled ? "1px solid transparent" : "1px solid var(--border)",
+          background: "transparent",
+          border: "none",
           borderRadius: "6px",
           width: "26px",
           height: "26px",
@@ -143,9 +150,9 @@ export const IconNavBtn: React.FC<{
           cursor: disabled ? "not-allowed" : "pointer",
           color: disabled ? "var(--border2)" : "var(--muted2)",
           fontFamily: "var(--font-ui)",
-          transition: "background 0.12s, color 0.12s",
+          transition: "color 0.12s",
           ...(!disabled
-            ? { "&:hover": { background: "var(--s3)", color: "var(--text)" } }
+            ? { "&:hover": { color: hoverColor ?? getHoverIconColor(hoverBg) } }
             : {}),
         }}
       >

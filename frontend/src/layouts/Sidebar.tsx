@@ -341,13 +341,16 @@ export const Sidebar: React.FC = () => {
             const sectionTitle = t(section.titleKey);
 
             if (collapsed) {
-              const targetTo =
-                section.items.find((i) => isItemActive(i, location.pathname))
-                  ?.to ?? section.items[0].to;
+              const activeItem =
+                section.items.find((i) => isItemActive(i, location.pathname)) ??
+                section.items[0];
+              const targetTo = activeItem.to;
+              const ItemIcon = activeItem.icon ?? GroupIcon;
+              const itemTitle = t(activeItem.labelKey ?? section.titleKey);
               return (
                 <React.Fragment key={section.titleKey}>
                   {si > 0 && <Divider />}
-                  <Tooltip title={sectionTitle} placement="top" arrow>
+                  <Tooltip title={itemTitle} placement="top" arrow>
                     <Box
                       component="button"
                       onClick={() => navigate(targetTo)}
@@ -365,12 +368,10 @@ export const Sidebar: React.FC = () => {
                         "&:hover": { background: "var(--s3)" },
                       }}
                     >
-                      <GroupIcon
+                      <ItemIcon
                         sx={{
                           fontSize: 16,
-                          color: sectionActive
-                            ? "var(--accent)"
-                            : "var(--muted)",
+                          color: sectionActive ? "var(--accent)" : "var(--muted)",
                           transition: "color 0.12s",
                         }}
                       />

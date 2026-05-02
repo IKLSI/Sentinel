@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
+import TuneOutlined from "@mui/icons-material/TuneOutlined";
 import { format, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
@@ -18,6 +18,7 @@ import {
   getCurrentUserAvatar,
   getUserInitials,
   getUserAvatar,
+  IconNavBtn,
   parseDateLocal,
 } from "../../helpers";
 import { RowActions } from "@/components/RowActions";
@@ -31,6 +32,8 @@ interface Props {
   exporting: boolean;
   isAdmin: boolean;
   currentUserId?: string;
+  canFilterByUser: boolean;
+  onOpenUserFilter: () => void;
   onCreate: () => void;
   onExport: () => void;
   onEdit: (entry: TimeEntryDto) => void;
@@ -47,6 +50,8 @@ export const JournalCard: React.FC<Props> = ({
   exporting,
   isAdmin,
   currentUserId,
+  canFilterByUser,
+  onOpenUserFilter,
   onCreate,
   onExport,
   onEdit,
@@ -81,7 +86,7 @@ export const JournalCard: React.FC<Props> = ({
           flexShrink: 0,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <Box
             sx={{
               fontSize: "11px",
@@ -93,72 +98,36 @@ export const JournalCard: React.FC<Props> = ({
           >
             {t("time_tracking.journal_label")}
           </Box>
+          {canFilterByUser && (
+            <IconNavBtn
+              onClick={onOpenUserFilter}
+              title={t("time_tracking.filter_users_tooltip")}
+              hoverColor="#1D4ED8"
+            >
+              <TuneOutlined sx={{ fontSize: 16 }} />
+            </IconNavBtn>
+          )}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Tooltip
+          <IconNavBtn
+            onClick={onCreate}
             title={t("time_tracking.add_entry_title")}
-            arrow
-            placement="top"
-            enterDelay={0}
-            enterNextDelay={0}
+            hoverBg="var(--accent)"
           >
-            <Box
-              component="button"
-              onClick={onCreate}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "26px",
-                height: "26px",
-                background: "var(--s2)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                cursor: "pointer",
-                color: "var(--muted2)",
-                transition: "background 0.12s, color 0.12s",
-                "&:hover": { background: "var(--s3)", color: "var(--text)" },
-              }}
-            >
-              <AddOutlined sx={{ fontSize: 12 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip
+            <AddOutlined sx={{ fontSize: 13 }} />
+          </IconNavBtn>
+          <IconNavBtn
+            onClick={onExport}
+            disabled={exporting}
             title={t("time_tracking.export")}
-            arrow
-            placement="top"
-            enterDelay={0}
-            enterNextDelay={0}
+            hoverBg="#7C6FCD"
           >
-            <Box component="span" sx={{ display: "inline-flex" }}>
-              <Box
-                component="button"
-                onClick={onExport}
-                disabled={exporting}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "26px",
-                  height: "26px",
-                  background: "var(--s2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "6px",
-                  cursor: exporting ? "default" : "pointer",
-                  color: "var(--muted2)",
-                  opacity: exporting ? 0.5 : 1,
-                  transition: "background 0.12s, color 0.12s",
-                  "&:hover": { background: "var(--s3)", color: "var(--text)" },
-                }}
-              >
-                {exporting ? (
-                  <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
-                ) : (
-                  <FileDownloadOutlined sx={{ fontSize: 12 }} />
-                )}
-              </Box>
-            </Box>
-          </Tooltip>
+            {exporting ? (
+              <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
+            ) : (
+              <FileDownloadOutlined sx={{ fontSize: 13 }} />
+            )}
+          </IconNavBtn>
         </Box>
       </Box>
 

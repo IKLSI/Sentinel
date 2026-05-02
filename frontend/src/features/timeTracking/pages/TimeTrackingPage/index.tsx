@@ -16,6 +16,7 @@ import {
 } from "@/features/timeTracking/api/timeEntries";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getTickets } from "@/features/tickets/api/tickets";
+import { getUsers } from "@/features/users/api/users";
 import { Ticket } from "@/types";
 import {
   FormState,
@@ -26,9 +27,16 @@ import {
 import { WeekCalendarCard } from "./components/WeekCalendarCard";
 import { ProjectStatsCard } from "./components/ProjectStatsCard";
 import { JournalCard } from "./components/JournalCard";
+import { UserPicker } from "./components/UserPicker";
 import { TimeEntryModal } from "./components/TimeEntryModal";
 import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
 import { extractApiError } from "@/utils/apiError";
+
+type JournalUserOption = {
+  id: string;
+  name: string;
+  role?: string;
+};
 
 export const TimeTrackingPage: React.FC = () => {
   const t = useT();
@@ -49,6 +57,10 @@ export const TimeTrackingPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [detailEntry, setDetailEntry] = useState<TimeEntryDto | null>(null);
+  const [userFilterOpen, setUserFilterOpen] = useState(false);
+  const [selectedJournalUserId, setSelectedJournalUserId] =
+    useState<string>("all");
+  const [allUsers, setAllUsers] = useState<JournalUserOption[]>([]);
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -77,13 +89,47 @@ export const TimeTrackingPage: React.FC = () => {
   }, [load]);
 
   useEffect(() => {
+    const loadAllUsers = async () => {
+      const firstPage = await getUsers({ page: 1 });
+      const users = [...firstPage.items];
+
+      if (firstPage.totalPages > 1) {
+        const remainingPages = await Promise.all(
+          Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+            getUsers({ page: i + 2 }),
+          ),
+        );
+        remainingPages.forEach((page) => users.push(...page.items));
+      }
+
+      setAllUsers(
+        users.map((u) => ({
+          id: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          role: u.role,
+        })),
+      );
+    };
+
     getProjects()
       .then(setProjects)
       .catch(() => {});
     getTickets({ pageSize: 200 })
       .then((r) => setTickets(r.items))
       .catch(() => {});
+
+    loadAllUsers().catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setSelectedJournalUserId("all");
+      return;
+    }
+    if (user?.id) {
+      setSelectedJournalUserId(user.id);
+    }
+  }, [isAdmin, user?.id]);
 
   const handleExport = async () => {
     setExporting(true);
@@ -112,11 +158,66 @@ export const TimeTrackingPage: React.FC = () => {
     [entries, weekStart],
   );
 
-  const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
-  const contributors = useMemo(
-    () => new Set(weekEntries.map((e) => e.userId)).size,
-    [weekEntries],
+  const journalUsers = useMemo<JournalUserOption[]>(() => {
+    const usersMap = new Map<string, JournalUserOption>();
+
+    allUsers.forEach((u) => usersMap.set(u.id, u));
+
+    weekEntries.forEach((entry) => {
+      if (!usersMap.has(entry.userId)) {
+        usersMap.set(entry.userId, {
+          id: entry.userId,
+          name: entry.userName,
+          role: entry.userRole,
+        });
+      }
+    });
+
+    if (user?.id && !usersMap.has(user.id)) {
+      usersMap.set(user.id, {
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        role: user.role,
+      });
+    }
+
+    return Array.from(usersMap.values()).sort((a, b) => {
+      if (a.id === user?.id) return -1;
+      if (b.id === user?.id) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [
+    allUsers,
+    weekEntries,
+    user?.id,
+    user?.firstName,
+    user?.lastName,
+    user?.role,
+  ]);
+
+  const filteredJournalEntries = useMemo(() => {
+    if (selectedJournalUserId === "all") return weekEntries;
+    return weekEntries.filter(
+      (entry) => entry.userId === selectedJournalUserId,
+    );
+  }, [weekEntries, selectedJournalUserId]);
+
+  const journalEntriesByDay = useMemo(() => {
+    const map = new Map<string, TimeEntryDto[]>();
+    weekDays.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
+    filteredJournalEntries.forEach((e) => {
+      const list = map.get(e.date);
+      if (list) list.push(e);
+    });
+    return map;
+  }, [weekDays, filteredJournalEntries]);
+
+  const journalContributors = useMemo(
+    () => new Set(filteredJournalEntries.map((e) => e.userId)).size,
+    [filteredJournalEntries],
   );
+
+  const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
 
   const statsByProject = useMemo(() => {
     const map = new Map<string, { name: string | null; minutes: number }>();
@@ -188,7 +289,10 @@ export const TimeTrackingPage: React.FC = () => {
       setModalOpen(false);
       await load();
     } catch (err) {
-      showToast(extractApiError(err, t("time_tracking.error_save_entry")), "error");
+      showToast(
+        extractApiError(err, t("time_tracking.error_save_entry")),
+        "error",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -203,7 +307,10 @@ export const TimeTrackingPage: React.FC = () => {
       showToast(t("time_tracking.toast_entry_deleted"), "success");
       await load();
     } catch (err) {
-      showToast(extractApiError(err, t("time_tracking.error_delete_entry")), "error");
+      showToast(
+        extractApiError(err, t("time_tracking.error_delete_entry")),
+        "error",
+      );
     } finally {
       setDeleting(false);
     }
@@ -257,19 +364,31 @@ export const TimeTrackingPage: React.FC = () => {
         <JournalCard
           loading={loading}
           weekDays={weekDays}
-          weekEntries={weekEntries}
-          entriesByDay={entriesByDay}
-          contributors={contributors}
+          weekEntries={filteredJournalEntries}
+          entriesByDay={journalEntriesByDay}
+          contributors={journalContributors}
           exporting={exporting}
           isAdmin={isAdmin}
           currentUserId={user?.id}
+          canFilterByUser={isAdmin}
+          activeUserFilter={selectedJournalUserId !== "all"}
+          onOpenUserFilter={() => setUserFilterOpen(true)}
           onCreate={() => openCreate()}
           onExport={handleExport}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
-        onViewDetail={setDetailEntry}
+          onViewDetail={setDetailEntry}
         />
       </Box>
+
+      <UserPicker
+        open={userFilterOpen}
+        onClose={() => setUserFilterOpen(false)}
+        users={journalUsers}
+        selected={selectedJournalUserId}
+        onApply={setSelectedJournalUserId}
+        currentUserId={user?.id}
+      />
 
       <TimeEntryModal
         open={modalOpen}
