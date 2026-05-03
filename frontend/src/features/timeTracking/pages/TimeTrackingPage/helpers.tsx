@@ -117,7 +117,7 @@ export const IconNavBtn: React.FC<{
   hoverBg?: string;
   hoverColor?: string;
   children: React.ReactNode;
-}> = ({ onClick, disabled, title, _hoverBg, _hoverColor, children }) => (
+}> = ({ onClick, disabled, title, hoverBg, hoverColor, children }) => (
   <Tooltip
     title={title ?? ""}
     arrow
@@ -143,16 +143,18 @@ export const IconNavBtn: React.FC<{
           cursor: disabled ? "not-allowed" : "pointer",
           color: disabled ? "var(--border2)" : "var(--muted2)",
           fontFamily: "var(--font-ui)",
-          transition: "background 0.12s ease, border-color 0.12s ease, color 0.12s ease",
+          transition:
+            "background 0.12s ease, border-color 0.12s ease, color 0.12s ease",
           ...(!disabled
             ? {
                 "&:hover": {
-                  background: "var(--accent-subtle)",
+                  background: hoverBg ?? "var(--accent-subtle)",
                   borderColor: "var(--accent-border)",
-                  color: "var(--accent)",
+                  color: hoverColor ?? "var(--accent)",
                 },
                 "&:active": {
-                  background: "color-mix(in srgb, var(--accent) 18%, transparent)",
+                  background:
+                    "color-mix(in srgb, var(--accent) 18%, transparent)",
                 },
               }
             : {}),
