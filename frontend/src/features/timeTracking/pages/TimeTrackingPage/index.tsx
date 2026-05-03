@@ -186,14 +186,7 @@ export const TimeTrackingPage: React.FC = () => {
       if (b.id === user?.id) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [
-    allUsers,
-    weekEntries,
-    user?.id,
-    user?.firstName,
-    user?.lastName,
-    user?.role,
-  ]);
+  }, [allUsers, weekEntries, user]);
 
   const filteredJournalEntries = useMemo(() => {
     if (selectedJournalUserId === "all") return weekEntries;
