@@ -303,66 +303,54 @@ export const ProjectPicker: React.FC<Props> = ({
           background: "var(--s2)",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           flexShrink: 0,
           gap: "8px",
         }}
       >
-        <Box
-          sx={{ fontSize: "12.5px", color: "var(--muted2)", fontWeight: 500 }}
+        <Button
+          variant="contained"
+          size="small"
+          disableElevation
+          sx={{
+            textTransform: "none",
+            background:
+              "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+            color: "#fff",
+            boxShadow: "none",
+            "&:hover": {
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+              boxShadow: "none",
+              transform: "none",
+            },
+          }}
+          onClick={() => setPending([])}
         >
-          {pending.length !== 1
-            ? t("tickets.kanban.picker.selected_plural", {
-                count: pending.length,
-              })
-            : t("tickets.kanban.picker.selected_singular", {
-                count: pending.length,
-              })}
-        </Box>
-        <Box sx={{ display: "flex", gap: "8px" }}>
-          <Button
-            variant="contained"
-            size="small"
-            disableElevation
-            sx={{
-              textTransform: "none",
+          {t("tickets.kanban.picker.reset")}
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          disableElevation
+          sx={{
+            textTransform: "none",
+            background:
+              "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+            color: "#fff",
+            boxShadow: "none",
+            "&:hover": {
               background:
-                "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
-              color: "#fff",
+                "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
               boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
-            onClick={() => setPending([])}
-          >
-            {t("tickets.kanban.picker.reset")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            disableElevation
-            sx={{
-              textTransform: "none",
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              color: "#fff",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
-            onClick={handleApply}
-          >
-            {t("tickets.kanban.picker.apply")}
-          </Button>
-        </Box>
+              transform: "none",
+            },
+          }}
+          onClick={handleApply}
+        >
+          {t("tickets.kanban.picker.apply")}
+          {pending.length > 0 && ` (${pending.length})`}
+        </Button>
       </Box>
     </Dialog>
   );

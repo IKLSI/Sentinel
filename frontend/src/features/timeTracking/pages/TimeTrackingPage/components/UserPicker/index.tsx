@@ -338,10 +338,12 @@ export const UserPicker: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
+            disableElevation
             sx={{
               textTransform: "none",
               background:
                 "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 background:
@@ -357,10 +359,12 @@ export const UserPicker: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
+            disableElevation
             sx={{
               textTransform: "none",
               background:
                 "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 background:

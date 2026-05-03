@@ -101,26 +101,7 @@ export const KanbanToolbar: React.FC<Props> = ({
       >
         <TuneOutlined sx={{ fontSize: "14px" }} />
         {t("tickets.kanban.filters_button")}
-        {activeFilterCount > 0 && (
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "16px",
-              height: "16px",
-              borderRadius: "50%",
-              background: "var(--accent)",
-              color: "var(--s1)",
-              fontSize: "9px",
-              fontWeight: 700,
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {activeFilterCount}
-          </Box>
-        )}
+        {activeFilterCount > 0 && ` (${activeFilterCount})`}
       </Box>
     </Box>
   );
