@@ -121,54 +121,6 @@ export function ticketsToColumns(
   return cols;
 }
 
-export function projectInitials(name: string): string {
-  const words = name.trim().split(/\s+/);
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
-
-const avatarPalette: { bg: string; text: string }[] = [
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--purple) 18%, white), color-mix(in srgb, var(--purple) 32%, white))",
-    text: "color-mix(in srgb, var(--purple) 75%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--green) 18%, white), color-mix(in srgb, var(--green) 32%, white))",
-    text: "color-mix(in srgb, var(--green) 75%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--red) 16%, white), color-mix(in srgb, var(--red) 28%, white))",
-    text: "color-mix(in srgb, var(--red) 70%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--orange) 18%, white), color-mix(in srgb, var(--orange) 32%, white))",
-    text: "color-mix(in srgb, var(--orange) 75%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--cyan) 18%, white), color-mix(in srgb, var(--cyan) 32%, white))",
-    text: "color-mix(in srgb, var(--cyan) 75%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, white), color-mix(in srgb, var(--accent) 32%, white))",
-    text: "color-mix(in srgb, var(--accent) 75%, black)",
-  },
-  {
-    bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
-    text: "#8b1c38",
-  },
-  {
-    bg: "linear-gradient(135deg, color-mix(in srgb, var(--yellow) 22%, white), color-mix(in srgb, var(--yellow) 38%, white))",
-    text: "color-mix(in srgb, var(--yellow) 75%, black)",
-  },
-];
-
-export function getAvatarColor(name: string): { bg: string; text: string } {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++)
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  return avatarPalette[Math.abs(hash) % avatarPalette.length];
-}
-
 export function toggleItem<T>(arr: T[], val: T): T[] {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 }
