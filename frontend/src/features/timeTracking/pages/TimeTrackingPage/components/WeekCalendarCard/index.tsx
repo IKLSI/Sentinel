@@ -50,7 +50,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
       sx={{
         background: "var(--s1)",
         border: "1px solid var(--border)",
-        borderRadius: "12px",
+        borderRadius: 'var(--r-md)',
         overflow: "hidden",
         flexShrink: 0,
       }}
@@ -98,7 +98,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
                 color: "var(--accent)",
                 letterSpacing: "-0.04em",
                 lineHeight: 1,
-                borderRadius: "4px",
+                borderRadius: 'var(--r-xs)',
                 px: "8px",
                 py: "4px",
               }}

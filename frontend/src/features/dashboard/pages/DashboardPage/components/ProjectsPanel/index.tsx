@@ -133,7 +133,7 @@ export const ProjectsPanel: React.FC<Props> = ({
                 minHeight: "48px",
                 px: "10px",
                 gap: "10px",
-                borderRadius: "12px",
+                borderRadius: 'var(--r-md)',
                 background: palette.rowBg,
                 transition: "background 120ms ease, box-shadow 120ms ease",
                 "&:hover": {

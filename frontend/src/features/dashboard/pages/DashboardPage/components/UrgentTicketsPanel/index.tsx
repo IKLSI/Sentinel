@@ -137,7 +137,7 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
               sx={{
                 all: "unset",
                 cursor: "pointer",
-                borderRadius: "12px",
+                borderRadius: 'var(--r-md)',
                 minHeight: "48px",
                 px: "10px",
                 display: "flex",
@@ -217,7 +217,7 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
                 sx={{
                   width: 28,
                   height: 28,
-                  borderRadius: "999px",
+                  borderRadius: '50%',
                   background: av.bg,
                   color: av.text,
                   fontWeight: 700,

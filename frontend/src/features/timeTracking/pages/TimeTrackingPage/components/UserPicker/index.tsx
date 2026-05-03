@@ -73,7 +73,7 @@ export const UserPicker: React.FC<Props> = ({
               sx={{
                 width: "100%",
                 height: "100%",
-                borderRadius: "8px",
+                borderRadius: 'var(--r)',
                 background: avatar.bg,
                 display: "flex",
                 alignItems: "center",
@@ -142,7 +142,7 @@ export const UserPicker: React.FC<Props> = ({
             gap: "8px",
             background: "var(--bg)",
             border: "1px solid var(--border)",
-            borderRadius: "9px",
+            borderRadius: 'var(--r)',
             px: "10px",
             height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
@@ -247,7 +247,7 @@ export const UserPicker: React.FC<Props> = ({
                   gap: "11px",
                   px: "10px",
                   py: "9px",
-                  borderRadius: "10px",
+                  borderRadius: 'var(--r)',
                   mb: "2px",
                   background: isSelected
                     ? "var(--accent-subtle)"
@@ -266,7 +266,7 @@ export const UserPicker: React.FC<Props> = ({
                   sx={{
                     width: "36px",
                     height: "36px",
-                    borderRadius: "9px",
+                    borderRadius: 'var(--r)',
                     background:
                       option.id === "all"
                         ? "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 82%, white) 100%)"
@@ -300,7 +300,7 @@ export const UserPicker: React.FC<Props> = ({
                   sx={{
                     width: "16px",
                     height: "16px",
-                    borderRadius: "4px",
+                    borderRadius: 'var(--r-xs)',
                     flexShrink: 0,
                     border: isSelected ? "none" : "1.5px solid var(--border2)",
                     background: isSelected ? "var(--accent)" : "transparent",

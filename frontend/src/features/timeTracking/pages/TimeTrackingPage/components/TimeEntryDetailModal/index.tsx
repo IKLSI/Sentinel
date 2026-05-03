@@ -46,7 +46,7 @@ export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, is
           sx: {
             bgcolor: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: "14px",
+            borderRadius: 'var(--r-lg)',
             overflow: "hidden",
             boxShadow: "0 20px 56px rgba(0,0,0,.3)",
           },
@@ -118,12 +118,12 @@ export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, is
           <Box sx={{ borderTop: "1px solid var(--border)" }} />
           <Box sx={{ px: "20px", py: "11px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", background: "var(--s2)" }}>
             {entry.techProjectName && (
-              <Box component="span" sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted2)", px: "5px", py: "1px", borderRadius: "4px", border: "1px solid var(--border2)", background: "var(--s3)" }}>
+              <Box component="span" sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted2)", px: "5px", py: "1px", borderRadius: 'var(--r-xs)', border: "1px solid var(--border2)", background: "var(--s3)" }}>
                 {entry.techProjectName}
               </Box>
             )}
             {entry.ticketTitle && (
-              <Box sx={{ fontSize: "10px", fontWeight: 600, px: "5px", py: "1px", borderRadius: "4px", background: "var(--accent-subtle)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}>
+              <Box sx={{ fontSize: "10px", fontWeight: 600, px: "5px", py: "1px", borderRadius: 'var(--r-xs)', background: "var(--accent-subtle)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}>
                 {entry.ticketTitle}
               </Box>
             )}

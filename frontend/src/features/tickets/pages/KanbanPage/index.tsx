@@ -232,7 +232,7 @@ export const KanbanPage: React.FC = () => {
           },
           ".kanban-col-body::-webkit-scrollbar-thumb": {
             background: "var(--border2)",
-            borderRadius: "4px",
+            borderRadius: 'var(--r-xs)',
           },
         }}
       />

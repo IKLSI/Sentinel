@@ -142,7 +142,7 @@ export const buildPalette = (_isDark: boolean): DashPalette => ({
 export const buildPanelSx = (p: DashPalette) =>
   ({
     background: p.panelBg,
-    borderRadius: "20px",
+    borderRadius: 'var(--r-xl)',
     border: `1px solid ${p.panelBorder}`,
     boxShadow: p.panelShadow,
     overflow: "hidden",
@@ -155,7 +155,7 @@ export const buildScrollSx = (p: DashPalette) => ({
   "&::-webkit-scrollbar": { width: "4px" },
   "&::-webkit-scrollbar-thumb": {
     background: "transparent",
-    borderRadius: "4px",
+    borderRadius: 'var(--r-xs)',
   },
   "&::-webkit-scrollbar-track": { background: "transparent" },
   "&:hover": { scrollbarColor: `${p.scrollThumb} transparent` },

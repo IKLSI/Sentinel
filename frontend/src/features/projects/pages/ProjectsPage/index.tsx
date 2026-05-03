@@ -276,7 +276,7 @@ export const ProjectsPage: React.FC = () => {
               "&::-webkit-scrollbar": { width: "6px" },
               "&::-webkit-scrollbar-thumb": {
                 background: "var(--border2)",
-                borderRadius: "99px",
+                borderRadius: '50%',
               },
               "&::-webkit-scrollbar-track": { background: "transparent" },
             }}

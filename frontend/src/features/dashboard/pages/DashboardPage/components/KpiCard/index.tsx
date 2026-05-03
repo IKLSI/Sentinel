@@ -74,7 +74,7 @@ export const KpiCard: React.FC<Props> = ({
           sx={{
             width: "36px",
             height: "36px",
-            borderRadius: "12px",
+            borderRadius: 'var(--r-md)',
             display: "grid",
             placeItems: "center",
             color: valueColor,

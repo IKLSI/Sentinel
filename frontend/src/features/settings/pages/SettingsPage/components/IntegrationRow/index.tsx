@@ -54,7 +54,7 @@ export const IntegrationRow: React.FC<Props> = ({
           sx={{
             width: 40,
             height: 40,
-            borderRadius: "10px",
+            borderRadius: 'var(--r)',
             flexShrink: 0,
             background: iconBackground,
             border: iconBorder ?? "none",
@@ -104,7 +104,7 @@ export const IntegrationRow: React.FC<Props> = ({
                     alignItems: "center",
                     px: "7px",
                     py: "2px",
-                    borderRadius: "6px",
+                    borderRadius: 'var(--r-sm)',
                     background: "color-mix(in srgb, var(--accent) 12%, var(--s2))",
                     border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
                     color: "var(--accent)",

@@ -138,7 +138,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             gap: "8px",
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: "8px",
+            borderRadius: 'var(--r)',
             px: "10px",
             height: "32px",
             "&:focus-within": {
@@ -229,7 +229,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           flexDirection: "column",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: "10px",
+          borderRadius: 'var(--r)',
         }}
       >
         {loadingMembers ? (

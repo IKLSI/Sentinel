@@ -30,8 +30,12 @@ const darkCssVars = `
     --cyan-subtle: rgba(6, 182, 212, 0.10);
     --purple: #a855f7;
     --purple-subtle: rgba(168, 85, 247, 0.10);
+    --r-xs: 4px;
+    --r-sm: 6px;
     --r: 8px;
-    --r-sm: 5px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 20px;
     --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
   }
@@ -68,8 +72,12 @@ const lightCssVars = `
     --cyan-subtle: rgba(8, 145, 178, 0.08);
     --purple: #9333ea;
     --purple-subtle: rgba(147, 51, 234, 0.08);
+    --r-xs: 4px;
+    --r-sm: 6px;
     --r: 8px;
-    --r-sm: 5px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 20px;
     --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
   }
@@ -86,7 +94,7 @@ const baseComponents = {
         textTransform: 'none' as const,
         fontWeight: 600,
         letterSpacing: '-0.01em',
-        borderRadius: '8px',
+        borderRadius: 'var(--r)',
         fontFamily: 'Inter, system-ui, sans-serif',
         transition: 'all 0.15s ease',
         '&:hover': {
@@ -120,7 +128,7 @@ const baseComponents = {
       sizeSmall: {
         fontSize: '12px',
         padding: '6px 12px',
-        borderRadius: '7px',
+        borderRadius: 'var(--r-sm)',
       },
       sizeMedium: {
         fontSize: '13px',
@@ -145,7 +153,7 @@ const baseComponents = {
         },
       },
       paper: {
-        borderRadius: '14px',
+        borderRadius: 'var(--r-lg)',
         boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
       },
     },
@@ -165,7 +173,7 @@ const baseComponents = {
         fontSize: '11px',
         fontWeight: 500,
         fontFamily: 'Inter, sans-serif',
-        borderRadius: '6px',
+        borderRadius: 'var(--r-sm)',
         padding: '5px 10px',
       },
     },
@@ -178,7 +186,7 @@ const baseComponents = {
         fontWeight: 700,
         letterSpacing: '0.04em',
         height: '20px',
-        borderRadius: '5px',
+        borderRadius: 'var(--r-sm)',
       },
       label: {
         padding: '0 6px',
@@ -200,7 +208,7 @@ const baseComponents = {
   MuiListItemButton: {
     styleOverrides: {
       root: {
-        borderRadius: '7px',
+        borderRadius: 'var(--r-sm)',
         transition: 'all 0.12s ease',
       },
     },
@@ -217,7 +225,7 @@ const baseComponents = {
     styleOverrides: {
       root: {
         fontSize: '13px',
-        borderRadius: '6px',
+        borderRadius: 'var(--r-sm)',
         margin: '1px 4px',
         transition: 'background 0.1s',
       },
@@ -240,7 +248,7 @@ const baseComponents = {
   MuiLinearProgress: {
     styleOverrides: {
       root: {
-        borderRadius: '4px',
+        borderRadius: 'var(--r-xs)',
         height: '4px',
       },
     },

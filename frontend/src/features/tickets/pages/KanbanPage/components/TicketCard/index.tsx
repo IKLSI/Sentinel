@@ -60,7 +60,7 @@ export const TicketCard: React.FC<Props> = ({
             fontWeight: 600,
             color: "var(--text-secondary)",
             background: "color-mix(in srgb, var(--muted2) 8%, transparent)",
-            borderRadius: "4px",
+            borderRadius: 'var(--r-xs)',
             padding: "2px 7px 2px 5px",
           }}
         >

@@ -68,7 +68,7 @@ export const RowActions: React.FC<{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: "6px",
+                borderRadius: 'var(--r-sm)',
                 color: "var(--muted)",
                 opacity: action.disabled ? 0.35 : 1,
                 transition: "background 0.12s, border 0.12s, color 0.12s",

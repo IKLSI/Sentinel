@@ -197,7 +197,7 @@ export const buildMarkdownSx = (p: DetailPalette) =>
       fontSize: "12px",
       background: p.mdInlineCodeBg,
       border: `1px solid ${p.mdInlineCodeBorder}`,
-      borderRadius: "7px",
+      borderRadius: 'var(--r-sm)',
       px: "6px",
       py: "2px",
       color: p.mdInlineCodeFg,
@@ -205,7 +205,7 @@ export const buildMarkdownSx = (p: DetailPalette) =>
     "& pre": {
       mt: "14px",
       mb: "6px",
-      borderRadius: "14px",
+      borderRadius: 'var(--r-lg)',
       border: `1px solid ${p.mdPreBorder}`,
       background: p.mdPreBg,
       overflow: "auto",
@@ -228,7 +228,7 @@ export const buildFieldSx = (p: DetailPalette) =>
   ({
     background: p.inputBg,
     border: `1px solid ${p.inputBorder}`,
-    borderRadius: "14px",
+    borderRadius: 'var(--r-lg)',
     px: "18px",
     py: "14px",
     fontSize: "14px",

@@ -59,7 +59,7 @@ export const WeekPicker: React.FC<Props> = ({
           sx: {
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: "12px",
+            borderRadius: 'var(--r-md)',
             boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             p: "12px",
             mt: "4px",
@@ -105,7 +105,7 @@ export const WeekPicker: React.FC<Props> = ({
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            borderRadius: "6px",
+            borderRadius: 'var(--r-sm)',
             px: "6px",
             py: "2px",
             fontFamily: "var(--font-ui)",
@@ -174,7 +174,7 @@ export const WeekPicker: React.FC<Props> = ({
                   border: isCurrent
                     ? "1px solid var(--accent-border)"
                     : "1px solid transparent",
-                  borderRadius: "6px",
+                  borderRadius: 'var(--r-sm)',
                   py: "7px",
                   cursor: "pointer",
                   fontFamily: "var(--font-ui)",

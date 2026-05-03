@@ -79,7 +79,7 @@ export const EditCommentModal: React.FC<Props> = ({
               gap: "4px",
               background: "var(--s2)",
               border: "1px solid var(--border)",
-              borderRadius: "8px",
+              borderRadius: 'var(--r)',
               p: "3px",
             }}
           >
@@ -102,7 +102,7 @@ export const EditCommentModal: React.FC<Props> = ({
                     height: "26px",
                     fontSize: "11px",
                     fontWeight: 600,
-                    borderRadius: "6px",
+                    borderRadius: 'var(--r-sm)',
                     display: "flex",
                     alignItems: "center",
                     background: active ? "var(--s1)" : "transparent",
@@ -131,7 +131,7 @@ export const EditCommentModal: React.FC<Props> = ({
             sx={{
               background: "var(--s2)",
               border: "1px solid var(--border)",
-              borderRadius: "10px",
+              borderRadius: 'var(--r)',
               p: "14px 16px",
               minHeight: "150px",
               ...markdownSx,

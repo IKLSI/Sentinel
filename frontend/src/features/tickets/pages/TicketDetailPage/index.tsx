@@ -250,7 +250,7 @@ export const TicketDetailPage: React.FC = () => {
             maxHeight: { xs: "calc(100vh - 22px)", md: "calc(100vh - 36px)" },
             background: palette.panelBg,
             border: `1px solid ${palette.panelBorder}`,
-            borderRadius: "20px",
+            borderRadius: 'var(--r-xl)',
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",

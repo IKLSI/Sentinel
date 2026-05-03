@@ -141,7 +141,7 @@ export const IconNavBtn: React.FC<{
         sx={{
           background: "transparent",
           border: "none",
-          borderRadius: "6px",
+          borderRadius: 'var(--r-sm)',
           width: "26px",
           height: "26px",
           display: "flex",

@@ -90,7 +90,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                   gap: "5px",
                   background: "var(--s2)",
                   border: "1px solid var(--border)",
-                  borderRadius: "5px",
+                  borderRadius: 'var(--r-sm)',
                   px: "8px",
                   py: "3px",
                 }}
@@ -114,7 +114,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                   gap: "5px",
                   background: "var(--s2)",
                   border: "1px solid var(--border)",
-                  borderRadius: "5px",
+                  borderRadius: 'var(--r-sm)',
                   px: "8px",
                   py: "3px",
                 }}

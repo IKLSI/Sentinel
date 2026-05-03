@@ -47,7 +47,7 @@ export const DatePickerPopover: React.FC<Props> = ({
           sx: {
             mt: "4px",
             p: "12px",
-            borderRadius: "12px",
+            borderRadius: 'var(--r-md)',
             border: "1px solid var(--border)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             background: "var(--s1)",
@@ -93,7 +93,7 @@ export const DatePickerPopover: React.FC<Props> = ({
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            borderRadius: "6px",
+            borderRadius: 'var(--r-sm)',
             px: "6px",
             py: "2px",
             fontFamily: "var(--font-ui)",
@@ -158,7 +158,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   border: isCurrent
                     ? "1px solid var(--accent-border)"
                     : "1px solid transparent",
-                  borderRadius: "6px",
+                  borderRadius: 'var(--r-sm)',
                   py: "7px",
                   cursor: "pointer",
                   fontFamily: "var(--font-ui)",
@@ -240,7 +240,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   sx={{
                     background: isSelected ? "var(--accent)" : "transparent",
                     border: "none",
-                    borderRadius: "6px",
+                    borderRadius: 'var(--r-sm)',
                     height: "28px",
                     display: "flex",
                     alignItems: "center",

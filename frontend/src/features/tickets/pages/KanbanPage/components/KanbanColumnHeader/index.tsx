@@ -82,7 +82,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
               sx={{
                 width: 22,
                 height: 20,
-                borderRadius: 99,
+                borderRadius: '50%',
                 background: "var(--s2)",
               }}
             />
@@ -126,7 +126,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
                   minWidth: "22px",
                   height: "20px",
                   padding: "0 6px",
-                  borderRadius: "99px",
+                  borderRadius: '50%',
                   background: colDef.subtle,
                   border: `1px solid ${colDef.border}`,
                   fontFamily: "var(--font-mono)",

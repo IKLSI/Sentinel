@@ -106,7 +106,7 @@ export const PropertiesCard: React.FC<Props> = ({
     <Box
       sx={{
         border: `1px solid ${palette.panelBorder}`,
-        borderRadius: "20px",
+        borderRadius: 'var(--r-xl)',
         background: palette.panelBg,
         boxShadow: palette.panelShadow,
         p: "8px 6px 4px",
@@ -139,7 +139,7 @@ export const PropertiesCard: React.FC<Props> = ({
               gridTemplateColumns: "76px 1fr",
               alignItems: "center",
               gap: "8px",
-              borderRadius: "8px",
+              borderRadius: 'var(--r)',
             }}
           >
             <Box

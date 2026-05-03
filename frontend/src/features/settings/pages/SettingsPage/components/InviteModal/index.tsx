@@ -88,7 +88,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             alignItems: "center",
             gap: "14px",
             p: "16px",
-            borderRadius: "12px",
+            borderRadius: 'var(--r-md)',
             background:
               "linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent) 0%, color-mix(in srgb, var(--accent) 3%, transparent) 100%)",
             border: "1px solid var(--accent-border)",
@@ -98,7 +98,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             sx={{
               width: 44,
               height: 44,
-              borderRadius: "11px",
+              borderRadius: 'var(--r-md)',
               flexShrink: 0,
               background:
                 "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, white) 100%)",
@@ -192,7 +192,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                   boxSizing: "border-box",
                   background: "var(--s2)",
                   border: "1px solid var(--border)",
-                  borderRadius: "6px",
+                  borderRadius: 'var(--r-sm)',
                   px: "12px",
                   py: "9px",
                   pr: "36px",

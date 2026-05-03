@@ -46,7 +46,7 @@ export const CommentComposer: React.FC<Props> = ({
           p: "3px",
           background: palette.tabStripBg,
           border: `1px solid ${palette.tabStripBorder}`,
-          borderRadius: "12px",
+          borderRadius: 'var(--r-md)',
           mb: "8px",
           gap: "3px",
         }}
@@ -77,7 +77,7 @@ export const CommentComposer: React.FC<Props> = ({
                 gap: "6px",
                 px: "12px",
                 height: "34px",
-                borderRadius: "10px",
+                borderRadius: 'var(--r)',
                 color: active ? palette.tabActiveFg : palette.tabIdleFg,
                 background: active ? palette.tabActiveBg : "transparent",
                 boxShadow: active ? palette.tabActiveShadow : "none",
@@ -95,7 +95,7 @@ export const CommentComposer: React.FC<Props> = ({
       <Box
         sx={{
           border: `1px solid ${palette.composerBorder}`,
-          borderRadius: "16px",
+          borderRadius: 'var(--r-lg)',
           overflow: "hidden",
           background: palette.composerBg,
         }}
@@ -157,7 +157,7 @@ export const CommentComposer: React.FC<Props> = ({
                 all: "unset",
                 width: "28px",
                 height: "28px",
-                borderRadius: "7px",
+                borderRadius: 'var(--r-sm)',
                 cursor: "pointer",
                 color: palette.toolbarIdle,
                 display: "grid",
@@ -196,7 +196,7 @@ export const CommentComposer: React.FC<Props> = ({
               },
               minWidth: "100px",
               height: "32px",
-              borderRadius: "10px",
+              borderRadius: 'var(--r)',
               fontWeight: 700,
               fontSize: "12px",
             }}

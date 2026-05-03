@@ -33,7 +33,7 @@ const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
             background: "var(--cyan-subtle)",
             px: "7px",
             py: "3px",
-            borderRadius: "3px",
+            borderRadius: 'var(--r-xs)',
           }}
         >
           {vuln.cveId}

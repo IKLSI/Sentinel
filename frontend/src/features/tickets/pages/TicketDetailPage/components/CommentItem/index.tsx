@@ -53,7 +53,7 @@ export const CommentItem: React.FC<Props> = ({
         sx={{
           width: "30px",
           height: "30px",
-          borderRadius: "8px",
+          borderRadius: 'var(--r)',
           background: c.isInternal
             ? "linear-gradient(140deg, #c4b5fd 0%, #818cf8 100%)"
             : "linear-gradient(140deg, #fda4af 0%, #fb7185 100%)",
@@ -97,7 +97,7 @@ export const CommentItem: React.FC<Props> = ({
                 fontWeight: 800,
                 px: "10px",
                 py: "4px",
-                borderRadius: "8px",
+                borderRadius: 'var(--r)',
               }}
             >
               <LockOutlined sx={{ fontSize: 14 }} />
@@ -125,7 +125,7 @@ export const CommentItem: React.FC<Props> = ({
                   all: "unset",
                   width: "28px",
                   height: "28px",
-                  borderRadius: "8px",
+                  borderRadius: 'var(--r)',
                   cursor: "pointer",
                   color: palette.iconBtnIdle,
                   display: "grid",
@@ -145,7 +145,7 @@ export const CommentItem: React.FC<Props> = ({
                   all: "unset",
                   width: "28px",
                   height: "28px",
-                  borderRadius: "8px",
+                  borderRadius: 'var(--r)',
                   cursor: "pointer",
                   color: palette.iconBtnIdle,
                   display: "grid",
@@ -167,7 +167,7 @@ export const CommentItem: React.FC<Props> = ({
             border: c.isInternal
               ? `1px solid ${palette.commentBorderInternal}`
               : `1px solid ${palette.commentBorderExternal}`,
-            borderRadius: "14px",
+            borderRadius: 'var(--r-lg)',
             background: c.isInternal
               ? palette.commentBgInternal
               : palette.commentBgExternal,

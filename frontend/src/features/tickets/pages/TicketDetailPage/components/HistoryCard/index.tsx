@@ -30,7 +30,7 @@ export const HistoryCard: React.FC<Props> = ({
     <Box
       sx={{
         border: `1px solid ${palette.panelBorder}`,
-        borderRadius: "20px",
+        borderRadius: 'var(--r-xl)',
         background: palette.panelBg,
         boxShadow: palette.panelShadow,
         p: "8px 6px 4px",
@@ -98,7 +98,7 @@ export const HistoryCard: React.FC<Props> = ({
                     width: "8px",
                     height: "8px",
                     mt: "8px",
-                    borderRadius: "999px",
+                    borderRadius: '50%',
                     background: event.tone.dot,
                     border: `2px solid ${palette.historyDotBorder}`,
                     boxShadow: `0 0 0 2px ${event.tone.ring}`,

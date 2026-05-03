@@ -103,7 +103,7 @@ export const TicketHeader: React.FC<Props> = ({
               color: palette.endpointFg,
               background: palette.endpointBg,
               border: `1px solid ${palette.endpointBorder}`,
-              borderRadius: "11px",
+              borderRadius: 'var(--r-md)',
               px: "11px",
               py: "5px",
               fontWeight: 600,

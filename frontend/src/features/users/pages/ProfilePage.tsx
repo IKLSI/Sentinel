@@ -23,7 +23,7 @@ const inp = {
   boxSizing: "border-box",
   background: "var(--s2)",
   border: "1px solid var(--border)",
-  borderRadius: "6px",
+  borderRadius: 'var(--r-sm)',
   padding: "6px 10px",
   fontSize: "12px",
   color: "var(--text)",
@@ -37,7 +37,7 @@ const inpRo = { ...inp, color: "var(--muted2)", cursor: "default" } as const;
 const CARD_SX = {
   background: "var(--s1)",
   border: "1px solid var(--border)",
-  borderRadius: "12px",
+  borderRadius: 'var(--r-md)',
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
@@ -277,7 +277,7 @@ export const ProfilePage: React.FC = () => {
                   all: "unset",
                   cursor: "pointer",
                   width: 80,
-                  borderRadius: "7px",
+                  borderRadius: 'var(--r-sm)',
                   overflow: "hidden",
                   border:
                     theme === mode
@@ -305,7 +305,7 @@ export const ProfilePage: React.FC = () => {
                     sx={{
                       height: 3,
                       width: "60%",
-                      borderRadius: 2,
+                      borderRadius: 'var(--r-xs)',
                       background: mode === "dark" ? "#263352" : "#dde3f2",
                     }}
                   />
@@ -313,7 +313,7 @@ export const ProfilePage: React.FC = () => {
                     sx={{
                       height: 3,
                       width: "80%",
-                      borderRadius: 2,
+                      borderRadius: 'var(--r-xs)',
                       background: mode === "dark" ? "#192036" : "#eaedfa",
                     }}
                   />
@@ -321,7 +321,7 @@ export const ProfilePage: React.FC = () => {
                     sx={{
                       height: 3,
                       width: "40%",
-                      borderRadius: 2,
+                      borderRadius: 'var(--r-xs)',
                       background:
                         mode === "dark"
                           ? "rgba(99,102,241,0.5)"

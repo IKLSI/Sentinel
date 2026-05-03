@@ -66,7 +66,7 @@ export const JournalCard: React.FC<Props> = ({
       sx={{
         background: "var(--s1)",
         border: "1px solid var(--border)",
-        borderRadius: "12px",
+        borderRadius: 'var(--r-md)',
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -409,7 +409,7 @@ export const JournalCard: React.FC<Props> = ({
                                       color: "var(--muted2)",
                                       px: "5px",
                                       py: "1px",
-                                      borderRadius: "4px",
+                                      borderRadius: 'var(--r-xs)',
                                       border: "1px solid var(--border2)",
                                       background: "var(--s3)",
                                     }}
@@ -426,7 +426,7 @@ export const JournalCard: React.FC<Props> = ({
                                       color: "var(--accent)",
                                       px: "5px",
                                       py: "1px",
-                                      borderRadius: "4px",
+                                      borderRadius: 'var(--r-xs)',
                                       border: "1px solid var(--accent-border)",
                                       background: "var(--accent-subtle)",
                                     }}

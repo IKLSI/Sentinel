@@ -15,7 +15,7 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes: _totalM
       sx={{
         background: "var(--s1)",
         border: "1px solid var(--border)",
-        borderRadius: "12px",
+        borderRadius: 'var(--r-md)',
         px: "16px",
         py: "14px",
         display: "flex",
@@ -42,7 +42,7 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes: _totalM
         sx={{
           display: "flex",
           height: "4px",
-          borderRadius: "4px",
+          borderRadius: 'var(--r-xs)',
           overflow: "hidden",
           gap: "2px",
         }}
@@ -78,7 +78,7 @@ export const ProjectStatsCard: React.FC<Props> = ({ stats, totalMinutes: _totalM
                 px: "6px",
                 py: "3px",
                 background: "var(--s2)",
-                borderRadius: "6px",
+                borderRadius: 'var(--r-sm)',
                 whiteSpace: "nowrap",
               }}
             >

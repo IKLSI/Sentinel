@@ -85,7 +85,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                     sx={{
                       width: 26,
                       height: 26,
-                      borderRadius: "999px",
+                      borderRadius: '50%',
                       background: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
                       color: accentColor,
                       display: "grid",

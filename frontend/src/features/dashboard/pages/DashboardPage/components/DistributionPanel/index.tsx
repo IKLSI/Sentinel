@@ -96,7 +96,7 @@ export const DistributionPanel: React.FC<Props> = ({
                     sx={{
                       width: 9,
                       height: 9,
-                      borderRadius: "999px",
+                      borderRadius: '50%',
                       bgcolor: color,
                       flexShrink: 0,
                     }}

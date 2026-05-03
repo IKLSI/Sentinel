@@ -67,7 +67,7 @@ export const DependenciesTab: React.FC<Props> = ({
             gap: "7px",
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: "7px",
+            borderRadius: 'var(--r-sm)',
             px: "9px",
             height: "28px",
             width: "calc(30% + 10px)",
@@ -220,7 +220,7 @@ export const DependenciesTab: React.FC<Props> = ({
                           background: "var(--s3)",
                           px: "7px",
                           py: "2px",
-                          borderRadius: "3px",
+                          borderRadius: 'var(--r-xs)',
                         }}
                       >
                         {d.ecosystem}

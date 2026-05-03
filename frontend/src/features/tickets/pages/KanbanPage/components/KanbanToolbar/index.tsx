@@ -39,7 +39,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           gap: "8px",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: "9px",
+          borderRadius: 'var(--r)',
           px: "10px",
           height: "32px",
           transition: "border-color 0.15s, box-shadow 0.15s",
@@ -79,7 +79,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           gap: "6px",
           height: "32px",
           px: "12px",
-          borderRadius: "9px",
+          borderRadius: 'var(--r)',
           border: `1px solid ${activeFilterCount > 0 ? "var(--accent-border)" : "var(--border)"}`,
           background:
             activeFilterCount > 0 ? "var(--accent-subtle)" : "var(--s1)",
