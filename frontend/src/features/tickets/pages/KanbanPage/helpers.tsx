@@ -127,20 +127,42 @@ export function projectInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-const avatarPalette = [
-  "var(--purple)",
-  "var(--green)",
-  "var(--red)",
-  "var(--orange)",
-  "var(--cyan)",
-  "var(--accent2)",
-  "var(--accent)",
-  "var(--green)",
-  "var(--purple)",
-  "var(--yellow)",
+const avatarPalette: { bg: string; text: string }[] = [
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--purple) 18%, white), color-mix(in srgb, var(--purple) 32%, white))",
+    text: "color-mix(in srgb, var(--purple) 75%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--green) 18%, white), color-mix(in srgb, var(--green) 32%, white))",
+    text: "color-mix(in srgb, var(--green) 75%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--red) 16%, white), color-mix(in srgb, var(--red) 28%, white))",
+    text: "color-mix(in srgb, var(--red) 70%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--orange) 18%, white), color-mix(in srgb, var(--orange) 32%, white))",
+    text: "color-mix(in srgb, var(--orange) 75%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--cyan) 18%, white), color-mix(in srgb, var(--cyan) 32%, white))",
+    text: "color-mix(in srgb, var(--cyan) 75%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, white), color-mix(in srgb, var(--accent) 32%, white))",
+    text: "color-mix(in srgb, var(--accent) 75%, black)",
+  },
+  {
+    bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
+    text: "#8b1c38",
+  },
+  {
+    bg: "linear-gradient(135deg, color-mix(in srgb, var(--yellow) 22%, white), color-mix(in srgb, var(--yellow) 38%, white))",
+    text: "color-mix(in srgb, var(--yellow) 75%, black)",
+  },
 ];
 
-export function getAvatarColor(name: string): string {
+export function getAvatarColor(name: string): { bg: string; text: string } {
   let hash = 0;
   for (let i = 0; i < name.length; i++)
     hash = (hash * 31 + name.charCodeAt(i)) | 0;

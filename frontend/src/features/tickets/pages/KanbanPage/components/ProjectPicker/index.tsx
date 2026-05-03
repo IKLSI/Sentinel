@@ -8,8 +8,6 @@ import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
   ProjectInfo,
-  getAvatarColor,
-  projectInitials,
   toggleItem,
 } from "../../helpers";
 
@@ -216,8 +214,6 @@ export const ProjectPicker: React.FC<Props> = ({
         ) : (
           visible.map((project) => {
             const isSelected = pending.includes(project.name);
-            const color = getAvatarColor(project.name);
-            const initials = projectInitials(project.name);
             return (
               <Box
                 key={project.name}
@@ -244,26 +240,6 @@ export const ProjectPicker: React.FC<Props> = ({
                   transition: "background 0.1s",
                 }}
               >
-                <Box
-                  sx={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: 'var(--r)',
-                    background: color,
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "var(--s1)",
-                    fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {initials}
-                </Box>
-
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box
                     sx={{
@@ -347,10 +323,12 @@ export const ProjectPicker: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
+            disableElevation
             sx={{
               textTransform: "none",
               background:
                 "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 background:
@@ -366,10 +344,12 @@ export const ProjectPicker: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
+            disableElevation
             sx={{
               textTransform: "none",
               background:
                 "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 background:
