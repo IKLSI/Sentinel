@@ -110,13 +110,6 @@ export const FormField: React.FC<{
   </Box>
 );
 
-const getHoverIconColor = (hoverBg?: string) => {
-  if (!hoverBg) return "var(--text)";
-
-  const match = hoverBg.match(/var\(--[a-z0-9-]+\)|#[0-9a-fA-F]{3,8}/);
-  return match?.[0] ?? "var(--text)";
-};
-
 export const IconNavBtn: React.FC<{
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
@@ -140,19 +133,28 @@ export const IconNavBtn: React.FC<{
         disabled={disabled}
         sx={{
           background: "transparent",
-          border: "none",
-          borderRadius: 'var(--r-sm)',
-          width: "26px",
-          height: "26px",
+          border: "1.5px solid transparent",
+          borderRadius: "var(--r-sm)",
+          width: "28px",
+          height: "28px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: disabled ? "not-allowed" : "pointer",
           color: disabled ? "var(--border2)" : "var(--muted2)",
           fontFamily: "var(--font-ui)",
-          transition: "color 0.12s",
+          transition: "background 0.12s ease, border-color 0.12s ease, color 0.12s ease",
           ...(!disabled
-            ? { "&:hover": { color: hoverColor ?? getHoverIconColor(hoverBg) } }
+            ? {
+                "&:hover": {
+                  background: "var(--accent-subtle)",
+                  borderColor: "var(--accent-border)",
+                  color: "var(--accent)",
+                },
+                "&:active": {
+                  background: "color-mix(in srgb, var(--accent) 18%, transparent)",
+                },
+              }
             : {}),
         }}
       >
