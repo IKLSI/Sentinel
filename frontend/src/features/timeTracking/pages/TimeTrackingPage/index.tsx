@@ -364,7 +364,6 @@ export const TimeTrackingPage: React.FC = () => {
           isAdmin={isAdmin}
           currentUserId={user?.id}
           canFilterByUser={isAdmin}
-          activeUserFilter={selectedJournalUserId !== "all"}
           onOpenUserFilter={() => setUserFilterOpen(true)}
           onCreate={() => openCreate()}
           onExport={handleExport}
