@@ -117,7 +117,7 @@ export const IconNavBtn: React.FC<{
   hoverBg?: string;
   hoverColor?: string;
   children: React.ReactNode;
-}> = ({ onClick, disabled, title, hoverBg, hoverColor, children }) => (
+}> = ({ onClick, disabled, title, _hoverBg, _hoverColor, children }) => (
   <Tooltip
     title={title ?? ""}
     arrow
