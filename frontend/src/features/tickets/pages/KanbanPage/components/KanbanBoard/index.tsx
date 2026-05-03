@@ -244,32 +244,60 @@ export const KanbanBoard: React.FC<Props> = ({
               flexShrink: 0,
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              border: "1px dashed var(--border2)",
+              border: "2px dashed var(--border2)",
               borderRadius: "var(--r)",
               cursor: "pointer",
               color: "var(--muted2)",
-              fontSize: "12px",
-              fontWeight: 600,
-              transition: "border-color 0.15s, color 0.15s, background 0.15s",
+              transition: "border-color 0.2s, color 0.2s, background 0.2s",
               "&:hover": {
                 borderColor: "var(--accent)",
                 color: "var(--accent)",
-                background: "var(--s1)",
+                background: "color-mix(in srgb, var(--accent) 5%, transparent)",
+                "& .add-col-icon-wrap": {
+                  transform: "rotate(90deg)",
+                },
               },
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            Ajouter une colonne
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "12px",
+              }}
+            >
+              <Box
+                className="add-col-icon-wrap"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1)",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </Box>
+              <Box
+                className="add-col-label"
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  letterSpacing: "0.03em",
+                }}
+              >
+                Ajouter une colonne
+              </Box>
+            </Box>
           </Box>
         </div>
       </DragDropContext>
