@@ -200,7 +200,7 @@ export const Sidebar: React.FC = () => {
         sx={{
           width: collapsed ? "56px" : "220px",
           flexShrink: 0,
-          height: isMobile ? "100vh" : "calc(100vh - 24px)",
+          height: isMobile ? "100vh" : "calc(100vh - 40px)",
           background: "var(--s1)",
           border: "1px solid var(--border)",
           borderRadius: isMobile ? 0 : "14px",
@@ -211,7 +211,7 @@ export const Sidebar: React.FC = () => {
           flexDirection: "column",
           position: "fixed",
           left: isMobile ? 0 : "12px",
-          top: isMobile ? 0 : "12px",
+          top: isMobile ? 0 : "20px",
           zIndex: isMobile ? 200 : 100,
           overflowY: "auto",
           overflowX: "hidden",

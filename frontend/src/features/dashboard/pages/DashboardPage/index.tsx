@@ -102,14 +102,14 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: "16px 20px", height: "100vh", overflow: "hidden" }}>
+    <Box sx={{ p: "20px", height: "100vh", overflow: "hidden" }}>
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
           gridTemplateRows: "auto 1.1fr 1fr",
           gap: "14px",
-          height: "calc(100vh - 32px)",
+          height: "calc(100vh - 40px)",
           minHeight: "720px",
         }}
       >

@@ -37,7 +37,7 @@ export const SettingsPage: React.FC = () => {
           overflow: "hidden",
         }}
       >
-        <Box sx={{ px: "28px", pt: "28px", pb: 0, flexShrink: 0 }}>
+        <Box sx={{ px: "28px", pt: "20px", pb: 0, flexShrink: 0 }}>
           <Box
             sx={{
               display: "flex",
@@ -103,7 +103,7 @@ export const SettingsPage: React.FC = () => {
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            p: "20px 28px 20px",
+            p: "20px 28px",
           }}
         >
           <Box sx={{ display: activeTab === "members" ? "contents" : "none" }}>

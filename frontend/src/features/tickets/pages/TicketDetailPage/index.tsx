@@ -235,7 +235,7 @@ export const TicketDetailPage: React.FC = () => {
       <Box
         className="page-enter"
         sx={{
-          p: { xs: "12px 8px 10px", md: "20px 28px 16px" },
+          p: { xs: "20px 8px", md: "20px 28px" },
           minHeight: "100vh",
           display: "flex",
           gap: "14px",

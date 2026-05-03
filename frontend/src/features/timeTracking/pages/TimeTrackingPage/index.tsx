@@ -325,7 +325,7 @@ export const TimeTrackingPage: React.FC = () => {
       <Box
         className="page-enter"
         sx={{
-          p: "36px 24px 20px",
+          p: "20px 24px",
           display: "flex",
           flexDirection: "column",
           gap: "16px",

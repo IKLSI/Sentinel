@@ -134,7 +134,7 @@ export const ProjectDetailPage: React.FC = () => {
       <Box
         className="page-enter"
         sx={{
-          p: "36px 28px 24px",
+          p: "20px 28px",
           height: "100vh",
           display: "flex",
           flexDirection: "column",

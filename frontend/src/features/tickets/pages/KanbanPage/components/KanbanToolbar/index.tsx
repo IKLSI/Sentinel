@@ -23,7 +23,7 @@ export const KanbanToolbar: React.FC<Props> = ({
     <Box
       sx={{
         px: "28px",
-        pt: "36px",
+        pt: "20px",
         pb: "14px",
         flexShrink: 0,
         display: "flex",

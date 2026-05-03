@@ -236,7 +236,7 @@ export const ProjectsPage: React.FC = () => {
       <Box
         className="page-enter"
         sx={{
-          p: "36px 28px 24px",
+          p: "20px 28px",
           height: "100vh",
           maxHeight: "100vh",
           boxSizing: "border-box",
