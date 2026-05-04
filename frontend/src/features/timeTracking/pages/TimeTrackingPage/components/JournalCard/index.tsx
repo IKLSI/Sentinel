@@ -356,7 +356,7 @@ export const JournalCard: React.FC<Props> = ({
                             <Box
                               sx={{
                                 width: "1px",
-                                height: "28px",
+                                height: "18px",
                                 background: "var(--border)",
                                 flexShrink: 0,
                                 ml: "28px",
@@ -370,7 +370,7 @@ export const JournalCard: React.FC<Props> = ({
                             sx={{
                               flex: 1,
                               minWidth: 0,
-                              py: "11px",
+                              py: "16px",
                               pl: isAdmin ? 0 : "16px",
                               pr: "8px",
                             }}
