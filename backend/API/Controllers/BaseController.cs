@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 
 namespace Sentinel.API.Controllers;
@@ -16,4 +17,6 @@ public abstract class BaseController : ControllerBase
         string? claim = User.FindFirst("organizationId")?.Value;
         return Guid.TryParse(claim, out Guid id) ? id : null;
     }
+
+    protected string? GetCurrentJti() => User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
 }

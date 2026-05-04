@@ -18,11 +18,13 @@ public class UsersController : BaseController
 {
     private readonly SentinelContext _context;
     private readonly IBackgroundJobClient _jobs;
+    private readonly IAuditLogService _auditLog;
 
-    public UsersController(SentinelContext context, IBackgroundJobClient jobs)
+    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog)
     {
         _context = context;
         _jobs = jobs;
+        _auditLog = auditLog;
     }
 
     [HttpGet]
@@ -100,6 +102,14 @@ public class UsersController : BaseController
 
         _jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id));
 
+        await _auditLog.LogAsync(
+            AuditAction.UserInvited,
+            entityType: "User",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: invitation.Id,
+            jti: GetCurrentJti());
+
         return Accepted(new { message = "Invitation envoyée" });
     }
 
@@ -136,6 +146,13 @@ public class UsersController : BaseController
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.InvitationAccepted,
+            entityType: "User",
+            organizationId: invitation.OrganizationId,
+            entityId: user.Id,
+            jti: GetCurrentJti());
 
         return Ok(new { message = "Compte créé avec succès" });
     }
@@ -184,6 +201,14 @@ public class UsersController : BaseController
 
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.UserUpdated,
+            entityType: "User",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: id,
+            jti: GetCurrentJti());
+
         return Ok(MapToDto(user));
     }
 
@@ -224,6 +249,15 @@ public class UsersController : BaseController
         if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
 
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.ProfileUpdated,
+            entityType: "User",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: currentUserId.Value,
+            jti: GetCurrentJti());
+
         return Ok(MapToDto(user));
     }
 

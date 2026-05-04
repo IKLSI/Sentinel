@@ -37,13 +37,15 @@ public class TechHealthController : BaseController
     private readonly TechHealthService _techHealthService;
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly ExportService _exportService;
+    private readonly IAuditLogService _auditLog;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog)
     {
         _context = context;
         _techHealthService = techHealthService;
         _backgroundJobs = backgroundJobs;
         _exportService = exportService;
+        _auditLog = auditLog;
     }
 
     [HttpGet("projects/export/excel")]
@@ -135,6 +137,14 @@ public class TechHealthController : BaseController
         await _context.TechProjects.AddAsync(project);
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.ProjectCreated,
+            entityType: "TechProject",
+            organizationId: organizationId.Value,
+            userId: GetCurrentUserId(),
+            entityId: project.Id,
+            jti: GetCurrentJti());
+
         TechProjectDto? created = await _techHealthService.GetProjectWithDetailsAsync(project.Id);
         return CreatedAtAction(nameof(GetProject), new { id = project.Id }, created);
     }
@@ -166,6 +176,14 @@ public class TechHealthController : BaseController
 
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.ProjectUpdated,
+            entityType: "TechProject",
+            organizationId: organizationId.Value,
+            userId: GetCurrentUserId(),
+            entityId: id,
+            jti: GetCurrentJti());
+
         TechProjectDto? updated = await _techHealthService.GetProjectWithDetailsAsync(id);
         return Ok(updated);
     }
@@ -186,6 +204,14 @@ public class TechHealthController : BaseController
         _context.TechProjects.Remove(project);
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.ProjectDeleted,
+            entityType: "TechProject",
+            organizationId: organizationId.Value,
+            userId: GetCurrentUserId(),
+            entityId: id,
+            jti: GetCurrentJti());
+
         return NoContent();
     }
 
@@ -203,6 +229,14 @@ public class TechHealthController : BaseController
             return NotFound(new { message = "Projet introuvable" });
 
         _backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectAsync(id));
+
+        await _auditLog.LogAsync(
+            AuditAction.ScanTriggered,
+            entityType: "TechProject",
+            organizationId: organizationId.Value,
+            userId: GetCurrentUserId(),
+            entityId: id,
+            jti: GetCurrentJti());
 
         return Accepted();
     }

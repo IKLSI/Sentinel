@@ -17,11 +17,13 @@ public class AuthController : BaseController
 {
     private readonly AuthService _authService;
     private readonly ITokenBlacklistService _blacklist;
+    private readonly IAuditLogService _auditLog;
 
-    public AuthController(AuthService authService, ITokenBlacklistService blacklist)
+    public AuthController(AuthService authService, ITokenBlacklistService blacklist, IAuditLogService auditLog)
     {
         _authService = authService;
         _blacklist = blacklist;
+        _auditLog = auditLog;
     }
 
     [HttpPost("login")]
@@ -34,6 +36,13 @@ public class AuthController : BaseController
         {
             return Unauthorized(new { message = "Email ou mot de passe incorrect" });
         }
+
+        await _auditLog.LogAsync(
+            AuditAction.Login,
+            entityType: "User",
+            organizationId: result.User.OrganizationId,
+            userId: result.User.Id,
+            entityId: result.User.Id);
 
         return Ok(result);
     }
@@ -48,6 +57,13 @@ public class AuthController : BaseController
         {
             return Unauthorized(new { message = "Token de rafraîchissement invalide ou expiré" });
         }
+
+        await _auditLog.LogAsync(
+            AuditAction.TokenRefreshed,
+            entityType: "User",
+            organizationId: result.User.OrganizationId,
+            userId: result.User.Id,
+            entityId: result.User.Id);
 
         return Ok(result);
     }
@@ -73,6 +89,14 @@ public class AuthController : BaseController
 
         await _authService.LogoutAsync(userId.Value);
 
+        await _auditLog.LogAsync(
+            AuditAction.Logout,
+            entityType: "User",
+            organizationId: GetOrganizationId(),
+            userId: userId.Value,
+            entityId: userId.Value,
+            jti: GetCurrentJti());
+
         return NoContent();
     }
 
@@ -85,6 +109,10 @@ public class AuthController : BaseController
         if (resetToken != null)
         {
             BackgroundJob.Enqueue<SendPasswordResetEmailJob>(j => j.ExecuteAsync(resetToken.Id));
+
+            await _auditLog.LogAsync(
+                AuditAction.PasswordResetRequested,
+                entityType: "User");
         }
 
         return Ok(new { message = "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation." });
@@ -100,6 +128,10 @@ public class AuthController : BaseController
         {
             return BadRequest(new { message = "Le lien de réinitialisation est invalide ou expiré." });
         }
+
+        await _auditLog.LogAsync(
+            AuditAction.PasswordReset,
+            entityType: "User");
 
         return Ok(new { message = "Mot de passe réinitialisé avec succès." });
     }

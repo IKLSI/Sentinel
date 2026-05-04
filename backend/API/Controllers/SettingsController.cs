@@ -16,12 +16,14 @@ public class SettingsController : BaseController
     private readonly SentinelContext _context;
     private readonly RepositoryHostClient _repositoryHostClient;
     private readonly TokenProtector _tokenProtector;
+    private readonly IAuditLogService _auditLog;
 
-    public SettingsController(SentinelContext context, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector)
+    public SettingsController(SentinelContext context, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, IAuditLogService auditLog)
     {
         _context = context;
         _repositoryHostClient = repositoryHostClient;
         _tokenProtector = tokenProtector;
+        _auditLog = auditLog;
     }
 
     [HttpGet("integrations")]
@@ -57,6 +59,14 @@ public class SettingsController : BaseController
         org.GithubToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.GithubIntegrationSaved,
+            entityType: "Organization",
+            organizationId: orgId.Value,
+            userId: GetCurrentUserId(),
+            entityId: orgId.Value,
+            jti: GetCurrentJti());
 
         List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(dto.Token, "github");
 
@@ -104,6 +114,14 @@ public class SettingsController : BaseController
         org.GitlabToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.GitlabIntegrationSaved,
+            entityType: "Organization",
+            organizationId: orgId.Value,
+            userId: GetCurrentUserId(),
+            entityId: orgId.Value,
+            jti: GetCurrentJti());
 
         List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(dto.Token, "gitlab");
 
@@ -172,6 +190,14 @@ public class SettingsController : BaseController
         org.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.OrganizationUpdated,
+            entityType: "Organization",
+            organizationId: orgId.Value,
+            userId: GetCurrentUserId(),
+            entityId: orgId.Value,
+            jti: GetCurrentJti());
 
         return Ok(new OrganizationSettingsDto
         {

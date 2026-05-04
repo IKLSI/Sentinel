@@ -14,11 +14,13 @@ public class TimeEntriesController : BaseController
 {
     private readonly TimeTrackingService _timeTrackingService;
     private readonly ExportService _exportService;
+    private readonly IAuditLogService _auditLog;
 
-    public TimeEntriesController(TimeTrackingService timeTrackingService, ExportService exportService)
+    public TimeEntriesController(TimeTrackingService timeTrackingService, ExportService exportService, IAuditLogService auditLog)
     {
         _timeTrackingService = timeTrackingService;
         _exportService = exportService;
+        _auditLog = auditLog;
     }
 
     [HttpGet]
@@ -65,6 +67,14 @@ public class TimeEntriesController : BaseController
         TimeEntry entry = await _timeTrackingService.CreateManualEntryAsync(dto, currentUserId.Value, organizationId.Value);
         TimeEntryDto entryDto = TimeTrackingService.MapToDto(entry);
 
+        await _auditLog.LogAsync(
+            AuditAction.TimeEntryCreated,
+            entityType: "TimeEntry",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: entry.Id,
+            jti: GetCurrentJti());
+
         return CreatedAtAction(nameof(GetEntries), entryDto);
     }
 
@@ -78,6 +88,14 @@ public class TimeEntriesController : BaseController
         TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value, organizationId.Value, IsAdmin());
         if (entry == null) return NotFound(new { message = "Saisie introuvable" });
 
+        await _auditLog.LogAsync(
+            AuditAction.TimeEntryUpdated,
+            entityType: "TimeEntry",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: id,
+            jti: GetCurrentJti());
+
         return Ok(TimeTrackingService.MapToDto(entry));
     }
 
@@ -90,6 +108,14 @@ public class TimeEntriesController : BaseController
 
         bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value, organizationId.Value, IsAdmin());
         if (!deleted) return NotFound(new { message = "Saisie introuvable" });
+
+        await _auditLog.LogAsync(
+            AuditAction.TimeEntryDeleted,
+            entityType: "TimeEntry",
+            organizationId: organizationId.Value,
+            userId: currentUserId.Value,
+            entityId: id,
+            jti: GetCurrentJti());
 
         return NoContent();
     }

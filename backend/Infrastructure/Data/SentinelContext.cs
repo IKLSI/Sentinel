@@ -20,6 +20,7 @@ public class SentinelContext : DbContext
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,7 @@ public class SentinelContext : DbContext
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
+        ConfigureAuditLog(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -313,6 +315,24 @@ public class SentinelContext : DbContext
                 .WithMany(p => p.Runtimes)
                 .HasForeignKey(e => e.TechProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureAuditLog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).HasConversion<string>().IsRequired();
+            entity.Property(e => e.EntityType).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Jti).HasMaxLength(36);
+            entity.HasIndex(e => e.Jti);
+
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
         });
     }
 }

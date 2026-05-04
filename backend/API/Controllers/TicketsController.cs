@@ -17,12 +17,14 @@ public class TicketsController : BaseController
     private readonly SentinelContext _context;
     private readonly TicketService _ticketService;
     private readonly ExportService _exportService;
+    private readonly IAuditLogService _auditLog;
 
-    public TicketsController(SentinelContext context, TicketService ticketService, ExportService exportService)
+    public TicketsController(SentinelContext context, TicketService ticketService, ExportService exportService, IAuditLogService auditLog)
     {
         _context = context;
         _ticketService = ticketService;
         _exportService = exportService;
+        _auditLog = auditLog;
     }
 
     [HttpGet]
@@ -119,6 +121,14 @@ public class TicketsController : BaseController
         Ticket ticket = await _ticketService.CreateTicketAsync(dto, userId.Value, organizationId.Value);
         TicketDto? ticketDto = await _ticketService.GetTicketWithDetailsAsync(ticket.Id);
 
+        await _auditLog.LogAsync(
+            AuditAction.TicketCreated,
+            entityType: "Ticket",
+            organizationId: organizationId.Value,
+            userId: userId.Value,
+            entityId: ticket.Id,
+            jti: GetCurrentJti());
+
         return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticketDto);
     }
 
@@ -155,6 +165,14 @@ public class TicketsController : BaseController
         await _ticketService.UpdateTicketAsync(id, dto, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
 
+        await _auditLog.LogAsync(
+            AuditAction.TicketUpdated,
+            entityType: "Ticket",
+            organizationId: organizationId,
+            userId: userId.Value,
+            entityId: id,
+            jti: GetCurrentJti());
+
         return Ok(updatedDto);
     }
 
@@ -170,6 +188,14 @@ public class TicketsController : BaseController
 
         _context.Tickets.Remove(ticket);
         await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.TicketDeleted,
+            entityType: "Ticket",
+            organizationId: organizationId,
+            userId: GetCurrentUserId(),
+            entityId: id,
+            jti: GetCurrentJti());
 
         return NoContent();
     }
@@ -192,6 +218,14 @@ public class TicketsController : BaseController
         TicketComment comment = await _ticketService.AddCommentAsync(id, dto.Content, userId.Value, dto.IsInternal);
 
         User? user = await _context.Users.FindAsync(userId.Value);
+
+        await _auditLog.LogAsync(
+            AuditAction.CommentAdded,
+            entityType: "TicketComment",
+            organizationId: organizationId,
+            userId: userId.Value,
+            entityId: comment.Id,
+            jti: GetCurrentJti());
 
         return CreatedAtAction(nameof(GetTicket), new { id }, new TicketCommentDto
         {
@@ -228,6 +262,14 @@ public class TicketsController : BaseController
         comment.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.CommentUpdated,
+            entityType: "TicketComment",
+            organizationId: GetOrganizationId(),
+            userId: userId.Value,
+            entityId: commentId,
+            jti: GetCurrentJti());
+
         return Ok(new TicketCommentDto
         {
             Id = comment.Id,
@@ -258,6 +300,14 @@ public class TicketsController : BaseController
         _context.TicketComments.Remove(comment);
         await _context.SaveChangesAsync();
 
+        await _auditLog.LogAsync(
+            AuditAction.CommentDeleted,
+            entityType: "TicketComment",
+            organizationId: GetOrganizationId(),
+            userId: userId.Value,
+            entityId: commentId,
+            jti: GetCurrentJti());
+
         return NoContent();
     }
 
@@ -276,6 +326,14 @@ public class TicketsController : BaseController
         Ticket? updated = await _ticketService.ChangeStatusAsync(id, dto.StatusId, userId.Value);
         if (updated == null)
             return BadRequest(new { message = "Statut invalide" });
+
+        await _auditLog.LogAsync(
+            AuditAction.TicketStatusChanged,
+            entityType: "Ticket",
+            organizationId: organizationId,
+            userId: userId.Value,
+            entityId: id,
+            jti: GetCurrentJti());
 
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
         return Ok(updatedDto);
