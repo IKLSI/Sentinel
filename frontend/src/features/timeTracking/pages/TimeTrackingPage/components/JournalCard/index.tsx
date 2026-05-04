@@ -112,7 +112,7 @@ export const JournalCard: React.FC<Props> = ({
           <IconNavBtn
             onClick={onCreate}
             title={t("time_tracking.add_entry_title")}
-            hoverBg="var(--accent)"
+            hoverColor="#1D4ED8"
           >
             <AddOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
@@ -120,7 +120,7 @@ export const JournalCard: React.FC<Props> = ({
             onClick={onExport}
             disabled={exporting}
             title={t("time_tracking.export")}
-            hoverBg="#7C6FCD"
+            hoverColor="#1D4ED8"
           >
             {exporting ? (
               <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
@@ -502,34 +502,36 @@ export const JournalCard: React.FC<Props> = ({
         </Box>
       )}
 
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          px: "16px",
-          py: "8px",
-          borderTop: "1px solid var(--border)",
-          background: "var(--s2)",
-          flexShrink: 0,
-          gap: "16px",
-        }}
-      >
-        {contributors > 0 && (
-          <Box
-            sx={{
-              fontSize: "11px",
-              color: "var(--muted)",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.04em",
-            }}
-          >
-            {contributors}{" "}
-            {contributors > 1
-              ? t("time_tracking.member_plural")
-              : t("time_tracking.member_singular")}
-          </Box>
-        )}
-      </Box>
+      {!loading && weekEntries.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            px: "16px",
+            py: "8px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--s2)",
+            flexShrink: 0,
+            gap: "16px",
+          }}
+        >
+          {contributors > 0 && (
+            <Box
+              sx={{
+                fontSize: "11px",
+                color: "var(--muted)",
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {contributors}{" "}
+              {contributors > 1
+                ? t("time_tracking.member_plural")
+                : t("time_tracking.member_singular")}
+            </Box>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

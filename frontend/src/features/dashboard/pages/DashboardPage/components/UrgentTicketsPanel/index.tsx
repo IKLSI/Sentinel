@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
@@ -226,21 +227,28 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
                   </span>
                 </Box>
               </Box>
-              <Box
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: av.bg,
-                  color: av.text,
-                  fontWeight: 700,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: "10px",
-                }}
+              <Tooltip
+                title={ticket.assignedToName ?? ""}
+                placement="top"
+                arrow
+                disableHoverListener={!ticket.assignedToName}
               >
-                {ticket.assignedToName ? initials(ticket.assignedToName) : "?"}
-              </Box>
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: av.bg,
+                    color: av.text,
+                    fontWeight: 700,
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: "10px",
+                  }}
+                >
+                  {ticket.assignedToName ? initials(ticket.assignedToName) : "?"}
+                </Box>
+              </Tooltip>
             </Box>
           );
         })}

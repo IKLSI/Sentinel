@@ -112,7 +112,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
             <IconNavBtn
               onClick={onResetToToday}
               title={t("time_tracking.btn_today")}
-              hoverBg="linear-gradient(135deg, var(--cyan) 0%, color-mix(in srgb, var(--cyan) 92%, white) 100%)"
+              hoverColor="#1D4ED8"
             >
               <TodayOutlined sx={{ fontSize: 13 }} />
             </IconNavBtn>
@@ -120,7 +120,7 @@ export const WeekCalendarCard: React.FC<Props> = ({
           <IconNavBtn
             onClick={onPrev}
             title={t("time_tracking.btn_prev_week")}
-            hoverBg="linear-gradient(135deg, #4A90D9 0%, color-mix(in srgb, #4A90D9 92%, white) 100%)"
+            hoverColor="#1D4ED8"
           >
             <ChevronLeftOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
@@ -128,14 +128,14 @@ export const WeekCalendarCard: React.FC<Props> = ({
             onClick={onNext}
             disabled={isCurrentWeek}
             title={t("time_tracking.btn_next_week")}
-            hoverBg="linear-gradient(135deg, #4A90D9 0%, color-mix(in srgb, #4A90D9 92%, white) 100%)"
+            hoverColor="#1D4ED8"
           >
             <ChevronRightOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
           <IconNavBtn
             onClick={(e) => setCalendarAnchor(e.currentTarget)}
             title={t("time_tracking.btn_pick_week")}
-            hoverBg="linear-gradient(135deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 92%, white) 100%)"
+            hoverColor="#1D4ED8"
           >
             <CalendarTodayOutlined
               sx={{
