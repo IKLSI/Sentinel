@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
+import { useT } from "@/i18n/I18nContext";
 import { KanbanColumnDef } from "../../helpers";
 
 interface Props {
@@ -19,6 +20,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
   loading = false,
   onDelete,
 }) => {
+  const t = useT();
   const [hovered, setHovered] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -139,7 +141,7 @@ export const KanbanColumnHeader: React.FC<Props> = ({
               </Box>
             </Box>
             {onDelete && !colDef.isDefault && (
-              <Tooltip title="Supprimer la colonne" placement="top" arrow>
+              <Tooltip title={t("tickets.kanban.column.delete_tooltip")} placement="top" arrow>
                 <IconButton
                   size="small"
                   onClick={() => setDeleteOpen(true)}
@@ -171,13 +173,9 @@ export const KanbanColumnHeader: React.FC<Props> = ({
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         loading={deleting}
-        title="Supprimer la colonne"
+        title={t("tickets.kanban.column.delete_title")}
       >
-        Supprimer la colonne{" "}
-        <Box component="span" sx={{ fontWeight: 700 }}>
-          {colDef.name}
-        </Box>{" "}
-        ? Les tickets qu'elle contient ne seront pas supprimés.
+        {t("tickets.kanban.column.delete_prefix")}<strong>{colDef.name}</strong>{t("tickets.kanban.column.delete_suffix")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

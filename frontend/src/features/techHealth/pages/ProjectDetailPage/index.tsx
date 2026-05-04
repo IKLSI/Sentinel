@@ -217,9 +217,7 @@ export const ProjectDetailPage: React.FC = () => {
         loading={deleting}
         title={t("tech_health.delete.title")}
       >
-        {t("tech_health.delete.message_prefix")}
-        <strong>{project.name}</strong>
-        {t("tech_health.delete.message_suffix")}
+        {t("tech_health.delete.prefix")}<strong>{project.name}</strong>{t("tech_health.delete.suffix")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

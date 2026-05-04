@@ -21,7 +21,6 @@ import { Ticket } from "@/types";
 import {
   FormState,
   emptyForm,
-  formatDuration,
   parseDateLocal,
 } from "./helpers";
 import { WeekCalendarCard } from "./components/WeekCalendarCard";
@@ -409,14 +408,13 @@ export const TimeTrackingPage: React.FC = () => {
         loading={deleting}
         title={t("time_tracking.delete_modal_title")}
       >
-        {deleteTarget?.title && (
-          <>
-            <strong>"{deleteTarget.title}"</strong> —{" "}
-          </>
-        )}
-        {deleteTarget ? formatDuration(deleteTarget.durationMinutes) : ""}
-        <br />
-        {t("time_tracking.delete_modal_warning")}
+        {t("time_tracking.delete_modal_warning")}{" "}
+        <strong>
+          {deleteTarget?.date
+            ? format(new Date(deleteTarget.date), "dd/MM/yyyy")
+            : ""}
+        </strong>{" "}
+        ?<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

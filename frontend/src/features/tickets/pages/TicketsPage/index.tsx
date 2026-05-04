@@ -366,9 +366,7 @@ export const TicketsPage: React.FC = () => {
         loading={deleting}
         title={t("tickets.list.delete_title")}
       >
-        {t("tickets.list.delete_message_prefix")}{" "}
-        <strong>{deleteTarget?.reference}</strong>{" "}
-        {t("tickets.list.delete_message_suffix")}
+        {t("tickets.list.delete_prefix")}<strong>{deleteTarget?.reference}</strong>{t("tickets.list.delete_suffix")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

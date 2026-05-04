@@ -5,6 +5,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import { useT } from "../i18n/I18nContext";
 
 interface DeleteModalProps {
@@ -37,6 +38,8 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
             bgcolor: "var(--s1)",
             border: "1px solid",
             borderColor: "divider",
+            borderRadius: "10px",
+            overflow: "hidden",
           },
         },
       }}
@@ -46,24 +49,61 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           fontSize: "14px",
           fontWeight: 700,
           letterSpacing: "-0.02em",
-          p: "16px 24px",
+          p: "16px 20px",
           borderBottom: "1px solid var(--border)",
           background:
             "linear-gradient(135deg, var(--red-subtle) 0%, var(--s2) 60%)",
         }}
       >
-        {title}
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 28,
+              height: 28,
+              borderRadius: "8px",
+              background: "color-mix(in srgb, var(--red) 12%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--red) 22%, transparent)",
+              flexShrink: 0,
+            }}
+          >
+            <DeleteOutlined sx={{ fontSize: 14, color: "var(--red)" }} />
+          </Box>
+          {title}
+        </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: "20px !important" }}>
-        <Box sx={{ fontSize: "14px", color: "var(--text)", lineHeight: 1.6 }}>
+      <DialogContent sx={{ pt: "18px !important", pb: "18px" }}>
+        <Box
+          sx={{
+            fontSize: "13px",
+            color: "var(--text-secondary)",
+            lineHeight: 1.65,
+            "& strong": {
+              fontWeight: 600,
+              color: "var(--red)",
+              background: "color-mix(in srgb, var(--red) 8%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
+              borderRadius: "4px",
+              padding: "1px 6px",
+              fontSize: "12px",
+              fontFamily: "var(--font-mono)",
+            },
+            "& b": {
+              fontWeight: 700,
+              color: "var(--text)",
+            },
+          }}
+        >
           {children}
         </Box>
       </DialogContent>
 
       <DialogActions
         sx={{
-          p: "14px 20px",
+          p: "12px 20px",
           borderTop: "1px solid var(--border)",
           background: "var(--s2)",
           gap: "8px",
