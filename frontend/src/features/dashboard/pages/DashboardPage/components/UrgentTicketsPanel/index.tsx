@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
+import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
   DashPalette,
@@ -122,7 +123,19 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
           ...buildScrollSx(palette),
         }}
       >
-        {Array.from({ length: 8 }).map((_, i) => {
+        {urgent.length === 0 ? (
+          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+            <Box className="empty-state-icon">
+              <ConfirmationNumberOutlined sx={{ fontSize: 32 }} />
+            </Box>
+            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+              {t("dashboard.urgent.empty_title")}
+            </Box>
+            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+              {t("dashboard.urgent.empty_subtitle")}
+            </Box>
+          </Box>
+        ) : Array.from({ length: 8 }).map((_, i) => {
           const ticket = urgent[i];
           if (!ticket)
             return <Box key={`urgent-empty-${i}`} sx={{ minHeight: "48px" }} />;

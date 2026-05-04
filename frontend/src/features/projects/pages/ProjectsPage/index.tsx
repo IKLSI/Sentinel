@@ -284,7 +284,7 @@ export const ProjectsPage: React.FC = () => {
             {filtered.length === 0 ? (
               <Box
                 sx={{
-                  flex: 1,
+                  height: "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

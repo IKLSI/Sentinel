@@ -346,7 +346,7 @@ export const Sidebar: React.FC = () => {
                 section.items[0];
               const targetTo = activeItem.to;
               const ItemIcon = activeItem.icon ?? GroupIcon;
-              const itemTitle = t(activeItem.labelKey ?? section.titleKey);
+              const itemTitle = t(section.titleKey);
               return (
                 <React.Fragment key={section.titleKey}>
                   {si > 0 && <Divider />}

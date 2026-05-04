@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
   ActivityItem,
@@ -55,9 +56,24 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
           ...buildScrollSx(palette),
         }}
       >
+        {activity.length === 0 ? (
+          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+            <Box className="empty-state-icon">
+              <HistoryOutlined sx={{ fontSize: 32 }} />
+            </Box>
+            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+              {t("dashboard.activity.empty_title")}
+            </Box>
+            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+              {t("dashboard.activity.empty_subtitle")}
+            </Box>
+          </Box>
+        ) : (
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           {activity.map((a, idx) => {
             const danger = a.color === "red";
@@ -163,6 +179,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
             );
           })}
         </Box>
+        )}
       </Box>
     </Box>
   );

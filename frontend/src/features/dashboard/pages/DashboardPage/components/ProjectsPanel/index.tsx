@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
+import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
@@ -118,7 +119,19 @@ export const ProjectsPanel: React.FC<Props> = ({
           ...buildScrollSx(palette),
         }}
       >
-        {projectRows.map((p) => {
+        {projectRows.length === 0 ? (
+          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+            <Box className="empty-state-icon">
+              <AccountTreeOutlined sx={{ fontSize: 32 }} />
+            </Box>
+            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+              {t("dashboard.projects.empty_title")}
+            </Box>
+            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+              {t("dashboard.projects.empty_subtitle")}
+            </Box>
+          </Box>
+        ) : projectRows.map((p) => {
           const tone = projectTone(p, isDark);
           return (
             <Box
