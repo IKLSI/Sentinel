@@ -181,13 +181,11 @@ public class TicketsController : BaseController
     public async Task<IActionResult> DeleteTicket(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
-        Ticket? ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == organizationId);
+        if (organizationId == null) return Unauthorized();
 
-        if (ticket == null)
+        bool deleted = await _ticketService.DeleteTicketAsync(id, organizationId.Value);
+        if (!deleted)
             return NotFound(new { message = "Ticket introuvable" });
-
-        _context.Tickets.Remove(ticket);
-        await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
             AuditAction.TicketDeleted,

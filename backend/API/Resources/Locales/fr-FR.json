@@ -463,6 +463,7 @@
   "tickets.list.create_error": "Erreur lors de la création du ticket",
   "tickets.list.create_submit": "Créer le ticket",
   "tickets.list.create_title": "Nouveau ticket",
+  "tickets.list.delete_error": "Erreur lors de la suppression du ticket",
   "tickets.list.delete_prefix": "Êtes-vous sûr de vouloir supprimer le ticket ",
   "tickets.list.delete_suffix": " ?",
   "tickets.list.delete_title": "Supprimer ce ticket ?",

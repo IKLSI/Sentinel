@@ -174,6 +174,7 @@ export const TicketsPage: React.FC = () => {
         prev.map((tk) => (tk.id === updated.id ? updated : tk)),
       );
       setEditTarget(null);
+      window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.edit_error")), "error");
     } finally {
@@ -190,6 +191,9 @@ export const TicketsPage: React.FC = () => {
         prev.filter((tk) => tk.id !== deleteTarget.id),
       );
       setDeleteTarget(null);
+      window.dispatchEvent(new Event("dashboard:refresh"));
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.list.delete_error")), "error");
     } finally {
       setDeleting(false);
     }

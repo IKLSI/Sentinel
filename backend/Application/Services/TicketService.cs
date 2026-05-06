@@ -151,6 +151,19 @@ public class TicketService
         return ticket;
     }
 
+    public async Task<bool> DeleteTicketAsync(Guid ticketId, Guid organizationId)
+    {
+        Ticket? ticket = await _context.Tickets
+            .FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
+        if (ticket == null)
+            return false;
+
+        _context.Tickets.Remove(ticket);
+        await _context.SaveChangesAsync();
+        InvalidateDashboardCache(organizationId);
+        return true;
+    }
+
     public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId, bool isInternal = false)
     {
         Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
