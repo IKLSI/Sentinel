@@ -221,6 +221,20 @@ export const deleteComment = async (
   await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`);
 };
 
+export const uploadAttachment = async (
+  ticketId: string,
+  file: File,
+): Promise<{ url: string; fileName: string }> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post<{ url: string; fileName: string }>(
+    `/api/tickets/${ticketId}/attachments`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return response.data;
+};
+
 
 
 export const exportTicketsExcel = async (params?: {

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
@@ -10,23 +11,40 @@ import FormatBoldRounded from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRounded from "@mui/icons-material/FormatItalicRounded";
 import CodeRounded from "@mui/icons-material/CodeRounded";
 import LinkOutlined from "@mui/icons-material/LinkOutlined";
+import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
+import ImageOutlined from "@mui/icons-material/ImageOutlined";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useT } from "@/i18n/I18nContext";
+import { useTheme } from "@/store/ThemeContext";
 import { DetailPalette } from "../../helpers";
+import { uploadAttachment } from "@/features/tickets/api/tickets";
+import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
 
 type Mode = "reply" | "internal";
 
+interface Attachment {
+  fileName: string;
+  url: string;
+  isImage: boolean;
+}
+
 interface Props {
+  ticketId: string;
   mode: Mode;
   onModeChange: (m: Mode) => void;
   value: string;
   onValueChange: (v: string) => void;
   submitting: boolean;
-  onSubmit: () => void;
+  onSubmit: (content: string) => void;
   palette: DetailPalette;
   fieldSx: object;
+  markdownSx: object;
 }
 
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export const CommentComposer: React.FC<Props> = ({
+  ticketId,
   mode,
   onModeChange,
   value,
@@ -34,19 +52,98 @@ export const CommentComposer: React.FC<Props> = ({
   submitting,
   onSubmit,
   palette,
-  fieldSx,
+  fieldSx: _fieldSx,
+  markdownSx: _markdownSx,
 }) => {
   const t = useT();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const editorRef = useRef<MarkdownEditorHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const hasContent = value.trim().length > 0 || attachments.length > 0;
+
+  const applyWrap = (before: string, after: string) => {
+    editorRef.current?.applyWrap(before, after);
+  };
+
+  const applyCode = () => {
+    // Use code block if selection spans multiple lines, else inline
+    const [from, to] = editorRef.current?.getSelection() ?? [0, 0];
+    const selected = value.slice(from, to);
+    if (selected.includes("\n")) applyWrap("```\n", "\n```");
+    else applyWrap("`", "`");
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setUploading(true);
+    try {
+      const { url, fileName } = await uploadAttachment(ticketId, file);
+      setAttachments((prev) => [
+        ...prev,
+        { fileName, url: `${BASE_URL}${url}`, isImage: file.type.startsWith("image/") },
+      ]);
+    } catch {
+      // upload failed
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const buildFullContent = (): string => {
+    if (attachments.length === 0) return value;
+    const links = attachments
+      .map((a) => (a.isImage ? `![${a.fileName}](${a.url})` : `[${a.fileName}](${a.url})`))
+      .join("\n");
+    const base = value.trimEnd();
+    return base
+      ? `${base}\n\n<!-- attachments -->\n${links}`
+      : `<!-- attachments -->\n${links}`;
+  };
+
+  const handleSubmit = () => {
+    const content = buildFullContent();
+    if (!content.trim()) return;
+    onSubmit(content);
+    setAttachments([]);
+  };
+
+  const toolbarBtnSx = {
+    all: "unset" as const,
+    width: "28px",
+    height: "28px",
+    borderRadius: "var(--r-sm)",
+    cursor: "pointer",
+    color: palette.toolbarIdle,
+    display: "grid",
+    placeItems: "center",
+    "&:hover": {
+      background: palette.toolbarHoverBg,
+      color: palette.toolbarHoverFg,
+    },
+  };
 
   return (
     <Box sx={{ mt: "28px" }}>
+      {/* tab strip */}
       <Box
         sx={{
           display: "inline-flex",
           p: "3px",
           background: palette.tabStripBg,
           border: `1px solid ${palette.tabStripBorder}`,
-          borderRadius: 'var(--r-md)',
+          borderRadius: "var(--r-md)",
           mb: "8px",
           gap: "3px",
         }}
@@ -77,7 +174,7 @@ export const CommentComposer: React.FC<Props> = ({
                 gap: "6px",
                 px: "12px",
                 height: "34px",
-                borderRadius: 'var(--r)',
+                borderRadius: "var(--r)",
                 color: active ? palette.tabActiveFg : palette.tabIdleFg,
                 background: active ? palette.tabActiveBg : "transparent",
                 boxShadow: active ? palette.tabActiveShadow : "none",
@@ -95,45 +192,94 @@ export const CommentComposer: React.FC<Props> = ({
       <Box
         sx={{
           border: `1px solid ${palette.composerBorder}`,
-          borderRadius: 'var(--r-lg)',
+          borderRadius: "var(--r-lg)",
           overflow: "hidden",
           background: palette.composerBg,
+          cursor: "text",
         }}
+        onClick={() => editorRef.current?.focus()}
       >
-        <Box
-          component="textarea"
+        <MarkdownEditor
+          ref={editorRef}
           value={value}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-            onValueChange(e.target.value)
-          }
-          onKeyDown={(e: React.KeyboardEvent) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && value.trim())
-              onSubmit();
-          }}
-          rows={4}
+          onChange={onValueChange}
+          onSubmit={handleSubmit}
           placeholder={
             mode === "internal"
               ? t("tickets.detail.composer_internal_placeholder")
               : t("tickets.detail.composer_reply_placeholder")
           }
-          sx={{
-            ...fieldSx,
-            border: "none",
-            borderRadius: 0,
-            boxShadow: "none !important",
-            "&:focus": {
-              outline: "none",
-              boxShadow: "none !important",
-              borderColor: "transparent",
-            },
-            "&:focus-visible": { outline: "none" },
-            px: "16px",
-            py: "12px",
-            resize: "vertical",
-            minHeight: "90px",
-          }}
+          minHeight={90}
+          isDark={isDark}
         />
+
+        {/* attachment chips */}
+        {attachments.length > 0 && (
+          <Box
+            sx={{
+              borderTop: `1px solid ${palette.composerDivider}`,
+              px: "12px",
+              py: "8px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "6px",
+            }}
+          >
+            {attachments.map((a, i) => (
+              <Box
+                key={i}
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  px: "8px",
+                  height: "26px",
+                  borderRadius: "var(--r)",
+                  border: `1px solid ${palette.composerBorder}`,
+                  background: palette.tabStripBg,
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: palette.tabIdleFg,
+                  maxWidth: "200px",
+                }}
+              >
+                {a.isImage ? (
+                  <ImageOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
+                ) : (
+                  <InsertDriveFileOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
+                )}
+                <Box
+                  component="span"
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {a.fileName}
+                </Box>
+                <Box
+                  component="button"
+                  onClick={() => removeAttachment(i)}
+                  sx={{
+                    all: "unset",
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: "pointer",
+                    color: palette.toolbarIdle,
+                    borderRadius: "50%",
+                    width: "14px",
+                    height: "14px",
+                    flexShrink: 0,
+                    "&:hover": { color: palette.toolbarHoverFg },
+                  }}
+                >
+                  <CloseRounded sx={{ fontSize: 11 }} />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+
         <Box sx={{ height: "1px", background: palette.composerDivider }} />
+
+        {/* toolbar + send */}
         <Box
           sx={{
             px: "12px",
@@ -143,41 +289,74 @@ export const CommentComposer: React.FC<Props> = ({
             gap: "4px",
           }}
         >
-          {[
-            <FormatBoldRounded key="b" sx={{ fontSize: 16 }} />,
-            <FormatItalicRounded key="i" sx={{ fontSize: 16 }} />,
-            <CodeRounded key="c" sx={{ fontSize: 16 }} />,
-            <LinkOutlined key="l" sx={{ fontSize: 16 }} />,
-            <AttachFileOutlined key="a" sx={{ fontSize: 16 }} />,
-          ].map((icon, idx) => (
+          <Tooltip title="Gras" placement="top">
             <Box
-              key={idx}
               component="button"
-              sx={{
-                all: "unset",
-                width: "28px",
-                height: "28px",
-                borderRadius: 'var(--r-sm)',
-                cursor: "pointer",
-                color: palette.toolbarIdle,
-                display: "grid",
-                placeItems: "center",
-                "&:hover": {
-                  background: palette.toolbarHoverBg,
-                  color: palette.toolbarHoverFg,
-                },
-              }}
+              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+              onClick={() => applyWrap("**", "**")}
+              sx={toolbarBtnSx}
             >
-              {icon}
+              <FormatBoldRounded sx={{ fontSize: 16 }} />
             </Box>
-          ))}
+          </Tooltip>
+          <Tooltip title="Italique" placement="top">
+            <Box
+              component="button"
+              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+              onClick={() => applyWrap("*", "*")}
+              sx={toolbarBtnSx}
+            >
+              <FormatItalicRounded sx={{ fontSize: 16 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title="Code" placement="top">
+            <Box
+              component="button"
+              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+              onClick={applyCode}
+              sx={toolbarBtnSx}
+            >
+              <CodeRounded sx={{ fontSize: 16 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title="Lien" placement="top">
+            <Box
+              component="button"
+              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+              onClick={() => editorRef.current?.insertLink()}
+              sx={toolbarBtnSx}
+            >
+              <LinkOutlined sx={{ fontSize: 16 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title="Pièce jointe" placement="top">
+            <Box
+              component="button"
+              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              sx={{ ...toolbarBtnSx, opacity: uploading ? 0.5 : 1 }}
+            >
+              {uploading ? (
+                <CircularProgress size={12} />
+              ) : (
+                <AttachFileOutlined sx={{ fontSize: 16 }} />
+              )}
+            </Box>
+          </Tooltip>
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            accept="image/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"
+            onChange={handleFileChange}
+          />
           <Box sx={{ flex: 1 }} />
           <Button
             variant="contained"
             size="small"
             disableElevation
-            onClick={onSubmit}
-            disabled={!value.trim() || submitting}
+            onClick={handleSubmit}
+            disabled={!hasContent || submitting}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -196,7 +375,7 @@ export const CommentComposer: React.FC<Props> = ({
               },
               minWidth: "100px",
               height: "32px",
-              borderRadius: 'var(--r)',
+              borderRadius: "var(--r)",
               fontWeight: 700,
               fontSize: "12px",
             }}
@@ -210,6 +389,7 @@ export const CommentComposer: React.FC<Props> = ({
           </Button>
         </Box>
       </Box>
+
     </Box>
   );
 };

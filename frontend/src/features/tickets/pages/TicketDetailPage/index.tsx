@@ -97,12 +97,12 @@ export const TicketDetailPage: React.FC = () => {
     return ticket.title;
   }, [ticket, endpointMatch]);
 
-  const handleAddComment = async () => {
-    if (!ticket || !composerValue.trim()) return;
+  const handleAddComment = async (content: string) => {
+    if (!ticket || !content.trim()) return;
     setSubmitting(true);
     try {
       const isInternal = composerMode === "internal";
-      const created = await addComment(ticket.id, composerValue, isInternal);
+      const created = await addComment(ticket.id, content, isInternal);
       setTicket((prev) =>
         prev
           ? {
@@ -313,6 +313,7 @@ export const TicketDetailPage: React.FC = () => {
             />
 
             <CommentComposer
+              ticketId={id ?? ""}
               mode={composerMode}
               onModeChange={setComposerMode}
               value={composerValue}
@@ -321,6 +322,7 @@ export const TicketDetailPage: React.FC = () => {
               onSubmit={handleAddComment}
               palette={palette}
               fieldSx={fieldSx}
+              markdownSx={markdownSx}
             />
           </Box>
         </Box>
