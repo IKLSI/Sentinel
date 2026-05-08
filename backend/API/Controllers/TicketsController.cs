@@ -18,13 +18,15 @@ public class TicketsController : BaseController
     private readonly TicketService _ticketService;
     private readonly ExportService _exportService;
     private readonly IAuditLogService _auditLog;
+    private readonly IWebHostEnvironment _env;
 
-    public TicketsController(SentinelContext context, TicketService ticketService, ExportService exportService, IAuditLogService auditLog)
+    public TicketsController(SentinelContext context, TicketService ticketService, ExportService exportService, IAuditLogService auditLog, IWebHostEnvironment env)
     {
         _context = context;
         _ticketService = ticketService;
         _exportService = exportService;
         _auditLog = auditLog;
+        _env = env;
     }
 
     [HttpGet]
@@ -307,6 +309,47 @@ public class TicketsController : BaseController
             jti: GetCurrentJti());
 
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/attachments")]
+    [RequestSizeLimit(10_485_760)]
+    public async Task<IActionResult> UploadAttachment(Guid id, IFormFile file)
+    {
+        Guid? userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        Guid? organizationId = GetOrganizationId();
+        bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
+        if (!ticketExists)
+            return NotFound(new { message = "Ticket introuvable" });
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "Fichier invalide" });
+
+        string[] allowedMimes = [
+            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "application/pdf", "text/plain", "application/zip",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ];
+
+        if (!allowedMimes.Contains(file.ContentType))
+            return BadRequest(new { message = "Type de fichier non autorisé" });
+
+        string webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        string sanitized = Path.GetFileName(file.FileName).Replace(" ", "_");
+        string uniqueName = $"{Guid.NewGuid():N}_{sanitized}";
+        string uploadDir = Path.Combine(webRoot, "uploads", id.ToString());
+        Directory.CreateDirectory(uploadDir);
+
+        using (FileStream stream = new FileStream(Path.Combine(uploadDir, uniqueName), FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return Ok(new { url = $"/uploads/{id}/{uniqueName}", fileName = file.FileName });
     }
 
     [HttpPatch("{id:guid}/status")]

@@ -70,6 +70,7 @@ public static class Program
             });
         }
 
+        app.UseStaticFiles();
         app.UseCors();
         app.UseRateLimiter();
         app.UseAuthentication();

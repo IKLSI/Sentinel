@@ -99,6 +99,7 @@ yarn.lock
 bin/
 obj/
 out/
+backend/API/wwwroot/
 
 # User-specific files
 
