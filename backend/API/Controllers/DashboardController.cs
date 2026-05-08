@@ -1,13 +1,14 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sentinel.API.Attributes;
 using Sentinel.Domain.DTOs.Dashboard;
+using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
 
 namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
-[Authorize(Roles = "Admin,Developer")]
+[AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
 public class DashboardController : BaseController
 {
     private readonly DashboardService _dashboardService;

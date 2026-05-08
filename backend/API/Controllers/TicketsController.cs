@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Tickets;
@@ -179,7 +180,7 @@ public class TicketsController : BaseController
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> DeleteTicket(Guid id)
     {
         Guid? organizationId = GetOrganizationId();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
@@ -28,7 +29,7 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
     {
         Guid? organizationId = GetOrganizationId();
@@ -64,7 +65,7 @@ public class UsersController : BaseController
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> InviteUser([FromBody] CreateUserDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -158,7 +159,7 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
     {
         Guid? organizationId = GetOrganizationId();

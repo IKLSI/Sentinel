@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Sentinel.API.Attributes;
 using Sentinel.Domain.DTOs.TimeEntries;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -9,7 +9,7 @@ namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/time-entries")]
-[Authorize(Roles = "Admin,Developer")]
+[AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
 public class TimeEntriesController : BaseController
 {
     private readonly TimeTrackingService _timeTrackingService;

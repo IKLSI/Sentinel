@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.API.Attributes;
 using Sentinel.Application.Services;
 using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
@@ -27,7 +28,7 @@ public class SettingsController : BaseController
     }
 
     [HttpGet("integrations")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> GetIntegrationSettings()
     {
         Guid? orgId = GetOrganizationId();
@@ -44,7 +45,7 @@ public class SettingsController : BaseController
     }
 
     [HttpPost("integrations/github")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> ConnectGithub([FromBody] ConnectIntegrationDto dto)
     {
         Guid? orgId = GetOrganizationId();
@@ -99,7 +100,7 @@ public class SettingsController : BaseController
     }
 
     [HttpPost("integrations/gitlab")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> ConnectGitlab([FromBody] ConnectIntegrationDto dto)
     {
         Guid? orgId = GetOrganizationId();
@@ -154,7 +155,7 @@ public class SettingsController : BaseController
     }
 
     [HttpGet("organization")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> GetOrganizationSettings()
     {
         Guid? orgId = GetOrganizationId();
@@ -173,7 +174,7 @@ public class SettingsController : BaseController
     }
 
     [HttpPut("organization")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> UpdateOrganizationSettings([FromBody] UpdateOrganizationSettingsDto dto)
     {
         Guid? orgId = GetOrganizationId();

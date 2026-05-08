@@ -2,6 +2,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
@@ -49,7 +50,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects/export/excel")]
-    [Authorize(Roles = "Admin,Developer")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<IActionResult> ExportExcel()
     {
         Guid? organizationId = GetOrganizationId();
@@ -60,7 +61,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects")]
-    [Authorize(Roles = "Admin,Developer,Client")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
     public async Task<ActionResult<IEnumerable<TechProjectDto>>> GetProjects()
     {
         Guid? organizationId = GetOrganizationId();
@@ -91,7 +92,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects/{id:guid}")]
-    [Authorize(Roles = "Admin,Developer,Client")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
     public async Task<ActionResult<TechProjectDto>> GetProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
@@ -111,7 +112,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpPost("projects")]
-    [Authorize(Roles = "Admin,Developer")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<TechProjectDto>> CreateProject([FromBody] CreateTechProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -153,7 +154,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpPut("projects/{id:guid}")]
-    [Authorize(Roles = "Admin,Developer")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<TechProjectDto>> UpdateProject(Guid id, [FromBody] UpdateTechProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
@@ -192,7 +193,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpDelete("projects/{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> DeleteProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
@@ -219,7 +220,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpPost("projects/{id:guid}/scan")]
-    [Authorize(Roles = "Admin,Developer")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<IActionResult> TriggerScan(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
