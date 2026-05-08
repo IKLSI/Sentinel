@@ -49,6 +49,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects/export/excel")]
+    [Authorize(Roles = "Admin,Developer")]
     public async Task<IActionResult> ExportExcel()
     {
         Guid? organizationId = GetOrganizationId();
@@ -59,6 +60,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects")]
+    [Authorize(Roles = "Admin,Developer,Client")]
     public async Task<ActionResult<IEnumerable<TechProjectDto>>> GetProjects()
     {
         Guid? organizationId = GetOrganizationId();
@@ -89,6 +91,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects/{id:guid}")]
+    [Authorize(Roles = "Admin,Developer,Client")]
     public async Task<ActionResult<TechProjectDto>> GetProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();

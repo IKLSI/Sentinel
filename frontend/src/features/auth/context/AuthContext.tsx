@@ -10,7 +10,7 @@ interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
 }
@@ -19,7 +19,7 @@ export const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
   loading: true,
-  login: async () => {},
+  login: async () => { throw new Error(); },
   logout: async () => {},
   setUser: () => {},
 });
@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("accessToken", response.accessToken);
     localStorage.setItem("refreshToken", response.refreshToken);
     setUser(response.user);
+    return response.user;
   }, []);
 
   const logout = useCallback(async () => {

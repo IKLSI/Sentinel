@@ -38,8 +38,8 @@ export const LoginPage: React.FC = () => {
     }
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/");
+      const loggedUser = await login(email, password);
+      navigate(loggedUser.role === 'Client' ? '/tickets' : '/');
     } catch {
       setHasError(true);
       showToast(t("auth.login.invalid_credentials"), "error");

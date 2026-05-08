@@ -7,7 +7,7 @@ namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
-[Authorize]
+[Authorize(Roles = "Admin,Developer")]
 public class DashboardController : BaseController
 {
     private readonly DashboardService _dashboardService;

@@ -14,6 +14,7 @@ import { useT } from "../../../i18n/I18nContext";
 
 const ROLE_LABEL_KEYS: Record<string, string> = {
   Admin: "profile.role.admin",
+  Client: "profile.role.client",
   Developer: "profile.role.developer",
 };
 

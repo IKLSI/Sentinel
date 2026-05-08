@@ -9,7 +9,7 @@ namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/time-entries")]
-[Authorize]
+[Authorize(Roles = "Admin,Developer")]
 public class TimeEntriesController : BaseController
 {
     private readonly TimeTrackingService _timeTrackingService;

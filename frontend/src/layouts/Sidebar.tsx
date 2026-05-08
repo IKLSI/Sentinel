@@ -137,9 +137,15 @@ export const Sidebar: React.FC = () => {
   };
 
   const isAdmin = user?.role === "Admin";
+  const isClient = user?.role === "Client";
   const filteredSections = useMemo(
-    () => navSections.filter((s) => s.items.length > 0),
-    [],
+    () => {
+      const clientAllowed = ["sidebar.section.tickets"];
+      return navSections
+        .filter((s) => s.items.length > 0)
+        .filter((s) => !isClient || clientAllowed.includes(s.titleKey));
+    },
+    [isClient],
   );
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {

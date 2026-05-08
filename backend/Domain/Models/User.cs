@@ -3,7 +3,8 @@ namespace Sentinel.Domain.Models;
 public enum UserRole
 {
     Admin,
-    Developer
+    Developer,
+    Client
 }
 
 public class User

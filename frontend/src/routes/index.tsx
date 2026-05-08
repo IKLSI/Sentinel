@@ -51,6 +51,17 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role === "Client") return <Navigate to="/tickets" replace />;
+  return <>{children}</>;
+};
+
+const RoleAwareRedirect: React.FC = () => {
+  const { user } = useAuth();
+  return <Navigate to={user?.role === "Client" ? "/tickets" : "/"} replace />;
+};
+
 export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
@@ -64,23 +75,25 @@ export const AppRoutes: React.FC = () => (
         </PrivateRoute>
       }
     >
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={<NonClientRoute><DashboardPage /></NonClientRoute>} />
       <Route path="/tickets" element={<TicketsPage />} />
       <Route path="/tickets/kanban" element={<KanbanPage />} />
       <Route path="/tickets/:id" element={<TicketDetailPage />} />
-      <Route path="/projects" element={<ProjectsPage />} />
-      <Route path="/projects/:id" element={<ProjectDetailPage />} />
-      <Route path="/time-tracking" element={<TimeTrackingPage />} />
+      <Route path="/projects" element={<NonClientRoute><ProjectsPage /></NonClientRoute>} />
+      <Route path="/projects/:id" element={<NonClientRoute><ProjectDetailPage /></NonClientRoute>} />
+      <Route path="/time-tracking" element={<NonClientRoute><TimeTrackingPage /></NonClientRoute>} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route
         path="/settings"
         element={
-          <AdminRoute>
-            <SettingsPage />
-          </AdminRoute>
+          <NonClientRoute>
+            <AdminRoute>
+              <SettingsPage />
+            </AdminRoute>
+          </NonClientRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<RoleAwareRedirect />} />
     </Route>
   </Routes>
 );
