@@ -150,6 +150,9 @@ public class TicketsController : BaseController
         if (!exists)
             return Forbid();
 
+        if (CurrentUserIsClient())
+            ticket.Comments = ticket.Comments.Where(c => !c.IsInternal).ToList();
+
         return Ok(ticket);
     }
 

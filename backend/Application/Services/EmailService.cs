@@ -12,6 +12,8 @@ public interface IEmailService
 {
     Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
+    Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
+    Task SendTicketUpdateToClientAsync(string clientEmail, string clientName, string ticketTitle, string actorName, string eventVerb, string eventLabel, string eventValue, string ticketUrl);
 }
 
 public class EmailService : IEmailService
@@ -119,6 +121,77 @@ public class EmailService : IEmailService
         await client.DisconnectAsync(true);
 
         _logger.LogInformation("Email de réinitialisation de mot de passe envoyé à {Email}", email);
+    }
+
+    public async Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl)
+    {
+        string html = LoadTemplate("ticket-admin-new.html")
+            .Replace("{{CLIENT_NAME}}", clientName)
+            .Replace("{{TICKET_TITLE}}", ticketTitle)
+            .Replace("{{ORGANIZATION}}", organizationName)
+            .Replace("{{EVENT_LABEL}}", eventLabel)
+            .Replace("{{CONTENT_LABEL}}", contentLabel)
+            .Replace("{{CONTENT_PREVIEW}}", contentPreview)
+            .Replace("{{TICKET_URL}}", ticketUrl);
+
+        foreach (string adminEmail in adminEmails)
+        {
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(
+                _configuration["Email:FromName"] ?? "Sentinel",
+                _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+            ));
+            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
+            message.Subject = $"[{organizationName}] {eventLabel} — {ticketTitle}";
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            using SmtpClient client = new SmtpClient();
+            string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
+            int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
+            string username = _configuration["Email:Username"] ?? string.Empty;
+            string password = _configuration["Email:Password"] ?? string.Empty;
+            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+            if (!string.IsNullOrEmpty(username))
+                await client.AuthenticateAsync(username, password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
+            _logger.LogInformation("Notification admin envoyée à {Email} pour ticket client", adminEmail);
+        }
+    }
+
+    public async Task SendTicketUpdateToClientAsync(string clientEmail, string clientName, string ticketTitle, string actorName, string eventVerb, string eventLabel, string eventValue, string ticketUrl)
+    {
+        string html = LoadTemplate("ticket-client-update.html")
+            .Replace("{{CLIENT_NAME}}", clientName)
+            .Replace("{{TICKET_TITLE}}", ticketTitle)
+            .Replace("{{ACTOR_NAME}}", actorName)
+            .Replace("{{EVENT_VERB}}", eventVerb)
+            .Replace("{{EVENT_LABEL}}", eventLabel)
+            .Replace("{{EVENT_VALUE}}", eventValue)
+            .Replace("{{TICKET_URL}}", ticketUrl);
+
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(
+            _configuration["Email:FromName"] ?? "Sentinel",
+            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+        ));
+        message.To.Add(new MailboxAddress(clientEmail, clientEmail));
+        message.Subject = $"Mise à jour de votre ticket — {ticketTitle}";
+        message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+        using SmtpClient client = new SmtpClient();
+        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
+        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
+        string username = _configuration["Email:Username"] ?? string.Empty;
+        string password = _configuration["Email:Password"] ?? string.Empty;
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+        if (!string.IsNullOrEmpty(username))
+            await client.AuthenticateAsync(username, password);
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
+
+        _logger.LogInformation("Notification de mise à jour envoyée au client {Email}", clientEmail);
     }
 
     private static string LoadTemplate(string fileName)

@@ -19,4 +19,7 @@ public abstract class BaseController : ControllerBase
     }
 
     protected string? GetCurrentJti() => User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+    protected bool CurrentUserIsClient() =>
+        User.FindFirst(ClaimTypes.Role)?.Value == "Client";
 }

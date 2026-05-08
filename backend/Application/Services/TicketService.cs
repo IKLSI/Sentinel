@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Tickets;
@@ -11,11 +13,17 @@ public class TicketService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<TicketService> _logger;
 
-    public TicketService(SentinelContext context, IMemoryCache cache)
+    public TicketService(SentinelContext context, IMemoryCache cache, IEmailService emailService, IConfiguration configuration, ILogger<TicketService> logger)
     {
         _context = context;
         _cache = cache;
+        _emailService = emailService;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     private void InvalidateDashboardCache(Guid organizationId) =>
@@ -49,6 +57,8 @@ public class TicketService
         await _context.Tickets.AddAsync(ticket);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(organizationId);
+
+        await NotifyAdminsIfClientTicketAsync(ticket, createdById, organizationId, "Nouveau ticket", "Description", dto.Description ?? string.Empty);
 
         return ticket;
     }
@@ -131,6 +141,7 @@ public class TicketService
     {
         Ticket? ticket = await _context.Tickets
             .Include(t => t.TicketStatus)
+            .Include(t => t.CreatedBy)
             .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
             return null;
@@ -147,6 +158,28 @@ public class TicketService
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
+
+        if (ticket.CreatedBy.Role == UserRole.Client && ticket.CreatedById != userId)
+        {
+            User? actor = await _context.Users.FindAsync(userId);
+            string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
+            try
+            {
+                await _emailService.SendTicketUpdateToClientAsync(
+                    ticket.CreatedBy.Email,
+                    ticket.CreatedBy.FullName,
+                    ticket.Title,
+                    actor?.FullName ?? "Un membre de l'équipe",
+                    "changé le statut de",
+                    "Nouveau statut",
+                    newStatus.Name,
+                    ticketUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec envoi notification changement statut au client {Email}", ticket.CreatedBy.Email);
+            }
+        }
 
         return ticket;
     }
@@ -166,7 +199,10 @@ public class TicketService
 
     public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId, bool isInternal = false)
     {
-        Ticket? ticket = await _context.Tickets.FindAsync(ticketId);
+        Ticket? ticket = await _context.Tickets
+            .Include(t => t.CreatedBy)
+            .Include(t => t.Organization)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
             throw new InvalidOperationException("Ticket introuvable");
 
@@ -183,6 +219,34 @@ public class TicketService
         await _context.TicketComments.AddAsync(comment);
         ticket.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        User? author = await _context.Users.FindAsync(authorId);
+
+        if (author?.Role == UserRole.Client)
+        {
+            await NotifyAdminsIfClientTicketAsync(ticket, authorId, ticket.OrganizationId, "Nouveau commentaire client", "Commentaire", content);
+        }
+        else if (!isInternal && ticket.CreatedBy.Role == UserRole.Client && ticket.CreatedById != authorId)
+        {
+            string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
+            string actorName = author?.FullName ?? "Un membre de l'équipe";
+            try
+            {
+                await _emailService.SendTicketUpdateToClientAsync(
+                    ticket.CreatedBy.Email,
+                    ticket.CreatedBy.FullName,
+                    ticket.Title,
+                    actorName,
+                    "répondu à",
+                    "Réponse",
+                    content,
+                    ticketUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec envoi notification commentaire au client {Email}", ticket.CreatedBy.Email);
+            }
+        }
 
         return comment;
     }
@@ -251,6 +315,46 @@ public class TicketService
                 CreatedAt = h.CreatedAt
             }).OrderByDescending(h => h.CreatedAt).ToList() ?? new List<TicketHistoryDto>()
         };
+    }
+
+    private async Task NotifyAdminsIfClientTicketAsync(Ticket ticket, Guid actorId, Guid organizationId, string eventLabel, string contentLabel, string contentPreview)
+    {
+        User? actor = await _context.Users.FindAsync(actorId);
+        if (actor?.Role != UserRole.Client)
+            return;
+
+        List<string> adminEmails = await _context.Users
+            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive)
+            .Select(u => u.Email)
+            .ToListAsync();
+
+        if (adminEmails.Count == 0)
+            return;
+
+        string orgName = await _context.Organizations
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+
+        string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticket.Id}";
+        string preview = contentPreview.Length > 300 ? contentPreview[..300] + "…" : contentPreview;
+
+        try
+        {
+            await _emailService.SendNewClientTicketToAdminsAsync(
+                adminEmails,
+                actor.FullName,
+                ticket.Title,
+                orgName,
+                eventLabel,
+                contentLabel,
+                preview,
+                ticketUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Échec envoi notification admins pour ticket client");
+        }
     }
 
     private static TicketHistory CreateHistory(Guid ticketId, Guid userId, string field, string? oldValue, string? newValue)
