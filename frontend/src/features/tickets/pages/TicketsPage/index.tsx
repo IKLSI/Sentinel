@@ -23,6 +23,7 @@ import { Pagination } from "./components/Pagination";
 import { CreateTicketModal } from "./components/CreateTicketModal";
 import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
 import { extractApiError } from "@/utils/apiError";
+import { TICKETS_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
@@ -228,6 +229,12 @@ export const TicketsPage: React.FC = () => {
 
   useEffect(() => {
     getTicketStatuses().then(setStatuses).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handler = () => openCreateModal();
+    window.addEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
+    return () => window.removeEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
   }, []);
 
   useEffect(() => {
