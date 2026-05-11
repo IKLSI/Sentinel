@@ -315,9 +315,52 @@ public class TicketsController : BaseController
         return NoContent();
     }
 
+    private static readonly string[] AllowedAttachmentMimes =
+    [
+        "image/jpeg", "image/png", "image/gif", "image/webp",
+        "application/pdf", "text/plain", "application/zip",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ];
+
+    private string GetAttachmentsRoot() =>
+        Path.Combine(_env.ContentRootPath, "App_Data", "attachments");
+
+    [HttpGet("{id:guid}/attachments")]
+    public async Task<ActionResult<List<TicketAttachmentDto>>> ListAttachments(Guid id)
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
+        if (!ticketExists)
+            return NotFound(new { message = "Ticket introuvable" });
+
+        List<TicketAttachmentDto> attachments = await _context.TicketAttachments
+            .Where(a => a.TicketId == id)
+            .Include(a => a.UploadedBy)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new TicketAttachmentDto
+            {
+                Id = a.Id,
+                TicketId = a.TicketId,
+                FileName = a.FileName,
+                ContentType = a.ContentType,
+                Size = a.Size,
+                UploadedById = a.UploadedById,
+                UploadedByName = a.UploadedBy.FirstName + " " + a.UploadedBy.LastName,
+                CreatedAt = a.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(attachments);
+    }
+
     [HttpPost("{id:guid}/attachments")]
     [RequestSizeLimit(10_485_760)]
-    public async Task<IActionResult> UploadAttachment(Guid id, IFormFile file)
+    public async Task<ActionResult<TicketAttachmentDto>> UploadAttachment(Guid id, IFormFile file)
     {
         Guid? userId = GetCurrentUserId();
         if (userId == null) return Unauthorized();
@@ -330,30 +373,119 @@ public class TicketsController : BaseController
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "Fichier invalide" });
 
-        string[] allowedMimes = [
-            "image/jpeg", "image/png", "image/gif", "image/webp",
-            "application/pdf", "text/plain", "application/zip",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "application/vnd.ms-excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ];
-
-        if (!allowedMimes.Contains(file.ContentType))
+        if (!AllowedAttachmentMimes.Contains(file.ContentType))
             return BadRequest(new { message = "Type de fichier non autorisé" });
 
-        string webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string sanitized = Path.GetFileName(file.FileName).Replace(" ", "_");
-        string uniqueName = $"{Guid.NewGuid():N}_{sanitized}";
-        string uploadDir = Path.Combine(webRoot, "uploads", id.ToString());
-        Directory.CreateDirectory(uploadDir);
+        string originalName = Path.GetFileName(file.FileName);
+        string sanitized = string.Concat(originalName.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Replace(" ", "_");
+        if (string.IsNullOrWhiteSpace(sanitized))
+            return BadRequest(new { message = "Nom de fichier invalide" });
 
-        using (FileStream stream = new FileStream(Path.Combine(uploadDir, uniqueName), FileMode.Create))
+        Guid attachmentId = Guid.NewGuid();
+        string uploadDir = Path.Combine(GetAttachmentsRoot(), id.ToString());
+        Directory.CreateDirectory(uploadDir);
+        string storedName = $"{attachmentId:N}_{sanitized}";
+        string storagePath = Path.Combine(uploadDir, storedName);
+
+        using (FileStream stream = new FileStream(storagePath, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
 
-        return Ok(new { url = $"/uploads/{id}/{uniqueName}", fileName = file.FileName });
+        TicketAttachment attachment = new TicketAttachment
+        {
+            Id = attachmentId,
+            TicketId = id,
+            UploadedById = userId.Value,
+            FileName = originalName,
+            StoragePath = storagePath,
+            ContentType = file.ContentType,
+            Size = file.Length,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.TicketAttachments.Add(attachment);
+        await _context.SaveChangesAsync();
+
+        User? uploader = await _context.Users.FindAsync(userId.Value);
+
+        await _auditLog.LogAsync(
+            AuditAction.AttachmentUploaded,
+            entityType: "TicketAttachment",
+            organizationId: organizationId,
+            userId: userId.Value,
+            entityId: attachmentId,
+            jti: GetCurrentJti());
+
+        return Ok(new TicketAttachmentDto
+        {
+            Id = attachment.Id,
+            TicketId = attachment.TicketId,
+            FileName = attachment.FileName,
+            ContentType = attachment.ContentType,
+            Size = attachment.Size,
+            UploadedById = attachment.UploadedById,
+            UploadedByName = uploader != null ? $"{uploader.FirstName} {uploader.LastName}" : string.Empty,
+            CreatedAt = attachment.CreatedAt
+        });
+    }
+
+    [HttpGet("{id:guid}/attachments/{attachmentId:guid}")]
+    public async Task<IActionResult> DownloadAttachment(Guid id, Guid attachmentId)
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        TicketAttachment? attachment = await _context.TicketAttachments
+            .Include(a => a.Ticket)
+            .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == id);
+
+        if (attachment == null || attachment.Ticket.OrganizationId != organizationId.Value)
+            return NotFound(new { message = "Pièce jointe introuvable" });
+
+        if (!System.IO.File.Exists(attachment.StoragePath))
+            return NotFound(new { message = "Fichier manquant" });
+
+        FileStream stream = new FileStream(attachment.StoragePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return File(stream, attachment.ContentType, attachment.FileName);
+    }
+
+    [HttpDelete("{id:guid}/attachments/{attachmentId:guid}")]
+    public async Task<IActionResult> DeleteAttachment(Guid id, Guid attachmentId)
+    {
+        Guid? userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        Guid? organizationId = GetOrganizationId();
+        TicketAttachment? attachment = await _context.TicketAttachments
+            .Include(a => a.Ticket)
+            .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == id);
+
+        if (attachment == null || attachment.Ticket.OrganizationId != organizationId)
+            return NotFound(new { message = "Pièce jointe introuvable" });
+
+        bool isAdmin = User.IsInRole(UserRole.Admin.ToString());
+        if (!isAdmin && attachment.UploadedById != userId.Value)
+            return Forbid();
+
+        if (System.IO.File.Exists(attachment.StoragePath))
+        {
+            try { System.IO.File.Delete(attachment.StoragePath); }
+            catch { /* fichier déjà absent ou verrouillé : on supprime quand même la trace DB */ }
+        }
+
+        _context.TicketAttachments.Remove(attachment);
+        await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.AttachmentDeleted,
+            entityType: "TicketAttachment",
+            organizationId: organizationId,
+            userId: userId.Value,
+            entityId: attachmentId,
+            jti: GetCurrentJti());
+
+        return NoContent();
     }
 
     [HttpPatch("{id:guid}/status")]

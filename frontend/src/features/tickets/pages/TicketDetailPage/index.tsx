@@ -31,6 +31,7 @@ import { CommentComposer } from "./components/CommentComposer";
 import { PropertiesCard } from "./components/PropertiesCard";
 import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
+import { AttachmentsCard } from "./components/AttachmentsCard";
 import { extractApiError } from "@/utils/apiError";
 
 export const TicketDetailPage: React.FC = () => {
@@ -342,6 +343,8 @@ export const TicketDetailPage: React.FC = () => {
             palette={palette}
             priorityConfig={priorityConfig}
           />
+
+          <AttachmentsCard ticketId={ticket.id} palette={palette} />
 
           <HistoryCard
             ticket={ticket}

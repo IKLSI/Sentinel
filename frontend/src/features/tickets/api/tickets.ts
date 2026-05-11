@@ -221,18 +221,64 @@ export const deleteComment = async (
   await apiClient.delete(`/api/tickets/${ticketId}/comments/${commentId}`);
 };
 
+export interface TicketAttachment {
+  id: string;
+  ticketId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  uploadedById: string;
+  uploadedByName: string;
+  createdAt: string;
+}
+
+export const listAttachments = async (
+  ticketId: string,
+): Promise<TicketAttachment[]> => {
+  const response = await apiClient.get<TicketAttachment[]>(
+    `/api/tickets/${ticketId}/attachments`,
+  );
+  return response.data;
+};
+
 export const uploadAttachment = async (
   ticketId: string,
   file: File,
-): Promise<{ url: string; fileName: string }> => {
+): Promise<TicketAttachment> => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await apiClient.post<{ url: string; fileName: string }>(
+  const response = await apiClient.post<TicketAttachment>(
     `/api/tickets/${ticketId}/attachments`,
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
   return response.data;
+};
+
+export const deleteAttachment = async (
+  ticketId: string,
+  attachmentId: string,
+): Promise<void> => {
+  await apiClient.delete(
+    `/api/tickets/${ticketId}/attachments/${attachmentId}`,
+  );
+};
+
+export const downloadAttachment = async (
+  ticketId: string,
+  attachmentId: string,
+  fileName: string,
+): Promise<void> => {
+  const response = await apiClient.get(
+    `/api/tickets/${ticketId}/attachments/${attachmentId}`,
+    { responseType: "blob" },
+  );
+  const url = URL.createObjectURL(new Blob([response.data]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
 

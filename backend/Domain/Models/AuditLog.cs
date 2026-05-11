@@ -20,6 +20,8 @@ public enum AuditAction
     CommentAdded,
     CommentUpdated,
     CommentDeleted,
+    AttachmentUploaded,
+    AttachmentDeleted,
 
     TimeEntryCreated,
     TimeEntryUpdated,

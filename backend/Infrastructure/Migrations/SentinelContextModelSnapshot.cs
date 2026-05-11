@@ -344,6 +344,51 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Tickets");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UploadedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("TicketAttachments");
+                });
+
+
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -735,6 +780,26 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("TicketStatus");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.TicketAttachment", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
+                        .WithMany("Attachments")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sentinel.Domain.Models.User", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("UploadedBy");
+                });
+
+
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.User", "Author")
@@ -871,6 +936,8 @@ namespace Sentinel.Infrastructure.Migrations
 
             modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
                 {
+                    b.Navigation("Attachments");
+
                     b.Navigation("Comments");
 
                     b.Navigation("History");

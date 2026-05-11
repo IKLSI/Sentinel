@@ -21,6 +21,7 @@ public class SentinelContext : DbContext
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +41,7 @@ public class SentinelContext : DbContext
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
         ConfigureAuditLog(modelBuilder);
+        ConfigureTicketAttachment(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -333,6 +335,29 @@ public class SentinelContext : DbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Action);
             entity.HasIndex(e => new { e.EntityType, e.EntityId });
+        });
+    }
+
+    private static void ConfigureTicketAttachment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TicketAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.ContentType).HasMaxLength(150).IsRequired();
+            entity.HasIndex(e => e.TicketId);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.Ticket)
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(e => e.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.UploadedBy)
+                .WithMany()
+                .HasForeignKey(e => e.UploadedById)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
