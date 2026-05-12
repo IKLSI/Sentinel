@@ -419,7 +419,7 @@
   "tickets.detail.attachments_size_too_big": "Fichier trop volumineux (max 10 Mo)",
   "tickets.detail.attachments_type_not_allowed": "Type de fichier non autorisé",
   "tickets.detail.attachments_load_error": "Erreur de chargement des pièces jointes",
-  "palette.placeholder": "Rechercher ou exécuter une commande…",
+  "palette.placeholder": "Rechercher…",
   "palette.shortcut_hint": "Ctrl+K",
   "palette.section_actions": "Actions",
   "palette.section_navigation": "Navigation",

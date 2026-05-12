@@ -297,22 +297,6 @@ export const CommandPalette: React.FC = () => {
               "::placeholder": { color: "var(--muted)" },
             }}
           />
-          <Box
-            sx={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              color: "var(--muted)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r-sm)",
-              px: "6px",
-              py: "2px",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              background: "var(--s2)",
-            }}
-          >
-            {t("palette.shortcut_hint")}
-          </Box>
         </Box>
 
         <Box
