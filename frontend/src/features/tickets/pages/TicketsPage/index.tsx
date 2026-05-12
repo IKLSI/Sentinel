@@ -235,7 +235,7 @@ export const TicketsPage: React.FC = () => {
     const handler = () => openCreateModal();
     window.addEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
     return () => window.removeEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
-  }, []);
+  }, [openCreateModal]);
 
   useEffect(() => {
     if (tickets?.items !== undefined) {
