@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
-import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
+import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import { useT } from "@/i18n/I18nContext";
@@ -187,6 +187,7 @@ export const AttachmentsCard: React.FC<Props> = ({ ticketId, palette }) => {
         ref={fileInputRef}
         type="file"
         hidden
+        accept="image/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) handleFile(f);
@@ -248,7 +249,7 @@ export const AttachmentsCard: React.FC<Props> = ({ ticketId, palette }) => {
                       fontFamily: "var(--font-mono)",
                     }}
                   >
-                    {formatSize(a.size)} · {a.uploadedByName}
+                    {a.uploadedByName}
                   </Box>
                 </Box>
                 <IconButton
@@ -262,7 +263,7 @@ export const AttachmentsCard: React.FC<Props> = ({ ticketId, palette }) => {
                     },
                   }}
                 >
-                  <DownloadOutlined sx={{ fontSize: 14 }} />
+                  <FileDownloadOutlined sx={{ fontSize: 14 }} />
                 </IconButton>
                 {canDelete(a) && (
                   <IconButton
