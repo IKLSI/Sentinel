@@ -85,10 +85,11 @@ export const CommentComposer: React.FC<Props> = ({
     e.target.value = "";
     setUploading(true);
     try {
-      const { url, fileName } = await uploadAttachment(ticketId, file);
+      const created = await uploadAttachment(ticketId, file);
+      const path = `/api/tickets/${ticketId}/attachments/${created.id}`;
       setAttachments((prev) => [
         ...prev,
-        { fileName, url: `${BASE_URL}${url}`, isImage: file.type.startsWith("image/") },
+        { fileName: created.fileName, url: `${BASE_URL}${path}`, isImage: file.type.startsWith("image/") },
       ]);
     } catch {
       // upload failed
