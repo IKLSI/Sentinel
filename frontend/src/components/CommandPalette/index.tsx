@@ -15,7 +15,7 @@ import KeyboardReturnOutlined from "@mui/icons-material/KeyboardReturnOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
-export const PALETTE_OPEN_EVENT = "command-palette:open";
+const PALETTE_OPEN_EVENT = "command-palette:open";
 export const TICKETS_OPEN_CREATE_EVENT = "tickets:open-create";
 
 interface PaletteItem {
