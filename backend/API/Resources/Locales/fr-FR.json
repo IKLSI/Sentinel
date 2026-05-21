@@ -610,5 +610,11 @@
   "time_tracking.weekday_initial_thu": "J",
   "time_tracking.weekday_initial_tue": "M",
   "time_tracking.weekday_initial_wed": "M",
-  "time_tracking.you": "Vous"
+  "time_tracking.you": "Vous",
+  "error.404.title": "Page introuvable",
+  "error.404.subtitle": "Vérifiez l'URL ou retournez à l'accueil",
+  "error.500.title": "Une erreur inattendue s'est produite",
+  "error.500.subtitle": "Réessayez ou retournez à l'accueil",
+  "error.back_home": "Retour à l'accueil",
+  "error.retry": "Réessayer"
 }

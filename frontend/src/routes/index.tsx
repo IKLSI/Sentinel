@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { AppLayout } from "../layouts/AppLayout";
 
+import { ErrorPage } from "../pages/ErrorPage";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { AcceptInvitationPage } from "../features/auth/pages/AcceptInvitationPage";
 import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage";
@@ -57,11 +58,6 @@ const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const RoleAwareRedirect: React.FC = () => {
-  const { user } = useAuth();
-  return <Navigate to={user?.role === "Client" ? "/tickets" : "/"} replace />;
-};
-
 export const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
@@ -93,7 +89,7 @@ export const AppRoutes: React.FC = () => (
           </NonClientRoute>
         }
       />
-      <Route path="*" element={<RoleAwareRedirect />} />
     </Route>
+    <Route path="*" element={<ErrorPage status={404} />} />
   </Routes>
 );
