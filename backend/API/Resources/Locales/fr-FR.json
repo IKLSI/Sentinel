@@ -302,13 +302,14 @@
   "sidebar.item.kanban": "Kanban",
   "sidebar.item.list": "Liste",
   "sidebar.item.projects": "Projets",
+  "sidebar.item.settings": "Administration",
   "sidebar.item.time_tracking": "Pointage",
   "sidebar.logout": "Déconnexion",
+  "sidebar.section.administration": "Administration",
   "sidebar.section.dashboard": "Tableau de bord",
   "sidebar.section.projects": "Projets",
   "sidebar.section.resources": "Ressources",
   "sidebar.section.tickets": "Tickets",
-  "sidebar.settings": "Paramètres",
   "sidebar.workspace": "workspace",
   "tech_health.delete.prefix": "Êtes-vous sûr de vouloir supprimer ",
   "tech_health.delete.suffix": " ?",
@@ -616,5 +617,6 @@
   "error.500.title": "Une erreur inattendue s'est produite",
   "error.500.subtitle": "Réessayez ou retournez à l'accueil",
   "error.back_home": "Retour à l'accueil",
-  "error.retry": "Réessayer"
+  "error.retry": "Réessayer",
+  "error.contact_support": "Contacter le support"
 }

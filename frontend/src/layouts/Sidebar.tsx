@@ -29,6 +29,7 @@ interface NavSection {
   titleKey: string;
   icon: React.ElementType;
   items: NavItem[];
+  adminOnly?: boolean;
 }
 
 const navSections: NavSection[] = [
@@ -80,6 +81,18 @@ const navSections: NavSection[] = [
         to: "/time-tracking",
         icon: AccessTimeOutlined,
         labelKey: "sidebar.item.time_tracking",
+      },
+    ],
+  },
+  {
+    titleKey: "sidebar.section.administration",
+    icon: SettingsOutlined,
+    adminOnly: true,
+    items: [
+      {
+        to: "/settings",
+        icon: SettingsOutlined,
+        labelKey: "sidebar.item.settings",
       },
     ],
   },
@@ -143,9 +156,10 @@ export const Sidebar: React.FC = () => {
       const clientAllowed = ["sidebar.section.tickets"];
       return navSections
         .filter((s) => s.items.length > 0)
-        .filter((s) => !isClient || clientAllowed.includes(s.titleKey));
+        .filter((s) => !isClient || clientAllowed.includes(s.titleKey))
+        .filter((s) => !s.adminOnly || isAdmin);
     },
-    [isClient],
+    [isClient, isAdmin],
   );
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -641,31 +655,6 @@ export const Sidebar: React.FC = () => {
               )}
             </Box>
           </Tooltip>
-
-          {isAdmin && (
-            <Tooltip title={t("sidebar.settings")} placement="top" arrow>
-              <Box
-                component="button"
-                onClick={() => navigate("/settings")}
-                sx={{
-                  all: "unset",
-                  cursor: "pointer",
-                  width: 26,
-                  height: 26,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 'var(--r-sm)',
-                  color: "var(--muted)",
-                  flexShrink: 0,
-                  transition: "color 0.12s, background 0.12s",
-                  "&:hover": { color: "var(--accent)" },
-                }}
-              >
-                <SettingsOutlined sx={{ fontSize: 14 }} />
-              </Box>
-            </Tooltip>
-          )}
 
           <Tooltip title={t("sidebar.logout")} placement="top" arrow>
             <Box
