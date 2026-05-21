@@ -531,7 +531,7 @@
   "tickets.list.export": "Exporter",
   "tickets.list.export_error": "Impossible d'exporter les tickets",
   "tickets.list.field_assignee": "Assigné à",
-  "tickets.list.field_description": "Description (Markdown supporté)",
+  "tickets.list.field_description": "Description",
   "tickets.list.field_estimation": "Estimation",
   "tickets.list.field_priority": "Priorité",
   "tickets.list.field_project": "Projet",

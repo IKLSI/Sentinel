@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import ReactMarkdown from "react-markdown";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
@@ -283,8 +282,8 @@ export const TicketDetailPage: React.FC = () => {
 
             <Box>
               {ticket.description ? (
-                <Box sx={markdownSx}>
-                  <ReactMarkdown>{ticket.description}</ReactMarkdown>
+                <Box sx={{ fontSize: "13px", color: palette.mdText, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                  {ticket.description}
                 </Box>
               ) : (
                 <Box sx={{ color: palette.descFallback, fontSize: "13px" }}>
