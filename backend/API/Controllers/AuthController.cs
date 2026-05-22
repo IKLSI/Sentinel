@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Asp.Versioning;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,9 @@ using Sentinel.API.Jobs;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/auth")]
+[Route("api/v{version:apiVersion}/auth")]
 public class AuthController : BaseController
 {
     private readonly AuthService _authService;

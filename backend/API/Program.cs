@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Serilog;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Extensions;
+using Sentinel.API.HealthChecks;
 using Sentinel.API.Middleware;
 namespace Sentinel.API;
 
@@ -10,6 +13,11 @@ public static class Program
     public static async Task Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext());
 
         string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
@@ -22,11 +30,13 @@ public static class Program
             .AddHangfireServices(connectionString)
             .AddHttpRegistryClients()
             .AddApplicationServices()
+            .AddApiVersioningPolicy()
             .AddSwaggerWithJwt()
             .AddRequestValidation()
             .AddControllersWithJsonOptions()
             .AddLoginRateLimiting()
             .AddMemoryCache()
+            .AddAppHealthChecks()
             .AddDataProtection();
 
         WebApplication app = builder.Build();
@@ -36,7 +46,20 @@ public static class Program
             app.UseHsts();
         }
 
+        app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<ErrorHandlingMiddleware>();
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = (diagCtx, httpCtx) =>
+            {
+                if (httpCtx.Items.TryGetValue(CorrelationIdMiddleware.HeaderName, out object? cid)
+                    && cid?.ToString() is string cidStr
+                    && !string.IsNullOrEmpty(cidStr))
+                {
+                    diagCtx.Set("CorrelationId", cidStr);
+                }
+            };
+        });
         app.UseRouting();
 
         app.Use(async (context, next) =>
@@ -78,6 +101,19 @@ public static class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.ConfigureHangfire();
+
+        app.MapHealthChecks("/health/live", new HealthCheckOptions
+        {
+            Predicate = _ => false,
+            ResponseWriter = HealthCheckResponseWriter.WriteResponse
+        });
+
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        {
+            Predicate = c => c.Tags.Contains("ready"),
+            ResponseWriter = HealthCheckResponseWriter.WriteResponse
+        });
+
         app.MapControllers();
 
         app.Run();

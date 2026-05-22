@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Hangfire;
 using Hangfire.Storage;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,9 @@ public record RecurringJobStatusDto(
 );
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/jobs")]
+[Route("api/v{version:apiVersion}/jobs")]
 [Authorize]
 [AuthorizeRoles(UserRole.Admin)]
 public class JobsController : BaseController

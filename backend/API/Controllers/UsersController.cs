@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,9 @@ using Sentinel.API.Jobs;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/users")]
+[Route("api/v{version:apiVersion}/users")]
 [Authorize]
 public class UsersController : BaseController
 {

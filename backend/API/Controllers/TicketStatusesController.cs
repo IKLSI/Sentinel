@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,9 @@ using Sentinel.Domain.Models;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/statuses")]
+[Route("api/v{version:apiVersion}/statuses")]
 [Authorize]
 public class TicketStatusesController : BaseController
 {

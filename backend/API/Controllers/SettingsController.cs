@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,9 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/settings")]
+[Route("api/v{version:apiVersion}/settings")]
 [Authorize]
 public class SettingsController : BaseController
 {

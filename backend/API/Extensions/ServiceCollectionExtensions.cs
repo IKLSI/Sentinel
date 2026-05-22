@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Asp.Versioning;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -14,6 +15,7 @@ using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
+using Sentinel.API.HealthChecks;
 using Sentinel.API.Jobs;
 using Sentinel.API.Services;
 using Sentinel.Application.Services;
@@ -242,6 +244,32 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddRequestValidation(this IServiceCollection services)
     {
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+        return services;
+    }
+
+    public static IServiceCollection AddApiVersioningPolicy(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new UrlSegmentApiVersionReader(),
+                new HeaderApiVersionReader("X-Api-Version"),
+                new QueryStringApiVersionReader("api-version"));
+        }).AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
+        return services;
+    }
+
+    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
+    {
+        services.AddHealthChecks()
+            .AddCheck<PostgresHealthCheck>("postgres", tags: new[] { "ready" });
         return services;
     }
 

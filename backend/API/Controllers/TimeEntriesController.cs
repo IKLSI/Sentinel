@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
 using Sentinel.Domain.DTOs.TimeEntries;
 using Sentinel.Domain.Models;
@@ -8,7 +9,9 @@ using Sentinel.Application.Services;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/time-entries")]
+[Route("api/v{version:apiVersion}/time-entries")]
 [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
 public class TimeEntriesController : BaseController
 {

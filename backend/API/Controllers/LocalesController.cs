@@ -1,11 +1,14 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sentinel.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/locales")]
+[Route("api/v{version:apiVersion}/locales")]
 public class LocalesController : BaseController
 {
     private readonly IWebHostEnvironment _environment;

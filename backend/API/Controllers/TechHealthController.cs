@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,9 @@ internal static class RepositoryUrlGuard
 }
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/tech-health")]
+[Route("api/v{version:apiVersion}/tech-health")]
 [Authorize]
 public class TechHealthController : BaseController
 {
