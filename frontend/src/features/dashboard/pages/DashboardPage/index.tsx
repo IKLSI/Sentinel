@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
-import { getDashboardStats } from "@/features/dashboard/api/dashboard";
-import { getProjects } from "@/features/techHealth/api/projects";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { useDashboard, dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
+import { useProjects, projectsQueryKey } from "@/features/techHealth/hooks/useProjects";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
@@ -29,42 +29,31 @@ export const DashboardPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
-  const [stats, setStats] = useState<StatsData>(EMPTY_STATS);
-  const [projects, setProjects] = useState<ProjectDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const loadData = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const [statsRes, projectsRes] = await Promise.allSettled([
-        getDashboardStats(signal),
-        getProjects(signal),
-      ]);
-      if (signal?.aborted) return;
-      if (statsRes.status === "fulfilled") setStats(statsRes.value);
-      else showToast(t("dashboard.toast.stats_load_error"), "error");
-      if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
-      else showToast(t("dashboard.toast.projects_load_error"), "error");
-    } catch {
-      if (signal?.aborted) return;
-      showToast(t("dashboard.toast.stats_load_error"), "error");
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [showToast, t]);
+  const dashboardQuery = useDashboard();
+  const projectsQuery = useProjects();
+
+  const stats: StatsData = (dashboardQuery.data as StatsData) ?? EMPTY_STATS;
+  const projects = projectsQuery.data ?? [];
+  const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
 
   useEffect(() => {
-    const controller = new AbortController();
-    void loadData(controller.signal);
-    return () => controller.abort();
-  }, [loadData]);
+    if (dashboardQuery.error) showToast(t("dashboard.toast.stats_load_error"), "error");
+  }, [dashboardQuery.error, showToast, t]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (projectsQuery.error) showToast(t("dashboard.toast.projects_load_error"), "error");
+  }, [projectsQuery.error, showToast, t]);
+
+  useEffect(() => {
     const handler = () => {
-      void loadData();
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
+      queryClient.invalidateQueries({ queryKey: projectsQueryKey });
     };
     window.addEventListener("dashboard:refresh", handler);
     return () => window.removeEventListener("dashboard:refresh", handler);
-  }, [loadData]);
+  }, [queryClient]);
 
   const urgent = useMemo(
     () =>

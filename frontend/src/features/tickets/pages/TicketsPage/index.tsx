@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "@/components/DeleteModal";
@@ -12,7 +13,7 @@ import {
   exportTicketsExcel,
   updateTicket,
 } from "@/features/tickets/api/tickets";
-import { getTicketStatuses } from "@/features/tickets/api/ticketStatuses";
+import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { Ticket, TicketStatusDef, User } from "@/types";
@@ -29,7 +30,7 @@ export const TicketsPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { tickets, loading, fetchTickets } = useTickets();
+  const queryClient = useQueryClient();
   const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -56,7 +57,8 @@ export const TicketsPage: React.FC = () => {
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
-  const [statuses, setStatuses] = useState<TicketStatusDef[]>([]);
+  const { data: statusesData } = useTicketStatuses();
+  const statuses: TicketStatusDef[] = statusesData ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const [editForm, setEditForm] = useState<EditFormState>({
     title: "",
@@ -186,6 +188,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) =>
         prev.map((tk) => (tk.id === updated.id ? updated : tk)),
       );
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
       setEditTarget(null);
       window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {
@@ -203,6 +206,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) =>
         prev.filter((tk) => tk.id !== deleteTarget.id),
       );
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
       setDeleteTarget(null);
       window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {
@@ -220,22 +224,20 @@ export const TicketsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
+  const ticketsFilters = useMemo(() => {
     const params: Record<string, unknown> = { page, pageSize };
     if (debouncedSearch) params.search = debouncedSearch;
     if (filters.priority) params.priority = filters.priority;
     if (filters.status) params.status = filters.status;
     if (filters.type) params.type = filters.type;
-    fetchTickets(params).catch(() => {
-      showToast(t("tickets.list.load_error"), "error");
-    });
-  }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast, t]);
+    return params;
+  }, [page, pageSize, debouncedSearch, filters]);
+
+  const { tickets, loading, error } = useTickets(ticketsFilters);
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    getTicketStatuses(ctrl.signal).then(setStatuses).catch(() => {});
-    return () => ctrl.abort();
-  }, []);
+    if (error) showToast(t("tickets.list.load_error"), "error");
+  }, [error, showToast, t]);
 
   useEffect(() => {
     const handler = () => openCreateModal();

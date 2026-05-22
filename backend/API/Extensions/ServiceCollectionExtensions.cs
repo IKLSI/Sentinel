@@ -88,22 +88,57 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
-        string? frontendUrl = configuration["Frontend:BaseUrl"];
-        if (string.IsNullOrWhiteSpace(frontendUrl))
-            frontendUrl = "http://localhost:3000";
+        string[] origins = ResolveAllowedOrigins(configuration);
 
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
             {
                 policy
-                    .WithOrigins(frontendUrl)
+                    .WithOrigins(origins)
                     .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With")
                     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                     .AllowCredentials();
             });
         });
         return services;
+    }
+
+    private static string[] ResolveAllowedOrigins(IConfiguration configuration)
+    {
+        HashSet<string> origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        string[]? configured = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (configured != null)
+        {
+            foreach (string origin in configured)
+            {
+                if (IsValidOrigin(origin))
+                {
+                    origins.Add(origin.TrimEnd('/'));
+                }
+            }
+        }
+
+        string? frontendUrl = configuration["Frontend:BaseUrl"];
+        if (IsValidOrigin(frontendUrl))
+        {
+            origins.Add(frontendUrl!.TrimEnd('/'));
+        }
+
+        if (origins.Count == 0)
+        {
+            origins.Add("http://localhost:3000");
+        }
+
+        return origins.ToArray();
+    }
+
+    private static bool IsValidOrigin(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uri)) return false;
+        return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
     }
 
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, string connectionString)
