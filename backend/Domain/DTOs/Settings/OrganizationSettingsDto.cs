@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Sentinel.Domain.DTOs.Settings;
 
 public class OrganizationSettingsDto
@@ -12,10 +10,7 @@ public class OrganizationSettingsDto
 
 public class UpdateOrganizationSettingsDto
 {
-    [Required]
-    [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
-    [MaxLength(100)]
     public string Timezone { get; set; } = string.Empty;
 }
 
@@ -27,8 +22,6 @@ public class IntegrationSettingsDto
 
 public class ConnectIntegrationDto
 {
-    [Required]
-    [MaxLength(500)]
     public string Token { get; set; } = string.Empty;
 }
 

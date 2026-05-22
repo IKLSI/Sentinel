@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Sentinel.Domain.DTOs.Tickets;
 
 public class TicketStatusDto
@@ -15,9 +13,6 @@ public class TicketStatusDto
 
 public class CreateTicketStatusDto
 {
-    [Required(ErrorMessage = "Le nom du statut est requis")]
-    [MaxLength(50, ErrorMessage = "Le nom ne peut pas dépasser 50 caractères")]
     public string Name { get; set; } = string.Empty;
-
     public string Color { get; set; } = "var(--muted2)";
 }

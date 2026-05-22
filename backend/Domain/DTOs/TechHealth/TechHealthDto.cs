@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Sentinel.Domain.DTOs.TechHealth;
 
 public class TechProjectDto
@@ -57,27 +55,16 @@ public class RuntimeDto
 
 public class CreateTechProjectDto
 {
-    [Required]
-    [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
-    [MaxLength(500)]
-    [Url]
     public string? RepositoryUrl { get; set; }
-    [MaxLength(50)]
     public string RepositoryType { get; set; } = "GitHub";
-    [MaxLength(50)]
     public string ScanFrequency { get; set; } = "Weekly";
 }
 
 public class UpdateTechProjectDto
 {
-    [MaxLength(200)]
     public string? Name { get; set; }
-    [MaxLength(500)]
-    [Url]
     public string? RepositoryUrl { get; set; }
-    [MaxLength(50)]
     public string? RepositoryType { get; set; }
-    [MaxLength(50)]
     public string? ScanFrequency { get; set; }
 }

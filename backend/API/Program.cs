@@ -23,6 +23,7 @@ public static class Program
             .AddHttpRegistryClients()
             .AddApplicationServices()
             .AddSwaggerWithJwt()
+            .AddRequestValidation()
             .AddControllersWithJsonOptions()
             .AddLoginRateLimiting()
             .AddMemoryCache()

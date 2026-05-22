@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Sentinel.Domain.Models;
-
 namespace Sentinel.Domain.DTOs.Tickets;
 
 public class TicketDto
@@ -54,14 +51,11 @@ public class TicketHistoryDto
 
 public class CreateCommentDto
 {
-    [Required]
-    [MaxLength(5000, ErrorMessage = "Le commentaire ne peut pas dépasser 5000 caractères")]
     public string Content { get; set; } = string.Empty;
     public bool IsInternal { get; set; } = false;
 }
 
 public class ChangeStatusDto
 {
-    [Required]
     public Guid StatusId { get; set; }
 }

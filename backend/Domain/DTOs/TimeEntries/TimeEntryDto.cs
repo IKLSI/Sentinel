@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Sentinel.Domain.DTOs.TimeEntries;
 
 public class TimeEntryDto
@@ -22,31 +20,17 @@ public class CreateTimeEntryDto
 {
     public Guid? TicketId { get; set; }
     public Guid? TechProjectId { get; set; }
-
-    [Required(ErrorMessage = "La date est requise")]
     public DateOnly Date { get; set; }
-
-    [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int DurationMinutes { get; set; }
-
-    [MaxLength(500)]
     public string? Title { get; set; }
-
-    [MaxLength(2000)]
     public string? Description { get; set; }
 }
 
 public class UpdateTimeEntryDto
 {
     public DateOnly? Date { get; set; }
-
-    [Range(1, 1440, ErrorMessage = "La durée doit être entre 1 et 1440 minutes")]
     public int? DurationMinutes { get; set; }
-
-    [MaxLength(500)]
     public string? Title { get; set; }
-
-    [MaxLength(2000)]
     public string? Description { get; set; }
     public Guid? TechProjectId { get; set; }
     public Guid? TicketId { get; set; }

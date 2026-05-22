@@ -2,18 +2,22 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
+using Sentinel.API.Filters;
 using Sentinel.API.Jobs;
 using Sentinel.API.Services;
 using Sentinel.Application.Services;
+using Sentinel.Application.Validators;
 
 namespace Sentinel.API.Extensions;
 
@@ -202,12 +206,50 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddControllersWithJsonOptions(this IServiceCollection services)
     {
-        services.AddControllers().AddJsonOptions(options =>
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidationFilter>();
+        }).AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         });
+
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = ctx =>
+            {
+                Dictionary<string, string[]> errors = ctx.ModelState
+                    .Where(kv => kv.Value != null && kv.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kv => ToCamelCase(kv.Key),
+                        kv => kv.Value!.Errors.Select(e => string.IsNullOrEmpty(e.ErrorMessage) ? "Valeur invalide" : e.ErrorMessage).ToArray());
+
+                ValidationProblemDetails problem = new ValidationProblemDetails(errors)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation échouée",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Instance = ctx.HttpContext.Request.Path
+                };
+                return new BadRequestObjectResult(problem);
+            };
+        });
+
         return services;
+    }
+
+    public static IServiceCollection AddRequestValidation(this IServiceCollection services)
+    {
+        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+        return services;
+    }
+
+    private static string ToCamelCase(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        if (char.IsLower(name[0])) return name;
+        return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
     public static IServiceCollection AddTenantContext(this IServiceCollection services)
