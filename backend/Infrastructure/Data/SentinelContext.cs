@@ -111,7 +111,13 @@ public class SentinelContext : DbContext
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.Timezone).HasMaxLength(50);
             entity.Property(e => e.GithubToken).HasMaxLength(500);
+            entity.Property(e => e.GithubAccountId).HasMaxLength(100);
+            entity.Property(e => e.GithubAccountLogin).HasMaxLength(100);
             entity.Property(e => e.GitlabToken).HasMaxLength(500);
+            entity.Property(e => e.GitlabAccountId).HasMaxLength(100);
+            entity.Property(e => e.GitlabAccountLogin).HasMaxLength(100);
+            entity.HasIndex(e => e.GithubAccountId).IsUnique().HasFilter("\"GithubAccountId\" IS NOT NULL");
+            entity.HasIndex(e => e.GitlabAccountId).IsUnique().HasFilter("\"GitlabAccountId\" IS NOT NULL");
         });
     }
 
@@ -121,7 +127,6 @@ public class SentinelContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-            entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.FirstName).HasMaxLength(100).IsRequired();
             entity.Property(e => e.LastName).HasMaxLength(100).IsRequired();
             entity.Property(e => e.PasswordHash).IsRequired();

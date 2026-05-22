@@ -32,12 +32,17 @@ public static class ServiceCollectionExtensions
         string connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
-        services.AddDbContext<SentinelContext>(options =>
+        services.AddScoped<TenantCommandInterceptor>();
+
+        services.AddDbContext<SentinelContext>((sp, options) =>
+        {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
                 npgsqlOptions.CommandTimeout(30);
-            }));
+            });
+            options.AddInterceptors(sp.GetRequiredService<TenantCommandInterceptor>());
+        });
 
         return services;
     }

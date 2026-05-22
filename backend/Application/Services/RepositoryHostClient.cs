@@ -34,6 +34,55 @@ public class RepositoryHostClient
         return [];
     }
 
+    public async Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform)
+    {
+        HttpClient client = _httpClientFactory.CreateClient("Registry");
+
+        if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
+        {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            try
+            {
+                HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode) return null;
+                JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+                string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
+                string login = payload.TryGetProperty("login", out JsonElement l) ? l.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(login)) return null;
+                return (id, login);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Échec récupération identité GitHub");
+                return null;
+            }
+        }
+
+        if (platform.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
+        {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "https://gitlab.com/api/v4/user");
+            request.Headers.Add("PRIVATE-TOKEN", token);
+            try
+            {
+                HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode) return null;
+                JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+                string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
+                string login = payload.TryGetProperty("username", out JsonElement u) ? u.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(login)) return null;
+                return (id, login);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Échec récupération identité GitLab");
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo, string? tokenOverride = null)
     {
         if (host.Contains("github"))

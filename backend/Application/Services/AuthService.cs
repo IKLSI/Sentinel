@@ -77,10 +77,26 @@ public class AuthService
 
     public async Task<LoginResponse?> LoginAsync(string email, string password)
     {
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == email.ToLower() && u.IsActive);
+        string normalizedEmail = email.ToLower();
+        List<User> candidates = await _context.Users
+            .Where(u => u.Email == normalizedEmail && u.IsActive)
+            .ToListAsync();
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        User? user = null;
+        foreach (User candidate in candidates)
+        {
+            if (BCrypt.Net.BCrypt.Verify(password, candidate.PasswordHash))
+            {
+                if (user != null)
+                {
+                    _logger.LogWarning("Plusieurs comptes correspondent au login {Email} — connexion refusée par ambiguïté", normalizedEmail);
+                    return null;
+                }
+                user = candidate;
+            }
+        }
+
+        if (user == null)
         {
             return null;
         }

@@ -7,7 +7,15 @@ public class Organization
     public string Slug { get; set; } = string.Empty;
     public string Timezone { get; set; } = "Europe/Paris";
     public string? GithubToken { get; set; }
+    public string? GithubAccountId { get; set; }
+    public string? GithubAccountLogin { get; set; }
+    public DateTime? GithubConnectedAt { get; set; }
+    public Guid? GithubConnectedById { get; set; }
     public string? GitlabToken { get; set; }
+    public string? GitlabAccountId { get; set; }
+    public string? GitlabAccountLogin { get; set; }
+    public DateTime? GitlabConnectedAt { get; set; }
+    public Guid? GitlabConnectedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
