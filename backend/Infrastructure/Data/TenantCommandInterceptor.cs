@@ -18,18 +18,18 @@ public class TenantCommandInterceptor : DbCommandInterceptor
         CommandEventData eventData,
         InterceptionResult<DbDataReader> result)
     {
-        InjectTenant(command);
+        SetTenantConfig(command);
         return base.ReaderExecuting(command, eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+    public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
         DbCommand command,
         CommandEventData eventData,
         InterceptionResult<DbDataReader> result,
         CancellationToken cancellationToken = default)
     {
-        InjectTenant(command);
-        return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        await SetTenantConfigAsync(command, cancellationToken);
+        return await base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
     }
 
     public override InterceptionResult<int> NonQueryExecuting(
@@ -37,18 +37,18 @@ public class TenantCommandInterceptor : DbCommandInterceptor
         CommandEventData eventData,
         InterceptionResult<int> result)
     {
-        InjectTenant(command);
+        SetTenantConfig(command);
         return base.NonQueryExecuting(command, eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
+    public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
         DbCommand command,
         CommandEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        InjectTenant(command);
-        return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
+        await SetTenantConfigAsync(command, cancellationToken);
+        return await base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
     }
 
     public override InterceptionResult<object> ScalarExecuting(
@@ -56,23 +56,37 @@ public class TenantCommandInterceptor : DbCommandInterceptor
         CommandEventData eventData,
         InterceptionResult<object> result)
     {
-        InjectTenant(command);
+        SetTenantConfig(command);
         return base.ScalarExecuting(command, eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
+    public override async ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
         DbCommand command,
         CommandEventData eventData,
         InterceptionResult<object> result,
         CancellationToken cancellationToken = default)
     {
-        InjectTenant(command);
-        return base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
+        await SetTenantConfigAsync(command, cancellationToken);
+        return await base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
     }
 
-    private void InjectTenant(DbCommand command)
+    private void SetTenantConfig(DbCommand command)
     {
+        if (command.Connection == null) return;
         string orgValue = _tenant.OrganizationId?.ToString() ?? string.Empty;
-        command.CommandText = $"SELECT set_config('app.current_org', '{orgValue}', true); " + command.CommandText;
+        using DbCommand setCmd = command.Connection.CreateCommand();
+        setCmd.Transaction = command.Transaction;
+        setCmd.CommandText = $"SET app.current_org = '{orgValue}'";
+        setCmd.ExecuteNonQuery();
+    }
+
+    private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
+    {
+        if (command.Connection == null) return;
+        string orgValue = _tenant.OrganizationId?.ToString() ?? string.Empty;
+        await using DbCommand setCmd = command.Connection.CreateCommand();
+        setCmd.Transaction = command.Transaction;
+        setCmd.CommandText = $"SET app.current_org = '{orgValue}'";
+        await setCmd.ExecuteNonQueryAsync(cancellationToken);
     }
 }
