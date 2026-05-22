@@ -24,11 +24,11 @@ interface Props {
   isDark: boolean;
 }
 
-export const UrgentTicketsPanel: React.FC<Props> = ({
+export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTicketsPanel({
   urgent,
   palette,
   isDark,
-}) => {
+}) {
   const t = useT();
   const navigate = useNavigate();
 
@@ -255,4 +255,4 @@ export const UrgentTicketsPanel: React.FC<Props> = ({
       </Box>
     </Box>
   );
-};
+});

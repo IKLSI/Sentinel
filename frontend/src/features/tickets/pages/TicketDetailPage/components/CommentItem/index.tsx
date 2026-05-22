@@ -55,7 +55,7 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-export const CommentItem: React.FC<Props> = ({
+export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   comment: c,
   isLast,
   isOwn,
@@ -63,7 +63,7 @@ export const CommentItem: React.FC<Props> = ({
   markdownSx,
   onEdit,
   onDelete,
-}) => {
+}) {
   const t = useT();
   const { mainText, attachments } = parseComment(c.content);
 
@@ -289,4 +289,4 @@ export const CommentItem: React.FC<Props> = ({
       </Box>
     </Box>
   );
-};
+});

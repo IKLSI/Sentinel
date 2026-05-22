@@ -55,16 +55,22 @@ export const OrganisationTab: React.FC = () => {
   const [connectingGitlab, setConnectingGitlab] = useState(false);
 
   useEffect(() => {
-    Promise.all([getOrganizationSettings(), getIntegrationSettings()])
+    const ctrl = new AbortController();
+    Promise.all([getOrganizationSettings(ctrl.signal), getIntegrationSettings(ctrl.signal)])
       .then(([o, i]) => {
+        if (ctrl.signal.aborted) return;
         setOrg(o);
         setOrgForm({ name: o.name, timezone: o.timezone });
         setIntegrations(i);
       })
-      .catch(() => showToast(t("settings.toast.settings_load_error"), "error"))
+      .catch(() => {
+        if (ctrl.signal.aborted) return;
+        showToast(t("settings.toast.settings_load_error"), "error");
+      })
       .finally(() => {
-        setLoadingOrg(false);
+        if (!ctrl.signal.aborted) setLoadingOrg(false);
       });
+    return () => ctrl.abort();
   }, [showToast, t]);
 
   const handleSaveOrg = async () => {

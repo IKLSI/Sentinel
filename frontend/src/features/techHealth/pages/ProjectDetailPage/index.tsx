@@ -34,22 +34,26 @@ export const ProjectDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [depSearch, setDepSearch] = useState("");
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!id) return;
     setLoading(true);
     try {
-      const data = await getProject(id);
+      const data = await getProject(id, signal);
+      if (signal?.aborted) return;
       setProject(data);
     } catch {
+      if (signal?.aborted) return;
       showToast(t("tech_health.error.load_failed"), "error");
       navigate("/projects");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [id, showToast, navigate, t]);
 
   useEffect(() => {
-    load();
+    const ctrl = new AbortController();
+    void load(ctrl.signal);
+    return () => ctrl.abort();
   }, [load]);
 
   const handleDelete = async () => {

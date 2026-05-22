@@ -76,10 +76,19 @@ public class TicketsController : BaseController
                 .Replace("%", "\\%")
                 .Replace("_", "\\_");
             string pattern = $"%{escaped}%";
+
+            List<Guid> commentTicketIds = await _context.TicketComments
+                .AsNoTracking()
+                .Where(c => c.Ticket.OrganizationId == organizationId.Value
+                    && EF.Functions.ILike(c.Content, pattern))
+                .Select(c => c.TicketId)
+                .Distinct()
+                .ToListAsync();
+
             query = query.Where(t =>
                 EF.Functions.ILike(t.Title, pattern) ||
                 EF.Functions.ILike(t.Description, pattern) ||
-                t.Comments.Any(c => EF.Functions.ILike(c.Content, pattern))
+                commentTicketIds.Contains(t.Id)
             );
         }
 

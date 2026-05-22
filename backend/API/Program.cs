@@ -48,6 +48,7 @@ public static class Program
 
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<ErrorHandlingMiddleware>();
+        app.UseMiddleware<ETagMiddleware>();
         app.UseSerilogRequestLogging(options =>
         {
             options.EnrichDiagnosticContext = (diagCtx, httpCtx) =>

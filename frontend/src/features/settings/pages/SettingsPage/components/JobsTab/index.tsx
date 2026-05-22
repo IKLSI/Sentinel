@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
@@ -68,17 +68,19 @@ export const JobsTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const data = await getRecurringJobs();
+      const data = await getRecurringJobs(signal);
+      if (signal?.aborted) return;
       setJobs(data);
     } catch (err) {
+      if (signal?.aborted) return;
       showToast(extractApiError(err, t("settings.jobs.load_error")), "error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   const handleTrigger = async () => {
     setTriggering(true);
@@ -93,7 +95,11 @@ export const JobsTab: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadJobs(); }, []);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    void loadJobs(ctrl.signal);
+    return () => ctrl.abort();
+  }, [loadJobs]);
 
   const jobName = (id: string) => {
     const key = `settings.jobs.job.${id}`;

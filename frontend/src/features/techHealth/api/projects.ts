@@ -58,13 +58,13 @@ interface CreateProjectDto {
   repositoryUrl?: string
 }
 
-export const getProjects = async (): Promise<ProjectDto[]> => {
-  const response = await apiClient.get<ProjectDto[]>('/api/tech-health/projects')
+export const getProjects = async (signal?: AbortSignal): Promise<ProjectDto[]> => {
+  const response = await apiClient.get<ProjectDto[]>('/api/tech-health/projects', { signal })
   return response.data
 }
 
-export const getProject = async (id: string): Promise<ProjectDetailDto> => {
-  const response = await apiClient.get<ProjectDetailDto>(`/api/tech-health/projects/${id}`)
+export const getProject = async (id: string, signal?: AbortSignal): Promise<ProjectDetailDto> => {
+  const response = await apiClient.get<ProjectDetailDto>(`/api/tech-health/projects/${id}`, { signal })
   return response.data
 }
 

@@ -70,17 +70,23 @@ export const TicketDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
+    const ctrl = new AbortController();
     setLoading(true);
     setNotFound(false);
-    getTicket(id)
+    getTicket(id, ctrl.signal)
       .then((tk) => {
+        if (ctrl.signal.aborted) return;
         setTicket(tk);
       })
       .catch(() => {
+        if (ctrl.signal.aborted) return;
         setNotFound(true);
         showToast(t("tickets.detail.not_found_toast"), "error");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
+    return () => ctrl.abort();
   }, [id, showToast, t]);
 
   const endpointMatch = useMemo(() => {

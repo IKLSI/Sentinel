@@ -23,7 +23,7 @@ interface Props {
   onAddColumn: () => void;
 }
 
-export const KanbanBoard: React.FC<Props> = ({
+export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   loading,
   filteredColumns,
   columnDefs,
@@ -33,7 +33,7 @@ export const KanbanBoard: React.FC<Props> = ({
   onCardClick,
   onDeleteColumn,
   onAddColumn,
-}) => {
+}) {
   if (loading) {
     return (
       <Box
@@ -303,4 +303,4 @@ export const KanbanBoard: React.FC<Props> = ({
       </DragDropContext>
     </Box>
   );
-};
+});

@@ -14,12 +14,12 @@ interface Props {
   onDelete?: (id: string) => void;
 }
 
-export const KanbanColumnHeader: React.FC<Props> = ({
+export const KanbanColumnHeader: React.FC<Props> = React.memo(function KanbanColumnHeader({
   colDef,
   count,
   loading = false,
   onDelete,
-}) => {
+}) {
   const t = useT();
   const [hovered, setHovered] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -179,4 +179,4 @@ export const KanbanColumnHeader: React.FC<Props> = ({
       </DeleteModal>
     </>
   );
-};
+});

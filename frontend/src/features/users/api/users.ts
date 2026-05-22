@@ -1,8 +1,8 @@
 import apiClient from '../../../services/client'
 import { User, UserRole, PaginatedResponse } from '../../../types'
 
-export const getUsers = async (params: { page?: number; role?: UserRole; search?: string } = {}): Promise<PaginatedResponse<User>> => {
-  const response = await apiClient.get<PaginatedResponse<User>>('/api/users', { params })
+export const getUsers = async (params: { page?: number; role?: UserRole; search?: string } = {}, signal?: AbortSignal): Promise<PaginatedResponse<User>> => {
+  const response = await apiClient.get<PaginatedResponse<User>>('/api/users', { params, signal })
   return response.data
 }
 

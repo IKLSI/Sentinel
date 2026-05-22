@@ -64,20 +64,24 @@ export const ProjectsPage: React.FC = () => {
     [],
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const data = await getProjects();
+      const data = await getProjects(signal);
+      if (signal?.aborted) return;
       setProjects(data);
     } catch {
+      if (signal?.aborted) return;
       showToast(t("projects.toast.load_error"), "error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [showToast, t]);
 
   useEffect(() => {
-    load();
+    const ctrl = new AbortController();
+    void load(ctrl.signal);
+    return () => ctrl.abort();
   }, [load]);
 
   const handleExport = async () => {

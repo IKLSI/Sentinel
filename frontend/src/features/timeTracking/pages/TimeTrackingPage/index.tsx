@@ -68,23 +68,28 @@ export const TimeTrackingPage: React.FC = () => {
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const data = await getTimeEntries(
         format(weekStart, "yyyy-MM-dd"),
         format(weekEnd, "yyyy-MM-dd"),
+        signal,
       );
+      if (signal?.aborted) return;
       setEntries(data);
     } catch {
+      if (signal?.aborted) return;
       showToast(t("time_tracking.error_load_entries"), "error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [weekStart, weekEnd, showToast, t]);
 
   useEffect(() => {
-    load();
+    const ctrl = new AbortController();
+    void load(ctrl.signal);
+    return () => ctrl.abort();
   }, [load]);
 
   useEffect(() => {

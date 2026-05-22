@@ -15,7 +15,7 @@ interface Props {
   palette: DashPalette;
 }
 
-export const KpiCard: React.FC<Props> = ({
+export const KpiCard: React.FC<Props> = React.memo(function KpiCard({
   label,
   value,
   valueColor,
@@ -24,7 +24,7 @@ export const KpiCard: React.FC<Props> = ({
   inverse = false,
   badge = false,
   palette,
-}) => {
+}) {
   const positive = (delta ?? 0) >= 0;
   const good = inverse ? !positive : positive;
   const upColor = palette.activityOkFg;
@@ -136,4 +136,4 @@ export const KpiCard: React.FC<Props> = ({
       </Box>
     </Box>
   );
-};
+});

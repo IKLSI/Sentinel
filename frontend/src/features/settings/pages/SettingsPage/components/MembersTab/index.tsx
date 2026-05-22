@@ -61,19 +61,24 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     return () => obs.disconnect();
   }, []);
 
-  const loadMembers = useCallback(async () => {
+  const loadMembers = useCallback(async (signal?: AbortSignal) => {
     setLoadingMembers(true);
     try {
-      setMembers((await getUsers()).items);
+      const res = await getUsers({}, signal);
+      if (signal?.aborted) return;
+      setMembers(res.items);
     } catch {
+      if (signal?.aborted) return;
       showToast(t("settings.toast.members_load_error"), "error");
     } finally {
-      setLoadingMembers(false);
+      if (!signal?.aborted) setLoadingMembers(false);
     }
   }, [showToast, t]);
 
   useEffect(() => {
-    loadMembers();
+    const ctrl = new AbortController();
+    void loadMembers(ctrl.signal);
+    return () => ctrl.abort();
   }, [loadMembers]);
 
   useEffect(() => {

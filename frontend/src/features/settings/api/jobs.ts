@@ -9,8 +9,8 @@ export interface RecurringJobStatus {
   error: string | null
 }
 
-export const getRecurringJobs = async (): Promise<RecurringJobStatus[]> => {
-  const response = await apiClient.get<RecurringJobStatus[]>('/api/jobs')
+export const getRecurringJobs = async (signal?: AbortSignal): Promise<RecurringJobStatus[]> => {
+  const response = await apiClient.get<RecurringJobStatus[]>('/api/jobs', { signal })
   return response.data
 }
 

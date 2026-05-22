@@ -34,8 +34,8 @@ interface UpdateTimeEntryDto {
   ticketId?: string | null
 }
 
-export const getTimeEntries = async (from?: string, to?: string): Promise<TimeEntryDto[]> => {
-  const response = await apiClient.get<TimeEntryDto[]>('/api/time-entries', { params: { from, to } })
+export const getTimeEntries = async (from?: string, to?: string, signal?: AbortSignal): Promise<TimeEntryDto[]> => {
+  const response = await apiClient.get<TimeEntryDto[]>('/api/time-entries', { params: { from, to }, signal })
   return response.data
 }
 

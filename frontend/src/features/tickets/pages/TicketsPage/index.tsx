@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -103,7 +103,7 @@ export const TicketsPage: React.FC = () => {
     });
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
     setCreateForm({
       title: "",
       description: "",
@@ -114,7 +114,7 @@ export const TicketsPage: React.FC = () => {
     setCreateEstMinutes(0);
     setShowCreateModal(true);
     loadModalRefs();
-  };
+  }, []);
 
   const handleCreate = async () => {
     if (!createForm.title.trim()) return;
@@ -228,7 +228,9 @@ export const TicketsPage: React.FC = () => {
   }, [page, pageSize, debouncedSearch, filters, fetchTickets, showToast, t]);
 
   useEffect(() => {
-    getTicketStatuses().then(setStatuses).catch(() => {});
+    const ctrl = new AbortController();
+    getTicketStatuses(ctrl.signal).then(setStatuses).catch(() => {});
+    return () => ctrl.abort();
   }, []);
 
   useEffect(() => {

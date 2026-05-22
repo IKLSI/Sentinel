@@ -33,32 +33,29 @@ export const DashboardPage: React.FC = () => {
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (signal?: AbortSignal) => {
     try {
       const [statsRes, projectsRes] = await Promise.allSettled([
-        getDashboardStats(),
-        getProjects(),
+        getDashboardStats(signal),
+        getProjects(signal),
       ]);
+      if (signal?.aborted) return;
       if (statsRes.status === "fulfilled") setStats(statsRes.value);
       else showToast(t("dashboard.toast.stats_load_error"), "error");
       if (projectsRes.status === "fulfilled") setProjects(projectsRes.value);
       else showToast(t("dashboard.toast.projects_load_error"), "error");
     } catch {
+      if (signal?.aborted) return;
       showToast(t("dashboard.toast.stats_load_error"), "error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [showToast, t]);
 
   useEffect(() => {
-    let mounted = true;
-    void (async () => {
-      if (!mounted) return;
-      await loadData();
-    })();
-    return () => {
-      mounted = false;
-    };
+    const controller = new AbortController();
+    void loadData(controller.signal);
+    return () => controller.abort();
   }, [loadData]);
 
   React.useEffect(() => {

@@ -124,9 +124,11 @@ function mapTicketDto(dto: TicketDto): Ticket {
 
 export const getTickets = async (
   filters: TicketFilters = {},
+  signal?: AbortSignal,
 ): Promise<PaginatedResponse<Ticket>> => {
   const response = await apiClient.get<PagedResult<TicketDto>>("/api/tickets", {
     params: filters,
+    signal,
   });
   const data = response.data;
   return {
@@ -138,8 +140,8 @@ export const getTickets = async (
   };
 };
 
-export const getTicket = async (id: string): Promise<Ticket> => {
-  const response = await apiClient.get<TicketDto>(`/api/tickets/${id}`);
+export const getTicket = async (id: string, signal?: AbortSignal): Promise<Ticket> => {
+  const response = await apiClient.get<TicketDto>(`/api/tickets/${id}`, { signal });
   return mapTicketDto(response.data);
 };
 
@@ -234,9 +236,11 @@ export interface TicketAttachment {
 
 export const listAttachments = async (
   ticketId: string,
+  signal?: AbortSignal,
 ): Promise<TicketAttachment[]> => {
   const response = await apiClient.get<TicketAttachment[]>(
     `/api/tickets/${ticketId}/attachments`,
+    { signal },
   );
   return response.data;
 };

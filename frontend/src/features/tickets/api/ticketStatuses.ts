@@ -10,8 +10,8 @@ export interface TicketStatusDef {
   ticketCount: number
 }
 
-export const getTicketStatuses = async (): Promise<TicketStatusDef[]> => {
-  const response = await apiClient.get<TicketStatusDef[]>('/api/statuses')
+export const getTicketStatuses = async (signal?: AbortSignal): Promise<TicketStatusDef[]> => {
+  const response = await apiClient.get<TicketStatusDef[]>('/api/statuses', { signal })
   return response.data
 }
 

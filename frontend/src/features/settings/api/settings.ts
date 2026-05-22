@@ -7,8 +7,8 @@ export interface OrganizationSettings {
   createdAt: string
 }
 
-export const getOrganizationSettings = async (): Promise<OrganizationSettings> => {
-  const response = await apiClient.get<OrganizationSettings>('/api/settings/organization')
+export const getOrganizationSettings = async (signal?: AbortSignal): Promise<OrganizationSettings> => {
+  const response = await apiClient.get<OrganizationSettings>('/api/settings/organization', { signal })
   return response.data
 }
 
@@ -27,8 +27,8 @@ interface ImportResult {
   skippedCount: number
 }
 
-export const getIntegrationSettings = async (): Promise<IntegrationSettings> => {
-  const response = await apiClient.get<IntegrationSettings>('/api/settings/integrations')
+export const getIntegrationSettings = async (signal?: AbortSignal): Promise<IntegrationSettings> => {
+  const response = await apiClient.get<IntegrationSettings>('/api/settings/integrations', { signal })
   return response.data
 }
 

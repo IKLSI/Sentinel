@@ -14,12 +14,12 @@ interface Props {
   onClick: () => void;
 }
 
-export const TicketCard: React.FC<Props> = ({
+export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
   ticket,
   isDragging = false,
   updatingId,
   onClick,
-}) => {
+}) {
   const t = useT();
   const isUpdating = updatingId === ticket.id;
 
@@ -216,4 +216,4 @@ export const TicketCard: React.FC<Props> = ({
       </Box>
     </Box>
   );
-};
+});
