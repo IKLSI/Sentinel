@@ -68,3 +68,10 @@ public class UpdateTechProjectDto
     public string? RepositoryType { get; set; }
     public string? ScanFrequency { get; set; }
 }
+
+public class AvailableRepoDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string Platform { get; set; } = string.Empty;
+}

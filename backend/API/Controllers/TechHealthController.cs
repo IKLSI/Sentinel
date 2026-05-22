@@ -42,14 +42,66 @@ public class TechHealthController : BaseController
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly ExportService _exportService;
     private readonly IAuditLogService _auditLog;
+    private readonly RepositoryHostClient _repositoryHostClient;
+    private readonly TokenProtector _tokenProtector;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector)
     {
         _context = context;
         _techHealthService = techHealthService;
         _backgroundJobs = backgroundJobs;
         _exportService = exportService;
         _auditLog = auditLog;
+        _repositoryHostClient = repositoryHostClient;
+        _tokenProtector = tokenProtector;
+    }
+
+    [HttpGet("projects/available-repos")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<IEnumerable<AvailableRepoDto>>> GetAvailableRepos()
+    {
+        Guid? organizationId = GetOrganizationId();
+        if (organizationId == null) return Unauthorized();
+
+        Organization? org = await _context.Organizations.FindAsync(organizationId.Value);
+        if (org == null) return NotFound();
+
+        List<string?> existingUrls = await _context.TechProjects
+            .Where(p => p.OrganizationId == organizationId.Value)
+            .Select(p => p.RepositoryUrl)
+            .ToListAsync();
+
+        List<AvailableRepoDto> result = new();
+
+        if (!string.IsNullOrEmpty(org.GithubToken))
+        {
+            string? token = _tokenProtector.Unprotect(org.GithubToken);
+            if (!string.IsNullOrEmpty(token))
+            {
+                List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(token, "github");
+                foreach ((string name, string url) in repos)
+                {
+                    if (!existingUrls.Contains(url))
+                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = "GitHub" });
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(org.GitlabToken))
+        {
+            string? token = _tokenProtector.Unprotect(org.GitlabToken);
+            if (!string.IsNullOrEmpty(token))
+            {
+                List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(token, "gitlab");
+                foreach ((string name, string url) in repos)
+                {
+                    if (!existingUrls.Contains(url))
+                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = "GitLab" });
+                }
+            }
+        }
+
+        return Ok(result);
     }
 
     [HttpGet("projects/export/excel")]

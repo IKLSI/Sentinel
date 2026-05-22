@@ -14,17 +14,18 @@ import { useT } from "@/i18n/I18nContext";
 import {
   getProjects,
   getProject,
-  createProject,
   updateProject,
   deleteProject,
   scanProject,
   exportProjectsExcel,
   ProjectDto,
 } from "@/features/techHealth/api/projects";
+import { getIntegrationSettings } from "@/features/settings/api/settings";
 import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { ProjectFormModal } from "./components/ProjectFormModal";
+import { ImportReposModal } from "./components/ImportReposModal";
 import { extractApiError } from "@/utils/apiError";
 
 export const ProjectsPage: React.FC = () => {
@@ -33,10 +34,6 @@ export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [formName, setFormName] = useState("");
-  const [formRepoUrl, setFormRepoUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editTarget, setEditTarget] = useState<ProjectDto | null>(null);
@@ -45,6 +42,8 @@ export const ProjectsPage: React.FC = () => {
   const [editSaving, setEditSaving] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [hasIntegration, setHasIntegration] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<GradeKey, boolean>
   >({
@@ -81,6 +80,9 @@ export const ProjectsPage: React.FC = () => {
   useEffect(() => {
     const ctrl = new AbortController();
     void load(ctrl.signal);
+    getIntegrationSettings(ctrl.signal)
+      .then((s) => { if (!ctrl.signal.aborted) setHasIntegration(s.hasGithubToken || s.hasGitlabToken); })
+      .catch(() => {});
     return () => ctrl.abort();
   }, [load]);
 
@@ -92,30 +94,6 @@ export const ProjectsPage: React.FC = () => {
       showToast(t("projects.toast.export_error"), "error");
     } finally {
       setExporting(false);
-    }
-  };
-
-  const openModal = () => {
-    setFormName("");
-    setFormRepoUrl("");
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!formName.trim()) return;
-    setSubmitting(true);
-    try {
-      await createProject({
-        name: formName.trim(),
-        repositoryUrl: formRepoUrl || undefined,
-      });
-      setShowModal(false);
-      showToast(t("projects.toast.create_success"), "success");
-      await load();
-    } catch (err) {
-      showToast(extractApiError(err, t("projects.toast.create_error")), "error");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -253,7 +231,7 @@ export const ProjectsPage: React.FC = () => {
         <ProjectsToolbar
           search={search}
           onSearchChange={setSearch}
-          onCreate={openModal}
+          onImport={hasIntegration ? () => setShowImportModal(true) : undefined}
           onExport={handleExport}
           exporting={exporting}
         />
@@ -344,16 +322,11 @@ export const ProjectsPage: React.FC = () => {
         )}
       </Box>
 
-      <ProjectFormModal
-        open={showModal}
-        mode="create"
-        name={formName}
-        repoUrl={formRepoUrl}
-        onNameChange={setFormName}
-        onRepoUrlChange={setFormRepoUrl}
-        onClose={() => setShowModal(false)}
-        onSubmit={handleSubmit}
-        saving={submitting}
+      <ImportReposModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => void load()}
+        showToast={showToast}
       />
 
       <ProjectFormModal

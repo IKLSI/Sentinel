@@ -91,6 +91,17 @@ export const createProject = async (data: CreateProjectDto): Promise<ProjectDto>
   return response.data
 }
 
+export interface AvailableRepoDto {
+  name: string
+  url: string
+  platform: string
+}
+
+export const getAvailableRepos = async (signal?: AbortSignal): Promise<AvailableRepoDto[]> => {
+  const response = await apiClient.get<AvailableRepoDto[]>('/api/tech-health/projects/available-repos', { signal })
+  return response.data
+}
+
 export const exportProjectsExcel = async (): Promise<void> => {
   await downloadExcel(
     '/api/tech-health/projects/export/excel',

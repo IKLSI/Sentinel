@@ -3,14 +3,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import AddOutlined from "@mui/icons-material/AddOutlined";
+import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import { useT } from "@/i18n/I18nContext";
 
 interface Props {
   search: string;
   onSearchChange: (v: string) => void;
-  onCreate: () => void;
+  onImport?: () => void;
   onExport: () => void;
   exporting: boolean;
 }
@@ -18,7 +18,7 @@ interface Props {
 export const ProjectsToolbar: React.FC<Props> = ({
   search,
   onSearchChange,
-  onCreate,
+  onImport,
   onExport,
   exporting,
 }) => {
@@ -79,33 +79,35 @@ export const ProjectsToolbar: React.FC<Props> = ({
         </Box>
       </Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            textTransform: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            flexShrink: 0,
-            "&.MuiButton-root": {
-              background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              color: "#fff",
-              boxShadow: "none",
-              height: "32px",
-              px: "14px",
-            },
-            "&.MuiButton-root:hover": {
-              background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-              boxShadow: "none",
-              transform: "none",
-            },
-          }}
-          onClick={onCreate}
-        >
-          <AddOutlined sx={{ fontSize: 14 }} />
-          {t("projects.new_project")}
-        </Button>
+        {onImport && (
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              textTransform: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              "&.MuiButton-root": {
+                background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+                color: "#fff",
+                boxShadow: "none",
+                height: "32px",
+                px: "14px",
+              },
+              "&.MuiButton-root:hover": {
+                background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
+            onClick={onImport}
+          >
+            <CloudDownloadOutlined sx={{ fontSize: 14 }} />
+            {t("projects.import_repos")}
+          </Button>
+        )}
         <Button
           variant="outlined"
           size="small"
