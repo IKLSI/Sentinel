@@ -159,7 +159,11 @@ public class DashboardService
             RecentActivity = recentActivity,
         };
 
-        _cache.Set(cacheKey, result, TimeSpan.FromMinutes(2));
+        _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+            Priority = CacheItemPriority.High
+        });
 
         return result;
     }
@@ -169,19 +173,24 @@ public class DashboardService
         DateTime since = now.AddDays(-7);
         List<ActivityItemDto> items = new List<ActivityItemDto>();
 
-        List<Ticket> closedTickets = await _context.Tickets
+        var closedTickets = await _context.Tickets
             .AsNoTracking()
-            .Include(t => t.Project)
-            .Include(t => t.AssignedTo)
-            .Include(t => t.TicketStatus)
             .Where(t => t.OrganizationId == organizationId
                 && t.TicketStatus != null && t.TicketStatus.IsClosed
                 && t.UpdatedAt >= since)
             .OrderByDescending(t => t.UpdatedAt)
             .Take(8)
+            .Select(t => new
+            {
+                t.Title,
+                t.UpdatedAt,
+                ProjectName = t.Project != null ? t.Project.Name : null,
+                AssigneeFirstName = t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+                AssigneeLastName = t.AssignedTo != null ? t.AssignedTo.LastName : null,
+            })
             .ToListAsync();
 
-        foreach (Ticket? t in closedTickets)
+        foreach (var t in closedTickets)
         {
             string? tooltipTitle = null;
             string title = t.Title;
@@ -193,8 +202,8 @@ public class DashboardService
                 tooltipTitle = t.Title;
             }
             List<string> detailParts = [];
-            if (t.Project?.Name is string pn) detailParts.Add(pn);
-            if (t.AssignedTo is { } u) detailParts.Add($"{u.FirstName} {u.LastName}");
+            if (t.ProjectName is string pn) detailParts.Add(pn);
+            if (t.AssigneeFirstName is not null) detailParts.Add($"{t.AssigneeFirstName} {t.AssigneeLastName}");
             items.Add(new ActivityItemDto
             {
                 Color = "accent",
@@ -205,22 +214,27 @@ public class DashboardService
             });
         }
 
-        List<Vulnerability> recentVulns = await _context.Vulnerabilities
+        var recentVulns = await _context.Vulnerabilities
             .AsNoTracking()
-            .Include(v => v.Dependency).ThenInclude(d => d.TechProject)
             .Where(v => v.Severity == VulnerabilitySeverity.Critical
                 && v.Dependency.TechProject.OrganizationId == organizationId
                 && v.DetectedAt >= since)
             .OrderByDescending(v => v.DetectedAt)
             .Take(8)
+            .Select(v => new
+            {
+                v.CveId,
+                v.DetectedAt,
+                ProjectName = v.Dependency.TechProject.Name
+            })
             .ToListAsync();
 
-        foreach (Vulnerability? v in recentVulns)
+        foreach (var v in recentVulns)
         {
             items.Add(new ActivityItemDto
             {
                 Color = "red",
-                Text = $"Vulnérabilité critique détectée sur {v.Dependency.TechProject.Name}",
+                Text = $"Vulnérabilité critique détectée sur {v.ProjectName}",
                 Timestamp = v.DetectedAt,
                 Detail = $"{v.CveId} · Scanner auto",
             });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import Box from "@mui/material/Box";
 import {
   DragDropContext,
@@ -34,6 +34,13 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   onDeleteColumn,
   onAddColumn,
 }) {
+  const safeCardClick = useCallback(
+    (id: string) => {
+      if (!wasDraggingRef.current) onCardClick(id);
+    },
+    [onCardClick, wasDraggingRef],
+  );
+
   if (loading) {
     return (
       <Box
@@ -174,10 +181,7 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
                                 ticket={ticket}
                                 isDragging={snap.isDragging}
                                 updatingId={updatingId}
-                                onClick={() => {
-                                  if (!wasDraggingRef.current)
-                                    onCardClick(ticket.id);
-                                }}
+                                onCardClick={safeCardClick}
                               />
                             </div>
                           )}

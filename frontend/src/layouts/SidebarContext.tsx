@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface SidebarContextValue {
   isOpen: boolean;
@@ -43,7 +50,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const toggleCollapse = () => {
+  const toggleCollapse = useCallback(() => {
     setIsCollapsed((v) => {
       const next = !v;
       try {
@@ -53,20 +60,17 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       return next;
     });
-  };
+  }, []);
+
+  const toggle = useCallback(() => setIsOpen((v) => !v), []);
+  const close = useCallback(() => setIsOpen(false), []);
+
+  const value = useMemo<SidebarContextValue>(
+    () => ({ isOpen, isMobile, isCollapsed, toggle, close, toggleCollapse }),
+    [isOpen, isMobile, isCollapsed, toggle, close, toggleCollapse],
+  );
 
   return (
-    <SidebarContext.Provider
-      value={{
-        isOpen,
-        isMobile,
-        isCollapsed,
-        toggle: () => setIsOpen((v) => !v),
-        close: () => setIsOpen(false),
-        toggleCollapse,
-      }}
-    >
-      {children}
-    </SidebarContext.Provider>
+    <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
   );
 };

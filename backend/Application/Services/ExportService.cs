@@ -60,7 +60,6 @@ public class ExportService
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
-            .Include(t => t.TimeEntries)
             .Where(t => t.OrganizationId == organizationId);
 
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
@@ -88,7 +87,16 @@ public class ExportService
         }
 
         List<Ticket> tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
-        return WriteTicketsExcel(tickets);
+
+        List<Guid> ticketIds = tickets.Select(t => t.Id).ToList();
+        Dictionary<Guid, int> totalsByTicket = await _context.TimeEntries
+            .AsNoTracking()
+            .Where(te => te.TicketId.HasValue && ticketIds.Contains(te.TicketId.Value))
+            .GroupBy(te => te.TicketId!.Value)
+            .Select(g => new { TicketId = g.Key, Total = g.Sum(x => x.DurationMinutes) })
+            .ToDictionaryAsync(x => x.TicketId, x => x.Total);
+
+        return WriteTicketsExcel(tickets, totalsByTicket);
     }
 
     private static byte[] WriteTimeEntriesExcel(List<TimeEntry> entries)
@@ -124,7 +132,7 @@ public class ExportService
         return SaveWorkbook(workbook);
     }
 
-    private static byte[] WriteTicketsExcel(List<Ticket> tickets)
+    private static byte[] WriteTicketsExcel(List<Ticket> tickets, Dictionary<Guid, int> totalsByTicket)
     {
         string[] headers = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "H. estimées", "H. saisies"];
 
@@ -161,7 +169,8 @@ public class ExportService
                 ws.Cell(row, 11).Style.NumberFormat.Format = "0.00 \"h\"";
             }
 
-            ws.Cell(row, 12).Value = (double)Math.Round(t.TimeEntries.Sum(te => te.DurationMinutes) / 60m, 2);
+            int totalMinutes = totalsByTicket.TryGetValue(t.Id, out int sum) ? sum : 0;
+            ws.Cell(row, 12).Value = (double)Math.Round(totalMinutes / 60m, 2);
             ws.Cell(row, 12).Style.NumberFormat.Format = "0.00 \"h\"";
         }
 

@@ -37,6 +37,8 @@ public static class Program
             .AddLoginRateLimiting()
             .AddMemoryCache()
             .AddAppHealthChecks()
+            .AddResponseCompressionPolicy()
+            .AddOutputCachePolicy()
             .AddDataProtection();
 
         WebApplication app = builder.Build();
@@ -46,6 +48,7 @@ public static class Program
             app.UseHsts();
         }
 
+        app.UseResponseCompression();
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<ErrorHandlingMiddleware>();
         app.UseMiddleware<ETagMiddleware>();
@@ -101,6 +104,7 @@ public static class Program
         app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseOutputCache();
         app.ConfigureHangfire();
 
         app.MapHealthChecks("/health/live", new HealthCheckOptions

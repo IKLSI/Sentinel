@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -134,7 +134,7 @@ export const TicketsPage: React.FC = () => {
     }
   };
 
-  const openEditModal = (ticket: Ticket) => {
+  const openEditModal = useCallback((ticket: Ticket) => {
     setEditForm({
       title: ticket.title,
       description: ticket.description ?? "",
@@ -150,7 +150,19 @@ export const TicketsPage: React.FC = () => {
     });
     setEditTarget(ticket);
     loadModalRefs();
-  };
+  }, []);
+
+  const toggleSort = useCallback((col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  }, []);
+
+  const onDeleteTarget = useCallback((id: string, reference: string) => {
+    setDeleteTarget({ id, reference });
+  }, []);
 
   const handleEdit = async () => {
     if (!editTarget) return;
@@ -200,14 +212,6 @@ export const TicketsPage: React.FC = () => {
     }
   };
 
-  const toggleSort = (col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
-      return null;
-    });
-  };
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -245,31 +249,33 @@ export const TicketsPage: React.FC = () => {
     }
   }, [tickets]);
 
-  const filtered = displayTickets.slice().sort((a, b) => {
-    if (!sort) return 0;
-    const mul = sort.dir === "asc" ? 1 : -1;
-    switch (sort.col) {
-      case "title":
-        return mul * a.title.localeCompare(b.title);
-      case "priority":
-        return (
-          mul *
-          ((PRIORITY_ORDER[a.priority] ?? 9) -
-            (PRIORITY_ORDER[b.priority] ?? 9))
-        );
-      case "status":
-        return mul * a.statusName.localeCompare(b.statusName);
-      case "assignee":
-        return (
-          mul *
-          `${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`.localeCompare(
-            `${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`,
-          )
-        );
-      default:
-        return 0;
-    }
-  });
+  const filtered = useMemo(() => {
+    return displayTickets.slice().sort((a, b) => {
+      if (!sort) return 0;
+      const mul = sort.dir === "asc" ? 1 : -1;
+      switch (sort.col) {
+        case "title":
+          return mul * a.title.localeCompare(b.title);
+        case "priority":
+          return (
+            mul *
+            ((PRIORITY_ORDER[a.priority] ?? 9) -
+              (PRIORITY_ORDER[b.priority] ?? 9))
+          );
+        case "status":
+          return mul * a.statusName.localeCompare(b.statusName);
+        case "assignee":
+          return (
+            mul *
+            `${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`.localeCompare(
+              `${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`,
+            )
+          );
+        default:
+          return 0;
+      }
+    });
+  }, [displayTickets, sort]);
 
   const hasFiltersApplied = !!(
     debouncedSearch ||
@@ -334,7 +340,7 @@ export const TicketsPage: React.FC = () => {
               sort={sort}
               onToggleSort={toggleSort}
               onEdit={openEditModal}
-              onDelete={(id, reference) => setDeleteTarget({ id, reference })}
+              onDelete={onDeleteTarget}
               hasFiltersApplied={hasFiltersApplied}
             />
 

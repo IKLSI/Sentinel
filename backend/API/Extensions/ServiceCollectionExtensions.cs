@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Compression;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -9,6 +10,7 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -146,7 +148,9 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddSingleton<AuditLogQueue>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<TokenService>();
         services.AddScoped<AuthService>();
         services.AddScoped<TicketService>();
@@ -277,13 +281,62 @@ public static class ServiceCollectionExtensions
     {
         if (string.IsNullOrEmpty(name)) return name;
         if (char.IsLower(name[0])) return name;
-        return char.ToLowerInvariant(name[0]) + name.Substring(1);
+        return string.Create(name.Length, name, static (span, source) =>
+        {
+            source.AsSpan().CopyTo(span);
+            span[0] = char.ToLowerInvariant(span[0]);
+        });
     }
 
     public static IServiceCollection AddTenantContext(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        return services;
+    }
+
+    public static IServiceCollection AddResponseCompressionPolicy(this IServiceCollection services)
+    {
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+            {
+                "application/json",
+                "application/javascript",
+                "text/json",
+                "text/css"
+            });
+        });
+
+        services.Configure<BrotliCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);
+        services.Configure<GzipCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);
+
+        return services;
+    }
+
+    public static IServiceCollection AddOutputCachePolicy(this IServiceCollection services)
+    {
+        services.AddOutputCache(options =>
+        {
+            options.AddBasePolicy(builder => builder
+                .Expire(TimeSpan.FromSeconds(30))
+                .SetVaryByHeader("Authorization", "Accept-Language")
+                .Tag("default"));
+
+            options.AddPolicy("StatusesCache", builder => builder
+                .Expire(TimeSpan.FromMinutes(5))
+                .SetVaryByHeader("Authorization")
+                .Tag("statuses"));
+
+            options.AddPolicy("DashboardCache", builder => builder
+                .Expire(TimeSpan.FromSeconds(60))
+                .SetVaryByHeader("Authorization")
+                .Tag("dashboard"));
+        });
+
         return services;
     }
 

@@ -52,7 +52,6 @@ public class TicketsController : BaseController
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
-            .Include(t => t.TimeEntries)
             .Where(t => t.OrganizationId == organizationId.Value);
 
         if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
@@ -77,18 +76,10 @@ public class TicketsController : BaseController
                 .Replace("_", "\\_");
             string pattern = $"%{escaped}%";
 
-            List<Guid> commentTicketIds = await _context.TicketComments
-                .AsNoTracking()
-                .Where(c => c.Ticket.OrganizationId == organizationId.Value
-                    && EF.Functions.ILike(c.Content, pattern))
-                .Select(c => c.TicketId)
-                .Distinct()
-                .ToListAsync();
-
             query = query.Where(t =>
                 EF.Functions.ILike(t.Title, pattern) ||
                 EF.Functions.ILike(t.Description, pattern) ||
-                commentTicketIds.Contains(t.Id)
+                _context.TicketComments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern))
             );
         }
 
@@ -100,9 +91,24 @@ public class TicketsController : BaseController
             .Take(pageSize)
             .ToListAsync();
 
+        List<Guid> ticketIds = tickets.Select(t => t.Id).ToList();
+        Dictionary<Guid, int> totalsByTicket = await _context.TimeEntries
+            .AsNoTracking()
+            .Where(te => te.TicketId.HasValue && ticketIds.Contains(te.TicketId.Value))
+            .GroupBy(te => te.TicketId!.Value)
+            .Select(g => new { TicketId = g.Key, Total = g.Sum(x => x.DurationMinutes) })
+            .ToDictionaryAsync(x => x.TicketId, x => x.Total);
+
+        List<TicketDto> items = tickets.Select(t =>
+        {
+            TicketDto dto = TicketService.MapToDto(t);
+            dto.TotalTimeMinutes = totalsByTicket.TryGetValue(t.Id, out int sum) ? sum : 0;
+            return dto;
+        }).ToList();
+
         return Ok(new PagedResult<TicketDto>
         {
-            Items = tickets.Select(TicketService.MapToDto),
+            Items = items,
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize

@@ -33,20 +33,50 @@ public class UsersController : BaseController
 
     [HttpGet]
     [AuthorizeRoles(UserRole.Admin)]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? search = null)
     {
         Guid? organizationId = GetOrganizationId();
         if (organizationId == null) return Unauthorized();
 
-        List<User> users = await _context.Users
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 50;
+        if (pageSize > 100) pageSize = 100;
+
+        IQueryable<User> query = _context.Users
             .AsNoTracking()
-            .Where(u => u.OrganizationId == organizationId.Value)
+            .Where(u => u.OrganizationId == organizationId.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            string pattern = $"%{search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+            query = query.Where(u =>
+                EF.Functions.ILike(u.FirstName, pattern) ||
+                EF.Functions.ILike(u.LastName, pattern) ||
+                EF.Functions.ILike(u.Email, pattern));
+        }
+
+        int total = await query.CountAsync();
+
+        List<User> users = await query
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         List<UserDto> items = users.Select(MapToDto).ToList();
-        return Ok(new { items, total = items.Count });
+
+        return Ok(new
+        {
+            items,
+            total,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)total / pageSize)
+        });
     }
 
     [HttpGet("{id:guid}")]

@@ -61,6 +61,7 @@ public class TicketStatusesController : BaseController
         }
 
         List<TicketStatusDto> statuses = await _context.TicketStatuses
+            .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId.Value)
             .OrderBy(s => s.Order)
             .Select(s => new TicketStatusDto
@@ -71,7 +72,7 @@ public class TicketStatusesController : BaseController
                 Order = s.Order,
                 IsDefault = s.IsDefault,
                 IsClosed = s.IsClosed,
-                TicketCount = s.Tickets.Count,
+                TicketCount = s.Tickets.Count(),
             })
             .ToListAsync();
 

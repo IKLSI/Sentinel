@@ -21,7 +21,7 @@ interface Props {
 
 const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
 
-export const TicketsTable: React.FC<Props> = ({
+const TicketsTableComponent: React.FC<Props> = ({
   tickets,
   sort,
   onToggleSort,
@@ -164,3 +164,5 @@ export const TicketsTable: React.FC<Props> = ({
     </>
   );
 };
+
+export const TicketsTable = React.memo(TicketsTableComponent);

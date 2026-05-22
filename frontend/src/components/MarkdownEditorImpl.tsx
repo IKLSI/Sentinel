@@ -1,7 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
 import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
-import { languages } from "@codemirror/language-data";
 import {
   EditorView,
   ViewPlugin,
@@ -224,7 +223,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
       });
 
       return [
-        markdown({ codeLanguages: languages }),
+        markdown(),
         syntaxHighlighting(mdHighlight),
         buildObsidianPlugin(),
         EditorView.lineWrapping,

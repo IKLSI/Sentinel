@@ -200,6 +200,14 @@ export const KanbanPage: React.FC = () => {
     [showToast],
   );
 
+  const handleCardClick = useCallback((id: string) => {
+    navigate(`/tickets/${id}`);
+  }, [navigate]);
+
+  const handleOpenAddColumn = useCallback(() => {
+    setAddColOpen(true);
+  }, []);
+
   const handleDeleteColumn = useCallback(
     async (id: string) => {
       try {
@@ -268,9 +276,9 @@ export const KanbanPage: React.FC = () => {
           updatingId={updatingId}
           wasDraggingRef={wasDragging}
           onDragEnd={onDragEnd}
-          onCardClick={(id) => navigate(`/tickets/${id}`)}
+          onCardClick={handleCardClick}
           onDeleteColumn={handleDeleteColumn}
-          onAddColumn={() => setAddColOpen(true)}
+          onAddColumn={handleOpenAddColumn}
         />
 
         <AddColumnDialog

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -16,6 +17,7 @@ public class TechHealthService
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
     private readonly TokenProtector _tokenProtector;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
     {
@@ -47,7 +49,8 @@ public class TechHealthService
         IHttpClientFactory httpClientFactory,
         ILogger<TechHealthService> logger,
         RepositoryScannerService repositoryScanner,
-        TokenProtector tokenProtector)
+        TokenProtector tokenProtector,
+        IServiceScopeFactory scopeFactory)
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
@@ -55,6 +58,7 @@ public class TechHealthService
         _logger = logger;
         _repositoryScanner = repositoryScanner;
         _tokenProtector = tokenProtector;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
@@ -107,11 +111,20 @@ public class TechHealthService
                 .FirstAsync(p => p.Id == projectId);
         }
 
-        foreach (Dependency dependency in project.Dependencies)
-            await CheckVulnerabilitiesAsync(dependency);
+        using SemaphoreSlim throttle = new SemaphoreSlim(10);
 
-        foreach (Runtime runtime in project.Runtimes)
-            await CheckRuntimeEolAsync(runtime);
+        async Task RunThrottledAsync(Func<Task> work)
+        {
+            await throttle.WaitAsync();
+            try { await work(); }
+            finally { throttle.Release(); }
+        }
+
+        await Task.WhenAll(project.Dependencies.Select(d =>
+            RunThrottledAsync(() => CheckVulnerabilitiesAsync(d))));
+
+        await Task.WhenAll(project.Runtimes.Select(r =>
+            RunThrottledAsync(() => CheckRuntimeEolAsync(r))));
 
         project.HealthScore = CalculateHealthScore(project);
         project.HealthGrade = ScoreToGrade(project.HealthScore);
@@ -137,11 +150,19 @@ public class TechHealthService
             .Select(p => p.Id)
             .ToListAsync();
 
-        foreach (Guid projectId in daily.Concat(weekly))
+        using SemaphoreSlim throttle = new SemaphoreSlim(5);
+        await Task.WhenAll(daily.Concat(weekly).Select(async projectId =>
         {
-            try { await ScanProjectAsync(projectId); }
+            await throttle.WaitAsync();
+            try
+            {
+                using IServiceScope scope = _scopeFactory.CreateScope();
+                TechHealthService scoped = scope.ServiceProvider.GetRequiredService<TechHealthService>();
+                await scoped.ScanProjectAsync(projectId);
+            }
             catch (Exception ex) { _logger.LogError(ex, "Erreur scan projet {ProjectId}", projectId); }
-        }
+            finally { throttle.Release(); }
+        }));
     }
 
     private async Task CheckVulnerabilitiesAsync(Dependency dependency)

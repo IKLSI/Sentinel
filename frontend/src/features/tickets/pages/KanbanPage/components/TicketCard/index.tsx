@@ -11,21 +11,21 @@ interface Props {
   ticket: KanbanTicket;
   isDragging?: boolean;
   updatingId: string | null;
-  onClick: () => void;
+  onCardClick: (id: string) => void;
 }
 
 export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
   ticket,
   isDragging = false,
   updatingId,
-  onClick,
+  onCardClick,
 }) {
   const t = useT();
   const isUpdating = updatingId === ticket.id;
 
   return (
     <Box
-      onClick={onClick}
+      onClick={() => onCardClick(ticket.id)}
       sx={{
         background: isUpdating ? "var(--accent-subtle)" : "var(--s1)",
         border: "1px solid var(--border)",

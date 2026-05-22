@@ -347,6 +347,8 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId", "UpdatedAt");
 
+                    b.HasIndex("OrganizationId", "Priority", "TicketStatusId");
+
                     b.ToTable("Tickets");
                 });
 

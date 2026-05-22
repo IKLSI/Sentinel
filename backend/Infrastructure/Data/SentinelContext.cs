@@ -208,6 +208,7 @@ public class SentinelContext : DbContext
             entity.HasIndex(e => new { e.OrganizationId, e.TicketStatusId });
             entity.HasIndex(e => new { e.OrganizationId, e.UpdatedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
+            entity.HasIndex(e => new { e.OrganizationId, e.Priority, e.TicketStatusId });
 
             entity.HasOne(e => e.Organization)
                 .WithMany()

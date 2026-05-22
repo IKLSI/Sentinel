@@ -22,7 +22,7 @@ interface Props {
   onDelete: (id: string, reference: string) => void;
 }
 
-export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
+const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const t = useT();
 
@@ -252,3 +252,5 @@ export const TicketRow: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
     </Box>
   );
 };
+
+export const TicketRow = React.memo(TicketRowComponent);
