@@ -486,7 +486,7 @@ export const Sidebar: React.FC = () => {
                             key={item.to}
                             to={item.to}
                             end={item.end ?? false}
-                            className="d-block text-decoration-none"
+                            style={{ textDecoration: 'none', display: 'block' }}
                           >
                             <Box
                               sx={{
@@ -534,7 +534,7 @@ export const Sidebar: React.FC = () => {
                   <NavLink
                     to={section.items[0].to}
                     end={section.items[0].end ?? false}
-                    className="d-block text-decoration-none"
+                    style={{ textDecoration: 'none', display: 'block' }}
                   >
                     {({ isActive }) => {
                       const Icon = section.items[0].icon;
