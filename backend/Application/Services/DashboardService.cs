@@ -143,6 +143,24 @@ public class DashboardService
 
         List<ActivityItemDto> recentActivity = await BuildRecentActivityAsync(organizationId, now);
 
+        DateTime sevenDaysAgo = now.AddDays(-6).Date;
+        var creationCounts = await _context.Tickets
+            .AsNoTracking()
+            .Where(t => t.OrganizationId == organizationId && t.CreatedAt >= sevenDaysAgo)
+            .GroupBy(t => t.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync();
+        Dictionary<DateTime, int> creationDict = creationCounts.ToDictionary(x => x.Date, x => x.Count);
+        List<TicketCreationDataPointDto> ticketsCreatedPerDay = Enumerable
+            .Range(0, 7)
+            .Select(i => now.AddDays(-6 + i).Date)
+            .Select(d => new TicketCreationDataPointDto
+            {
+                Date = d.ToString("yyyy-MM-dd"),
+                Count = creationDict.GetValueOrDefault(d, 0),
+            })
+            .ToList();
+
         DashboardStatsDto result = new DashboardStatsDto
         {
             OpenTickets = openTickets,
@@ -157,6 +175,7 @@ public class DashboardService
             UnassignedOpenTickets = unassignedOpenTickets,
             UrgentTickets = urgentTickets,
             RecentActivity = recentActivity,
+            TicketsCreatedPerDay = ticketsCreatedPerDay,
         };
 
         _cache.Set(cacheKey, result, new MemoryCacheEntryOptions

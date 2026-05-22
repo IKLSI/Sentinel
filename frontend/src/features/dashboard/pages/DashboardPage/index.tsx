@@ -2,10 +2,6 @@ import React, { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import TaskAltOutlined from "@mui/icons-material/TaskAltOutlined";
-import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
-import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import { useDashboard, dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import { useProjects, projectsQueryKey } from "@/features/techHealth/hooks/useProjects";
 import { useToast } from "@/hooks/useToast";
@@ -17,10 +13,9 @@ import {
   StatsData,
   buildPalette,
 } from "./helpers";
-import { KpiCard } from "./components/KpiCard";
 import { UrgentTicketsPanel } from "./components/UrgentTicketsPanel";
 import { ActivityPanel } from "./components/ActivityPanel";
-import { DistributionPanel } from "./components/DistributionPanel";
+import { TicketCreationPanel } from "./components/TicketCreationPanel";
 import { ProjectsPanel } from "./components/ProjectsPanel";
 
 export const DashboardPage: React.FC = () => {
@@ -35,7 +30,7 @@ export const DashboardPage: React.FC = () => {
   const projectsQuery = useProjects();
 
   const stats: StatsData = (dashboardQuery.data as StatsData) ?? EMPTY_STATS;
-  const projects = projectsQuery.data ?? [];
+  const projects = (projectsQuery.data ?? []).slice(0, 8);
   const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
 
   useEffect(() => {
@@ -93,63 +88,17 @@ export const DashboardPage: React.FC = () => {
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
-          gridTemplateRows: "auto 1.1fr 1fr",
+          gridTemplateRows: "1.1fr 1fr",
           gap: "14px",
           height: "calc(100vh - 40px)",
-          minHeight: "720px",
+          minHeight: "580px",
         }}
       >
-        <Box sx={{ gridColumn: "span 3" }}>
-          <KpiCard
-            label={t("dashboard.kpi.open_tickets")}
-            value={stats.openTickets}
-            valueColor="var(--accent2)"
-            icon={<ConfirmationNumberOutlined sx={{ fontSize: 17 }} />}
-            delta={stats.openTicketsDelta}
-            inverse
-            palette={palette}
-          />
-        </Box>
-        <Box sx={{ gridColumn: "span 3" }}>
-          <KpiCard
-            label={t("dashboard.kpi.resolved_per_month")}
-            value={stats.resolvedThisMonth}
-            valueColor="var(--green)"
-            icon={<TaskAltOutlined sx={{ fontSize: 17 }} />}
-            delta={stats.resolvedThisMonthDelta}
-            palette={palette}
-          />
-        </Box>
-        <Box sx={{ gridColumn: "span 3" }}>
-          <KpiCard
-            label={t("dashboard.kpi.unassigned")}
-            value={stats.unassignedOpenTickets}
-            valueColor="var(--orange)"
-            icon={<PersonOffOutlined sx={{ fontSize: 17 }} />}
-            palette={palette}
-          />
-        </Box>
-        <Box sx={{ gridColumn: "span 3" }}>
-          <KpiCard
-            label={t("dashboard.kpi.critical_vulns")}
-            value={stats.criticalVulnerabilities}
-            valueColor="var(--red)"
-            icon={<GppBadOutlined sx={{ fontSize: 17 }} />}
-            delta={stats.criticalVulnerabilities}
-            badge
-            palette={palette}
-          />
-        </Box>
-
         <UrgentTicketsPanel urgent={urgent} palette={palette} isDark={isDark} />
 
         <ActivityPanel activity={activity} palette={palette} />
 
-        <DistributionPanel
-          ticketsByStatus={stats.ticketsByStatus}
-          ticketsByStatusColor={stats.ticketsByStatusColor ?? {}}
-          palette={palette}
-        />
+        <TicketCreationPanel data={stats.ticketsCreatedPerDay} palette={palette} />
 
         <ProjectsPanel projects={projects} palette={palette} isDark={isDark} />
       </Box>

@@ -14,4 +14,5 @@ public class DashboardStatsDto
     public int UnassignedOpenTickets { get; set; }
     public List<UrgentTicketDto> UrgentTickets { get; set; } = [];
     public List<ActivityItemDto> RecentActivity { get; set; } = [];
+    public List<TicketCreationDataPointDto> TicketsCreatedPerDay { get; set; } = [];
 }
