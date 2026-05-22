@@ -55,6 +55,16 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Test
+        run: pnpm test:coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
   backend:
     name: Backend — build
     runs-on: ubuntu-latest
@@ -72,6 +82,16 @@ jobs:
 
       - name: Build
         run: dotnet build Sentinel.sln --no-restore --configuration Release
+
+      - name: Test + Coverage
+        run: dotnet test backend/Sentinel.Tests/Sentinel.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: ./coverage
 
       - name: Audit NuGet dependencies
         run: dotnet list Sentinel.sln package --vulnerable --include-transitive

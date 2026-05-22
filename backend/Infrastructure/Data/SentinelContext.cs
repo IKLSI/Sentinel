@@ -204,6 +204,10 @@ public class SentinelContext : DbContext
             entity.HasIndex(e => e.AssignedToId);
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => new { e.OrganizationId, e.TicketStatusId });
+            entity.HasIndex(e => new { e.OrganizationId, e.UpdatedAt });
+            entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
 
             entity.HasOne(e => e.Organization)
                 .WithMany()
@@ -285,6 +289,8 @@ public class SentinelContext : DbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.TicketId);
             entity.HasIndex(e => e.Date);
+            entity.HasIndex(e => new { e.UserId, e.Date });
+            entity.HasIndex(e => e.TechProjectId);
 
             entity.HasOne(e => e.Ticket)
                 .WithMany(t => t.TimeEntries)
@@ -353,6 +359,7 @@ public class SentinelContext : DbContext
             entity.Property(e => e.Severity).HasConversion<string>();
             entity.HasIndex(e => e.DependencyId);
             entity.HasIndex(e => e.Severity);
+            entity.HasIndex(e => new { e.Severity, e.DependencyId });
 
             entity.HasOne(e => e.Dependency)
                 .WithMany(d => d.Vulnerabilities)

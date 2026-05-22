@@ -17,7 +17,7 @@ namespace Sentinel.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -341,6 +341,12 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("TicketStatusId");
 
+                    b.HasIndex("OrganizationId", "CreatedAt");
+
+                    b.HasIndex("OrganizationId", "TicketStatusId");
+
+                    b.HasIndex("OrganizationId", "UpdatedAt");
+
                     b.ToTable("Tickets");
                 });
 
@@ -387,7 +393,6 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.ToTable("TicketAttachments");
                 });
-
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {
@@ -535,6 +540,8 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("TicketId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "Date");
 
                     b.ToTable("TimeEntries");
                 });
@@ -704,6 +711,8 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Severity");
 
+                    b.HasIndex("Severity", "DependencyId");
+
                     b.ToTable("Vulnerabilities");
                 });
 
@@ -798,7 +807,6 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Navigation("UploadedBy");
                 });
-
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
                 {

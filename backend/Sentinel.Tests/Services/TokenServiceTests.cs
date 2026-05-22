@@ -1,0 +1,88 @@
+using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Sentinel.Application.Services;
+using Sentinel.Domain.Models;
+
+namespace Sentinel.Tests.Services;
+
+public class TokenServiceTests
+{
+    private static TokenService BuildService()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = "test-secret-key-with-sufficient-length-1234567890",
+                ["Jwt:Issuer"] = "test-issuer",
+                ["Jwt:Audience"] = "test-audience",
+                ["Jwt:AccessTokenExpirationMinutes"] = "60",
+            })
+            .Build();
+        return new TokenService(config);
+    }
+
+    [Fact]
+    public void HashRefreshToken_SameInput_ProducesSameHash()
+    {
+        var svc = BuildService();
+        string h1 = svc.HashRefreshToken("abc123");
+        string h2 = svc.HashRefreshToken("abc123");
+        h1.Should().Be(h2);
+    }
+
+    [Fact]
+    public void HashRefreshToken_DifferentInput_ProducesDifferentHash()
+    {
+        var svc = BuildService();
+        svc.HashRefreshToken("abc").Should().NotBe(svc.HashRefreshToken("abd"));
+    }
+
+    [Fact]
+    public void HashRefreshToken_Returns64HexChars()
+    {
+        var svc = BuildService();
+        string hash = svc.HashRefreshToken("token");
+        hash.Should().HaveLength(64);
+        hash.Should().MatchRegex("^[0-9a-f]+$");
+    }
+
+    [Fact]
+    public void GenerateRefreshToken_ProducesUniqueTokens()
+    {
+        var svc = BuildService();
+        HashSet<string> tokens = new();
+        for (int i = 0; i < 50; i++)
+            tokens.Add(svc.GenerateRefreshToken());
+        tokens.Should().HaveCount(50);
+    }
+
+    [Fact]
+    public void GenerateAccessToken_ReturnsValidJwt()
+    {
+        var svc = BuildService();
+        User user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@test.fr",
+            OrganizationId = Guid.NewGuid(),
+            FirstName = "Test",
+            LastName = "User",
+            PasswordHash = "x",
+            Role = UserRole.Admin
+        };
+
+        string token = svc.GenerateAccessToken(user);
+
+        token.Should().NotBeNullOrEmpty();
+        token.Split('.').Should().HaveCount(3); // JWT = header.payload.signature
+    }
+
+    [Fact]
+    public void GetAccessTokenExpiry_ReturnsFutureDate()
+    {
+        var svc = BuildService();
+        DateTime expiry = svc.GetAccessTokenExpiry();
+        expiry.Should().BeAfter(DateTime.UtcNow);
+        expiry.Should().BeCloseTo(DateTime.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
+    }
+}
