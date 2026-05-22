@@ -263,7 +263,7 @@
   "settings.role.admin": "Administrateur",
   "settings.role.client": "Client",
   "settings.role.developer": "Développeur",
-  "settings.tab.jobs": "Gestion des automatisations",
+  "settings.tab.jobs": "Automatisations",
   "settings.tab.members": "Membres",
   "settings.tab.organisation": "Organisation",
   "settings.jobs.title": "Jobs récurrents",

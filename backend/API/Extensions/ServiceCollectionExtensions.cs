@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Jobs;
+using Sentinel.API.Services;
 using Sentinel.Application.Services;
 
 namespace Sentinel.API.Extensions;
@@ -205,6 +207,13 @@ public static class ServiceCollectionExtensions
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         });
+        return services;
+    }
+
+    public static IServiceCollection AddTenantContext(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
         return services;
     }
 

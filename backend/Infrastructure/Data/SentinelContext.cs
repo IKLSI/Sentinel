@@ -1,11 +1,19 @@
 using Microsoft.EntityFrameworkCore;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Infrastructure.Data;
 
 public class SentinelContext : DbContext
 {
+    private readonly ITenantContext? _tenant;
+
     public SentinelContext(DbContextOptions<SentinelContext> options) : base(options) { }
+
+    public SentinelContext(DbContextOptions<SentinelContext> options, ITenantContext tenant) : base(options)
+    {
+        _tenant = tenant;
+    }
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
@@ -42,6 +50,55 @@ public class SentinelContext : DbContext
         ConfigureRuntime(modelBuilder);
         ConfigureAuditLog(modelBuilder);
         ConfigureTicketAttachment(modelBuilder);
+
+        ApplyTenantQueryFilters(modelBuilder);
+    }
+
+    private void ApplyTenantQueryFilters(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Organization>()
+            .HasQueryFilter(o => _tenant == null || !_tenant.IsSet || o.Id == _tenant.OrganizationId);
+
+        modelBuilder.Entity<User>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<UserInvitation>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TicketStatus>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<Ticket>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TechProject>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TicketComment>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TicketHistory>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TicketAttachment>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<TimeEntry>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet
+                || (e.Ticket != null && e.Ticket.OrganizationId == _tenant.OrganizationId)
+                || (e.TechProject != null && e.TechProject.OrganizationId == _tenant.OrganizationId));
+
+        modelBuilder.Entity<Dependency>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.TechProject.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<Runtime>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.TechProject.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<Vulnerability>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.TechProject.OrganizationId == _tenant.OrganizationId);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
