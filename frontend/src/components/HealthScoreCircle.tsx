@@ -40,7 +40,7 @@ export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({
   const iconSize = Math.round(size * 0.38);
 
   return (
-    <Box className="position-relative" sx={{ width: size, height: size }}>
+    <Box sx={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle
           cx={size / 2}
@@ -63,8 +63,14 @@ export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({
         />
       </svg>
       <Box
-        className="position-absolute d-flex align-items-center justify-content-center"
-        sx={{ inset: 0, color }}
+        sx={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color,
+        }}
       >
         <Icon sx={{ fontSize: iconSize }} />
       </Box>

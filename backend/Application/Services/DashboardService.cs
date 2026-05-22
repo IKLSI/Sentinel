@@ -35,6 +35,7 @@ public class DashboardService
         TicketPriority[] allPriorities = [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
 
         List<TicketStatus> statuses = await _context.TicketStatuses
+            .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId)
             .OrderBy(s => s.Order)
             .ToListAsync();
@@ -70,12 +71,10 @@ public class DashboardService
                 && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd);
 
         int hoursThisMonth = await _context.TimeEntries
-            .Include(te => te.User)
             .Where(te => te.User.OrganizationId == organizationId && te.Date >= monthStartDate && te.Date <= todayDate)
             .SumAsync(te => (int?)te.DurationMinutes) ?? 0;
 
         int criticalVulnerabilities = await _context.Vulnerabilities
-            .Include(v => v.Dependency).ThenInclude(d => d.TechProject)
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
             .CountAsync();
 
@@ -106,6 +105,7 @@ public class DashboardService
                 && t.AssignedToId == null);
 
         var rawUrgentTickets = await _context.Tickets
+            .AsNoTracking()
             .Where(t => t.OrganizationId == organizationId
                 && t.TicketStatusId != null
                 && openStatusIds.Contains(t.TicketStatusId.Value))
@@ -172,6 +172,7 @@ public class DashboardService
         List<ActivityItemDto> items = new List<ActivityItemDto>();
 
         List<Ticket> closedTickets = await _context.Tickets
+            .AsNoTracking()
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.TicketStatus)
@@ -207,6 +208,7 @@ public class DashboardService
         }
 
         List<Vulnerability> recentVulns = await _context.Vulnerabilities
+            .AsNoTracking()
             .Include(v => v.Dependency).ThenInclude(d => d.TechProject)
             .Where(v => v.Severity == VulnerabilitySeverity.Critical
                 && v.Dependency.TechProject.OrganizationId == organizationId

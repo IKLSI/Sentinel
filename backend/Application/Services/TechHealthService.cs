@@ -434,6 +434,7 @@ public class TechHealthService
     public async Task<TechProjectDto?> GetProjectWithDetailsAsync(Guid projectId)
     {
         TechProject? project = await _context.TechProjects
+            .AsNoTracking()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .FirstOrDefaultAsync(p => p.Id == projectId);

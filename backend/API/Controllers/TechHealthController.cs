@@ -71,6 +71,7 @@ public class TechHealthController : BaseController
         if (organizationId == null) return Unauthorized();
 
         List<TechProject> projects = await _context.TechProjects
+            .AsNoTracking()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId.Value)

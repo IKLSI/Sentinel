@@ -32,6 +32,7 @@ public class ExportService
     public async Task<byte[]> ExportTimeEntriesExcelAsync(Guid organizationId, Guid? userId, DateOnly? from, DateOnly? to)
     {
         IQueryable<TimeEntry> query = _context.TimeEntries
+            .AsNoTracking()
             .Include(te => te.User)
             .Include(te => te.Ticket)
             .Include(te => te.TechProject)
@@ -54,6 +55,7 @@ public class ExportService
         Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search)
     {
         IQueryable<Ticket> query = _context.Tickets
+            .AsNoTracking()
             .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
@@ -261,6 +263,7 @@ public class ExportService
     public async Task<byte[]> ExportTechHealthExcelAsync(Guid organizationId)
     {
         List<TechProject> projects = await _context.TechProjects
+            .AsNoTracking()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId)

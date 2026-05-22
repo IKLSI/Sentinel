@@ -98,6 +98,7 @@ public class TimeTrackingService
         DateOnly? from = null, DateOnly? to = null)
     {
         IQueryable<TimeEntry> query = _context.TimeEntries
+            .AsNoTracking()
             .Include(te => te.User)
             .Include(te => te.Ticket)
             .Include(te => te.TechProject)
@@ -115,27 +116,6 @@ public class TimeTrackingService
         List<TimeEntry> entries = await query.OrderByDescending(te => te.Date).ToListAsync();
 
         return entries.Select(MapToDto).ToList();
-    }
-
-    public async Task<decimal> GetTotalHoursForPeriodAsync(string period, Guid? techProjectId = null)
-    {
-        if (!TryParsePeriod(period, out int year, out int month))
-        {
-            return 0;
-        }
-
-        DateOnly from = new DateOnly(year, month, 1);
-        DateOnly to = from.AddMonths(1).AddDays(-1);
-
-        IQueryable<TimeEntry> query = _context.TimeEntries
-            .Where(te => te.Date >= from && te.Date <= to);
-
-        if (techProjectId.HasValue)
-            query = query.Where(te => te.TechProjectId == techProjectId.Value);
-
-        int totalMinutes = await query.SumAsync(te => te.DurationMinutes);
-
-        return Math.Round(totalMinutes / 60m, 2);
     }
 
     public static TimeEntryDto MapToDto(TimeEntry entry)
@@ -157,18 +137,4 @@ public class TimeTrackingService
         };
     }
 
-    private static bool TryParsePeriod(string period, out int year, out int month)
-    {
-        year = 0;
-        month = 0;
-
-        if (string.IsNullOrEmpty(period) || period.Length != 7)
-            return false;
-
-        string[] parts = period.Split('-');
-        if (parts.Length != 2)
-            return false;
-
-        return int.TryParse(parts[0], out year) && int.TryParse(parts[1], out month);
-    }
 }

@@ -39,6 +39,7 @@ public class UsersController : BaseController
         if (organizationId == null) return Unauthorized();
 
         List<User> users = await _context.Users
+            .AsNoTracking()
             .Where(u => u.OrganizationId == organizationId.Value)
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)

@@ -1,6 +1,5 @@
 {
-  "entry": ["src/main.tsx", "index.html"],
+  "entry": ["index.html"],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["@types/.*"],
   "vite": { "config": ["vite.config.ts"] }
 }

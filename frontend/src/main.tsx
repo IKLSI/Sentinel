@@ -6,7 +6,6 @@ import { ThemeProvider } from "./store/ThemeContext";
 import { ToastProvider } from "./hooks/ToastProvider";
 import { I18nProvider } from "./i18n/I18nContext";
 import { App } from "./App";
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/global.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

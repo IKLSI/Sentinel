@@ -47,6 +47,7 @@ public class TicketsController : BaseController
         if (organizationId == null) return Unauthorized();
 
         IQueryable<Ticket> query = _context.Tickets
+            .AsNoTracking()
             .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
@@ -342,6 +343,7 @@ public class TicketsController : BaseController
             return NotFound(new { message = "Ticket introuvable" });
 
         List<TicketAttachmentDto> attachments = await _context.TicketAttachments
+            .AsNoTracking()
             .Where(a => a.TicketId == id)
             .Include(a => a.UploadedBy)
             .OrderByDescending(a => a.CreatedAt)

@@ -186,13 +186,12 @@ public class TicketService
 
     public async Task<bool> DeleteTicketAsync(Guid ticketId, Guid organizationId)
     {
-        Ticket? ticket = await _context.Tickets
-            .FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
-        if (ticket == null)
+        int rows = await _context.Tickets
+            .Where(t => t.Id == ticketId && t.OrganizationId == organizationId)
+            .ExecuteDeleteAsync();
+        if (rows == 0)
             return false;
 
-        _context.Tickets.Remove(ticket);
-        await _context.SaveChangesAsync();
         InvalidateDashboardCache(organizationId);
         return true;
     }
@@ -254,6 +253,7 @@ public class TicketService
     public async Task<TicketDto?> GetTicketWithDetailsAsync(Guid ticketId)
     {
         Ticket? ticket = await _context.Tickets
+            .AsNoTracking()
             .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
