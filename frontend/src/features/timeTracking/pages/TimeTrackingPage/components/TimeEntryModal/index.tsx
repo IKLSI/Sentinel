@@ -9,7 +9,7 @@ import { AppModal } from "@/components/AppModal";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
 import { Ticket } from "@/types";
-import { FormField, FormState, formatDuration, inputSx, parseDateLocal } from "../../helpers";
+import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
 import { DatePickerPopover } from "../DatePickerPopover";
 
 interface Props {

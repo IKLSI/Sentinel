@@ -1,11 +1,11 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Sentinel.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class EnableRowLevelSecurity : Migration
+    public partial class Performance : Migration
     {
         private static readonly (string Table, string OrgExpression)[] DirectTenantTables =
         {
@@ -32,6 +32,28 @@ namespace Sentinel.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Indexes GIN fulltext — non exprimables via le DbContext EF
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Title_trgm""
+                ON ""Tickets""
+                USING gin (""Title"" gin_trgm_ops);
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Description_trgm""
+                ON ""Tickets""
+                USING gin (""Description"" gin_trgm_ops);
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_TicketComments_Content_trgm""
+                ON ""TicketComments""
+                USING gin (""Content"" gin_trgm_ops);
+            ");
+
+            // Row Level Security — isolation multi-tenant
             foreach ((string table, string orgExpr) in DirectTenantTables)
             {
                 migrationBuilder.Sql($"ALTER TABLE \"{table}\" ENABLE ROW LEVEL SECURITY;");
@@ -73,6 +95,10 @@ USING (
                 migrationBuilder.Sql($"DROP POLICY IF EXISTS tenant_isolation ON \"{table}\";");
                 migrationBuilder.Sql($"ALTER TABLE \"{table}\" DISABLE ROW LEVEL SECURITY;");
             }
+
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_TicketComments_Content_trgm"";");
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_Tickets_Description_trgm"";");
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_Tickets_Title_trgm"";");
         }
     }
 }

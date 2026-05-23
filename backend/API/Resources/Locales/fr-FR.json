@@ -647,7 +647,6 @@
   "time_tracking.toast_entry_deleted": "Saisie supprimée",
   "time_tracking.toast_entry_updated": "Saisie modifiée",
   "time_tracking.today": "Aujourd'hui",
-  "time_tracking.user_filter_all": "Tous",
   "time_tracking.user_filter_reset_self": "Réinitialiser",
   "time_tracking.user_filter_search_aria": "Rechercher un utilisateur",
   "time_tracking.user_filter_search_placeholder": "Rechercher un utilisateur",

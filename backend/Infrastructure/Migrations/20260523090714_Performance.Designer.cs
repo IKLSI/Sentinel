@@ -12,8 +12,8 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260523082121_AddTimeEntryStartEndTime")]
-    partial class AddTimeEntryStartEndTime
+    [Migration("20260523090714_Performance")]
+    partial class Performance
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

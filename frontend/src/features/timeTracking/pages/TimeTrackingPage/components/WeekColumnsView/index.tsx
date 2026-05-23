@@ -6,7 +6,6 @@ import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
-import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import TuneOutlined from "@mui/icons-material/TuneOutlined";
@@ -17,12 +16,11 @@ import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
   WORK_HOURS_TARGET,
   formatDuration,
-  getProjectColor,
   IconNavBtn,
   parseDateLocal,
 } from "../../helpers";
 import { WeekPicker } from "../WeekPicker";
-import { RowActions } from "@/components/RowActions";
+
 
 const HOUR_HEIGHT = 64;
 const START_HOUR = 7;
@@ -66,7 +64,7 @@ export const WeekColumnsView: React.FC<Props> = ({
   isAdmin,
   onPrev,
   onNext,
-  onResetToToday,
+  onResetToToday: _onResetToToday,
   onPickDay,
   onCreate,
   onEdit,
@@ -78,7 +76,6 @@ export const WeekColumnsView: React.FC<Props> = ({
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
 
   const weekLabel = `${format(weekStart, "dd MMM", { locale: fr })} — ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
-  const totalMinutes = Array.from(entriesByDay.values()).flat().reduce((s, e) => s + e.durationMinutes, 0);
 
   return (
     <Box
@@ -367,9 +364,6 @@ export const WeekColumnsView: React.FC<Props> = ({
                       onClick={(e) => e.stopPropagation()}
                     >
                       {dayEntries.map((entry) => {
-                        const projColor = entry.techProjectName
-                          ? getProjectColor(entry.techProjectName)
-                          : "var(--accent)";
                         const blockHeight = Math.max(
                           Math.round((entry.durationMinutes / 60) * HOUR_HEIGHT),
                           32,

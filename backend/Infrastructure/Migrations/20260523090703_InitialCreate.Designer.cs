@@ -12,8 +12,8 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260522144045_DropUserEmailGlobalUnique")]
-    partial class DropUserEmailGlobalUnique
+    [Migration("20260523090703_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -129,9 +129,37 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("GithubAccountId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GithubAccountLogin")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("GithubConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("GithubConnectedById")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("GithubToken")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("GitlabAccountId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GitlabAccountLogin")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("GitlabConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("GitlabConnectedById")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("GitlabToken")
                         .HasMaxLength(500)
@@ -156,6 +184,14 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GithubAccountId")
+                        .IsUnique()
+                        .HasFilter("\"GithubAccountId\" IS NOT NULL");
+
+                    b.HasIndex("GitlabAccountId")
+                        .IsUnique()
+                        .HasFilter("\"GitlabAccountId\" IS NOT NULL");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -522,6 +558,12 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone");
 
                     b.Property<Guid?>("TechProjectId")
                         .HasColumnType("uuid");

@@ -5,7 +5,7 @@ import Dialog from "@mui/material/Dialog";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import PersonOutlineOutlined from "@mui/icons-material/PersonOutlineOutlined";
-import GroupsOutlined from "@mui/icons-material/GroupsOutlined";
+import AccountCircleOutlined from "@mui/icons-material/AccountCircleOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
   getCurrentUserAvatar,
@@ -57,23 +57,19 @@ export const UserPicker: React.FC<Props> = ({
 
   const options = useMemo(
     () => [
-      {
-        id: "all",
-        name: t("time_tracking.user_filter_all"),
-        icon: <GroupsOutlined sx={{ fontSize: "17px", color: "var(--s1)" }} />,
-      },
       ...visibleUsers.map((u) => {
         const isOwn = u.id === currentUserId;
         const avatar = isOwn ? getCurrentUserAvatar() : getUserAvatar();
         return {
           id: u.id,
           name: isOwn ? t("time_tracking.you") : u.name,
+          isOwn,
           icon: (
             <Box
               sx={{
                 width: "100%",
                 height: "100%",
-                borderRadius: 'var(--r)',
+                borderRadius: "var(--r)",
                 background: avatar.bg,
                 display: "flex",
                 alignItems: "center",
@@ -84,7 +80,10 @@ export const UserPicker: React.FC<Props> = ({
                 letterSpacing: "0.03em",
               }}
             >
-              {getUserInitials(u.name)}
+              {isOwn
+                ? <AccountCircleOutlined sx={{ fontSize: "20px", color: avatar.text }} />
+                : getUserInitials(u.name)
+              }
             </Box>
           ),
         };
