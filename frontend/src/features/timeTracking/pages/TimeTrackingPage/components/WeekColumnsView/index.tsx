@@ -4,7 +4,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
-import TodayOutlined from "@mui/icons-material/TodayOutlined";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -113,34 +112,24 @@ export const WeekColumnsView: React.FC<Props> = ({
           <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", textTransform: "capitalize" }}>
             {weekLabel}
           </Box>
-          {totalMinutes > 0 && (
-            <Box sx={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 800, color: "var(--accent)", letterSpacing: "-0.04em", px: "8px", py: "4px", borderRadius: "var(--r-xs)" }}>
-              {formatDuration(totalMinutes)}
-            </Box>
-          )}
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
           {canFilterByUser && (
             <IconNavBtn onClick={onOpenUserFilter} title={t("time_tracking.filter_users_tooltip")} hoverColor="#1D4ED8">
               <TuneOutlined sx={{ fontSize: 13 }} />
             </IconNavBtn>
           )}
-          <IconNavBtn onClick={onExport} disabled={exporting} title={t("time_tracking.export")} hoverColor="#1D4ED8">
-            {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 13 }} />}
-          </IconNavBtn>
-          {!isCurrentWeek && (
-            <IconNavBtn onClick={onResetToToday} title={t("time_tracking.btn_today")} hoverColor="#1D4ED8">
-              <TodayOutlined sx={{ fontSize: 13 }} />
-            </IconNavBtn>
-          )}
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <IconNavBtn onClick={onPrev} title={t("time_tracking.btn_prev_week")} hoverColor="#1D4ED8">
             <ChevronLeftOutlined sx={{ fontSize: 13 }} />
+          </IconNavBtn>
+          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")} hoverColor="#1D4ED8">
+            <CalendarTodayOutlined sx={{ fontSize: 13, color: calendarAnchor ? "var(--accent)" : undefined }} />
           </IconNavBtn>
           <IconNavBtn onClick={onNext} disabled={isCurrentWeek} title={t("time_tracking.btn_next_week")} hoverColor="#1D4ED8">
             <ChevronRightOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")} hoverColor="#1D4ED8">
-            <CalendarTodayOutlined sx={{ fontSize: 13, color: calendarAnchor ? "var(--accent)" : undefined }} />
+          <IconNavBtn onClick={onExport} disabled={exporting} title={t("time_tracking.export")} hoverColor="#1D4ED8">
+            {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 13 }} />}
           </IconNavBtn>
         </Box>
       </Box>

@@ -4,7 +4,7 @@ import Popover from "@mui/material/Popover";
 import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
-import { addDays, format, isSameWeek, isToday, startOfWeek } from "date-fns";
+import { addDays, endOfWeek, format, isSameWeek, isToday, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
 import { IconNavBtn } from "../../helpers";
@@ -34,13 +34,14 @@ export const WeekPicker: React.FC<Props> = ({
   }, [anchor, weekStart]);
 
   const calendarGrid = React.useMemo(() => {
-    const firstDay = new Date(
-      calendarMonth.getFullYear(),
-      calendarMonth.getMonth(),
-      1,
-    );
+    const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+    const lastDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
     const start = startOfWeek(firstDay, { weekStartsOn: 1 });
-    return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+    const end = endOfWeek(lastDay, { weekStartsOn: 1 });
+    const days: Date[] = [];
+    let cur = start;
+    while (cur <= end) { days.push(cur); cur = addDays(cur, 1); }
+    return days;
   }, [calendarMonth]);
 
   return (
@@ -294,6 +295,30 @@ export const WeekPicker: React.FC<Props> = ({
             })}
           </Box>
         </>
+      )}
+      {!isSameWeek(weekStart, new Date(), { weekStartsOn: 1 }) && (
+      <Box sx={{ mt: "8px" }}>
+        <Box
+          component="button"
+          onClick={() => onPickDay(new Date())}
+          sx={{
+            width: "100%",
+            background: "transparent",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r-sm)",
+            py: "5px",
+            fontSize: "11px",
+            fontWeight: 600,
+            color: "var(--muted2)",
+            cursor: "pointer",
+            fontFamily: "var(--font-ui)",
+            transition: "color 0.12s, border-color 0.12s",
+            "&:hover": { color: "var(--accent)", borderColor: "var(--accent-border)" },
+          }}
+        >
+          {t("time_tracking.btn_today")}
+        </Box>
+      </Box>
       )}
     </Popover>
   );
