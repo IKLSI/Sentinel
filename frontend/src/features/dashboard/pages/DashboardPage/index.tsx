@@ -30,7 +30,18 @@ export const DashboardPage: React.FC = () => {
   const projectsQuery = useProjects();
 
   const stats: StatsData = (dashboardQuery.data as StatsData) ?? EMPTY_STATS;
-  const projects = (projectsQuery.data ?? []).slice(0, 8);
+  const projects = useMemo(() => {
+    const sorted = [...(projectsQuery.data ?? [])].sort((a, b) => {
+      const gradeOrder: Record<string, number> = { F: 0, E: 1, D: 2, C: 3, B: 4, A: 5 };
+      const ga = gradeOrder[a.healthGrade?.toUpperCase() ?? "A"] ?? 5;
+      const gb = gradeOrder[b.healthGrade?.toUpperCase() ?? "A"] ?? 5;
+      return ga - gb
+        || (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
+        || (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
+        || (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0);
+    });
+    return sorted.slice(0, 8);
+  }, [projectsQuery.data]);
   const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
 
   useEffect(() => {
@@ -100,7 +111,7 @@ export const DashboardPage: React.FC = () => {
 
         <TicketCreationPanel data={stats.ticketsCreatedPerDay} palette={palette} />
 
-        <ProjectsPanel projects={projects} palette={palette} isDark={isDark} />
+        <ProjectsPanel projects={projects} palette={palette} />
       </Box>
     </Box>
   );

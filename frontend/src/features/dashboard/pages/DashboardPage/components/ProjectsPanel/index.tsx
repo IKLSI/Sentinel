@@ -3,8 +3,9 @@ import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
+import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import HubOutlined from "@mui/icons-material/HubOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
@@ -13,21 +14,15 @@ import {
   DashPalette,
   buildPanelSx,
   buildScrollSx,
-  projectTone,
   repoPath,
 } from "../../helpers";
 
 interface Props {
   projects: ProjectDto[];
   palette: DashPalette;
-  isDark: boolean;
 }
 
-export const ProjectsPanel: React.FC<Props> = ({
-  projects,
-  palette,
-  isDark,
-}) => {
+export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
   const t = useT();
   const navigate = useNavigate();
 
@@ -133,7 +128,6 @@ export const ProjectsPanel: React.FC<Props> = ({
             </Box>
           </Box>
         ) : projectRows.map((p) => {
-          const tone = projectTone(p, isDark);
           return (
             <Box
               key={p.id}
@@ -157,8 +151,8 @@ export const ProjectsPanel: React.FC<Props> = ({
                 "&:active": { background: palette.rowActiveBg },
               }}
             >
-              <tone.Icon
-                sx={{ fontSize: 18, color: tone.color, flexShrink: 0 }}
+              <HubOutlined
+                sx={{ fontSize: 18, color: palette.typeIconDefault, flexShrink: 0 }}
               />
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Box
@@ -191,7 +185,7 @@ export const ProjectsPanel: React.FC<Props> = ({
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
+                  gap: "8px",
                   flexShrink: 0,
                 }}
               >
@@ -217,13 +211,12 @@ export const ProjectsPanel: React.FC<Props> = ({
                     gap: "4px",
                     fontSize: "11px",
                     fontWeight: 600,
-                    color:
-                      p.criticalVulnerabilities > 0
-                        ? palette.vulnDanger
-                        : palette.vulnNeutral,
+                    color: p.criticalVulnerabilities > 0
+                      ? "var(--red)"
+                      : palette.vulnNeutral,
                   }}
                 >
-                  <ShieldOutlined sx={{ fontSize: 14 }} />
+                  <GppBadOutlined sx={{ fontSize: 14 }} />
                   <span>{p.criticalVulnerabilities}</span>
                 </Box>
               </Box>

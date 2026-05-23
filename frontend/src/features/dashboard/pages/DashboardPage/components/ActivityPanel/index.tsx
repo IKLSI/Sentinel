@@ -1,8 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
-import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
@@ -16,6 +14,31 @@ interface Props {
   activity: ActivityItem[];
   palette: DashPalette;
 }
+
+const TimelineDot: React.FC<{ color: string }> = ({ color }) => (
+  <Box
+    sx={{
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      border: `1.5px solid ${color}`,
+      flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      mt: "2px",
+    }}
+  >
+    <Box
+      sx={{
+        width: 3,
+        height: 3,
+        borderRadius: "50%",
+        bgcolor: color,
+      }}
+    />
+  </Box>
+);
 
 export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
   const t = useT();
@@ -40,7 +63,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           sx={{
             fontSize: "15px",
             lineHeight: 1.1,
-            fontWeight: 700,
+            fontWeight: 600,
             color: palette.textHeading,
             letterSpacing: "-0.02em",
           }}
@@ -53,7 +76,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
       </Box>
       <Box
         sx={{
-          p: "8px 14px",
+          p: "12px 16px",
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
@@ -75,49 +98,62 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
             </Box>
           </Box>
         ) : (
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          {activity.map((a, idx) => {
-            const danger = a.color === "red";
-            const accentColor = danger
-              ? palette.activityDangerFg
-              : palette.activityOkFg;
-            const boldPrefix = danger
-              ? t("dashboard.activity.bold_critical")
-              : t("dashboard.activity.bold_resolved");
-            const rest = a.text.startsWith(boldPrefix)
-              ? a.text.slice(boldPrefix.length)
-              : a.text;
-            const hasBoldPrefix = a.text.startsWith(boldPrefix);
-            return (
-              <React.Fragment key={`${a.timestamp}-${a.text}-${idx}`}>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            {activity.map((a, idx) => {
+              const danger = a.color === "red";
+              const isCreated = a.color === "green";
+              const accentColor = danger
+                ? palette.activityDangerFg
+                : isCreated
+                  ? palette.activityCreatedFg
+                  : palette.activityOkFg;
+              const boldPrefix = danger
+                ? t("dashboard.activity.bold_critical")
+                : isCreated
+                  ? t("dashboard.activity.bold_created")
+                  : t("dashboard.activity.bold_resolved");
+              const hasBoldPrefix = a.text.startsWith(boldPrefix);
+              const afterPrefix = hasBoldPrefix
+                ? a.text.slice(boldPrefix.length)
+                : a.text;
+              const dashIdx = afterPrefix.indexOf(" — ");
+              const surIdx = dashIdx < 0 ? afterPrefix.indexOf(" sur ") : -1;
+              const midText = dashIdx >= 0
+                ? afterPrefix.slice(0, dashIdx + 3)
+                : surIdx >= 0 ? afterPrefix.slice(0, surIdx + 5) : afterPrefix;
+              const boldSuffix = dashIdx >= 0
+                ? afterPrefix.slice(dashIdx + 3)
+                : surIdx >= 0 ? afterPrefix.slice(surIdx + 5) : "";
+              const isLast = idx === activity.length - 1;
+
+              return (
                 <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    minHeight: "48px",
-                  }}
+                  key={`${a.timestamp}-${a.text}-${idx}`}
+                  sx={{ display: "flex", gap: "12px" }}
                 >
                   <Box
                     sx={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: '50%',
-                      background: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
-                      color: accentColor,
-                      display: "grid",
-                      placeItems: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
                       flexShrink: 0,
-                      zIndex: 1,
+                      width: 12,
                     }}
                   >
-                    {danger ? (
-                      <ErrorOutlineOutlined sx={{ fontSize: 14 }} />
-                    ) : (
-                      <CheckOutlined sx={{ fontSize: 14 }} />
+                    <TimelineDot color={accentColor} />
+                    {!isLast && (
+                      <Box
+                        sx={{
+                          width: "1px",
+                          flex: 1,
+                          minHeight: "12px",
+                          bgcolor: palette.activityDivider,
+                          mt: "4px",
+                        }}
+                      />
                     )}
                   </Box>
-                  <Box sx={{ minWidth: 0 }}>
+                  <Box sx={{ minWidth: 0, pb: isLast ? 0 : "14px" }}>
                     <Tooltip
                       title={a.tooltipText ?? ""}
                       disableHoverListener={!a.tooltipText}
@@ -126,8 +162,9 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                     >
                       <Box
                         sx={{
-                          fontSize: "11px",
+                          fontSize: "12px",
                           color: palette.textPrimary,
+                          lineHeight: 1.4,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -135,25 +172,25 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                       >
                         {hasBoldPrefix ? (
                           <>
-                            <Box
-                              component="span"
-                              sx={{ fontWeight: 700, color: accentColor }}
-                            >
+                            <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
                               {boldPrefix}
                             </Box>
-                            <span>{rest}</span>
+                            <Box component="span">{midText}</Box>
+                            {boldSuffix && (
+                              <Box component="span" sx={{ fontWeight: 600 }}>
+                                {boldSuffix}
+                              </Box>
+                            )}
                           </>
                         ) : (
-                          <Box component="span" sx={{ fontWeight: 700 }}>
-                            {a.text}
-                          </Box>
+                          <Box component="span">{a.text}</Box>
                         )}
                       </Box>
                     </Tooltip>
                     <Box
                       sx={{
                         mt: "1px",
-                        fontSize: "10px",
+                        fontSize: "11px",
                         color: palette.activityDetail,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -164,22 +201,9 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                     </Box>
                   </Box>
                 </Box>
-                {idx < activity.length - 1 && (
-                  <Box
-                    sx={{
-                      width: "1px",
-                      height: "16px",
-                      bgcolor: palette.activityDivider,
-                      ml: "13px",
-                      flexShrink: 0,
-                      my: "-4.5px",
-                    }}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </Box>
+              );
+            })}
+          </Box>
         )}
       </Box>
     </Box>

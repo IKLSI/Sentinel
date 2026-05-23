@@ -95,6 +95,7 @@ export interface DashPalette {
   activityDangerFg: string;
   activityOkBg: string;
   activityOkFg: string;
+  activityCreatedFg: string;
   activityDetail: string;
   activityDivider: string;
   scrollThumb: string;
@@ -136,6 +137,7 @@ export const buildPalette = (_isDark: boolean): DashPalette => ({
   activityDangerFg: "var(--red)",
   activityOkBg: "color-mix(in srgb, var(--green) 18%, transparent)",
   activityOkFg: "var(--green)",
+  activityCreatedFg: "var(--accent)",
   activityDetail: "var(--text-secondary)",
   activityDivider: "var(--border)",
   scrollThumb: "var(--border2)",

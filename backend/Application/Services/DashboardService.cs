@@ -201,35 +201,65 @@ public class DashboardService
             .Take(8)
             .Select(t => new
             {
+                t.Id,
                 t.Title,
                 t.UpdatedAt,
                 ProjectName = t.Project != null ? t.Project.Name : null,
                 AssigneeFirstName = t.AssignedTo != null ? t.AssignedTo.FirstName : null,
                 AssigneeLastName = t.AssignedTo != null ? t.AssignedTo.LastName : null,
+                CreatedByFirstName = t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+                CreatedByLastName = t.CreatedBy != null ? t.CreatedBy.LastName : null,
             })
             .ToListAsync();
 
         foreach (var t in closedTickets)
         {
-            string? tooltipTitle = null;
-            string title = t.Title;
-            if (t.Title.Length > 45)
-            {
-                int lastSpace = t.Title.LastIndexOf(' ', 45);
-                int cut = lastSpace > 0 ? lastSpace : 45;
-                title = t.Title[..cut] + "…";
-                tooltipTitle = t.Title;
-            }
+            string reference = $"TKT-{t.Id.ToString()[..6].ToUpper()}";
+            string? userName = t.AssigneeFirstName is not null
+                ? $"{t.AssigneeFirstName} {t.AssigneeLastName}"
+                : t.CreatedByFirstName is not null
+                    ? $"{t.CreatedByFirstName} {t.CreatedByLastName}"
+                    : null;
             List<string> detailParts = [];
             if (t.ProjectName is string pn) detailParts.Add(pn);
-            if (t.AssigneeFirstName is not null) detailParts.Add($"{t.AssigneeFirstName} {t.AssigneeLastName}");
+            if (userName is not null) detailParts.Add(userName);
             items.Add(new ActivityItemDto
             {
                 Color = "accent",
-                Text = $"Ticket résolu — {title}",
+                Text = $"Ticket résolu — {reference}",
                 Timestamp = t.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
-                TooltipText = tooltipTitle,
+            });
+        }
+
+        var createdTickets = await _context.Tickets
+            .AsNoTracking()
+            .Where(t => t.OrganizationId == organizationId && t.CreatedAt >= since)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(8)
+            .Select(t => new
+            {
+                t.Id,
+                t.Title,
+                t.CreatedAt,
+                ProjectName = t.Project != null ? t.Project.Name : null,
+                CreatedByFirstName = t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+                CreatedByLastName = t.CreatedBy != null ? t.CreatedBy.LastName : null,
+            })
+            .ToListAsync();
+
+        foreach (var t in createdTickets)
+        {
+            string reference = $"TKT-{t.Id.ToString()[..6].ToUpper()}";
+            List<string> detailParts = [];
+            if (t.ProjectName is string pn) detailParts.Add(pn);
+            if (t.CreatedByFirstName is not null) detailParts.Add($"{t.CreatedByFirstName} {t.CreatedByLastName}");
+            items.Add(new ActivityItemDto
+            {
+                Color = "green",
+                Text = $"Ticket créé — {reference}",
+                Timestamp = t.CreatedAt,
+                Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
             });
         }
 

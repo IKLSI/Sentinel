@@ -104,6 +104,7 @@
   "common.edit": "Modifier",
   "dashboard.activity.bold_critical": "Vulnérabilité critique",
   "dashboard.activity.bold_resolved": "Ticket résolu",
+  "dashboard.activity.bold_created": "Ticket créé",
   "dashboard.activity.realtime": "Mise à jour en temps réel",
   "dashboard.activity.empty_subtitle": "Les événements apparaîtront ici en temps réel.",
   "dashboard.activity.empty_title": "Aucune activité récente",
