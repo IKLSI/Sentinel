@@ -22,7 +22,8 @@ public class User
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiry { get; set; }
     public string? PreviousRefreshTokenHash { get; set; }
-    public string Theme { get; set; } = "dark";
+    public string Theme { get; set; } = "light";
+    public string Language { get; set; } = "fr-FR";
 
     public Organization Organization { get; set; } = null!;
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();

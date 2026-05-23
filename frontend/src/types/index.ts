@@ -11,6 +11,7 @@ export interface User {
   createdAt: string
   isActive: boolean
   theme?: 'dark' | 'light'
+  language?: 'fr-FR' | 'en-US'
   lastLoginAt?: string
 }
 

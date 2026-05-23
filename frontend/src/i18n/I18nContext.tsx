@@ -8,20 +8,23 @@ import React, {
 import apiClient from "../services/client";
 
 type Translations = Record<string, string>;
+type Language = "fr-FR" | "en-US";
 
 interface I18nContextValue {
   t: (key: string, vars?: Record<string, string | number>) => string;
   ready: boolean;
-  culture: string;
+  culture: Language;
+  setLanguage: (lang: Language) => void;
 }
 
 const I18nContext = createContext<I18nContextValue>({
   t: (key) => key,
   ready: false,
   culture: "fr-FR",
+  setLanguage: () => {},
 });
 
-const DEFAULT_CULTURE = "fr-FR";
+const STORAGE_KEY = "sentinel_language";
 
 function interpolate(
   template: string,
@@ -34,16 +37,26 @@ function interpolate(
   });
 }
 
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
+export const I18nProvider: React.FC<{ children: React.ReactNode; initialLanguage?: Language }> = ({
   children,
+  initialLanguage,
 }) => {
+  const [language, setLanguageState] = useState<Language>(
+    initialLanguage ?? (localStorage.getItem(STORAGE_KEY) as Language) ?? "fr-FR"
+  );
   const [translations, setTranslations] = useState<Translations | null>(null);
 
   useEffect(() => {
+    setTranslations(null);
     apiClient
-      .get<Translations>(`/api/locales/${DEFAULT_CULTURE}`)
+      .get<Translations>(`/api/locales/${language}`)
       .then((response) => setTranslations(response.data))
       .catch(() => setTranslations({}));
+  }, [language]);
+
+  const setLanguage = useCallback((lang: Language) => {
+    localStorage.setItem(STORAGE_KEY, lang);
+    setLanguageState(lang);
   }, []);
 
   const t = useCallback(
@@ -58,11 +71,11 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
   if (translations === null) return null;
 
   return (
-    <I18nContext.Provider value={{ t, ready: true, culture: DEFAULT_CULTURE }}>
+    <I18nContext.Provider value={{ t, ready: true, culture: language, setLanguage }}>
       {children}
     </I18nContext.Provider>
   );
 };
 
 export const useT = () => useContext(I18nContext).t;
-
+export const useI18n = () => useContext(I18nContext);
