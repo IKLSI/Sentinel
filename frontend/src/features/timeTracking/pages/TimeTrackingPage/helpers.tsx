@@ -57,6 +57,8 @@ export const parseDateLocal = (dateStr: string) => {
 export type FormState = {
   date: string;
   durationMinutes: number;
+  startTime: string;
+  endTime: string;
   title: string;
   description: string;
   techProjectId: string;
@@ -66,6 +68,8 @@ export type FormState = {
 export const emptyForm = (date?: string): FormState => ({
   date: date ?? format(new Date(), "yyyy-MM-dd"),
   durationMinutes: 0,
+  startTime: "",
+  endTime: "",
   title: "",
   description: "",
   techProjectId: "",

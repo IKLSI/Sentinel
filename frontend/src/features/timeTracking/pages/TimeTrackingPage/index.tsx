@@ -198,6 +198,8 @@ export const TimeTrackingPage: React.FC = () => {
     setForm({
       date: entry.date,
       durationMinutes: entry.durationMinutes,
+      startTime: entry.startTime ? entry.startTime.substring(0, 5) : "",
+      endTime: entry.endTime ? entry.endTime.substring(0, 5) : "",
       title: entry.title ?? "",
       description: entry.description ?? "",
       techProjectId: entry.techProjectId ?? "",
@@ -207,13 +209,22 @@ export const TimeTrackingPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!form.title.trim() || form.durationMinutes <= 0) return;
+    let durationMinutes = form.durationMinutes;
+    if (form.startTime && form.endTime) {
+      const [sh, sm] = form.startTime.split(":").map(Number);
+      const [eh, em] = form.endTime.split(":").map(Number);
+      const diff = (eh * 60 + em) - (sh * 60 + sm);
+      if (diff > 0) durationMinutes = diff;
+    }
+    if (!form.title.trim() || durationMinutes <= 0) return;
     setSubmitting(true);
     try {
       if (editingId) {
         await updateTimeEntry(editingId, {
           date: form.date,
-          durationMinutes: form.durationMinutes,
+          durationMinutes: durationMinutes,
+          startTime: form.startTime || undefined,
+          endTime: form.endTime || undefined,
           title: form.title.trim(),
           description: form.description.trim() || undefined,
           techProjectId: form.techProjectId || null,
@@ -223,7 +234,9 @@ export const TimeTrackingPage: React.FC = () => {
       } else {
         const payload: CreateTimeEntryDto = {
           date: form.date,
-          durationMinutes: form.durationMinutes,
+          durationMinutes: durationMinutes,
+          startTime: form.startTime || undefined,
+          endTime: form.endTime || undefined,
           title: form.title.trim(),
           description: form.description.trim() || undefined,
         };

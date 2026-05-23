@@ -22,6 +22,11 @@ public class CreateTimeEntryDtoValidator : AbstractValidator<CreateTimeEntryDto>
         RuleFor(x => x)
             .Must(x => x.TicketId.HasValue || x.TechProjectId.HasValue)
             .WithMessage("Un ticket ou un projet technique doit être associé");
+
+        RuleFor(x => x)
+            .Must(x => !x.StartTime.HasValue || !x.EndTime.HasValue || x.EndTime > x.StartTime)
+            .WithMessage("L'heure de fin doit être après l'heure de début")
+            .When(x => x.StartTime.HasValue && x.EndTime.HasValue);
     }
 }
 
@@ -41,5 +46,10 @@ public class UpdateTimeEntryDtoValidator : AbstractValidator<UpdateTimeEntryDto>
 
         RuleFor(x => x.Title).MaximumLength(500).When(x => x.Title != null);
         RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description != null);
+
+        RuleFor(x => x)
+            .Must(x => !x.StartTime.HasValue || !x.EndTime.HasValue || x.EndTime > x.StartTime)
+            .WithMessage("L'heure de fin doit être après l'heure de début")
+            .When(x => x.StartTime.HasValue && x.EndTime.HasValue);
     }
 }

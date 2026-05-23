@@ -12,6 +12,8 @@ export interface TimeEntryDto {
   userRole?: string
   date: string
   durationMinutes: number
+  startTime?: string
+  endTime?: string
   title?: string
   description?: string
 }
@@ -21,6 +23,8 @@ export interface CreateTimeEntryDto {
   techProjectId?: string
   date: string
   durationMinutes: number
+  startTime?: string
+  endTime?: string
   title?: string
   description?: string
 }
@@ -28,6 +32,8 @@ export interface CreateTimeEntryDto {
 interface UpdateTimeEntryDto {
   date?: string
   durationMinutes?: number
+  startTime?: string
+  endTime?: string
   title?: string
   description?: string
   techProjectId?: string | null

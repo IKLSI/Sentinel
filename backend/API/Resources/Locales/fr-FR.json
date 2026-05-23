@@ -674,5 +674,7 @@
   "error.500.subtitle": "Réessayez ou retournez à l'accueil",
   "error.back_home": "Retour à l'accueil",
   "error.retry": "Réessayer",
-  "error.contact_support": "Contacter le support"
+  "error.contact_support": "Contacter le support",
+  "time_tracking.field_start_time": "Début",
+  "time_tracking.field_end_time": "Fin"
 }

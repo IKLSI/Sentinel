@@ -556,6 +556,12 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone");
+
                     b.Property<Guid?>("TechProjectId")
                         .HasColumnType("uuid");
 

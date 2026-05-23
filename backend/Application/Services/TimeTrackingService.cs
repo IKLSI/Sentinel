@@ -18,13 +18,19 @@ public class TimeTrackingService
     {
         await EnsureBelongsToOrganizationAsync(dto.TicketId, dto.TechProjectId, organizationId);
 
+        int durationMinutes = dto.DurationMinutes;
+        if (dto.StartTime.HasValue && dto.EndTime.HasValue && dto.EndTime > dto.StartTime)
+            durationMinutes = (int)(dto.EndTime.Value.ToTimeSpan() - dto.StartTime.Value.ToTimeSpan()).TotalMinutes;
+
         TimeEntry entry = new TimeEntry
         {
             TicketId = dto.TicketId,
             TechProjectId = dto.TechProjectId,
             UserId = userId,
             Date = dto.Date,
-            DurationMinutes = dto.DurationMinutes,
+            DurationMinutes = durationMinutes,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
             Title = dto.Title,
             Description = dto.Description
         };
@@ -53,6 +59,10 @@ public class TimeTrackingService
 
         if (dto.Date.HasValue) entry.Date = dto.Date.Value;
         if (dto.DurationMinutes.HasValue) entry.DurationMinutes = dto.DurationMinutes.Value;
+        if (dto.StartTime.HasValue) entry.StartTime = dto.StartTime;
+        if (dto.EndTime.HasValue) entry.EndTime = dto.EndTime;
+        if (dto.StartTime.HasValue && dto.EndTime.HasValue && dto.EndTime > dto.StartTime)
+            entry.DurationMinutes = (int)(dto.EndTime.Value.ToTimeSpan() - dto.StartTime.Value.ToTimeSpan()).TotalMinutes;
         if (dto.Title != null) entry.Title = dto.Title;
         if (dto.Description != null) entry.Description = dto.Description;
         if (dto.TechProjectId != null) entry.TechProjectId = dto.TechProjectId == Guid.Empty ? null : dto.TechProjectId;
@@ -132,6 +142,8 @@ public class TimeTrackingService
             UserRole = entry.User?.Role.ToString() ?? string.Empty,
             Date = entry.Date,
             DurationMinutes = entry.DurationMinutes,
+            StartTime = entry.StartTime,
+            EndTime = entry.EndTime,
             Title = entry.Title,
             Description = entry.Description
         };

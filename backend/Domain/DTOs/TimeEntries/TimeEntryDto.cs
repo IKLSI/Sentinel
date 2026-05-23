@@ -12,6 +12,8 @@ public class TimeEntryDto
     public string UserRole { get; set; } = string.Empty;
     public DateOnly Date { get; set; }
     public int DurationMinutes { get; set; }
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
 }
@@ -22,6 +24,8 @@ public class CreateTimeEntryDto
     public Guid? TechProjectId { get; set; }
     public DateOnly Date { get; set; }
     public int DurationMinutes { get; set; }
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
 }
@@ -30,6 +34,8 @@ public class UpdateTimeEntryDto
 {
     public DateOnly? Date { get; set; }
     public int? DurationMinutes { get; set; }
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public Guid? TechProjectId { get; set; }

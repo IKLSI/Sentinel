@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
-import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AppModal } from "@/components/AppModal";
-import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
 import { Ticket } from "@/types";
-import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
+import { FormField, FormState, formatDuration, inputSx, parseDateLocal } from "../../helpers";
 import { DatePickerPopover } from "../DatePickerPopover";
 
 interface Props {
@@ -39,9 +36,17 @@ export const TimeEntryModal: React.FC<Props> = ({
   tickets,
 }) => {
   const t = useT();
-  const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(
-    null,
-  );
+  const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(null);
+
+  const computedMinutes = useMemo(() => {
+    if (!form.startTime || !form.endTime) return null;
+    const [sh, sm] = form.startTime.split(":").map(Number);
+    const [eh, em] = form.endTime.split(":").map(Number);
+    const diff = (eh * 60 + em) - (sh * 60 + sm);
+    return diff > 0 ? diff : null;
+  }, [form.startTime, form.endTime]);
+
+  const effectiveDuration = computedMinutes ?? form.durationMinutes;
 
   return (
     <AppModal
@@ -69,7 +74,7 @@ export const TimeEntryModal: React.FC<Props> = ({
             sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
             onClick={onSubmit}
             disabled={
-              !form.title.trim() || submitting || form.durationMinutes <= 0
+              !form.title.trim() || submitting || effectiveDuration <= 0
             }
           >
             {submitting ? (
@@ -84,9 +89,7 @@ export const TimeEntryModal: React.FC<Props> = ({
       }
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
           <FormField label={t("time_tracking.field_date")}>
             <Box
               component="button"
@@ -103,13 +106,9 @@ export const TimeEntryModal: React.FC<Props> = ({
               }}
             >
               {form.date
-                ? format(parseDateLocal(form.date), "d MMMM yyyy", {
-                    locale: fr,
-                  })
+                ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: fr })
                 : t("time_tracking.choose_date")}
-              <CalendarTodayOutlined
-                sx={{ fontSize: 13, color: "var(--muted2)" }}
-              />
+              <CalendarTodayOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
             </Box>
             <DatePickerPopover
               anchor={datePickerAnchor}
@@ -118,30 +117,26 @@ export const TimeEntryModal: React.FC<Props> = ({
               onSelect={(d) => onFormChange((f) => ({ ...f, date: d }))}
             />
           </FormField>
-          <FormField
-            label={t("time_tracking.field_duration")}
-            labelSuffix={
-              <Tooltip
-                title={t("time_tracking.duration_help")}
-                placement="top"
-                arrow
-              >
-                <InfoOutlined
-                  sx={{
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    cursor: "help",
-                    verticalAlign: "middle",
-                  }}
-                />
-              </Tooltip>
-            }
-          >
-            <DurationPicker
-              value={form.durationMinutes}
-              onChange={(v) =>
-                onFormChange((f) => ({ ...f, durationMinutes: v }))
+          <FormField label={t("time_tracking.field_start_time")}>
+            <Box
+              component="input"
+              type="time"
+              value={form.startTime}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onFormChange((f) => ({ ...f, startTime: e.target.value }))
               }
+              sx={{ ...inputSx, accentColor: "var(--accent)" }}
+            />
+          </FormField>
+          <FormField label={t("time_tracking.field_end_time")}>
+            <Box
+              component="input"
+              type="time"
+              value={form.endTime}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onFormChange((f) => ({ ...f, endTime: e.target.value }))
+              }
+              sx={{ ...inputSx, accentColor: "var(--accent)" }}
             />
           </FormField>
         </Box>

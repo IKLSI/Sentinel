@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
 import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import TodayOutlined from "@mui/icons-material/TodayOutlined";
@@ -369,16 +370,11 @@ export const WeekColumnsView: React.FC<Props> = ({
                           : "transparent",
                       position: "relative",
                       cursor: "pointer",
-                      "&:hover": {
-                        background: today
-                          ? "color-mix(in srgb, var(--accent) 5%, transparent)"
-                          : "color-mix(in srgb, var(--s3) 80%, transparent)",
-                      },
                     }}
                   >
                     {/* Entry blocks */}
                     <Box
-                      sx={{ position: "absolute", inset: "4px", display: "flex", flexDirection: "column", gap: "3px", zIndex: 1 }}
+                      sx={{ position: "absolute", inset: 0, zIndex: 1 }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {dayEntries.map((entry) => {
@@ -392,30 +388,46 @@ export const WeekColumnsView: React.FC<Props> = ({
                         const isOwn = entry.userId === currentUserId;
                         const canEdit = isOwn || isAdmin;
 
+                        let topOffset: number | null = null;
+                        if (entry.startTime) {
+                          const [h, m] = entry.startTime.split(":").map(Number);
+                          const decimalHour = h + m / 60;
+                          if (decimalHour >= START_HOUR && decimalHour < END_HOUR) {
+                            topOffset = (decimalHour - START_HOUR) * HOUR_HEIGHT;
+                          }
+                        }
+
+                        const timeLabel = entry.startTime
+                          ? `${entry.startTime.substring(0, 5)} – ${entry.endTime?.substring(0, 5) ?? ""}`
+                          : formatDuration(entry.durationMinutes);
+
                         return (
                           <Box
                             key={entry.id}
                             onClick={() => canEdit && onEdit(entry)}
                             sx={{
+                              position: topOffset !== null ? "absolute" : "relative",
+                              ...(topOffset !== null
+                                ? { top: `${topOffset}px`, left: "4px", right: "4px" }
+                                : { mx: "4px", mt: "4px" }),
                               height: `${blockHeight}px`,
                               flexShrink: 0,
                               background: "var(--s1)",
-                              borderRadius: "var(--r-sm)",
+                              border: "1px solid var(--border)",
+                              borderRadius: "var(--r)",
                               px: "8px",
-                              py: "5px",
+                              py: "6px",
                               cursor: canEdit ? "pointer" : "default",
                               display: "flex",
                               flexDirection: "column",
                               justifyContent: "space-between",
                               overflow: "hidden",
-                              position: "relative",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
-                              transition: "box-shadow 0.15s, transform 0.1s",
+                              transition: "border-color 0.15s, box-shadow 0.15s",
                               "&:hover": canEdit ? {
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-                                transform: "translateY(-1px)",
+                                borderColor: "var(--border2)",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
                               } : {},
-                              "&:hover .row-actions": { opacity: 1 },
+                              "&:hover .entry-actions": { opacity: 1 },
                             }}
                           >
                             <Box
@@ -426,44 +438,74 @@ export const WeekColumnsView: React.FC<Props> = ({
                                 lineHeight: 1.35,
                                 overflow: "hidden",
                                 display: "-webkit-box",
-                                WebkitLineClamp: blockHeight >= 64 ? 3 : 1,
+                                WebkitLineClamp: 2,
                                 WebkitBoxOrient: "vertical",
-                                letterSpacing: "-0.01em",
+                                letterSpacing: "-0.015em",
                               }}
                             >
                               {entry.title ?? "—"}
                             </Box>
 
-                            <Box
-                              sx={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: "10px",
-                                fontWeight: 700,
-                                color: projColor,
-                                letterSpacing: "-0.02em",
-                              }}
-                            >
-                              {formatDuration(entry.durationMinutes)}
-                            </Box>
+                            {blockHeight >= 52 && entry.description && (
+                              <Box
+                                sx={{
+                                  fontSize: "10.5px",
+                                  color: "var(--muted2)",
+                                  overflow: "hidden",
+                                  whiteSpace: "nowrap",
+                                  textOverflow: "ellipsis",
+                                  lineHeight: 1.3,
+                                }}
+                              >
+                                {entry.description}
+                              </Box>
+                            )}
 
-                            {canEdit && (
-                              <Box sx={{ position: "absolute", top: "3px", right: "3px" }}>
-                                <RowActions
-                                  actions={[
-                                    {
-                                      icon: <EditOutlined sx={{ fontSize: 11 }} />,
-                                      label: t("time_tracking.action_edit"),
-                                      onClick: (e) => { e.stopPropagation(); onEdit(entry); },
-                                      color: "accent",
-                                    },
-                                    {
-                                      icon: <DeleteOutlineOutlined sx={{ fontSize: 11 }} />,
-                                      label: t("time_tracking.action_delete"),
-                                      onClick: (e) => { e.stopPropagation(); onDelete(entry); },
-                                      color: "red",
-                                    },
-                                  ]}
-                                />
+                            {blockHeight >= 48 ? (
+                              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 0 }}>
+                                <Box
+                                  sx={{
+                                    fontFamily: "var(--font-mono)",
+                                    fontSize: "10px",
+                                    fontWeight: 600,
+                                    color: "var(--muted)",
+                                    letterSpacing: "0.02em",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {timeLabel}
+                                </Box>
+                                {canEdit && (
+                                  <Box
+                                    className="entry-actions"
+                                    sx={{ display: "flex", alignItems: "center", opacity: 0, transition: "opacity 0.15s" }}
+                                  >
+                                    <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
+                                      <Box
+                                        component="button"
+                                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
+                                        sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "4px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
+                                      >
+                                        <DeleteOutlineOutlined sx={{ fontSize: 11 }} />
+                                      </Box>
+                                    </Tooltip>
+                                  </Box>
+                                )}
+                              </Box>
+                            ) : canEdit && (
+                              <Box
+                                className="entry-actions"
+                                sx={{ position: "absolute", bottom: "2px", right: "2px", opacity: 0, transition: "opacity 0.15s" }}
+                              >
+                                <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
+                                  <Box
+                                    component="button"
+                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
+                                    sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "3px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
+                                  >
+                                    <DeleteOutlineOutlined sx={{ fontSize: 10 }} />
+                                  </Box>
+                                </Tooltip>
                               </Box>
                             )}
                           </Box>
