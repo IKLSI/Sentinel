@@ -70,7 +70,7 @@ export const ProjectDetailPage: React.FC = () => {
   };
 
   const allVulns = useMemo(
-    () => project?.dependencies.flatMap((d) => d.vulnerabilities) ?? [],
+    () => project?.dependencies.flatMap((d) => d.vulnerabilities.map((v) => ({ ...v, dependencyName: d.name }))) ?? [],
     [project],
   );
 
@@ -87,13 +87,6 @@ export const ProjectDetailPage: React.FC = () => {
     );
   }, [project, depSearch]);
 
-  const depsToUpdate = useMemo(
-    () =>
-      project?.dependencies.filter(
-        (d) => d.status === "MinorUpdate" || d.status === "MajorUpdate",
-      ).length ?? 0,
-    [project],
-  );
 
   const eolRuntimes = useMemo(
     () => project?.runtimes.filter((r) => r.isEol).length ?? 0,
@@ -147,7 +140,6 @@ export const ProjectDetailPage: React.FC = () => {
       >
         <ProjectHeaderCard
           project={project}
-          depsToUpdate={depsToUpdate}
           eolRuntimes={eolRuntimes}
         />
 

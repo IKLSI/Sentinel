@@ -8,7 +8,6 @@ import { RowActions } from "@/components/RowActions";
 import { useT } from "@/i18n/I18nContext";
 import { Ticket } from "@/types";
 import {
-  getAvatarStyle,
   priorityColor,
   priorityLabelKeys,
   typeBadgeStyle,
@@ -176,38 +175,16 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         }}
       >
         {ticket.assignee ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <Box
-              sx={{
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "8px",
-                fontWeight: 700,
-                fontFamily: "var(--font-mono)",
-                background: getAvatarStyle().bg,
-                color: getAvatarStyle().color,
-                flexShrink: 0,
-              }}
-            >
-              {ticket.assignee.firstName?.[0]?.toUpperCase()}
-              {ticket.assignee.lastName?.[0]?.toUpperCase()}
-            </Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                color: "var(--text-secondary)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {ticket.assignee.firstName}{" "}
-              {ticket.assignee.lastName?.[0]?.toUpperCase()}.
-            </Box>
+          <Box
+            sx={{
+              fontSize: "12px",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {ticket.assignee.firstName} {ticket.assignee.lastName}
           </Box>
         ) : (
           <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>—</Box>

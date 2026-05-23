@@ -123,7 +123,7 @@ export const DependenciesTab: React.FC<Props> = ({
         >
           <Box component="colgroup">
             <Box component="col" sx={{ width: "30%" }} />
-            <Box component="col" sx={{ width: "9%" }} />
+            <Box component="col" sx={{ width: "12%" }} />
             <Box component="col" sx={{ width: "6%" }} />
             <Box component="col" sx={{ width: "17%" }} />
             <Box component="col" sx={{ width: "10%" }} />
@@ -152,7 +152,7 @@ export const DependenciesTab: React.FC<Props> = ({
         >
           <Box component="colgroup">
             <Box component="col" sx={{ width: "30%" }} />
-            <Box component="col" sx={{ width: "9%" }} />
+            <Box component="col" sx={{ width: "12%" }} />
             <Box component="col" sx={{ width: "6%" }} />
             <Box component="col" sx={{ width: "17%" }} />
             <Box component="col" sx={{ width: "10%" }} />

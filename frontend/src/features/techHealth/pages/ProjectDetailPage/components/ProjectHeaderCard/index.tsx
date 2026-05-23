@@ -1,24 +1,38 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import type { SvgIconComponent } from "@mui/icons-material";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
+import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import { HealthScoreCircle } from "@/components/HealthScoreCircle";
+import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
+import ReportOutlined from "@mui/icons-material/ReportOutlined";
+import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
+import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
+import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
+import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDetailDto } from "@/features/techHealth/api/projects";
 
+const GRADE_ICON: Record<string, { color: string; Icon: SvgIconComponent }> = {
+  F: { color: "var(--red)", Icon: DangerousOutlined },
+  E: { color: "var(--orange)", Icon: ReportOutlined },
+  D: { color: "var(--yellow)", Icon: TrendingDownOutlined },
+  C: { color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: LockOpenOutlined },
+  B: { color: "var(--accent)", Icon: ThumbUpAltOutlined },
+  A: { color: "var(--green)", Icon: WorkspacePremiumOutlined },
+};
+
 interface Props {
   project: ProjectDetailDto;
-  depsToUpdate: number;
   eolRuntimes: number;
 }
 
 export const ProjectHeaderCard: React.FC<Props> = ({
   project,
-  depsToUpdate,
   eolRuntimes,
 }) => {
   const t = useT();
@@ -138,11 +152,14 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           </Box>
         </Box>
 
-        <HealthScoreCircle
-          score={project.healthScore}
-          grade={project.healthGrade as "A" | "B" | "C" | "D" | "F"}
-          size={64}
-        />
+        {(() => {
+          const cfg = GRADE_ICON[project.healthGrade ?? "F"] ?? GRADE_ICON["F"];
+          return (
+            <Box sx={{ color: cfg.color, flexShrink: 0 }}>
+              <cfg.Icon sx={{ fontSize: 28 }} />
+            </Box>
+          );
+        })()}
       </Box>
 
       <Box
@@ -161,16 +178,16 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               alert: null,
             },
             {
-              label: t("tech_health.stats.to_update"),
-              value: depsToUpdate,
-              icon: <RefreshOutlined sx={{ fontSize: 13 }} />,
-              alert: depsToUpdate > 0 ? "orange" : null,
-            },
-            {
               label: t("tech_health.stats.critical"),
               value: project.criticalVulnerabilities,
               icon: <GppBadOutlined sx={{ fontSize: 13 }} />,
               alert: project.criticalVulnerabilities > 0 ? "red" : null,
+            },
+            {
+              label: t("tech_health.stats.vulnerabilities"),
+              value: project.totalVulnerabilities,
+              icon: <GppMaybeOutlined sx={{ fontSize: 13 }} />,
+              alert: project.totalVulnerabilities > 0 ? "orange" : null,
             },
             {
               label: t("tech_health.stats.eol"),

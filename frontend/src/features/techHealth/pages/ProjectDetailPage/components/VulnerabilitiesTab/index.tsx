@@ -5,7 +5,9 @@ import { useT } from "@/i18n/I18nContext";
 import { VulnerabilityDto } from "@/features/techHealth/api/projects";
 import { SEV_CONFIG, TD, TH, TR } from "../../helpers";
 
-const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
+type VulnWithDep = VulnerabilityDto & { dependencyName: string };
+
+const VulnRow: React.FC<{ vuln: VulnWithDep }> = ({ vuln }) => {
   const cfg = SEV_CONFIG[vuln.severity] ?? SEV_CONFIG.Low;
   return (
     <TR>
@@ -20,6 +22,11 @@ const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
           }}
         >
           {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : "—"}
+        </Box>
+      </TD>
+      <TD>
+        <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)" }}>
+          {vuln.dependencyName}
         </Box>
       </TD>
       <TD>{vuln.description}</TD>
@@ -65,7 +72,7 @@ const VulnRow: React.FC<{ vuln: VulnerabilityDto }> = ({ vuln }) => {
 };
 
 interface Props {
-  vulns: VulnerabilityDto[];
+  vulns: VulnWithDep[];
 }
 
 export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
@@ -110,14 +117,16 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
           }}
         >
           <Box component="colgroup">
-            <Box component="col" sx={{ width: "13%" }} />
-            <Box component="col" />
+            <Box component="col" sx={{ width: "6%" }} />
+            <Box component="col" sx={{ width: "18%" }} />
+            <Box component="col" sx={{ width: "34%" }} />
             <Box component="col" sx={{ width: "13%" }} />
             <Box component="col" sx={{ width: "12%" }} />
           </Box>
           <Box component="thead">
             <Box component="tr">
               <TH>{t("tech_health.table.vuln.score")}</TH>
+              <TH>{t("tech_health.table.vuln.dependency")}</TH>
               <TH>{t("tech_health.table.vuln.vulnerability")}</TH>
               <TH>{t("tech_health.table.vuln.cve_ref")}</TH>
               <TH>{t("tech_health.table.vuln.fixed_version")}</TH>
@@ -135,8 +144,9 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
           }}
         >
           <Box component="colgroup">
-            <Box component="col" sx={{ width: "13%" }} />
-            <Box component="col" />
+            <Box component="col" sx={{ width: "6%" }} />
+            <Box component="col" sx={{ width: "18%" }} />
+            <Box component="col" sx={{ width: "34%" }} />
             <Box component="col" sx={{ width: "13%" }} />
             <Box component="col" sx={{ width: "12%" }} />
           </Box>

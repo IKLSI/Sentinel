@@ -1,9 +1,12 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import type { SvgIconComponent } from "@mui/icons-material";
-import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
-import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
-import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
+import ReportOutlined from "@mui/icons-material/ReportOutlined";
+import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
+import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
+import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
+import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import { HealthGrade } from "../types";
 
 interface HealthScoreCircleProps {
@@ -16,15 +19,15 @@ const gradeConfig: Record<
   HealthGrade,
   { color: string; Icon: SvgIconComponent }
 > = {
-  F: { color: "var(--red)", Icon: WarningAmberOutlined },
-  E: { color: "var(--orange)", Icon: WarningAmberOutlined },
-  D: { color: "var(--yellow)", Icon: ErrorOutlineOutlined },
+  F: { color: "var(--red)", Icon: DangerousOutlined },
+  E: { color: "var(--orange)", Icon: ReportOutlined },
+  D: { color: "var(--yellow)", Icon: TrendingDownOutlined },
   C: {
     color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)",
-    Icon: ErrorOutlineOutlined,
+    Icon: LockOpenOutlined,
   },
-  B: { color: "var(--accent)", Icon: CheckCircleOutlineOutlined },
-  A: { color: "var(--green)", Icon: CheckCircleOutlineOutlined },
+  B: { color: "var(--accent)", Icon: ThumbUpAltOutlined },
+  A: { color: "var(--green)", Icon: WorkspacePremiumOutlined },
 };
 
 export const HealthScoreCircle: React.FC<HealthScoreCircleProps> = ({
