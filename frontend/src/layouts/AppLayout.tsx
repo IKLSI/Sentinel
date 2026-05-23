@@ -13,7 +13,7 @@ const AppContent: React.FC = () => {
   const { isCollapsed, isMobile } = useSidebar();
   const { pathname } = useLocation();
   const collapsed = isCollapsed && !isMobile;
-  const ml = isMobile ? 0 : (collapsed ? 56 : 220) + SIDEBAR_GAP * 2;
+  const ml = isMobile ? 0 : (collapsed ? 56 : 200) + SIDEBAR_GAP * 2;
 
   return (
     <Box

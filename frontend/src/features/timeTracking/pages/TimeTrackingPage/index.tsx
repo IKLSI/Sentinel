@@ -24,6 +24,7 @@ import { UserPicker } from "./components/UserPicker";
 import { TimeEntryModal } from "./components/TimeEntryModal";
 import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
 import { extractApiError } from "@/utils/apiError";
+import { TIME_TRACKING_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
 
 type JournalUserOption = {
   id: string;
@@ -187,11 +188,17 @@ export const TimeTrackingPage: React.FC = () => {
     setWeekOffset(diff);
   };
 
-  const openCreate = (date?: string) => {
+  const openCreate = useCallback((date?: string) => {
     setEditingId(null);
     setForm(emptyForm(date));
     setModalOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    const handler = () => openCreate();
+    window.addEventListener(TIME_TRACKING_OPEN_CREATE_EVENT, handler);
+    return () => window.removeEventListener(TIME_TRACKING_OPEN_CREATE_EVENT, handler);
+  }, [openCreate]);
 
   const openEdit = (entry: TimeEntryDto) => {
     setEditingId(entry.id);

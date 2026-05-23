@@ -28,6 +28,7 @@ import { ProjectsSection } from "./components/ProjectsSection";
 import { ProjectFormModal } from "./components/ProjectFormModal";
 import { SyncProjectModal } from "./components/SyncProjectModal";
 import { extractApiError } from "@/utils/apiError";
+import { PROJECTS_OPEN_IMPORT_EVENT } from "@/components/CommandPalette";
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
@@ -63,6 +64,12 @@ export const ProjectsPage: React.FC = () => {
     },
     [],
   );
+
+  useEffect(() => {
+    const handler = () => setShowSyncModal(true);
+    window.addEventListener(PROJECTS_OPEN_IMPORT_EVENT, handler);
+    return () => window.removeEventListener(PROJECTS_OPEN_IMPORT_EVENT, handler);
+  }, []);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);

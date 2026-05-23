@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
@@ -10,6 +10,7 @@ import { MembersTab } from "./components/MembersTab";
 import { OrganisationTab } from "./components/OrganisationTab";
 import { JobsTab } from "./components/JobsTab";
 import { InviteModal } from "./components/InviteModal";
+import { SETTINGS_OPEN_INVITE_EVENT } from "@/components/CommandPalette";
 
 export const SettingsPage: React.FC = () => {
   const t = useT();
@@ -33,6 +34,12 @@ export const SettingsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>("organisation");
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => { setActiveTab("members"); setInviteOpen(true); };
+    window.addEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
+    return () => window.removeEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
+  }, []);
 
   return (
     <>

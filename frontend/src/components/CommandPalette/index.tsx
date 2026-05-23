@@ -3,20 +3,19 @@ import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import AddOutlined from "@mui/icons-material/AddOutlined";
-import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import ViewKanbanOutlined from "@mui/icons-material/ViewKanbanOutlined";
-import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
-import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import KeyboardReturnOutlined from "@mui/icons-material/KeyboardReturnOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
-const PALETTE_OPEN_EVENT = "command-palette:open";
+export const PALETTE_OPEN_EVENT = "command-palette:open";
 export const TICKETS_OPEN_CREATE_EVENT = "tickets:open-create";
+export const PROJECTS_OPEN_IMPORT_EVENT = "projects:open-import";
+export const TIME_TRACKING_OPEN_CREATE_EVENT = "time-tracking:open-create";
+export const SETTINGS_OPEN_INVITE_EVENT = "settings:open-invite";
 
 interface PaletteItem {
   id: string;
@@ -45,18 +44,9 @@ export const CommandPalette: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const isMod = e.ctrlKey || e.metaKey;
-      if (isMod && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        setOpen((v) => !v);
-      }
-    };
     const onOpen = () => setOpen(true);
-    window.addEventListener("keydown", onKey);
     window.addEventListener(PALETTE_OPEN_EVENT, onOpen);
     return () => {
-      window.removeEventListener("keydown", onKey);
       window.removeEventListener(PALETTE_OPEN_EVENT, onOpen);
     };
   }, []);
@@ -80,7 +70,7 @@ export const CommandPalette: React.FC = () => {
         group: "palette.section_actions",
         labelKey: "palette.action_create_ticket",
         hintKey: "palette.action_create_ticket_hint",
-        icon: AddOutlined,
+        icon: ConfirmationNumberOutlined,
         perform: () => {
           close();
           navigate("/tickets");
@@ -91,76 +81,50 @@ export const CommandPalette: React.FC = () => {
         },
       },
       {
-        id: "nav-dashboard",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_dashboard",
-        icon: DashboardOutlined,
-        perform: () => {
-          close();
-          navigate("/");
-        },
-        roles: ["Admin", "Developer"],
-      },
-      {
-        id: "nav-tickets",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_tickets",
-        icon: ConfirmationNumberOutlined,
-        perform: () => {
-          close();
-          navigate("/tickets");
-        },
-      },
-      {
-        id: "nav-kanban",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_kanban",
-        icon: ViewKanbanOutlined,
-        perform: () => {
-          close();
-          navigate("/tickets/kanban");
-        },
-      },
-      {
-        id: "nav-projects",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_projects",
-        icon: AccountTreeOutlined,
+        id: "import-project",
+        group: "palette.section_actions",
+        labelKey: "palette.action_import_project",
+        hintKey: "palette.action_import_project_hint",
+        icon: CloudDownloadOutlined,
         perform: () => {
           close();
           navigate("/projects");
+          window.setTimeout(
+            () => window.dispatchEvent(new Event(PROJECTS_OPEN_IMPORT_EVENT)),
+            50,
+          );
         },
         roles: ["Admin", "Developer"],
       },
       {
-        id: "nav-time",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_time_tracking",
+        id: "log-time",
+        group: "palette.section_actions",
+        labelKey: "palette.action_log_time",
+        hintKey: "palette.action_log_time_hint",
         icon: AccessTimeOutlined,
         perform: () => {
           close();
           navigate("/time-tracking");
+          window.setTimeout(
+            () => window.dispatchEvent(new Event(TIME_TRACKING_OPEN_CREATE_EVENT)),
+            50,
+          );
         },
         roles: ["Admin", "Developer"],
       },
       {
-        id: "nav-profile",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_profile",
-        icon: PersonOutlined,
-        perform: () => {
-          close();
-          navigate("/profile");
-        },
-      },
-      {
-        id: "nav-settings",
-        group: "palette.section_navigation",
-        labelKey: "palette.nav_settings",
-        icon: SettingsOutlined,
+        id: "invite-member",
+        group: "palette.section_actions",
+        labelKey: "palette.action_invite_member",
+        hintKey: "palette.action_invite_member_hint",
+        icon: PersonAddOutlined,
         perform: () => {
           close();
           navigate("/settings");
+          window.setTimeout(
+            () => window.dispatchEvent(new Event(SETTINGS_OPEN_INVITE_EVENT)),
+            50,
+          );
         },
         roles: ["Admin"],
       },
@@ -217,7 +181,6 @@ export const CommandPalette: React.FC = () => {
   const groups: { key: string; items: PaletteItem[] }[] = useMemo(() => {
     const order = [
       "palette.section_actions",
-      "palette.section_navigation",
     ];
     const map = new Map<string, PaletteItem[]>();
     for (const it of filtered) {
@@ -245,9 +208,8 @@ export const CommandPalette: React.FC = () => {
       }}
       sx={{
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        pt: "12vh",
         outline: "none",
       }}
     >

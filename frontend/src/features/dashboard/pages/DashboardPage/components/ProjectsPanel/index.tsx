@@ -31,7 +31,7 @@ export const ProjectsPanel: React.FC<Props> = ({
   const t = useT();
   const navigate = useNavigate();
 
-  const projectRows = projects.slice(0, 4);
+  const projectRows = projects.slice(0, 8);
 
   const projectsSyncText = (() => {
     const latestScan = projects
