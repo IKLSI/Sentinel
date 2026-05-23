@@ -135,16 +135,18 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                     strokeWidth={0.7}
                     strokeDasharray={tick === 0 ? "none" : "3 4"}
                   />
-                  <text
-                    x={PL - 5}
-                    y={y + 3}
-                    textAnchor="end"
-                    fontSize="7"
-                    fill={palette.textSecondary}
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  >
-                    {tick}
-                  </text>
+                  {tick !== 0 && (
+                    <text
+                      x={PL - 5}
+                      y={y + 3}
+                      textAnchor="end"
+                      fontSize="7"
+                      fill={palette.textSecondary}
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
+                      {tick}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -254,7 +256,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                   <tspan
                     x={p.x}
                     y={VH - 11}
-                    fontSize="6.5"
+                    fontSize="5"
                     fill={color}
                     fontWeight={active ? "700" : "400"}
                     style={{ transition: "fill 0.15s" }}
@@ -264,7 +266,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                   <tspan
                     x={p.x}
                     y={VH - 4}
-                    fontSize="8"
+                    fontSize="6"
                     fill={color}
                     fontWeight="700"
                     style={{ transition: "fill 0.15s" }}
