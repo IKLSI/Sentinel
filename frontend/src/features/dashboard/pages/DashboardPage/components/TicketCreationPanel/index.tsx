@@ -8,8 +8,9 @@ const dayNumFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric" });
 
 const formatDay = (isoDate: string) => {
   const d = new Date(`${isoDate}T12:00:00`);
+  const raw = weekdayFmt.format(d).replace(/\.$/, "");
   return {
-    abbr: weekdayFmt.format(d).replace(/\.$/, ""),
+    abbr: raw.charAt(0).toUpperCase() + raw.slice(1),
     num: dayNumFmt.format(d),
   };
 };
@@ -111,6 +112,13 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
                 <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
               </linearGradient>
+              <linearGradient id="tck-tip-bg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--s2)" stopOpacity="1" />
+                <stop offset="100%" stopColor="var(--s1)" stopOpacity="1" />
+              </linearGradient>
+              <filter id="tck-shadow" x="-20%" y="-20%" width="140%" height="160%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.28)" />
+              </filter>
               <clipPath id="tck-clip">
                 <rect x={PL} y={PT - 2} width={CW + PR} height={CH + 4} />
               </clipPath>
@@ -206,18 +214,20 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
             {hoveredPt && (
               <g style={{ pointerEvents: "none" }}>
                 {(() => {
-                  const tw = 62;
-                  const th = 22;
+                  const tw = 52;
+                  const th = 30;
                   const tx = Math.min(Math.max(hoveredPt.x - tw / 2, PL), VW - PR - tw);
-                  const ty = Math.max(hoveredPt.y - th - 6, PT);
+                  const ty = Math.max(hoveredPt.y - th - 8, PT);
+                  const lbl = xLabels[hovered!];
+                  const count = hoveredPt.count;
                   return (
                     <>
-                      <rect x={tx} y={ty} width={tw} height={th} rx={3} fill={palette.panelBg} stroke="var(--accent-border)" strokeWidth={0.8} />
-                      <text x={tx + tw / 2} y={ty + 7} textAnchor="middle" fontSize="7" fill={palette.textSecondary} style={{ fontFamily: "var(--font-mono)" }}>
-                        {xLabels[hovered!]?.abbr} {xLabels[hovered!]?.num}
+                      <rect x={tx} y={ty} width={tw} height={th} rx={4} fill="url(#tck-tip-bg)" stroke="var(--accent-border)" strokeWidth={0.7} filter="url(#tck-shadow)" />
+                      <text x={tx + tw / 2} y={ty + 11} textAnchor="middle" fontSize="7" fill={palette.textSecondary} style={{ fontFamily: "var(--font-mono)" }}>
+                        {lbl?.abbr} {lbl?.num}
                       </text>
-                      <text x={tx + tw / 2} y={ty + 13} textAnchor="middle" fontSize="8" fill={palette.textPrimary} fontWeight="700" style={{ fontFamily: "var(--font-mono)" }}>
-                        {hoveredPt.count > 0 ? hoveredPt.count : t("dashboard.creation.tooltip_zero")}
+                      <text x={tx + tw / 2} y={ty + 23} textAnchor="middle" fontSize="10" fill="var(--accent)" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }}>
+                        {count}
                       </text>
                     </>
                   );

@@ -397,6 +397,7 @@ public class TechHealthService
             else if (eolProp.ValueKind == JsonValueKind.String &&
                      DateTime.TryParse(eolProp.GetString(), out DateTime eolDate))
             {
+                eolDate = DateTime.SpecifyKind(eolDate, DateTimeKind.Utc);
                 runtime.EolDate = eolDate;
                 runtime.IsEol = eolDate < DateTime.UtcNow;
             }

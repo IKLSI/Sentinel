@@ -5,6 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { projectsQueryKey } from "@/features/techHealth/hooks/useProjects";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
@@ -20,17 +22,17 @@ import {
   exportProjectsExcel,
   ProjectDto,
 } from "@/features/techHealth/api/projects";
-import { getIntegrationSettings } from "@/features/settings/api/settings";
 import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { ProjectFormModal } from "./components/ProjectFormModal";
-import { ImportReposModal } from "./components/ImportReposModal";
+import { SyncProjectModal } from "./components/SyncProjectModal";
 import { extractApiError } from "@/utils/apiError";
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
+  const queryClient = useQueryClient();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -42,8 +44,7 @@ export const ProjectsPage: React.FC = () => {
   const [editSaving, setEditSaving] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [hasIntegration, setHasIntegration] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<GradeKey, boolean>
   >({
@@ -80,9 +81,6 @@ export const ProjectsPage: React.FC = () => {
   useEffect(() => {
     const ctrl = new AbortController();
     void load(ctrl.signal);
-    getIntegrationSettings(ctrl.signal)
-      .then((s) => { if (!ctrl.signal.aborted) setHasIntegration(s.hasGithubToken || s.hasGitlabToken); })
-      .catch(() => {});
     return () => ctrl.abort();
   }, [load]);
 
@@ -171,6 +169,7 @@ export const ProjectsPage: React.FC = () => {
             );
             setScanningId(null);
             showToast(t("projects.toast.scan_done"), "success");
+            void queryClient.invalidateQueries({ queryKey: projectsQueryKey });
           } else {
             scanPollRef.current = setTimeout(poll, 3000);
           }
@@ -231,7 +230,7 @@ export const ProjectsPage: React.FC = () => {
         <ProjectsToolbar
           search={search}
           onSearchChange={setSearch}
-          onImport={hasIntegration ? () => setShowImportModal(true) : undefined}
+          onImport={() => setShowSyncModal(true)}
           onExport={handleExport}
           exporting={exporting}
         />
@@ -322,9 +321,9 @@ export const ProjectsPage: React.FC = () => {
         )}
       </Box>
 
-      <ImportReposModal
-        open={showImportModal}
-        onClose={() => setShowImportModal(false)}
+      <SyncProjectModal
+        open={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
         onImported={() => void load()}
         showToast={showToast}
       />

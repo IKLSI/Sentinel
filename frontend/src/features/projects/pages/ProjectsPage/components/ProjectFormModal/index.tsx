@@ -86,12 +86,14 @@ export const ProjectFormModal: React.FC<Props> = ({
           onChange={onNameChange}
           autoFocus={isCreate}
         />
-        <ModalField
-          label={t("projects.field.repo_url_label")}
-          placeholder={t("projects.field.repo_url_placeholder")}
-          value={repoUrl}
-          onChange={onRepoUrlChange}
-        />
+        {isCreate && (
+          <ModalField
+            label={t("projects.field.repo_url_label")}
+            placeholder={t("projects.field.repo_url_placeholder")}
+            value={repoUrl}
+            onChange={onRepoUrlChange}
+          />
+        )}
       </Box>
     </AppModal>
   );

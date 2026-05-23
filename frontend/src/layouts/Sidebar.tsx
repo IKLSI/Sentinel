@@ -84,18 +84,6 @@ const navSections: NavSection[] = [
       },
     ],
   },
-  {
-    titleKey: "sidebar.section.administration",
-    icon: SettingsOutlined,
-    adminOnly: true,
-    items: [
-      {
-        to: "/settings",
-        icon: SettingsOutlined,
-        labelKey: "sidebar.item.settings",
-      },
-    ],
-  },
 ];
 
 function isSectionActive(section: NavSection, pathname: string): boolean {
@@ -656,28 +644,55 @@ export const Sidebar: React.FC = () => {
             </Box>
           </Tooltip>
 
-          <Tooltip title={t("sidebar.logout")} placement="top" arrow>
-            <Box
-              component="button"
-              onClick={handleLogout}
-              sx={{
-                all: "unset",
-                cursor: "pointer",
-                width: 26,
-                height: 26,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 'var(--r-sm)',
-                color: "var(--muted)",
-                flexShrink: 0,
-                transition: "color 0.12s, background 0.12s",
-                "&:hover": { color: "var(--red)" },
-              }}
-            >
-              <LogoutOutlined sx={{ fontSize: 14 }} />
-            </Box>
-          </Tooltip>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+            {isAdmin && (
+              <Tooltip title={t("sidebar.item.settings")} placement="top" arrow>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/settings")}
+                  sx={{
+                    all: "unset",
+                    cursor: "pointer",
+                    width: 26,
+                    height: 26,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 'var(--r-sm)',
+                    color: "var(--muted)",
+                    flexShrink: 0,
+                    transition: "color 0.12s, background 0.12s",
+                    "&:hover": { color: "var(--text)", background: "var(--s3)" },
+                  }}
+                >
+                  <SettingsOutlined sx={{ fontSize: 14 }} />
+                </Box>
+              </Tooltip>
+            )}
+
+            <Tooltip title={t("sidebar.logout")} placement="top" arrow>
+              <Box
+                component="button"
+                onClick={handleLogout}
+                sx={{
+                  all: "unset",
+                  cursor: "pointer",
+                  width: 26,
+                  height: 26,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 'var(--r-sm)',
+                  color: "var(--muted)",
+                  flexShrink: 0,
+                  transition: "color 0.12s, background 0.12s",
+                  "&:hover": { color: "var(--red)" },
+                }}
+              >
+                <LogoutOutlined sx={{ fontSize: 14 }} />
+              </Box>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
     </>

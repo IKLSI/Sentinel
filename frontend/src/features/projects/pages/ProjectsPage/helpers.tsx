@@ -1,8 +1,11 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
-import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
-import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
+import ReportOutlined from "@mui/icons-material/ReportOutlined";
+import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
+import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
+import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
+import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
 
 export type GradeKey = "F" | "E" | "D" | "C" | "B" | "A";
@@ -13,12 +16,12 @@ export const GRADE_VISUAL: Record<
   GradeKey,
   { iconColor: string; Icon: SvgIconComponent }
 > = {
-  F: { iconColor: "var(--red)", Icon: WarningAmberOutlined },
-  E: { iconColor: "var(--orange)", Icon: WarningAmberOutlined },
-  D: { iconColor: "var(--yellow)", Icon: ErrorOutlineOutlined },
-  C: { iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: ErrorOutlineOutlined },
-  B: { iconColor: "var(--accent)", Icon: CheckCircleOutlineOutlined },
-  A: { iconColor: "var(--green)", Icon: CheckCircleOutlineOutlined },
+  F: { iconColor: "var(--red)", Icon: DangerousOutlined },
+  E: { iconColor: "var(--orange)", Icon: ReportOutlined },
+  D: { iconColor: "var(--yellow)", Icon: TrendingDownOutlined },
+  C: { iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: LockOpenOutlined },
+  B: { iconColor: "var(--accent)", Icon: ThumbUpAltOutlined },
+  A: { iconColor: "var(--green)", Icon: WorkspacePremiumOutlined },
 };
 
 export const getGrade = (grade: string | null | undefined): GradeKey => {

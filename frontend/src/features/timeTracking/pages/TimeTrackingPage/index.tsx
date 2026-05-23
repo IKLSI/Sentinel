@@ -18,14 +18,8 @@ import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getTickets } from "@/features/tickets/api/tickets";
 import { getUsers } from "@/features/users/api/users";
 import { Ticket } from "@/types";
-import {
-  FormState,
-  emptyForm,
-  parseDateLocal,
-} from "./helpers";
-import { WeekCalendarCard } from "./components/WeekCalendarCard";
-import { ProjectStatsCard } from "./components/ProjectStatsCard";
-import { JournalCard } from "./components/JournalCard";
+import { FormState, emptyForm, parseDateLocal } from "./helpers";
+import { WeekColumnsView } from "./components/WeekColumnsView";
 import { UserPicker } from "./components/UserPicker";
 import { TimeEntryModal } from "./components/TimeEntryModal";
 import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
@@ -57,8 +51,7 @@ export const TimeTrackingPage: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [detailEntry, setDetailEntry] = useState<TimeEntryDto | null>(null);
   const [userFilterOpen, setUserFilterOpen] = useState(false);
-  const [selectedJournalUserId, setSelectedJournalUserId] =
-    useState<string>("all");
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
   const [allUsers, setAllUsers] = useState<JournalUserOption[]>([]);
 
   const weekStart = useMemo(() => {
@@ -68,23 +61,26 @@ export const TimeTrackingPage: React.FC = () => {
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
-  const load = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    try {
-      const data = await getTimeEntries(
-        format(weekStart, "yyyy-MM-dd"),
-        format(weekEnd, "yyyy-MM-dd"),
-        signal,
-      );
-      if (signal?.aborted) return;
-      setEntries(data);
-    } catch {
-      if (signal?.aborted) return;
-      showToast(t("time_tracking.error_load_entries"), "error");
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [weekStart, weekEnd, showToast, t]);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      try {
+        const data = await getTimeEntries(
+          format(weekStart, "yyyy-MM-dd"),
+          format(weekEnd, "yyyy-MM-dd"),
+          signal,
+        );
+        if (signal?.aborted) return;
+        setEntries(data);
+      } catch {
+        if (signal?.aborted) return;
+        showToast(t("time_tracking.error_load_entries"), "error");
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [weekStart, weekEnd, showToast, t],
+  );
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -96,16 +92,14 @@ export const TimeTrackingPage: React.FC = () => {
     const loadAllUsers = async () => {
       const firstPage = await getUsers({ page: 1 });
       const users = [...firstPage.items];
-
       if (firstPage.totalPages > 1) {
-        const remainingPages = await Promise.all(
+        const remaining = await Promise.all(
           Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
             getUsers({ page: i + 2 }),
           ),
         );
-        remainingPages.forEach((page) => users.push(...page.items));
+        remaining.forEach((p) => users.push(...p.items));
       }
-
       setAllUsers(
         users.map((u) => ({
           id: u.id,
@@ -115,39 +109,18 @@ export const TimeTrackingPage: React.FC = () => {
       );
     };
 
-    getProjects()
-      .then(setProjects)
-      .catch(() => {});
-    getTickets({ pageSize: 200 })
-      .then((r) => setTickets(r.items))
-      .catch(() => {});
-
+    getProjects().then(setProjects).catch(() => {});
+    getTickets({ pageSize: 200 }).then((r) => setTickets(r.items)).catch(() => {});
     loadAllUsers().catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!isAdmin) {
-      setSelectedJournalUserId("all");
+      setSelectedUserId("all");
       return;
     }
-    if (user?.id) {
-      setSelectedJournalUserId(user.id);
-    }
+    if (user?.id) setSelectedUserId(user.id);
   }, [isAdmin, user?.id]);
-
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      await exportTimeEntriesExcel({
-        from: format(weekStart, "yyyy-MM-dd"),
-        to: format(weekEnd, "yyyy-MM-dd"),
-      });
-    } catch {
-      showToast(t("time_tracking.error_export_entries"), "error");
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -162,11 +135,24 @@ export const TimeTrackingPage: React.FC = () => {
     [entries, weekStart],
   );
 
+  const filteredEntries = useMemo(() => {
+    if (selectedUserId === "all") return weekEntries;
+    return weekEntries.filter((e) => e.userId === selectedUserId);
+  }, [weekEntries, selectedUserId]);
+
+  const entriesByDay = useMemo(() => {
+    const map = new Map<string, TimeEntryDto[]>();
+    weekDays.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
+    filteredEntries.forEach((e) => {
+      const list = map.get(e.date);
+      if (list) list.push(e);
+    });
+    return map;
+  }, [weekDays, filteredEntries]);
+
   const journalUsers = useMemo<JournalUserOption[]>(() => {
     const usersMap = new Map<string, JournalUserOption>();
-
     allUsers.forEach((u) => usersMap.set(u.id, u));
-
     weekEntries.forEach((entry) => {
       if (!usersMap.has(entry.userId)) {
         usersMap.set(entry.userId, {
@@ -176,7 +162,6 @@ export const TimeTrackingPage: React.FC = () => {
         });
       }
     });
-
     if (user?.id && !usersMap.has(user.id)) {
       usersMap.set(user.id, {
         id: user.id,
@@ -184,7 +169,6 @@ export const TimeTrackingPage: React.FC = () => {
         role: user.role,
       });
     }
-
     return Array.from(usersMap.values()).sort((a, b) => {
       if (a.id === user?.id) return -1;
       if (b.id === user?.id) return 1;
@@ -192,51 +176,16 @@ export const TimeTrackingPage: React.FC = () => {
     });
   }, [allUsers, weekEntries, user]);
 
-  const filteredJournalEntries = useMemo(() => {
-    if (selectedJournalUserId === "all") return weekEntries;
-    return weekEntries.filter(
-      (entry) => entry.userId === selectedJournalUserId,
+  const isCurrentWeek = weekOffset === 0;
+
+  const handlePickDay = (newWeekStart: Date) => {
+    const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const diff = Math.round(
+      (newWeekStart.getTime() - currentWeekStart.getTime()) /
+        (7 * 24 * 60 * 60 * 1000),
     );
-  }, [weekEntries, selectedJournalUserId]);
-
-  const journalEntriesByDay = useMemo(() => {
-    const map = new Map<string, TimeEntryDto[]>();
-    weekDays.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
-    filteredJournalEntries.forEach((e) => {
-      const list = map.get(e.date);
-      if (list) list.push(e);
-    });
-    return map;
-  }, [weekDays, filteredJournalEntries]);
-
-  const journalContributors = useMemo(
-    () => new Set(filteredJournalEntries.map((e) => e.userId)).size,
-    [filteredJournalEntries],
-  );
-
-  const totalMinutes = weekEntries.reduce((s, e) => s + e.durationMinutes, 0);
-
-  const statsByProject = useMemo(() => {
-    const map = new Map<string, { name: string | null; minutes: number }>();
-    weekEntries.forEach((e) => {
-      const key = e.techProjectId ?? "__none__";
-      const name = e.techProjectName ?? null;
-      const ex = map.get(key);
-      if (ex) ex.minutes += e.durationMinutes;
-      else map.set(key, { name, minutes: e.durationMinutes });
-    });
-    return Array.from(map.values()).sort((a, b) => b.minutes - a.minutes);
-  }, [weekEntries]);
-
-  const entriesByDay = useMemo(() => {
-    const map = new Map<string, TimeEntryDto[]>();
-    weekDays.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
-    weekEntries.forEach((e) => {
-      const l = map.get(e.date);
-      if (l) l.push(e);
-    });
-    return map;
-  }, [weekDays, weekEntries]);
+    setWeekOffset(diff);
+  };
 
   const openCreate = (date?: string) => {
     setEditingId(null);
@@ -313,15 +262,18 @@ export const TimeTrackingPage: React.FC = () => {
     }
   };
 
-  const isCurrentWeek = weekOffset === 0;
-
-  const handlePickDay = (newWeekStart: Date) => {
-    const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const diff = Math.round(
-      (newWeekStart.getTime() - currentWeekStart.getTime()) /
-        (7 * 24 * 60 * 60 * 1000),
-    );
-    setWeekOffset(diff);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportTimeEntriesExcel({
+        from: format(weekStart, "yyyy-MM-dd"),
+        to: format(weekEnd, "yyyy-MM-dd"),
+      });
+    } catch {
+      showToast(t("time_tracking.error_export_entries"), "error");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -332,48 +284,30 @@ export const TimeTrackingPage: React.FC = () => {
           p: "20px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
           height: "100vh",
           overflow: "hidden",
         }}
       >
-        <WeekCalendarCard
+        <WeekColumnsView
           weekStart={weekStart}
           weekEnd={weekEnd}
           weekDays={weekDays}
           isCurrentWeek={isCurrentWeek}
-          totalMinutes={totalMinutes}
           entriesByDay={entriesByDay}
+          loading={loading}
+          exporting={exporting}
+          canFilterByUser={isAdmin}
+          currentUserId={user?.id}
+          isAdmin={isAdmin}
           onPrev={() => setWeekOffset((o) => o - 1)}
           onNext={() => setWeekOffset((o) => o + 1)}
           onResetToToday={() => setWeekOffset(0)}
           onPickDay={handlePickDay}
-          onCreateForDate={openCreate}
-        />
-
-        {statsByProject.some((p) => p.name !== null) && (
-          <ProjectStatsCard
-            stats={statsByProject}
-            totalMinutes={totalMinutes}
-          />
-        )}
-
-        <JournalCard
-          loading={loading}
-          weekDays={weekDays}
-          weekEntries={filteredJournalEntries}
-          entriesByDay={journalEntriesByDay}
-          contributors={journalContributors}
-          exporting={exporting}
-          isAdmin={isAdmin}
-          currentUserId={user?.id}
-          canFilterByUser={isAdmin}
-          onOpenUserFilter={() => setUserFilterOpen(true)}
-          onCreate={() => openCreate()}
-          onExport={handleExport}
+          onCreate={openCreate}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
-          onViewDetail={setDetailEntry}
+          onExport={handleExport}
+          onOpenUserFilter={() => setUserFilterOpen(true)}
         />
       </Box>
 
@@ -381,8 +315,8 @@ export const TimeTrackingPage: React.FC = () => {
         open={userFilterOpen}
         onClose={() => setUserFilterOpen(false)}
         users={journalUsers}
-        selected={selectedJournalUserId}
-        onApply={setSelectedJournalUserId}
+        selected={selectedUserId}
+        onApply={setSelectedUserId}
         currentUserId={user?.id}
       />
 
@@ -419,7 +353,10 @@ export const TimeTrackingPage: React.FC = () => {
             ? format(new Date(deleteTarget.date), "dd/MM/yyyy")
             : ""}
         </strong>{" "}
-        ?<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
+        ?<br />
+        {t("common.action_irreversible_before")}
+        <b>{t("common.action_irreversible_word")}</b>
+        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );
