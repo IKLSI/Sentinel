@@ -23,7 +23,8 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
     <Box
       sx={{
         ...buildPanelSx(palette),
-        gridColumn: "span 5",
+        gridColumn: "2",
+        gridRow: "1",
         display: "flex",
         flexDirection: "column",
       }}

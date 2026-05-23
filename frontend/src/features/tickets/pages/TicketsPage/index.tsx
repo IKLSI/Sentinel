@@ -7,6 +7,7 @@ import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { useTickets } from "@/features/tickets/hooks/useTickets";
+import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import {
   createTicket,
   deleteTicket,
@@ -128,6 +129,7 @@ export const TicketsPage: React.FC = () => {
       if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
       const created = await createTicket(payload as unknown as Partial<Ticket>);
       setShowCreateModal(false);
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
       navigate(`/tickets/${created.id}`);
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.create_error")), "error");

@@ -204,6 +204,13 @@ export const ProjectsPage: React.FC = () => {
     filtered.forEach((project) => {
       map[getGrade(project.healthGrade)].push(project);
     });
+    const sortGroup = (arr: ProjectDto[]) =>
+      arr.sort((a, b) =>
+        (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0) ||
+        (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0) ||
+        (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0)
+      );
+    (Object.keys(map) as GradeKey[]).forEach((grade) => sortGroup(map[grade]));
     return map;
   }, [filtered]);
 

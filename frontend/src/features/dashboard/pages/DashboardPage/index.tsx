@@ -87,8 +87,8 @@ export const DashboardPage: React.FC = () => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
-          gridTemplateRows: "1.1fr 1fr",
+          gridTemplateColumns: "1fr 1fr",
+          gridTemplateRows: "1fr 1fr 1fr",
           gap: "14px",
           height: "calc(100vh - 40px)",
           minHeight: "580px",

@@ -17,11 +17,11 @@ const formatDay = (isoDate: string) => {
 
 // SVG coordinate system
 const VW = 320;
-const VH = 138;
+const VH = 100;
 const PL = 26;
 const PR = 8;
 const PT = 10;
-const PB = 30; // two-line x labels
+const PB = 20;
 const CW = VW - PL - PR;
 const CH = VH - PT - PB;
 
@@ -81,7 +81,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
   const hoveredPt = hovered !== null ? pts[hovered] : null;
 
   return (
-    <Box sx={{ ...buildPanelSx(palette), gridColumn: "span 6", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ ...buildPanelSx(palette), gridColumn: "2", gridRow: "2", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
       <Box sx={{ px: "18px", py: "12px", borderBottom: `1px solid ${palette.headerBorder}`, flexShrink: 0 }}>
@@ -96,7 +96,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
       </Box>
 
       {/* Chart */}
-      <Box sx={{ flex: 1, minHeight: 0, px: "14px", py: "12px", display: "flex", alignItems: "center" }}>
+      <Box sx={{ flex: 1, minHeight: 0, px: "14px", py: "8px", display: "flex", alignItems: "center", overflow: "hidden" }}>
         {data.length === 0 ? (
           <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: palette.textSecondary, fontSize: "12px" }}>
             {t("dashboard.creation.empty")}
@@ -105,7 +105,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
           <svg
             viewBox={`0 0 ${VW} ${VH}`}
             width="100%"
-            style={{ display: "block" }}
+            style={{ display: "block", flexShrink: 0 }}
           >
             <defs>
               <linearGradient id="tck-area" x1="0" y1="0" x2="0" y2="1">
@@ -253,7 +253,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                 >
                   <tspan
                     x={p.x}
-                    y={VH - 17}
+                    y={VH - 11}
                     fontSize="6.5"
                     fill={color}
                     fontWeight={active ? "700" : "400"}
@@ -263,7 +263,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                   </tspan>
                   <tspan
                     x={p.x}
-                    y={VH - 6}
+                    y={VH - 4}
                     fontSize="8"
                     fill={color}
                     fontWeight="700"

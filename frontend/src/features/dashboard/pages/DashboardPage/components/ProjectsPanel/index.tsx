@@ -51,7 +51,8 @@ export const ProjectsPanel: React.FC<Props> = ({
     <Box
       sx={{
         ...buildPanelSx(palette),
-        gridColumn: "span 6",
+        gridColumn: "2",
+        gridRow: "3",
         display: "flex",
         flexDirection: "column",
       }}

@@ -56,7 +56,8 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
     <Box
       sx={{
         ...buildPanelSx(palette),
-        gridColumn: "span 7",
+        gridColumn: "1",
+        gridRow: "1 / 4",
         display: "flex",
         flexDirection: "column",
       }}
