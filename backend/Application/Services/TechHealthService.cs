@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
@@ -18,6 +19,8 @@ public class TechHealthService
     private readonly RepositoryScannerService _repositoryScanner;
     private readonly TokenProtector _tokenProtector;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
     {
@@ -50,7 +53,9 @@ public class TechHealthService
         ILogger<TechHealthService> logger,
         RepositoryScannerService repositoryScanner,
         TokenProtector tokenProtector,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
@@ -59,6 +64,8 @@ public class TechHealthService
         _repositoryScanner = repositoryScanner;
         _tokenProtector = tokenProtector;
         _scopeFactory = scopeFactory;
+        _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
@@ -67,6 +74,13 @@ public class TechHealthService
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null) return;
+
+        bool isFirstScan = project.LastScanAt == null;
+
+        HashSet<string> previousCveIds = await _context.Vulnerabilities
+            .Where(v => v.Dependency.TechProjectId == projectId)
+            .Select(v => v.CveId)
+            .ToHashSetAsync();
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
@@ -134,6 +148,47 @@ public class TechHealthService
             dep.ScannedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await TrySendVulnerabilityAlertAsync(project, isFirstScan, previousCveIds);
+    }
+
+    private async Task TrySendVulnerabilityAlertAsync(TechProject project, bool isFirstScan, HashSet<string> previousCveIds)
+    {
+        try
+        {
+            List<Vulnerability> allVulns = project.Dependencies
+                .SelectMany(d => d.Vulnerabilities)
+                .ToList();
+
+            List<Vulnerability> newVulns = isFirstScan
+                ? allVulns
+                : allVulns.Where(v => !previousCveIds.Contains(v.CveId)).ToList();
+
+            if (newVulns.Count == 0) return;
+
+            List<string> adminEmails = await _context.Users
+                .Where(u => u.OrganizationId == project.OrganizationId && u.Role == UserRole.Admin)
+                .Select(u => u.Email)
+                .ToListAsync();
+
+            if (adminEmails.Count == 0) return;
+
+            Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
+            string organizationName = org?.Name ?? string.Empty;
+            string frontendBase = _configuration["Frontend:BaseUrl"] ?? "https://app.sentinel.io";
+            string projectUrl = $"{frontendBase}/projects/{project.Id}";
+
+            List<VulnerabilityAlertEntry> entries = newVulns
+                .OrderBy(v => v.Severity)
+                .Select(v => new VulnerabilityAlertEntry(v.CveId, v.PackageName, v.Severity.ToString(), v.CvssScore, v.FixedVersion))
+                .ToList();
+
+            await _emailService.SendVulnerabilityAlertAsync(adminEmails, project.Name, organizationName, projectUrl, isFirstScan, entries);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Impossible d'envoyer l'alerte vulnérabilités pour le projet {ProjectId}", project.Id);
+        }
     }
 
     public async Task ScanAllProjectsDueAsync()

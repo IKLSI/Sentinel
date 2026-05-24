@@ -124,6 +124,7 @@ public class TechHealthController : BaseController
 
         List<TechProject> projects = await _context.TechProjects
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId.Value)

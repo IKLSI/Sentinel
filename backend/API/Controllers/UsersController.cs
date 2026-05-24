@@ -32,7 +32,6 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
-    [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,

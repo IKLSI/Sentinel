@@ -8,12 +8,15 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
+public record VulnerabilityAlertEntry(string CveId, string PackageName, string Severity, decimal CvssScore, string? FixedVersion);
+
 public interface IEmailService
 {
     Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
     Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
     Task SendTicketUpdateToClientAsync(string clientEmail, string clientName, string ticketTitle, string actorName, string eventVerb, string eventLabel, string eventValue, string ticketUrl);
+    Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
 }
 
 public class EmailService : IEmailService
@@ -192,6 +195,73 @@ public class EmailService : IEmailService
         await client.DisconnectAsync(true);
 
         _logger.LogInformation("Notification de mise à jour envoyée au client {Email}", clientEmail);
+    }
+
+    public async Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
+    {
+        string scanLabel = isFirstScan ? "Premier scan — vulnérabilités détectées" : "Nouvelles vulnérabilités détectées";
+        int critical = newVulns.Count(v => v.Severity == "Critical");
+        int high = newVulns.Count(v => v.Severity == "High");
+        int medium = newVulns.Count(v => v.Severity == "Medium");
+        int low = newVulns.Count(v => v.Severity == "Low");
+
+        string vulnRows = string.Join("\n", newVulns.Take(15).Select(v =>
+        {
+            (string color, string bg) = v.Severity switch
+            {
+                "Critical" => ("#ef4444", "#1a0a0a"),
+                "High"     => ("#f97316", "#1a110a"),
+                "Medium"   => ("#eab308", "#141208"),
+                _          => ("#6b7a99", "#0a0d14")
+            };
+            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix: <span style=\"color:#34d399\">{v.FixedVersion}</span>";
+            return $"""<p style="margin:0 0 8px;font-size:13px;color:#9aaccc;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{v.Severity}</span><span style="color:#c8d3e8;font-weight:600;">{v.PackageName}</span> &mdash; <span style="font-family:monospace;font-size:12px;">{v.CveId}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
+        }));
+
+        if (newVulns.Count > 15)
+            vulnRows += $"""<p style="margin:8px 0 0;font-size:12px;color:#3a4459;">... et {newVulns.Count - 15} autre(s)</p>""";
+
+        string html = LoadTemplate("vuln-alert.html")
+            .Replace("{{PROJECT_NAME}}", projectName)
+            .Replace("{{ORGANIZATION}}", organizationName)
+            .Replace("{{SCAN_LABEL}}", scanLabel)
+            .Replace("{{NEW_COUNT}}", newVulns.Count.ToString())
+            .Replace("{{COUNT_CRITICAL}}", critical.ToString())
+            .Replace("{{COUNT_HIGH}}", high.ToString())
+            .Replace("{{COUNT_MEDIUM}}", medium.ToString())
+            .Replace("{{COUNT_LOW}}", low.ToString())
+            .Replace("{{VULN_ROWS}}", vulnRows)
+            .Replace("{{PROJECT_URL}}", projectUrl);
+
+        string subject = isFirstScan
+            ? $"[{organizationName}] {projectName} — {newVulns.Count} vulnérabilité(s) détectée(s)"
+            : $"[{organizationName}] {projectName} — {newVulns.Count} nouvelle(s) vulnérabilité(s)";
+
+        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
+        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
+        string username = _configuration["Email:Username"] ?? string.Empty;
+        string password = _configuration["Email:Password"] ?? string.Empty;
+
+        foreach (string adminEmail in adminEmails)
+        {
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(
+                _configuration["Email:FromName"] ?? "Sentinel",
+                _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+            ));
+            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
+            message.Subject = subject;
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            using SmtpClient client = new SmtpClient();
+            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+            if (!string.IsNullOrEmpty(username))
+                await client.AuthenticateAsync(username, password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
+            _logger.LogInformation("Alerte vulnérabilités envoyée à {Email} pour projet {Project}", adminEmail, projectName);
+        }
     }
 
     private static string LoadTemplate(string fileName)

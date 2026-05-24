@@ -70,6 +70,7 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
             bgcolor: 'var(--s1)',
             border: '1px solid',
             borderColor: 'divider',
+            outline: 'none',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
