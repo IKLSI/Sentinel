@@ -421,7 +421,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                         return (
                           <Box
                             key={entry.id}
-                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); canEdit && onEdit(entry); }}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); if (canEdit) onEdit(entry); }}
                             sx={{
                               position: topOffset !== null ? "absolute" : "relative",
                               ...(topOffset !== null
