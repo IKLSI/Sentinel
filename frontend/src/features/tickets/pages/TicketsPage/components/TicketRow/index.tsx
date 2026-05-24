@@ -19,9 +19,10 @@ interface Props {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
+  hasNotif?: boolean;
 }
 
-const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
+const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete, hasNotif = false }) => {
   const navigate = useNavigate();
   const t = useT();
 
@@ -71,10 +72,22 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
+              flex: 1,
             }}
           >
             {ticket.title}
           </Box>
+          {hasNotif && (
+            <Box
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--accent)",
+                flexShrink: 0,
+              }}
+            />
+          )}
         </Box>
         <Box
           sx={{

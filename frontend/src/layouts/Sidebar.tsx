@@ -19,7 +19,7 @@ import { useSidebar } from "./SidebarContext";
 import { SentinelLogo } from "./SentinelLogo";
 import { useT } from "../i18n/I18nContext";
 import { PALETTE_OPEN_EVENT } from "../components/CommandPalette";
-import { NotificationBell } from "../features/notifications/NotificationBell";
+import { useNotifications } from "../features/notifications/useNotifications";
 
 interface NavItem {
   to: string;
@@ -142,6 +142,8 @@ export const Sidebar: React.FC = () => {
 
   const isAdmin = user?.role === "Admin";
   const isClient = user?.role === "Client";
+  const { unreadTicketIds } = useNotifications();
+  const hasTicketNotifs = unreadTicketIds.size > 0;
   const filteredSections = useMemo(
     () => {
       const clientAllowed = ["sidebar.section.tickets"];
@@ -403,6 +405,8 @@ export const Sidebar: React.FC = () => {
               const sectionActive = isSectionActive(section, location.pathname);
               const activeItem = section.items.find((i) => isItemActive(i, location.pathname)) ?? section.items[0];
               const ItemIcon = activeItem.icon ?? section.icon;
+              const isTickets = section.titleKey === "sidebar.section.tickets";
+              const showBadge = isTickets && hasTicketNotifs;
               return (
                 <Tooltip key={section.titleKey} title={t(section.titleKey)} placement="right" arrow>
                   <Box
@@ -419,11 +423,15 @@ export const Sidebar: React.FC = () => {
                       borderRadius: "var(--r)",
                       cursor: "pointer",
                       transition: "background 0.12s",
+                      position: "relative",
                       background: sectionActive ? "var(--accent-subtle)" : "transparent",
                       "&:hover": !sectionActive ? { background: "var(--s3)" } : {},
                     }}
                   >
                     <ItemIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
+                    {showBadge && (
+                      <Box sx={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1.5px solid var(--s1)" }} />
+                    )}
                   </Box>
                 </Tooltip>
               );
@@ -438,6 +446,8 @@ export const Sidebar: React.FC = () => {
 
                 if (isMulti) {
                   const GroupIcon = section.icon;
+                  const isTickets = section.titleKey === "sidebar.section.tickets";
+                  const showBadge = isTickets && hasTicketNotifs;
                   return (
                     <React.Fragment key={section.titleKey}>
                       <Box
@@ -452,7 +462,12 @@ export const Sidebar: React.FC = () => {
                           "&:hover": { background: "var(--s3)" },
                         }}
                       >
-                        <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
+                        <Box sx={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                          <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
+                          {showBadge && (
+                            <Box sx={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
+                          )}
+                        </Box>
                         <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: sectionActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
                           {t(section.titleKey)}
                         </Box>

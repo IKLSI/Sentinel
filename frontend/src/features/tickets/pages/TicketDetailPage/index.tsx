@@ -32,10 +32,12 @@ import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
 import { AttachmentsCard } from "./components/AttachmentsCard";
 import { extractApiError } from "@/utils/apiError";
+import { useNotifications } from "@/features/notifications/useNotifications";
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
   const { id } = useParams<{ id: string }>();
+  const { markReadByTicketId } = useNotifications();
   const { showToast } = useToast();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -77,6 +79,7 @@ export const TicketDetailPage: React.FC = () => {
       .then((tk) => {
         if (ctrl.signal.aborted) return;
         setTicket(tk);
+        markReadByTicketId(id);
       })
       .catch(() => {
         if (ctrl.signal.aborted) return;
@@ -87,7 +90,7 @@ export const TicketDetailPage: React.FC = () => {
         if (!ctrl.signal.aborted) setLoading(false);
       });
     return () => ctrl.abort();
-  }, [id, showToast, t]);
+  }, [id, showToast, t, markReadByTicketId]);
 
   const endpointMatch = useMemo(() => {
     if (!ticket) return null;
