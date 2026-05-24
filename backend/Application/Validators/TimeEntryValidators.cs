@@ -21,7 +21,7 @@ public class CreateTimeEntryDtoValidator : AbstractValidator<CreateTimeEntryDto>
 
         RuleFor(x => x)
             .Must(x => x.TicketId.HasValue || x.TechProjectId.HasValue)
-            .WithMessage("Un ticket ou un projet technique doit être associé");
+            .WithMessage("Un ticket ou un projet doit être associé");
 
         RuleFor(x => x)
             .Must(x => !x.StartTime.HasValue || !x.EndTime.HasValue || x.EndTime > x.StartTime)

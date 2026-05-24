@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -21,6 +21,20 @@ import {
 } from "../../helpers";
 import { WeekPicker } from "../WeekPicker";
 
+
+const OverflowTooltip: React.FC<{ title: string; sx?: object; children: React.ReactNode }> = ({ title, sx, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [truncated, setTruncated] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setTruncated(el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth);
+  });
+  return (
+    <Tooltip title={truncated ? title : ""} placement="right" arrow enterDelay={600} enterNextDelay={300}>
+      <Box ref={ref} sx={sx}>{children}</Box>
+    </Tooltip>
+  );
+};
 
 const HOUR_HEIGHT = 64;
 const START_HOUR = 7;
@@ -429,102 +443,91 @@ export const WeekColumnsView: React.FC<Props> = ({
                                 : { mx: "4px", mt: "4px" }),
                               height: `${blockHeight}px`,
                               flexShrink: 0,
-                              background: "var(--s1)",
-                              border: "1px solid var(--border)",
+                              pointerEvents: "auto",
+                              background: "color-mix(in srgb, var(--accent) 5%, var(--s1))",
+                              border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
                               borderRadius: "var(--r)",
-                              px: "8px",
-                              py: "6px",
+                              pl: "8px",
+                              pr: "8px",
+                              pt: "5px",
+                              pb: "5px",
                               cursor: canEdit ? "pointer" : "default",
                               display: "flex",
                               flexDirection: "column",
-                              justifyContent: "space-between",
                               overflow: "hidden",
-                              transition: "border-color 0.15s, box-shadow 0.15s",
+                              transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
                               "&:hover": canEdit ? {
-                                borderColor: "var(--border2)",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+                                background: "color-mix(in srgb, var(--accent) 8%, var(--s1))",
+                                borderColor: "color-mix(in srgb, var(--accent) 35%, var(--border))",
+                                boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
                               } : {},
                               "&:hover .entry-actions": { opacity: 1 },
                             }}
                           >
-                            <Box
-                              sx={{
+                            <OverflowTooltip title={entry.title ?? ""} sx={{
                                 fontSize: "11px",
                                 fontWeight: 600,
                                 color: "var(--text)",
-                                lineHeight: 1.35,
+                                lineHeight: 1.4,
                                 overflow: "hidden",
                                 display: "-webkit-box",
-                                WebkitLineClamp: 2,
+                                WebkitLineClamp: Math.max(1, Math.floor((blockHeight - 48) / 16) + 1),
                                 WebkitBoxOrient: "vertical",
-                                letterSpacing: "-0.015em",
-                              }}
-                            >
+                                letterSpacing: "-0.01em",
+                                wordBreak: "break-word",
+                              }}>
                               {entry.title ?? "—"}
-                            </Box>
+                            </OverflowTooltip>
 
-                            {blockHeight >= 52 && entry.description && (
-                              <Box
-                                sx={{
-                                  fontSize: "10.5px",
+                            {blockHeight >= 60 && entry.description && (
+                              <OverflowTooltip title={entry.description} sx={{
+                                  fontSize: "10px",
                                   color: "var(--muted2)",
                                   overflow: "hidden",
-                                  whiteSpace: "nowrap",
-                                  textOverflow: "ellipsis",
-                                  lineHeight: 1.3,
-                                }}
-                              >
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: Math.max(1, Math.floor((blockHeight - 80) / 14)),
+                                  WebkitBoxOrient: "vertical",
+                                  lineHeight: 1.4,
+                                  wordBreak: "break-word",
+                                  mt: "4px",
+                                  fontStyle: "italic",
+                                }}>
                                 {entry.description}
-                              </Box>
+                              </OverflowTooltip>
                             )}
 
-                            {blockHeight >= 48 ? (
-                              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 0 }}>
-                                <Box
-                                  sx={{
-                                    fontFamily: "var(--font-mono)",
-                                    fontSize: "10px",
-                                    fontWeight: 600,
-                                    color: "var(--muted)",
-                                    letterSpacing: "0.02em",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {timeLabel}
-                                </Box>
-                                {canEdit && (
-                                  <Box
-                                    className="entry-actions"
-                                    sx={{ display: "flex", alignItems: "center", opacity: 0, transition: "opacity 0.15s" }}
-                                  >
-                                    <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
-                                      <Box
-                                        component="button"
-                                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
-                                        sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "4px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
-                                      >
-                                        <DeleteOutlineOutlined sx={{ fontSize: 11 }} />
-                                      </Box>
-                                    </Tooltip>
-                                  </Box>
-                                )}
-                              </Box>
-                            ) : canEdit && (
+                            <Box sx={{ flex: 1 }} />
+
+                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 0 }}>
                               <Box
-                                className="entry-actions"
-                                sx={{ position: "absolute", bottom: "2px", right: "2px", opacity: 0, transition: "opacity 0.15s" }}
+                                sx={{
+                                  fontFamily: "var(--font-mono)",
+                                  fontSize: "9.5px",
+                                  fontWeight: 500,
+                                  color: "color-mix(in srgb, var(--accent) 70%, var(--muted))",
+                                  letterSpacing: "0.02em",
+                                  whiteSpace: "nowrap",
+                                }}
                               >
-                                <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
-                                  <Box
-                                    component="button"
-                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
-                                    sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "3px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
-                                  >
-                                    <DeleteOutlineOutlined sx={{ fontSize: 10 }} />
-                                  </Box>
-                                </Tooltip>
+                                {timeLabel}
                               </Box>
-                            )}
+                              {canEdit && (
+                                <Box
+                                  className="entry-actions"
+                                  sx={{ opacity: 0, transition: "opacity 0.15s", display: "flex", alignItems: "center" }}
+                                >
+                                  <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
+                                    <Box
+                                      component="button"
+                                      onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
+                                      sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "3px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
+                                    >
+                                      <DeleteOutlineOutlined sx={{ fontSize: 11 }} />
+                                    </Box>
+                                  </Tooltip>
+                                </Box>
+                              )}
+                            </Box>
                           </Box>
                         );
                       })}
