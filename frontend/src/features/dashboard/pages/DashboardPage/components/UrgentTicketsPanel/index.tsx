@@ -65,7 +65,7 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
       <Box
         sx={{
           px: "18px",
-          py: "12px",
+          py: "10px",
           borderBottom: `1px solid ${palette.headerBorder}`,
           display: "flex",
           alignItems: "center",
@@ -75,17 +75,17 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
         <Box>
           <Box
             sx={{
-              fontSize: "15px",
+              fontSize: "13px",
               lineHeight: 1.1,
-              fontWeight: 700,
-              color: palette.textHeading,
-              letterSpacing: "-0.02em",
+              fontWeight: 600,
+              color: palette.textSecondary,
+              letterSpacing: "-0.01em",
             }}
           >
             {t("dashboard.urgent.title")}
           </Box>
           <Box
-            sx={{ mt: "6px", color: palette.textSecondary, fontSize: "11px" }}
+            sx={{ mt: "3px", color: palette.textMuted, fontSize: "11px" }}
           >
             {summary}
           </Box>

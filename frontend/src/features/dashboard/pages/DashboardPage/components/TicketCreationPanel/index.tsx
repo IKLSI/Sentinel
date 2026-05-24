@@ -84,11 +84,11 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
     <Box sx={{ ...buildPanelSx(palette), gridColumn: "2", gridRow: "2", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
-      <Box sx={{ px: "18px", py: "12px", borderBottom: `1px solid ${palette.headerBorder}`, flexShrink: 0 }}>
-        <Box sx={{ fontSize: "15px", fontWeight: 700, color: palette.textHeading, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+      <Box sx={{ px: "18px", py: "10px", borderBottom: `1px solid ${palette.headerBorder}`, flexShrink: 0 }}>
+        <Box sx={{ fontSize: "13px", fontWeight: 600, color: palette.textSecondary, letterSpacing: "-0.01em", lineHeight: 1.1 }}>
           {t("dashboard.creation.title")}
         </Box>
-        <Box sx={{ mt: "4px", color: palette.textSecondary, fontSize: "11px" }}>
+        <Box sx={{ mt: "3px", color: palette.textMuted, fontSize: "11px" }}>
           {total === 1
             ? t("dashboard.creation.subtitle_week_one")
             : t("dashboard.creation.subtitle_week_other", { count: total })}
@@ -109,8 +109,8 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
           >
             <defs>
               <linearGradient id="tck-area" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.10" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.01" />
               </linearGradient>
               <linearGradient id="tck-tip-bg" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--s2)" stopOpacity="1" />
@@ -164,7 +164,7 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
               d={lineD}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="1.8"
+              strokeWidth="1.2"
               strokeLinejoin="round"
               strokeLinecap="round"
               clipPath="url(#tck-clip)"
@@ -177,10 +177,10 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
                 key={i}
                 cx={p.x}
                 cy={p.y}
-                r={hovered === i ? 4 : p.count > 0 ? 2.5 : 1.8}
+                r={hovered === i ? 3 : p.count > 0 ? 1.8 : 1.2}
                 fill={hovered === i ? "var(--cyan)" : p.count > 0 ? "var(--accent)" : palette.panelBg}
                 stroke={hovered === i ? "var(--cyan)" : "var(--accent)"}
-                strokeWidth={hovered === i ? 0 : p.count > 0 ? 0 : 1.2}
+                strokeWidth={hovered === i ? 0 : p.count > 0 ? 0 : 0.8}
                 style={{ transition: "r 0.15s, fill 0.15s", cursor: "crosshair", opacity: visible ? 1 : 0 }}
               />
             ))}

@@ -8,6 +8,8 @@ export interface ActivityItem {
   timestamp: string;
   detail?: string;
   tooltipText?: string;
+  ticketId?: string;
+  projectId?: string;
 }
 
 export interface UrgentTicket {

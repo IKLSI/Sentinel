@@ -7,4 +7,6 @@ public class ActivityItemDto
     public DateTime Timestamp { get; set; }
     public string? Detail { get; set; }
     public string? TooltipText { get; set; }
+    public string? TicketId { get; set; }
+    public string? ProjectId { get; set; }
 }

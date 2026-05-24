@@ -102,7 +102,7 @@
   "common.deleting": "Suppression…",
   "common.edit": "Modifier",
   "common.save": "Enregistrer",
-  "dashboard.activity.bold_created": "Ticket créé",
+"dashboard.activity.bold_created": "Ticket créé",
   "dashboard.activity.bold_critical": "Vulnérabilité critique",
   "dashboard.activity.bold_resolved": "Ticket résolu",
   "dashboard.activity.empty_subtitle": "Les événements apparaîtront ici en temps réel.",

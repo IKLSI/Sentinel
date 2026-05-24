@@ -229,6 +229,7 @@ public class DashboardService
                 Text = $"Ticket résolu — {reference}",
                 Timestamp = t.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
+                TicketId = t.Id.ToString(),
             });
         }
 
@@ -260,6 +261,7 @@ public class DashboardService
                 Text = $"Ticket créé — {reference}",
                 Timestamp = t.CreatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
+                TicketId = t.Id.ToString(),
             });
         }
 
@@ -274,7 +276,8 @@ public class DashboardService
             {
                 v.CveId,
                 v.DetectedAt,
-                ProjectName = v.Dependency.TechProject.Name
+                ProjectName = v.Dependency.TechProject.Name,
+                ProjectId = v.Dependency.TechProject.Id,
             })
             .ToListAsync();
 
@@ -286,6 +289,7 @@ public class DashboardService
                 Text = $"Vulnérabilité critique détectée sur {v.ProjectName}",
                 Timestamp = v.DetectedAt,
                 Detail = $"{v.CveId} · Scanner auto",
+                ProjectId = v.ProjectId.ToString(),
             });
         }
 

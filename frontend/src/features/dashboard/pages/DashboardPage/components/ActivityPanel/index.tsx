@@ -2,6 +2,9 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 import { useT } from "@/i18n/I18nContext";
 import {
   ActivityItem,
@@ -15,33 +18,16 @@ interface Props {
   palette: DashPalette;
 }
 
-const TimelineDot: React.FC<{ color: string }> = ({ color }) => (
-  <Box
-    sx={{
-      width: 12,
-      height: 12,
-      borderRadius: "50%",
-      border: `1.5px solid ${color}`,
-      flexShrink: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      mt: "2px",
-    }}
-  >
-    <Box
-      sx={{
-        width: 3,
-        height: 3,
-        borderRadius: "50%",
-        bgcolor: color,
-      }}
-    />
-  </Box>
-);
+const DOT_COLORS: Record<string, string> = {
+  red: "var(--red)",
+  green: "var(--green)",
+  accent: "var(--accent)",
+};
 
 export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
   const t = useT();
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
@@ -55,33 +41,34 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
       <Box
         sx={{
           px: "18px",
-          py: "12px",
+          py: "10px",
           borderBottom: `1px solid ${palette.headerBorder}`,
         }}
       >
         <Box
           sx={{
-            fontSize: "15px",
+            fontSize: "13px",
             lineHeight: 1.1,
             fontWeight: 600,
-            color: palette.textHeading,
-            letterSpacing: "-0.02em",
+            color: palette.textSecondary,
+            letterSpacing: "-0.01em",
           }}
         >
           {t("dashboard.activity.title")}
         </Box>
-        <Box sx={{ mt: "6px", color: palette.textSecondary, fontSize: "11px" }}>
+        <Box sx={{ mt: "3px", color: palette.textMuted, fontSize: "11px" }}>
           {t("dashboard.activity.realtime")}
         </Box>
       </Box>
       <Box
         sx={{
-          p: "12px 16px",
+          p: "10px",
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
+          gap: "8px",
           ...buildScrollSx(palette),
         }}
       >
@@ -100,22 +87,16 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             {activity.map((a, idx) => {
+              const accentColor = DOT_COLORS[a.color] ?? "var(--accent)";
               const danger = a.color === "red";
               const isCreated = a.color === "green";
-              const accentColor = danger
-                ? palette.activityDangerFg
-                : isCreated
-                  ? palette.activityCreatedFg
-                  : palette.activityOkFg;
               const boldPrefix = danger
                 ? t("dashboard.activity.bold_critical")
                 : isCreated
                   ? t("dashboard.activity.bold_created")
                   : t("dashboard.activity.bold_resolved");
               const hasBoldPrefix = a.text.startsWith(boldPrefix);
-              const afterPrefix = hasBoldPrefix
-                ? a.text.slice(boldPrefix.length)
-                : a.text;
+              const afterPrefix = hasBoldPrefix ? a.text.slice(boldPrefix.length) : a.text;
               const dashIdx = afterPrefix.indexOf(" — ");
               const surIdx = dashIdx < 0 ? afterPrefix.indexOf(" sur ") : -1;
               const midText = dashIdx >= 0
@@ -124,45 +105,43 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               const boldSuffix = dashIdx >= 0
                 ? afterPrefix.slice(dashIdx + 3)
                 : surIdx >= 0 ? afterPrefix.slice(surIdx + 5) : "";
-              const isLast = idx === activity.length - 1;
+              const href = a.ticketId
+                ? `/tickets/${a.ticketId}`
+                : a.projectId
+                  ? `/projects/${a.projectId}`
+                  : null;
 
               return (
-                <Box
+                <Tooltip
                   key={`${a.timestamp}-${a.text}-${idx}`}
-                  sx={{ display: "flex", gap: "12px" }}
+                  title={a.tooltipText ?? ""}
+                  disableHoverListener={!a.tooltipText}
+                  placement="top"
+                  arrow
                 >
                   <Box
+                    onClick={href ? () => navigate(href) : undefined}
                     sx={{
                       display: "flex",
-                      flexDirection: "column",
                       alignItems: "center",
-                      flexShrink: 0,
-                      width: 12,
+                      gap: "10px",
+                      px: "10px",
+                      minHeight: "48px",
+                      borderRadius: "var(--r-md)",
+                      background: palette.rowBg,
+                      cursor: href ? "pointer" : "default",
+                      transition: "background 120ms ease, box-shadow 120ms ease",
+                      "&:hover": href ? {
+                        background: palette.rowHoverBg,
+                        boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
+                      } : undefined,
+                      "&:active": href ? { background: palette.rowActiveBg } : undefined,
                     }}
                   >
-                    <TimelineDot color={accentColor} />
-                    {!isLast && (
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box
                         sx={{
-                          width: "1px",
-                          flex: 1,
-                          minHeight: "12px",
-                          bgcolor: palette.activityDivider,
-                          mt: "4px",
-                        }}
-                      />
-                    )}
-                  </Box>
-                  <Box sx={{ minWidth: 0, pb: isLast ? 0 : "14px" }}>
-                    <Tooltip
-                      title={a.tooltipText ?? ""}
-                      disableHoverListener={!a.tooltipText}
-                      placement="top"
-                      arrow
-                    >
-                      <Box
-                        sx={{
-                          fontSize: "12px",
+                          fontSize: "11px",
                           color: palette.textPrimary,
                           lineHeight: 1.4,
                           whiteSpace: "nowrap",
@@ -186,21 +165,36 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                           <Box component="span">{a.text}</Box>
                         )}
                       </Box>
-                    </Tooltip>
-                    <Box
-                      sx={{
-                        mt: "1px",
-                        fontSize: "11px",
-                        color: palette.activityDetail,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {a.detail}
+                      {a.detail && (
+                        <Box
+                          sx={{
+                            mt: "2px",
+                            fontSize: "10px",
+                            color: palette.activityDetail,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {a.detail}
+                        </Box>
+                      )}
                     </Box>
+                    {a.timestamp && (
+                      <Box
+                        sx={{
+                          fontSize: "10px",
+                          color: palette.textMuted,
+                          flexShrink: 0,
+                          fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: fr })}
+                      </Box>
+                    )}
                   </Box>
-                </Box>
+                </Tooltip>
               );
             })}
           </Box>
