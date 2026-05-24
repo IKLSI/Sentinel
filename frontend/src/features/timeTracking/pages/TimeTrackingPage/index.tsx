@@ -188,9 +188,9 @@ export const TimeTrackingPage: React.FC = () => {
     setWeekOffset(diff);
   };
 
-  const openCreate = useCallback((date?: string) => {
+  const openCreate = useCallback((date?: string, startTime?: string) => {
     setEditingId(null);
-    setForm(emptyForm(date));
+    setForm(emptyForm(date, startTime));
     setModalOpen(true);
   }, []);
 

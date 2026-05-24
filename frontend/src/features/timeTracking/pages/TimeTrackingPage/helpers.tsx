@@ -65,16 +65,24 @@ export type FormState = {
   ticketId: string;
 };
 
-export const emptyForm = (date?: string): FormState => ({
-  date: date ?? format(new Date(), "yyyy-MM-dd"),
-  durationMinutes: 0,
-  startTime: "",
-  endTime: "",
-  title: "",
-  description: "",
-  techProjectId: "",
-  ticketId: "",
-});
+export const emptyForm = (date?: string, startTime?: string): FormState => {
+  let endTime = "";
+  if (startTime) {
+    const [h, m] = startTime.split(":").map(Number);
+    const total = h * 60 + m + 15;
+    endTime = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  }
+  return {
+    date: date ?? format(new Date(), "yyyy-MM-dd"),
+    durationMinutes: 0,
+    startTime: startTime ?? "",
+    endTime,
+    title: "",
+    description: "",
+    techProjectId: "",
+    ticketId: "",
+  };
+};
 
 export const inputSx = {
   background: "var(--s1)",

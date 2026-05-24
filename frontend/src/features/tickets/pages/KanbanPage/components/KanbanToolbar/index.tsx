@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import TuneOutlined from "@mui/icons-material/TuneOutlined";
+import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/i18n/I18nContext";
 
 interface Props {
@@ -28,7 +28,9 @@ export const KanbanToolbar: React.FC<Props> = ({
         flexShrink: 0,
         display: "flex",
         alignItems: "center",
-        gap: "8px",
+        gap: "10px",
+        position: "relative",
+        zIndex: 2,
       }}
     >
       <Box
@@ -76,19 +78,19 @@ export const KanbanToolbar: React.FC<Props> = ({
         sx={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "6px",
+          gap: "7px",
           height: "32px",
-          px: "12px",
+          px: "14px",
           borderRadius: 'var(--r)',
           border: `1px solid ${activeFilterCount > 0 ? "var(--accent-border)" : "var(--border)"}`,
           background:
             activeFilterCount > 0 ? "var(--accent-subtle)" : "var(--s1)",
           color:
             activeFilterCount > 0 ? "var(--accent)" : "var(--text-secondary)",
-          fontSize: "12.5px",
+          fontSize: "13px",
           fontWeight: activeFilterCount > 0 ? 600 : 500,
           cursor: "pointer",
-          transition: "all 0.15s",
+          transition: "all 0.12s",
           outline: "none",
           flexShrink: 0,
           "&:hover": {
@@ -99,7 +101,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           },
         }}
       >
-        <TuneOutlined sx={{ fontSize: "14px" }} />
+        <FilterListOutlined sx={{ fontSize: 15 }} />
         {t("tickets.kanban.filters_button")}
         {activeFilterCount > 0 && ` (${activeFilterCount})`}
       </Box>

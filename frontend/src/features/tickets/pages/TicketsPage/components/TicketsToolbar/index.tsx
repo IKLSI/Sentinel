@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import TuneOutlined from "@mui/icons-material/TuneOutlined";
+import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { TicketStatusDef } from "@/types";
 import { selectSx } from "../../helpers";
@@ -144,7 +144,7 @@ export const TicketsToolbar: React.FC<Props> = ({
             },
           }}
         >
-          <TuneOutlined sx={{ fontSize: 15 }} />
+          <FilterListOutlined sx={{ fontSize: 15 }} />
           {t("tickets.list.filters")}
         </Box>
 

@@ -127,11 +127,6 @@ export const priorityColor: Record<TicketPriority, string> = {
   low: "var(--green)",
 };
 
-export const getAvatarStyle = () => ({
-  bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
-  color: "#8b1c38",
-});
-
 export const selectSx = {
   appearance: "none",
   WebkitAppearance: "none",

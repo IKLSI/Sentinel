@@ -626,7 +626,7 @@
   "time_tracking.choose_date": "Choisir une date",
   "time_tracking.delete_modal_title": "Supprimer cette saisie ?",
   "time_tracking.delete_modal_warning": "Êtes-vous sûr de vouloir supprimer la saisie du",
-  "time_tracking.description_placeholder": "Détails supplémentaires (optionnel)...",
+  "time_tracking.description_placeholder": "Détails supplémentaires...",
   "time_tracking.detail_no_description": "Aucune description",
   "time_tracking.duration_help": "Formats acceptés : 2h, 1h30, 45m",
   "time_tracking.empty_subtitle": "Cliquez sur un jour dans le calendrier pour ajouter une saisie.",

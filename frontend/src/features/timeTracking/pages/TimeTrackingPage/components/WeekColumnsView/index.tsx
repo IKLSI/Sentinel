@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -8,7 +8,7 @@ import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
-import TuneOutlined from "@mui/icons-material/TuneOutlined";
+import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { format, isToday, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
@@ -44,7 +44,7 @@ interface Props {
   onNext: () => void;
   onResetToToday: () => void;
   onPickDay: (day: Date) => void;
-  onCreate: (dateStr: string) => void;
+  onCreate: (dateStr: string, startTime?: string) => void;
   onEdit: (entry: TimeEntryDto) => void;
   onDelete: (entry: TimeEntryDto) => void;
   onExport: () => void;
@@ -74,6 +74,11 @@ export const WeekColumnsView: React.FC<Props> = ({
 }) => {
   const t = useT();
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const weekLabel = `${format(weekStart, "dd MMM", { locale: fr })} — ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
 
@@ -111,7 +116,7 @@ export const WeekColumnsView: React.FC<Props> = ({
           </Box>
           {canFilterByUser && (
             <IconNavBtn onClick={onOpenUserFilter} title={t("time_tracking.filter_users_tooltip")} hoverColor="#1D4ED8">
-              <TuneOutlined sx={{ fontSize: 13 }} />
+              <FilterListOutlined sx={{ fontSize: 13 }} />
             </IconNavBtn>
           )}
         </Box>
@@ -146,7 +151,6 @@ export const WeekColumnsView: React.FC<Props> = ({
           const dayStr = format(day, "yyyy-MM-dd");
           const dayDate = parseDateLocal(dayStr);
           const today = isToday(dayDate);
-          const isWeekend = [0, 6].includes(day.getDay());
           const dayMinutes = (entriesByDay.get(dayStr) ?? []).reduce((s, e) => s + e.durationMinutes, 0);
           const isLast = idx === weekDays.length - 1;
 
@@ -170,12 +174,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                 flexDirection: "column",
                 gap: "2px",
                 borderRight: isLast ? "none" : "1px solid var(--border)",
-                borderTop: today ? "3px solid var(--accent)" : "3px solid transparent",
-                background: today
-                  ? "color-mix(in srgb, var(--accent) 4%, var(--s1))"
-                  : isWeekend
-                    ? "var(--s2)"
-                    : "transparent",
+                background: today ? "color-mix(in srgb, var(--accent) 4%, var(--s1))" : "transparent",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
@@ -183,7 +182,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                   sx={{
                     fontSize: "11px",
                     fontWeight: 700,
-                    color: today ? "var(--accent)" : isWeekend ? "var(--muted)" : "var(--text)",
+                    color: today ? "var(--accent)" : "var(--text)",
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                   }}
@@ -326,6 +325,7 @@ export const WeekColumnsView: React.FC<Props> = ({
               />
             ))}
 
+
             {/* Day columns */}
             <Box
               sx={{
@@ -339,29 +339,63 @@ export const WeekColumnsView: React.FC<Props> = ({
                 const dayStr = format(day, "yyyy-MM-dd");
                 const dayDate = parseDateLocal(dayStr);
                 const today = isToday(dayDate);
-                const isWeekend = [0, 6].includes(day.getDay());
                 const dayEntries = entriesByDay.get(dayStr) ?? [];
                 const isLast = idx === weekDays.length - 1;
 
                 return (
                   <Box
                     key={dayStr}
-                    onClick={() => onCreate(dayStr)}
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const relY = e.clientY - rect.top;
+                      const decimalHour = START_HOUR + relY / HOUR_HEIGHT;
+                      const totalMinutes = Math.round(decimalHour * 60 / 15) * 15;
+                      const h = Math.floor(totalMinutes / 60);
+                      const m = totalMinutes % 60;
+                      const startTime = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                      onCreate(dayStr, startTime);
+                    }}
                     sx={{
                       borderRight: isLast ? "none" : "1px solid var(--border)",
-                      background: today
-                        ? "color-mix(in srgb, var(--accent) 2%, transparent)"
-                        : isWeekend
-                          ? "color-mix(in srgb, var(--s2) 60%, transparent)"
-                          : "transparent",
+                      background: today ? "color-mix(in srgb, var(--accent) 3%, transparent)" : "transparent",
                       position: "relative",
                       cursor: "pointer",
                     }}
                   >
+                    {/* Current time line */}
+                    {today && isCurrentWeek && (() => {
+                      const top = (now.getHours() + now.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT;
+                      if (top < 0 || top > GRID_HEIGHT) return null;
+                      return (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: `${top}px`,
+                            left: 0,
+                            right: 0,
+                            height: "1px",
+                            background: "var(--accent)",
+                            opacity: 0.7,
+                            zIndex: 3,
+                            pointerEvents: "none",
+                            "&::before": {
+                              content: '""',
+                              position: "absolute",
+                              left: 0,
+                              top: "-3px",
+                              width: "6px",
+                              height: "6px",
+                              borderRadius: "50%",
+                              background: "var(--accent)",
+                            },
+                          }}
+                        />
+                      );
+                    })()}
+
                     {/* Entry blocks */}
                     <Box
-                      sx={{ position: "absolute", inset: 0, zIndex: 1 }}
-                      onClick={(e) => e.stopPropagation()}
+                      sx={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}
                     >
                       {dayEntries.map((entry) => {
                         const blockHeight = Math.max(
@@ -387,7 +421,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                         return (
                           <Box
                             key={entry.id}
-                            onClick={() => canEdit && onEdit(entry)}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); canEdit && onEdit(entry); }}
                             sx={{
                               position: topOffset !== null ? "absolute" : "relative",
                               ...(topOffset !== null

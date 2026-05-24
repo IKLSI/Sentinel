@@ -1,10 +1,6 @@
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import BoltOutlined from "@mui/icons-material/BoltOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
-import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
-import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
-import InfoOutlined from "@mui/icons-material/InfoOutlined";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
 
 export interface ActivityItem {
   color: string;
@@ -234,27 +230,4 @@ export const repoPath = (
     if (path) return path;
   }
   return (repositoryType ?? "git").toLowerCase();
-};
-
-export const projectTone = (project: ProjectDto, _isDark: boolean) => {
-  if (project.criticalVulnerabilities > 0)
-    return {
-      labelKey: "dashboard.project_tone.at_risk",
-      color: "var(--red)",
-      dot: "var(--red)",
-      Icon: WarningAmberOutlined,
-    };
-  if (project.healthScore >= 85)
-    return {
-      labelKey: "dashboard.project_tone.healthy",
-      color: "var(--green)",
-      dot: "var(--green)",
-      Icon: CheckCircleOutlineOutlined,
-    };
-  return {
-    labelKey: "dashboard.project_tone.monitoring",
-    color: "var(--yellow)",
-    dot: "var(--yellow)",
-    Icon: InfoOutlined,
-  };
 };
