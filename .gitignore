@@ -97,7 +97,9 @@ yarn.lock
 # ------------------------------
 
 bin/
+[Bb]in/
 obj/
+[Oo]bj/
 out/
 backend/API/wwwroot/
 
