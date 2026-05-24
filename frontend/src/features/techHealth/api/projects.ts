@@ -76,11 +76,6 @@ export const scanProject = async (id: string): Promise<void> => {
   await apiClient.post(`/api/tech-health/projects/${id}/scan`)
 }
 
-export const updateProject = async (id: string, data: Partial<CreateProjectDto>): Promise<ProjectDto> => {
-  const response = await apiClient.put<ProjectDto>(`/api/tech-health/projects/${id}`, data)
-  return response.data
-}
-
 export const createProject = async (data: CreateProjectDto): Promise<ProjectDto> => {
   const response = await apiClient.post<ProjectDto>('/api/tech-health/projects', {
     name: data.name,

@@ -36,28 +36,3 @@ public class CreateTechProjectDtoValidator : AbstractValidator<CreateTechProject
             && (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
     }
 }
-
-public class UpdateTechProjectDtoValidator : AbstractValidator<UpdateTechProjectDto>
-{
-    public UpdateTechProjectDtoValidator()
-    {
-        RuleFor(x => x.Name).MaximumLength(200).When(x => x.Name != null);
-
-        RuleFor(x => x.RepositoryUrl)
-            .MaximumLength(500)
-            .Must(CreateTechProjectDtoValidator.BeValidHttpUrl).WithMessage("URL de dépôt invalide")
-            .When(x => x.RepositoryUrl != null);
-
-        RuleFor(x => x.RepositoryType)
-            .MaximumLength(50)
-            .Must(t => t is "GitHub" or "GitLab" or "Bitbucket")
-            .WithMessage("Type de dépôt invalide")
-            .When(x => !string.IsNullOrEmpty(x.RepositoryType));
-
-        RuleFor(x => x.ScanFrequency)
-            .MaximumLength(50)
-            .Must(f => f is "Daily" or "Weekly" or "Monthly" or "Manual")
-            .WithMessage("Fréquence invalide")
-            .When(x => !string.IsNullOrEmpty(x.ScanFrequency));
-    }
-}

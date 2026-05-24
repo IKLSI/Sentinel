@@ -16,7 +16,6 @@ import { useT } from "@/i18n/I18nContext";
 import {
   getProjects,
   getProject,
-  updateProject,
   deleteProject,
   scanProject,
   exportProjectsExcel,
@@ -25,7 +24,6 @@ import {
 import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
-import { ProjectFormModal } from "./components/ProjectFormModal";
 import { SyncProjectModal } from "./components/SyncProjectModal";
 import { extractApiError } from "@/utils/apiError";
 import { PROJECTS_OPEN_IMPORT_EVENT } from "@/components/CommandPalette";
@@ -39,10 +37,6 @@ export const ProjectsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [editTarget, setEditTarget] = useState<ProjectDto | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editRepoUrl, setEditRepoUrl] = useState("");
-  const [editSaving, setEditSaving] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -99,32 +93,6 @@ export const ProjectsPage: React.FC = () => {
       showToast(t("projects.toast.export_error"), "error");
     } finally {
       setExporting(false);
-    }
-  };
-
-  const openEdit = (project: ProjectDto) => {
-    setEditTarget(project);
-    setEditName(project.name);
-    setEditRepoUrl(project.repositoryUrl ?? "");
-  };
-
-  const handleEdit = async () => {
-    if (!editTarget || !editName.trim()) return;
-    setEditSaving(true);
-    try {
-      const updated = await updateProject(editTarget.id, {
-        name: editName.trim(),
-        repositoryUrl: editRepoUrl || undefined,
-      });
-      setProjects((prev) =>
-        prev.map((p) => (p.id === updated.id ? updated : p)),
-      );
-      setEditTarget(null);
-      showToast(t("projects.toast.update_success"), "success");
-    } catch (err) {
-      showToast(extractApiError(err, t("projects.toast.update_error")), "error");
-    } finally {
-      setEditSaving(false);
     }
   };
 
@@ -324,7 +292,6 @@ export const ProjectsPage: React.FC = () => {
                       }))
                     }
                     scanningId={scanningId}
-                    onEdit={openEdit}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}
                   />
@@ -340,18 +307,6 @@ export const ProjectsPage: React.FC = () => {
         onClose={() => setShowSyncModal(false)}
         onImported={() => void load()}
         showToast={showToast}
-      />
-
-      <ProjectFormModal
-        open={!!editTarget}
-        mode="edit"
-        name={editName}
-        repoUrl={editRepoUrl}
-        onNameChange={setEditName}
-        onRepoUrlChange={setEditRepoUrl}
-        onClose={() => setEditTarget(null)}
-        onSubmit={handleEdit}
-        saving={editSaving}
       />
 
       <DeleteModal

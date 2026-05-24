@@ -2,7 +2,6 @@ import React from "react";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
-import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/RowActions";
 import { useT } from "@/i18n/I18nContext";
@@ -10,7 +9,6 @@ import { ProjectDto } from "@/features/techHealth/api/projects";
 
 interface Props {
   project: ProjectDto;
-  onEdit: () => void;
   onDelete: () => void;
   onScan: () => void;
   isScanning: boolean;
@@ -18,7 +16,6 @@ interface Props {
 
 export const ProjectRow: React.FC<Props> = ({
   project,
-  onEdit,
   onDelete,
   onScan,
   isScanning,
@@ -168,7 +165,7 @@ export const ProjectRow: React.FC<Props> = ({
         component="td"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={{
-          padding: "8px 20px 8px 0",
+          padding: "8px 40px 8px 0",
           borderBottom: "1px solid var(--border)",
           whiteSpace: "nowrap",
           overflow: "visible",
@@ -193,15 +190,6 @@ export const ProjectRow: React.FC<Props> = ({
               },
               color: "yellow",
               disabled: isScanning,
-            },
-            {
-              icon: <EditOutlined sx={{ fontSize: 12 }} />,
-              label: t("projects.action.edit"),
-              onClick: (e) => {
-                e.stopPropagation();
-                onEdit();
-              },
-              color: "accent",
             },
             {
               icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />,

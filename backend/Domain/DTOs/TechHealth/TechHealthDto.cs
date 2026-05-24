@@ -61,14 +61,6 @@ public class CreateTechProjectDto
     public string ScanFrequency { get; set; } = "Weekly";
 }
 
-public class UpdateTechProjectDto
-{
-    public string? Name { get; set; }
-    public string? RepositoryUrl { get; set; }
-    public string? RepositoryType { get; set; }
-    public string? ScanFrequency { get; set; }
-}
-
 public class AvailableRepoDto
 {
     public string Name { get; set; } = string.Empty;

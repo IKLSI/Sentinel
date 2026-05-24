@@ -209,45 +209,6 @@ public class TechHealthController : BaseController
         return CreatedAtAction(nameof(GetProject), new { id = project.Id }, created);
     }
 
-    [HttpPut("projects/{id:guid}")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<TechProjectDto>> UpdateProject(Guid id, [FromBody] UpdateTechProjectDto dto)
-    {
-        Guid? organizationId = GetOrganizationId();
-        if (organizationId == null) return Unauthorized();
-
-        TechProject? project = await _context.TechProjects
-            .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (project == null)
-            return NotFound(new { message = "Projet introuvable" });
-
-        if (dto.RepositoryUrl != null && !string.IsNullOrEmpty(dto.RepositoryUrl) && !RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
-            return BadRequest(new { message = "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com" });
-
-        if (!string.IsNullOrEmpty(dto.Name)) project.Name = dto.Name;
-        if (dto.RepositoryUrl != null) project.RepositoryUrl = string.IsNullOrEmpty(dto.RepositoryUrl) ? null : dto.RepositoryUrl;
-
-        if (!string.IsNullOrEmpty(dto.RepositoryType) && Enum.TryParse<RepositoryType>(dto.RepositoryType, true, out RepositoryType repoType))
-            project.RepositoryType = repoType;
-
-        if (!string.IsNullOrEmpty(dto.ScanFrequency) && Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
-            project.ScanFrequency = scanFreq;
-
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.ProjectUpdated,
-            entityType: "TechProject",
-            organizationId: organizationId.Value,
-            userId: GetCurrentUserId(),
-            entityId: id,
-            jti: GetCurrentJti());
-
-        TechProjectDto? updated = await _techHealthService.GetProjectWithDetailsAsync(id);
-        return Ok(updated);
-    }
-
     [HttpDelete("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> DeleteProject(Guid id)

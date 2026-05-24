@@ -12,7 +12,6 @@ interface Props {
   collapsed: boolean;
   onToggleCollapsed: () => void;
   scanningId: string | null;
-  onEdit: (project: ProjectDto) => void;
   onDelete: (project: ProjectDto) => void;
   onScan: (id: string) => void;
 }
@@ -23,7 +22,6 @@ export const ProjectsSection: React.FC<Props> = ({
   collapsed,
   onToggleCollapsed,
   scanningId,
-  onEdit,
   onDelete,
   onScan,
 }) => {
@@ -172,7 +170,6 @@ export const ProjectsSection: React.FC<Props> = ({
                 <ProjectRow
                   key={project.id}
                   project={project}
-                  onEdit={() => onEdit(project)}
                   onDelete={() => onDelete(project)}
                   onScan={() => onScan(project.id)}
                   isScanning={scanningId === project.id}
