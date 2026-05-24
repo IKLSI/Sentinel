@@ -7,14 +7,12 @@ import { useT } from '@/i18n/I18nContext'
 import { useNotifications } from '../../useNotifications'
 import { NotificationItem } from '../../api'
 
-type Filter = 'all' | 'TicketAssigned' | 'TicketStatusChanged' | 'TicketComment' | 'TicketCreatedByClient'
+type Filter = 'all' | 'unread' | 'read'
 
 const FILTERS: { key: Filter; labelKey: string }[] = [
   { key: 'all', labelKey: 'notifications.filter.all' },
-  { key: 'TicketAssigned', labelKey: 'notifications.filter.assigned' },
-  { key: 'TicketStatusChanged', labelKey: 'notifications.filter.status' },
-  { key: 'TicketComment', labelKey: 'notifications.filter.comment' },
-  { key: 'TicketCreatedByClient', labelKey: 'notifications.filter.client' },
+  { key: 'unread', labelKey: 'notifications.filter.unread' },
+  { key: 'read', labelKey: 'notifications.filter.read' },
 ]
 
 function timeAgo(dateStr: string): string {
@@ -34,7 +32,10 @@ export const NotificationsPage: React.FC = () => {
   const { items, unreadCount, markReadByTicketId, markAllRead } = useNotifications()
   const [activeFilter, setActiveFilter] = useState<Filter>('all')
 
-  const filtered = activeFilter === 'all' ? items : items.filter((n) => n.type === activeFilter)
+  const filtered =
+    activeFilter === 'unread' ? items.filter((n) => !n.isRead) :
+    activeFilter === 'read' ? items.filter((n) => n.isRead) :
+    items
 
   const handleClick = (notif: NotificationItem) => {
     if (!notif.isRead && notif.ticketId) markReadByTicketId(notif.ticketId)
@@ -181,23 +182,7 @@ export const NotificationsPage: React.FC = () => {
                   >
                     {notif.message}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mt: '4px' }}>
-                    <Box
-                      sx={{
-                        fontSize: '9px',
-                        fontFamily: 'var(--font-mono)',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        color: 'var(--muted)',
-                        px: '5px',
-                        py: '1px',
-                        borderRadius: 'var(--r-xs)',
-                        border: '1px solid var(--border)',
-                        background: 'var(--s2)',
-                      }}
-                    >
-                      {t(`notifications.type.${notif.type}`)}
-                    </Box>
+                  <Box sx={{ mt: '4px' }}>
                     <Box sx={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
                       {timeAgo(notif.createdAt)}
                     </Box>

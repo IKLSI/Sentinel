@@ -216,20 +216,6 @@ public class TicketService
             {
                 _logger.LogError(ex, "Échec envoi notification changement statut au client {Email}", ticket.CreatedBy.Email);
             }
-
-            try
-            {
-                await _notificationService.CreateAsync(
-                    ticket.CreatedById,
-                    ticket.OrganizationId,
-                    NotificationType.TicketStatusChanged,
-                    $"Statut mis à jour : \"{newStatus.Name}\" sur le ticket {ticket.Title}",
-                    ticketId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Échec création notification statut pour ticket {TicketId}", ticketId);
-            }
         }
 
         return ticket;
@@ -275,33 +261,6 @@ public class TicketService
         if (author?.Role == UserRole.Client)
         {
             await NotifyAdminsIfClientTicketAsync(ticket, authorId, ticket.OrganizationId, "Nouveau commentaire client", "Commentaire", content);
-
-            List<Guid> adminIds = await _context.Users
-                .Where(u => u.OrganizationId == ticket.OrganizationId && u.Role == UserRole.Admin && u.IsActive && u.Id != authorId)
-                .Select(u => u.Id)
-                .ToListAsync();
-
-            Guid? assigneeId = ticket.AssignedToId;
-            IEnumerable<Guid> targets = adminIds;
-            if (assigneeId.HasValue && !adminIds.Contains(assigneeId.Value))
-                targets = targets.Append(assigneeId.Value);
-
-            foreach (Guid targetId in targets)
-            {
-                try
-                {
-                    await _notificationService.CreateAsync(
-                        targetId,
-                        ticket.OrganizationId,
-                        NotificationType.TicketComment,
-                        $"Nouveau commentaire client sur : {ticket.Title}",
-                        ticketId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Échec création notification commentaire client pour utilisateur {UserId}", targetId);
-                }
-            }
         }
         else if (!isInternal && ticket.CreatedBy.Role == UserRole.Client && ticket.CreatedById != authorId)
         {
@@ -322,20 +281,6 @@ public class TicketService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Échec envoi notification commentaire au client {Email}", ticket.CreatedBy.Email);
-            }
-
-            try
-            {
-                await _notificationService.CreateAsync(
-                    ticket.CreatedById,
-                    ticket.OrganizationId,
-                    NotificationType.TicketComment,
-                    $"{actorName} a répondu à votre ticket : {ticket.Title}",
-                    ticketId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Échec création notification commentaire pour client {UserId}", ticket.CreatedById);
             }
         }
 
@@ -446,28 +391,6 @@ public class TicketService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Échec envoi notification admins pour ticket client");
-        }
-
-        List<Guid> adminIds = await _context.Users
-            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive)
-            .Select(u => u.Id)
-            .ToListAsync();
-
-        foreach (Guid adminId in adminIds)
-        {
-            try
-            {
-                await _notificationService.CreateAsync(
-                    adminId,
-                    organizationId,
-                    NotificationType.TicketCreatedByClient,
-                    $"{actor.FullName} — {eventLabel} : {ticket.Title}",
-                    ticket.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Échec création notification admin pour ticket client {TicketId}", ticket.Id);
-            }
         }
     }
 
