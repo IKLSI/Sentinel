@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchNotifications,
@@ -34,10 +35,13 @@ export function useNotifications() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
   })
 
-  const markReadByTicketId = (ticketId: string) => {
-    const notif = items.find((n) => !n.isRead && n.ticketId === ticketId)
+  const itemsRef = useRef(items)
+  itemsRef.current = items
+
+  const markReadByTicketId = useCallback((ticketId: string) => {
+    const notif = itemsRef.current.find((n) => !n.isRead && n.ticketId === ticketId)
     if (notif) markRead.mutate(notif.id)
-  }
+  }, [markRead.mutate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { items, unreadCount, unreadTicketIds, markReadByTicketId, markAllRead: markAllRead.mutate }
 }
