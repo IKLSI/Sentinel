@@ -687,5 +687,16 @@
   "notifications.title": "Notifications",
   "notifications.empty": "No notifications",
   "notifications.mark_all_read": "Mark all as read",
-  "notifications.tooltip": "Notifications"
+  "notifications.tooltip": "Notifications",
+  "notifications.filter.all": "All",
+  "notifications.filter.assigned": "Assigned",
+  "notifications.filter.status": "Status",
+  "notifications.filter.comment": "Comments",
+  "notifications.filter.client": "Client",
+  "notifications.type.TicketAssigned": "Assignment",
+  "notifications.type.TicketStatusChanged": "Status",
+  "notifications.type.TicketComment": "Comment",
+  "notifications.type.TicketCreatedByClient": "Client ticket",
+  "sidebar.item.notifications": "Notifications",
+  "sidebar.section.notifications": "Notifications"
 }

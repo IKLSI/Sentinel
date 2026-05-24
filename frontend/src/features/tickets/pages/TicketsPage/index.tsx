@@ -26,7 +26,6 @@ import { CreateTicketModal } from "./components/CreateTicketModal";
 import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
 import { extractApiError } from "@/utils/apiError";
 import { TICKETS_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
-import { useNotifications } from "@/features/notifications/useNotifications";
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
@@ -237,7 +236,6 @@ export const TicketsPage: React.FC = () => {
   }, [page, pageSize, debouncedSearch, filters]);
 
   const { tickets, loading, error } = useTickets(ticketsFilters);
-  const { unreadTicketIds } = useNotifications();
 
   useEffect(() => {
     if (error) showToast(t("tickets.list.load_error"), "error");
@@ -257,9 +255,6 @@ export const TicketsPage: React.FC = () => {
 
   const filtered = useMemo(() => {
     return displayTickets.slice().sort((a, b) => {
-      const aHasNotif = unreadTicketIds.has(a.id) ? 0 : 1;
-      const bHasNotif = unreadTicketIds.has(b.id) ? 0 : 1;
-      if (aHasNotif !== bHasNotif) return aHasNotif - bHasNotif;
       if (!sort) return 0;
       const mul = sort.dir === "asc" ? 1 : -1;
       switch (sort.col) {
@@ -351,7 +346,6 @@ export const TicketsPage: React.FC = () => {
               onEdit={openEditModal}
               onDelete={onDeleteTarget}
               hasFiltersApplied={hasFiltersApplied}
-              notifTicketIds={unreadTicketIds}
             />
 
             <Pagination

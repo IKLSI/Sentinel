@@ -11,6 +11,7 @@ import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleArrowLeftOutlined";
 import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import NotificationsNone from "@mui/icons-material/NotificationsNone";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
@@ -89,6 +90,18 @@ const navSections: NavSection[] = [
       },
     ],
   },
+  {
+    titleKey: "sidebar.section.notifications",
+    icon: NotificationsNone,
+    items: [
+      {
+        to: "/notifications",
+        icon: NotificationsNone,
+        labelKey: "sidebar.item.notifications",
+        end: true,
+      },
+    ],
+  },
 ];
 
 function isSectionActive(section: NavSection, pathname: string): boolean {
@@ -142,8 +155,7 @@ export const Sidebar: React.FC = () => {
 
   const isAdmin = user?.role === "Admin";
   const isClient = user?.role === "Client";
-  const { unreadTicketIds } = useNotifications();
-  const hasTicketNotifs = unreadTicketIds.size > 0;
+  const { unreadCount } = useNotifications();
   const filteredSections = useMemo(
     () => {
       const clientAllowed = ["sidebar.section.tickets"];
@@ -405,8 +417,7 @@ export const Sidebar: React.FC = () => {
               const sectionActive = isSectionActive(section, location.pathname);
               const activeItem = section.items.find((i) => isItemActive(i, location.pathname)) ?? section.items[0];
               const ItemIcon = activeItem.icon ?? section.icon;
-              const isTickets = section.titleKey === "sidebar.section.tickets";
-              const showBadge = isTickets && hasTicketNotifs;
+              const isNotifs = activeItem.to === "/notifications";
               return (
                 <Tooltip key={section.titleKey} title={t(section.titleKey)} placement="right" arrow>
                   <Box
@@ -429,7 +440,7 @@ export const Sidebar: React.FC = () => {
                     }}
                   >
                     <ItemIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
-                    {showBadge && (
+                    {isNotifs && unreadCount > 0 && (
                       <Box sx={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1.5px solid var(--s1)" }} />
                     )}
                   </Box>
@@ -446,8 +457,6 @@ export const Sidebar: React.FC = () => {
 
                 if (isMulti) {
                   const GroupIcon = section.icon;
-                  const isTickets = section.titleKey === "sidebar.section.tickets";
-                  const showBadge = isTickets && hasTicketNotifs;
                   return (
                     <React.Fragment key={section.titleKey}>
                       <Box
@@ -462,12 +471,7 @@ export const Sidebar: React.FC = () => {
                           "&:hover": { background: "var(--s3)" },
                         }}
                       >
-                        <Box sx={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
-                          <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
-                          {showBadge && (
-                            <Box sx={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
-                          )}
-                        </Box>
+                        <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
                         <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: sectionActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
                           {t(section.titleKey)}
                         </Box>
@@ -493,14 +497,25 @@ export const Sidebar: React.FC = () => {
                 }
 
                 const Icon = section.items[0].icon;
+                const isNotifs = section.items[0].to === "/notifications";
                 return (
                   <NavLink key={section.titleKey} to={section.items[0].to} end={section.items[0].end ?? false} style={{ textDecoration: "none", display: "block" }}>
                     {({ isActive }) => (
                       <Box sx={{ ...ITEM_SX, background: isActive ? "var(--accent-subtle)" : "transparent", "&:hover": !isActive ? { background: "var(--s3)" } : {} }}>
-                        <Icon sx={{ fontSize: 16, flexShrink: 0, color: isActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
+                        <Box sx={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                          <Icon sx={{ fontSize: 16, color: isActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
+                          {isNotifs && unreadCount > 0 && (
+                            <Box sx={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
+                          )}
+                        </Box>
                         <Box component="span" sx={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: isActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
                           {t(section.items[0].labelKey)}
                         </Box>
+                        {isNotifs && unreadCount > 0 && (
+                          <Box sx={{ ml: "auto", px: "5px", py: "1px", borderRadius: "10px", background: "var(--red, #ef4444)", color: "#fff", fontSize: "9px", fontWeight: 700, lineHeight: 1.4, flexShrink: 0 }}>
+                            {unreadCount}
+                          </Box>
+                        )}
                       </Box>
                     )}
                   </NavLink>

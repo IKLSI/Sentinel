@@ -17,7 +17,6 @@ interface Props {
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
   hasFiltersApplied: boolean;
-  notifTicketIds?: Set<string>;
 }
 
 const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
@@ -29,7 +28,6 @@ const TicketsTableComponent: React.FC<Props> = ({
   onEdit,
   onDelete,
   hasFiltersApplied,
-  notifTicketIds,
 }) => {
   const t = useT();
 
@@ -158,7 +156,6 @@ const TicketsTableComponent: React.FC<Props> = ({
                 ticket={ticket}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                hasNotif={notifTicketIds?.has(ticket.id) ?? false}
               />
             ))}
           </Box>
