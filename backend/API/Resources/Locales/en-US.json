@@ -634,6 +634,7 @@
   "time_tracking.error_delete_entry": "Error while deleting",
   "time_tracking.error_export_entries": "Unable to export entries",
   "time_tracking.error_load_entries": "Unable to load entries",
+  "time_tracking.error_project_or_ticket_required": "A project or a ticket is required",
   "time_tracking.error_save_entry": "Error while saving entry",
   "time_tracking.export": "Export",
   "time_tracking.field_author": "Author",

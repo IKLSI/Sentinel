@@ -224,6 +224,10 @@ export const TimeTrackingPage: React.FC = () => {
       if (diff > 0) durationMinutes = diff;
     }
     if (!form.title.trim() || durationMinutes <= 0) return;
+    if (!form.techProjectId && !form.ticketId) {
+      showToast(t("time_tracking.error_project_or_ticket_required"), "error");
+      return;
+    }
     setSubmitting(true);
     try {
       if (editingId) {

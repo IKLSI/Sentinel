@@ -634,6 +634,7 @@
   "time_tracking.error_delete_entry": "Erreur lors de la suppression",
   "time_tracking.error_export_entries": "Impossible d'exporter les saisies",
   "time_tracking.error_load_entries": "Impossible de charger les saisies",
+  "time_tracking.error_project_or_ticket_required": "Un projet ou un ticket est requis",
   "time_tracking.error_save_entry": "Erreur lors de la saisie",
   "time_tracking.export": "Exporter",
   "time_tracking.field_author": "Auteur",
