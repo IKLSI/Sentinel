@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
@@ -6,6 +6,66 @@ import { StatusChip } from "@/components/StatusChip";
 import { useT } from "@/i18n/I18nContext";
 import { DependencyDto } from "@/features/techHealth/api/projects";
 import { DEP_STATUS, TD, TH, TR } from "../../helpers";
+
+const iconSx = { fontSize: 13, color: "var(--muted)", flexShrink: 0 } as const;
+const nameSx = { fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600 } as const;
+const nameWrapSx = { display: "flex", alignItems: "center", gap: "8px" } as const;
+const ecoSx = { fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--muted)", background: "var(--s3)", px: "7px", py: "2px", borderRadius: "var(--r-xs)" } as const;
+const versionWrapSx = { display: "flex", alignItems: "center", gap: "6px" } as const;
+const arrowSx = { color: "var(--muted)", fontFamily: "var(--font-mono)" } as const;
+const latestSx = { color: "var(--orange)", fontWeight: 600, fontFamily: "var(--font-mono)" } as const;
+const noVulnSx = { color: "var(--muted)", fontSize: "12px" } as const;
+
+interface RowProps {
+  d: DependencyDto;
+  typeProd: string;
+  typeDev: string;
+}
+
+const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev }) => {
+  const s = DEP_STATUS[d.status] ?? { labelKey: "", variant: "gray" as const };
+  const t = useT();
+  return (
+    <TR>
+      <TD>
+        <Box sx={nameWrapSx}>
+          <InventoryOutlined sx={iconSx} />
+          <Box component="span" sx={nameSx}>{d.name}</Box>
+        </Box>
+      </TD>
+      <TD>
+        <Box component="span" sx={ecoSx}>{d.ecosystem}</Box>
+      </TD>
+      <TD>
+        <StatusChip variant="gray">{d.type === "Prod" ? typeProd : typeDev}</StatusChip>
+      </TD>
+      <TD mono muted>
+        <Box sx={versionWrapSx}>
+          <span>{d.currentVersion}</span>
+          {d.latestVersion && d.latestVersion !== d.currentVersion && (
+            <>
+              <Box component="span" sx={arrowSx}>→</Box>
+              <Box component="span" sx={latestSx}>{d.latestVersion}</Box>
+            </>
+          )}
+        </Box>
+      </TD>
+      <TD>
+        <StatusChip variant={s.variant}>
+          {s.labelKey ? t(s.labelKey) : d.status}
+        </StatusChip>
+      </TD>
+      <TD>
+        {d.vulnerabilities.length > 0 ? (
+          <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+        ) : (
+          <Box component="span" sx={noVulnSx}>—</Box>
+        )}
+      </TD>
+    </TR>
+  );
+});
+DependencyRow.displayName = "DependencyRow";
 
 interface Props {
   dependencies: DependencyDto[];
@@ -21,17 +81,15 @@ export const DependenciesTab: React.FC<Props> = ({
   onSearchChange,
 }) => {
   const t = useT();
+  const typeProd = t("tech_health.dep.type_prod");
+  const typeDev = t("tech_health.dep.type_dev");
 
   if (dependencies.length === 0) {
     return (
       <Box className="empty-state">
         <InventoryOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-        <Box className="empty-state-title">
-          {t("tech_health.empty.no_deps_title")}
-        </Box>
-        <Box className="empty-state-subtitle">
-          {t("tech_health.empty.no_deps_subtitle")}
-        </Box>
+        <Box className="empty-state-title">{t("tech_health.empty.no_deps_title")}</Box>
+        <Box className="empty-state-subtitle">{t("tech_health.empty.no_deps_subtitle")}</Box>
       </Box>
     );
   }
@@ -67,7 +125,7 @@ export const DependenciesTab: React.FC<Props> = ({
             gap: "7px",
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r-sm)',
+            borderRadius: "var(--r-sm)",
             px: "9px",
             height: "28px",
             width: "calc(30% + 10px)",
@@ -78,16 +136,12 @@ export const DependenciesTab: React.FC<Props> = ({
             },
           }}
         >
-          <SearchOutlined
-            sx={{ color: "var(--muted)", fontSize: "13px", flexShrink: 0 }}
-          />
+          <SearchOutlined sx={{ color: "var(--muted)", fontSize: "13px", flexShrink: 0 }} />
           <Box
             component="input"
             placeholder={t("tech_health.search_placeholder")}
             value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onSearchChange(e.target.value)
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
             sx={{
               all: "unset",
               flex: 1,
@@ -99,28 +153,14 @@ export const DependenciesTab: React.FC<Props> = ({
           />
         </Box>
         {search && (
-          <Box
-            component="span"
-            sx={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              color: "var(--muted)",
-            }}
-          >
+          <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted)" }}>
             {filteredDeps.length} / {dependencies.length}
           </Box>
         )}
       </Box>
 
       <Box sx={{ flexShrink: 0 }}>
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
+        <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <Box component="colgroup">
             <Box component="col" sx={{ width: "30%" }} />
             <Box component="col" sx={{ width: "12%" }} />
@@ -141,15 +181,9 @@ export const DependenciesTab: React.FC<Props> = ({
           </Box>
         </Box>
       </Box>
+
       <Box sx={{ overflowY: "auto", flex: 1 }}>
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
+        <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <Box component="colgroup">
             <Box component="col" sx={{ width: "30%" }} />
             <Box component="col" sx={{ width: "12%" }} />
@@ -164,132 +198,15 @@ export const DependenciesTab: React.FC<Props> = ({
                 <Box
                   component="td"
                   colSpan={6}
-                  sx={{
-                    padding: "32px",
-                    textAlign: "center",
-                    color: "var(--muted)",
-                    fontSize: "13px",
-                    borderBottom: "none",
-                  }}
+                  sx={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px", borderBottom: "none" }}
                 >
                   {t("tech_health.no_results")}
                 </Box>
               </Box>
             ) : (
-              filteredDeps.map((d) => {
-                const s = DEP_STATUS[d.status] ?? {
-                  labelKey: "",
-                  variant: "gray" as const,
-                };
-                return (
-                  <TR key={d.id}>
-                    <TD>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                        }}
-                      >
-                        <InventoryOutlined
-                          sx={{
-                            fontSize: 13,
-                            color: "var(--muted)",
-                            flexShrink: 0,
-                          }}
-                        />
-                        <Box
-                          component="span"
-                          sx={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {d.name}
-                        </Box>
-                      </Box>
-                    </TD>
-                    <TD>
-                      <Box
-                        component="span"
-                        sx={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          color: "var(--muted)",
-                          background: "var(--s3)",
-                          px: "7px",
-                          py: "2px",
-                          borderRadius: 'var(--r-xs)',
-                        }}
-                      >
-                        {d.ecosystem}
-                      </Box>
-                    </TD>
-                    <TD>
-                      <StatusChip variant="gray">
-                        {d.type === "Prod"
-                          ? t("tech_health.dep.type_prod")
-                          : t("tech_health.dep.type_dev")}
-                      </StatusChip>
-                    </TD>
-                    <TD mono muted>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <span>{d.currentVersion}</span>
-                        {d.latestVersion &&
-                          d.latestVersion !== d.currentVersion && (
-                            <>
-                              <Box
-                                component="span"
-                                sx={{
-                                  color: "var(--muted)",
-                                  fontFamily: "var(--font-mono)",
-                                }}
-                              >
-                                →
-                              </Box>
-                              <Box
-                                component="span"
-                                sx={{
-                                  color: "var(--orange)",
-                                  fontWeight: 600,
-                                  fontFamily: "var(--font-mono)",
-                                }}
-                              >
-                                {d.latestVersion}
-                              </Box>
-                            </>
-                          )}
-                      </Box>
-                    </TD>
-                    <TD>
-                      <StatusChip variant={s.variant}>
-                        {s.labelKey ? t(s.labelKey) : d.status}
-                      </StatusChip>
-                    </TD>
-                    <TD>
-                      {d.vulnerabilities.length > 0 ? (
-                        <StatusChip variant="red">
-                          {d.vulnerabilities.length}
-                        </StatusChip>
-                      ) : (
-                        <Box
-                          component="span"
-                          sx={{ color: "var(--muted)", fontSize: "12px" }}
-                        >
-                          —
-                        </Box>
-                      )}
-                    </TD>
-                  </TR>
-                );
-              })
+              filteredDeps.map((d) => (
+                <DependencyRow key={d.id} d={d} typeProd={typeProd} typeDev={typeDev} />
+              ))
             )}
           </Box>
         </Box>

@@ -25,6 +25,7 @@ interface NavItem {
   icon: React.ElementType;
   labelKey: string;
   end?: boolean;
+  activeFor?: RegExp;
 }
 
 interface NavSection {
@@ -56,6 +57,7 @@ const navSections: NavSection[] = [
         icon: ConfirmationNumberOutlined,
         labelKey: "sidebar.item.list",
         end: true,
+        activeFor: /^\/tickets\/(?!kanban).+/,
       },
       {
         to: "/tickets/kanban",
@@ -97,6 +99,7 @@ function sectionKey(section: NavSection): string {
 }
 
 function isItemActive(item: NavItem, pathname: string): boolean {
+  if (item.activeFor && item.activeFor.test(pathname)) return true;
   if (item.end) return pathname === item.to;
   return pathname === item.to || pathname.startsWith(item.to + "/");
 }

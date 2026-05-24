@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
@@ -33,6 +33,7 @@ export const ProjectDetailPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [depSearch, setDepSearch] = useState("");
+  const [, startTransition] = useTransition();
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!id) return;
@@ -81,10 +82,10 @@ export const ProjectDetailPage: React.FC = () => {
 
   const filteredDeps = useMemo(() => {
     if (!project) return [];
-    if (!depSearch) return project.dependencies;
-    return project.dependencies.filter((d) =>
-      d.name.toLowerCase().includes(depSearch.toLowerCase()),
-    );
+    const deps = depSearch
+      ? project.dependencies.filter((d) => d.name.toLowerCase().includes(depSearch.toLowerCase()))
+      : [...project.dependencies];
+    return deps.sort((a, b) => b.vulnerabilities.length - a.vulnerabilities.length);
   }, [project, depSearch]);
 
 
@@ -171,37 +172,29 @@ export const ProjectDetailPage: React.FC = () => {
               tabs={tabDefs}
               active={activeTab}
               onChange={(i) => {
-                setActiveTab(i);
-                setDepSearch("");
+                startTransition(() => {
+                  setActiveTab(i);
+                  setDepSearch("");
+                });
               }}
             />
           </Box>
 
-          <Box
-            key={activeTab}
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-              p: "20px",
-              animation: "tabIn 0.18s cubic-bezier(0.4,0,0.2,1) both",
-              "@keyframes tabIn": {
-                from: { opacity: 0, transform: "translateY(6px)" },
-                to: { opacity: 1, transform: "translateY(0)" },
-              },
-            }}
-          >
-            {activeTab === 0 && <VulnerabilitiesTab vulns={sortedVulns} />}
-            {activeTab === 1 && (
+          <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", p: "20px" }}>
+            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 0 ? "flex" : "none", flexDirection: "column" }}>
+              <VulnerabilitiesTab vulns={sortedVulns} />
+            </Box>
+            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 1 ? "flex" : "none", flexDirection: "column" }}>
               <DependenciesTab
                 dependencies={project.dependencies}
                 filteredDeps={filteredDeps}
                 search={depSearch}
                 onSearchChange={setDepSearch}
               />
-            )}
-            {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
+            </Box>
+            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 2 ? "flex" : "none", flexDirection: "column" }}>
+              <RuntimesTab runtimes={project.runtimes} />
+            </Box>
           </Box>
         </Box>
       </Box>
