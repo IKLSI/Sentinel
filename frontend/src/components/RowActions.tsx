@@ -59,6 +59,7 @@ export const RowActions: React.FC<{
           <Tooltip key={i} title={action.label} placement="top" arrow>
             <Box
               component="button"
+              type="button"
               onClick={action.disabled ? undefined : action.onClick}
               sx={{
                 all: "unset",
