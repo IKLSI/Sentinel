@@ -30,6 +30,7 @@ public class SentinelContext : DbContext
     public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,7 @@ public class SentinelContext : DbContext
         ConfigureRuntime(modelBuilder);
         ConfigureAuditLog(modelBuilder);
         ConfigureTicketAttachment(modelBuilder);
+        ConfigureNotification(modelBuilder);
 
         ApplyTenantQueryFilters(modelBuilder);
     }
@@ -85,6 +87,9 @@ public class SentinelContext : DbContext
 
         modelBuilder.Entity<TicketAttachment>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<Notification>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<TimeEntry>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet
@@ -428,6 +433,31 @@ public class SentinelContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UploadedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureNotification(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).HasConversion<string>().IsRequired();
+            entity.Property(e => e.Message).HasMaxLength(500).IsRequired();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Ticket)
+                .WithMany()
+                .HasForeignKey(e => e.TicketId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

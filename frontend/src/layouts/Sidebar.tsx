@@ -19,6 +19,7 @@ import { useSidebar } from "./SidebarContext";
 import { SentinelLogo } from "./SentinelLogo";
 import { useT } from "../i18n/I18nContext";
 import { PALETTE_OPEN_EVENT } from "../components/CommandPalette";
+import { NotificationBell } from "../features/notifications/NotificationBell";
 
 interface NavItem {
   to: string;
@@ -563,6 +564,7 @@ export const Sidebar: React.FC = () => {
           </Tooltip>
 
           <Box sx={{ display: "flex", flexDirection: collapsed ? "column" : "row", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+            <NotificationBell collapsed={collapsed} />
             {isAdmin && (
               <Tooltip title={t("sidebar.item.settings")} placement="top" arrow>
                 <Box

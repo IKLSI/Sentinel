@@ -683,5 +683,9 @@
   "time_tracking.weekday_initial_thu": "J",
   "time_tracking.weekday_initial_tue": "M",
   "time_tracking.weekday_initial_wed": "M",
-  "time_tracking.you": "Vous"
+  "time_tracking.you": "Vous",
+  "notifications.title": "Notifications",
+  "notifications.empty": "Aucune notification",
+  "notifications.mark_all_read": "Tout marquer comme lu",
+  "notifications.tooltip": "Notifications"
 }

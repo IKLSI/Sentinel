@@ -212,6 +212,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SendPasswordResetEmailJob>();
 
         services.AddSingleton<IEmailService, EmailService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }
