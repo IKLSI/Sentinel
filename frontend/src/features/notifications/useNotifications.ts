@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchNotifications,
@@ -7,7 +7,7 @@ import {
   NotificationItem,
 } from './api'
 
-export const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const
+const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const
 
 export function useNotifications() {
   const queryClient = useQueryClient()
@@ -36,7 +36,7 @@ export function useNotifications() {
   })
 
   const itemsRef = useRef(items)
-  itemsRef.current = items
+  useEffect(() => { itemsRef.current = items })
 
   const markReadByTicketId = useCallback((ticketId: string) => {
     const notif = itemsRef.current.find((n) => !n.isRead && n.ticketId === ticketId)

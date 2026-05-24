@@ -21,6 +21,7 @@ import { SentinelLogo } from "./SentinelLogo";
 import { useT } from "../i18n/I18nContext";
 import { PALETTE_OPEN_EVENT } from "../components/CommandPalette";
 import { useNotifications } from "../features/notifications/useNotifications";
+import { NotificationsModal } from "../features/notifications/NotificationsModal";
 
 interface NavItem {
   to: string;
@@ -28,6 +29,7 @@ interface NavItem {
   labelKey: string;
   end?: boolean;
   activeFor?: RegExp;
+  adminOnly?: boolean;
 }
 
 interface NavSection {
@@ -35,6 +37,7 @@ interface NavSection {
   icon: React.ElementType;
   items: NavItem[];
   adminOnly?: boolean;
+  group?: 'nav' | 'admin';
 }
 
 const navSections: NavSection[] = [
@@ -91,14 +94,15 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    titleKey: "sidebar.section.notifications",
-    icon: NotificationsNone,
+    titleKey: "sidebar.section.administration",
+    icon: SettingsOutlined,
+    adminOnly: true,
+    group: 'admin',
     items: [
       {
-        to: "/notifications",
-        icon: NotificationsNone,
-        labelKey: "sidebar.item.notifications",
-        end: true,
+        to: "/settings",
+        icon: SettingsOutlined,
+        labelKey: "sidebar.item.settings",
       },
     ],
   },
@@ -130,8 +134,8 @@ const ITEM_SX = {
   userSelect: "none",
 } as const;
 
-const SectionHeader = ({ label }: { label: string }) => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: "8px", px: "4px", pt: "8px", pb: "4px" }}>
+const SectionHeader = ({ label, mt }: { label: string; mt?: string | number }) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: "8px", px: "4px", pt: "8px", pb: "4px", mt: mt ?? 0 }}>
     <Box component="span" sx={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)", whiteSpace: "nowrap", flexShrink: 0 }}>
       {label}
     </Box>
@@ -156,13 +160,18 @@ export const Sidebar: React.FC = () => {
   const isAdmin = user?.role === "Admin";
   const isClient = user?.role === "Client";
   const { unreadCount } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
   const filteredSections = useMemo(
     () => {
       const clientAllowed = ["sidebar.section.tickets"];
       return navSections
-        .filter((s) => s.items.length > 0)
         .filter((s) => !isClient || clientAllowed.includes(s.titleKey))
-        .filter((s) => !s.adminOnly || isAdmin);
+        .filter((s) => !s.adminOnly || isAdmin)
+        .map((s) => ({
+          ...s,
+          items: s.items.filter((item) => !item.adminOnly || isAdmin),
+        }))
+        .filter((s) => s.items.length > 0);
     },
     [isClient, isAdmin],
   );
@@ -417,7 +426,6 @@ export const Sidebar: React.FC = () => {
               const sectionActive = isSectionActive(section, location.pathname);
               const activeItem = section.items.find((i) => isItemActive(i, location.pathname)) ?? section.items[0];
               const ItemIcon = activeItem.icon ?? section.icon;
-              const isNotifs = activeItem.to === "/notifications";
               return (
                 <Tooltip key={section.titleKey} title={t(section.titleKey)} placement="right" arrow>
                   <Box
@@ -440,85 +448,82 @@ export const Sidebar: React.FC = () => {
                     }}
                   >
                     <ItemIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
-                    {isNotifs && unreadCount > 0 && (
-                      <Box sx={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1.5px solid var(--s1)" }} />
-                    )}
                   </Box>
                 </Tooltip>
               );
             })
           ) : (
             <>
-              <SectionHeader label={t("sidebar.section.nav")} />
-              {filteredSections.map((section) => {
-                const isMulti = section.items.length > 1;
-                const sectionActive = isSectionActive(section, location.pathname);
-                const isGroupOpen = openGroups[sectionKey(section)] ?? false;
-
-                if (isMulti) {
-                  const GroupIcon = section.icon;
-                  return (
-                    <React.Fragment key={section.titleKey}>
-                      <Box
-                        component="button"
-                        onClick={() => toggleGroup(sectionKey(section))}
-                        sx={{
-                          all: "unset",
-                          ...ITEM_SX,
-                          width: "100%",
-                          boxSizing: "border-box",
-                          background: sectionActive && !isGroupOpen ? "var(--accent-subtle)" : "transparent",
-                          "&:hover": { background: "var(--s3)" },
-                        }}
-                      >
-                        <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
-                        <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: sectionActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
-                          {t(section.titleKey)}
-                        </Box>
-                        <ChevronRightOutlined sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0, transform: isGroupOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.18s cubic-bezier(0.4,0,0.2,1)" }} />
-                      </Box>
-                      <Box sx={{ overflow: "hidden", maxHeight: isGroupOpen ? `${section.items.length * 34}px` : "0px", ml: "15px", borderLeft: `2px solid ${sectionActive ? "var(--accent-border)" : "var(--border)"}`, transition: "max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s" }}>
-                        {section.items.map((item) => {
-                          const active = isItemActive(item, location.pathname);
-                          return (
-                            <NavLink key={item.to} to={item.to} end={item.end ?? false} style={{ textDecoration: "none", display: "block" }}>
-                              <Box sx={{ height: "30px", display: "flex", alignItems: "center", gap: "8px", pl: "10px", pr: "8px", mx: "4px", borderRadius: "var(--r-xs)", cursor: "pointer", "&:hover span.sub-label": !active ? { color: "var(--text-secondary)" } : {} }}>
-                                <Box sx={{ width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0, background: active ? "var(--accent)" : "var(--border2)", transition: "background 0.15s" }} />
-                                <Box component="span" className="sub-label" sx={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "10px", fontWeight: active ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", color: active ? "var(--accent)" : "var(--muted)", transition: "color 0.15s" }}>
-                                  {t(item.labelKey)}
-                                </Box>
-                              </Box>
-                            </NavLink>
-                          );
-                        })}
-                      </Box>
-                    </React.Fragment>
-                  );
-                }
-
-                const Icon = section.items[0].icon;
-                const isNotifs = section.items[0].to === "/notifications";
+              {[
+                { groupKey: 'nav' as const, headerKey: 'sidebar.section.nav' },
+                { groupKey: 'admin' as const, headerKey: 'sidebar.section.administration' },
+              ].map(({ groupKey, headerKey }) => {
+                const groupSections = filteredSections.filter((s) => (s.group ?? 'nav') === groupKey);
+                if (groupSections.length === 0) return null;
                 return (
-                  <NavLink key={section.titleKey} to={section.items[0].to} end={section.items[0].end ?? false} style={{ textDecoration: "none", display: "block" }}>
-                    {({ isActive }) => (
-                      <Box sx={{ ...ITEM_SX, background: isActive ? "var(--accent-subtle)" : "transparent", "&:hover": !isActive ? { background: "var(--s3)" } : {} }}>
-                        <Box sx={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
-                          <Icon sx={{ fontSize: 16, color: isActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
-                          {isNotifs && unreadCount > 0 && (
-                            <Box sx={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
+                  <React.Fragment key={groupKey}>
+                    <SectionHeader label={t(headerKey)} mt={groupKey === 'admin' ? '12px' : 0} />
+                    {groupSections.map((section) => {
+                      const isMulti = section.items.length > 1;
+                      const sectionActive = isSectionActive(section, location.pathname);
+                      const isGroupOpen = openGroups[sectionKey(section)] ?? false;
+
+                      if (isMulti) {
+                        const GroupIcon = section.icon;
+                        return (
+                          <React.Fragment key={section.titleKey}>
+                            <Box
+                              component="button"
+                              onClick={() => toggleGroup(sectionKey(section))}
+                              sx={{
+                                all: "unset",
+                                ...ITEM_SX,
+                                width: "100%",
+                                boxSizing: "border-box",
+                                background: sectionActive && !isGroupOpen ? "var(--accent-subtle)" : "transparent",
+                                "&:hover": { background: "var(--s3)" },
+                              }}
+                            >
+                              <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
+                              <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: sectionActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
+                                {t(section.titleKey)}
+                              </Box>
+                              <ChevronRightOutlined sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0, transform: isGroupOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.18s cubic-bezier(0.4,0,0.2,1)" }} />
+                            </Box>
+                            <Box sx={{ overflow: "hidden", maxHeight: isGroupOpen ? `${section.items.length * 34}px` : "0px", ml: "15px", borderLeft: `2px solid ${sectionActive ? "var(--accent-border)" : "var(--border)"}`, transition: "max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s" }}>
+                              {section.items.map((item) => {
+                                const active = isItemActive(item, location.pathname);
+                                return (
+                                  <NavLink key={item.to} to={item.to} end={item.end ?? false} style={{ textDecoration: "none", display: "block" }}>
+                                    <Box sx={{ height: "30px", display: "flex", alignItems: "center", gap: "8px", pl: "10px", pr: "8px", mx: "4px", borderRadius: "var(--r-xs)", cursor: "pointer", "&:hover span.sub-label": !active ? { color: "var(--text-secondary)" } : {} }}>
+                                      <Box sx={{ width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0, background: active ? "var(--accent)" : "var(--border2)", transition: "background 0.15s" }} />
+                                      <Box component="span" className="sub-label" sx={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "10px", fontWeight: active ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", color: active ? "var(--accent)" : "var(--muted)", transition: "color 0.15s" }}>
+                                        {t(item.labelKey)}
+                                      </Box>
+                                    </Box>
+                                  </NavLink>
+                                );
+                              })}
+                            </Box>
+                          </React.Fragment>
+                        );
+                      }
+
+                      const Icon = section.items[0].icon;
+                      return (
+                        <NavLink key={section.titleKey} to={section.items[0].to} end={section.items[0].end ?? false} style={{ textDecoration: "none", display: "block" }}>
+                          {({ isActive }) => (
+                            <Box sx={{ ...ITEM_SX, background: isActive ? "var(--accent-subtle)" : "transparent", "&:hover": !isActive ? { background: "var(--s3)" } : {} }}>
+                              <Icon sx={{ fontSize: 16, color: isActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
+                              <Box component="span" sx={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: isActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
+                                {t(section.items[0].labelKey)}
+                              </Box>
+                            </Box>
                           )}
-                        </Box>
-                        <Box component="span" sx={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: isActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
-                          {t(section.items[0].labelKey)}
-                        </Box>
-                        {isNotifs && unreadCount > 0 && (
-                          <Box sx={{ ml: "auto", px: "5px", py: "1px", borderRadius: "10px", background: "var(--red, #ef4444)", color: "#fff", fontSize: "9px", fontWeight: 700, lineHeight: 1.4, flexShrink: 0 }}>
-                            {unreadCount}
-                          </Box>
-                        )}
-                      </Box>
-                    )}
-                  </NavLink>
+                        </NavLink>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })}
             </>
@@ -594,32 +599,32 @@ export const Sidebar: React.FC = () => {
           </Tooltip>
 
           <Box sx={{ display: "flex", flexDirection: collapsed ? "column" : "row", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-            <NotificationBell collapsed={collapsed} />
-            {isAdmin && (
-              <Tooltip title={t("sidebar.item.settings")} placement="top" arrow>
-                <Box
-                  component="button"
-                  onClick={() => navigate("/settings")}
-                  sx={{
-                    all: "unset",
-                    cursor: "pointer",
-                    width: 26,
-                    height: 26,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 'var(--r-sm)',
-                    color: "var(--muted)",
-                    flexShrink: 0,
-                    transition: "color 0.12s, background 0.12s",
-                    "&:hover": { color: "var(--text)", background: "var(--s3)" },
-                  }}
-                >
-                  <SettingsOutlined sx={{ fontSize: 14 }} />
-                </Box>
-              </Tooltip>
-            )}
-
+            <Tooltip title={t("sidebar.item.notifications")} placement="top" arrow>
+              <Box
+                component="button"
+                onClick={() => setNotifOpen(true)}
+                sx={{
+                  all: "unset",
+                  cursor: "pointer",
+                  width: 26,
+                  height: 26,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 'var(--r-sm)',
+                  color: "var(--muted)",
+                  flexShrink: 0,
+                  position: "relative",
+                  transition: "color 0.12s, background 0.12s",
+                  "&:hover": { color: "var(--text)", background: "var(--s3)" },
+                }}
+              >
+                <NotificationsNone sx={{ fontSize: 14 }} />
+                {unreadCount > 0 && (
+                  <Box sx={{ position: "absolute", top: 4, right: 4, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
+                )}
+              </Box>
+            </Tooltip>
             <Tooltip title={t("sidebar.logout")} placement="top" arrow>
               <Box
                 component="button"
@@ -645,6 +650,7 @@ export const Sidebar: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      <NotificationsModal open={notifOpen} onClose={() => setNotifOpen(false)} />
     </>
   );
 };

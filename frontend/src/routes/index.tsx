@@ -69,11 +69,6 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   })),
 );
-const NotificationsPage = lazy(() =>
-  import("../features/notifications/pages/NotificationsPage").then((m) => ({
-    default: m.NotificationsPage,
-  })),
-);
 
 const FullScreenLoader: React.FC = () => (
   <Box
@@ -133,7 +128,7 @@ export const AppRoutes: React.FC = () => (
         <Route path="/projects" element={<NonClientRoute><ProjectsPage /></NonClientRoute>} />
         <Route path="/projects/:id" element={<NonClientRoute><ProjectDetailPage /></NonClientRoute>} />
         <Route path="/time-tracking" element={<NonClientRoute><TimeTrackingPage /></NonClientRoute>} />
-        <Route path="/notifications" element={<NotificationsPage />} />
+
         <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/settings"
