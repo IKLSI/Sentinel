@@ -71,14 +71,21 @@ public class TechHealthController : BaseController
             .Select(p => p.RepositoryUrl)
             .ToListAsync();
 
+        bool hasToken = !string.IsNullOrEmpty(org.GithubToken) || !string.IsNullOrEmpty(org.GitlabToken);
+        bool fetchFailed = false;
         List<AvailableRepoDto> result = new();
 
         if (!string.IsNullOrEmpty(org.GithubToken))
         {
             string? token = _tokenProtector.Unprotect(org.GithubToken);
-            if (!string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(token))
             {
-                List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(token, "github");
+                fetchFailed = true;
+            }
+            else
+            {
+                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, "github");
+                if (!success) fetchFailed = true;
                 foreach ((string name, string url) in repos)
                 {
                     if (!existingUrls.Contains(url))
@@ -90,9 +97,14 @@ public class TechHealthController : BaseController
         if (!string.IsNullOrEmpty(org.GitlabToken))
         {
             string? token = _tokenProtector.Unprotect(org.GitlabToken);
-            if (!string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(token))
             {
-                List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(token, "gitlab");
+                fetchFailed = true;
+            }
+            else
+            {
+                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, "gitlab");
+                if (!success) fetchFailed = true;
                 foreach ((string name, string url) in repos)
                 {
                     if (!existingUrls.Contains(url))
@@ -101,7 +113,12 @@ public class TechHealthController : BaseController
             }
         }
 
-        return Ok(result);
+        return Ok(new AvailableReposResponse
+        {
+            Repos = result,
+            HasToken = hasToken,
+            FetchFailed = fetchFailed
+        });
     }
 
     [HttpGet("projects/export/excel")]

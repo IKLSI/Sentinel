@@ -56,6 +56,7 @@ export interface ProjectDetailDto extends ProjectDto {
 interface CreateProjectDto {
   name: string
   repositoryUrl?: string
+  repositoryType?: string
 }
 
 export const getProjects = async (signal?: AbortSignal): Promise<ProjectDto[]> => {
@@ -80,7 +81,7 @@ export const createProject = async (data: CreateProjectDto): Promise<ProjectDto>
   const response = await apiClient.post<ProjectDto>('/api/tech-health/projects', {
     name: data.name,
     repositoryUrl: data.repositoryUrl,
-    repositoryType: 'GitHub',
+    repositoryType: data.repositoryType ?? 'GitHub',
     scanFrequency: 'Weekly',
   })
   return response.data
@@ -92,8 +93,14 @@ export interface AvailableRepoDto {
   platform: string
 }
 
-export const getAvailableRepos = async (signal?: AbortSignal): Promise<AvailableRepoDto[]> => {
-  const response = await apiClient.get<AvailableRepoDto[]>('/api/tech-health/projects/available-repos', { signal })
+export interface AvailableReposResult {
+  repos: AvailableRepoDto[]
+  hasToken: boolean
+  fetchFailed: boolean
+}
+
+export const getAvailableRepos = async (signal?: AbortSignal): Promise<AvailableReposResult> => {
+  const response = await apiClient.get<AvailableReposResult>('/api/tech-health/projects/available-repos', { signal })
   return response.data
 }
 

@@ -30,6 +30,8 @@ export const SyncProjectModal: React.FC<Props> = ({
 }) => {
   const t = useT();
   const [repos, setRepos] = useState<AvailableRepoDto[]>([]);
+  const [hasToken, setHasToken] = useState(true);
+  const [fetchFailed, setFetchFailed] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -42,10 +44,17 @@ export const SyncProjectModal: React.FC<Props> = ({
     const ctrl = new AbortController();
     setLoading(true);
     setError(false);
+    setHasToken(true);
+    setFetchFailed(false);
     setSearch("");
     setSelected(new Set());
     getAvailableRepos(ctrl.signal)
-      .then((data) => { if (!ctrl.signal.aborted) setRepos(data); })
+      .then((data) => {
+        if (ctrl.signal.aborted) return;
+        setRepos(data.repos);
+        setHasToken(data.hasToken);
+        setFetchFailed(data.fetchFailed);
+      })
       .catch(() => { if (!ctrl.signal.aborted) setError(true); })
       .finally(() => { if (!ctrl.signal.aborted) setLoading(false); });
     setTimeout(() => inputRef.current?.focus(), 80);
@@ -79,7 +88,7 @@ export const SyncProjectModal: React.FC<Props> = ({
     setImporting(true);
     try {
       const toImport = repos.filter((r) => selected.has(r.url));
-      await Promise.all(toImport.map((r) => createProject({ name: r.name, repositoryUrl: r.url })));
+      await Promise.all(toImport.map((r) => createProject({ name: r.name, repositoryUrl: r.url, repositoryType: r.platform })));
       showToast(t("projects.toast.import_success", { count: toImport.length }), "success");
       onClose();
       onImported();
@@ -95,6 +104,12 @@ export const SyncProjectModal: React.FC<Props> = ({
     : selected.size > 0
       ? t("projects.import_modal.import_count", { count: selected.size })
       : t("projects.import_modal.import");
+
+  const emptyMessage = !hasToken
+    ? t("projects.import_modal.no_token")
+    : fetchFailed
+      ? t("projects.import_modal.fetch_failed")
+      : t("projects.import_modal.empty");
 
   return (
     <Dialog
@@ -228,7 +243,7 @@ export const SyncProjectModal: React.FC<Props> = ({
           <Box sx={{ py: "40px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
             <FolderOutlined sx={{ fontSize: "28px", color: "var(--muted2)", opacity: 0.4 }} />
             <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
-              {repos.length === 0 ? t("projects.import_modal.empty") : t("projects.sync_modal.no_results")}
+              {repos.length === 0 ? emptyMessage : t("projects.sync_modal.no_results")}
             </Box>
           </Box>
         ) : (

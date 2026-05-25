@@ -67,3 +67,10 @@ public class AvailableRepoDto
     public string Url { get; set; } = string.Empty;
     public string Platform { get; set; } = string.Empty;
 }
+
+public class AvailableReposResponse
+{
+    public List<AvailableRepoDto> Repos { get; set; } = new();
+    public bool HasToken { get; set; }
+    public bool FetchFailed { get; set; }
+}
