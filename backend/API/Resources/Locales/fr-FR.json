@@ -227,7 +227,7 @@
   "projects.import_modal.cancel": "Annuler",
   "projects.import_modal.empty": "Tous vos dépôts sont déjà importés.",
   "projects.import_modal.error": "Impossible de charger les dépôts",
-  "projects.import_modal.fetch_failed": "Impossible de récupérer vos dépôts. Vérifiez que votre jeton d'accès est valide et non expiré.",
+  "projects.import_modal.fetch_failed": "Vérifiez que votre jeton d'accès est valide et non expiré.",
   "projects.import_modal.no_token": "Aucun jeton d'accès configuré. Ajoutez un jeton GitHub ou GitLab dans les paramètres de l'organisation.",
   "projects.import_modal.import": "Importer",
   "projects.import_modal.import_count": "Importer ({count})",

@@ -236,14 +236,14 @@ export const SyncProjectModal: React.FC<Props> = ({
           </Box>
         ) : error ? (
           <Box sx={{ py: "40px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-            <Box sx={{ fontSize: "13px", color: "var(--red)", fontWeight: 500 }}>
+            <Box sx={{ fontSize: "13px", color: "var(--red)", fontWeight: 500, textAlign: "center" }}>
               {t("projects.import_modal.error")}
             </Box>
           </Box>
         ) : visible.length === 0 ? (
           <Box sx={{ py: "40px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
             <FolderOutlined sx={{ fontSize: "28px", color: "var(--muted2)", opacity: 0.4 }} />
-            <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
+            <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500, textAlign: "center" }}>
               {repos.length === 0 ? emptyMessage : t("projects.sync_modal.no_results")}
             </Box>
           </Box>

@@ -227,7 +227,7 @@
   "projects.import_modal.cancel": "Cancel",
   "projects.import_modal.empty": "All your repositories are already imported.",
   "projects.import_modal.error": "Unable to load repositories",
-  "projects.import_modal.fetch_failed": "Unable to fetch your repositories. Check that your access token is valid and not expired.",
+  "projects.import_modal.fetch_failed": "Check that your access token is valid and not expired.",
   "projects.import_modal.no_token": "No access token configured. Add a GitHub or GitLab token in the organization settings.",
   "projects.import_modal.import": "Import",
   "projects.import_modal.import_count": "Import ({count})",
