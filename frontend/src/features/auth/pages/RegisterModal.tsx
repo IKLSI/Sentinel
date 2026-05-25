@@ -192,7 +192,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               {t("auth.register.success_sub")}
             </Box>
             <button
-              className="lp-submit"
+              className="lp-submit no-elevation"
               onClick={onClose}
               style={{ marginBottom: "12px", animation: "none", opacity: 1 }}
             >
@@ -337,7 +337,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
             <button
               type="submit"
-              className="lp-submit"
+              className="lp-submit no-elevation"
               disabled={loading}
               style={{ marginTop: "4px", animation: "none", opacity: 1 }}
             >

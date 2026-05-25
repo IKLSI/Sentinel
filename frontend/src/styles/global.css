@@ -967,6 +967,11 @@ a:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 26px rgba(99, 102, 241, 0.36);
 }
+.lp-submit.no-elevation:hover:not(:disabled) {
+  background: linear-gradient(135deg, color-mix(in srgb, #4338ca 85%, black) 0%, #4338ca 100%);
+  transform: none;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.28);
+}
 .lp-submit:active:not(:disabled) {
   transform: translateY(0);
 }
