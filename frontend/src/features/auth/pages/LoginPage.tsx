@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../../../hooks/useToast";
 import Box from "@mui/material/Box";
@@ -10,6 +10,8 @@ import { useT } from "../../../i18n/I18nContext";
 import { resendVerification } from "../api/auth";
 import { extractApiError } from "../../../utils/apiError";
 import { UserRole } from "../../../types/enums";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
+import { RegisterModal } from "./RegisterModal";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -23,6 +25,8 @@ export const LoginPage: React.FC = () => {
   const [hasError, setHasError] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -154,15 +158,14 @@ export const LoginPage: React.FC = () => {
                 {
                   icon: (
                     <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <circle
-                        cx="7"
-                        cy="7"
-                        r="6"
+                      <path
+                        d="M7 1.5L12.5 4v4c0 2.8-2.5 5.2-5.5 6C3.5 13.2 1 10.8 1 8V4L7 1.5z"
                         stroke="currentColor"
                         strokeWidth="1.4"
+                        strokeLinejoin="round"
                       />
                       <path
-                        d="M7 4v3.5l2 2"
+                        d="M4.5 7l2 2 3-3"
                         stroke="currentColor"
                         strokeWidth="1.4"
                         strokeLinecap="round"
@@ -199,14 +202,15 @@ export const LoginPage: React.FC = () => {
                 {
                   icon: (
                     <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M7 1.5L12.5 4v4c0 2.8-2.5 5.2-5.5 6C3.5 13.2 1 10.8 1 8V4L7 1.5z"
+                      <circle
+                        cx="7"
+                        cy="7"
+                        r="6"
                         stroke="currentColor"
                         strokeWidth="1.4"
-                        strokeLinejoin="round"
                       />
                       <path
-                        d="M4.5 7l2 2 3-3"
+                        d="M7 4v3.5l2 2"
                         stroke="currentColor"
                         strokeWidth="1.4"
                         strokeLinecap="round"
@@ -327,9 +331,24 @@ export const LoginPage: React.FC = () => {
             </form>
 
             <Box className="lp-forgot-wrap">
-              <Link to="/forgot-password" className="lp-forgot">
+              <button
+                type="button"
+                className="lp-forgot"
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+                onClick={() => setForgotOpen(true)}
+              >
                 {t("auth.login.forgot_password_link")}
-              </Link>
+              </button>
+            </Box>
+            <Box className="lp-forgot-wrap" sx={{ marginTop: "6px" }}>
+              <button
+                type="button"
+                className="lp-forgot"
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+                onClick={() => setRegisterOpen(true)}
+              >
+                {t("auth.login.register_link")}
+              </button>
             </Box>
 
             {showResend && (
@@ -348,15 +367,11 @@ export const LoginPage: React.FC = () => {
                 </button>
               </Box>
             )}
-
-            <Box className="lp-forgot-wrap">
-              <Link to="/register" className="lp-forgot">
-                {t("auth.login.register_link")}
-              </Link>
-            </Box>
           </Box>
         </Box>
       </Box>
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
+      <RegisterModal open={registerOpen} onClose={() => setRegisterOpen(false)} />
     </Box>
   );
 };
