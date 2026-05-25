@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
 
@@ -73,6 +74,7 @@ public class AuditLogBackgroundWriter : BackgroundService
 {
     private readonly AuditLogQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ISystemScope _systemScope;
     private readonly ILogger<AuditLogBackgroundWriter> _logger;
     private const int BatchSize = 100;
     private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(2);
@@ -80,10 +82,12 @@ public class AuditLogBackgroundWriter : BackgroundService
     public AuditLogBackgroundWriter(
         AuditLogQueue queue,
         IServiceScopeFactory scopeFactory,
+        ISystemScope systemScope,
         ILogger<AuditLogBackgroundWriter> logger)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
+        _systemScope = systemScope;
         _logger = logger;
     }
 
@@ -134,6 +138,7 @@ public class AuditLogBackgroundWriter : BackgroundService
     {
         try
         {
+            using IDisposable elevation = _systemScope.Enter();
             using IServiceScope scope = _scopeFactory.CreateScope();
             SentinelContext context = scope.ServiceProvider.GetRequiredService<SentinelContext>();
             context.AuditLogs.AddRange(logs);

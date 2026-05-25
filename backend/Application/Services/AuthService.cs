@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
@@ -13,13 +14,15 @@ public class AuthService
     private readonly TokenService _tokenService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly ISystemScope _systemScope;
 
-    public AuthService(SentinelContext context, TokenService tokenService, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(SentinelContext context, TokenService tokenService, IConfiguration configuration, ILogger<AuthService> logger, ISystemScope systemScope)
     {
         _context = context;
         _tokenService = tokenService;
         _configuration = configuration;
         _logger = logger;
+        _systemScope = systemScope;
     }
 
     private int RefreshTokenExpirationDays =>
@@ -27,6 +30,8 @@ public class AuthService
 
     public async Task<PasswordResetToken?> CreatePasswordResetTokenAsync(string email)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         User? user = await _context.Users
             .FirstOrDefaultAsync(u => u.Email == email.ToLower() && u.IsActive);
 
@@ -53,6 +58,8 @@ public class AuthService
 
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         PasswordResetToken? resetToken = await _context.PasswordResetTokens
             .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
 
@@ -77,6 +84,8 @@ public class AuthService
 
     public async Task<LoginResponse?> LoginAsync(string email, string password)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         string normalizedEmail = email.ToLower();
         List<User> candidates = await _context.Users
             .Where(u => u.Email == normalizedEmail && u.IsActive)
@@ -130,6 +139,8 @@ public class AuthService
 
     public async Task<LoginResponse?> RefreshTokenAsync(string refreshToken)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         string tokenHash = _tokenService.HashRefreshToken(refreshToken);
 
         User? user = await _context.Users

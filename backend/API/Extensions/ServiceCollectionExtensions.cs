@@ -333,6 +333,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddSingleton<ISystemScope, SystemScope>();
         return services;
     }
 

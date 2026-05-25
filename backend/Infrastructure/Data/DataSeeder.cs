@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Infrastructure.Data;
@@ -8,15 +9,19 @@ public class DataSeeder
 {
     private readonly SentinelContext _context;
     private readonly ILogger<DataSeeder> _logger;
+    private readonly ISystemScope _systemScope;
 
-    public DataSeeder(SentinelContext context, ILogger<DataSeeder> logger)
+    public DataSeeder(SentinelContext context, ILogger<DataSeeder> logger, ISystemScope systemScope)
     {
         _context = context;
         _logger = logger;
+        _systemScope = systemScope;
     }
 
     public async Task SeedAsync()
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         if (await _context.Organizations.AnyAsync())
             return;
 

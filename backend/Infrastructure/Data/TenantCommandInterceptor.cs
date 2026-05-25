@@ -6,11 +6,14 @@ namespace Sentinel.Infrastructure.Data;
 
 public class TenantCommandInterceptor : DbCommandInterceptor
 {
+    private const string SystemSentinel = "system";
     private readonly ITenantContext _tenant;
+    private readonly ISystemScope _systemScope;
 
-    public TenantCommandInterceptor(ITenantContext tenant)
+    public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope)
     {
         _tenant = tenant;
+        _systemScope = systemScope;
     }
 
     public override InterceptionResult<DbDataReader> ReaderExecuting(
@@ -70,23 +73,34 @@ public class TenantCommandInterceptor : DbCommandInterceptor
         return await base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
     }
 
+    private string ResolveOrgValue() =>
+        _systemScope.IsActive
+            ? SystemSentinel
+            : _tenant.OrganizationId?.ToString() ?? string.Empty;
+
     private void SetTenantConfig(DbCommand command)
     {
         if (command.Connection == null) return;
-        string orgValue = _tenant.OrganizationId?.ToString() ?? string.Empty;
         using DbCommand setCmd = command.Connection.CreateCommand();
         setCmd.Transaction = command.Transaction;
-        setCmd.CommandText = $"SET app.current_org = '{orgValue}'";
+        setCmd.CommandText = "SELECT set_config('app.current_org', @org, false)";
+        DbParameter parameter = setCmd.CreateParameter();
+        parameter.ParameterName = "@org";
+        parameter.Value = ResolveOrgValue();
+        setCmd.Parameters.Add(parameter);
         setCmd.ExecuteNonQuery();
     }
 
     private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
     {
         if (command.Connection == null) return;
-        string orgValue = _tenant.OrganizationId?.ToString() ?? string.Empty;
         await using DbCommand setCmd = command.Connection.CreateCommand();
         setCmd.Transaction = command.Transaction;
-        setCmd.CommandText = $"SET app.current_org = '{orgValue}'";
+        setCmd.CommandText = "SELECT set_config('app.current_org', @org, false)";
+        DbParameter parameter = setCmd.CreateParameter();
+        parameter.ParameterName = "@org";
+        parameter.Value = ResolveOrgValue();
+        setCmd.Parameters.Add(parameter);
         await setCmd.ExecuteNonQueryAsync(cancellationToken);
     }
 }

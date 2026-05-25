@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
@@ -23,12 +24,14 @@ public class UsersController : BaseController
     private readonly SentinelContext _context;
     private readonly IBackgroundJobClient _jobs;
     private readonly IAuditLogService _auditLog;
+    private readonly ISystemScope _systemScope;
 
-    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog)
+    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog, ISystemScope systemScope)
     {
         _context = context;
         _jobs = jobs;
         _auditLog = auditLog;
+        _systemScope = systemScope;
     }
 
     [HttpGet]
@@ -152,6 +155,8 @@ public class UsersController : BaseController
     [EnableRateLimiting("invitation")]
     public async Task<IActionResult> AcceptInvitation([FromBody] AcceptInvitationDto dto)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         UserInvitation? invitation = await _context.UserInvitations
             .FirstOrDefaultAsync(i => i.Token == dto.Token && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
 
