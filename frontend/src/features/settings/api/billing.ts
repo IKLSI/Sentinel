@@ -20,6 +20,7 @@ export interface PlanOption {
   maxProjects: number
   maxMembers: number
   maxScansPerMonth: number
+  priceMonthly: number
   isCurrent: boolean
 }
 

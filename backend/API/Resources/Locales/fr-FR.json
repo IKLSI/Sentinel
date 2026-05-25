@@ -750,5 +750,22 @@
   "settings.billing.upgrade_to": "Passer à",
   "settings.billing.checkout_success": "Abonnement activé. Merci !",
   "settings.billing.checkout_cancel": "Paiement annulé.",
-  "settings.billing.error_generic": "Le service de facturation est momentanément indisponible."
+  "settings.billing.error_generic": "Le service de facturation est momentanément indisponible.",
+  "settings.billing.plan_free": "Gratuit",
+  "settings.billing.plan_price_monthly": "{price} € / mois",
+  "settings.billing.plan_recommended": "Recommandé",
+  "settings.billing.status_active": "Actif",
+  "settings.billing.status_trialing": "Essai gratuit",
+  "settings.billing.status_past_due": "Paiement en retard",
+  "settings.billing.status_canceled": "Annulé",
+  "settings.billing.status_incomplete": "Incomplet",
+  "settings.billing.status_none": "Aucun abonnement",
+  "settings.billing.quota_near_limit": "Proche de la limite",
+  "settings.billing.period_ends_on": "fin le",
+  "settings.billing.days_remaining": "{count} jour restant",
+  "settings.billing.days_remaining_plural": "{count} jours restants",
+  "settings.billing.alert_past_due": "Votre paiement n'a pas abouti. Mettez à jour votre moyen de paiement pour éviter l'interruption du service.",
+  "settings.billing.alert_canceled": "Abonnement annulé. Accès disponible jusqu'au {date}.",
+  "settings.billing.alert_trialing": "Essai gratuit — se termine le {date}.",
+  "settings.billing.reactivate": "Réactiver"
 }

@@ -750,5 +750,22 @@
   "settings.billing.upgrade_to": "Upgrade to",
   "settings.billing.checkout_success": "Subscription activated. Thank you!",
   "settings.billing.checkout_cancel": "Payment canceled.",
-  "settings.billing.error_generic": "The billing service is temporarily unavailable."
+  "settings.billing.error_generic": "The billing service is temporarily unavailable.",
+  "settings.billing.plan_free": "Free",
+  "settings.billing.plan_price_monthly": "€{price} / month",
+  "settings.billing.plan_recommended": "Recommended",
+  "settings.billing.status_active": "Active",
+  "settings.billing.status_trialing": "Free trial",
+  "settings.billing.status_past_due": "Past due",
+  "settings.billing.status_canceled": "Canceled",
+  "settings.billing.status_incomplete": "Incomplete",
+  "settings.billing.status_none": "No subscription",
+  "settings.billing.quota_near_limit": "Near limit",
+  "settings.billing.period_ends_on": "ends on",
+  "settings.billing.days_remaining": "{count} day left",
+  "settings.billing.days_remaining_plural": "{count} days left",
+  "settings.billing.alert_past_due": "Your payment failed. Update your payment method to avoid service interruption.",
+  "settings.billing.alert_canceled": "Subscription canceled. Access available until {date}.",
+  "settings.billing.alert_trialing": "Free trial — ends on {date}.",
+  "settings.billing.reactivate": "Reactivate"
 }

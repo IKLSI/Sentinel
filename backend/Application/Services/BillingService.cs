@@ -48,6 +48,7 @@ public class BillingService
             MaxProjects = kvp.Value.MaxProjects,
             MaxMembers = kvp.Value.MaxMembers,
             MaxScansPerMonth = kvp.Value.MaxScansPerMonth,
+            PriceMonthly = kvp.Value.PriceMonthly,
             IsCurrent = kvp.Key == currentTier
         }).ToList();
     }

@@ -23,6 +23,7 @@ public class PlanOptionDto
     public int MaxProjects { get; set; }
     public int MaxMembers { get; set; }
     public int MaxScansPerMonth { get; set; }
+    public decimal PriceMonthly { get; set; }
     public bool IsCurrent { get; set; }
 }
 
