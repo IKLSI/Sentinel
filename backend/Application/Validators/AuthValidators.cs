@@ -62,3 +62,50 @@ public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequ
         RuleFor(x => x.Password).StrongPassword();
     }
 }
+
+public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
+{
+    public RegisterRequestValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("L'email est requis")
+            .EmailAddress().WithMessage("Format d'email invalide")
+            .MaximumLength(254);
+
+        RuleFor(x => x.Password).StrongPassword();
+
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("Le prénom est requis")
+            .MaximumLength(100);
+
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Le nom est requis")
+            .MaximumLength(100);
+
+        RuleFor(x => x.OrganizationName)
+            .NotEmpty().WithMessage("Le nom de l'organisation est requis")
+            .MinimumLength(2).WithMessage("Le nom de l'organisation doit contenir au moins 2 caractères")
+            .MaximumLength(200);
+    }
+}
+
+public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
+{
+    public VerifyEmailRequestValidator()
+    {
+        RuleFor(x => x.Token)
+            .NotEmpty().WithMessage("Le token est requis")
+            .MaximumLength(200);
+    }
+}
+
+public class ResendVerificationRequestValidator : AbstractValidator<ResendVerificationRequest>
+{
+    public ResendVerificationRequestValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("L'email est requis")
+            .EmailAddress().WithMessage("Format d'email invalide")
+            .MaximumLength(254);
+    }
+}

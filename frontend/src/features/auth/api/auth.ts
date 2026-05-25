@@ -23,3 +23,23 @@ export const forgotPassword = async (email: string): Promise<void> => {
 export const resetPassword = async (token: string, password: string): Promise<void> => {
   await apiClient.post('/api/auth/reset-password', { token, password })
 }
+
+export interface RegisterPayload {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  organizationName: string
+}
+
+export const register = async (payload: RegisterPayload): Promise<void> => {
+  await apiClient.post('/api/auth/register', payload)
+}
+
+export const verifyEmail = async (token: string): Promise<void> => {
+  await apiClient.post('/api/auth/verify-email', { token })
+}
+
+export const resendVerification = async (email: string): Promise<void> => {
+  await apiClient.post('/api/auth/resend-verification', { email })
+}

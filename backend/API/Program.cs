@@ -39,7 +39,8 @@ public static class Program
             .AddAppHealthChecks()
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
-            .AddDataProtection();
+            .AddStripe(builder.Configuration)
+            .AddDataProtectionPolicy();
 
         WebApplication app = builder.Build();
 

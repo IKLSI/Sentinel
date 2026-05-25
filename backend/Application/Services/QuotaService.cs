@@ -1,0 +1,110 @@
+using Microsoft.EntityFrameworkCore;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.DTOs.Billing;
+using Sentinel.Domain.Models;
+using Sentinel.Infrastructure.Data;
+
+namespace Sentinel.Application.Services;
+
+public class QuotaService
+{
+    private readonly SentinelContext _context;
+    private readonly ISystemScope _systemScope;
+
+    public QuotaService(SentinelContext context, ISystemScope systemScope)
+    {
+        _context = context;
+        _systemScope = systemScope;
+    }
+
+    public static bool ResetScanPeriodIfElapsed(Organization organization)
+    {
+        if (DateTime.UtcNow >= organization.ScanCountPeriodStart.AddMonths(1))
+        {
+            organization.MonthlyScanCount = 0;
+            organization.ScanCountPeriodStart = DateTime.UtcNow;
+            return true;
+        }
+        return false;
+    }
+
+    public async Task EnsureCanAddProjectAsync(Guid organizationId)
+    {
+        PlanLimits limits = await GetLimitsAsync(organizationId);
+        int current = await _context.TechProjects.CountAsync(p => p.OrganizationId == organizationId);
+
+        if (!PlanLimits.IsWithin(current, limits.MaxProjects))
+            throw new QuotaExceededException(
+                $"Limite de projets atteinte pour votre plan ({limits.MaxProjects}). Passez à un plan supérieur pour en ajouter davantage.");
+    }
+
+    public async Task EnsureCanInviteMemberAsync(Guid organizationId)
+    {
+        PlanLimits limits = await GetLimitsAsync(organizationId);
+
+        int activeMembers = await _context.Users.CountAsync(u => u.OrganizationId == organizationId && u.IsActive);
+        int pendingInvitations = await _context.UserInvitations.CountAsync(i =>
+            i.OrganizationId == organizationId && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
+
+        if (!PlanLimits.IsWithin(activeMembers + pendingInvitations, limits.MaxMembers))
+            throw new QuotaExceededException(
+                $"Limite de membres atteinte pour votre plan ({limits.MaxMembers}). Passez à un plan supérieur pour inviter davantage de membres.");
+    }
+
+    public async Task EnsureCanScanAsync(Guid organizationId)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        Organization? organization = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId);
+        if (organization == null) throw new KeyNotFoundException();
+
+        if (ResetScanPeriodIfElapsed(organization))
+            await _context.SaveChangesAsync();
+
+        PlanLimits limits = PlanLimits.For(organization.PlanTier);
+
+        if (!PlanLimits.IsWithin(organization.MonthlyScanCount, limits.MaxScansPerMonth))
+            throw new QuotaExceededException(
+                $"Limite de scans mensuels atteinte pour votre plan ({limits.MaxScansPerMonth}). Le compteur se réinitialise le {organization.ScanCountPeriodStart.AddMonths(1):dd/MM/yyyy}.");
+    }
+
+    public async Task<BillingStatusDto> GetStatusAsync(Guid organizationId)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        Organization? organization = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId);
+        if (organization == null) throw new KeyNotFoundException();
+
+        if (ResetScanPeriodIfElapsed(organization))
+            await _context.SaveChangesAsync();
+
+        PlanLimits limits = PlanLimits.For(organization.PlanTier);
+        int projects = await _context.TechProjects.CountAsync(p => p.OrganizationId == organizationId);
+        int members = await _context.Users.CountAsync(u => u.OrganizationId == organizationId && u.IsActive);
+
+        bool active = organization.SubscriptionStatus is SubscriptionStatus.Active or SubscriptionStatus.Trialing;
+
+        return new BillingStatusDto
+        {
+            PlanTier = organization.PlanTier.ToString(),
+            SubscriptionStatus = organization.SubscriptionStatus.ToString(),
+            CurrentPeriodEnd = organization.CurrentPeriodEnd,
+            HasActiveSubscription = active,
+            Projects = new PlanQuotaDto { Used = projects, Limit = limits.MaxProjects },
+            Members = new PlanQuotaDto { Used = members, Limit = limits.MaxMembers },
+            Scans = new PlanQuotaDto { Used = organization.MonthlyScanCount, Limit = limits.MaxScansPerMonth }
+        };
+    }
+
+    private async Task<PlanLimits> GetLimitsAsync(Guid organizationId)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        PlanTier tier = await _context.Organizations
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.PlanTier)
+            .FirstOrDefaultAsync();
+
+        return PlanLimits.For(tier);
+    }
+}

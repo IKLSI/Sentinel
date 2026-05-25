@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Infrastructure.Data;
 
-public class SentinelContext : DbContext
+public class SentinelContext : DbContext, IDataProtectionKeyContext
 {
     private readonly ITenantContext? _tenant;
 
@@ -27,10 +29,12 @@ public class SentinelContext : DbContext
     public DbSet<Runtime> Runtimes => Set<Runtime>();
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +44,7 @@ public class SentinelContext : DbContext
         ConfigureUser(modelBuilder);
         ConfigureUserInvitation(modelBuilder);
         ConfigurePasswordResetToken(modelBuilder);
+        ConfigureEmailVerificationToken(modelBuilder);
         ConfigureTicketStatus(modelBuilder);
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
@@ -123,6 +128,24 @@ public class SentinelContext : DbContext
             entity.Property(e => e.GitlabAccountLogin).HasMaxLength(100);
             entity.HasIndex(e => e.GithubAccountId).IsUnique().HasFilter("\"GithubAccountId\" IS NOT NULL");
             entity.HasIndex(e => e.GitlabAccountId).IsUnique().HasFilter("\"GitlabAccountId\" IS NOT NULL");
+            entity.Property(e => e.PlanTier).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.SubscriptionStatus).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.StripeCustomerId).HasMaxLength(255);
+            entity.Property(e => e.StripeSubscriptionId).HasMaxLength(255);
+            entity.HasIndex(e => e.StripeCustomerId).IsUnique().HasFilter("\"StripeCustomerId\" IS NOT NULL");
+            entity.HasIndex(e => e.StripeSubscriptionId).IsUnique().HasFilter("\"StripeSubscriptionId\" IS NOT NULL");
+        });
+    }
+
+    private static void ConfigureEmailVerificationToken(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmailVerificationToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.Email);
         });
     }
 

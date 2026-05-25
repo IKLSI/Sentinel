@@ -19,6 +19,16 @@ const ForgotPasswordPage = lazy(() =>
     default: m.ForgotPasswordPage,
   })),
 );
+const RegisterPage = lazy(() =>
+  import("../features/auth/pages/RegisterPage").then((m) => ({
+    default: m.RegisterPage,
+  })),
+);
+const VerifyEmailPage = lazy(() =>
+  import("../features/auth/pages/VerifyEmailPage").then((m) => ({
+    default: m.VerifyEmailPage,
+  })),
+);
 const ResetPasswordPage = lazy(() =>
   import("../features/auth/pages/ResetPasswordPage").then((m) => ({
     default: m.ResetPasswordPage,
@@ -111,6 +121,8 @@ export const AppRoutes: React.FC = () => (
   <Suspense fallback={<FullScreenLoader />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

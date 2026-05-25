@@ -139,6 +139,63 @@ public class AuthController : BaseController
         return Ok(new { message = "Mot de passe réinitialisé avec succès." });
     }
 
+    [HttpPost("register")]
+    [EnableRateLimiting("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        EmailVerificationToken token;
+        try
+        {
+            token = await _authService.RegisterAsync(request);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+
+        BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Id));
+
+        await _auditLog.LogAsync(
+            AuditAction.OrganizationRegistered,
+            entityType: "Organization");
+
+        return Accepted(new { message = "Compte créé. Consultez votre boîte de réception pour activer votre compte." });
+    }
+
+    [HttpPost("verify-email")]
+    [EnableRateLimiting("password-reset")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+    {
+        bool success = await _authService.VerifyEmailAsync(request.Token);
+
+        if (!success)
+            return BadRequest(new { message = "Le lien de vérification est invalide ou expiré." });
+
+        await _auditLog.LogAsync(
+            AuditAction.EmailVerified,
+            entityType: "User");
+
+        return Ok(new { message = "Email vérifié avec succès. Vous pouvez maintenant vous connecter." });
+    }
+
+    [HttpPost("resend-verification")]
+    [EnableRateLimiting("password-reset")]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+    {
+        EmailVerificationToken? token = await _authService.ResendVerificationAsync(request.Email);
+
+        if (token != null)
+        {
+            BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Id));
+
+            await _auditLog.LogAsync(
+                AuditAction.EmailVerificationResent,
+                entityType: "User");
+        }
+
+        return Ok(new { message = "Si un compte non vérifié existe pour cet email, un nouveau lien d'activation a été envoyé." });
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<UserProfile>> GetCurrentUser()

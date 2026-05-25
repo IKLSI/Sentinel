@@ -25,13 +25,15 @@ public class UsersController : BaseController
     private readonly IBackgroundJobClient _jobs;
     private readonly IAuditLogService _auditLog;
     private readonly ISystemScope _systemScope;
+    private readonly QuotaService _quotaService;
 
-    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog, ISystemScope systemScope)
+    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog, ISystemScope systemScope, QuotaService quotaService)
     {
         _context = context;
         _jobs = jobs;
         _auditLog = auditLog;
         _systemScope = systemScope;
+        _quotaService = quotaService;
     }
 
     [HttpGet]
@@ -120,6 +122,8 @@ public class UsersController : BaseController
         if (pendingInvitation)
             return Conflict(new { message = "Une invitation est déjà en attente pour cet email" });
 
+        await _quotaService.EnsureCanInviteMemberAsync(organizationId.Value);
+
         if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
             return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Developer" });
 
@@ -178,6 +182,7 @@ public class UsersController : BaseController
             LastName = dto.LastName,
             Role = invitation.Role,
             IsActive = true,
+            IsEmailVerified = true,
             CreatedAt = DateTime.UtcNow
         };
 

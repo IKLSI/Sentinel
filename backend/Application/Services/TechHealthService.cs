@@ -172,6 +172,13 @@ public class TechHealthService
         foreach (Dependency dep in project.Dependencies)
             dep.ScannedAt = DateTime.UtcNow;
 
+        Organization? scanOrg = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == project.OrganizationId);
+        if (scanOrg != null)
+        {
+            QuotaService.ResetScanPeriodIfElapsed(scanOrg);
+            scanOrg.MonthlyScanCount++;
+        }
+
         await _context.SaveChangesAsync();
 
         await TrySendVulnerabilityAlertAsync(project, isFirstScan, previousCveIds);

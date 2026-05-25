@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 
-export type Tab = "members" | "organisation" | "jobs";
+export type Tab = "members" | "organisation" | "jobs" | "billing";
 
 export const TIMEZONE_VALUES = [
   "Europe/Paris",

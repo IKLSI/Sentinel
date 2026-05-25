@@ -8,6 +8,7 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -230,16 +231,35 @@ public static class ServiceCollectionExtensions
         services.AddScoped<DashboardService>();
         services.AddScoped<DataSeeder>();
         services.AddScoped<TokenProtector>();
+        services.AddScoped<QuotaService>();
+        services.AddScoped<BillingService>();
 
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
+        services.AddTransient<SendEmailVerificationJob>();
 
         services.AddSingleton<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddStripe(this IServiceCollection services, IConfiguration configuration)
+    {
+        string apiKey = configuration["Stripe:SecretKey"] ?? string.Empty;
+        if (string.IsNullOrEmpty(apiKey)) apiKey = "sk_test_placeholder";
+        services.AddSingleton<Stripe.IStripeClient>(new Stripe.StripeClient(apiKey));
+        return services;
+    }
+
+    public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services)
+    {
+        services.AddDataProtection()
+            .SetApplicationName("Sentinel")
+            .PersistKeysToDbContext<SentinelContext>();
         return services;
     }
 
@@ -441,6 +461,17 @@ public static class ServiceCollectionExtensions
                     {
                         PermitLimit = 10,
                         Window = TimeSpan.FromMinutes(15),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
+            options.AddPolicy("register", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(60),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                         QueueLimit = 0
                     }));

@@ -111,6 +111,11 @@ public class AuthService
             return null;
         }
 
+        if (!user.IsEmailVerified)
+        {
+            throw new EmailNotVerifiedException("Votre adresse email n'a pas encore été vérifiée. Consultez votre boîte de réception ou demandez un nouveau lien.");
+        }
+
         string accessToken = _tokenService.GenerateAccessToken(user);
         string refreshToken = _tokenService.GenerateRefreshToken();
 
@@ -205,6 +210,142 @@ public class AuthService
         user.RefreshTokenExpiry = null;
         await _context.SaveChangesAsync();
     }
+
+    public async Task<EmailVerificationToken> RegisterAsync(RegisterRequest request)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        string normalizedEmail = request.Email.ToLower().Trim();
+
+        bool emailExists = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
+        if (emailExists)
+            throw new InvalidOperationException("Un compte existe déjà avec cette adresse email.");
+
+        DateTime now = DateTime.UtcNow;
+
+        Organization organization = new Organization
+        {
+            Name = request.OrganizationName.Trim(),
+            Slug = await GenerateUniqueSlugAsync(request.OrganizationName),
+            Timezone = "Europe/Paris",
+            PlanTier = PlanTier.Free,
+            SubscriptionStatus = SubscriptionStatus.None,
+            ScanCountPeriodStart = now,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        await _context.Organizations.AddAsync(organization);
+
+        User admin = new User
+        {
+            OrganizationId = organization.Id,
+            Email = normalizedEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Role = UserRole.Admin,
+            IsActive = true,
+            IsEmailVerified = false,
+            CreatedAt = now
+        };
+        await _context.Users.AddAsync(admin);
+
+        await _context.TicketStatuses.AddRangeAsync(BuildDefaultStatuses(organization.Id));
+
+        EmailVerificationToken verificationToken = new EmailVerificationToken
+        {
+            Email = normalizedEmail,
+            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            ExpiresAt = now.AddHours(48)
+        };
+        await _context.EmailVerificationTokens.AddAsync(verificationToken);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Nouvelle organisation enregistrée {Slug} par {Email}", organization.Slug, normalizedEmail);
+        return verificationToken;
+    }
+
+    public async Task<bool> VerifyEmailAsync(string token)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        EmailVerificationToken? verificationToken = await _context.EmailVerificationTokens
+            .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+
+        if (verificationToken == null) return false;
+
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == verificationToken.Email);
+        if (user == null) return false;
+
+        user.IsEmailVerified = true;
+        verificationToken.IsUsed = true;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Email vérifié pour {Email}", user.Email);
+        return true;
+    }
+
+    public async Task<EmailVerificationToken?> ResendVerificationAsync(string email)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        string normalizedEmail = email.ToLower().Trim();
+
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        if (user == null || user.IsEmailVerified) return null;
+
+        await _context.EmailVerificationTokens
+            .Where(t => t.Email == normalizedEmail && !t.IsUsed)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true));
+
+        EmailVerificationToken verificationToken = new EmailVerificationToken
+        {
+            Email = normalizedEmail,
+            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            ExpiresAt = DateTime.UtcNow.AddHours(48)
+        };
+
+        await _context.EmailVerificationTokens.AddAsync(verificationToken);
+        await _context.SaveChangesAsync();
+
+        return verificationToken;
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync(string name)
+    {
+        string baseSlug = Slugify(name);
+        if (string.IsNullOrEmpty(baseSlug)) baseSlug = "org";
+
+        string candidate = baseSlug;
+        int suffix = 2;
+        while (await _context.Organizations.AnyAsync(o => o.Slug == candidate))
+        {
+            candidate = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private static string Slugify(string value)
+    {
+        string lower = value.Trim().ToLowerInvariant();
+        char[] chars = lower.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray();
+        string slug = new string(chars);
+        while (slug.Contains("--")) slug = slug.Replace("--", "-");
+        slug = slug.Trim('-');
+        return slug.Length > 90 ? slug[..90].Trim('-') : slug;
+    }
+
+    private static IEnumerable<TicketStatus> BuildDefaultStatuses(Guid organizationId) => new[]
+    {
+        new TicketStatus { OrganizationId = organizationId, Name = "Nouveau", Color = "var(--accent)", Order = 0, IsDefault = true, IsClosed = false },
+        new TicketStatus { OrganizationId = organizationId, Name = "En cours", Color = "var(--orange)", Order = 1, IsDefault = false, IsClosed = false },
+        new TicketStatus { OrganizationId = organizationId, Name = "En test", Color = "var(--cyan)", Order = 2, IsDefault = false, IsClosed = false },
+        new TicketStatus { OrganizationId = organizationId, Name = "Résolu", Color = "var(--green)", Order = 3, IsDefault = false, IsClosed = true },
+        new TicketStatus { OrganizationId = organizationId, Name = "Fermé", Color = "var(--muted2)", Order = 4, IsDefault = false, IsClosed = true }
+    };
 
     public async Task<User?> GetUserByIdAsync(Guid userId)
     {

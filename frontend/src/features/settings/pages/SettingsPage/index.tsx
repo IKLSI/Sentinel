@@ -3,12 +3,14 @@ import Box from "@mui/material/Box";
 import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
+import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { AuthContext } from "@/features/auth/context/AuthContext";
 import { Tab } from "./helpers";
 import { MembersTab } from "./components/MembersTab";
 import { OrganisationTab } from "./components/OrganisationTab";
 import { JobsTab } from "./components/JobsTab";
+import { BillingTab } from "./components/BillingTab";
 import { InviteModal } from "./components/InviteModal";
 import { SETTINGS_OPEN_INVITE_EVENT } from "@/components/CommandPalette";
 
@@ -26,7 +28,10 @@ export const SettingsPage: React.FC = () => {
       },
       { id: "members", label: t("settings.tab.members"), icon: PeopleOutlined },
       ...(isAdmin
-        ? [{ id: "jobs" as Tab, label: t("settings.tab.jobs"), icon: TerminalOutlined }]
+        ? [
+            { id: "jobs" as Tab, label: t("settings.tab.jobs"), icon: TerminalOutlined },
+            { id: "billing" as Tab, label: t("settings.tab.billing"), icon: CreditCardOutlined },
+          ]
         : []),
     ],
     [t, isAdmin],
@@ -127,6 +132,7 @@ export const SettingsPage: React.FC = () => {
 
           {activeTab === "organisation" && <OrganisationTab />}
           {activeTab === "jobs" && <JobsTab />}
+          {activeTab === "billing" && <BillingTab />}
         </Box>
       </Box>
 

@@ -44,8 +44,9 @@ public class TechHealthController : BaseController
     private readonly IAuditLogService _auditLog;
     private readonly RepositoryHostClient _repositoryHostClient;
     private readonly TokenProtector _tokenProtector;
+    private readonly QuotaService _quotaService;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, QuotaService quotaService)
     {
         _context = context;
         _techHealthService = techHealthService;
@@ -54,6 +55,7 @@ public class TechHealthController : BaseController
         _auditLog = auditLog;
         _repositoryHostClient = repositoryHostClient;
         _tokenProtector = tokenProtector;
+        _quotaService = quotaService;
     }
 
     [HttpGet("projects/available-repos")]
@@ -195,6 +197,8 @@ public class TechHealthController : BaseController
         if (!RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
             return BadRequest(new { message = "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com" });
 
+        await _quotaService.EnsureCanAddProjectAsync(organizationId.Value);
+
         if (!Enum.TryParse<RepositoryType>(dto.RepositoryType, true, out RepositoryType repoType))
             repoType = RepositoryType.GitHub;
 
@@ -266,6 +270,8 @@ public class TechHealthController : BaseController
 
         if (!belongs)
             return NotFound(new { message = "Projet introuvable" });
+
+        await _quotaService.EnsureCanScanAsync(organizationId.Value);
 
         _backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectAsync(id));
 

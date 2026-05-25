@@ -7,6 +7,8 @@ import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
+import { resendVerification } from "../api/auth";
+import { extractApiError } from "../../../utils/apiError";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -18,6 +20,7 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [showResend, setShowResend] = useState(false);
   const [mounted, setMounted] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -40,11 +43,30 @@ export const LoginPage: React.FC = () => {
     try {
       const loggedUser = await login(email, password);
       navigate(loggedUser.role === 'Client' ? '/tickets' : '/');
-    } catch {
-      setHasError(true);
-      showToast(t("auth.login.invalid_credentials"), "error");
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 403) {
+        setShowResend(true);
+        showToast(extractApiError(err, t("auth.login.email_not_verified")), "warning");
+      } else {
+        setHasError(true);
+        showToast(t("auth.login.invalid_credentials"), "error");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      showToast(t("auth.login.email_required_for_resend"), "warning");
+      return;
+    }
+    try {
+      await resendVerification(email);
+      showToast(t("auth.login.resend_done"), "success");
+    } catch (err) {
+      showToast(extractApiError(err, t("auth.login.invalid_credentials")), "error");
     }
   };
 
@@ -299,6 +321,25 @@ export const LoginPage: React.FC = () => {
             <Box className="lp-forgot-wrap">
               <Link to="/forgot-password" className="lp-forgot">
                 {t("auth.login.forgot_password_link")}
+              </Link>
+            </Box>
+
+            {showResend && (
+              <Box className="lp-forgot-wrap">
+                <button
+                  type="button"
+                  className="lp-forgot"
+                  style={{ background: "none", border: "none", cursor: "pointer" }}
+                  onClick={handleResend}
+                >
+                  {t("auth.login.resend_link")}
+                </button>
+              </Box>
+            )}
+
+            <Box className="lp-forgot-wrap">
+              <Link to="/register" className="lp-forgot">
+                {t("auth.login.register_link")}
               </Link>
             </Box>
           </Box>

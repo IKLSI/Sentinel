@@ -14,6 +14,7 @@ public interface IEmailService
 {
     Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
+    Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl);
     Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
     Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
 }
@@ -123,6 +124,55 @@ public class EmailService : IEmailService
         await client.DisconnectAsync(true);
 
         _logger.LogInformation("Email de réinitialisation de mot de passe envoyé à {Email}", email);
+    }
+
+    public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl)
+    {
+        string verifyUrl = $"{frontendBaseUrl}/verify-email?token={verificationToken}";
+
+        string html = LoadTemplate("email-verification.html")
+            .Replace("{{EMAIL}}", email)
+            .Replace("{{VERIFY_URL}}", verifyUrl);
+
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(
+            _configuration["Email:FromName"] ?? "Sentinel",
+            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+        ));
+        message.To.Add(new MailboxAddress(email, email));
+        message.Subject = "Confirmez votre adresse email Sentinel";
+        message.Body = new BodyBuilder
+        {
+            HtmlBody = html,
+            TextBody = $"""
+                Bienvenue sur Sentinel
+
+                Confirmez votre adresse email pour activer votre compte.
+
+                Lien d'activation : {verifyUrl}
+
+                Ce lien expire dans 48 heures.
+
+                Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.
+                """
+        }.ToMessageBody();
+
+        using SmtpClient client = new SmtpClient();
+
+        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
+        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
+        string username = _configuration["Email:Username"] ?? string.Empty;
+        string password = _configuration["Email:Password"] ?? string.Empty;
+
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+
+        if (!string.IsNullOrEmpty(username))
+            await client.AuthenticateAsync(username, password);
+
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
+
+        _logger.LogInformation("Email de vérification envoyé à {Email}", email);
     }
 
     public async Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl)

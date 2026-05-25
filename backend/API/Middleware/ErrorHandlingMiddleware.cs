@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.Application.Services;
 
 namespace Sentinel.API.Middleware;
 
@@ -34,6 +35,8 @@ public class ErrorHandlingMiddleware
 
         (HttpStatusCode statusCode, string message) = exception switch
         {
+            QuotaExceededException quota => (HttpStatusCode.PaymentRequired, quota.Message),
+            EmailNotVerifiedException notVerified => (HttpStatusCode.Forbidden, notVerified.Message),
             DbUpdateConcurrencyException => (HttpStatusCode.Conflict, "La ressource a été modifiée par une autre opération. Rechargez puis réessayez."),
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Accès non autorisé"),
             KeyNotFoundException => (HttpStatusCode.NotFound, "Ressource introuvable"),

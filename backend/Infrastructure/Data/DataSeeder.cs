@@ -33,6 +33,8 @@ public class DataSeeder
             Name = "Sentinel",
             Slug = "sentinel",
             Timezone = "Europe/Paris",
+            PlanTier = PlanTier.Business,
+            ScanCountPeriodStart = now,
             CreatedAt = now
         };
 
@@ -50,6 +52,7 @@ public class DataSeeder
             LastName = "Sentinel",
             Role = UserRole.Admin,
             IsActive = true,
+            IsEmailVerified = true,
             CreatedAt = now,
             Theme = "dark"
         };

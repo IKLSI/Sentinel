@@ -8,6 +8,10 @@ public enum AuditAction
     PasswordReset,
     TokenRefreshed,
 
+    OrganizationRegistered,
+    EmailVerified,
+    EmailVerificationResent,
+
     UserInvited,
     InvitationAccepted,
     UserUpdated,
@@ -34,7 +38,11 @@ public enum AuditAction
 
     OrganizationUpdated,
     GithubIntegrationSaved,
-    GitlabIntegrationSaved
+    GitlabIntegrationSaved,
+
+    CheckoutStarted,
+    BillingPortalOpened,
+    SubscriptionUpdated
 }
 
 public class AuditLog
