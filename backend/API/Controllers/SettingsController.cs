@@ -88,34 +88,7 @@ public class SettingsController : BaseController
             entityId: orgId.Value,
             jti: GetCurrentJti());
 
-        List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(dto.Token, "github");
-
-        List<string?> existingUrls = await _context.TechProjects
-            .Where(p => p.OrganizationId == orgId.Value)
-            .Select(p => p.RepositoryUrl)
-            .ToListAsync();
-
-        int imported = 0, skipped = 0;
-        foreach ((string name, string url) in repos)
-        {
-            if (existingUrls.Contains(url)) { skipped++; continue; }
-            _context.TechProjects.Add(new TechProject
-            {
-                OrganizationId = orgId.Value,
-                Name = name,
-                RepositoryUrl = url,
-                RepositoryType = RepositoryType.GitHub,
-                ScanFrequency = ScanFrequency.Weekly,
-                HealthScore = 100,
-                HealthGrade = "A",
-            });
-            imported++;
-        }
-
-        if (imported > 0)
-            await _context.SaveChangesAsync();
-
-        return Ok(new ImportResultDto { ImportedCount = imported, SkippedCount = skipped });
+        return NoContent();
     }
 
     [HttpPost("integrations/gitlab")]
@@ -158,34 +131,7 @@ public class SettingsController : BaseController
             entityId: orgId.Value,
             jti: GetCurrentJti());
 
-        List<(string Name, string Url)> repos = await _repositoryHostClient.ListUserRepositoriesAsync(dto.Token, "gitlab");
-
-        List<string?> existingUrls = await _context.TechProjects
-            .Where(p => p.OrganizationId == orgId.Value)
-            .Select(p => p.RepositoryUrl)
-            .ToListAsync();
-
-        int imported = 0, skipped = 0;
-        foreach ((string name, string url) in repos)
-        {
-            if (existingUrls.Contains(url)) { skipped++; continue; }
-            _context.TechProjects.Add(new TechProject
-            {
-                OrganizationId = orgId.Value,
-                Name = name,
-                RepositoryUrl = url,
-                RepositoryType = RepositoryType.GitLab,
-                ScanFrequency = ScanFrequency.Weekly,
-                HealthScore = 100,
-                HealthGrade = "A",
-            });
-            imported++;
-        }
-
-        if (imported > 0)
-            await _context.SaveChangesAsync();
-
-        return Ok(new ImportResultDto { ImportedCount = imported, SkippedCount = skipped });
+        return NoContent();
     }
 
     [HttpGet("organization")]

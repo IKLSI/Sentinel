@@ -186,7 +186,7 @@ export const modalTextareaSx = {
   boxSizing: "border-box",
   maxWidth: "100%",
   minHeight: "80px",
-  maxHeight: "300px",
+  maxHeight: "200px",
 };
 
 export const PRIORITY_ORDER: Record<TicketPriority, number> = {

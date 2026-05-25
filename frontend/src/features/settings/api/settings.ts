@@ -22,22 +22,15 @@ export interface IntegrationSettings {
   hasGitlabToken: boolean
 }
 
-interface ImportResult {
-  importedCount: number
-  skippedCount: number
-}
-
 export const getIntegrationSettings = async (signal?: AbortSignal): Promise<IntegrationSettings> => {
   const response = await apiClient.get<IntegrationSettings>('/api/settings/integrations', { signal })
   return response.data
 }
 
-export const connectGithub = async (token: string): Promise<ImportResult> => {
-  const response = await apiClient.post<ImportResult>('/api/settings/integrations/github', { token })
-  return response.data
+export const connectGithub = async (token: string): Promise<void> => {
+  await apiClient.post('/api/settings/integrations/github', { token })
 }
 
-export const connectGitlab = async (token: string): Promise<ImportResult> => {
-  const response = await apiClient.post<ImportResult>('/api/settings/integrations/gitlab', { token })
-  return response.data
+export const connectGitlab = async (token: string): Promise<void> => {
+  await apiClient.post('/api/settings/integrations/gitlab', { token })
 }

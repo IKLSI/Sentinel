@@ -98,13 +98,10 @@ export const OrganisationTab: React.FC = () => {
     }
     setConnectingGithub(true);
     try {
-      const result = await connectGithub(githubToken.trim());
+      await connectGithub(githubToken.trim());
       setIntegrations((prev) => ({ ...prev, hasGithubToken: true }));
       setGithubToken("");
-      showToast(
-        `${t("settings.toast.github_connected")} — ${result.importedCount} ${t("settings.toast.projects_imported")}`,
-        "success",
-      );
+      showToast(t("settings.toast.github_connected"), "success");
     } catch (err) {
       showToast(extractApiError(err, t("settings.toast.github_error")), "error");
     } finally {
@@ -119,13 +116,10 @@ export const OrganisationTab: React.FC = () => {
     }
     setConnectingGitlab(true);
     try {
-      const result = await connectGitlab(gitlabToken.trim());
+      await connectGitlab(gitlabToken.trim());
       setIntegrations((prev) => ({ ...prev, hasGitlabToken: true }));
       setGitlabToken("");
-      showToast(
-        `${t("settings.toast.gitlab_connected")} — ${result.importedCount} ${t("settings.toast.projects_imported")}`,
-        "success",
-      );
+      showToast(t("settings.toast.gitlab_connected"), "success");
     } catch (err) {
       showToast(extractApiError(err, t("settings.toast.gitlab_error")), "error");
     } finally {
