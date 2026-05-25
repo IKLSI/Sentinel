@@ -203,6 +203,7 @@ public class SentinelContext : DbContext
         modelBuilder.Entity<Ticket>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Priority).HasConversion<string>();
             entity.Property(e => e.Type).HasConversion<string>();
@@ -295,6 +296,7 @@ public class SentinelContext : DbContext
         modelBuilder.Entity<TimeEntry>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             entity.Property(e => e.Title).HasMaxLength(500);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.HasIndex(e => e.UserId);
@@ -326,6 +328,7 @@ public class SentinelContext : DbContext
         modelBuilder.Entity<TechProject>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.RepositoryType).HasConversion<string>();
             entity.Property(e => e.ScanFrequency).HasConversion<string>();

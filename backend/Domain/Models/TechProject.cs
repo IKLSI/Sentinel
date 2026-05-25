@@ -20,6 +20,7 @@ public class TechProject
     public string? RepositoryUrl { get; set; }
     public RepositoryType RepositoryType { get; set; } = RepositoryType.GitHub;
     public DateTime? LastScanAt { get; set; }
+    public string? LastScanError { get; set; }
     public int HealthScore { get; set; } = 100;
     public string HealthGrade { get; set; } = "A";
     public ScanFrequency ScanFrequency { get; set; } = ScanFrequency.Weekly;

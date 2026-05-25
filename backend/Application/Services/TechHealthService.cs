@@ -1,10 +1,12 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
@@ -22,6 +24,7 @@ public class TechHealthService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly IConfiguration _configuration;
+    private readonly ISystemScope _systemScope;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
     {
@@ -56,7 +59,8 @@ public class TechHealthService
         TokenProtector tokenProtector,
         IServiceScopeFactory scopeFactory,
         IBackgroundJobClient backgroundJobs,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISystemScope systemScope)
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
@@ -67,10 +71,13 @@ public class TechHealthService
         _scopeFactory = scopeFactory;
         _backgroundJobs = backgroundJobs;
         _configuration = configuration;
+        _systemScope = systemScope;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
     {
+        using IDisposable elevation = _systemScope.Enter();
+
         TechProject? project = await _context.TechProjects
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
@@ -82,6 +89,8 @@ public class TechHealthService
             .Where(v => v.Dependency.TechProjectId == projectId)
             .Select(v => v.CveId)
             .ToHashSetAsync();
+
+        string? scanError = null;
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
@@ -95,22 +104,36 @@ public class TechHealthService
                 tokenOverride = _tokenProtector.Unprotect(stored);
             }
 
-            (List<Dependency> newDeps, List<Runtime> newRuntimes) =
+            ScanOutcome outcome =
                 await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl, tokenOverride);
+            scanError = outcome.Error;
 
-            if (newDeps.Count > 0 || newRuntimes.Count > 0)
+            if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
             {
-                await _context.Vulnerabilities
-                    .Where(v => v.Dependency.TechProjectId == projectId)
-                    .ExecuteDeleteAsync();
-                await _context.Dependencies
-                    .Where(d => d.TechProjectId == projectId)
-                    .ExecuteDeleteAsync();
-                await _context.Runtimes
-                    .Where(r => r.TechProjectId == projectId)
-                    .ExecuteDeleteAsync();
-                await _context.Dependencies.AddRangeAsync(newDeps);
-                await _context.Runtimes.AddRangeAsync(newRuntimes);
+                IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
+                await strategy.ExecuteAsync(async () =>
+                {
+                    await using IDbContextTransaction tx = await _context.Database.BeginTransactionAsync();
+
+                    await _context.Vulnerabilities
+                        .Where(v => v.Dependency.TechProjectId == projectId)
+                        .ExecuteDeleteAsync();
+                    await _context.Dependencies
+                        .Where(d => d.TechProjectId == projectId)
+                        .ExecuteDeleteAsync();
+                    await _context.Runtimes
+                        .Where(r => r.TechProjectId == projectId)
+                        .ExecuteDeleteAsync();
+                    await _context.Dependencies.AddRangeAsync(outcome.Dependencies);
+                    await _context.Runtimes.AddRangeAsync(outcome.Runtimes);
+                    await _context.SaveChangesAsync();
+
+                    await tx.CommitAsync();
+                });
+            }
+            else if (scanError != null)
+            {
+                _logger.LogWarning("Scan de {Url} échoué : {Error} — données existantes conservées", project.RepositoryUrl, scanError);
             }
             else
             {
@@ -144,6 +167,7 @@ public class TechHealthService
         project.HealthScore = CalculateHealthScore(project);
         project.HealthGrade = ScoreToGrade(project.HealthScore);
         project.LastScanAt = DateTime.UtcNow;
+        project.LastScanError = scanError;
 
         foreach (Dependency dep in project.Dependencies)
             dep.ScannedAt = DateTime.UtcNow;
@@ -530,6 +554,7 @@ public class TechHealthService
             RepositoryUrl = project.RepositoryUrl,
             RepositoryType = project.RepositoryType.ToString(),
             LastScanAt = project.LastScanAt,
+            LastScanError = project.LastScanError,
             HealthScore = project.HealthScore,
             HealthGrade = project.HealthGrade,
             ScanFrequency = project.ScanFrequency.ToString(),

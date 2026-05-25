@@ -7,6 +7,7 @@ public class TechProjectDto
     public string? RepositoryUrl { get; set; }
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
+    public string? LastScanError { get; set; }
     public int HealthScore { get; set; }
     public string HealthGrade { get; set; } = string.Empty;
     public string ScanFrequency { get; set; } = string.Empty;

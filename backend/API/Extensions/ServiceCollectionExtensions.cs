@@ -17,6 +17,7 @@ using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
+using Sentinel.API.Http;
 using Sentinel.API.HealthChecks;
 using Sentinel.API.Jobs;
 using Sentinel.API.Services;
@@ -187,24 +188,26 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddHttpRegistryClients(this IServiceCollection services)
     {
+        services.AddTransient<ResilientHttpHandler>();
+
         services.AddHttpClient("OSV", client =>
         {
             client.BaseAddress = new Uri("https://api.osv.dev");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
+            client.Timeout = TimeSpan.FromSeconds(90);
+        }).AddHttpMessageHandler<ResilientHttpHandler>();
 
         services.AddHttpClient("Registry", client =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
+            client.Timeout = TimeSpan.FromSeconds(90);
+        }).AddHttpMessageHandler<ResilientHttpHandler>();
 
         services.AddHttpClient("EolDate", client =>
         {
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.Timeout = TimeSpan.FromSeconds(10);
-        });
+            client.Timeout = TimeSpan.FromSeconds(45);
+        }).AddHttpMessageHandler<ResilientHttpHandler>();
 
         return services;
     }

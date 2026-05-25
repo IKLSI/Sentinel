@@ -3,6 +3,8 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
+public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error);
+
 public class RepositoryScannerService
 {
     private readonly RepositoryHostClient _hostClient;
@@ -22,12 +24,18 @@ public class RepositoryScannerService
         _logger = logger;
     }
 
-    public async Task<(List<Dependency>, List<Runtime>)> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null)
+    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null)
     {
         try
         {
             (string host, string owner, string repo) = ParseRepoUrl(repoUrl);
             List<(string Name, string Url)> files = await _hostClient.ListFilesAsync(host, owner, repo, tokenOverride);
+
+            if (files.Count == 0)
+            {
+                return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
+                    "Aucun fichier accessible dans le dépôt (dépôt privé sans token valide, token expiré, ou limite de requêtes atteinte).");
+            }
 
             List<Dependency> manifestDeps = new();
             List<Dependency> lockDeps = new();
@@ -72,12 +80,13 @@ public class RepositoryScannerService
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyRegistryClient.ComputeStatus(dep.CurrentVersion, dep.LatestVersion);
 
-            return (dedupedDeps, dedupedRuntimes);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Erreur lors du scan du dépôt {RepoUrl}", repoUrl);
-            return (new List<Dependency>(), new List<Runtime>());
+            return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
+                $"Échec du scan du dépôt : {ex.Message}");
         }
     }
 
