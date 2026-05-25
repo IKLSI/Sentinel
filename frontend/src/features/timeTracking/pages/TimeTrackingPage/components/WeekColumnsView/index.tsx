@@ -37,11 +37,13 @@ const OverflowTooltip: React.FC<{ title: string; sx?: object; children: React.Re
 };
 
 const HOUR_HEIGHT = 64;
-const START_HOUR = 7;
-const END_HOUR = 21;
+const START_HOUR = 0;
+const END_HOUR = 24;
 const GUTTER_WIDTH = 44;
 const GRID_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
+const SNAP_MINUTES = 15;
+const SCROLL_VIEWPORT_OFFSET = 3;
 
 interface Props {
   weekStart: Date;
@@ -89,10 +91,35 @@ export const WeekColumnsView: React.FC<Props> = ({
   const t = useT();
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [hover, setHover] = useState<{ dayStr: string; top: number; label: string } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (loading || !isCurrentWeek) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const current = new Date();
+    const target =
+      (current.getHours() + current.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT -
+      el.clientHeight / SCROLL_VIEWPORT_OFFSET;
+    el.scrollTop = Math.max(0, target);
+  }, [loading, isCurrentWeek]);
+
+  const computeSlot = (relY: number) => {
+    const decimalHour = START_HOUR + relY / HOUR_HEIGHT;
+    const snapped = Math.min(
+      Math.max(Math.round((decimalHour * 60) / SNAP_MINUTES) * SNAP_MINUTES, START_HOUR * 60),
+      END_HOUR * 60,
+    );
+    const h = Math.floor(snapped / 60);
+    const m = snapped % 60;
+    const startTime = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    return { startTime, top: (snapped / 60 - START_HOUR) * HOUR_HEIGHT };
+  };
 
   const weekLabel = `${format(weekStart, "dd MMM", { locale: fr })} — ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
 
@@ -290,7 +317,7 @@ export const WeekColumnsView: React.FC<Props> = ({
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex" }}>
+        <Box ref={scrollRef} sx={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex" }}>
           {/* Hours gutter */}
           <Box
             sx={{
@@ -306,7 +333,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                 key={h}
                 sx={{
                   position: "absolute",
-                  top: (h - START_HOUR) * HOUR_HEIGHT - 8,
+                  top: Math.max((h - START_HOUR) * HOUR_HEIGHT - 8, 0),
                   right: "6px",
                   fontSize: "9px",
                   fontWeight: 700,
@@ -361,14 +388,15 @@ export const WeekColumnsView: React.FC<Props> = ({
                     key={dayStr}
                     onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                       const rect = e.currentTarget.getBoundingClientRect();
-                      const relY = e.clientY - rect.top;
-                      const decimalHour = START_HOUR + relY / HOUR_HEIGHT;
-                      const totalMinutes = Math.round(decimalHour * 60 / 15) * 15;
-                      const h = Math.floor(totalMinutes / 60);
-                      const m = totalMinutes % 60;
-                      const startTime = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                      const { startTime } = computeSlot(e.clientY - rect.top);
                       onCreate(dayStr, startTime);
                     }}
+                    onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const { startTime, top } = computeSlot(e.clientY - rect.top);
+                      setHover({ dayStr, top, label: startTime });
+                    }}
+                    onMouseLeave={() => setHover((h) => (h?.dayStr === dayStr ? null : h))}
                     sx={{
                       borderRight: isLast ? "none" : "1px solid var(--border)",
                       background: today ? "color-mix(in srgb, var(--accent) 3%, transparent)" : "transparent",
@@ -407,9 +435,47 @@ export const WeekColumnsView: React.FC<Props> = ({
                       );
                     })()}
 
+                    {/* Hover slot indicator */}
+                    {hover?.dayStr === dayStr && hover.top > 0 && hover.top < GRID_HEIGHT && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: `${hover.top}px`,
+                          left: 0,
+                          right: 0,
+                          transform: "translateY(-50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          px: "6px",
+                          zIndex: 1,
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <Box sx={{ flex: 1, height: "1px", background: "var(--accent)", opacity: 0.45 }} />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            color: "var(--accent)",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            letterSpacing: "0.01em",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {hover.label}
+                          <AddOutlined sx={{ fontSize: 12 }} />
+                        </Box>
+                        <Box sx={{ flex: 1, height: "1px", background: "var(--accent)", opacity: 0.45 }} />
+                      </Box>
+                    )}
+
                     {/* Entry blocks */}
                     <Box
-                      sx={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}
+                      sx={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
                     >
                       {dayEntries.map((entry) => {
                         const blockHeight = Math.max(
@@ -436,6 +502,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                           <Box
                             key={entry.id}
                             onClick={(e: React.MouseEvent) => { e.stopPropagation(); if (canEdit) onEdit(entry); }}
+                            onMouseMove={(e: React.MouseEvent) => { e.stopPropagation(); setHover(null); }}
                             sx={{
                               position: topOffset !== null ? "absolute" : "relative",
                               ...(topOffset !== null

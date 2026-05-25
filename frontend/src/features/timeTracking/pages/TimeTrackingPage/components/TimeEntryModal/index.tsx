@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
+import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AppModal } from "@/components/AppModal";
@@ -11,6 +12,10 @@ import { ProjectDto } from "@/features/techHealth/api/projects";
 import { Ticket } from "@/types";
 import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
 import { DatePickerPopover } from "../DatePickerPopover";
+import { TimePickerPopover } from "../TimePickerPopover";
+
+const TIME_PLACEHOLDER = "--:--";
+type TimeFieldKey = "startTime" | "endTime";
 
 interface Props {
   open: boolean;
@@ -37,6 +42,10 @@ export const TimeEntryModal: React.FC<Props> = ({
 }) => {
   const t = useT();
   const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(null);
+  const [timePicker, setTimePicker] = useState<{
+    field: TimeFieldKey;
+    anchor: HTMLElement;
+  } | null>(null);
 
   const computedMinutes = useMemo(() => {
     if (!form.startTime || !form.endTime) return null;
@@ -117,29 +126,45 @@ export const TimeEntryModal: React.FC<Props> = ({
               onSelect={(d) => onFormChange((f) => ({ ...f, date: d }))}
             />
           </FormField>
-          <FormField label={t("time_tracking.field_start_time")}>
-            <Box
-              component="input"
-              type="time"
-              value={form.startTime}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onFormChange((f) => ({ ...f, startTime: e.target.value }))
-              }
-              sx={{ ...inputSx, accentColor: "var(--accent)" }}
-            />
-          </FormField>
-          <FormField label={t("time_tracking.field_end_time")}>
-            <Box
-              component="input"
-              type="time"
-              value={form.endTime}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onFormChange((f) => ({ ...f, endTime: e.target.value }))
-              }
-              sx={{ ...inputSx, accentColor: "var(--accent)" }}
-            />
-          </FormField>
+          {(
+            [
+              { field: "startTime", label: t("time_tracking.field_start_time") },
+              { field: "endTime", label: t("time_tracking.field_end_time") },
+            ] as const
+          ).map(({ field, label }) => (
+            <FormField key={field} label={label}>
+              <Box
+                component="button"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  setTimePicker({ field, anchor: e.currentTarget })
+                }
+                sx={{
+                  ...inputSx,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontFamily: "var(--font-mono)",
+                  color: form[field] ? "var(--text)" : "var(--muted)",
+                }}
+              >
+                {form[field] || TIME_PLACEHOLDER}
+                <AccessTimeOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
+              </Box>
+            </FormField>
+          ))}
         </Box>
+
+        <TimePickerPopover
+          anchor={timePicker?.anchor ?? null}
+          onClose={() => setTimePicker(null)}
+          value={timePicker ? form[timePicker.field] : ""}
+          onSelect={(time) => {
+            const field = timePicker?.field;
+            if (field) onFormChange((f) => ({ ...f, [field]: time }));
+          }}
+        />
 
         <FormField
           label={
