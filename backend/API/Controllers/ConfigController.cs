@@ -1,5 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.API.Controllers;
 
@@ -9,11 +11,11 @@ namespace Sentinel.API.Controllers;
 [Route("api/v{version:apiVersion}/config")]
 public class ConfigController : BaseController
 {
-    private readonly IConfiguration _configuration;
+    private readonly SupportSettings _support;
 
-    public ConfigController(IConfiguration configuration)
+    public ConfigController(IOptions<SupportSettings> supportOptions)
     {
-        _configuration = configuration;
+        _support = supportOptions.Value;
     }
 
     [HttpGet]
@@ -21,7 +23,7 @@ public class ConfigController : BaseController
     {
         return Ok(new
         {
-            supportEmail = _configuration["Support:Email"] ?? string.Empty,
+            supportEmail = _support.Email,
         });
     }
 }

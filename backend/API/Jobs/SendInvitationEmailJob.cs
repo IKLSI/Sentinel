@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Sentinel.Application.Services;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.API.Jobs;
@@ -10,20 +12,20 @@ public class SendInvitationEmailJob
 {
     private readonly SentinelContext _context;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly FrontendSettings _frontend;
     private readonly ILogger<SendInvitationEmailJob> _logger;
     private readonly ISystemScope _systemScope;
 
     public SendInvitationEmailJob(
         SentinelContext context,
         IEmailService emailService,
-        IConfiguration configuration,
+        IOptions<FrontendSettings> frontendOptions,
         ILogger<SendInvitationEmailJob> logger,
         ISystemScope systemScope)
     {
         _context = context;
         _emailService = emailService;
-        _configuration = configuration;
+        _frontend = frontendOptions.Value;
         _logger = logger;
         _systemScope = systemScope;
     }
@@ -43,13 +45,11 @@ public class SendInvitationEmailJob
             return;
         }
 
-        string frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-
         await _emailService.SendInvitationAsync(
             invitation,
             invitation.Organization.Name,
             invitation.InvitedBy.FullName,
-            frontendBaseUrl
+            _frontend.BaseUrl
         );
     }
 }

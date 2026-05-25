@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.BillingPortal;
 using Stripe.Checkout;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Session = Stripe.Checkout.Session;
 using SessionCreateOptions = Stripe.Checkout.SessionCreateOptions;
@@ -21,23 +22,26 @@ namespace Sentinel.Application.Services;
 public class BillingService
 {
     private readonly SentinelContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly StripeSettings _stripe;
+    private readonly FrontendSettings _frontend;
     private readonly ILogger<BillingService> _logger;
     private readonly ISystemScope _systemScope;
-    private readonly IStripeClient _stripe;
+    private readonly IStripeClient _stripeClient;
 
     public BillingService(
         SentinelContext context,
-        IConfiguration configuration,
+        IOptions<StripeSettings> stripeOptions,
+        IOptions<FrontendSettings> frontendOptions,
         ILogger<BillingService> logger,
         ISystemScope systemScope,
         IStripeClient stripe)
     {
         _context = context;
-        _configuration = configuration;
+        _stripe = stripeOptions.Value;
+        _frontend = frontendOptions.Value;
         _logger = logger;
         _systemScope = systemScope;
-        _stripe = stripe;
+        _stripeClient = stripe;
     }
 
     public List<PlanOptionDto> GetPlans(PlanTier currentTier)
@@ -87,7 +91,7 @@ public class BillingService
             }
         };
 
-        SessionService service = new SessionService(_stripe);
+        SessionService service = new SessionService(_stripeClient);
         Session session = await service.CreateAsync(options);
 
         return session.Url;
@@ -109,7 +113,7 @@ public class BillingService
             ReturnUrl = $"{FrontendBaseUrl()}/settings"
         };
 
-        PortalSessionService service = new PortalSessionService(_stripe);
+        PortalSessionService service = new PortalSessionService(_stripeClient);
         Stripe.BillingPortal.Session session = await service.CreateAsync(options);
 
         return session.Url;
@@ -117,8 +121,10 @@ public class BillingService
 
     public async Task HandleWebhookAsync(string json, string signatureHeader)
     {
-        string webhookSecret = _configuration["Stripe:WebhookSecret"]
-            ?? throw new InvalidOperationException("Stripe:WebhookSecret manquant");
+        string webhookSecret = _stripe.WebhookSecret;
+
+        if (string.IsNullOrEmpty(webhookSecret))
+            throw new InvalidOperationException("Stripe:WebhookSecret manquant");
 
         Event stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, webhookSecret, throwOnApiVersionMismatch: false);
 
@@ -231,7 +237,7 @@ public class BillingService
             Metadata = new Dictionary<string, string> { ["organizationId"] = organization.Id.ToString() }
         };
 
-        CustomerService service = new CustomerService(_stripe);
+        CustomerService service = new CustomerService(_stripeClient);
         Customer customer = await service.CreateAsync(options);
 
         organization.StripeCustomerId = customer.Id;
@@ -244,8 +250,8 @@ public class BillingService
     {
         string? priceId = tier switch
         {
-            PlanTier.Pro => _configuration["Stripe:Prices:Pro"],
-            PlanTier.Business => _configuration["Stripe:Prices:Business"],
+            PlanTier.Pro => _stripe.Prices.Pro,
+            PlanTier.Business => _stripe.Prices.Business,
             _ => null
         };
 
@@ -258,8 +264,8 @@ public class BillingService
     private PlanTier? TierForPriceId(string? priceId)
     {
         if (string.IsNullOrEmpty(priceId)) return null;
-        if (priceId == _configuration["Stripe:Prices:Pro"]) return PlanTier.Pro;
-        if (priceId == _configuration["Stripe:Prices:Business"]) return PlanTier.Business;
+        if (priceId == _stripe.Prices.Pro) return PlanTier.Pro;
+        if (priceId == _stripe.Prices.Business) return PlanTier.Business;
         return null;
     }
 
@@ -273,6 +279,5 @@ public class BillingService
         _ => SubscriptionStatus.None
     };
 
-    private string FrontendBaseUrl() =>
-        (_configuration["Frontend:BaseUrl"] ?? "http://localhost:3000").TrimEnd('/');
+    private string FrontendBaseUrl() => _frontend.BaseUrl.TrimEnd('/');
 }

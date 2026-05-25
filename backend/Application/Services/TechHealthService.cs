@@ -1,12 +1,13 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
@@ -23,7 +24,7 @@ public class TechHealthService
     private readonly TokenProtector _tokenProtector;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IBackgroundJobClient _backgroundJobs;
-    private readonly IConfiguration _configuration;
+    private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
@@ -59,7 +60,7 @@ public class TechHealthService
         TokenProtector tokenProtector,
         IServiceScopeFactory scopeFactory,
         IBackgroundJobClient backgroundJobs,
-        IConfiguration configuration,
+        IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope)
     {
         _context = context;
@@ -70,7 +71,7 @@ public class TechHealthService
         _tokenProtector = tokenProtector;
         _scopeFactory = scopeFactory;
         _backgroundJobs = backgroundJobs;
-        _configuration = configuration;
+        _frontend = frontendOptions.Value;
         _systemScope = systemScope;
     }
 
@@ -207,7 +208,7 @@ public class TechHealthService
 
             Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
             string organizationName = org?.Name ?? string.Empty;
-            string frontendBase = _configuration["Frontend:BaseUrl"] ?? "https://app.sentinel.io";
+            string frontendBase = _frontend.BaseUrl;
             string projectUrl = $"{frontendBase}/projects/{project.Id}";
 
             List<VulnerabilityAlertEntry> entries = newVulns

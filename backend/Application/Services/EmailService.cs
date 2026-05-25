@@ -1,10 +1,11 @@
 using System.Reflection;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Services;
 
@@ -21,12 +22,12 @@ public interface IEmailService
 
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration _configuration;
+    private readonly EmailSettings _email;
     private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(IOptions<EmailSettings> emailOptions, ILogger<EmailService> logger)
     {
-        _configuration = configuration;
+        _email = emailOptions.Value;
         _logger = logger;
     }
 
@@ -48,8 +49,8 @@ public class EmailService : IEmailService
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
-            _configuration["Email:FromName"] ?? "Sentinel",
-            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+            _email.FromName,
+            _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(invitation.Email, invitation.Email));
         message.Subject = $"Invitation à rejoindre {organizationName} sur Sentinel";
@@ -61,10 +62,10 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-        string username = _configuration["Email:Username"] ?? string.Empty;
-        string password = _configuration["Email:Password"] ?? string.Empty;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        int    port     = _email.Port;
+        string username = _email.Username;
+        string password = _email.Password;
 
         await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
 
@@ -87,8 +88,8 @@ public class EmailService : IEmailService
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
-            _configuration["Email:FromName"] ?? "Sentinel",
-            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+            _email.FromName,
+            _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
         message.Subject = "Réinitialisation de votre mot de passe Sentinel";
@@ -110,10 +111,10 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-        string username = _configuration["Email:Username"] ?? string.Empty;
-        string password = _configuration["Email:Password"] ?? string.Empty;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        int    port     = _email.Port;
+        string username = _email.Username;
+        string password = _email.Password;
 
         await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
 
@@ -136,8 +137,8 @@ public class EmailService : IEmailService
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
-            _configuration["Email:FromName"] ?? "Sentinel",
-            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+            _email.FromName,
+            _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
         message.Subject = "Confirmez votre adresse email Sentinel";
@@ -159,10 +160,10 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-        string username = _configuration["Email:Username"] ?? string.Empty;
-        string password = _configuration["Email:Password"] ?? string.Empty;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        int    port     = _email.Port;
+        string username = _email.Username;
+        string password = _email.Password;
 
         await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
 
@@ -190,18 +191,18 @@ public class EmailService : IEmailService
         {
             MimeMessage message = new MimeMessage();
             message.From.Add(new MailboxAddress(
-                _configuration["Email:FromName"] ?? "Sentinel",
-                _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+                _email.FromName,
+                _email.FromAddress
             ));
             message.To.Add(new MailboxAddress(adminEmail, adminEmail));
             message.Subject = $"[{organizationName}] {eventLabel} — {ticketTitle}";
             message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
 
             using SmtpClient client = new SmtpClient();
-            string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-            int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-            string username = _configuration["Email:Username"] ?? string.Empty;
-            string password = _configuration["Email:Password"] ?? string.Empty;
+            string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+            int    port     = _email.Port;
+            string username = _email.Username;
+            string password = _email.Password;
             await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
             if (!string.IsNullOrEmpty(username))
                 await client.AuthenticateAsync(username, password);
@@ -252,17 +253,17 @@ public class EmailService : IEmailService
             ? $"[{organizationName}] {projectName} — {newVulns.Count} vulnérabilité(s) détectée(s)"
             : $"[{organizationName}] {projectName} — {newVulns.Count} nouvelle(s) vulnérabilité(s)";
 
-        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-        string username = _configuration["Email:Username"] ?? string.Empty;
-        string password = _configuration["Email:Password"] ?? string.Empty;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        int    port     = _email.Port;
+        string username = _email.Username;
+        string password = _email.Password;
 
         foreach (string adminEmail in adminEmails)
         {
             MimeMessage message = new MimeMessage();
             message.From.Add(new MailboxAddress(
-                _configuration["Email:FromName"] ?? "Sentinel",
-                _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
+                _email.FromName,
+                _email.FromAddress
             ));
             message.To.Add(new MailboxAddress(adminEmail, adminEmail));
             message.Subject = subject;

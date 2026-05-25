@@ -23,6 +23,7 @@ public static class Program
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
         builder.Services
+            .AddSettings(builder.Configuration)
             .AddTenantContext()
             .AddDatabase(builder.Configuration)
             .AddJwtAuthentication(builder.Configuration)

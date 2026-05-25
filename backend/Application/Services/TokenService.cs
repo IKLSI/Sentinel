@@ -1,31 +1,26 @@
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Services;
 
 public class TokenService
 {
-    private readonly IConfiguration _configuration;
+    private readonly JwtSettings _jwt;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IOptions<JwtSettings> options)
     {
-        _configuration = configuration;
+        _jwt = options.Value;
     }
 
     public string GenerateAccessToken(User user)
     {
-        IConfigurationSection jwtSettings = _configuration.GetSection("Jwt");
-        string secret = jwtSettings["Secret"]!;
-        string issuer = jwtSettings["Issuer"]!;
-        string audience = jwtSettings["Audience"]!;
-        int expirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? "60");
-
-        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
         SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         Claim[] claims = new[]
@@ -40,10 +35,10 @@ public class TokenService
         };
 
         JwtSecurityToken token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _jwt.Issuer,
+            audience: _jwt.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            expires: DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpirationMinutes),
             signingCredentials: credentials
         );
 
@@ -64,9 +59,6 @@ public class TokenService
         return Convert.ToHexString(bytes).ToLower();
     }
 
-    public DateTime GetAccessTokenExpiry()
-    {
-        int expirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
-        return DateTime.UtcNow.AddMinutes(expirationMinutes);
-    }
+    public DateTime GetAccessTokenExpiry() =>
+        DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpirationMinutes);
 }

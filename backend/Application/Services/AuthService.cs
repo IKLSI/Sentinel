@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
@@ -12,21 +13,20 @@ public class AuthService
 {
     private readonly SentinelContext _context;
     private readonly TokenService _tokenService;
-    private readonly IConfiguration _configuration;
+    private readonly JwtSettings _jwt;
     private readonly ILogger<AuthService> _logger;
     private readonly ISystemScope _systemScope;
 
-    public AuthService(SentinelContext context, TokenService tokenService, IConfiguration configuration, ILogger<AuthService> logger, ISystemScope systemScope)
+    public AuthService(SentinelContext context, TokenService tokenService, IOptions<JwtSettings> jwtOptions, ILogger<AuthService> logger, ISystemScope systemScope)
     {
         _context = context;
         _tokenService = tokenService;
-        _configuration = configuration;
+        _jwt = jwtOptions.Value;
         _logger = logger;
         _systemScope = systemScope;
     }
 
-    private int RefreshTokenExpirationDays =>
-        int.TryParse(_configuration["Jwt:RefreshTokenExpirationDays"], out int days) && days > 0 ? days : 30;
+    private int RefreshTokenExpirationDays => _jwt.RefreshTokenExpirationDays > 0 ? _jwt.RefreshTokenExpirationDays : 30;
 
     public async Task<PasswordResetToken?> CreatePasswordResetTokenAsync(string email)
     {

@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
 using Sentinel.API.Http;
@@ -45,6 +46,19 @@ public static class ServiceCollectionExtensions
             });
             options.AddInterceptors(sp.GetRequiredService<TenantCommandInterceptor>());
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddSettings(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<EmailSettings>(configuration.GetSection("Email"));
+        services.Configure<FrontendSettings>(configuration.GetSection("Frontend"));
+        services.Configure<CorsSettings>(configuration.GetSection("Cors"));
+        services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
+        services.Configure<EncryptionSettings>(configuration.GetSection("Encryption"));
+        services.Configure<SupportSettings>(configuration.GetSection("Support"));
 
         return services;
     }

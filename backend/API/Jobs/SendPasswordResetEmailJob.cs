@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Sentinel.Application.Services;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.API.Jobs;
@@ -9,18 +11,18 @@ public class SendPasswordResetEmailJob
 {
     private readonly SentinelContext _context;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly FrontendSettings _frontend;
     private readonly ILogger<SendPasswordResetEmailJob> _logger;
 
     public SendPasswordResetEmailJob(
         SentinelContext context,
         IEmailService emailService,
-        IConfiguration configuration,
+        IOptions<FrontendSettings> frontendOptions,
         ILogger<SendPasswordResetEmailJob> logger)
     {
         _context = context;
         _emailService = emailService;
-        _configuration = configuration;
+        _frontend = frontendOptions.Value;
         _logger = logger;
     }
 
@@ -35,12 +37,10 @@ public class SendPasswordResetEmailJob
             return;
         }
 
-        string frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-
         await _emailService.SendPasswordResetAsync(
             resetToken.Email,
             resetToken.Token,
-            frontendBaseUrl
+            _frontend.BaseUrl
         );
     }
 }

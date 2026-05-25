@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -9,7 +8,6 @@ namespace Sentinel.Application.Services;
 public class RepositoryHostClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly string? _githubToken;
     private readonly ILogger<RepositoryHostClient> _logger;
 
     private static readonly HashSet<string> SkippedDirs = new(StringComparer.OrdinalIgnoreCase)
@@ -18,10 +16,9 @@ public class RepositoryHostClient
         "target", ".gradle", ".cargo",
     };
 
-    public RepositoryHostClient(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RepositoryHostClient> logger)
+    public RepositoryHostClient(IHttpClientFactory httpClientFactory, ILogger<RepositoryHostClient> logger)
     {
         _httpClientFactory = httpClientFactory;
-        _githubToken = configuration["GitHub:Token"];
         _logger = logger;
     }
 
@@ -86,7 +83,7 @@ public class RepositoryHostClient
     public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo, string? tokenOverride = null)
     {
         if (host.Contains("github"))
-            return await ListGitHubFilesAsync(owner, repo, tokenOverride ?? _githubToken);
+            return await ListGitHubFilesAsync(owner, repo, tokenOverride);
         if (host.Contains("gitlab"))
             return await ListGitLabFilesAsync(_httpClientFactory.CreateClient("Registry"), owner, repo, tokenOverride);
         return [];
@@ -98,7 +95,7 @@ public class RepositoryHostClient
 
         if (host.Contains("github"))
         {
-            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url, tokenOverride ?? _githubToken);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url, tokenOverride);
             try
             {
                 HttpResponseMessage response = await client.SendAsync(request);

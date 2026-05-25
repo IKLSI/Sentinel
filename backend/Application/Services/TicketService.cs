@@ -1,9 +1,10 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
@@ -16,16 +17,16 @@ public class TicketService
     private readonly IMemoryCache _cache;
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly INotificationService _notificationService;
-    private readonly IConfiguration _configuration;
+    private readonly FrontendSettings _frontend;
     private readonly ILogger<TicketService> _logger;
 
-    public TicketService(SentinelContext context, IMemoryCache cache, IBackgroundJobClient backgroundJobs, INotificationService notificationService, IConfiguration configuration, ILogger<TicketService> logger)
+    public TicketService(SentinelContext context, IMemoryCache cache, IBackgroundJobClient backgroundJobs, INotificationService notificationService, IOptions<FrontendSettings> frontendOptions, ILogger<TicketService> logger)
     {
         _context = context;
         _cache = cache;
         _backgroundJobs = backgroundJobs;
         _notificationService = notificationService;
-        _configuration = configuration;
+        _frontend = frontendOptions.Value;
         _logger = logger;
     }
 
@@ -321,7 +322,7 @@ public class TicketService
             .Select(o => o.Name)
             .FirstOrDefaultAsync() ?? string.Empty;
 
-        string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticket.Id}";
+        string ticketUrl = $"{_frontend.BaseUrl}/tickets/{ticket.Id}";
         string preview = contentPreview.Length > 300 ? contentPreview[..300] + "…" : contentPreview;
         string actorName = actor.FullName;
         string ticketTitle = ticket.Title;

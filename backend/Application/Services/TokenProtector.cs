@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Services;
 
@@ -8,11 +9,15 @@ public class TokenProtector
 {
     private readonly byte[] _key;
 
-    public TokenProtector(IConfiguration configuration)
+    public TokenProtector(IOptions<EncryptionSettings> options)
     {
-        string? keyString = configuration["Encryption:Key"]
-            ?? throw new InvalidOperationException("Encryption:Key est requis dans la configuration.");
+        string keyString = options.Value.Key;
+
+        if (string.IsNullOrEmpty(keyString))
+            throw new InvalidOperationException("Encryption:Key est requis dans la configuration.");
+
         _key = Convert.FromBase64String(keyString);
+
         if (_key.Length != 32)
             throw new InvalidOperationException("Encryption:Key doit être une clé base64 de 32 octets.");
     }
