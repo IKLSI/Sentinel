@@ -276,16 +276,18 @@ public class RepositoryHostClient
         string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
         int page = 1;
 
-        if (!string.IsNullOrEmpty(token) && !client.DefaultRequestHeaders.Contains("PRIVATE-TOKEN"))
-            client.DefaultRequestHeaders.Add("PRIVATE-TOKEN", token);
-
         while (true)
         {
             List<JsonElement>? items;
             try
             {
-                items = await client.GetFromJsonAsync<List<JsonElement>>(
+                using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
                     $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/tree?recursive=true&per_page=100&page={page}");
+                if (!string.IsNullOrEmpty(token))
+                    request.Headers.Add("PRIVATE-TOKEN", token);
+                HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode) break;
+                items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
             }
             catch { break; }
 

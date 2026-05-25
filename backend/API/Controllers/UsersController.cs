@@ -213,6 +213,7 @@ public class UsersController : BaseController
         if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
         if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
 
+        UserRole originalRole = user.Role;
         bool willDeactivate = dto.IsActive.HasValue && !dto.IsActive.Value;
         bool willDemote = !string.IsNullOrEmpty(dto.Role)
             && Enum.TryParse<UserRole>(dto.Role, true, out UserRole parsedRole)
@@ -237,6 +238,8 @@ public class UsersController : BaseController
                 return BadRequest(new { message = "Rôle invalide" });
             user.Role = role;
         }
+
+        if (user.Role != originalRole || willDeactivate) user.TokenVersion++;
 
         await _context.SaveChangesAsync();
 

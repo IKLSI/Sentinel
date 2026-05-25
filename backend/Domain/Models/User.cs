@@ -22,6 +22,7 @@ public class User
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiry { get; set; }
     public string? PreviousRefreshTokenHash { get; set; }
+    public int TokenVersion { get; set; }
     public string Theme { get; set; } = "light";
     public string Language { get; set; } = "fr-FR";
 

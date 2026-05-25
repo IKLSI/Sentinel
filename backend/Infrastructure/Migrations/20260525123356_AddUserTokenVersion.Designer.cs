@@ -12,8 +12,8 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260525115623_RlsFailClosed")]
-    partial class RlsFailClosed
+    [Migration("20260525123356_AddUserTokenVersion")]
+    partial class AddUserTokenVersion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -695,6 +695,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("Theme")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("TokenVersion")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

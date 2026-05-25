@@ -73,6 +73,7 @@ public class AuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
+        user.TokenVersion++;
 
         resetToken.IsUsed = true;
 

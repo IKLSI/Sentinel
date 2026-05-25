@@ -73,16 +73,39 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnTokenValidated = context =>
+                    OnTokenValidated = async context =>
                     {
-                        ITokenBlacklistService? blacklist = context.HttpContext.RequestServices
-                            .GetService<ITokenBlacklistService>();
+                        IServiceProvider sp = context.HttpContext.RequestServices;
+
+                        ITokenBlacklistService? blacklist = sp.GetService<ITokenBlacklistService>();
                         string? jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
                         if (blacklist != null && !string.IsNullOrEmpty(jti) && blacklist.IsRevoked(jti))
                         {
                             context.Fail("Token révoqué");
+                            return;
                         }
-                        return Task.CompletedTask;
+
+                        string? userIdClaim = context.Principal?.FindFirst("userId")?.Value;
+                        string? versionClaim = context.Principal?.FindFirst("tokenVersion")?.Value;
+                        if (!Guid.TryParse(userIdClaim, out Guid userId) || !int.TryParse(versionClaim, out int tokenVersion))
+                        {
+                            context.Fail("Token invalide");
+                            return;
+                        }
+
+                        SentinelContext db = sp.GetRequiredService<SentinelContext>();
+                        ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
+                        using IDisposable elevation = systemScope.Enter();
+
+                        var account = await db.Users
+                            .Where(u => u.Id == userId)
+                            .Select(u => new { u.IsActive, u.TokenVersion })
+                            .FirstOrDefaultAsync();
+
+                        if (account == null || !account.IsActive || account.TokenVersion != tokenVersion)
+                        {
+                            context.Fail("Session expirée");
+                        }
                     }
                 };
             });
