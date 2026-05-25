@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,7 @@ public class TechHealthService
     private readonly RepositoryScannerService _repositoryScanner;
     private readonly TokenProtector _tokenProtector;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundJobClient _backgroundJobs;
     private readonly IConfiguration _configuration;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
@@ -54,7 +55,7 @@ public class TechHealthService
         RepositoryScannerService repositoryScanner,
         TokenProtector tokenProtector,
         IServiceScopeFactory scopeFactory,
-        IEmailService emailService,
+        IBackgroundJobClient backgroundJobs,
         IConfiguration configuration)
     {
         _context = context;
@@ -64,7 +65,7 @@ public class TechHealthService
         _repositoryScanner = repositoryScanner;
         _tokenProtector = tokenProtector;
         _scopeFactory = scopeFactory;
-        _emailService = emailService;
+        _backgroundJobs = backgroundJobs;
         _configuration = configuration;
     }
 
@@ -183,7 +184,8 @@ public class TechHealthService
                 .Select(v => new VulnerabilityAlertEntry(v.CveId, v.PackageName, v.Severity.ToString(), v.CvssScore, v.FixedVersion))
                 .ToList();
 
-            await _emailService.SendVulnerabilityAlertAsync(adminEmails, project.Name, organizationName, projectUrl, isFirstScan, entries);
+            string projectName = project.Name;
+            _backgroundJobs.Enqueue<IEmailService>(s => s.SendVulnerabilityAlertAsync(adminEmails, projectName, organizationName, projectUrl, isFirstScan, entries));
         }
         catch (Exception ex)
         {

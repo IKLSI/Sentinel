@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -13,16 +14,16 @@ public class TicketService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundJobClient _backgroundJobs;
     private readonly INotificationService _notificationService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TicketService> _logger;
 
-    public TicketService(SentinelContext context, IMemoryCache cache, IEmailService emailService, INotificationService notificationService, IConfiguration configuration, ILogger<TicketService> logger)
+    public TicketService(SentinelContext context, IMemoryCache cache, IBackgroundJobClient backgroundJobs, INotificationService notificationService, IConfiguration configuration, ILogger<TicketService> logger)
     {
         _context = context;
         _cache = cache;
-        _emailService = emailService;
+        _backgroundJobs = backgroundJobs;
         _notificationService = notificationService;
         _configuration = configuration;
         _logger = logger;
@@ -200,22 +201,21 @@ public class TicketService
         {
             User? actor = await _context.Users.FindAsync(userId);
             string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
-            try
-            {
-                await _emailService.SendTicketUpdateToClientAsync(
-                    ticket.CreatedBy.Email,
-                    ticket.CreatedBy.FullName,
-                    ticket.Title,
-                    actor?.FullName ?? "Un membre de l'équipe",
-                    "changé le statut de",
-                    "Nouveau statut",
-                    newStatus.Name,
-                    ticketUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Échec envoi notification changement statut au client {Email}", ticket.CreatedBy.Email);
-            }
+            string clientEmail = ticket.CreatedBy.Email;
+            string clientName = ticket.CreatedBy.FullName;
+            string ticketTitle = ticket.Title;
+            string statusName = newStatus.Name;
+            string actorName = actor?.FullName ?? "Un membre de l'équipe";
+
+            _backgroundJobs.Enqueue<IEmailService>(s => s.SendTicketUpdateToClientAsync(
+                clientEmail,
+                clientName,
+                ticketTitle,
+                actorName,
+                "changé le statut de",
+                "Nouveau statut",
+                statusName,
+                ticketUrl));
         }
 
         return ticket;
@@ -266,22 +266,19 @@ public class TicketService
         {
             string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
             string actorName = author?.FullName ?? "Un membre de l'équipe";
-            try
-            {
-                await _emailService.SendTicketUpdateToClientAsync(
-                    ticket.CreatedBy.Email,
-                    ticket.CreatedBy.FullName,
-                    ticket.Title,
-                    actorName,
-                    "répondu à",
-                    "Réponse",
-                    content,
-                    ticketUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Échec envoi notification commentaire au client {Email}", ticket.CreatedBy.Email);
-            }
+            string clientEmail = ticket.CreatedBy.Email;
+            string clientName = ticket.CreatedBy.FullName;
+            string ticketTitle = ticket.Title;
+
+            _backgroundJobs.Enqueue<IEmailService>(s => s.SendTicketUpdateToClientAsync(
+                clientEmail,
+                clientName,
+                ticketTitle,
+                actorName,
+                "répondu à",
+                "Réponse",
+                content,
+                ticketUrl));
         }
 
         return comment;
@@ -375,23 +372,18 @@ public class TicketService
 
         string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticket.Id}";
         string preview = contentPreview.Length > 300 ? contentPreview[..300] + "…" : contentPreview;
+        string actorName = actor.FullName;
+        string ticketTitle = ticket.Title;
 
-        try
-        {
-            await _emailService.SendNewClientTicketToAdminsAsync(
-                adminEmails,
-                actor.FullName,
-                ticket.Title,
-                orgName,
-                eventLabel,
-                contentLabel,
-                preview,
-                ticketUrl);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Échec envoi notification admins pour ticket client");
-        }
+        _backgroundJobs.Enqueue<IEmailService>(s => s.SendNewClientTicketToAdminsAsync(
+            adminEmails,
+            actorName,
+            ticketTitle,
+            orgName,
+            eventLabel,
+            contentLabel,
+            preview,
+            ticketUrl));
     }
 
     private static TicketHistory CreateHistory(Guid ticketId, Guid userId, string field, string? oldValue, string? newValue)
