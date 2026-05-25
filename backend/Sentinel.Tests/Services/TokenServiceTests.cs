@@ -1,7 +1,8 @@
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Sentinel.Application.Services;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Tests.Services;
 
@@ -9,16 +10,14 @@ public class TokenServiceTests
 {
     private static TokenService BuildService()
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:Secret"] = "test-secret-key-with-sufficient-length-1234567890",
-                ["Jwt:Issuer"] = "test-issuer",
-                ["Jwt:Audience"] = "test-audience",
-                ["Jwt:AccessTokenExpirationMinutes"] = "60",
-            })
-            .Build();
-        return new TokenService(config);
+        var settings = new JwtSettings
+        {
+            Secret = "test-secret-key-with-sufficient-length-1234567890",
+            Issuer = "test-issuer",
+            Audience = "test-audience",
+            AccessTokenExpirationMinutes = 60,
+        };
+        return new TokenService(Options.Create(settings));
     }
 
     [Fact]

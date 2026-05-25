@@ -31,7 +31,7 @@ public enum DependencyStatus
 public class Dependency
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid TechProjectId { get; set; }
+    public Guid ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string CurrentVersion { get; set; } = string.Empty;
     public string? LatestVersion { get; set; }
@@ -40,6 +40,6 @@ public class Dependency
     public DependencyStatus Status { get; set; } = DependencyStatus.UpToDate;
     public DateTime ScannedAt { get; set; } = DateTime.UtcNow;
 
-    public TechProject TechProject { get; set; } = null!;
+    public Project Project { get; set; } = null!;
     public ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
 }

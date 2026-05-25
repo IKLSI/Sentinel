@@ -78,7 +78,7 @@ public class DashboardService
 
         int criticalVulnerabilities = await _context.Vulnerabilities
             .AsNoTracking()
-            .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.TechProject.OrganizationId == organizationId)
+            .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.Project.OrganizationId == organizationId)
             .CountAsync();
 
         Dictionary<string, int> ticketsByStatus = statuses.ToDictionary(
@@ -268,7 +268,7 @@ public class DashboardService
         var recentVulns = await _context.Vulnerabilities
             .AsNoTracking()
             .Where(v => v.Severity == VulnerabilitySeverity.Critical
-                && v.Dependency.TechProject.OrganizationId == organizationId
+                && v.Dependency.Project.OrganizationId == organizationId
                 && v.DetectedAt >= since)
             .OrderByDescending(v => v.DetectedAt)
             .Take(8)
@@ -276,8 +276,8 @@ public class DashboardService
             {
                 v.CveId,
                 v.DetectedAt,
-                ProjectName = v.Dependency.TechProject.Name,
-                ProjectId = v.Dependency.TechProject.Id,
+                ProjectName = v.Dependency.Project.Name,
+                ProjectId = v.Dependency.Project.Id,
             })
             .ToListAsync();
 

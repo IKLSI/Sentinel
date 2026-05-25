@@ -31,7 +31,7 @@ public class QuotaService
     public async Task EnsureCanAddProjectAsync(Guid organizationId)
     {
         PlanLimits limits = await GetLimitsAsync(organizationId);
-        int current = await _context.TechProjects.CountAsync(p => p.OrganizationId == organizationId);
+        int current = await _context.Projects.CountAsync(p => p.OrganizationId == organizationId);
 
         if (!PlanLimits.IsWithin(current, limits.MaxProjects))
             throw new QuotaExceededException(
@@ -79,7 +79,7 @@ public class QuotaService
             await _context.SaveChangesAsync();
 
         PlanLimits limits = PlanLimits.For(organization.PlanTier);
-        int projects = await _context.TechProjects.CountAsync(p => p.OrganizationId == organizationId);
+        int projects = await _context.Projects.CountAsync(p => p.OrganizationId == organizationId);
         int members = await _context.Users.CountAsync(u => u.OrganizationId == organizationId && u.IsActive);
 
         bool active = organization.SubscriptionStatus is SubscriptionStatus.Active or SubscriptionStatus.Trialing;

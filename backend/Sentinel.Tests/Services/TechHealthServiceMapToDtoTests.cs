@@ -9,7 +9,7 @@ public class TechHealthServiceMapToDtoTests
     [Fact]
     public void MapToDto_EmptyProject_ReturnsZeroCounts()
     {
-        TechProject project = new TechProject
+        Project project = new Project
         {
             Id = Guid.NewGuid(),
             Name = "Empty",
@@ -34,7 +34,7 @@ public class TechHealthServiceMapToDtoTests
     [Fact]
     public void MapToDto_CountsVulnerableDependencies()
     {
-        TechProject project = new TechProject
+        Project project = new Project
         {
             Id = Guid.NewGuid(),
             Name = "P",
@@ -59,7 +59,7 @@ public class TechHealthServiceMapToDtoTests
     [Fact]
     public void MapToDto_CountsCriticalVulnsAcrossDependencies()
     {
-        TechProject project = new TechProject
+        Project project = new Project
         {
             Id = Guid.NewGuid(),
             Name = "P",
@@ -98,7 +98,7 @@ public class TechHealthServiceMapToDtoTests
     [Fact]
     public void MapToDto_MapsRuntimes()
     {
-        TechProject project = new TechProject
+        Project project = new Project
         {
             Id = Guid.NewGuid(),
             Name = "P",

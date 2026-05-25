@@ -23,7 +23,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
     public DbSet<TicketHistory> TicketHistories => Set<TicketHistory>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
-    public DbSet<TechProject> TechProjects => Set<TechProject>();
+    public DbSet<Project> Projects => Set<Project>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
     public DbSet<Runtime> Runtimes => Set<Runtime>();
@@ -50,7 +50,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
         ConfigureTimeEntry(modelBuilder);
-        ConfigureTechProject(modelBuilder);
+        ConfigureProject(modelBuilder);
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
         ConfigureRuntime(modelBuilder);
@@ -78,7 +78,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Ticket>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
 
-        modelBuilder.Entity<TechProject>()
+        modelBuilder.Entity<Project>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<AuditLog>()
@@ -99,16 +99,16 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<TimeEntry>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet
                 || (e.Ticket != null && e.Ticket.OrganizationId == _tenant.OrganizationId)
-                || (e.TechProject != null && e.TechProject.OrganizationId == _tenant.OrganizationId));
+                || (e.Project != null && e.Project.OrganizationId == _tenant.OrganizationId));
 
         modelBuilder.Entity<Dependency>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.TechProject.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Project.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<Runtime>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.TechProject.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Project.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<Vulnerability>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.TechProject.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.Project.OrganizationId == _tenant.OrganizationId);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -330,16 +330,16 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.TicketId);
             entity.HasIndex(e => e.Date);
             entity.HasIndex(e => new { e.UserId, e.Date });
-            entity.HasIndex(e => e.TechProjectId);
+            entity.HasIndex(e => e.ProjectId);
 
             entity.HasOne(e => e.Ticket)
                 .WithMany(t => t.TimeEntries)
                 .HasForeignKey(e => e.TicketId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasOne(e => e.TechProject)
+            entity.HasOne(e => e.Project)
                 .WithMany()
-                .HasForeignKey(e => e.TechProjectId)
+                .HasForeignKey(e => e.ProjectId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -350,9 +350,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         });
     }
 
-    private static void ConfigureTechProject(ModelBuilder modelBuilder)
+    private static void ConfigureProject(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TechProject>(entity =>
+        modelBuilder.Entity<Project>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
@@ -380,12 +380,12 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Ecosystem).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();
-            entity.HasIndex(e => e.TechProjectId);
+            entity.HasIndex(e => e.ProjectId);
             entity.HasIndex(e => e.Status);
 
-            entity.HasOne(e => e.TechProject)
+            entity.HasOne(e => e.Project)
                 .WithMany(p => p.Dependencies)
-                .HasForeignKey(e => e.TechProjectId)
+                .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -416,11 +416,11 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Version).HasMaxLength(50).IsRequired();
-            entity.HasIndex(e => e.TechProjectId);
+            entity.HasIndex(e => e.ProjectId);
 
-            entity.HasOne(e => e.TechProject)
+            entity.HasOne(e => e.Project)
                 .WithMany(p => p.Runtimes)
-                .HasForeignKey(e => e.TechProjectId)
+                .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

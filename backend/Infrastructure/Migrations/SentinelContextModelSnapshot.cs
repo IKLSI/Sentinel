@@ -113,6 +113,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("ScannedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -120,18 +123,15 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TechProjectId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Status");
+                    b.HasIndex("ProjectId");
 
-                    b.HasIndex("TechProjectId");
+                    b.HasIndex("Status");
 
                     b.ToTable("Dependencies");
                 });
@@ -365,39 +365,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("PasswordResetTokens");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("EolDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsEol")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("TechProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Version")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TechProjectId");
-
-                    b.ToTable("Runtimes");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -446,7 +414,39 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("TechProjects");
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EolDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEol")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Runtimes");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
@@ -708,11 +708,11 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<TimeOnly?>("EndTime")
                         .HasColumnType("time without time zone");
 
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
                     b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time without time zone");
-
-                    b.Property<Guid?>("TechProjectId")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("TicketId")
                         .HasColumnType("uuid");
@@ -734,7 +734,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Date");
 
-                    b.HasIndex("TechProjectId");
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("TicketId");
 
@@ -925,13 +925,13 @@ namespace Sentinel.Infrastructure.Migrations
 
             modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
                         .WithMany("Dependencies")
-                        .HasForeignKey("TechProjectId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TechProject");
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Notification", b =>
@@ -952,18 +952,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
-                        .WithMany("Runtimes")
-                        .HasForeignKey("TechProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TechProject");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
                         .WithMany()
@@ -972,6 +961,17 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
+                        .WithMany("Runtimes")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
@@ -993,7 +993,7 @@ namespace Sentinel.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.TechProject", "Project")
+                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1084,9 +1084,9 @@ namespace Sentinel.Infrastructure.Migrations
 
             modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.TechProject", "TechProject")
+                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
                         .WithMany()
-                        .HasForeignKey("TechProjectId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
@@ -1100,7 +1100,7 @@ namespace Sentinel.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("TechProject");
+                    b.Navigation("Project");
 
                     b.Navigation("Ticket");
 
@@ -1158,7 +1158,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TechProject", b =>
+            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
                 {
                     b.Navigation("Dependencies");
 

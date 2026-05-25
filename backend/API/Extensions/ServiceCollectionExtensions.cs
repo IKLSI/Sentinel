@@ -59,6 +59,7 @@ public static class ServiceCollectionExtensions
         services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
         services.Configure<EncryptionSettings>(configuration.GetSection("Encryption"));
         services.Configure<SupportSettings>(configuration.GetSection("Support"));
+        services.Configure<DataProtectionSettings>(configuration.GetSection("DataProtection"));
 
         return services;
     }
@@ -282,11 +283,21 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services)
+    public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services, DataProtectionSettings settings)
     {
-        services.AddDataProtection()
+        IDataProtectionBuilder dp = services.AddDataProtection()
             .SetApplicationName("Sentinel")
             .PersistKeysToDbContext<SentinelContext>();
+
+        if (!string.IsNullOrWhiteSpace(settings.CertBase64))
+        {
+            byte[] pfxBytes = Convert.FromBase64String(settings.CertBase64);
+            System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
+                System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(
+                    pfxBytes, null, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.EphemeralKeySet);
+
+            dp.ProtectKeysWithCertificate(cert);
+        }
 
         return services;
     }

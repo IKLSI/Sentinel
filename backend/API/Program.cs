@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
 using Sentinel.API.HealthChecks;
 using Sentinel.API.Middleware;
@@ -41,7 +42,7 @@ public static class Program
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
-            .AddDataProtectionPolicy();
+            .AddDataProtectionPolicy(builder.Configuration.GetSection("DataProtection").Get<DataProtectionSettings>() ?? new());
 
         WebApplication app = builder.Build();
 

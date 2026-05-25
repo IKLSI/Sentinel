@@ -1,7 +1,6 @@
 import apiClient from '../../../services/client'
 import { downloadExcel } from '../../../utils/download'
 import { ScanFrequency, DependencyStatus, DependencyType, VulnerabilitySeverity, Provider } from '../../../types/enums'
-export type { ScanFrequency, DependencyStatus, DependencyType, VulnerabilitySeverity, Provider }
 
 export interface ProjectDto {
   id: string

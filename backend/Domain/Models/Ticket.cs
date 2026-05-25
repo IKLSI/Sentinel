@@ -37,7 +37,7 @@ public class Ticket
     public string Tags { get; set; } = "[]";
     public TicketStatus? TicketStatus { get; set; }
     public Organization Organization { get; set; } = null!;
-    public TechProject? Project { get; set; }
+    public Project? Project { get; set; }
     public User? AssignedTo { get; set; }
     public User CreatedBy { get; set; } = null!;
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();

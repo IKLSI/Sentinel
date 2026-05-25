@@ -79,7 +79,7 @@ public class TechHealthService
     {
         using IDisposable elevation = _systemScope.Enter();
 
-        TechProject? project = await _context.TechProjects
+        Project? project = await _context.Projects
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null) return;
@@ -87,7 +87,7 @@ public class TechHealthService
         bool isFirstScan = project.LastScanAt == null;
 
         HashSet<string> previousCveIds = await _context.Vulnerabilities
-            .Where(v => v.Dependency.TechProjectId == projectId)
+            .Where(v => v.Dependency.ProjectId == projectId)
             .Select(v => v.CveId)
             .ToHashSetAsync();
 
@@ -117,13 +117,13 @@ public class TechHealthService
                     await using IDbContextTransaction tx = await _context.Database.BeginTransactionAsync();
 
                     await _context.Vulnerabilities
-                        .Where(v => v.Dependency.TechProjectId == projectId)
+                        .Where(v => v.Dependency.ProjectId == projectId)
                         .ExecuteDeleteAsync();
                     await _context.Dependencies
-                        .Where(d => d.TechProjectId == projectId)
+                        .Where(d => d.ProjectId == projectId)
                         .ExecuteDeleteAsync();
                     await _context.Runtimes
-                        .Where(r => r.TechProjectId == projectId)
+                        .Where(r => r.ProjectId == projectId)
                         .ExecuteDeleteAsync();
                     await _context.Dependencies.AddRangeAsync(outcome.Dependencies);
                     await _context.Runtimes.AddRangeAsync(outcome.Runtimes);
@@ -144,7 +144,7 @@ public class TechHealthService
 
         if (!project.Dependencies.Any() && !project.Runtimes.Any())
         {
-            project = await _context.TechProjects
+            project = await _context.Projects
                 .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
                 .Include(p => p.Runtimes)
                 .FirstAsync(p => p.Id == projectId);
@@ -185,7 +185,7 @@ public class TechHealthService
         await TrySendVulnerabilityAlertAsync(project, isFirstScan, previousCveIds);
     }
 
-    private async Task TrySendVulnerabilityAlertAsync(TechProject project, bool isFirstScan, HashSet<string> previousCveIds)
+    private async Task TrySendVulnerabilityAlertAsync(Project project, bool isFirstScan, HashSet<string> previousCveIds)
     {
         try
         {
@@ -227,13 +227,13 @@ public class TechHealthService
 
     public async Task ScanAllProjectsDueAsync()
     {
-        List<Guid> daily = await _context.TechProjects
+        List<Guid> daily = await _context.Projects
             .Where(p => p.ScanFrequency == ScanFrequency.Daily
                 && (p.LastScanAt == null || p.LastScanAt < DateTime.UtcNow.AddDays(-1)))
             .Select(p => p.Id)
             .ToListAsync();
 
-        List<Guid> weekly = await _context.TechProjects
+        List<Guid> weekly = await _context.Projects
             .Where(p => p.ScanFrequency == ScanFrequency.Weekly
                 && (p.LastScanAt == null || p.LastScanAt < DateTime.UtcNow.AddDays(-7)))
             .Select(p => p.Id)
@@ -497,7 +497,7 @@ public class TechHealthService
         }
     }
 
-    private static int CalculateHealthScore(TechProject project)
+    private static int CalculateHealthScore(Project project)
     {
         int score = 100;
 
@@ -542,9 +542,9 @@ public class TechHealthService
         _ => "F"
     };
 
-    public async Task<TechProjectDto?> GetProjectWithDetailsAsync(Guid projectId)
+    public async Task<ProjectDto?> GetProjectWithDetailsAsync(Guid projectId)
     {
-        TechProject? project = await _context.TechProjects
+        Project? project = await _context.Projects
             .AsNoTracking()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
@@ -553,9 +553,9 @@ public class TechHealthService
         return project == null ? null : MapToDto(project);
     }
 
-    public static TechProjectDto MapToDto(TechProject project)
+    public static ProjectDto MapToDto(Project project)
     {
-        return new TechProjectDto
+        return new ProjectDto
         {
             Id = project.Id,
             Name = project.Name,

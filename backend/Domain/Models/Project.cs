@@ -14,7 +14,7 @@ public enum ScanFrequency
     Manual
 }
 
-public class TechProject
+public class Project
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }

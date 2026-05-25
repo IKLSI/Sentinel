@@ -31,7 +31,7 @@ export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, is
   const t = useT();
   if (!entry) return null;
 
-  const projColor = entry.techProjectName ? getProjectColor(entry.techProjectName) : "var(--accent)";
+  const projColor = entry.projectName ? getProjectColor(entry.projectName) : "var(--accent)";
   const parsedDate = parseDateLocal(entry.date);
   const isOwn = entry.userId === currentUserId;
 
@@ -113,13 +113,13 @@ export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, is
       </Box>
 
       {/* Footer badges */}
-      {(entry.techProjectName || entry.ticketTitle) && (
+      {(entry.projectName || entry.ticketTitle) && (
         <>
           <Box sx={{ borderTop: "1px solid var(--border)" }} />
           <Box sx={{ px: "20px", py: "11px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", background: "var(--s2)" }}>
-            {entry.techProjectName && (
+            {entry.projectName && (
               <Box component="span" sx={{ fontSize: "10px", fontWeight: 600, color: "var(--muted2)", px: "5px", py: "1px", borderRadius: 'var(--r-xs)', border: "1px solid var(--border2)", background: "var(--s3)" }}>
-                {entry.techProjectName}
+                {entry.projectName}
               </Box>
             )}
             {entry.ticketTitle && (

@@ -1,6 +1,6 @@
 namespace Sentinel.Domain.DTOs.TechHealth;
 
-public class TechProjectDto
+public class ProjectDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -54,7 +54,7 @@ public class RuntimeDto
     public bool IsEol { get; set; }
 }
 
-public class CreateTechProjectDto
+public class CreateProjectDto
 {
     public string Name { get; set; } = string.Empty;
     public string? RepositoryUrl { get; set; }

@@ -4,9 +4,9 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Validators;
 
-public class CreateTechProjectDtoValidator : AbstractValidator<CreateTechProjectDto>
+public class CreateProjectDtoValidator : AbstractValidator<CreateProjectDto>
 {
-    public CreateTechProjectDtoValidator()
+    public CreateProjectDtoValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Le nom du projet est requis")

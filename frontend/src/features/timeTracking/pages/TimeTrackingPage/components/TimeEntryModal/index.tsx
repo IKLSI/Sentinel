@@ -243,9 +243,9 @@ export const TimeEntryModal: React.FC<Props> = ({
           <FormField label={t("time_tracking.field_project")}>
             <Box
               component="select"
-              value={form.techProjectId}
+              value={form.projectId}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, techProjectId: e.target.value }))
+                onFormChange((f) => ({ ...f, projectId: e.target.value }))
               }
               sx={{
                 appearance: "none",

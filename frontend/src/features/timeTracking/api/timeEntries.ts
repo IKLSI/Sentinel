@@ -5,8 +5,8 @@ export interface TimeEntryDto {
   id: string
   ticketId?: string
   ticketTitle?: string
-  techProjectId?: string
-  techProjectName?: string
+  projectId?: string
+  projectName?: string
   userId: string
   userName: string
   userRole?: string
@@ -20,7 +20,7 @@ export interface TimeEntryDto {
 
 export interface CreateTimeEntryDto {
   ticketId?: string
-  techProjectId?: string
+  projectId?: string
   date: string
   durationMinutes: number
   startTime?: string
@@ -36,7 +36,7 @@ interface UpdateTimeEntryDto {
   endTime?: string
   title?: string
   description?: string
-  techProjectId?: string | null
+  projectId?: string | null
   ticketId?: string | null
 }
 

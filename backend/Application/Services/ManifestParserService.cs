@@ -76,12 +76,12 @@ public class ManifestParserService
             {
                 string v = CleanVersion(nodeProp.GetString() ?? "");
                 if (!string.IsNullOrEmpty(v))
-                    runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Node.js", Version = v });
+                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Node.js", Version = v });
             }
 
             (string Name, string Version)? frameworkRuntime = DetectNpmFrameworkRuntime(root);
             if (frameworkRuntime.HasValue)
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = frameworkRuntime.Value.Name, Version = frameworkRuntime.Value.Version });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = frameworkRuntime.Value.Name, Version = frameworkRuntime.Value.Version });
 
             if (root.TryGetProperty("dependencies", out JsonElement prodDeps))
                 ExtractNpmDeps(projectId, prodDeps, DependencyType.Prod, deps);
@@ -134,7 +134,7 @@ public class ManifestParserService
             if (string.IsNullOrEmpty(v)) continue;
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = prop.Name,
                 CurrentVersion = v,
                 Type = type,
@@ -154,7 +154,7 @@ public class ManifestParserService
                   ?? doc.Descendants("TargetFrameworks").FirstOrDefault()?.Value?.Split(';').FirstOrDefault();
 
             if (!string.IsNullOrEmpty(tf))
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = ".NET", Version = ParseDotNetVersion(tf) });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = ".NET", Version = ParseDotNetVersion(tf) });
 
             foreach (XElement pkgRef in doc.Descendants("PackageReference"))
             {
@@ -164,7 +164,7 @@ public class ManifestParserService
 
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = name,
                     CurrentVersion = version,
                     Type = DependencyType.Prod,
@@ -195,7 +195,7 @@ public class ManifestParserService
             string? javaVersion = doc.Descendants(ns + "maven.compiler.source").FirstOrDefault()?.Value
                            ?? doc.Descendants(ns + "java.version").FirstOrDefault()?.Value;
             if (!string.IsNullOrEmpty(javaVersion))
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Java", Version = javaVersion });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
 
             foreach (XElement dep in doc.Descendants(ns + "dependency"))
             {
@@ -209,7 +209,7 @@ public class ManifestParserService
                 string name = string.IsNullOrEmpty(groupId) ? artifactId : $"{groupId}:{artifactId}";
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = name,
                     CurrentVersion = version,
                     Type = scope == "test" ? DependencyType.Dev : DependencyType.Prod,
@@ -233,11 +233,11 @@ public class ManifestParserService
 
         Match javaVersionMatch = Regex.Match(content, @"sourceCompatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?");
         if (javaVersionMatch.Success)
-            runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Java", Version = javaVersionMatch.Groups[1].Value });
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersionMatch.Groups[1].Value });
 
         Match kotlinMatch = Regex.Match(content, @"kotlin\(['""]jvm['""]\)\s+version\s+['""]([^'""]+)['""]");
         if (kotlinMatch.Success)
-            runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Kotlin", Version = kotlinMatch.Groups[1].Value });
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Kotlin", Version = kotlinMatch.Groups[1].Value });
 
         foreach (Match m in coordPattern.Matches(content))
         {
@@ -252,7 +252,7 @@ public class ManifestParserService
 
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = name,
                 CurrentVersion = version,
                 Type = isTest ? DependencyType.Dev : DependencyType.Prod,
@@ -265,7 +265,7 @@ public class ManifestParserService
         {
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = $"{m.Groups[1].Value}:{m.Groups[2].Value}",
                 CurrentVersion = m.Groups[3].Value,
                 Type = DependencyType.Prod,
@@ -298,11 +298,11 @@ public class ManifestParserService
             if (string.IsNullOrEmpty(name)) continue;
 
             if (frameworkIndicators.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = fw, Version = version });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = version });
 
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = name,
                 CurrentVersion = version,
                 Type = DependencyType.Prod,
@@ -316,7 +316,7 @@ public class ManifestParserService
     {
         Match pythonMatch = Regex.Match(content, @"python\s*=\s*['""]([^'""]+)['""]");
         if (pythonMatch.Success)
-            runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Python", Version = CleanVersion(pythonMatch.Groups[1].Value) });
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Python", Version = CleanVersion(pythonMatch.Groups[1].Value) });
 
         MatchCollection poetryDepBlocks = Regex.Matches(content,
             @"\[tool\.poetry(?:\.group\.\w+)?\.dependencies\](.*?)(?=\[|\z)",
@@ -332,7 +332,7 @@ public class ManifestParserService
                 string version = CleanVersion(dep.Groups[2].Value);
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = name,
                     CurrentVersion = version,
                     Type = isDevBlock ? DependencyType.Dev : DependencyType.Prod,
@@ -349,7 +349,7 @@ public class ManifestParserService
             {
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = dep.Groups[1].Value,
                     CurrentVersion = dep.Groups[2].Value,
                     Type = DependencyType.Prod,
@@ -368,7 +368,7 @@ public class ManifestParserService
         foreach (Dependency dep in deps)
         {
             if (frameworkMap.TryGetValue(dep.Name, out string? fw) && !string.IsNullOrEmpty(dep.CurrentVersion))
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = fw, Version = dep.CurrentVersion });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = dep.CurrentVersion });
         }
     }
 
@@ -382,7 +382,7 @@ public class ManifestParserService
 
             if (line.StartsWith("go ") && !inRequireBlock)
             {
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Go", Version = line[3..].Trim() });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Go", Version = line[3..].Trim() });
                 continue;
             }
 
@@ -406,7 +406,7 @@ public class ManifestParserService
 
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = module,
                 CurrentVersion = version,
                 Type = DependencyType.Prod,
@@ -432,20 +432,20 @@ public class ManifestParserService
                     if (prop.Name.Equals("php", StringComparison.OrdinalIgnoreCase))
                     {
                         if (!string.IsNullOrEmpty(version))
-                            runtimes.Add(new Runtime { TechProjectId = projectId, Name = "PHP", Version = version });
+                            runtimes.Add(new Runtime { ProjectId = projectId, Name = "PHP", Version = version });
                         continue;
                     }
 
                     if (prop.Name.Equals("laravel/framework", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
-                        runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Laravel", Version = version });
+                        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Laravel", Version = version });
 
                     if (prop.Name.Equals("symfony/symfony", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
-                        runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Symfony", Version = version });
+                        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Symfony", Version = version });
 
                     if (string.IsNullOrEmpty(version)) continue;
                     deps.Add(new Dependency
                     {
-                        TechProjectId = projectId,
+                        ProjectId = projectId,
                         Name = prop.Name,
                         CurrentVersion = version,
                         Type = DependencyType.Prod,
@@ -463,7 +463,7 @@ public class ManifestParserService
                     if (string.IsNullOrEmpty(version)) continue;
                     deps.Add(new Dependency
                     {
-                        TechProjectId = projectId,
+                        ProjectId = projectId,
                         Name = prop.Name,
                         CurrentVersion = version,
                         Type = DependencyType.Dev,
@@ -480,7 +480,7 @@ public class ManifestParserService
     {
         Match rubyMatch = Regex.Match(content, @"^ruby\s+['""]([^'""]+)['""]", RegexOptions.Multiline);
         if (rubyMatch.Success)
-            runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Ruby", Version = CleanVersion(rubyMatch.Groups[1].Value) });
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Ruby", Version = CleanVersion(rubyMatch.Groups[1].Value) });
 
         Dictionary<string, string> frameworkMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -505,11 +505,11 @@ public class ManifestParserService
             string version = m.Groups[2].Success ? CleanVersion(m.Groups[2].Value) : "";
 
             if (frameworkMap.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
-                runtimes.Add(new Runtime { TechProjectId = projectId, Name = fw, Version = version });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = version });
 
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = name,
                 CurrentVersion = version,
                 Type = isInTest ? DependencyType.Dev : DependencyType.Prod,
@@ -521,7 +521,7 @@ public class ManifestParserService
 
     private static void ParseCargoToml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        runtimes.Add(new Runtime { TechProjectId = projectId, Name = "Rust", Version = DetectRustEdition(content) });
+        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Rust", Version = DetectRustEdition(content) });
 
         bool inDev = false;
         bool inDeps = false;
@@ -551,7 +551,7 @@ public class ManifestParserService
             {
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = name,
                     CurrentVersion = simpleMatch.Groups[1].Value,
                     Type = inDev ? DependencyType.Dev : DependencyType.Prod,
@@ -566,7 +566,7 @@ public class ManifestParserService
             {
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = name,
                     CurrentVersion = tableVersionMatch.Groups[1].Value,
                     Type = inDev ? DependencyType.Dev : DependencyType.Prod,
@@ -612,7 +612,7 @@ public class ManifestParserService
         string cmakeVersion = cmakeVersionMatch.Success ? cmakeVersionMatch.Groups[1].Value : "";
 
         foreach (string lang in languages)
-            runtimes.Add(new Runtime { TechProjectId = projectId, Name = lang, Version = cmakeVersion });
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = lang, Version = cmakeVersion });
     }
 
     private static void ParsePackageLockJson(Guid projectId, string content, List<Dependency> deps)
@@ -642,7 +642,7 @@ public class ManifestParserService
                     bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
                     deps.Add(new Dependency
                     {
-                        TechProjectId = projectId,
+                        ProjectId = projectId,
                         Name = name,
                         CurrentVersion = version,
                         Type = isDev ? DependencyType.Dev : DependencyType.Prod,
@@ -669,7 +669,7 @@ public class ManifestParserService
             bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
             deps.Add(new Dependency
             {
-                TechProjectId = projectId,
+                ProjectId = projectId,
                 Name = pkg.Name,
                 CurrentVersion = version,
                 Type = isDev ? DependencyType.Dev : DependencyType.Prod,
@@ -712,7 +712,7 @@ public class ManifestParserService
 
                 deps.Add(new Dependency
                 {
-                    TechProjectId = projectId,
+                    ProjectId = projectId,
                     Name = currentName,
                     CurrentVersion = vMatch.Groups[1].Value,
                     Type = DependencyType.Prod,
@@ -746,7 +746,7 @@ public class ManifestParserService
 
                     deps.Add(new Dependency
                     {
-                        TechProjectId = projectId,
+                        ProjectId = projectId,
                         Name = pkg.Name,
                         CurrentVersion = version,
                         Type = type,
@@ -779,7 +779,7 @@ public class ManifestParserService
 
                     deps.Add(new Dependency
                     {
-                        TechProjectId = projectId,
+                        ProjectId = projectId,
                         Name = name,
                         CurrentVersion = version,
                         Type = type,

@@ -20,7 +20,7 @@ public class CreateTimeEntryDtoValidator : AbstractValidator<CreateTimeEntryDto>
         RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description != null);
 
         RuleFor(x => x)
-            .Must(x => x.TicketId.HasValue || x.TechProjectId.HasValue)
+            .Must(x => x.TicketId.HasValue || x.ProjectId.HasValue)
             .WithMessage("Un ticket ou un projet doit être associé");
 
         RuleFor(x => x)

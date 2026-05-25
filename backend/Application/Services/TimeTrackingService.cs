@@ -16,7 +16,7 @@ public class TimeTrackingService
 
     public async Task<TimeEntry> CreateManualEntryAsync(CreateTimeEntryDto dto, Guid userId, Guid organizationId)
     {
-        await EnsureBelongsToOrganizationAsync(dto.TicketId, dto.TechProjectId, organizationId);
+        await EnsureBelongsToOrganizationAsync(dto.TicketId, dto.ProjectId, organizationId);
 
         int durationMinutes = dto.DurationMinutes;
         if (dto.StartTime.HasValue && dto.EndTime.HasValue && dto.EndTime > dto.StartTime)
@@ -25,7 +25,7 @@ public class TimeTrackingService
         TimeEntry entry = new TimeEntry
         {
             TicketId = dto.TicketId,
-            TechProjectId = dto.TechProjectId,
+            ProjectId = dto.ProjectId,
             UserId = userId,
             Date = dto.Date,
             DurationMinutes = durationMinutes,
@@ -46,7 +46,7 @@ public class TimeTrackingService
         TimeEntry? entry = await _context.TimeEntries
             .Include(e => e.User)
             .Include(e => e.Ticket)
-            .Include(e => e.TechProject)
+            .Include(e => e.Project)
             .FirstOrDefaultAsync(e => e.Id == id
                 && e.User.OrganizationId == organizationId
                 && (isAdmin || e.UserId == userId));
@@ -54,7 +54,7 @@ public class TimeTrackingService
         if (entry == null) return null;
 
         Guid? newTicketId = dto.TicketId != null && dto.TicketId != Guid.Empty ? dto.TicketId : entry.TicketId;
-        Guid? newProjectId = dto.TechProjectId != null && dto.TechProjectId != Guid.Empty ? dto.TechProjectId : entry.TechProjectId;
+        Guid? newProjectId = dto.ProjectId != null && dto.ProjectId != Guid.Empty ? dto.ProjectId : entry.ProjectId;
         await EnsureBelongsToOrganizationAsync(newTicketId, newProjectId, organizationId);
 
         if (dto.Date.HasValue) entry.Date = dto.Date.Value;
@@ -65,7 +65,7 @@ public class TimeTrackingService
             entry.DurationMinutes = (int)(dto.EndTime.Value.ToTimeSpan() - dto.StartTime.Value.ToTimeSpan()).TotalMinutes;
         if (dto.Title != null) entry.Title = dto.Title;
         if (dto.Description != null) entry.Description = dto.Description;
-        if (dto.TechProjectId != null) entry.TechProjectId = dto.TechProjectId == Guid.Empty ? null : dto.TechProjectId;
+        if (dto.ProjectId != null) entry.ProjectId = dto.ProjectId == Guid.Empty ? null : dto.ProjectId;
         if (dto.TicketId != null) entry.TicketId = dto.TicketId == Guid.Empty ? null : dto.TicketId;
 
         await _context.SaveChangesAsync();
@@ -83,7 +83,7 @@ public class TimeTrackingService
 
         if (projectId.HasValue && projectId.Value != Guid.Empty)
         {
-            bool ok = await _context.TechProjects
+            bool ok = await _context.Projects
                 .AnyAsync(p => p.Id == projectId.Value && p.OrganizationId == organizationId);
             if (!ok) throw new InvalidOperationException("Projet invalide");
         }
@@ -111,7 +111,7 @@ public class TimeTrackingService
             .AsNoTracking()
             .Include(te => te.User)
             .Include(te => te.Ticket)
-            .Include(te => te.TechProject)
+            .Include(te => te.Project)
             .Where(te => te.User.OrganizationId == organizationId);
 
         if (userId.HasValue)
@@ -135,8 +135,8 @@ public class TimeTrackingService
             Id = entry.Id,
             TicketId = entry.TicketId,
             TicketTitle = entry.Ticket?.Title,
-            TechProjectId = entry.TechProjectId,
-            TechProjectName = entry.TechProject?.Name,
+            ProjectId = entry.ProjectId,
+            ProjectName = entry.Project?.Name,
             UserId = entry.UserId,
             UserName = entry.User?.FullName ?? string.Empty,
             UserRole = entry.User?.Role.ToString() ?? string.Empty,

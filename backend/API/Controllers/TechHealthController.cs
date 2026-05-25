@@ -71,7 +71,7 @@ public class TechHealthController : BaseController
 
         if (org == null) return NotFound();
 
-        List<string?> existingUrls = await _context.TechProjects
+        List<string?> existingUrls = await _context.Projects
             .Where(p => p.OrganizationId == organizationId.Value)
             .Select(p => p.RepositoryUrl)
             .ToListAsync();
@@ -148,13 +148,13 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
-    public async Task<ActionResult<IEnumerable<TechProjectDto>>> GetProjects()
+    public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
     {
         Guid? organizationId = GetOrganizationId();
 
         if (organizationId == null) return Unauthorized();
 
-        List<TechProject> projects = await _context.TechProjects
+        List<Project> projects = await _context.Projects
             .AsNoTracking()
             .AsSplitQuery()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
@@ -174,7 +174,7 @@ public class TechHealthController : BaseController
 
         return Ok(projects.Select(p =>
         {
-            TechProjectDto dto = TechHealthService.MapToDto(p);
+            ProjectDto dto = TechHealthService.MapToDto(p);
             dto.TotalTickets = ticketCounts.GetValueOrDefault(p.Id);
             return dto;
         }));
@@ -182,18 +182,18 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
-    public async Task<ActionResult<TechProjectDto>> GetProject(Guid id)
+    public async Task<ActionResult<ProjectDto>> GetProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
 
         if (organizationId == null) return Unauthorized();
 
-        TechProjectDto? project = await _techHealthService.GetProjectWithDetailsAsync(id);
+        ProjectDto? project = await _techHealthService.GetProjectWithDetailsAsync(id);
 
         if (project == null)
             return NotFound(new { message = "Projet introuvable" });
 
-        bool belongs = await _context.TechProjects
+        bool belongs = await _context.Projects
             .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (!belongs) return Forbid();
@@ -203,7 +203,7 @@ public class TechHealthController : BaseController
 
     [HttpPost("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<TechProjectDto>> CreateProject([FromBody] CreateTechProjectDto dto)
+    public async Task<ActionResult<ProjectDto>> CreateProject([FromBody] CreateProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
 
@@ -220,7 +220,7 @@ public class TechHealthController : BaseController
         if (!Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
             scanFreq = ScanFrequency.Weekly;
 
-        TechProject project = new TechProject
+        Project project = new Project
         {
             OrganizationId = organizationId.Value,
             Name = dto.Name,
@@ -231,18 +231,18 @@ public class TechHealthController : BaseController
             HealthGrade = "A"
         };
 
-        await _context.TechProjects.AddAsync(project);
+        await _context.Projects.AddAsync(project);
         await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
             AuditAction.ProjectCreated,
-            entityType: "TechProject",
+            entityType: "Project",
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: project.Id,
             jti: GetCurrentJti());
 
-        TechProjectDto? created = await _techHealthService.GetProjectWithDetailsAsync(project.Id);
+        ProjectDto? created = await _techHealthService.GetProjectWithDetailsAsync(project.Id);
         return CreatedAtAction(nameof(GetProject), new { id = project.Id }, created);
     }
 
@@ -254,18 +254,18 @@ public class TechHealthController : BaseController
 
         if (organizationId == null) return Unauthorized();
 
-        TechProject? project = await _context.TechProjects
+        Project? project = await _context.Projects
             .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (project == null)
             return NotFound(new { message = "Projet introuvable" });
 
-        _context.TechProjects.Remove(project);
+        _context.Projects.Remove(project);
         await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
             AuditAction.ProjectDeleted,
-            entityType: "TechProject",
+            entityType: "Project",
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: id,
@@ -282,7 +282,7 @@ public class TechHealthController : BaseController
 
         if (organizationId == null) return Unauthorized();
 
-        bool belongs = await _context.TechProjects
+        bool belongs = await _context.Projects
             .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (!belongs)
@@ -294,7 +294,7 @@ public class TechHealthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.ScanTriggered,
-            entityType: "TechProject",
+            entityType: "Project",
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: id,

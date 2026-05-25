@@ -61,7 +61,7 @@ export type FormState = {
   endTime: string;
   title: string;
   description: string;
-  techProjectId: string;
+  projectId: string;
   ticketId: string;
 };
 
@@ -79,7 +79,7 @@ export const emptyForm = (date?: string, startTime?: string): FormState => {
     endTime,
     title: "",
     description: "",
-    techProjectId: "",
+    projectId: "",
     ticketId: "",
   };
 };

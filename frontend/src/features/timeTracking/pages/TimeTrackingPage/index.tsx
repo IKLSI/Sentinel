@@ -210,7 +210,7 @@ export const TimeTrackingPage: React.FC = () => {
       endTime: entry.endTime ? entry.endTime.substring(0, 5) : "",
       title: entry.title ?? "",
       description: entry.description ?? "",
-      techProjectId: entry.techProjectId ?? "",
+      projectId: entry.projectId ?? "",
       ticketId: entry.ticketId ?? "",
     });
     setModalOpen(true);
@@ -225,7 +225,7 @@ export const TimeTrackingPage: React.FC = () => {
       if (diff > 0) durationMinutes = diff;
     }
     if (!form.title.trim() || durationMinutes <= 0) return;
-    if (!form.techProjectId && !form.ticketId) {
+    if (!form.projectId && !form.ticketId) {
       showToast(t("time_tracking.error_project_or_ticket_required"), "error");
       return;
     }
@@ -239,7 +239,7 @@ export const TimeTrackingPage: React.FC = () => {
           endTime: form.endTime || undefined,
           title: form.title.trim(),
           description: form.description.trim() || undefined,
-          techProjectId: form.techProjectId || null,
+          projectId: form.projectId || null,
           ticketId: form.ticketId || null,
         });
         showToast(t("time_tracking.toast_entry_updated"), "success");
@@ -252,7 +252,7 @@ export const TimeTrackingPage: React.FC = () => {
           title: form.title.trim(),
           description: form.description.trim() || undefined,
         };
-        if (form.techProjectId) payload.techProjectId = form.techProjectId;
+        if (form.projectId) payload.projectId = form.projectId;
         if (form.ticketId) payload.ticketId = form.ticketId;
         await createTimeEntry(payload);
         showToast(t("time_tracking.toast_entry_created"), "success");

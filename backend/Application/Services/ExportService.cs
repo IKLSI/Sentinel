@@ -35,7 +35,7 @@ public class ExportService
             .AsNoTracking()
             .Include(te => te.User)
             .Include(te => te.Ticket)
-            .Include(te => te.TechProject)
+            .Include(te => te.Project)
             .Where(te => te.User.OrganizationId == organizationId);
 
         if (userId.HasValue)
@@ -118,7 +118,7 @@ public class ExportService
 
             SetDateCell(ws.Cell(row, 1), te.Date.ToDateTime(TimeOnly.MinValue));
             ws.Cell(row, 2).Value = te.User?.FullName ?? string.Empty;
-            ws.Cell(row, 3).Value = te.TechProject?.Name ?? string.Empty;
+            ws.Cell(row, 3).Value = te.Project?.Name ?? string.Empty;
             ws.Cell(row, 4).Value = te.Ticket?.Title ?? string.Empty;
 
             ws.Cell(row, 5).Value = (double)Math.Round(te.DurationMinutes / 60m, 2);
@@ -271,7 +271,7 @@ public class ExportService
 
     public async Task<byte[]> ExportTechHealthExcelAsync(Guid organizationId)
     {
-        List<TechProject> projects = await _context.TechProjects
+        List<Project> projects = await _context.Projects
             .AsNoTracking()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
@@ -282,12 +282,12 @@ public class ExportService
         return WriteTechHealthExcel(projects);
     }
 
-    private static byte[] WriteTechHealthExcel(List<TechProject> projects)
+    private static byte[] WriteTechHealthExcel(List<Project> projects)
     {
         using XLWorkbook workbook = new();
         WriteRecapSheet(workbook, projects);
         Dictionary<string, int> usedNames = [];
-        foreach (TechProject project in projects)
+        foreach (Project project in projects)
         {
             string baseName = SafeSheetName(project.Name);
             if (!usedNames.TryAdd(baseName, 1))
@@ -304,7 +304,7 @@ public class ExportService
         return SaveWorkbook(workbook);
     }
 
-    private static void WriteRecapSheet(XLWorkbook wb, List<TechProject> projects)
+    private static void WriteRecapSheet(XLWorkbook wb, List<Project> projects)
     {
         string[] headers = ["Projet", "Grade", "Score /100", "Dépendances", "À mettre à jour", "Vulnérables", "Critiques", "Runtimes EOL", "Dernier scan"];
         IXLWorksheet ws = wb.Worksheets.Add("Récapitulatif");
@@ -314,7 +314,7 @@ public class ExportService
 
         for (int i = 0; i < projects.Count; i++)
         {
-            TechProject p = projects[i];
+            Project p = projects[i];
             int row = i + 3;
             SetRowBackground(ws, row, headers.Length, i % 2 == 1 ? AltRowColor : XLColor.White);
 
@@ -372,7 +372,7 @@ public class ExportService
         FinalizeSheet(ws, headers.Length);
     }
 
-    private static void WriteProjectSheet(XLWorkbook wb, TechProject project, string sheetName)
+    private static void WriteProjectSheet(XLWorkbook wb, Project project, string sheetName)
     {
         IXLWorksheet ws = wb.Worksheets.Add(sheetName);
 
