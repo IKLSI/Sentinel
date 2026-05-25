@@ -1,28 +1,60 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Alerte vulnérabilités - Sentinel</title>
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
+  <title>Alerte vulnérabilités — Sentinel</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    body { margin:0; padding:0; width:100% !important; }
+    a { text-decoration:none; }
+    @media only screen and (max-width:600px) {
+      .sp-pad   { padding:30px 22px !important; }
+      .sp-h1    { font-size:20px !important; }
+      .sp-shell { padding:28px 12px !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#080b12;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#f0f2f8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#080b12;padding:48px 16px;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{NEW_COUNT}} vulnérabilité(s) détectée(s) sur le projet {{PROJECT_NAME}}.&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
     <tr>
-      <td align="center">
+      <td align="center" class="sp-shell" style="padding:48px 16px;">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
           <!-- ─── HEADER ─── -->
           <tr>
-            <td style="padding-bottom:24px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <td style="padding:0 6px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <span style="font-size:13px;font-weight:700;color:#6366f1;letter-spacing:0.12em;text-transform:uppercase;">SENTINEL</span>
+                  <td style="vertical-align:middle;padding-right:10px;line-height:0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 24 28" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="sentinelShield" x1="0" y1="0" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+                          <stop offset="0" stop-color="#09090b"/><stop offset="0.45" stop-color="#09090b"/>
+                          <stop offset="0.45" stop-color="#4f46e5"/><stop offset="0.58" stop-color="#4f46e5"/>
+                          <stop offset="0.58" stop-color="#09090b"/><stop offset="0.68" stop-color="#09090b"/>
+                          <stop offset="0.68" stop-color="#ea580c"/><stop offset="1" stop-color="#ea580c"/>
+                        </linearGradient>
+                        <clipPath id="sentinelClip"><path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z"/></clipPath>
+                      </defs>
+                      <path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z" fill="url(#sentinelShield)"/>
+                      <path d="M12 5 L18 7.5 V13 C18 17 15.5 20.5 12 22 C8.5 20.5 6 17 6 13 V7.5 Z" fill="rgba(255,255,255,0.15)"/>
+                      <path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/>
+                      <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="'Playfair Display',Georgia,serif" font-size="16" font-weight="700" fill="#ffffff" clip-path="url(#sentinelClip)">S</text>
+                    </svg>
                   </td>
-                  <td align="right">
-                    <span style="font-size:11px;color:#3a4459;font-family:monospace;letter-spacing:0.05em;">Tech Health</span>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:15px;font-weight:700;color:#0e1220;letter-spacing:0.18em;font-family:'Space Grotesk','Inter',Arial,sans-serif;">SENTINEL</span>
                   </td>
                 </tr>
               </table>
@@ -31,92 +63,100 @@
 
           <!-- ─── CARD ─── -->
           <tr>
-            <td style="background-color:#0d1220;border:1px solid #1a2236;border-radius:16px;overflow:hidden;">
-
-              <!-- Accent top bar -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="height:3px;background:linear-gradient(90deg,#ef4444 0%,#f87171 50%,#dc2626 100%);font-size:0;line-height:0;">&nbsp;</td>
-                </tr>
-              </table>
+            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(14,18,32,0.04),0 14px 32px rgba(14,18,32,0.07);">
 
               <!-- Card body -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="padding:44px 48px 40px;">
+                  <td class="sp-pad" style="padding:42px 46px 38px;">
 
                     <!-- Badge + title -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
                       <tr>
-                        <td style="vertical-align:middle;padding-right:16px;">
-                          <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#dc2626,#ef4444);text-align:center;line-height:52px;font-size:22px;display:inline-block;">&#x26A0;&#xFE0F;</div>
+                        <td style="vertical-align:middle;padding-right:15px;">
+                          <!--[if mso]>
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" stroke="f" fillcolor="#dc2626" arcsize="27%" style="width:50px;height:50px;v-text-anchor:middle;">
+                            <v:fill type="gradient" color="#dc2626" color2="#ef4444" angle="135" />
+                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:26px;font-weight:bold;">!</center>
+                          </v:roundrect>
+                          <![endif]-->
+                          <!--[if !mso]><!-->
+                          <div style="width:50px;height:50px;border-radius:13px;background-color:#dc2626;background:linear-gradient(135deg,#dc2626,#ef4444);text-align:center;line-height:50px;font-size:26px;font-weight:800;color:#ffffff;font-family:'Space Grotesk','Inter',Arial,sans-serif;">!</div>
+                          <!--<![endif]-->
                         </td>
                         <td style="vertical-align:middle;">
-                          <p style="margin:0;font-size:12px;color:#4a5568;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">Tech Health</p>
-                          <p style="margin:4px 0 0;font-size:14px;color:#f87171;font-weight:700;">{{SCAN_LABEL}}</p>
+                          <p style="margin:0;font-size:11px;color:#8898bb;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;">Tech Health</p>
+                          <p style="margin:5px 0 0;font-size:13px;color:#dc2626;font-weight:700;">{{SCAN_LABEL}}</p>
                         </td>
                       </tr>
                     </table>
 
                     <!-- Main heading -->
-                    <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#f0f4ff;letter-spacing:-0.5px;line-height:1.3;">{{NEW_COUNT}} nouvelle(s) vulnérabilité(s) détectée(s)</p>
-                    <p style="margin:0 0 32px;font-size:14px;color:#6b7a99;">
-                      Projet <span style="color:#c8d3e8;font-weight:600;">{{PROJECT_NAME}}</span> &bull; {{ORGANIZATION}}
+                    <p class="sp-h1" style="margin:0 0 8px;font-size:23px;font-weight:700;color:#0e1220;letter-spacing:-0.5px;line-height:1.3;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{NEW_COUNT}} nouvelle(s) vulnérabilité(s) détectée(s)</p>
+                    <p style="margin:0 0 28px;font-size:14px;color:#4d5e82;">
+                      Projet <span style="color:#0e1220;font-weight:600;">{{PROJECT_NAME}}</span> &middot; {{ORGANIZATION}}
                     </p>
 
                     <!-- Stats row -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                       <tr>
                         <td width="25%" align="center" style="padding:0 4px;">
-                          <div style="background-color:#1a0a0a;border:1px solid #3d1515;border-radius:10px;padding:16px 8px;">
-                            <p style="margin:0;font-size:22px;font-weight:800;color:#ef4444;">{{COUNT_CRITICAL}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#7a3535;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Critique</p>
+                          <div style="background-color:#fef2f2;border:1px solid #f6c9c9;border-radius:10px;padding:15px 8px;">
+                            <p style="margin:0;font-size:22px;font-weight:800;color:#dc2626;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_CRITICAL}}</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Critique</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
-                          <div style="background-color:#1a110a;border:1px solid #3d2910;border-radius:10px;padding:16px 8px;">
-                            <p style="margin:0;font-size:22px;font-weight:800;color:#f97316;">{{COUNT_HIGH}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#7a4a1a;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Élevée</p>
+                          <div style="background-color:#fff7ed;border:1px solid #fcd7ae;border-radius:10px;padding:15px 8px;">
+                            <p style="margin:0;font-size:22px;font-weight:800;color:#ea580c;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_HIGH}}</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Élevée</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
-                          <div style="background-color:#141208;border:1px solid #332e0e;border-radius:10px;padding:16px 8px;">
-                            <p style="margin:0;font-size:22px;font-weight:800;color:#eab308;">{{COUNT_MEDIUM}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#6a5e1a;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Moyenne</p>
+                          <div style="background-color:#fefce8;border:1px solid #f7e8a8;border-radius:10px;padding:15px 8px;">
+                            <p style="margin:0;font-size:22px;font-weight:800;color:#ca8a04;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_MEDIUM}}</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#a16207;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Moyenne</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
-                          <div style="background-color:#0a0d14;border:1px solid #1a2236;border-radius:10px;padding:16px 8px;">
-                            <p style="margin:0;font-size:22px;font-weight:800;color:#6b7a99;">{{COUNT_LOW}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#3a4459;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Faible</p>
+                          <div style="background-color:#f5f7fc;border:1px solid #d8e0ee;border-radius:10px;padding:15px 8px;">
+                            <p style="margin:0;font-size:22px;font-weight:800;color:#4d5e82;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_LOW}}</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#5c6f90;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Faible</p>
                           </div>
                         </td>
                       </tr>
                     </table>
 
                     <!-- Vuln list -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;background-color:#0a0f1a;border:1px solid #1a2236;border-left:3px solid #ef4444;border-radius:8px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:8px;">
                       <tr>
                         <td style="padding:16px 20px;">
-                          <p style="margin:0 0 12px;font-size:10px;font-weight:700;color:#3a4459;letter-spacing:0.1em;text-transform:uppercase;">Vulnérabilités détectées</p>
+                          <p style="margin:0 0 12px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">Vulnérabilités détectées</p>
                           {{VULN_ROWS}}
                         </td>
                       </tr>
                     </table>
 
                     <!-- CTA Button -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                       <tr>
-                        <td style="border-radius:10px;background:linear-gradient(135deg,#6366f1,#4f46e5);">
-                          <a href="{{PROJECT_URL}}" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.02em;border-radius:10px;">
-                            Voir le projet &rarr;
-                          </a>
+                        <td align="left">
+                          <!--[if mso]>
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{PROJECT_URL}}" stroke="f" fillcolor="#4f46e5" arcsize="22%" style="height:50px;width:196px;v-text-anchor:middle;">
+                            <v:fill type="gradient" color="#6366f1" color2="#4f46e5" angle="135" />
+                            <w:anchorlock/>
+                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Voir le projet &#8594;</center>
+                          </v:roundrect>
+                          <![endif]-->
+                          <!--[if !mso]><!-->
+                          <a href="{{PROJECT_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">Voir le projet &rarr;</a>
+                          <!--<![endif]-->
                         </td>
                       </tr>
                     </table>
 
-                    <p style="margin:0;font-size:11px;color:#2e3a4e;line-height:1.6;">
-                      Lien direct : <a href="{{PROJECT_URL}}" style="color:#4f5b8a;text-decoration:underline;">{{PROJECT_URL}}</a>
+                    <p style="margin:0;font-size:11px;color:#8898bb;line-height:1.6;">
+                      Lien direct : <a href="{{PROJECT_URL}}" style="color:#4f46e5;text-decoration:underline;">{{PROJECT_URL}}</a>
                     </p>
 
                   </td>
@@ -127,9 +167,14 @@
 
           <!-- ─── FOOTER ─── -->
           <tr>
-            <td style="padding:28px 0 0;text-align:center;">
-              <p style="margin:0 0 6px;font-size:11px;color:#2a3245;">Sentinel &mdash; Gestion TMA</p>
-              <p style="margin:0;font-size:10px;color:#1e2a3a;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <td style="padding:26px 8px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #dde3f2;padding-top:20px;text-align:center;">
+                    <p style="margin:0;font-size:10px;color:#a3aecb;">Email automatique &mdash; merci de ne pas y répondre.</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 

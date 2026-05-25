@@ -179,7 +179,6 @@ public class TicketService
     {
         Ticket? ticket = await _context.Tickets
             .Include(t => t.TicketStatus)
-            .Include(t => t.CreatedBy)
             .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
             return null;
@@ -196,27 +195,6 @@ public class TicketService
         await _context.TicketHistories.AddAsync(history);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
-
-        if (ticket.CreatedBy.Role == UserRole.Client && ticket.CreatedById != userId)
-        {
-            User? actor = await _context.Users.FindAsync(userId);
-            string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
-            string clientEmail = ticket.CreatedBy.Email;
-            string clientName = ticket.CreatedBy.FullName;
-            string ticketTitle = ticket.Title;
-            string statusName = newStatus.Name;
-            string actorName = actor?.FullName ?? "Un membre de l'équipe";
-
-            _backgroundJobs.Enqueue<IEmailService>(s => s.SendTicketUpdateToClientAsync(
-                clientEmail,
-                clientName,
-                ticketTitle,
-                actorName,
-                "changé le statut de",
-                "Nouveau statut",
-                statusName,
-                ticketUrl));
-        }
 
         return ticket;
     }
@@ -236,8 +214,6 @@ public class TicketService
     public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId, bool isInternal = false)
     {
         Ticket? ticket = await _context.Tickets
-            .Include(t => t.CreatedBy)
-            .Include(t => t.Organization)
             .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
             throw new InvalidOperationException("Ticket introuvable");
@@ -255,31 +231,6 @@ public class TicketService
         await _context.TicketComments.AddAsync(comment);
         ticket.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
-
-        User? author = await _context.Users.FindAsync(authorId);
-
-        if (author?.Role == UserRole.Client)
-        {
-            await NotifyAdminsIfClientTicketAsync(ticket, authorId, ticket.OrganizationId, "Nouveau commentaire client", "Commentaire", content);
-        }
-        else if (!isInternal && ticket.CreatedBy.Role == UserRole.Client && ticket.CreatedById != authorId)
-        {
-            string ticketUrl = $"{_configuration["Frontend:BaseUrl"]}/tickets/{ticketId}";
-            string actorName = author?.FullName ?? "Un membre de l'équipe";
-            string clientEmail = ticket.CreatedBy.Email;
-            string clientName = ticket.CreatedBy.FullName;
-            string ticketTitle = ticket.Title;
-
-            _backgroundJobs.Enqueue<IEmailService>(s => s.SendTicketUpdateToClientAsync(
-                clientEmail,
-                clientName,
-                ticketTitle,
-                actorName,
-                "répondu à",
-                "Réponse",
-                content,
-                ticketUrl));
-        }
 
         return comment;
     }

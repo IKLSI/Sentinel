@@ -15,7 +15,6 @@ public interface IEmailService
     Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
     Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
-    Task SendTicketUpdateToClientAsync(string clientEmail, string clientName, string ticketTitle, string actorName, string eventVerb, string eventLabel, string eventValue, string ticketUrl);
     Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
 }
 
@@ -34,8 +33,8 @@ public class EmailService : IEmailService
     {
         string acceptUrl  = $"{frontendBaseUrl}/accept-invitation?token={invitation.Token}";
         string roleLabel = invitation.Role == UserRole.Admin ? "Administrateur" : "Développeur";
-        string roleColor = invitation.Role == UserRole.Admin ? "#f87171" : "#818cf8";
-        string roleBg    = invitation.Role == UserRole.Admin ? "#2d1515" : "#1a1a35";
+        string roleColor = invitation.Role == UserRole.Admin ? "#dc2626" : "#4f46e5";
+        string roleBg    = invitation.Role == UserRole.Admin ? "#fef2f2" : "#eef2ff";
 
         string html = LoadTemplate("invitation.html")
             .Replace("{{EMAIL}}",        invitation.Email)
@@ -163,40 +162,6 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendTicketUpdateToClientAsync(string clientEmail, string clientName, string ticketTitle, string actorName, string eventVerb, string eventLabel, string eventValue, string ticketUrl)
-    {
-        string html = LoadTemplate("ticket-client-update.html")
-            .Replace("{{CLIENT_NAME}}", clientName)
-            .Replace("{{TICKET_TITLE}}", ticketTitle)
-            .Replace("{{ACTOR_NAME}}", actorName)
-            .Replace("{{EVENT_VERB}}", eventVerb)
-            .Replace("{{EVENT_LABEL}}", eventLabel)
-            .Replace("{{EVENT_VALUE}}", eventValue)
-            .Replace("{{TICKET_URL}}", ticketUrl);
-
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _configuration["Email:FromName"] ?? "Sentinel",
-            _configuration["Email:FromAddress"] ?? "noreply@sentinel.io"
-        ));
-        message.To.Add(new MailboxAddress(clientEmail, clientEmail));
-        message.Subject = $"Mise à jour de votre ticket — {ticketTitle}";
-        message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
-
-        using SmtpClient client = new SmtpClient();
-        string host     = _configuration["Email:Host"] ?? throw new InvalidOperationException("Email:Host manquant");
-        int    port     = int.Parse(_configuration["Email:Port"] ?? "587");
-        string username = _configuration["Email:Username"] ?? string.Empty;
-        string password = _configuration["Email:Password"] ?? string.Empty;
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
-
-        _logger.LogInformation("Notification de mise à jour envoyée au client {Email}", clientEmail);
-    }
-
     public async Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
     {
         string scanLabel = isFirstScan ? "Premier scan — vulnérabilités détectées" : "Nouvelles vulnérabilités détectées";
@@ -207,19 +172,19 @@ public class EmailService : IEmailService
 
         string vulnRows = string.Join("\n", newVulns.Take(15).Select(v =>
         {
-            (string color, string bg) = v.Severity switch
+            (string color, string bg, string border) = v.Severity switch
             {
-                "Critical" => ("#ef4444", "#1a0a0a"),
-                "High"     => ("#f97316", "#1a110a"),
-                "Medium"   => ("#eab308", "#141208"),
-                _          => ("#6b7a99", "#0a0d14")
+                "Critical" => ("#dc2626", "#fef2f2", "#fbd2d2"),
+                "High"     => ("#ea580c", "#fff7ed", "#fed8b4"),
+                "Medium"   => ("#ca8a04", "#fefce8", "#fae9b0"),
+                _          => ("#475569", "#f1f5f9", "#dde3ec")
             };
-            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix: <span style=\"color:#34d399\">{v.FixedVersion}</span>";
-            return $"""<p style="margin:0 0 8px;font-size:13px;color:#9aaccc;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{v.Severity}</span><span style="color:#c8d3e8;font-weight:600;">{v.PackageName}</span> &mdash; <span style="font-family:monospace;font-size:12px;">{v.CveId}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
+            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix : <span style=\"color:#059669;font-weight:700;\">{v.FixedVersion}</span>";
+            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{v.Severity}</span><span style="color:#0f172a;font-weight:700;">{v.PackageName}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{v.CveId}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
         }));
 
         if (newVulns.Count > 15)
-            vulnRows += $"""<p style="margin:8px 0 0;font-size:12px;color:#3a4459;">... et {newVulns.Count - 15} autre(s)</p>""";
+            vulnRows += $"""<p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">... et {newVulns.Count - 15} autre(s)</p>""";
 
         string html = LoadTemplate("vuln-alert.html")
             .Replace("{{PROJECT_NAME}}", projectName)

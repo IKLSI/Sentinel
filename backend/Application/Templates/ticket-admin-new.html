@@ -1,28 +1,60 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Nouveau ticket client - Sentinel</title>
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
+  <title>Nouveau ticket client — Sentinel</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    body { margin:0; padding:0; width:100% !important; }
+    a { text-decoration:none; }
+    @media only screen and (max-width:600px) {
+      .sp-pad   { padding:30px 22px !important; }
+      .sp-h1    { font-size:20px !important; }
+      .sp-shell { padding:28px 12px !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#080b12;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#f0f2f8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#080b12;padding:48px 16px;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{EVENT_LABEL}} — {{TICKET_TITLE}} par {{CLIENT_NAME}}.&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
     <tr>
-      <td align="center">
+      <td align="center" class="sp-shell" style="padding:48px 16px;">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
           <!-- ─── HEADER ─── -->
           <tr>
-            <td style="padding-bottom:24px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <td style="padding:0 6px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <span style="font-size:13px;font-weight:700;color:#6366f1;letter-spacing:0.12em;text-transform:uppercase;">SENTINEL</span>
+                  <td style="vertical-align:middle;padding-right:10px;line-height:0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 24 28" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="sentinelShield" x1="0" y1="0" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+                          <stop offset="0" stop-color="#09090b"/><stop offset="0.45" stop-color="#09090b"/>
+                          <stop offset="0.45" stop-color="#4f46e5"/><stop offset="0.58" stop-color="#4f46e5"/>
+                          <stop offset="0.58" stop-color="#09090b"/><stop offset="0.68" stop-color="#09090b"/>
+                          <stop offset="0.68" stop-color="#ea580c"/><stop offset="1" stop-color="#ea580c"/>
+                        </linearGradient>
+                        <clipPath id="sentinelClip"><path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z"/></clipPath>
+                      </defs>
+                      <path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z" fill="url(#sentinelShield)"/>
+                      <path d="M12 5 L18 7.5 V13 C18 17 15.5 20.5 12 22 C8.5 20.5 6 17 6 13 V7.5 Z" fill="rgba(255,255,255,0.15)"/>
+                      <path d="M12 1.5 L22 5 V13 C22 19.5 17.8 24.5 12 26.5 C6.2 24.5 2 19.5 2 13 V5 Z" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/>
+                      <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="'Playfair Display',Georgia,serif" font-size="16" font-weight="700" fill="#ffffff" clip-path="url(#sentinelClip)">S</text>
+                    </svg>
                   </td>
-                  <td align="right">
-                    <span style="font-size:11px;color:#3a4459;font-family:monospace;letter-spacing:0.05em;">TMA Platform</span>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:15px;font-weight:700;color:#0e1220;letter-spacing:0.18em;font-family:'Space Grotesk','Inter',Arial,sans-serif;">SENTINEL</span>
                   </td>
                 </tr>
               </table>
@@ -31,62 +63,70 @@
 
           <!-- ─── CARD ─── -->
           <tr>
-            <td style="background-color:#0d1220;border:1px solid #1a2236;border-radius:16px;overflow:hidden;">
-
-              <!-- Accent top bar -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="height:3px;background:linear-gradient(90deg,#f59e0b 0%,#fbbf24 50%,#d97706 100%);font-size:0;line-height:0;">&nbsp;</td>
-                </tr>
-              </table>
+            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(14,18,32,0.04),0 14px 32px rgba(14,18,32,0.07);">
 
               <!-- Card body -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="padding:44px 48px 40px;">
+                  <td class="sp-pad" style="padding:42px 46px 38px;">
 
                     <!-- Event badge + title -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
                       <tr>
-                        <td style="vertical-align:middle;padding-right:16px;">
-                          <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#d97706,#f59e0b);text-align:center;line-height:52px;font-size:22px;display:inline-block;">🎫</div>
+                        <td style="vertical-align:middle;padding-right:15px;">
+                          <!--[if mso]>
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" stroke="f" fillcolor="#d97706" arcsize="27%" style="width:50px;height:50px;v-text-anchor:middle;">
+                            <v:fill type="gradient" color="#d97706" color2="#ea580c" angle="135" />
+                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;">#</center>
+                          </v:roundrect>
+                          <![endif]-->
+                          <!--[if !mso]><!-->
+                          <div style="width:50px;height:50px;border-radius:13px;background-color:#d97706;background:linear-gradient(135deg,#d97706,#ea580c);text-align:center;line-height:50px;font-size:22px;font-weight:700;color:#ffffff;font-family:'JetBrains Mono',monospace;">#</div>
+                          <!--<![endif]-->
                         </td>
                         <td style="vertical-align:middle;">
-                          <p style="margin:0;font-size:12px;color:#4a5568;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">Action client</p>
-                          <p style="margin:4px 0 0;font-size:14px;color:#fbbf24;font-weight:700;">{{EVENT_LABEL}}</p>
+                          <p style="margin:0;font-size:11px;color:#8898bb;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;">Action client</p>
+                          <p style="margin:5px 0 0;font-size:13px;color:#d97706;font-weight:700;">{{EVENT_LABEL}}</p>
                         </td>
                       </tr>
                     </table>
 
                     <!-- Main heading -->
-                    <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#f0f4ff;letter-spacing:-0.5px;line-height:1.3;">{{TICKET_TITLE}}</p>
-                    <p style="margin:0 0 32px;font-size:14px;color:#6b7a99;">
-                      par <span style="color:#c8d3e8;font-weight:600;">{{CLIENT_NAME}}</span> &bull; {{ORGANIZATION}}
+                    <p class="sp-h1" style="margin:0 0 8px;font-size:23px;font-weight:700;color:#0e1220;letter-spacing:-0.5px;line-height:1.3;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{TICKET_TITLE}}</p>
+                    <p style="margin:0 0 28px;font-size:14px;color:#4d5e82;">
+                      par <span style="color:#0e1220;font-weight:600;">{{CLIENT_NAME}}</span> &middot; {{ORGANIZATION}}
                     </p>
 
                     <!-- Content preview -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;background-color:#0a0f1a;border:1px solid #1a2236;border-left:3px solid #f59e0b;border-radius:8px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#fffaf0;border:1px solid #f6e2c4;border-radius:8px;">
                       <tr>
                         <td style="padding:16px 20px;">
-                          <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#3a4459;letter-spacing:0.1em;text-transform:uppercase;">{{CONTENT_LABEL}}</p>
-                          <p style="margin:0;font-size:14px;color:#9aaccc;line-height:1.7;">{{CONTENT_PREVIEW}}</p>
+                          <p style="margin:0 0 7px;font-size:10px;font-weight:700;color:#b45309;letter-spacing:0.1em;text-transform:uppercase;">{{CONTENT_LABEL}}</p>
+                          <p style="margin:0;font-size:14px;color:#4d5e82;line-height:1.7;">{{CONTENT_PREVIEW}}</p>
                         </td>
                       </tr>
                     </table>
 
                     <!-- CTA Button -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                       <tr>
-                        <td style="border-radius:10px;background:linear-gradient(135deg,#6366f1,#4f46e5);">
-                          <a href="{{TICKET_URL}}" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.02em;border-radius:10px;">
-                            Voir le ticket &rarr;
-                          </a>
+                        <td align="left">
+                          <!--[if mso]>
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{TICKET_URL}}" stroke="f" fillcolor="#4f46e5" arcsize="22%" style="height:50px;width:196px;v-text-anchor:middle;">
+                            <v:fill type="gradient" color="#6366f1" color2="#4f46e5" angle="135" />
+                            <w:anchorlock/>
+                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Voir le ticket &#8594;</center>
+                          </v:roundrect>
+                          <![endif]-->
+                          <!--[if !mso]><!-->
+                          <a href="{{TICKET_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">Voir le ticket &rarr;</a>
+                          <!--<![endif]-->
                         </td>
                       </tr>
                     </table>
 
-                    <p style="margin:0;font-size:11px;color:#2e3a4e;line-height:1.6;">
-                      Lien direct : <a href="{{TICKET_URL}}" style="color:#4f5b8a;text-decoration:underline;">{{TICKET_URL}}</a>
+                    <p style="margin:0;font-size:11px;color:#8898bb;line-height:1.6;">
+                      Lien direct : <a href="{{TICKET_URL}}" style="color:#4f46e5;text-decoration:underline;">{{TICKET_URL}}</a>
                     </p>
 
                   </td>
@@ -97,9 +137,14 @@
 
           <!-- ─── FOOTER ─── -->
           <tr>
-            <td style="padding:28px 0 0;text-align:center;">
-              <p style="margin:0 0 6px;font-size:11px;color:#2a3245;">Sentinel &mdash; Gestion TMA</p>
-              <p style="margin:0;font-size:10px;color:#1e2a3a;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <td style="padding:26px 8px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #dde3f2;padding-top:20px;text-align:center;">
+                    <p style="margin:0;font-size:10px;color:#a3aecb;">Email automatique &mdash; merci de ne pas y répondre.</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
