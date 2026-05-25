@@ -35,5 +35,4 @@ public class DashboardController : BaseController
 
         return Ok(stats);
     }
-
 }

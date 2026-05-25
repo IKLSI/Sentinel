@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import { HealthGrade } from "@/types/enums";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
 import ReportOutlined from "@mui/icons-material/ReportOutlined";
 import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
@@ -8,12 +9,12 @@ import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
 import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
 
-export type GradeKey = "F" | "E" | "D" | "C" | "B" | "A";
+export type GradeKey = HealthGrade;
 
-export const GRADE_ORDER: GradeKey[] = ["F", "E", "D", "C", "B", "A"];
+export const GRADE_ORDER: HealthGrade[] = ["F", "E", "D", "C", "B", "A"];
 
 export const GRADE_VISUAL: Record<
-  GradeKey,
+  HealthGrade,
   { iconColor: string; Icon: SvgIconComponent }
 > = {
   F: { iconColor: "var(--red)", Icon: DangerousOutlined },
@@ -24,17 +25,17 @@ export const GRADE_VISUAL: Record<
   A: { iconColor: "var(--green)", Icon: WorkspacePremiumOutlined },
 };
 
-export const getGrade = (grade: string | null | undefined): GradeKey => {
+export const getGrade = (grade: string | null | undefined): HealthGrade => {
   if (
-    grade === "A" ||
-    grade === "B" ||
-    grade === "C" ||
-    grade === "D" ||
-    grade === "E" ||
-    grade === "F"
+    grade === HealthGrade.A ||
+    grade === HealthGrade.B ||
+    grade === HealthGrade.C ||
+    grade === HealthGrade.D ||
+    grade === HealthGrade.E ||
+    grade === HealthGrade.F
   )
     return grade;
-  return "F";
+  return HealthGrade.F;
 };
 
 export const HeadCell: React.FC<{

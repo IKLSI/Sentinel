@@ -41,10 +41,19 @@ export const RegisterPage: React.FC = () => {
     }
     setLoading(true);
     try {
-      await register({ organizationName, firstName, lastName, email, password });
+      await register({
+        organizationName,
+        firstName,
+        lastName,
+        email,
+        password,
+      });
       setDone(true);
     } catch (err) {
-      showToast(extractApiError(err, t("auth.register.error_generic")), "error");
+      showToast(
+        extractApiError(err, t("auth.register.error_generic")),
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -55,7 +64,10 @@ export const RegisterPage: React.FC = () => {
       await resendVerification(email);
       showToast(t("auth.register.resend_done"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("auth.register.error_generic")), "error");
+      showToast(
+        extractApiError(err, t("auth.register.error_generic")),
+        "error",
+      );
     }
   };
 
@@ -66,7 +78,13 @@ export const RegisterPage: React.FC = () => {
           <Box className="lp-left-noise" aria-hidden />
 
           <Box className="lp-decor" aria-hidden>
-            <svg width="100%" height="100%" viewBox="0 0 450 600" fill="none" preserveAspectRatio="xMidYMid slice">
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 450 600"
+              fill="none"
+              preserveAspectRatio="xMidYMid slice"
+            >
               <defs>
                 <radialGradient id="lp-glow-tr" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="rgba(165,180,252,0.2)" />
@@ -74,9 +92,27 @@ export const RegisterPage: React.FC = () => {
                 </radialGradient>
               </defs>
               <circle cx="450" cy="0" r="160" fill="url(#lp-glow-tr)" />
-              <circle cx="450" cy="0" r="80" stroke="rgba(255,255,255,0.30)" strokeWidth="1.2" />
-              <circle cx="450" cy="0" r="125" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
-              <circle cx="450" cy="0" r="175" stroke="rgba(255,255,255,0.11)" strokeWidth="1" />
+              <circle
+                cx="450"
+                cy="0"
+                r="80"
+                stroke="rgba(255,255,255,0.30)"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="450"
+                cy="0"
+                r="125"
+                stroke="rgba(255,255,255,0.18)"
+                strokeWidth="1"
+              />
+              <circle
+                cx="450"
+                cy="0"
+                r="175"
+                stroke="rgba(255,255,255,0.11)"
+                strokeWidth="1"
+              />
             </svg>
           </Box>
 
@@ -109,7 +145,13 @@ export const RegisterPage: React.FC = () => {
               <Box className="aip-success">
                 <Box className="aip-success-icon">
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <path d="M6 14l6 6 10-10" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M6 14l6 6 10-10"
+                      stroke="#6366f1"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </Box>
                 <Box component="p" className="aip-success-title">
@@ -118,11 +160,25 @@ export const RegisterPage: React.FC = () => {
                 <Box component="p" className="aip-success-sub">
                   {t("auth.register.success_sub")}
                 </Box>
-                <button type="button" className="lp-submit" style={{ marginTop: "24px" }} onClick={() => navigate("/login")}>
+                <button
+                  type="button"
+                  className="lp-submit"
+                  style={{ marginTop: "24px" }}
+                  onClick={() => navigate("/login")}
+                >
                   {t("auth.register.back_to_login")}
                 </button>
                 <Box className="lp-forgot-wrap">
-                  <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={handleResend}>
+                  <button
+                    type="button"
+                    className="lp-forgot"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={handleResend}
+                  >
                     {t("auth.register.resend_link")}
                   </button>
                 </Box>
@@ -140,7 +196,11 @@ export const RegisterPage: React.FC = () => {
 
                 <form onSubmit={handleSubmit} noValidate>
                   <Box className="lp-field">
-                    <Box component="label" className="lp-label" htmlFor="rp-org">
+                    <Box
+                      component="label"
+                      className="lp-label"
+                      htmlFor="rp-org"
+                    >
                       {t("auth.register.organization_label")}
                     </Box>
                     <input
@@ -158,7 +218,11 @@ export const RegisterPage: React.FC = () => {
 
                   <Box sx={{ display: "flex", gap: "12px" }}>
                     <Box className="lp-field" sx={{ flex: 1 }}>
-                      <Box component="label" className="lp-label" htmlFor="rp-firstname">
+                      <Box
+                        component="label"
+                        className="lp-label"
+                        htmlFor="rp-firstname"
+                      >
                         {t("auth.register.firstname_label")}
                       </Box>
                       <input
@@ -173,7 +237,11 @@ export const RegisterPage: React.FC = () => {
                       />
                     </Box>
                     <Box className="lp-field" sx={{ flex: 1 }}>
-                      <Box component="label" className="lp-label" htmlFor="rp-lastname">
+                      <Box
+                        component="label"
+                        className="lp-label"
+                        htmlFor="rp-lastname"
+                      >
                         {t("auth.register.lastname_label")}
                       </Box>
                       <input
@@ -190,7 +258,11 @@ export const RegisterPage: React.FC = () => {
                   </Box>
 
                   <Box className="lp-field">
-                    <Box component="label" className="lp-label" htmlFor="rp-email">
+                    <Box
+                      component="label"
+                      className="lp-label"
+                      htmlFor="rp-email"
+                    >
                       {t("auth.register.email_label")}
                     </Box>
                     <input
@@ -206,7 +278,11 @@ export const RegisterPage: React.FC = () => {
                   </Box>
 
                   <Box className="lp-field">
-                    <Box component="label" className="lp-label" htmlFor="rp-password">
+                    <Box
+                      component="label"
+                      className="lp-label"
+                      htmlFor="rp-password"
+                    >
                       {t("auth.register.password_label")}
                     </Box>
                     <Box className="lp-input-wrap">
@@ -216,7 +292,9 @@ export const RegisterPage: React.FC = () => {
                         type={showPassword ? "text" : "password"}
                         className="lp-input"
                         value={password}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setPassword(e.target.value)
+                        }
                         placeholder={t("auth.register.password_placeholder")}
                         autoComplete="new-password"
                         sx={{ paddingRight: "44px" }}
@@ -227,15 +305,31 @@ export const RegisterPage: React.FC = () => {
                         className="lp-pw-toggle"
                         onClick={() => setShowPassword((v) => !v)}
                         tabIndex={-1}
-                        aria-label={showPassword ? t("auth.register.password_hide") : t("auth.register.password_show")}
+                        aria-label={
+                          showPassword
+                            ? t("auth.register.password_hide")
+                            : t("auth.register.password_show")
+                        }
                       >
-                        {showPassword ? <VisibilityOffOutlined sx={{ fontSize: 16 }} /> : <VisibilityOutlined sx={{ fontSize: 16 }} />}
+                        {showPassword ? (
+                          <VisibilityOffOutlined sx={{ fontSize: 16 }} />
+                        ) : (
+                          <VisibilityOutlined sx={{ fontSize: 16 }} />
+                        )}
                       </button>
                     </Box>
                   </Box>
 
-                  <button type="submit" className="lp-submit" disabled={loading}>
-                    {loading ? <Box className="lp-submit-loader" /> : t("auth.register.submit")}
+                  <button
+                    type="submit"
+                    className="lp-submit"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Box className="lp-submit-loader" />
+                    ) : (
+                      t("auth.register.submit")
+                    )}
                   </button>
                 </form>
 

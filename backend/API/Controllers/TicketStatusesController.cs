@@ -39,6 +39,7 @@ public class TicketStatusesController : BaseController
     public async Task<ActionResult<List<TicketStatusDto>>> GetStatuses()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         bool hasAny = await _context.TicketStatuses
@@ -83,6 +84,7 @@ public class TicketStatusesController : BaseController
     public async Task<ActionResult<TicketStatusDto>> CreateStatus([FromBody] CreateTicketStatusDto dto)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Name))
@@ -127,6 +129,7 @@ public class TicketStatusesController : BaseController
     public async Task<IActionResult> DeleteStatus(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         TicketStatus? status = await _context.TicketStatuses
@@ -139,6 +142,7 @@ public class TicketStatusesController : BaseController
             return BadRequest(new { message = "Impossible de supprimer le statut par défaut" });
 
         bool hasTickets = await _context.Tickets.AnyAsync(t => t.TicketStatusId == id);
+
         if (hasTickets)
             return BadRequest(new { message = "Impossible de supprimer un statut contenant des tickets" });
 

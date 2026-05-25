@@ -9,6 +9,7 @@ import LinkOutlined from "@mui/icons-material/LinkOutlined";
 import { AppModal } from "@/components/AppModal";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
+import { Theme } from "@/types/enums";
 import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
 
 interface Props {
@@ -38,7 +39,7 @@ export const EditCommentModal: React.FC<Props> = ({
 }) => {
   const t = useT();
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = theme === Theme.Dark;
   const editorRef = useRef<MarkdownEditorHandle>(null);
 
   const applyWrap = (before: string, after: string) => {

@@ -25,6 +25,7 @@ import { TimeEntryModal } from "./components/TimeEntryModal";
 import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
 import { extractApiError } from "@/utils/apiError";
 import { TIME_TRACKING_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
+import { UserRole } from "@/types/enums";
 
 type JournalUserOption = {
   id: string;
@@ -36,7 +37,7 @@ export const TimeTrackingPage: React.FC = () => {
   const t = useT();
   const { showToast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === "Admin";
+  const isAdmin = user?.role === UserRole.Admin;
 
   const [entries, setEntries] = useState<TimeEntryDto[]>([]);
   const [projects, setProjects] = useState<ProjectDto[]>([]);

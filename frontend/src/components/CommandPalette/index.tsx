@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
@@ -10,6 +16,7 @@ import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import KeyboardReturnOutlined from "@mui/icons-material/KeyboardReturnOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { UserRole } from "@/types/enums";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
 export const TICKETS_OPEN_CREATE_EVENT = "tickets:open-create";
@@ -24,7 +31,7 @@ interface PaletteItem {
   hintKey?: string;
   icon: React.ElementType;
   perform: () => void;
-  roles?: Array<"Admin" | "Developer" | "Client">;
+  roles?: Array<UserRole>;
 }
 
 export const CommandPalette: React.FC = () => {
@@ -60,8 +67,8 @@ export const CommandPalette: React.FC = () => {
     }
   }, [open]);
 
-  const isClient = user?.role === "Client";
-  const isAdmin = user?.role === "Admin";
+  const isClient = user?.role === UserRole.Client;
+  const isAdmin = user?.role === UserRole.Admin;
 
   const allItems: PaletteItem[] = useMemo(() => {
     const items: PaletteItem[] = [
@@ -94,7 +101,7 @@ export const CommandPalette: React.FC = () => {
             50,
           );
         },
-        roles: ["Admin", "Developer"],
+        roles: [UserRole.Admin, UserRole.Developer],
       },
       {
         id: "log-time",
@@ -106,11 +113,12 @@ export const CommandPalette: React.FC = () => {
           close();
           navigate("/time-tracking");
           window.setTimeout(
-            () => window.dispatchEvent(new Event(TIME_TRACKING_OPEN_CREATE_EVENT)),
+            () =>
+              window.dispatchEvent(new Event(TIME_TRACKING_OPEN_CREATE_EVENT)),
             50,
           );
         },
-        roles: ["Admin", "Developer"],
+        roles: [UserRole.Admin, UserRole.Developer],
       },
       {
         id: "invite-member",
@@ -126,14 +134,14 @@ export const CommandPalette: React.FC = () => {
             50,
           );
         },
-        roles: ["Admin"],
+        roles: [UserRole.Admin],
       },
     ];
     return items.filter((it) => {
       if (!it.roles) return true;
-      if (isAdmin) return it.roles.includes("Admin");
-      if (isClient) return it.roles.includes("Client");
-      return it.roles.includes("Developer");
+      if (isAdmin) return it.roles.includes(UserRole.Admin);
+      if (isClient) return it.roles.includes(UserRole.Client);
+      return it.roles.includes(UserRole.Developer);
     });
   }, [isAdmin, isClient, navigate, close]);
 
@@ -179,9 +187,7 @@ export const CommandPalette: React.FC = () => {
   };
 
   const groups: { key: string; items: PaletteItem[] }[] = useMemo(() => {
-    const order = [
-      "palette.section_actions",
-    ];
+    const order = ["palette.section_actions"];
     const map = new Map<string, PaletteItem[]>();
     for (const it of filtered) {
       if (!map.has(it.group)) map.set(it.group, []);
@@ -319,8 +325,12 @@ export const CommandPalette: React.FC = () => {
                         mx: "4px",
                         borderRadius: "var(--r)",
                         cursor: "pointer",
-                        background: isActive ? "var(--accent-subtle)" : "transparent",
-                        color: isActive ? "var(--text)" : "var(--text-secondary)",
+                        background: isActive
+                          ? "var(--accent-subtle)"
+                          : "transparent",
+                        color: isActive
+                          ? "var(--text)"
+                          : "var(--text-secondary)",
                         transition: "background 0.08s, color 0.08s",
                       }}
                     >

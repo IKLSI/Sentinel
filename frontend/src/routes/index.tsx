@@ -3,11 +3,14 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import { UserRole } from "../types/enums";
 import { AppLayout } from "../layouts/AppLayout";
 import { ErrorPage } from "../pages/ErrorPage";
 
 const LoginPage = lazy(() =>
-  import("../features/auth/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+  import("../features/auth/pages/LoginPage").then((m) => ({
+    default: m.LoginPage,
+  })),
 );
 const AcceptInvitationPage = lazy(() =>
   import("../features/auth/pages/AcceptInvitationPage").then((m) => ({
@@ -107,13 +110,15 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  if (user?.role !== "Admin") return <Navigate to="/" replace />;
+  if (user?.role !== UserRole.Admin) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
-const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user } = useAuth();
-  if (user?.role === "Client") return <Navigate to="/tickets" replace />;
+  if (user?.role === UserRole.Client) return <Navigate to="/tickets" replace />;
   return <>{children}</>;
 };
 
@@ -133,13 +138,41 @@ export const AppRoutes: React.FC = () => (
           </PrivateRoute>
         }
       >
-        <Route path="/" element={<NonClientRoute><DashboardPage /></NonClientRoute>} />
+        <Route
+          path="/"
+          element={
+            <NonClientRoute>
+              <DashboardPage />
+            </NonClientRoute>
+          }
+        />
         <Route path="/tickets" element={<TicketsPage />} />
         <Route path="/tickets/kanban" element={<KanbanPage />} />
         <Route path="/tickets/:id" element={<TicketDetailPage />} />
-        <Route path="/projects" element={<NonClientRoute><ProjectsPage /></NonClientRoute>} />
-        <Route path="/projects/:id" element={<NonClientRoute><ProjectDetailPage /></NonClientRoute>} />
-        <Route path="/time-tracking" element={<NonClientRoute><TimeTrackingPage /></NonClientRoute>} />
+        <Route
+          path="/projects"
+          element={
+            <NonClientRoute>
+              <ProjectsPage />
+            </NonClientRoute>
+          }
+        />
+        <Route
+          path="/projects/:id"
+          element={
+            <NonClientRoute>
+              <ProjectDetailPage />
+            </NonClientRoute>
+          }
+        />
+        <Route
+          path="/time-tracking"
+          element={
+            <NonClientRoute>
+              <TimeTrackingPage />
+            </NonClientRoute>
+          }
+        />
 
         <Route path="/profile" element={<ProfilePage />} />
         <Route

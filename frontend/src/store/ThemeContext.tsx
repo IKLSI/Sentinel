@@ -9,8 +9,7 @@ import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
 import { darkTheme, lightTheme } from "../styles/theme";
 import { updateUserTheme } from "../features/users/api/users";
 import { useAuth } from "../features/auth/hooks/useAuth";
-
-type Theme = "dark" | "light";
+import { Theme } from "../types/enums";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -18,7 +17,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "light",
+  theme: Theme.Light,
   toggleTheme: () => {},
 });
 
@@ -27,7 +26,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem("theme") as Theme) || "light";
+    return (localStorage.getItem("theme") as Theme) || Theme.Light;
   });
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
+      const next = prev === Theme.Dark ? Theme.Light : Theme.Dark;
       if (isAuthenticated) updateUserTheme(next).catch(() => {});
       return next;
     });
@@ -49,7 +48,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <MuiThemeProvider theme={theme === "dark" ? darkTheme : lightTheme}>
+      <MuiThemeProvider theme={theme === Theme.Dark ? darkTheme : lightTheme}>
         <CssBaseline />
         {children}
       </MuiThemeProvider>

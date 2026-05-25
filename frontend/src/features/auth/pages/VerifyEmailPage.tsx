@@ -40,7 +40,15 @@ export const VerifyEmailPage: React.FC = () => {
             </Box>
 
             {status === "loading" && (
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", py: "40px" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "16px",
+                  py: "40px",
+                }}
+              >
                 <CircularProgress size={28} />
                 <Box component="p" className="lp-form-sub">
                   {t("auth.verify_email.loading")}
@@ -52,7 +60,13 @@ export const VerifyEmailPage: React.FC = () => {
               <Box className="aip-success">
                 <Box className="aip-success-icon">
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <path d="M6 14l6 6 10-10" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M6 14l6 6 10-10"
+                      stroke="#6366f1"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </Box>
                 <Box component="p" className="aip-success-title">
@@ -61,7 +75,12 @@ export const VerifyEmailPage: React.FC = () => {
                 <Box component="p" className="aip-success-sub">
                   {t("auth.verify_email.success_sub")}
                 </Box>
-                <button type="button" className="lp-submit" style={{ marginTop: "24px" }} onClick={() => navigate("/login")}>
+                <button
+                  type="button"
+                  className="lp-submit"
+                  style={{ marginTop: "24px" }}
+                  onClick={() => navigate("/login")}
+                >
                   {t("auth.verify_email.go_to_login")}
                 </button>
               </Box>
@@ -69,9 +88,17 @@ export const VerifyEmailPage: React.FC = () => {
 
             {status === "error" && (
               <Box className="aip-success">
-                <Box className="aip-success-icon" sx={{ background: "rgba(220,38,38,0.1) !important" }}>
+                <Box
+                  className="aip-success-icon"
+                  sx={{ background: "rgba(220,38,38,0.1) !important" }}
+                >
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <path d="M9 9l10 10M19 9L9 19" stroke="#dc2626" strokeWidth="2.4" strokeLinecap="round" />
+                    <path
+                      d="M9 9l10 10M19 9L9 19"
+                      stroke="#dc2626"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 </Box>
                 <Box component="p" className="aip-success-title">
@@ -80,7 +107,12 @@ export const VerifyEmailPage: React.FC = () => {
                 <Box component="p" className="aip-success-sub">
                   {t("auth.verify_email.error_sub")}
                 </Box>
-                <button type="button" className="lp-submit" style={{ marginTop: "24px" }} onClick={() => navigate("/login")}>
+                <button
+                  type="button"
+                  className="lp-submit"
+                  style={{ marginTop: "24px" }}
+                  onClick={() => navigate("/login")}
+                >
                   {t("auth.verify_email.go_to_login")}
                 </button>
               </Box>

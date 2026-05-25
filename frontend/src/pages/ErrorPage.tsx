@@ -9,13 +9,18 @@ interface ErrorPageProps {
   onRetry?: () => void;
 }
 
-export const ErrorPage: React.FC<ErrorPageProps> = ({ status = 500, message, onRetry }) => {
+export const ErrorPage: React.FC<ErrorPageProps> = ({
+  status = 500,
+  message,
+  onRetry,
+}) => {
   const navigate = useNavigate();
   const t = useT();
   const [supportEmail, setSupportEmail] = useState("");
 
   useEffect(() => {
-    apiClient.get<{ supportEmail: string }>("/api/config")
+    apiClient
+      .get<{ supportEmail: string }>("/api/config")
       .then((res) => setSupportEmail(res.data.supportEmail ?? ""))
       .catch(() => {});
   }, []);
@@ -42,14 +47,26 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ status = 500, message, onR
           {onRetry && (
             <button className="ep-btn-ghost" onClick={onRetry}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M1.5 6.5a5 5 0 1 0 1.2-3.2M1.5 2v2.5H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M1.5 6.5a5 5 0 1 0 1.2-3.2M1.5 2v2.5H4"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {t("error.retry")}
             </button>
           )}
           <button className="ep-btn-primary" onClick={() => navigate("/")}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             {t("error.back_home")}
           </button>
@@ -57,7 +74,8 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ status = 500, message, onR
 
         {supportEmail && (
           <div className="ep-support">
-            {t("error.contact_support")} — <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+            {t("error.contact_support")} —{" "}
+            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
           </div>
         )}
       </div>

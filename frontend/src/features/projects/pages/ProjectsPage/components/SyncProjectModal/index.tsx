@@ -14,6 +14,7 @@ import {
   AvailableRepoDto,
 } from "@/features/techHealth/api/projects";
 import { extractApiError } from "@/utils/apiError";
+import { Provider } from "@/types/enums";
 
 interface Props {
   open: boolean;
@@ -297,8 +298,8 @@ export const SyncProjectModal: React.FC<Props> = ({
                   sx={{
                     height: "18px",
                     fontSize: "10px",
-                    background: repo.platform === "GitHub" ? "var(--s2)" : "color-mix(in srgb, #FC6D26 15%, transparent)",
-                    color: repo.platform === "GitHub" ? "var(--muted)" : "#FC6D26",
+                    background: repo.platform === Provider.GitHub ? "var(--s2)" : "color-mix(in srgb, #FC6D26 15%, transparent)",
+                    color: repo.platform === Provider.GitHub ? "var(--muted)" : "#FC6D26",
                     border: "none",
                     flexShrink: 0,
                   }}

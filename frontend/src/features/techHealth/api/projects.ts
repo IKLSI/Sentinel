@@ -1,5 +1,7 @@
 import apiClient from '../../../services/client'
 import { downloadExcel } from '../../../utils/download'
+import { ScanFrequency, DependencyStatus, DependencyType, VulnerabilitySeverity, Provider } from '../../../types/enums'
+export type { ScanFrequency, DependencyStatus, DependencyType, VulnerabilitySeverity, Provider }
 
 export interface ProjectDto {
   id: string
@@ -21,7 +23,7 @@ export interface VulnerabilityDto {
   cveId: string
   cvssScore: number
   description: string
-  severity: string
+  severity: VulnerabilitySeverity
   fixedVersion?: string
   advisoryUrl?: string
   detectedAt: string
@@ -32,9 +34,9 @@ export interface DependencyDto {
   name: string
   currentVersion: string
   latestVersion?: string
-  type: string
+  type: DependencyType
   ecosystem: string
-  status: string
+  status: DependencyStatus
   scannedAt: string
   vulnerabilities: VulnerabilityDto[]
 }
@@ -48,7 +50,7 @@ export interface RuntimeDto {
 }
 
 export interface ProjectDetailDto extends ProjectDto {
-  scanFrequency: string
+  scanFrequency: ScanFrequency
   dependencies: DependencyDto[]
   runtimes: RuntimeDto[]
 }
@@ -81,8 +83,8 @@ export const createProject = async (data: CreateProjectDto): Promise<ProjectDto>
   const response = await apiClient.post<ProjectDto>('/api/tech-health/projects', {
     name: data.name,
     repositoryUrl: data.repositoryUrl,
-    repositoryType: data.repositoryType ?? 'GitHub',
-    scanFrequency: 'Weekly',
+    repositoryType: data.repositoryType ?? Provider.GitHub,
+    scanFrequency: ScanFrequency.Weekly,
   })
   return response.data
 }
@@ -90,7 +92,7 @@ export const createProject = async (data: CreateProjectDto): Promise<ProjectDto>
 export interface AvailableRepoDto {
   name: string
   url: string
-  platform: string
+  platform: Provider
 }
 
 export interface AvailableReposResult {

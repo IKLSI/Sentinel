@@ -12,11 +12,12 @@ import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { useT, useI18n } from "../../../i18n/I18nContext";
+import { Theme, Language, UserRole } from "../../../types/enums";
 
-const ROLE_LABEL_KEYS: Record<string, string> = {
-  Admin: "profile.role.admin",
-  Client: "profile.role.client",
-  Developer: "profile.role.developer",
+const ROLE_LABEL_KEYS: Record<UserRole, string> = {
+  [UserRole.Admin]: "profile.role.admin",
+  [UserRole.Client]: "profile.role.client",
+  [UserRole.Developer]: "profile.role.developer",
 };
 
 const inp = {
@@ -106,13 +107,13 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleThemeToggle = (mode: "dark" | "light") => {
+  const handleThemeToggle = (mode: Theme) => {
     if (theme === mode) return;
     toggleTheme();
     updatePreferences({ theme: mode }).catch(() => {});
   };
 
-  const handleLanguageChange = (lang: "fr-FR" | "en-US") => {
+  const handleLanguageChange = (lang: Language) => {
     if (culture === lang) return;
     setLanguage(lang);
     setUser({ ...user!, language: lang });
@@ -233,8 +234,8 @@ export const ProfilePage: React.FC = () => {
               type="text"
               sx={inpRo}
               value={
-                ROLE_LABEL_KEYS[user?.role ?? ""]
-                  ? t(ROLE_LABEL_KEYS[user?.role ?? ""])
+                user?.role && ROLE_LABEL_KEYS[user.role]
+                  ? t(ROLE_LABEL_KEYS[user.role])
                   : (user?.role ?? "")
               }
               readOnly
@@ -273,8 +274,8 @@ export const ProfilePage: React.FC = () => {
             </Box>
             <Box sx={{ display: "flex", gap: "8px" }}>
               {([
-                { code: "fr-FR" as const, flag: "🇫🇷", label: t("profile.language.fr"), bg: "linear-gradient(150deg,#dce8ff 55%,#c4d8ff 100%)" },
-                { code: "en-US" as const, flag: "🇬🇧", label: t("profile.language.en"), bg: "linear-gradient(150deg,#dce8ff 45%,#ffd8d8 100%)" },
+                { code: Language.Fr, flag: "🇫🇷", label: t("profile.language.fr"), bg: "linear-gradient(150deg,#dce8ff 55%,#c4d8ff 100%)" },
+                { code: Language.En, flag: "🇬🇧", label: t("profile.language.en"), bg: "linear-gradient(150deg,#dce8ff 45%,#ffd8d8 100%)" },
               ]).map(({ code, flag, label, bg }) => (
                 <Box
                   key={code}
@@ -349,7 +350,7 @@ export const ProfilePage: React.FC = () => {
               {t("profile.field.appearance")}
             </Box>
             <Box sx={{ display: "flex", gap: "8px" }}>
-              {(["dark", "light"] as const).map((mode) => (
+              {([Theme.Dark, Theme.Light] as const).map((mode) => (
                 <Box
                   key={mode}
                   component="button"
@@ -371,7 +372,7 @@ export const ProfilePage: React.FC = () => {
                     sx={{
                       height: 48,
                       background:
-                        mode === "dark"
+                        mode === Theme.Dark
                           ? "linear-gradient(150deg,#0d1120 55%,#1a2340 100%)"
                           : "linear-gradient(150deg,#ffffff 55%,#f0f2f8 100%)",
                       p: "6px 8px",

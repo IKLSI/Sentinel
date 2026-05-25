@@ -804,7 +804,8 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<string>("Theme")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<int>("TokenVersion")
                         .HasColumnType("integer");

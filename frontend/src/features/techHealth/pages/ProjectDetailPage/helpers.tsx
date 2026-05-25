@@ -1,6 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import { RuntimeDto } from "@/features/techHealth/api/projects";
+import { DependencyStatus, VulnerabilitySeverity, RuntimeEolStatus } from "@/types/enums";
 
 export interface TabDef {
   icon: React.ReactNode;
@@ -10,7 +11,7 @@ export interface TabDef {
 }
 
 export const DEP_STATUS: Record<
-  string,
+  DependencyStatus,
   { labelKey: string; variant: "green" | "blue" | "orange" | "red" | "gray" }
 > = {
   UpToDate: { labelKey: "tech_health.dep_status.up_to_date", variant: "green" },
@@ -27,7 +28,7 @@ export const DEP_STATUS: Record<
 };
 
 export const SEV_CONFIG: Record<
-  string,
+  VulnerabilitySeverity,
   {
     labelKey: string;
     variant: "red" | "orange" | "blue" | "gray";
@@ -62,7 +63,7 @@ export const SEV_CONFIG: Record<
 };
 
 export const EOL_COLOR: Record<
-  string,
+  RuntimeEolStatus,
   { text: string; stripe: string; border: string }
 > = {
   eol: {
@@ -87,15 +88,15 @@ export const EOL_COLOR: Record<
   },
 };
 
-export function getRuntimeUrgency(r: RuntimeDto): keyof typeof EOL_COLOR {
-  if (!r.eolDate) return r.isEol ? "eol" : "ok";
+export function getRuntimeUrgency(r: RuntimeDto): RuntimeEolStatus {
+  if (!r.eolDate) return r.isEol ? RuntimeEolStatus.Eol : RuntimeEolStatus.Ok;
   const days = Math.round(
     (new Date(r.eolDate).getTime() - Date.now()) / 86400000,
   );
-  if (days < 0) return "eol";
-  if (days < 90) return "danger";
-  if (days < 180) return "warn";
-  return "ok";
+  if (days < 0) return RuntimeEolStatus.Eol;
+  if (days < 90) return RuntimeEolStatus.Danger;
+  if (days < 180) return RuntimeEolStatus.Warn;
+  return RuntimeEolStatus.Ok;
 }
 
 export function getDaysLabel(

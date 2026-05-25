@@ -18,23 +18,28 @@ public class ValidationFilter : IAsyncActionFilter
 
             Type validatorType = typeof(IValidator<>).MakeGenericType(argument.GetType());
             object? validator = services.GetService(validatorType);
+
             if (validator == null) continue;
 
             IValidationContext validationContext = (IValidationContext)Activator
                 .CreateInstance(typeof(ValidationContext<>).MakeGenericType(argument.GetType()), argument)!;
 
             ValidationResult result = await ((IValidator)validator).ValidateAsync(validationContext);
+
             if (result.IsValid) continue;
 
             errors ??= new();
+
             foreach (ValidationFailure failure in result.Errors)
             {
                 string key = ToCamelCase(failure.PropertyName);
+
                 if (!errors.TryGetValue(key, out List<string>? list))
                 {
                     list = new List<string>();
                     errors[key] = list;
                 }
+
                 list.Add(failure.ErrorMessage);
             }
         }
@@ -49,7 +54,9 @@ public class ValidationFilter : IAsyncActionFilter
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Instance = context.HttpContext.Request.Path
             };
+
             context.Result = new BadRequestObjectResult(problem);
+
             return;
         }
 
@@ -60,6 +67,7 @@ public class ValidationFilter : IAsyncActionFilter
     {
         if (string.IsNullOrEmpty(name)) return name;
         if (char.IsLower(name[0])) return name;
+
         return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 }

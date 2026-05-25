@@ -32,11 +32,13 @@ public sealed class ResilientHttpHandler : DelegatingHandler
                     return response;
 
                 TimeSpan delay = RetryAfter(response) ?? Backoff(attempt);
+
                 if (delay > MaxRetryDelay)
                     return response;
 
                 _logger.LogWarning("HTTP {Status} sur {Url} — nouvelle tentative {Attempt}/{Max} dans {Delay}",
                     (int)response.StatusCode, attemptRequest.RequestUri, attempt + 1, MaxRetries, delay);
+
                 response.Dispose();
                 await Task.Delay(delay, cancellationToken);
             }
@@ -48,6 +50,7 @@ public sealed class ResilientHttpHandler : DelegatingHandler
                 TimeSpan delay = Backoff(attempt);
                 _logger.LogWarning(ex, "Échec réseau sur {Url} — nouvelle tentative {Attempt}/{Max} dans {Delay}",
                     attemptRequest.RequestUri, attempt + 1, MaxRetries, delay);
+
                 await Task.Delay(delay, cancellationToken);
             }
         }
@@ -62,12 +65,14 @@ public sealed class ResilientHttpHandler : DelegatingHandler
     {
         double seconds = Math.Pow(2, attempt) * 0.5;
         double jitter = Random.Shared.NextDouble() * 0.25;
+
         return TimeSpan.FromSeconds(seconds + jitter);
     }
 
     private static TimeSpan? RetryAfter(HttpResponseMessage response)
     {
         System.Net.Http.Headers.RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
+
         if (retryAfter is null) return null;
         if (retryAfter.Delta is { } delta && delta > TimeSpan.Zero) return delta;
         if (retryAfter.Date is { } date)
@@ -75,6 +80,7 @@ public sealed class ResilientHttpHandler : DelegatingHandler
             TimeSpan wait = date - DateTimeOffset.UtcNow;
             if (wait > TimeSpan.Zero) return wait;
         }
+
         return null;
     }
 

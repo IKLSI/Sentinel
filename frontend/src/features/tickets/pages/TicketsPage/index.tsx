@@ -26,6 +26,7 @@ import { CreateTicketModal } from "./components/CreateTicketModal";
 import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
 import { extractApiError } from "@/utils/apiError";
 import { TICKETS_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
+import { SortDirection } from "@/types/enums";
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
@@ -75,7 +76,7 @@ export const TicketsPage: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [sort, setSort] = useState<SortState | null>({
     col: "priority",
-    dir: "asc",
+    dir: SortDirection.Asc,
   });
 
   const pageSize = 20;
@@ -158,8 +159,8 @@ export const TicketsPage: React.FC = () => {
 
   const toggleSort = useCallback((col: string) => {
     setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
+      if (s?.col !== col) return { col, dir: SortDirection.Asc };
+      if (s.dir === SortDirection.Asc) return { col, dir: SortDirection.Desc };
       return null;
     });
   }, []);
@@ -256,7 +257,7 @@ export const TicketsPage: React.FC = () => {
   const filtered = useMemo(() => {
     return displayTickets.slice().sort((a, b) => {
       if (!sort) return 0;
-      const mul = sort.dir === "asc" ? 1 : -1;
+      const mul = sort.dir === SortDirection.Asc ? 1 : -1;
       switch (sort.col) {
         case "title":
           return mul * a.title.localeCompare(b.title);

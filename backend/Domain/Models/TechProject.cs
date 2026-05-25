@@ -9,7 +9,9 @@ public enum RepositoryType
 public enum ScanFrequency
 {
     Daily,
-    Weekly
+    Weekly,
+    Monthly,
+    Manual
 }
 
 public class TechProject

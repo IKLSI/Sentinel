@@ -1,5 +1,18 @@
 namespace Sentinel.Domain.Models;
 
+public enum ThemeType
+{
+    Light,
+    Dark
+}
+
+public static class LanguageValues
+{
+    public const string Fr = "fr-FR";
+    public const string En = "en-US";
+    public static readonly string[] All = [Fr, En];
+}
+
 public enum UserRole
 {
     Admin,
@@ -24,8 +37,8 @@ public class User
     public DateTime? RefreshTokenExpiry { get; set; }
     public string? PreviousRefreshTokenHash { get; set; }
     public int TokenVersion { get; set; }
-    public string Theme { get; set; } = "light";
-    public string Language { get; set; } = "fr-FR";
+    public ThemeType Theme { get; set; } = ThemeType.Light;
+    public string Language { get; set; } = LanguageValues.Fr;
 
     public Organization Organization { get; set; } = null!;
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();

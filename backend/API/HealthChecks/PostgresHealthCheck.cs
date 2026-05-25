@@ -18,6 +18,7 @@ public class PostgresHealthCheck : IHealthCheck
         try
         {
             bool canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+
             return canConnect
                 ? HealthCheckResult.Healthy("PostgreSQL accessible")
                 : HealthCheckResult.Unhealthy("PostgreSQL injoignable");

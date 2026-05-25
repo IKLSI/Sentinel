@@ -7,6 +7,7 @@ import { useProjects, projectsQueryKey } from "@/features/techHealth/hooks/usePr
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
+import { Theme } from "@/types/enums";
 import {
   EMPTY_STATS,
   PRIORITY_ORDER,
@@ -22,7 +23,7 @@ export const DashboardPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
   const queryClient = useQueryClient();
 

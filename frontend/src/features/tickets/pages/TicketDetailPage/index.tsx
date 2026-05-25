@@ -33,6 +33,7 @@ import { EditCommentModal } from "./components/EditCommentModal";
 import { AttachmentsCard } from "./components/AttachmentsCard";
 import { extractApiError } from "@/utils/apiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
+import { CommentMode, Theme } from "@/types/enums";
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
@@ -41,7 +42,7 @@ export const TicketDetailPage: React.FC = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
   const statusConfig = useMemo(() => buildStatusConfig(isDark), [isDark]);
   const priorityConfig = useMemo(() => buildPriorityConfig(isDark), [isDark]);
@@ -52,8 +53,8 @@ export const TicketDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [composerMode, setComposerMode] = useState<"reply" | "internal">(
-    "reply",
+  const [composerMode, setComposerMode] = useState<CommentMode>(
+    CommentMode.Reply,
   );
   const [composerValue, setComposerValue] = useState("");
   const [submitting, setSubmitting] = useState(false);

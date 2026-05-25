@@ -10,7 +10,11 @@ import {
   placeholder as cmPlaceholder,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { HighlightStyle, syntaxHighlighting, syntaxTree } from "@codemirror/language";
+import {
+  HighlightStyle,
+  syntaxHighlighting,
+  syntaxTree,
+} from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 
 export interface MarkdownEditorHandle {
@@ -60,7 +64,11 @@ function buildObsidianPlugin() {
       }
 
       update(update: ViewUpdate) {
-        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+        if (
+          update.docChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
           this.decorations = this.compute(update.view);
         }
       }
@@ -82,7 +90,10 @@ function buildObsidianPlugin() {
                 break;
               case "HeaderMark": {
                 const lineEnd = state.doc.lineAt(node.from).to;
-                ranges.push({ from: node.from, to: Math.min(node.to + 1, lineEnd) });
+                ranges.push({
+                  from: node.from,
+                  to: Math.min(node.to + 1, lineEnd),
+                });
                 break;
               }
               case "LinkMark":
@@ -197,7 +208,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
             from: pos,
             to: pos + 1,
             enter(node: { name: string; from: number; to: number }) {
-              if (node.name === "URL" || node.name === "Link" || node.name === "Autolink") {
+              if (
+                node.name === "URL" ||
+                node.name === "Link" ||
+                node.name === "Autolink"
+              ) {
                 const raw = view.state.sliceDoc(node.from, node.to);
                 url = raw.replace(/^<|>$/g, "");
               }

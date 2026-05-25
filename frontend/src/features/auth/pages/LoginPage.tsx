@@ -9,6 +9,7 @@ import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { resendVerification } from "../api/auth";
 import { extractApiError } from "../../../utils/apiError";
+import { UserRole } from "../../../types/enums";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -42,12 +43,16 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       const loggedUser = await login(email, password);
-      navigate(loggedUser.role === 'Client' ? '/tickets' : '/');
+      navigate(loggedUser.role === UserRole.Client ? "/tickets" : "/");
     } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
       if (status === 403) {
         setShowResend(true);
-        showToast(extractApiError(err, t("auth.login.email_not_verified")), "warning");
+        showToast(
+          extractApiError(err, t("auth.login.email_not_verified")),
+          "warning",
+        );
       } else {
         setHasError(true);
         showToast(t("auth.login.invalid_credentials"), "error");
@@ -66,7 +71,10 @@ export const LoginPage: React.FC = () => {
       await resendVerification(email);
       showToast(t("auth.login.resend_done"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("auth.login.invalid_credentials")), "error");
+      showToast(
+        extractApiError(err, t("auth.login.invalid_credentials")),
+        "error",
+      );
     }
   };
 
@@ -329,7 +337,11 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className="lp-forgot"
-                  style={{ background: "none", border: "none", cursor: "pointer" }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
                   onClick={handleResend}
                 >
                   {t("auth.login.resend_link")}

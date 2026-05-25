@@ -37,6 +37,7 @@ public class JobsController : BaseController
     public IActionResult GetRecurringJobs()
     {
         using IStorageConnection connection = JobStorage.Current.GetConnection();
+
         List<Hangfire.Storage.RecurringJobDto> jobs = connection.GetRecurringJobs();
 
         List<RecurringJobStatusDto> result = jobs.Select(j => new RecurringJobStatusDto(

@@ -149,6 +149,7 @@ public class BillingService
             return;
 
         Organization? organization = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId);
+
         if (organization == null) return;
 
         organization.StripeCustomerId = session.CustomerId ?? organization.StripeCustomerId;
@@ -171,6 +172,7 @@ public class BillingService
     private async Task ApplySubscriptionUpdateAsync(Subscription subscription)
     {
         Organization? organization = await FindByCustomerOrSubscriptionAsync(subscription);
+
         if (organization == null) return;
 
         organization.StripeSubscriptionId = subscription.Id;
@@ -178,17 +180,20 @@ public class BillingService
 
         string? priceId = subscription.Items?.Data?.FirstOrDefault()?.Price?.Id;
         PlanTier? tier = TierForPriceId(priceId);
+
         if (tier.HasValue && organization.SubscriptionStatus is SubscriptionStatus.Active or SubscriptionStatus.Trialing)
             organization.PlanTier = tier.Value;
 
         organization.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
         _logger.LogInformation("Abonnement mis à jour pour {OrganizationId} : {Status}", organization.Id, organization.SubscriptionStatus);
     }
 
     private async Task ApplySubscriptionCanceledAsync(Subscription subscription)
     {
         Organization? organization = await FindByCustomerOrSubscriptionAsync(subscription);
+
         if (organization == null) return;
 
         organization.SubscriptionStatus = SubscriptionStatus.Canceled;

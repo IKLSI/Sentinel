@@ -1,5 +1,6 @@
 using FluentValidation;
 using Sentinel.Domain.DTOs.Users;
+using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Validators;
 
@@ -14,7 +15,7 @@ public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
 
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("Le rôle est requis")
-            .Must(r => r is "Admin" or "Developer" or "Client")
+            .Must(r => Enum.TryParse<UserRole>(r, out _))
             .WithMessage("Rôle invalide (Admin, Developer ou Client)");
     }
 }
@@ -46,7 +47,7 @@ public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
         RuleFor(x => x.FirstName).MaximumLength(100).When(x => x.FirstName != null);
         RuleFor(x => x.LastName).MaximumLength(100).When(x => x.LastName != null);
         RuleFor(x => x.Role)
-            .Must(r => r is "Admin" or "Developer" or "Client")
+            .Must(r => Enum.TryParse<UserRole>(r, out _))
             .WithMessage("Rôle invalide")
             .When(x => !string.IsNullOrEmpty(x.Role));
     }
@@ -57,8 +58,8 @@ public class UpdatePreferencesDtoValidator : AbstractValidator<UpdatePreferences
     public UpdatePreferencesDtoValidator()
     {
         RuleFor(x => x.Theme)
-            .Must(t => t is "light" or "dark")
-            .WithMessage("Thème invalide (light ou dark)")
+            .Must(t => Enum.TryParse<ThemeType>(t, ignoreCase: true, out _))
+            .WithMessage($"Thème invalide ({ThemeType.Light.ToString().ToLower()} ou {ThemeType.Dark.ToString().ToLower()})")
             .When(x => !string.IsNullOrEmpty(x.Theme));
     }
 }

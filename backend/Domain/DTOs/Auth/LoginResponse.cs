@@ -16,5 +16,5 @@ public class UserProfile
     public string LastName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public Guid OrganizationId { get; set; }
-    public string Theme { get; set; } = "dark";
+    public string Theme { get; set; } = "light";
 }

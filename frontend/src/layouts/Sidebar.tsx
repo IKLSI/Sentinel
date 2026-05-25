@@ -21,6 +21,7 @@ import { SentinelLogo } from "./SentinelLogo";
 import { useT } from "../i18n/I18nContext";
 import { PALETTE_OPEN_EVENT } from "../components/CommandPalette";
 import { useNotifications } from "../features/notifications/useNotifications";
+import { UserRole } from "../types/enums";
 import { NotificationsModal } from "../features/notifications/NotificationsModal";
 
 interface NavItem {
@@ -37,7 +38,7 @@ interface NavSection {
   icon: React.ElementType;
   items: NavItem[];
   adminOnly?: boolean;
-  group?: 'nav' | 'admin';
+  group?: "nav" | "admin";
 }
 
 const navSections: NavSection[] = [
@@ -97,7 +98,7 @@ const navSections: NavSection[] = [
     titleKey: "sidebar.section.administration",
     icon: SettingsOutlined,
     adminOnly: true,
-    group: 'admin',
+    group: "admin",
     items: [
       {
         to: "/settings",
@@ -128,18 +129,47 @@ const ITEM_SX = {
   alignItems: "center",
   gap: "9px",
   px: "10px",
-  borderRadius: 'var(--r)',
+  borderRadius: "var(--r)",
   cursor: "pointer",
   transition: "background 0.12s, color 0.12s",
   userSelect: "none",
 } as const;
 
-const SectionHeader = ({ label, mt }: { label: string; mt?: string | number }) => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: "8px", px: "4px", pt: "8px", pb: "4px", mt: mt ?? 0 }}>
-    <Box component="span" sx={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)", whiteSpace: "nowrap", flexShrink: 0 }}>
+const SectionHeader = ({
+  label,
+  mt,
+}: {
+  label: string;
+  mt?: string | number;
+}) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      px: "4px",
+      pt: "8px",
+      pb: "4px",
+      mt: mt ?? 0,
+    }}
+  >
+    <Box
+      component="span"
+      sx={{
+        fontSize: "9px",
+        fontWeight: 700,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        color: "var(--muted)",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+      }}
+    >
       {label}
     </Box>
-    <Box sx={{ flex: 1, height: "1px", background: "var(--border)", opacity: 0.8 }} />
+    <Box
+      sx={{ flex: 1, height: "1px", background: "var(--border)", opacity: 0.8 }}
+    />
   </Box>
 );
 
@@ -157,24 +187,21 @@ export const Sidebar: React.FC = () => {
     navigate("/login");
   };
 
-  const isAdmin = user?.role === "Admin";
-  const isClient = user?.role === "Client";
+  const isAdmin = user?.role === UserRole.Admin;
+  const isClient = user?.role === UserRole.Client;
   const { unreadCount } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
-  const filteredSections = useMemo(
-    () => {
-      const clientAllowed = ["sidebar.section.tickets"];
-      return navSections
-        .filter((s) => !isClient || clientAllowed.includes(s.titleKey))
-        .filter((s) => !s.adminOnly || isAdmin)
-        .map((s) => ({
-          ...s,
-          items: s.items.filter((item) => !item.adminOnly || isAdmin),
-        }))
-        .filter((s) => s.items.length > 0);
-    },
-    [isClient, isAdmin],
-  );
+  const filteredSections = useMemo(() => {
+    const clientAllowed = ["sidebar.section.tickets"];
+    return navSections
+      .filter((s) => !isClient || clientAllowed.includes(s.titleKey))
+      .filter((s) => !s.adminOnly || isAdmin)
+      .map((s) => ({
+        ...s,
+        items: s.items.filter((item) => !item.adminOnly || isAdmin),
+      }))
+      .filter((s) => s.items.length > 0);
+  }, [isClient, isAdmin]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -189,7 +216,9 @@ export const Sidebar: React.FC = () => {
   useEffect(() => {
     for (const s of filteredSections) {
       if (s.items.length > 1 && isSectionActive(s, location.pathname))
-        setOpenGroups((prev) => prev[sectionKey(s)] ? prev : { ...prev, [sectionKey(s)]: true });
+        setOpenGroups((prev) =>
+          prev[sectionKey(s)] ? prev : { ...prev, [sectionKey(s)]: true },
+        );
     }
   }, [location.pathname, filteredSections]);
 
@@ -232,7 +261,7 @@ export const Sidebar: React.FC = () => {
           height: isMobile ? "100vh" : "calc(100vh - 40px)",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: isMobile ? 0 : 'var(--r-lg)',
+          borderRadius: isMobile ? 0 : "var(--r-lg)",
           boxShadow: isMobile
             ? "none"
             : "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.03)",
@@ -332,7 +361,7 @@ export const Sidebar: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 'var(--r-sm)',
+                    borderRadius: "var(--r-sm)",
                     color: "var(--muted)",
                     flexShrink: 0,
                     ml: "4px",
@@ -364,7 +393,9 @@ export const Sidebar: React.FC = () => {
             <Tooltip title={t("palette.placeholder")} placement="right" arrow>
               <Box
                 component="button"
-                onClick={() => window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))}
+                onClick={() =>
+                  window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))
+                }
                 sx={{
                   all: "unset",
                   height: "34px",
@@ -386,7 +417,9 @@ export const Sidebar: React.FC = () => {
           ) : (
             <Box
               component="button"
-              onClick={() => window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))}
+              onClick={() =>
+                window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))
+              }
               sx={{
                 all: "unset",
                 height: "30px",
@@ -402,10 +435,15 @@ export const Sidebar: React.FC = () => {
                 border: "1px solid var(--border)",
                 background: "var(--s2)",
                 transition: "background 0.12s, border-color 0.12s",
-                "&:hover": { background: "var(--s3)", borderColor: "var(--border-hover, var(--muted2))" },
+                "&:hover": {
+                  background: "var(--s3)",
+                  borderColor: "var(--border-hover, var(--muted2))",
+                },
               }}
             >
-              <SearchOutlined sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0 }} />
+              <SearchOutlined
+                sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0 }}
+              />
               <Box
                 component="span"
                 sx={{
@@ -424,10 +462,17 @@ export const Sidebar: React.FC = () => {
           {collapsed ? (
             filteredSections.map((section) => {
               const sectionActive = isSectionActive(section, location.pathname);
-              const activeItem = section.items.find((i) => isItemActive(i, location.pathname)) ?? section.items[0];
+              const activeItem =
+                section.items.find((i) => isItemActive(i, location.pathname)) ??
+                section.items[0];
               const ItemIcon = activeItem.icon ?? section.icon;
               return (
-                <Tooltip key={section.titleKey} title={t(section.titleKey)} placement="right" arrow>
+                <Tooltip
+                  key={section.titleKey}
+                  title={t(section.titleKey)}
+                  placement="right"
+                  arrow
+                >
                   <Box
                     component="button"
                     onClick={() => navigate(activeItem.to)}
@@ -443,11 +488,21 @@ export const Sidebar: React.FC = () => {
                       cursor: "pointer",
                       transition: "background 0.12s",
                       position: "relative",
-                      background: sectionActive ? "var(--accent-subtle)" : "transparent",
-                      "&:hover": !sectionActive ? { background: "var(--s3)" } : {},
+                      background: sectionActive
+                        ? "var(--accent-subtle)"
+                        : "transparent",
+                      "&:hover": !sectionActive
+                        ? { background: "var(--s3)" }
+                        : {},
                     }}
                   >
-                    <ItemIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", transition: "color 0.12s" }} />
+                    <ItemIcon
+                      sx={{
+                        fontSize: 16,
+                        color: sectionActive ? "var(--accent)" : "var(--muted)",
+                        transition: "color 0.12s",
+                      }}
+                    />
                   </Box>
                 </Tooltip>
               );
@@ -455,18 +510,30 @@ export const Sidebar: React.FC = () => {
           ) : (
             <>
               {[
-                { groupKey: 'nav' as const, headerKey: 'sidebar.section.nav' },
-                { groupKey: 'admin' as const, headerKey: 'sidebar.section.administration' },
+                { groupKey: "nav" as const, headerKey: "sidebar.section.nav" },
+                {
+                  groupKey: "admin" as const,
+                  headerKey: "sidebar.section.administration",
+                },
               ].map(({ groupKey, headerKey }) => {
-                const groupSections = filteredSections.filter((s) => (s.group ?? 'nav') === groupKey);
+                const groupSections = filteredSections.filter(
+                  (s) => (s.group ?? "nav") === groupKey,
+                );
                 if (groupSections.length === 0) return null;
                 return (
                   <React.Fragment key={groupKey}>
-                    <SectionHeader label={t(headerKey)} mt={groupKey === 'admin' ? '12px' : 0} />
+                    <SectionHeader
+                      label={t(headerKey)}
+                      mt={groupKey === "admin" ? "12px" : 0}
+                    />
                     {groupSections.map((section) => {
                       const isMulti = section.items.length > 1;
-                      const sectionActive = isSectionActive(section, location.pathname);
-                      const isGroupOpen = openGroups[sectionKey(section)] ?? false;
+                      const sectionActive = isSectionActive(
+                        section,
+                        location.pathname,
+                      );
+                      const isGroupOpen =
+                        openGroups[sectionKey(section)] ?? false;
 
                       if (isMulti) {
                         const GroupIcon = section.icon;
@@ -480,24 +547,127 @@ export const Sidebar: React.FC = () => {
                                 ...ITEM_SX,
                                 width: "100%",
                                 boxSizing: "border-box",
-                                background: sectionActive && !isGroupOpen ? "var(--accent-subtle)" : "transparent",
+                                background:
+                                  sectionActive && !isGroupOpen
+                                    ? "var(--accent-subtle)"
+                                    : "transparent",
                                 "&:hover": { background: "var(--s3)" },
                               }}
                             >
-                              <GroupIcon sx={{ fontSize: 16, color: sectionActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
-                              <Box component="span" className="nav-label" sx={{ flex: 1, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: sectionActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
+                              <GroupIcon
+                                sx={{
+                                  fontSize: 16,
+                                  color: sectionActive
+                                    ? "var(--accent)"
+                                    : "var(--muted)",
+                                  flexShrink: 0,
+                                  transition: "color 0.12s",
+                                }}
+                              />
+                              <Box
+                                component="span"
+                                className="nav-label"
+                                sx={{
+                                  flex: 1,
+                                  fontSize: "10.5px",
+                                  fontWeight: 700,
+                                  letterSpacing: "0.07em",
+                                  textTransform: "uppercase",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  color: sectionActive
+                                    ? "var(--accent)"
+                                    : "var(--muted2)",
+                                  transition: "color 0.15s",
+                                }}
+                              >
                                 {t(section.titleKey)}
                               </Box>
-                              <ChevronRightOutlined sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0, transform: isGroupOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.18s cubic-bezier(0.4,0,0.2,1)" }} />
+                              <ChevronRightOutlined
+                                sx={{
+                                  fontSize: 14,
+                                  color: "var(--muted)",
+                                  flexShrink: 0,
+                                  transform: isGroupOpen
+                                    ? "rotate(90deg)"
+                                    : "rotate(0deg)",
+                                  transition:
+                                    "transform 0.18s cubic-bezier(0.4,0,0.2,1)",
+                                }}
+                              />
                             </Box>
-                            <Box sx={{ overflow: "hidden", maxHeight: isGroupOpen ? `${section.items.length * 34}px` : "0px", ml: "15px", borderLeft: `2px solid ${sectionActive ? "var(--accent-border)" : "var(--border)"}`, transition: "max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s" }}>
+                            <Box
+                              sx={{
+                                overflow: "hidden",
+                                maxHeight: isGroupOpen
+                                  ? `${section.items.length * 34}px`
+                                  : "0px",
+                                ml: "15px",
+                                borderLeft: `2px solid ${sectionActive ? "var(--accent-border)" : "var(--border)"}`,
+                                transition:
+                                  "max-height 0.2s cubic-bezier(0.4,0,0.2,1), border-color 0.2s",
+                              }}
+                            >
                               {section.items.map((item) => {
-                                const active = isItemActive(item, location.pathname);
+                                const active = isItemActive(
+                                  item,
+                                  location.pathname,
+                                );
                                 return (
-                                  <NavLink key={item.to} to={item.to} end={item.end ?? false} style={{ textDecoration: "none", display: "block" }}>
-                                    <Box sx={{ height: "30px", display: "flex", alignItems: "center", gap: "8px", pl: "10px", pr: "8px", mx: "4px", borderRadius: "var(--r-xs)", cursor: "pointer", "&:hover span.sub-label": !active ? { color: "var(--text-secondary)" } : {} }}>
-                                      <Box sx={{ width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0, background: active ? "var(--accent)" : "var(--border2)", transition: "background 0.15s" }} />
-                                      <Box component="span" className="sub-label" sx={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "10px", fontWeight: active ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", color: active ? "var(--accent)" : "var(--muted)", transition: "color 0.15s" }}>
+                                  <NavLink
+                                    key={item.to}
+                                    to={item.to}
+                                    end={item.end ?? false}
+                                    style={{
+                                      textDecoration: "none",
+                                      display: "block",
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        height: "30px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        pl: "10px",
+                                        pr: "8px",
+                                        mx: "4px",
+                                        borderRadius: "var(--r-xs)",
+                                        cursor: "pointer",
+                                        "&:hover span.sub-label": !active
+                                          ? { color: "var(--text-secondary)" }
+                                          : {},
+                                      }}
+                                    >
+                                      <Box
+                                        sx={{
+                                          width: "5px",
+                                          height: "5px",
+                                          borderRadius: "50%",
+                                          flexShrink: 0,
+                                          background: active
+                                            ? "var(--accent)"
+                                            : "var(--border2)",
+                                          transition: "background 0.15s",
+                                        }}
+                                      />
+                                      <Box
+                                        component="span"
+                                        className="sub-label"
+                                        sx={{
+                                          fontFamily:
+                                            "'Space Grotesk', sans-serif",
+                                          fontSize: "10px",
+                                          fontWeight: active ? 600 : 400,
+                                          letterSpacing: "0.08em",
+                                          textTransform: "uppercase",
+                                          color: active
+                                            ? "var(--accent)"
+                                            : "var(--muted)",
+                                          transition: "color 0.15s",
+                                        }}
+                                      >
                                         {t(item.labelKey)}
                                       </Box>
                                     </Box>
@@ -511,11 +681,50 @@ export const Sidebar: React.FC = () => {
 
                       const Icon = section.items[0].icon;
                       return (
-                        <NavLink key={section.titleKey} to={section.items[0].to} end={section.items[0].end ?? false} style={{ textDecoration: "none", display: "block" }}>
+                        <NavLink
+                          key={section.titleKey}
+                          to={section.items[0].to}
+                          end={section.items[0].end ?? false}
+                          style={{ textDecoration: "none", display: "block" }}
+                        >
                           {({ isActive }) => (
-                            <Box sx={{ ...ITEM_SX, background: isActive ? "var(--accent-subtle)" : "transparent", "&:hover": !isActive ? { background: "var(--s3)" } : {} }}>
-                              <Icon sx={{ fontSize: 16, color: isActive ? "var(--accent)" : "var(--muted)", flexShrink: 0, transition: "color 0.12s" }} />
-                              <Box component="span" sx={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: isActive ? "var(--accent)" : "var(--muted2)", transition: "color 0.15s" }}>
+                            <Box
+                              sx={{
+                                ...ITEM_SX,
+                                background: isActive
+                                  ? "var(--accent-subtle)"
+                                  : "transparent",
+                                "&:hover": !isActive
+                                  ? { background: "var(--s3)" }
+                                  : {},
+                              }}
+                            >
+                              <Icon
+                                sx={{
+                                  fontSize: 16,
+                                  color: isActive
+                                    ? "var(--accent)"
+                                    : "var(--muted)",
+                                  flexShrink: 0,
+                                  transition: "color 0.12s",
+                                }}
+                              />
+                              <Box
+                                component="span"
+                                sx={{
+                                  fontSize: "10.5px",
+                                  fontWeight: 700,
+                                  letterSpacing: "0.07em",
+                                  textTransform: "uppercase",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  color: isActive
+                                    ? "var(--accent)"
+                                    : "var(--muted2)",
+                                  transition: "color 0.15s",
+                                }}
+                              >
                                 {t(section.items[0].labelKey)}
                               </Box>
                             </Box>
@@ -598,8 +807,20 @@ export const Sidebar: React.FC = () => {
             </Box>
           </Tooltip>
 
-          <Box sx={{ display: "flex", flexDirection: collapsed ? "column" : "row", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-            <Tooltip title={t("sidebar.item.notifications")} placement="top" arrow>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: collapsed ? "column" : "row",
+              alignItems: "center",
+              gap: "2px",
+              flexShrink: 0,
+            }}
+          >
+            <Tooltip
+              title={t("sidebar.item.notifications")}
+              placement="top"
+              arrow
+            >
               <Box
                 component="button"
                 onClick={() => setNotifOpen(true)}
@@ -611,7 +832,7 @@ export const Sidebar: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: 'var(--r-sm)',
+                  borderRadius: "var(--r-sm)",
                   color: "var(--muted)",
                   flexShrink: 0,
                   position: "relative",
@@ -621,7 +842,18 @@ export const Sidebar: React.FC = () => {
               >
                 <NotificationsNone sx={{ fontSize: 14 }} />
                 {unreadCount > 0 && (
-                  <Box sx={{ position: "absolute", top: 4, right: 4, width: 5, height: 5, borderRadius: "50%", background: "var(--red, #ef4444)", border: "1px solid var(--s1)" }} />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      background: "var(--red, #ef4444)",
+                      border: "1px solid var(--s1)",
+                    }}
+                  />
                 )}
               </Box>
             </Tooltip>
@@ -637,7 +869,7 @@ export const Sidebar: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: 'var(--r-sm)',
+                  borderRadius: "var(--r-sm)",
                   color: "var(--muted)",
                   flexShrink: 0,
                   transition: "color 0.12s, background 0.12s",
@@ -650,7 +882,10 @@ export const Sidebar: React.FC = () => {
           </Box>
         </Box>
       </Box>
-      <NotificationsModal open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <NotificationsModal
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+      />
     </>
   );
 };

@@ -65,7 +65,8 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
               height: 28,
               borderRadius: "8px",
               background: "color-mix(in srgb, var(--red) 12%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--red) 22%, transparent)",
+              border:
+                "1px solid color-mix(in srgb, var(--red) 22%, transparent)",
               flexShrink: 0,
             }}
           >
@@ -85,7 +86,8 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
               fontWeight: 600,
               color: "var(--red)",
               background: "color-mix(in srgb, var(--red) 8%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
+              border:
+                "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
               borderRadius: "4px",
               padding: "1px 6px",
               fontSize: "12px",
@@ -124,10 +126,12 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           size="small"
           sx={{
             textTransform: "none",
-            background: "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+            background:
+              "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
             boxShadow: "none",
             "&:hover": {
-              background: "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
               boxShadow: "none",
               transform: "none",
             },

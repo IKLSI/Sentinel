@@ -93,6 +93,7 @@ public class AuthService
             .ToListAsync();
 
         User? user = null;
+
         foreach (User candidate in candidates)
         {
             if (BCrypt.Net.BCrypt.Verify(password, candidate.PasswordHash))
@@ -102,6 +103,7 @@ public class AuthService
                     _logger.LogWarning("Plusieurs comptes correspondent au login {Email} — connexion refusée par ambiguïté", normalizedEmail);
                     return null;
                 }
+
                 user = candidate;
             }
         }
@@ -138,7 +140,7 @@ public class AuthService
                 LastName = user.LastName,
                 Role = user.Role.ToString(),
                 OrganizationId = user.OrganizationId,
-                Theme = user.Theme
+                Theme = user.Theme.ToString().ToLowerInvariant()
             }
         };
     }
@@ -193,7 +195,7 @@ public class AuthService
                 LastName = user.LastName,
                 Role = user.Role.ToString(),
                 OrganizationId = user.OrganizationId,
-                Theme = user.Theme
+                Theme = user.Theme.ToString().ToLowerInvariant()
             }
         };
     }
@@ -201,6 +203,7 @@ public class AuthService
     public async Task LogoutAsync(Guid userId)
     {
         User? user = await _context.Users.FindAsync(userId);
+
         if (user == null)
         {
             return;
@@ -208,6 +211,7 @@ public class AuthService
 
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
+
         await _context.SaveChangesAsync();
     }
 
@@ -218,6 +222,7 @@ public class AuthService
         string normalizedEmail = request.Email.ToLower().Trim();
 
         bool emailExists = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
+
         if (emailExists)
             throw new InvalidOperationException("Un compte existe déjà avec cette adresse email.");
 
@@ -234,6 +239,7 @@ public class AuthService
             CreatedAt = now,
             UpdatedAt = now
         };
+
         await _context.Organizations.AddAsync(organization);
 
         User admin = new User
@@ -248,8 +254,8 @@ public class AuthService
             IsEmailVerified = false,
             CreatedAt = now
         };
-        await _context.Users.AddAsync(admin);
 
+        await _context.Users.AddAsync(admin);
         await _context.TicketStatuses.AddRangeAsync(BuildDefaultStatuses(organization.Id));
 
         EmailVerificationToken verificationToken = new EmailVerificationToken
@@ -258,8 +264,8 @@ public class AuthService
             Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
             ExpiresAt = now.AddHours(48)
         };
-        await _context.EmailVerificationTokens.AddAsync(verificationToken);
 
+        await _context.EmailVerificationTokens.AddAsync(verificationToken);
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Nouvelle organisation enregistrée {Slug} par {Email}", organization.Slug, normalizedEmail);
@@ -276,6 +282,7 @@ public class AuthService
         if (verificationToken == null) return false;
 
         User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == verificationToken.Email);
+
         if (user == null) return false;
 
         user.IsEmailVerified = true;
@@ -294,6 +301,7 @@ public class AuthService
         string normalizedEmail = email.ToLower().Trim();
 
         User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
         if (user == null || user.IsEmailVerified) return null;
 
         await _context.EmailVerificationTokens
@@ -316,15 +324,18 @@ public class AuthService
     private async Task<string> GenerateUniqueSlugAsync(string name)
     {
         string baseSlug = Slugify(name);
+
         if (string.IsNullOrEmpty(baseSlug)) baseSlug = "org";
 
         string candidate = baseSlug;
         int suffix = 2;
+
         while (await _context.Organizations.AnyAsync(o => o.Slug == candidate))
         {
             candidate = $"{baseSlug}-{suffix}";
             suffix++;
         }
+
         return candidate;
     }
 
@@ -333,8 +344,11 @@ public class AuthService
         string lower = value.Trim().ToLowerInvariant();
         char[] chars = lower.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray();
         string slug = new string(chars);
+
         while (slug.Contains("--")) slug = slug.Replace("--", "-");
+
         slug = slug.Trim('-');
+
         return slug.Length > 90 ? slug[..90].Trim('-') : slug;
     }
 

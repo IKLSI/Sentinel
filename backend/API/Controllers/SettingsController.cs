@@ -36,6 +36,7 @@ public class SettingsController : BaseController
     public async Task<IActionResult> GetIntegrationSettings()
     {
         Guid? orgId = GetOrganizationId();
+
         if (orgId == null) return Unauthorized();
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
@@ -53,15 +54,18 @@ public class SettingsController : BaseController
     public async Task<IActionResult> ConnectGithub([FromBody] ConnectIntegrationDto dto)
     {
         Guid? orgId = GetOrganizationId();
+
         if (orgId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Token))
             return BadRequest(new { message = "Le token est requis" });
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
+
         if (org == null) return NotFound();
 
         (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "github");
+
         if (account == null)
             return BadRequest(new { message = "Le token GitHub est invalide ou ne peut pas être vérifié auprès du fournisseur" });
 
@@ -71,6 +75,7 @@ public class SettingsController : BaseController
         org.GithubConnectedAt = DateTime.UtcNow;
         org.GithubConnectedById = GetCurrentUserId();
         org.UpdatedAt = DateTime.UtcNow;
+
         try
         {
             await _context.SaveChangesAsync();
@@ -96,15 +101,18 @@ public class SettingsController : BaseController
     public async Task<IActionResult> ConnectGitlab([FromBody] ConnectIntegrationDto dto)
     {
         Guid? orgId = GetOrganizationId();
+
         if (orgId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Token))
             return BadRequest(new { message = "Le token est requis" });
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
+
         if (org == null) return NotFound();
 
         (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "gitlab");
+
         if (account == null)
             return BadRequest(new { message = "Le token GitLab est invalide ou ne peut pas être vérifié auprès du fournisseur" });
 
@@ -114,6 +122,7 @@ public class SettingsController : BaseController
         org.GitlabConnectedAt = DateTime.UtcNow;
         org.GitlabConnectedById = GetCurrentUserId();
         org.UpdatedAt = DateTime.UtcNow;
+
         try
         {
             await _context.SaveChangesAsync();
@@ -139,9 +148,11 @@ public class SettingsController : BaseController
     public async Task<IActionResult> GetOrganizationSettings()
     {
         Guid? orgId = GetOrganizationId();
+
         if (orgId == null) return Unauthorized();
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
+
         if (org == null) return NotFound();
 
         return Ok(new OrganizationSettingsDto
@@ -158,9 +169,11 @@ public class SettingsController : BaseController
     public async Task<IActionResult> UpdateOrganizationSettings([FromBody] UpdateOrganizationSettingsDto dto)
     {
         Guid? orgId = GetOrganizationId();
+
         if (orgId == null) return Unauthorized();
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
+
         if (org == null) return NotFound();
 
         if (string.IsNullOrWhiteSpace(dto.Name))
@@ -188,5 +201,4 @@ public class SettingsController : BaseController
             CreatedAt = org.CreatedAt,
         });
     }
-
 }

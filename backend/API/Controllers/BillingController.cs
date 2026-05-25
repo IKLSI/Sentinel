@@ -46,6 +46,7 @@ public class BillingController : BaseController
     public async Task<ActionResult<BillingStatusDto>> GetStatus()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         return Ok(await _quotaService.GetStatusAsync(organizationId.Value));
@@ -56,6 +57,7 @@ public class BillingController : BaseController
     public async Task<ActionResult<IEnumerable<PlanOptionDto>>> GetPlans()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         PlanTier tier = await CurrentTierAsync(organizationId.Value);
@@ -67,6 +69,7 @@ public class BillingController : BaseController
     public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         if (!Enum.TryParse(request.PlanTier, true, out PlanTier tier) || tier == PlanTier.Free)
@@ -102,6 +105,7 @@ public class BillingController : BaseController
     public async Task<IActionResult> Portal()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         try
@@ -134,6 +138,7 @@ public class BillingController : BaseController
     public async Task<IActionResult> Webhook()
     {
         using StreamReader reader = new StreamReader(Request.Body);
+
         string json = await reader.ReadToEndAsync();
         string signature = Request.Headers["Stripe-Signature"].ToString();
 

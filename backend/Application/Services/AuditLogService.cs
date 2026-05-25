@@ -47,6 +47,7 @@ public class AuditLogService : IAuditLogService
             Jti = jti,
             CreatedAt = DateTime.UtcNow
         });
+
         return Task.CompletedTask;
     }
 }

@@ -54,7 +54,7 @@ public class DataSeeder
             IsActive = true,
             IsEmailVerified = true,
             CreatedAt = now,
-            Theme = "dark"
+            Theme = ThemeType.Dark
         };
 
         await _context.Users.AddAsync(admin);

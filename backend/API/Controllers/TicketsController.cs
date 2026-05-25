@@ -44,6 +44,7 @@ public class TicketsController : BaseController
         [FromQuery] int pageSize = 20)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         IQueryable<Ticket> query = _context.Tickets
@@ -70,10 +71,12 @@ public class TicketsController : BaseController
         {
             if (search.Length > 100)
                 return BadRequest(new { message = "Recherche limitée à 100 caractères" });
+
             string escaped = search
                 .Replace("\\", "\\\\")
                 .Replace("%", "\\%")
                 .Replace("_", "\\_");
+
             string pattern = $"%{escaped}%";
 
             query = query.Where(t =>
@@ -124,11 +127,13 @@ public class TicketsController : BaseController
         [FromQuery] string? search)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         byte[] bytes = await _exportService.ExportTicketsExcelAsync(
             organizationId.Value, status, priority, assignedTo, type, search);
         string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
+
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }
 
@@ -158,6 +163,7 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketDto>> GetTicket(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         TicketDto? ticket = await _ticketService.GetTicketWithDetailsAsync(id);
@@ -166,6 +172,7 @@ public class TicketsController : BaseController
             return NotFound(new { message = "Ticket introuvable" });
 
         bool exists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId.Value);
+
         if (!exists)
             return Forbid();
 
@@ -179,6 +186,7 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketDto>> UpdateTicket(Guid id, [FromBody] UpdateTicketDto dto)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         Guid? organizationId = GetOrganizationId();
@@ -206,9 +214,11 @@ public class TicketsController : BaseController
     public async Task<IActionResult> DeleteTicket(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         bool deleted = await _ticketService.DeleteTicketAsync(id, organizationId.Value);
+
         if (!deleted)
             return NotFound(new { message = "Ticket introuvable" });
 
@@ -227,9 +237,11 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketCommentDto>> AddComment(Guid id, [FromBody] CreateCommentDto dto)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         Guid? organizationId = GetOrganizationId();
+
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
 
         if (!ticketExists)
@@ -266,6 +278,7 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketCommentDto>> UpdateComment(Guid id, Guid commentId, [FromBody] CreateCommentDto dto)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         TicketComment? comment = await _context.TicketComments
@@ -283,6 +296,7 @@ public class TicketsController : BaseController
 
         comment.Content = dto.Content;
         comment.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
@@ -309,6 +323,7 @@ public class TicketsController : BaseController
     public async Task<IActionResult> DeleteComment(Guid id, Guid commentId)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         TicketComment? comment = await _context.TicketComments
@@ -351,9 +366,11 @@ public class TicketsController : BaseController
     public async Task<ActionResult<List<TicketAttachmentDto>>> ListAttachments(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
+
         if (!ticketExists)
             return NotFound(new { message = "Ticket introuvable" });
 
@@ -383,10 +400,12 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketAttachmentDto>> UploadAttachment(Guid id, IFormFile file)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         Guid? organizationId = GetOrganizationId();
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
+
         if (!ticketExists)
             return NotFound(new { message = "Ticket introuvable" });
 
@@ -398,12 +417,15 @@ public class TicketsController : BaseController
 
         string originalName = Path.GetFileName(file.FileName);
         string sanitized = string.Concat(originalName.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Replace(" ", "_");
+
         if (string.IsNullOrWhiteSpace(sanitized))
             return BadRequest(new { message = "Nom de fichier invalide" });
 
         Guid attachmentId = Guid.NewGuid();
         string uploadDir = Path.Combine(GetAttachmentsRoot(), id.ToString());
+
         Directory.CreateDirectory(uploadDir);
+
         string storedName = $"{attachmentId:N}_{sanitized}";
         string storagePath = Path.Combine(uploadDir, storedName);
 
@@ -454,6 +476,7 @@ public class TicketsController : BaseController
     public async Task<IActionResult> DownloadAttachment(Guid id, Guid attachmentId)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         TicketAttachment? attachment = await _context.TicketAttachments
@@ -467,6 +490,7 @@ public class TicketsController : BaseController
             return NotFound(new { message = "Fichier manquant" });
 
         FileStream stream = new FileStream(attachment.StoragePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
         return File(stream, attachment.ContentType, attachment.FileName);
     }
 
@@ -474,6 +498,7 @@ public class TicketsController : BaseController
     public async Task<IActionResult> DeleteAttachment(Guid id, Guid attachmentId)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         Guid? organizationId = GetOrganizationId();
@@ -485,6 +510,7 @@ public class TicketsController : BaseController
             return NotFound(new { message = "Pièce jointe introuvable" });
 
         bool isAdmin = User.IsInRole(UserRole.Admin.ToString());
+
         if (!isAdmin && attachment.UploadedById != userId.Value)
             return Forbid();
 
@@ -512,6 +538,7 @@ public class TicketsController : BaseController
     public async Task<ActionResult<TicketDto>> ChangeStatus(Guid id, [FromBody] ChangeStatusDto dto)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId == null) return Unauthorized();
 
         Guid? organizationId = GetOrganizationId();
@@ -521,6 +548,7 @@ public class TicketsController : BaseController
             return NotFound(new { message = "Ticket introuvable" });
 
         Ticket? updated = await _ticketService.ChangeStatusAsync(id, dto.StatusId, userId.Value);
+
         if (updated == null)
             return BadRequest(new { message = "Statut invalide" });
 

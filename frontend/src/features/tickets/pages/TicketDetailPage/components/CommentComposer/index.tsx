@@ -19,8 +19,9 @@ import { useTheme } from "@/store/ThemeContext";
 import { DetailPalette } from "../../helpers";
 import { uploadAttachment } from "@/features/tickets/api/tickets";
 import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
+import { CommentMode, Theme } from "@/types/enums";
 
-type Mode = "reply" | "internal";
+type Mode = CommentMode;
 
 interface Attachment {
   fileName: string;
@@ -57,7 +58,7 @@ export const CommentComposer: React.FC<Props> = ({
 }) => {
   const t = useT();
   const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = theme === Theme.Dark;
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -6,20 +6,21 @@ import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { getRecurringJobs, triggerTechHealthScan, RecurringJobStatus } from "@/features/settings/api/jobs";
+import { JobState } from "@/types/enums";
 import { extractApiError } from "@/utils/apiError";
 import { CARD_SX } from "../../helpers";
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  Succeeded: { bg: "color-mix(in srgb, var(--success, #22c55e) 15%, transparent)", color: "var(--success, #22c55e)" },
-  Failed: { bg: "color-mix(in srgb, #ef4444 15%, transparent)", color: "#ef4444" },
-  Processing: { bg: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" },
-  Enqueued: { bg: "color-mix(in srgb, #f59e0b 15%, transparent)", color: "#f59e0b" },
+const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> = {
+  [JobState.Succeeded]: { bg: "color-mix(in srgb, var(--success, #22c55e) 15%, transparent)", color: "var(--success, #22c55e)" },
+  [JobState.Failed]: { bg: "color-mix(in srgb, #ef4444 15%, transparent)", color: "#ef4444" },
+  [JobState.Processing]: { bg: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" },
+  [JobState.Enqueued]: { bg: "color-mix(in srgb, #f59e0b 15%, transparent)", color: "#f59e0b" },
 };
 
 function StatusBadge({ state, t }: { state: string | null; t: ReturnType<typeof useT> }) {
   if (!state) return <Box sx={{ color: "var(--muted)", fontSize: "11px" }}>—</Box>;
   const key = state.charAt(0).toUpperCase() + state.slice(1).toLowerCase();
-  const colors = STATUS_COLORS[key] ?? { bg: "var(--s2)", color: "var(--muted)" };
+  const colors = STATUS_COLORS[key as JobState] ?? { bg: "var(--s2)", color: "var(--muted)" };
   const labelKey = `settings.jobs.status.${state.toLowerCase()}`;
   return (
     <Box

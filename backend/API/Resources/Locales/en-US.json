@@ -102,7 +102,7 @@
   "common.deleting": "Deleting…",
   "common.edit": "Edit",
   "common.save": "Save",
-"dashboard.activity.bold_created": "Ticket created",
+  "dashboard.activity.bold_created": "Ticket created",
   "dashboard.activity.bold_critical": "Critical vulnerability",
   "dashboard.activity.bold_resolved": "Ticket resolved",
   "dashboard.activity.empty_subtitle": "Events will appear here in real time.",

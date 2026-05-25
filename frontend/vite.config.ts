@@ -6,9 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -27,9 +25,21 @@ export default defineConfig({
             id.includes("/react-router") ||
             id.includes("/react/") ||
             id.includes("/scheduler/")
-          ) return "react-vendor";
-          if (id.includes("react-markdown") || id.includes("remark-") || id.includes("micromark") || id.includes("mdast-")) return "markdown";
-          if (id.includes("@codemirror/") || id.includes("@uiw/react-codemirror") || id.includes("@lezer/")) return "codemirror";
+          )
+            return "react-vendor";
+          if (
+            id.includes("react-markdown") ||
+            id.includes("remark-") ||
+            id.includes("micromark") ||
+            id.includes("mdast-")
+          )
+            return "markdown";
+          if (
+            id.includes("@codemirror/") ||
+            id.includes("@uiw/react-codemirror") ||
+            id.includes("@lezer/")
+          )
+            return "codemirror";
           if (id.includes("@hello-pangea/dnd")) return "dnd";
           if (id.includes("date-fns")) return "date";
         },

@@ -7,7 +7,7 @@ import { AppModal } from "@/components/AppModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { inviteUser } from "@/features/users/api/users";
-import { UserRole } from "@/types";
+import { UserRole } from "@/types/enums";
 import { inp } from "../../helpers";
 import { extractApiError } from "@/utils/apiError";
 
@@ -20,12 +20,12 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   const { showToast } = useToast();
   const t = useT();
 
-  const [inv, setInv] = useState({ email: "", role: "Developer" as UserRole });
+  const [inv, setInv] = useState<{ email: string; role: UserRole }>({ email: "", role: UserRole.Developer });
   const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
     onClose();
-    setInv({ email: "", role: "Developer" });
+    setInv({ email: "", role: UserRole.Developer as UserRole });
   };
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -211,9 +211,9 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                   setInv((f) => ({ ...f, role: e.target.value as UserRole }))
                 }
               >
-                <option value="Admin">{t("settings.role.admin")}</option>
-                <option value="Client">{t("settings.role.client")}</option>
-                <option value="Developer">
+                <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
+                <option value={UserRole.Client}>{t("settings.role.client")}</option>
+                <option value={UserRole.Developer}>
                   {t("settings.role.developer")}
                 </option>
               </Box>

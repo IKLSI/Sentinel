@@ -1,5 +1,6 @@
 using FluentValidation;
 using Sentinel.Domain.DTOs.TechHealth;
+using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Validators;
 
@@ -19,14 +20,15 @@ public class CreateTechProjectDtoValidator : AbstractValidator<CreateTechProject
         RuleFor(x => x.RepositoryType)
             .NotEmpty()
             .MaximumLength(50)
-            .Must(t => t is "GitHub" or "GitLab" or "Bitbucket")
-            .WithMessage("Type de dépôt invalide (GitHub, GitLab ou Bitbucket)");
+            .Must(t => Enum.TryParse<RepositoryType>(t, out _))
+            .WithMessage($"Type de dépôt invalide ({string.Join(", ", Enum.GetNames<RepositoryType>())})");
 
         RuleFor(x => x.ScanFrequency)
             .NotEmpty()
             .MaximumLength(50)
-            .Must(f => f is "Daily" or "Weekly" or "Monthly" or "Manual")
-            .WithMessage("Fréquence invalide (Daily, Weekly, Monthly ou Manual)");
+            .Must(f => Enum.TryParse<ScanFrequency>(f, out _))
+            .WithMessage($"Fréquence invalide ({string.Join(", ", Enum.GetNames<ScanFrequency>())})");
+
     }
 
     internal static bool BeValidHttpUrl(string? url)

@@ -6,6 +6,7 @@ import {
   PaginatedResponse,
   User,
 } from "../../../types";
+import { UserRole } from "../../../types/enums";
 import { downloadExcel } from "../../../utils/download";
 
 function createPartialUser(name: string, id: string, createdAt: string): User {
@@ -15,7 +16,7 @@ function createPartialUser(name: string, id: string, createdAt: string): User {
     email: "",
     firstName: firstName ?? name,
     lastName: rest.join(" "),
-    role: "Developer",
+    role: UserRole.Developer,
     organizationId: "",
     isActive: true,
     createdAt,

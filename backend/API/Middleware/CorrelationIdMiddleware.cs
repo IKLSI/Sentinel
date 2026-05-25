@@ -25,6 +25,7 @@ public class CorrelationIdMiddleware
             {
                 context.Response.Headers[HeaderName] = correlationId;
             }
+
             return Task.CompletedTask;
         });
 

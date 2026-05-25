@@ -33,6 +33,7 @@ public class TimeEntriesController : BaseController
         [FromQuery] DateOnly? to)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
@@ -50,6 +51,7 @@ public class TimeEntriesController : BaseController
         [FromQuery] DateOnly? to)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
@@ -57,6 +59,7 @@ public class TimeEntriesController : BaseController
         byte[] bytes = await _exportService.ExportTimeEntriesExcelAsync(organizationId.Value, filterUserId, from, to);
         string fromStr = from?.ToString("yyyy-MM-dd") ?? "debut";
         string toStr = to?.ToString("yyyy-MM-dd") ?? "fin";
+
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"temps-{fromStr}-{toStr}.xlsx");
     }
 
@@ -65,6 +68,7 @@ public class TimeEntriesController : BaseController
     {
         Guid? currentUserId = GetCurrentUserId();
         Guid? organizationId = GetOrganizationId();
+
         if (currentUserId == null || organizationId == null) return Unauthorized();
 
         TimeEntry entry = await _timeTrackingService.CreateManualEntryAsync(dto, currentUserId.Value, organizationId.Value);
@@ -86,9 +90,11 @@ public class TimeEntriesController : BaseController
     {
         Guid? currentUserId = GetCurrentUserId();
         Guid? organizationId = GetOrganizationId();
+
         if (currentUserId == null || organizationId == null) return Unauthorized();
 
         TimeEntry? entry = await _timeTrackingService.UpdateEntryAsync(id, dto, currentUserId.Value, organizationId.Value, IsAdmin());
+
         if (entry == null) return NotFound(new { message = "Saisie introuvable" });
 
         await _auditLog.LogAsync(
@@ -107,9 +113,11 @@ public class TimeEntriesController : BaseController
     {
         Guid? currentUserId = GetCurrentUserId();
         Guid? organizationId = GetOrganizationId();
+
         if (currentUserId == null || organizationId == null) return Unauthorized();
 
         bool deleted = await _timeTrackingService.DeleteEntryAsync(id, currentUserId.Value, organizationId.Value, IsAdmin());
+
         if (!deleted) return NotFound(new { message = "Saisie introuvable" });
 
         await _auditLog.LogAsync(
@@ -129,5 +137,4 @@ public class TimeEntriesController : BaseController
             (c.Type == "role" || c.Type == ClaimTypes.Role) &&
             c.Value == "Admin");
     }
-
 }

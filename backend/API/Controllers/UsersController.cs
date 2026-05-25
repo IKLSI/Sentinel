@@ -43,6 +43,7 @@ public class UsersController : BaseController
         [FromQuery] string? search = null)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         if (page < 1) page = 1;
@@ -56,6 +57,7 @@ public class UsersController : BaseController
         if (!string.IsNullOrWhiteSpace(search))
         {
             string pattern = $"%{search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+
             query = query.Where(u =>
                 EF.Functions.ILike(u.FirstName, pattern) ||
                 EF.Functions.ILike(u.LastName, pattern) ||
@@ -88,6 +90,7 @@ public class UsersController : BaseController
     {
         Guid? organizationId = GetOrganizationId();
         Guid? currentUserId = GetCurrentUserId();
+
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
         if (!User.IsInRole("Admin") && currentUserId != id)
@@ -108,6 +111,7 @@ public class UsersController : BaseController
     {
         Guid? organizationId = GetOrganizationId();
         Guid? currentUserId = GetCurrentUserId();
+
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
         bool userExists = await _context.Users
@@ -207,6 +211,7 @@ public class UsersController : BaseController
     {
         Guid? organizationId = GetOrganizationId();
         Guid? currentUserId = GetCurrentUserId();
+
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
         User? user = await _context.Users
@@ -231,6 +236,7 @@ public class UsersController : BaseController
                 u.OrganizationId == organizationId.Value
                 && u.Role == UserRole.Admin
                 && u.IsActive);
+
             if (activeAdmins <= 1)
                 return BadRequest(new { message = "Au moins un administrateur actif est requis" });
         }
@@ -241,6 +247,7 @@ public class UsersController : BaseController
         {
             if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
                 return BadRequest(new { message = "Rôle invalide" });
+
             user.Role = role;
         }
 
@@ -264,6 +271,7 @@ public class UsersController : BaseController
     {
         Guid? currentUserId = GetCurrentUserId();
         Guid? organizationId = GetOrganizationId();
+
         if (currentUserId == null || organizationId == null) return Unauthorized();
 
         User? user = await _context.Users
@@ -272,10 +280,10 @@ public class UsersController : BaseController
         if (user == null)
             return NotFound(new { message = "Utilisateur introuvable" });
 
-        if (!string.IsNullOrEmpty(dto.Theme) && (dto.Theme == "dark" || dto.Theme == "light"))
-            user.Theme = dto.Theme;
+        if (!string.IsNullOrEmpty(dto.Theme) && Enum.TryParse<ThemeType>(dto.Theme, ignoreCase: true, out ThemeType parsedTheme))
+            user.Theme = parsedTheme;
 
-        if (!string.IsNullOrEmpty(dto.Language) && (dto.Language == "fr-FR" || dto.Language == "en-US"))
+        if (!string.IsNullOrEmpty(dto.Language) && LanguageValues.All.Contains(dto.Language))
             user.Language = dto.Language;
 
         await _context.SaveChangesAsync();
@@ -287,6 +295,7 @@ public class UsersController : BaseController
     {
         Guid? currentUserId = GetCurrentUserId();
         Guid? organizationId = GetOrganizationId();
+
         if (currentUserId == null || organizationId == null) return Unauthorized();
 
         User? user = await _context.Users
@@ -323,7 +332,7 @@ public class UsersController : BaseController
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt,
-            Theme = user.Theme,
+            Theme = user.Theme.ToString().ToLowerInvariant(),
             Language = user.Language,
         };
     }

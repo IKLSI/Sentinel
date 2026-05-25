@@ -84,6 +84,7 @@ public class AuthController : BaseController
 
         string? jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
         string? expClaim = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+
         if (!string.IsNullOrEmpty(jti) && long.TryParse(expClaim, out long expSeconds))
         {
             DateTime expUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
@@ -144,6 +145,7 @@ public class AuthController : BaseController
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         EmailVerificationToken token;
+
         try
         {
             token = await _authService.RegisterAsync(request);
@@ -222,8 +224,7 @@ public class AuthController : BaseController
             LastName = user.LastName,
             Role = user.Role.ToString(),
             OrganizationId = user.OrganizationId,
-            Theme = user.Theme
+            Theme = user.Theme.ToString().ToLowerInvariant()
         });
     }
-
 }

@@ -22,6 +22,7 @@ import { getUsers, toggleUserActive } from "@/features/users/api/users";
 import { User } from "@/types";
 import { MemberPagination } from "../MemberPagination";
 import { extractApiError } from "@/utils/apiError";
+import { UserRole } from "@/types/enums";
 
 interface Props {
   onInviteClick: () => void;
@@ -199,9 +200,9 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           }
         >
           <option value="all">{t("settings.members.filter_all_roles")}</option>
-          <option value="Admin">{t("settings.role.admin")}</option>
-          <option value="Client">{t("settings.role.client")}</option>
-          <option value="Developer">{t("settings.role.developer")}</option>
+          <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
+          <option value={UserRole.Client}>{t("settings.role.client")}</option>
+          <option value={UserRole.Developer}>{t("settings.role.developer")}</option>
         </Box>
         <Box sx={{ flex: 1 }} />
         <Button

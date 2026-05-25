@@ -20,6 +20,7 @@ import {
   downloadAttachment,
 } from "@/features/tickets/api/tickets";
 import { DetailPalette } from "../../helpers";
+import { UserRole } from "@/types/enums";
 
 interface Props {
   ticketId: string;
@@ -55,7 +56,7 @@ export const AttachmentsCard: React.FC<Props> = ({ ticketId, palette }) => {
   );
   const [deleting, setDeleting] = useState(false);
 
-  const isAdmin = user?.role === "Admin";
+  const isAdmin = user?.role === UserRole.Admin;
 
   useEffect(() => {
     if (!ticketId) return;

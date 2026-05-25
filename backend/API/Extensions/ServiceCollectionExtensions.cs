@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         IConfigurationSection jwtSettings = configuration.GetSection("Jwt");
+
         string jwtSecret = jwtSettings["Secret"]
             ?? throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
 
@@ -81,6 +82,7 @@ public static class ServiceCollectionExtensions
 
                         ITokenBlacklistService? blacklist = sp.GetService<ITokenBlacklistService>();
                         string? jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
                         if (blacklist != null && !string.IsNullOrEmpty(jti) && blacklist.IsRevoked(jti))
                         {
                             context.Fail("Token révoqué");
@@ -89,6 +91,7 @@ public static class ServiceCollectionExtensions
 
                         string? userIdClaim = context.Principal?.FindFirst("userId")?.Value;
                         string? versionClaim = context.Principal?.FindFirst("tokenVersion")?.Value;
+
                         if (!Guid.TryParse(userIdClaim, out Guid userId) || !int.TryParse(versionClaim, out int tokenVersion))
                         {
                             context.Fail("Token invalide");
@@ -97,6 +100,7 @@ public static class ServiceCollectionExtensions
 
                         SentinelContext db = sp.GetRequiredService<SentinelContext>();
                         ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
+
                         using IDisposable elevation = systemScope.Enter();
 
                         var account = await db.Users
@@ -131,6 +135,7 @@ public static class ServiceCollectionExtensions
                     .AllowCredentials();
             });
         });
+
         return services;
     }
 
@@ -139,6 +144,7 @@ public static class ServiceCollectionExtensions
         HashSet<string> origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         string[]? configured = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
         if (configured != null)
         {
             foreach (string origin in configured)
@@ -151,6 +157,7 @@ public static class ServiceCollectionExtensions
         }
 
         string? frontendUrl = configuration["Frontend:BaseUrl"];
+
         if (IsValidOrigin(frontendUrl))
         {
             origins.Add(frontendUrl!.TrimEnd('/'));
@@ -168,6 +175,7 @@ public static class ServiceCollectionExtensions
     {
         if (string.IsNullOrWhiteSpace(value)) return false;
         if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uri)) return false;
+
         return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
     }
 
@@ -180,10 +188,12 @@ public static class ServiceCollectionExtensions
                 options.UseNpgsqlConnection(connectionString);
             });
         });
+
         services.AddHangfireServer(options =>
         {
             options.WorkerCount = 5;
         });
+
         return services;
     }
 
@@ -250,8 +260,11 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddStripe(this IServiceCollection services, IConfiguration configuration)
     {
         string apiKey = configuration["Stripe:SecretKey"] ?? string.Empty;
+
         if (string.IsNullOrEmpty(apiKey)) apiKey = "sk_test_placeholder";
+
         services.AddSingleton<Stripe.IStripeClient>(new Stripe.StripeClient(apiKey));
+
         return services;
     }
 
@@ -260,6 +273,7 @@ public static class ServiceCollectionExtensions
         services.AddDataProtection()
             .SetApplicationName("Sentinel")
             .PersistKeysToDbContext<SentinelContext>();
+
         return services;
     }
 
@@ -325,6 +339,7 @@ public static class ServiceCollectionExtensions
                     Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                     Instance = ctx.HttpContext.Request.Path
                 };
+
                 return new BadRequestObjectResult(problem);
             };
         });
@@ -354,6 +369,7 @@ public static class ServiceCollectionExtensions
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
+
         return services;
     }
 
@@ -361,6 +377,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddHealthChecks()
             .AddCheck<PostgresHealthCheck>("postgres", tags: new[] { "ready" });
+
         return services;
     }
 
@@ -368,6 +385,7 @@ public static class ServiceCollectionExtensions
     {
         if (string.IsNullOrEmpty(name)) return name;
         if (char.IsLower(name[0])) return name;
+
         return string.Create(name.Length, name, static (span, source) =>
         {
             source.AsSpan().CopyTo(span);
@@ -380,6 +398,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddSingleton<ISystemScope, SystemScope>();
+
         return services;
     }
 

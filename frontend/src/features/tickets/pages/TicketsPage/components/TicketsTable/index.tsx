@@ -4,10 +4,11 @@ import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOu
 import { useT } from "@/i18n/I18nContext";
 import { Ticket } from "@/types";
 import { TicketRow } from "../TicketRow";
+import { SortDirection } from "@/types/enums";
 
 export interface SortState {
   col: string;
-  dir: "asc" | "desc";
+  dir: SortDirection;
 }
 
 interface Props {

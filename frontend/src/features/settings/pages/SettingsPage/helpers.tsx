@@ -1,7 +1,9 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import { SettingsTab } from "@/types/enums";
 
-export type Tab = "members" | "organisation" | "jobs" | "billing";
+export type Tab = SettingsTab;
+export { SettingsTab };
 
 export const TIMEZONE_VALUES = [
   "Europe/Paris",

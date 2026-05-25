@@ -32,6 +32,7 @@ public class ETagMiddleware
             buffer.Seek(0, SeekOrigin.Begin);
             await buffer.CopyToAsync(originalBody);
             context.Response.Body = originalBody;
+
             return;
         }
 
@@ -48,6 +49,7 @@ public class ETagMiddleware
             context.Response.StatusCode = StatusCodes.Status304NotModified;
             context.Response.ContentLength = 0;
             context.Response.Body = originalBody;
+
             return;
         }
 

@@ -26,6 +26,7 @@ internal static class RepositoryUrlGuard
         if (string.IsNullOrWhiteSpace(url)) return true;
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)) return false;
         if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
+
         return AllowedHosts.Contains(uri.Host);
     }
 }
@@ -63,9 +64,11 @@ public class TechHealthController : BaseController
     public async Task<ActionResult<IEnumerable<AvailableRepoDto>>> GetAvailableRepos()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         Organization? org = await _context.Organizations.FindAsync(organizationId.Value);
+
         if (org == null) return NotFound();
 
         List<string?> existingUrls = await _context.TechProjects
@@ -80,18 +83,21 @@ public class TechHealthController : BaseController
         if (!string.IsNullOrEmpty(org.GithubToken))
         {
             string? token = _tokenProtector.Unprotect(org.GithubToken);
+
             if (string.IsNullOrEmpty(token))
             {
                 fetchFailed = true;
             }
             else
             {
-                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, "github");
+                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitHub.ToString().ToLower());
+
                 if (!success) fetchFailed = true;
+
                 foreach ((string name, string url) in repos)
                 {
                     if (!existingUrls.Contains(url))
-                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = "GitHub" });
+                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = RepositoryType.GitHub.ToString() });
                 }
             }
         }
@@ -99,18 +105,21 @@ public class TechHealthController : BaseController
         if (!string.IsNullOrEmpty(org.GitlabToken))
         {
             string? token = _tokenProtector.Unprotect(org.GitlabToken);
+
             if (string.IsNullOrEmpty(token))
             {
                 fetchFailed = true;
             }
             else
             {
-                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, "gitlab");
+                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitLab.ToString().ToLower());
+
                 if (!success) fetchFailed = true;
+
                 foreach ((string name, string url) in repos)
                 {
                     if (!existingUrls.Contains(url))
-                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = "GitLab" });
+                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = RepositoryType.GitLab.ToString() });
                 }
             }
         }
@@ -128,9 +137,12 @@ public class TechHealthController : BaseController
     public async Task<IActionResult> ExportExcel()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
+
         byte[] bytes = await _exportService.ExportTechHealthExcelAsync(organizationId.Value);
         string filename = $"techhealth-{DateTime.Now:yyyy-MM-dd}.xlsx";
+
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
     }
 
@@ -139,6 +151,7 @@ public class TechHealthController : BaseController
     public async Task<ActionResult<IEnumerable<TechProjectDto>>> GetProjects()
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         List<TechProject> projects = await _context.TechProjects
@@ -172,6 +185,7 @@ public class TechHealthController : BaseController
     public async Task<ActionResult<TechProjectDto>> GetProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         TechProjectDto? project = await _techHealthService.GetProjectWithDetailsAsync(id);
@@ -192,6 +206,7 @@ public class TechHealthController : BaseController
     public async Task<ActionResult<TechProjectDto>> CreateProject([FromBody] CreateTechProjectDto dto)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         if (!RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
@@ -236,6 +251,7 @@ public class TechHealthController : BaseController
     public async Task<IActionResult> DeleteProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         TechProject? project = await _context.TechProjects
@@ -263,6 +279,7 @@ public class TechHealthController : BaseController
     public async Task<IActionResult> TriggerScan(Guid id)
     {
         Guid? organizationId = GetOrganizationId();
+
         if (organizationId == null) return Unauthorized();
 
         bool belongs = await _context.TechProjects
@@ -285,5 +302,4 @@ public class TechHealthController : BaseController
 
         return Accepted();
     }
-
 }

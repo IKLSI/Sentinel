@@ -1,39 +1,47 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback } from "react";
+import { ToastSeverity } from "../types/enums";
 
-type Severity = 'success' | 'error' | 'warning' | 'info'
+type Severity = ToastSeverity;
 
 interface ToastState {
-  open: boolean
-  message: string
-  severity: Severity
+  open: boolean;
+  message: string;
+  severity: Severity;
 }
 
 interface ToastContextValue {
-  toast: ToastState
-  showToast: (message: string, severity?: Severity) => void
-  closeToast: () => void
+  toast: ToastState;
+  showToast: (message: string, severity?: Severity) => void;
+  closeToast: () => void;
 }
 
 export const ToastContext = createContext<ToastContextValue>({
-  toast: { open: false, message: '', severity: 'info' },
+  toast: { open: false, message: "", severity: ToastSeverity.Info },
   showToast: () => {},
   closeToast: () => {},
-})
+});
 
 export function useToast() {
-  return useContext(ToastContext)
+  return useContext(ToastContext);
 }
 
 export function useToastState(): ToastContextValue {
-  const [toast, setToast] = useState<ToastState>({ open: false, message: '', severity: 'info' })
+  const [toast, setToast] = useState<ToastState>({
+    open: false,
+    message: "",
+    severity: ToastSeverity.Info,
+  });
 
-  const showToast = useCallback((message: string, severity: Severity = 'info') => {
-    setToast({ open: true, message, severity })
-  }, [])
+  const showToast = useCallback(
+    (message: string, severity: Severity = ToastSeverity.Info) => {
+      setToast({ open: true, message, severity });
+    },
+    [],
+  );
 
   const closeToast = useCallback(() => {
-    setToast((prev) => ({ ...prev, open: false }))
-  }, [])
+    setToast((prev) => ({ ...prev, open: false }));
+  }, []);
 
-  return { toast, showToast, closeToast }
+  return { toast, showToast, closeToast };
 }

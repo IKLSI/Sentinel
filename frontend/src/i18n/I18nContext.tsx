@@ -6,9 +6,9 @@ import React, {
   useCallback,
 } from "react";
 import apiClient from "../services/client";
+import { Language } from "../types/enums";
 
 type Translations = Record<string, string>;
-type Language = "fr-FR" | "en-US";
 
 interface I18nContextValue {
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -20,7 +20,7 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue>({
   t: (key) => key,
   ready: false,
-  culture: "fr-FR",
+  culture: Language.Fr,
   setLanguage: () => {},
 });
 
@@ -37,12 +37,14 @@ function interpolate(
   });
 }
 
-export const I18nProvider: React.FC<{ children: React.ReactNode; initialLanguage?: Language }> = ({
-  children,
-  initialLanguage,
-}) => {
+export const I18nProvider: React.FC<{
+  children: React.ReactNode;
+  initialLanguage?: Language;
+}> = ({ children, initialLanguage }) => {
   const [language, setLanguageState] = useState<Language>(
-    initialLanguage ?? (localStorage.getItem(STORAGE_KEY) as Language) ?? "fr-FR"
+    initialLanguage ??
+      (localStorage.getItem(STORAGE_KEY) as Language) ??
+      Language.Fr,
   );
   const [translations, setTranslations] = useState<Translations | null>(null);
 
@@ -71,7 +73,9 @@ export const I18nProvider: React.FC<{ children: React.ReactNode; initialLanguage
   if (translations === null) return null;
 
   return (
-    <I18nContext.Provider value={{ t, ready: true, culture: language, setLanguage }}>
+    <I18nContext.Provider
+      value={{ t, ready: true, culture: language, setLanguage }}
+    >
       {children}
     </I18nContext.Provider>
   );

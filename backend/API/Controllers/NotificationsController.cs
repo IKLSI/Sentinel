@@ -24,6 +24,7 @@ public class NotificationsController : BaseController
     public async Task<ActionResult<NotificationsResponse>> GetNotifications()
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId is null) return Unauthorized();
 
         List<Notification> notifications = await _notificationService.GetForUserAsync(userId.Value);
@@ -46,6 +47,7 @@ public class NotificationsController : BaseController
     public async Task<IActionResult> MarkRead(Guid id)
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId is null) return Unauthorized();
 
         await _notificationService.MarkReadAsync(id, userId.Value);
@@ -56,6 +58,7 @@ public class NotificationsController : BaseController
     public async Task<IActionResult> MarkAllRead()
     {
         Guid? userId = GetCurrentUserId();
+
         if (userId is null) return Unauthorized();
 
         await _notificationService.MarkAllReadAsync(userId.Value);
