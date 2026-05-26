@@ -138,6 +138,8 @@ export const ProjectsPage: React.FC = () => {
                       totalDependencies: updated.totalDependencies,
                       vulnerableDependencies: updated.vulnerableDependencies,
                       criticalVulnerabilities: updated.criticalVulnerabilities,
+                      totalVulnerabilities: updated.totalVulnerabilities,
+                      totalTickets: updated.totalTickets,
                     }
                   : p,
               ),

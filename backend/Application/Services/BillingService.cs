@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -28,6 +29,7 @@ public class BillingService
     private readonly ILogger<BillingService> _logger;
     private readonly ISystemScope _systemScope;
     private readonly IStripeClient _stripeClient;
+    private readonly IBackgroundJobClient _backgroundJobs;
 
     public BillingService(
         SentinelContext context,
@@ -35,7 +37,8 @@ public class BillingService
         IOptions<FrontendSettings> frontendOptions,
         ILogger<BillingService> logger,
         ISystemScope systemScope,
-        IStripeClient stripe)
+        IStripeClient stripe,
+        IBackgroundJobClient backgroundJobs)
     {
         _context = context;
         _stripe = stripeOptions.Value;
@@ -43,6 +46,7 @@ public class BillingService
         _logger = logger;
         _systemScope = systemScope;
         _stripeClient = stripe;
+        _backgroundJobs = backgroundJobs;
     }
 
     public List<PlanOptionDto> GetPlans(PlanTier currentTier)
@@ -183,6 +187,7 @@ public class BillingService
 
         if (organization == null) return;
 
+        PlanTier previousPlan = organization.PlanTier;
         organization.StripeSubscriptionId = subscription.Id;
         organization.SubscriptionStatus = MapStatus(subscription.Status);
 
@@ -196,6 +201,31 @@ public class BillingService
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Abonnement mis à jour pour {OrganizationId} : {Status}", organization.Id, organization.SubscriptionStatus);
+
+        if (tier.HasValue && tier.Value != previousPlan)
+        {
+            List<string> adminEmails = await _context.Users
+                .Where(u => u.OrganizationId == organization.Id && u.Role == UserRole.Admin && u.IsActive)
+                .Select(u => u.Email)
+                .ToListAsync();
+
+            if (adminEmails.Count > 0)
+            {
+                string orgName = organization.Name;
+                string oldPlan = previousPlan.ToString();
+                string newPlan = tier.Value.ToString();
+                string status = organization.SubscriptionStatus.ToString();
+                string billingUrl = $"{_frontend.BaseUrl}/settings";
+                string statusMessage = organization.SubscriptionStatus switch
+                {
+                    SubscriptionStatus.Active    => "Abonnement actif.",
+                    SubscriptionStatus.Trialing  => "Période d'essai en cours.",
+                    SubscriptionStatus.PastDue   => "Paiement en retard — veuillez régulariser votre situation.",
+                    _                            => $"Statut : {status}"
+                };
+                _backgroundJobs.Enqueue<IEmailService>(s => s.SendSubscriptionUpdatedAsync(adminEmails, orgName, oldPlan, newPlan, statusMessage, billingUrl));
+            }
+        }
     }
 
     private async Task ApplySubscriptionCanceledAsync(Subscription subscription)
@@ -211,6 +241,19 @@ public class BillingService
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Abonnement annulé pour {OrganizationId} — retour au plan gratuit", organization.Id);
+
+        List<string> adminEmails = await _context.Users
+            .Where(u => u.OrganizationId == organization.Id && u.Role == UserRole.Admin && u.IsActive)
+            .Select(u => u.Email)
+            .ToListAsync();
+
+        if (adminEmails.Count > 0)
+        {
+            string orgName = organization.Name;
+            string billingUrl = $"{_frontend.BaseUrl}/settings";
+
+            _backgroundJobs.Enqueue<IEmailService>(s => s.SendSubscriptionCanceledAsync(adminEmails, orgName, billingUrl));
+        }
     }
 
     private Task<Organization?> FindByCustomerOrSubscriptionAsync(Subscription subscription)

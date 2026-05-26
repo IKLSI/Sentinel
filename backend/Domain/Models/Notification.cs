@@ -2,7 +2,9 @@ namespace Sentinel.Domain.Models;
 
 public enum NotificationType
 {
-    TicketAssigned
+    TicketAssigned,
+    TicketStatusChanged,
+    TicketCommentAdded
 }
 
 public class Notification

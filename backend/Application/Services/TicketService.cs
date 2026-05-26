@@ -198,6 +198,23 @@ public class TicketService
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(ticket.OrganizationId);
 
+        if (ticket.AssignedToId.HasValue && ticket.AssignedToId.Value != userId)
+        {
+            try
+            {
+                await _notificationService.CreateAsync(
+                    ticket.AssignedToId.Value,
+                    ticket.OrganizationId,
+                    NotificationType.TicketStatusChanged,
+                    $"Statut du ticket « {ticket.Title} » : {oldStatusName} → {newStatus.Name}",
+                    ticketId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec création notification de changement de statut pour ticket {TicketId}", ticketId);
+            }
+        }
+
         return ticket;
     }
 
@@ -233,6 +250,23 @@ public class TicketService
         await _context.TicketComments.AddAsync(comment);
         ticket.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (ticket.AssignedToId.HasValue && ticket.AssignedToId.Value != authorId)
+        {
+            try
+            {
+                await _notificationService.CreateAsync(
+                    ticket.AssignedToId.Value,
+                    ticket.OrganizationId,
+                    NotificationType.TicketCommentAdded,
+                    $"Nouveau commentaire sur le ticket : {ticket.Title}",
+                    ticketId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec création notification de commentaire pour ticket {TicketId}", ticketId);
+            }
+        }
 
         return comment;
     }
