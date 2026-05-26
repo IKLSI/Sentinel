@@ -4,8 +4,11 @@ import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useT } from "@/i18n/I18nContext";
+import { fr, enUS, type Locale } from "date-fns/locale";
+import { useI18n } from "@/i18n/I18nContext";
+import { Language } from "@/types/enums";
+
+const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
 import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
   formatDuration,
@@ -28,7 +31,8 @@ const FieldLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, isAdmin, currentUserId }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
+  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
   if (!entry) return null;
 
   const projColor = entry.projectName ? getProjectColor(entry.projectName) : "var(--accent)";
@@ -83,7 +87,7 @@ export const TimeEntryDetailModal: React.FC<Props> = ({ open, onClose, entry, is
           <Box>
             <FieldLabel>{t("time_tracking.field_date")}</FieldLabel>
             <Box sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", textTransform: "capitalize", lineHeight: 1 }}>
-              {format(parsedDate, "d MMMM yyyy", { locale: fr })}
+              {format(parsedDate, "d MMMM yyyy", { locale: dateFnsLocale })}
             </Box>
           </Box>
 

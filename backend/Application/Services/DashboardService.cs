@@ -230,6 +230,9 @@ public class DashboardService
                 Timestamp = t.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = t.Id.ToString(),
+                Type = "resolved",
+                Reference = reference,
+                ProjectName = t.ProjectName,
             });
         }
 
@@ -262,6 +265,9 @@ public class DashboardService
                 Timestamp = t.CreatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = t.Id.ToString(),
+                Type = "created",
+                Reference = reference,
+                ProjectName = t.ProjectName,
             });
         }
 
@@ -312,6 +318,11 @@ public class DashboardService
                 Detail = detail,
                 ProjectId = g.ProjectId.ToString(),
                 Count = g.Count > 1 ? g.Count : null,
+                Type = "vuln",
+                ProjectName = g.ProjectName,
+                VulnCveId = g.WorstCveId,
+                VulnOtherCount = g.Count > 1 ? g.Count - 1 : null,
+                VulnCvssScore = (double?)g.WorstCvssScore,
             });
         }
 

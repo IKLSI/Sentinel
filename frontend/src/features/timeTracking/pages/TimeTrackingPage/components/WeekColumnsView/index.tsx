@@ -10,8 +10,11 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { format, isToday, startOfWeek } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useT } from "@/i18n/I18nContext";
+import { fr, enUS, type Locale } from "date-fns/locale";
+import { useI18n } from "@/i18n/I18nContext";
+import { Language } from "@/types/enums";
+
+const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
 import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
   WORK_HOURS_TARGET,
@@ -88,7 +91,8 @@ export const WeekColumnsView: React.FC<Props> = ({
   onExport,
   onOpenUserFilter,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
+  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [hover, setHover] = useState<{ dayStr: string; top: number; label: string } | null>(null);
@@ -121,7 +125,7 @@ export const WeekColumnsView: React.FC<Props> = ({
     return { startTime, top: (snapped / 60 - START_HOUR) * HOUR_HEIGHT };
   };
 
-  const weekLabel = `${format(weekStart, "dd MMM", { locale: fr })} — ${format(weekEnd, "dd MMM yyyy", { locale: fr })}`;
+  const weekLabel = `${format(weekStart, "dd MMM", { locale: dateFnsLocale })} — ${format(weekEnd, "dd MMM yyyy", { locale: dateFnsLocale })}`;
 
   return (
     <Box
@@ -228,7 +232,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                     letterSpacing: "0.04em",
                   }}
                 >
-                  {format(day, "EEE", { locale: fr })}
+                  {format(day, "EEE", { locale: dateFnsLocale })}
                 </Box>
                 <Box
                   sx={{

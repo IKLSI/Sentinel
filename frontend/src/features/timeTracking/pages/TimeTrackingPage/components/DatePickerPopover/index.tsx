@@ -5,8 +5,11 @@ import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
 import { addDays, format, isToday, startOfWeek } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useT } from "@/i18n/I18nContext";
+import { fr, enUS, type Locale } from "date-fns/locale";
+import { useI18n } from "@/i18n/I18nContext";
+import { Language } from "@/types/enums";
+
+const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
 import { IconNavBtn, parseDateLocal } from "../../helpers";
 
 interface Props {
@@ -22,7 +25,8 @@ export const DatePickerPopover: React.FC<Props> = ({
   selectedDate,
   onSelect,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
+  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
   const [calendarMonth, setCalendarMonth] = React.useState(() =>
     parseDateLocal(selectedDate),
   );
@@ -101,7 +105,7 @@ export const DatePickerPopover: React.FC<Props> = ({
           }}
         >
           {view === "days"
-            ? format(calendarMonth, "MMMM yyyy", { locale: fr })
+            ? format(calendarMonth, "MMMM yyyy", { locale: dateFnsLocale })
             : calendarMonth.getFullYear()}
           <ExpandMoreOutlined
             sx={{
@@ -170,7 +174,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   },
                 }}
               >
-                {format(new Date(2000, monthIdx, 1), "MMM", { locale: fr })}
+                {format(new Date(2000, monthIdx, 1), "MMM", { locale: dateFnsLocale })}
               </Box>
             );
           })}

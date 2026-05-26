@@ -3,9 +3,10 @@ import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS, type Locale } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
+import { Language } from "@/types/enums";
 import {
   ActivityItem,
   DashPalette,
@@ -24,9 +25,15 @@ const DOT_COLORS: Record<string, string> = {
   accent: "var(--accent)",
 };
 
+const DATE_FNS_LOCALE: Record<string, Locale> = {
+  [Language.Fr]: fr,
+  [Language.En]: enUS,
+};
+
 export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   const navigate = useNavigate();
+  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
 
   return (
     <Box
@@ -88,30 +95,77 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             {activity.map((a, idx) => {
               const accentColor = DOT_COLORS[a.color] ?? "var(--accent)";
-              const danger = a.color === "red";
-              const isCreated = a.color === "green";
-              const boldPrefix = danger
-                ? a.count != null
-                  ? t("dashboard.activity.bold_critical_plural")
-                  : t("dashboard.activity.bold_critical")
-                : isCreated
-                  ? t("dashboard.activity.bold_created")
-                  : t("dashboard.activity.bold_resolved");
-              const hasBoldPrefix = a.text.startsWith(boldPrefix);
-              const afterPrefix = hasBoldPrefix ? a.text.slice(boldPrefix.length) : a.text;
-              const dashIdx = afterPrefix.indexOf(" — ");
-              const surIdx = dashIdx < 0 ? afterPrefix.indexOf(" sur ") : -1;
-              const midText = dashIdx >= 0
-                ? afterPrefix.slice(0, dashIdx + 3)
-                : surIdx >= 0 ? afterPrefix.slice(0, surIdx + 5) : afterPrefix;
-              const boldSuffix = dashIdx >= 0
-                ? afterPrefix.slice(dashIdx + 3)
-                : surIdx >= 0 ? afterPrefix.slice(surIdx + 5) : "";
               const href = a.ticketId
                 ? `/tickets/${a.ticketId}`
                 : a.projectId
                   ? `/projects/${a.projectId}`
                   : null;
+
+              const renderText = () => {
+                if (a.type === "resolved") {
+                  return (
+                    <>
+                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                        {t("dashboard.activity.bold_resolved")}
+                      </Box>
+                      {t("dashboard.activity.suffix_resolved", { reference: a.reference ?? "" })}
+                    </>
+                  );
+                }
+                if (a.type === "created") {
+                  return (
+                    <>
+                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                        {t("dashboard.activity.bold_created")}
+                      </Box>
+                      {t("dashboard.activity.suffix_created", { reference: a.reference ?? "" })}
+                    </>
+                  );
+                }
+                if (a.type === "vuln") {
+                  const isPlural = a.count != null && a.count > 1;
+                  return (
+                    <>
+                      {isPlural && (
+                        <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                          {a.count}&nbsp;
+                        </Box>
+                      )}
+                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                        {isPlural
+                          ? t("dashboard.activity.bold_critical_plural")
+                          : t("dashboard.activity.bold_critical")}
+                      </Box>
+                      {isPlural
+                        ? t("dashboard.activity.suffix_vuln_plural", { project: a.projectName ?? "" })
+                        : t("dashboard.activity.suffix_vuln", { project: a.projectName ?? "" })}
+                    </>
+                  );
+                }
+                return <Box component="span">{a.text}</Box>;
+              };
+
+              const renderDetail = () => {
+                if (a.type === "vuln" && a.vulnCveId) {
+                  if (a.vulnOtherCount != null && a.vulnOtherCount > 0) {
+                    const key = a.vulnOtherCount > 1
+                      ? "dashboard.activity.vuln_detail_more_plural"
+                      : "dashboard.activity.vuln_detail_more";
+                    return t(key, {
+                      cve: a.vulnCveId,
+                      count: a.vulnOtherCount,
+                      cvss: a.vulnCvssScore?.toFixed(1) ?? "",
+                    });
+                  }
+                  return t("dashboard.activity.vuln_detail_single", {
+                    cve: a.vulnCveId,
+                    cvss: a.vulnCvssScore?.toFixed(1) ?? "",
+                  });
+                }
+                return a.detail ?? null;
+              };
+
+              const detail = renderDetail();
 
               return (
                 <Tooltip
@@ -151,28 +205,9 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {hasBoldPrefix ? (
-                          <>
-                            {a.count != null && (
-                              <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
-                                {a.count}&nbsp;
-                              </Box>
-                            )}
-                            <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
-                              {boldPrefix}
-                            </Box>
-                            <Box component="span">{midText}</Box>
-                            {boldSuffix && (
-                              <Box component="span" sx={{ fontWeight: 600 }}>
-                                {boldSuffix}
-                              </Box>
-                            )}
-                          </>
-                        ) : (
-                          <Box component="span">{a.text}</Box>
-                        )}
+                        {renderText()}
                       </Box>
-                      {a.detail && (
+                      {detail && (
                         <Box
                           sx={{
                             mt: "2px",
@@ -183,7 +218,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                             textOverflow: "ellipsis",
                           }}
                         >
-                          {a.detail}
+                          {detail}
                         </Box>
                       )}
                     </Box>
@@ -197,7 +232,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: fr })}
+                        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: dateFnsLocale })}
                       </Box>
                     )}
                   </Box>

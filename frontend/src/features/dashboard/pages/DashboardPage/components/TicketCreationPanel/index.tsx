@@ -1,17 +1,14 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Box from "@mui/material/Box";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
 import { DashPalette, TicketCreationDataPoint, buildPanelSx } from "../../helpers";
 
-const weekdayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
-const dayNumFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric" });
-
-const formatDay = (isoDate: string) => {
+const formatDay = (isoDate: string, locale: string) => {
   const d = new Date(`${isoDate}T12:00:00`);
-  const raw = weekdayFmt.format(d).replace(/\.$/, "");
+  const raw = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d).replace(/\.$/, "");
   return {
     abbr: raw.charAt(0).toUpperCase() + raw.slice(1),
-    num: dayNumFmt.format(d),
+    num: new Intl.DateTimeFormat(locale, { day: "numeric" }).format(d),
   };
 };
 
@@ -40,7 +37,7 @@ interface Props {
 }
 
 export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   const [hovered, setHovered] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -72,11 +69,11 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
       "Z",
     ].join(" ");
 
-    const xLabels = data.map((d) => formatDay(d.date));
+    const xLabels = data.map((d) => formatDay(d.date, culture));
 
     const total = data.reduce((s, d) => s + d.count, 0);
     return { pts, areaD, lineD, yAxis, xLabels, total };
-  }, [data]);
+  }, [data, culture]);
 
   const hoveredPt = hovered !== null ? pts[hovered] : null;
 

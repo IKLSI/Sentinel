@@ -11,6 +11,12 @@ export interface ActivityItem {
   ticketId?: string;
   projectId?: string;
   count?: number;
+  type?: string;
+  reference?: string;
+  projectName?: string;
+  vulnCveId?: string;
+  vulnOtherCount?: number;
+  vulnCvssScore?: number;
 }
 
 export interface UrgentTicket {

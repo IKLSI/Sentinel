@@ -5,9 +5,12 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS, type Locale } from "date-fns/locale";
 import { AppModal } from "@/components/AppModal";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
+import { Language } from "@/types/enums";
+
+const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
 import { ProjectDto } from "@/features/techHealth/api/projects";
 import { Ticket } from "@/types";
 import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
@@ -40,7 +43,8 @@ export const TimeEntryModal: React.FC<Props> = ({
   projects,
   tickets,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
+  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
   const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(null);
   const [timePicker, setTimePicker] = useState<{
     field: TimeFieldKey;
@@ -115,7 +119,7 @@ export const TimeEntryModal: React.FC<Props> = ({
               }}
             >
               {form.date
-                ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: fr })
+                ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: dateFnsLocale })
                 : t("time_tracking.choose_date")}
               <CalendarTodayOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
             </Box>

@@ -195,15 +195,7 @@ export const AttachmentsCard: React.FC<Props> = ({ ticketId, palette }) => {
           <CircularProgress size={16} />
         </Box>
       ) : items.length === 0 ? (
-        <Box
-          sx={{
-            px: "10px",
-            py: "12px",
-            color: palette.muted,
-            fontSize: "11px",
-            fontStyle: "italic",
-          }}
-        >
+        <Box sx={{ color: palette.muted, fontSize: "13px", py: "4px", px: "10px" }}>
           {t("tickets.detail.attachments_empty")}
         </Box>
       ) : (
