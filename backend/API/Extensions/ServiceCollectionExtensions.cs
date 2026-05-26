@@ -7,6 +7,7 @@ using Asp.Versioning;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Npgsql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
@@ -38,9 +39,14 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<TenantCommandInterceptor>();
 
+        NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
+        {
+            MaxPoolSize = 8
+        };
+
         services.AddDbContext<SentinelContext>((sp, options) =>
         {
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+            options.UseNpgsql(dbBuilder.ToString(), npgsqlOptions =>
             {
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
                 npgsqlOptions.CommandTimeout(30);
@@ -201,13 +207,18 @@ public static class ServiceCollectionExtensions
         {
             config.UsePostgreSqlStorage(options =>
             {
-                options.UseNpgsqlConnection(connectionString);
+                NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder(connectionString)
+                {
+                    KeepAlive = 30,
+                    TcpKeepAlive = true
+                };
+                options.UseNpgsqlConnection(builder.ToString());
             });
         });
 
         services.AddHangfireServer(options =>
         {
-            options.WorkerCount = 5;
+            options.WorkerCount = 2;
         });
 
         return services;
