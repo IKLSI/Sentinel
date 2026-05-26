@@ -64,7 +64,7 @@ public class DashboardService
                 ResolvedLast = g.Count(t => closedStatusIds.Contains(t.TicketStatusId!.Value) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd),
                 Unassigned = g.Count(t => openStatusIds.Contains(t.TicketStatusId!.Value) && t.AssignedToId == null),
             })
-            .FirstOrDefaultAsync();
+            .SingleOrDefaultAsync();
 
         int openTicketsDelta = ticketCounters?.OpenDelta ?? 0;
         int resolvedThisMonth = ticketCounters?.ResolvedMonth ?? 0;
@@ -270,26 +270,48 @@ public class DashboardService
             .Where(v => v.Severity == VulnerabilitySeverity.Critical
                 && v.Dependency.Project.OrganizationId == organizationId
                 && v.DetectedAt >= since)
-            .OrderByDescending(v => v.DetectedAt)
-            .Take(8)
             .Select(v => new
             {
-                v.CveId,
                 v.DetectedAt,
+                v.CveId,
+                v.CvssScore,
                 ProjectName = v.Dependency.Project.Name,
                 ProjectId = v.Dependency.Project.Id,
             })
             .ToListAsync();
 
-        foreach (var v in recentVulns)
+        var vulnsByProject = recentVulns
+            .GroupBy(v => v.ProjectId)
+            .Select(g =>
+            {
+                var worst = g.OrderByDescending(v => v.CvssScore).First();
+                return new
+                {
+                    ProjectId = g.Key,
+                    ProjectName = g.First().ProjectName,
+                    Count = g.Count(),
+                    LatestDetectedAt = g.Max(v => v.DetectedAt),
+                    WorstCveId = worst.CveId,
+                    WorstCvssScore = worst.CvssScore,
+                };
+            });
+
+        foreach (var g in vulnsByProject)
         {
+            string vulnText = g.Count > 1
+                ? $"Vulnérabilités critiques détectées sur {g.ProjectName}"
+                : $"Vulnérabilité critique détectée sur {g.ProjectName}";
+            string detail = g.Count > 1
+                ? $"{g.WorstCveId} +{g.Count - 1} autre{(g.Count > 2 ? "s" : "")} · CVSS {g.WorstCvssScore:F1}"
+                : $"{g.WorstCveId} · CVSS {g.WorstCvssScore:F1}";
             items.Add(new ActivityItemDto
             {
                 Color = "red",
-                Text = $"Vulnérabilité critique détectée sur {v.ProjectName}",
-                Timestamp = v.DetectedAt,
-                Detail = $"{v.CveId} · Scanner auto",
-                ProjectId = v.ProjectId.ToString(),
+                Text = vulnText,
+                Timestamp = g.LatestDetectedAt,
+                Detail = detail,
+                ProjectId = g.ProjectId.ToString(),
+                Count = g.Count > 1 ? g.Count : null,
             });
         }
 

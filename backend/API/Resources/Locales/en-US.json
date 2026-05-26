@@ -104,6 +104,7 @@
   "common.save": "Save",
   "dashboard.activity.bold_created": "Ticket created",
   "dashboard.activity.bold_critical": "Critical vulnerability",
+  "dashboard.activity.bold_critical_plural": "Critical vulnerabilities",
   "dashboard.activity.bold_resolved": "Ticket resolved",
   "dashboard.activity.empty_subtitle": "Events will appear here in real time.",
   "dashboard.activity.empty_title": "No recent activity",

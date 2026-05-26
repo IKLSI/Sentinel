@@ -104,6 +104,7 @@
   "common.save": "Enregistrer",
   "dashboard.activity.bold_created": "Ticket créé",
   "dashboard.activity.bold_critical": "Vulnérabilité critique",
+  "dashboard.activity.bold_critical_plural": "Vulnérabilités critiques",
   "dashboard.activity.bold_resolved": "Ticket résolu",
   "dashboard.activity.empty_subtitle": "Les événements apparaîtront ici en temps réel.",
   "dashboard.activity.empty_title": "Aucune activité récente",

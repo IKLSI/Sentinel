@@ -91,7 +91,9 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               const danger = a.color === "red";
               const isCreated = a.color === "green";
               const boldPrefix = danger
-                ? t("dashboard.activity.bold_critical")
+                ? a.count != null
+                  ? t("dashboard.activity.bold_critical_plural")
+                  : t("dashboard.activity.bold_critical")
                 : isCreated
                   ? t("dashboard.activity.bold_created")
                   : t("dashboard.activity.bold_resolved");
@@ -151,6 +153,11 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                       >
                         {hasBoldPrefix ? (
                           <>
+                            {a.count != null && (
+                              <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                                {a.count}&nbsp;
+                              </Box>
+                            )}
                             <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
                               {boldPrefix}
                             </Box>

@@ -10,6 +10,7 @@ export interface ActivityItem {
   tooltipText?: string;
   ticketId?: string;
   projectId?: string;
+  count?: number;
 }
 
 export interface UrgentTicket {

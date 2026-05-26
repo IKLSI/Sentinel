@@ -275,6 +275,7 @@ public class TicketService
     {
         Ticket? ticket = await _context.Tickets
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)

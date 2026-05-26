@@ -9,4 +9,5 @@ public class ActivityItemDto
     public string? TooltipText { get; set; }
     public string? TicketId { get; set; }
     public string? ProjectId { get; set; }
+    public int? Count { get; set; }
 }
