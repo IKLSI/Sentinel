@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { projectsQueryKey } from "@/features/techHealth/hooks/useProjects";
 import Box from "@mui/material/Box";
@@ -26,12 +27,12 @@ import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { SyncProjectModal } from "./components/SyncProjectModal";
 import { extractApiError } from "@/utils/apiError";
-import { PROJECTS_OPEN_IMPORT_EVENT } from "@/components/CommandPalette";
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -39,7 +40,9 @@ export const ProjectsPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(
+    () => !!(location.state as { openImport?: boolean } | null)?.openImport,
+  );
   const [collapsedSections, setCollapsedSections] = useState<
     Record<GradeKey, boolean>
   >({
@@ -58,12 +61,6 @@ export const ProjectsPage: React.FC = () => {
     },
     [],
   );
-
-  useEffect(() => {
-    const handler = () => setShowSyncModal(true);
-    window.addEventListener(PROJECTS_OPEN_IMPORT_EVENT, handler);
-    return () => window.removeEventListener(PROJECTS_OPEN_IMPORT_EVENT, handler);
-  }, []);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import { addDays, addWeeks, format, isSameWeek, startOfWeek } from "date-fns";
 import { DeleteModal } from "@/components/DeleteModal";
@@ -24,7 +25,6 @@ import { UserPicker } from "./components/UserPicker";
 import { TimeEntryModal } from "./components/TimeEntryModal";
 import { TimeEntryDetailModal } from "./components/TimeEntryDetailModal";
 import { extractApiError } from "@/utils/apiError";
-import { TIME_TRACKING_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
 import { UserRole } from "@/types/enums";
 
 type JournalUserOption = {
@@ -35,6 +35,7 @@ type JournalUserOption = {
 
 export const TimeTrackingPage: React.FC = () => {
   const t = useT();
+  const location = useLocation();
   const { showToast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === UserRole.Admin;
@@ -196,10 +197,10 @@ export const TimeTrackingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handler = () => openCreate();
-    window.addEventListener(TIME_TRACKING_OPEN_CREATE_EVENT, handler);
-    return () => window.removeEventListener(TIME_TRACKING_OPEN_CREATE_EVENT, handler);
-  }, [openCreate]);
+    if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
+      openCreate();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openEdit = (entry: TimeEntryDto) => {
     setEditingId(entry.id);

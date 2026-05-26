@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -30,6 +31,7 @@ public class BillingService
     private readonly ISystemScope _systemScope;
     private readonly IStripeClient _stripeClient;
     private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly IMemoryCache _cache;
 
     public BillingService(
         SentinelContext context,
@@ -38,7 +40,8 @@ public class BillingService
         ILogger<BillingService> logger,
         ISystemScope systemScope,
         IStripeClient stripe,
-        IBackgroundJobClient backgroundJobs)
+        IBackgroundJobClient backgroundJobs,
+        IMemoryCache cache)
     {
         _context = context;
         _stripe = stripeOptions.Value;
@@ -47,17 +50,42 @@ public class BillingService
         _systemScope = systemScope;
         _stripeClient = stripe;
         _backgroundJobs = backgroundJobs;
+        _cache = cache;
     }
 
-    public List<PlanOptionDto> GetPlans(PlanTier currentTier)
+    public async Task<List<PlanOptionDto>> GetPlansAsync(PlanTier currentTier)
     {
+        Dictionary<PlanTier, decimal> stripePrices = await _cache.GetOrCreateAsync("stripe:prices", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+            var priceService = new PriceService(_stripeClient);
+            Dictionary<PlanTier, decimal> prices = new();
+            foreach (var (tier, priceId) in new[] {
+                (PlanTier.Pro, _stripe.Prices.Pro),
+                (PlanTier.Business, _stripe.Prices.Business)
+            })
+            {
+                if (string.IsNullOrEmpty(priceId)) continue;
+                try
+                {
+                    Price price = await priceService.GetAsync(priceId);
+                    prices[tier] = (price.UnitAmount ?? 0) / 100m;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Impossible de récupérer le prix Stripe pour {Tier}", tier);
+                }
+            }
+            return prices;
+        }) ?? new();
+
         return PlanLimits.ByTier.Select(kvp => new PlanOptionDto
         {
             Tier = kvp.Key.ToString(),
             MaxProjects = kvp.Value.MaxProjects,
             MaxMembers = kvp.Value.MaxMembers,
             MaxScansPerMonth = kvp.Value.MaxScansPerMonth,
-            PriceMonthly = kvp.Value.PriceMonthly,
+            PriceMonthly = stripePrices.GetValueOrDefault(kvp.Key, 0m),
             IsCurrent = kvp.Key == currentTier
         }).ToList();
     }

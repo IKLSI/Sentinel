@@ -81,11 +81,7 @@ export const CommandPalette: React.FC = () => {
         icon: ConfirmationNumberOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.TICKETS);
-          window.setTimeout(
-            () => window.dispatchEvent(new Event(TICKETS_OPEN_CREATE_EVENT)),
-            50,
-          );
+          navigate(ROUTES.TICKETS, { state: { openCreate: true } });
         },
       },
       {
@@ -96,11 +92,7 @@ export const CommandPalette: React.FC = () => {
         icon: CloudDownloadOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.PROJECTS);
-          window.setTimeout(
-            () => window.dispatchEvent(new Event(PROJECTS_OPEN_IMPORT_EVENT)),
-            50,
-          );
+          navigate(ROUTES.PROJECTS, { state: { openImport: true } });
         },
         roles: [UserRole.Admin, UserRole.Developer],
       },
@@ -112,12 +104,7 @@ export const CommandPalette: React.FC = () => {
         icon: AccessTimeOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.TIME_TRACKING);
-          window.setTimeout(
-            () =>
-              window.dispatchEvent(new Event(TIME_TRACKING_OPEN_CREATE_EVENT)),
-            50,
-          );
+          navigate(ROUTES.TIME_TRACKING, { state: { openCreate: true } });
         },
         roles: [UserRole.Admin, UserRole.Developer],
       },

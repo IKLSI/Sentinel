@@ -62,7 +62,7 @@ public class BillingController : BaseController
         if (organizationId == null) return Unauthorized();
 
         PlanTier tier = await CurrentTierAsync(organizationId.Value);
-        return Ok(_billingService.GetPlans(tier));
+        return Ok(await _billingService.GetPlansAsync(tier));
     }
 
     [HttpPost("checkout")]

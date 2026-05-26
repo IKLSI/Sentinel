@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -25,12 +25,12 @@ import { Pagination } from "./components/Pagination";
 import { CreateTicketModal } from "./components/CreateTicketModal";
 import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
 import { extractApiError } from "@/utils/apiError";
-import { TICKETS_OPEN_CREATE_EVENT } from "@/components/CommandPalette";
 import { SortDirection } from "@/types/enums";
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
@@ -243,10 +243,10 @@ export const TicketsPage: React.FC = () => {
   }, [error, showToast, t]);
 
   useEffect(() => {
-    const handler = () => openCreateModal();
-    window.addEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
-    return () => window.removeEventListener(TICKETS_OPEN_CREATE_EVENT, handler);
-  }, [openCreateModal]);
+    if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
+      openCreateModal();
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (tickets?.items !== undefined) {
