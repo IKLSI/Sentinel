@@ -295,7 +295,7 @@ public static class ServiceCollectionExtensions
             byte[] pfxBytes = Convert.FromBase64String(settings.CertBase64);
             System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
                 System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(
-                    pfxBytes, null, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.EphemeralKeySet);
+                    pfxBytes, null, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.DefaultKeySet);
 
             dp.ProtectKeysWithCertificate(cert);
         }

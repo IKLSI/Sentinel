@@ -87,163 +87,79 @@ export const LoginPage: React.FC = () => {
     <Box className="lp-root">
       <Box className="lp-card">
         <Box className="lp-left">
-          <Box className="lp-left-noise" aria-hidden />
-
-          <Box className="lp-decor" aria-hidden>
-            <svg
-              width="100%"
-              height="100%"
-              viewBox="0 0 450 600"
-              fill="none"
-              preserveAspectRatio="xMidYMid slice"
-            >
-              <defs>
-                <radialGradient id="lp-glow-tr" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(165,180,252,0.2)" />
-                  <stop offset="100%" stopColor="transparent" />
-                </radialGradient>
-              </defs>
-
-              <circle cx="450" cy="0" r="160" fill="url(#lp-glow-tr)" />
-
-              <circle
-                cx="450"
-                cy="0"
-                r="80"
-                stroke="rgba(255,255,255,0.30)"
-                strokeWidth="1.2"
-              />
-              <circle
-                cx="450"
-                cy="0"
-                r="125"
-                stroke="rgba(255,255,255,0.18)"
-                strokeWidth="1"
-              />
-              <circle
-                cx="450"
-                cy="0"
-                r="175"
-                stroke="rgba(255,255,255,0.11)"
-                strokeWidth="1"
-              />
-            </svg>
-          </Box>
 
           <Box className="lp-logo">
             <Box className="lp-logo-mark">
-              <SentinelLogo width={20} height={23} />
+              <SentinelLogo width={18} height={21} />
             </Box>
             <Box className="lp-logo-wordmark">{t("auth.login.brand")}</Box>
           </Box>
 
-          <Box className="lp-left-body">
-            <Box className="lp-left-headline">
-              <Box component="h1">
-                {t("auth.login.headline_part1")}
-                <br />
-                <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-                  {t("auth.login.headline_part2")}{" "}
-                  <Box component="span" className="lp-headline-accent">
-                    {t("auth.login.headline_accent")}
-                  </Box>
-                </Box>
-              </Box>
-              <Box component="p" className="lp-headline-sub">
-                {t("auth.login.headline_sub")}
+          <Box className="lp-left-headline">
+            <Box component="h1">
+              {t("auth.login.headline_part1")}
+              <br />
+              {t("auth.login.headline_part2")}{" "}
+              <Box component="span" className="lp-headline-accent">
+                {t("auth.login.headline_accent")}
               </Box>
             </Box>
-
-            <Box className="lp-features">
-              {[
-                {
-                  icon: (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M7 1.5L12.5 4v4c0 2.8-2.5 5.2-5.5 6C3.5 13.2 1 10.8 1 8V4L7 1.5z"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M4.5 7l2 2 3-3"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ),
-                  title: t("auth.login.feature1_title"),
-                  desc: t("auth.login.feature1_desc"),
-                  iconBg: "rgba(165,180,252,0.11)",
-                  iconColor: "rgba(165,180,252,0.9)",
-                },
-                {
-                  icon: (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M2 1.5h10a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5V2a.5.5 0 0 1 .5-.5z"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <path
-                        d="M3.5 5.5h4M3.5 8h5.5"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  ),
-                  title: t("auth.login.feature2_title"),
-                  desc: t("auth.login.feature2_desc"),
-                  iconBg: "rgba(249,168,212,0.11)",
-                  iconColor: "rgba(249,168,212,0.85)",
-                },
-                {
-                  icon: (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <circle
-                        cx="7"
-                        cy="7"
-                        r="6"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <path
-                        d="M7 4v3.5l2 2"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ),
-                  title: t("auth.login.feature3_title"),
-                  desc: t("auth.login.feature3_desc"),
-                  iconBg: "rgba(251,191,36,0.11)",
-                  iconColor: "rgba(251,191,36,0.85)",
-                },
-              ].map((f, i) => (
-                <Box
-                  key={i}
-                  className="lp-feature"
-                  style={{ animationDelay: `${0.52 + i * 0.1}s` }}
-                >
-                  <Box
-                    className="lp-feature-icon"
-                    style={{ background: f.iconBg, color: f.iconColor }}
-                  >
-                    {f.icon}
-                  </Box>
-                  <Box>
-                    <Box className="lp-feature-title">{f.title}</Box>
-                    <Box className="lp-feature-desc">{f.desc}</Box>
-                  </Box>
-                </Box>
-              ))}
+            <Box component="p" className="lp-headline-sub">
+              {t("auth.login.headline_sub")}
             </Box>
           </Box>
+
+          <Box className="lp-features">
+            {[
+              {
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                ),
+                title: t("auth.login.feature1_title"),
+                desc: t("auth.login.feature1_desc"),
+                iconBg: "#ffe0ef",
+              },
+              {
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                ),
+                title: t("auth.login.feature2_title"),
+                desc: t("auth.login.feature2_desc"),
+                iconBg: "#fff0cf",
+              },
+              {
+                icon: (
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                    <rect x="3" y="4" width="18" height="13" rx="2"/>
+                    <path d="M8 21h8M12 17v4"/>
+                  </svg>
+                ),
+                title: t("auth.login.feature3_title"),
+                desc: t("auth.login.feature3_desc"),
+                iconBg: "#d9f7e8",
+              },
+            ].map((f, i) => (
+              <Box
+                key={i}
+                className="lp-feature"
+                style={{ animationDelay: `${0.52 + i * 0.1}s` }}
+              >
+                <Box className="lp-feature-icon" style={{ background: f.iconBg }}>
+                  {f.icon}
+                </Box>
+                <Box>
+                  <Box className="lp-feature-title">{f.title}</Box>
+                  <Box className="lp-feature-desc">{f.desc}</Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+
         </Box>
 
         <Box className="lp-right">
@@ -257,7 +173,7 @@ export const LoginPage: React.FC = () => {
               </Box>
             </Box>
 
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit} noValidate style={{ marginTop: "30px" }}>
               <Box className="lp-field">
                 <Box component="label" className="lp-label" htmlFor="lp-email">
                   {t("auth.login.email_label")}
@@ -314,15 +230,15 @@ export const LoginPage: React.FC = () => {
                     }
                   >
                     {showPassword ? (
-                      <VisibilityOffOutlined sx={{ fontSize: 16 }} />
+                      <VisibilityOffOutlined sx={{ fontSize: 19 }} />
                     ) : (
-                      <VisibilityOutlined sx={{ fontSize: 16 }} />
+                      <VisibilityOutlined sx={{ fontSize: 19 }} />
                     )}
                   </button>
                 </Box>
               </Box>
 
-              <button type="submit" className="lp-submit" disabled={loading}>
+              <button type="submit" className="lp-submit" disabled={loading} style={{ padding: "16px", fontSize: "1rem", background: "linear-gradient(135deg, #7257e6, #9a6cff)", boxShadow: "0 14px 28px -10px rgba(114,87,230,0.6)", borderRadius: "14px" }}>
                 {loading ? (
                   <Box className="lp-submit-loader" />
                 ) : (
@@ -332,42 +248,18 @@ export const LoginPage: React.FC = () => {
             </form>
 
             <Box className="lp-forgot-wrap">
-              <button
-                type="button"
-                className="lp-forgot"
-                style={{ background: "none", border: "none", cursor: "pointer" }}
-                onClick={() => setForgotOpen(true)}
-              >
+              <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={() => setForgotOpen(true)}>
                 {t("auth.login.forgot_password_link")}
               </button>
-            </Box>
-            <Box className="lp-forgot-wrap" sx={{ marginTop: "6px" }}>
-              <button
-                type="button"
-                className="lp-forgot"
-                style={{ background: "none", border: "none", cursor: "pointer" }}
-                onClick={() => setRegisterOpen(true)}
-              >
+              <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 600, color: "#1b1633" }} onClick={() => setRegisterOpen(true)}>
                 {t("auth.login.register_link")}
               </button>
-            </Box>
-
-            {showResend && (
-              <Box className="lp-forgot-wrap">
-                <button
-                  type="button"
-                  className="lp-forgot"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleResend}
-                >
+              {showResend && (
+                <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={handleResend}>
                   {t("auth.login.resend_link")}
                 </button>
-              </Box>
-            )}
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>

@@ -208,18 +208,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               {loading ? (
                 <Box className="lp-submit-loader" />
               ) : (
-                <>
-                  {t("auth.forgot_password.submit")}
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8h10M9 4l4 4-4 4"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </>
+                t("auth.forgot_password.submit")
               )}
             </button>
           </form>
