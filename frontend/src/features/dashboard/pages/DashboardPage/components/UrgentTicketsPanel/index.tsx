@@ -6,6 +6,7 @@ import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useT } from "@/i18n/I18nContext";
+import { ROUTES } from "@/constants/routes";
 import {
   DashPalette,
   UrgentTicket,
@@ -92,7 +93,7 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
         </Box>
         <Box
           component="button"
-          onClick={() => navigate("/tickets")}
+          onClick={() => navigate(ROUTES.TICKETS)}
           sx={{
             all: "unset",
             cursor: "pointer",

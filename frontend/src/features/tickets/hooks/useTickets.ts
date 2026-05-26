@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { TicketFilters } from "../../../types";
 import { getTickets } from "../api/tickets";
 
-const ticketsQueryKey = (filters: TicketFilters) => ["tickets", filters] as const;
+export const TICKETS_QUERY_KEY = "tickets";
+
+const ticketsQueryKey = (filters: TicketFilters) =>
+  [TICKETS_QUERY_KEY, filters] as const;
 
 export const useTickets = (filters: TicketFilters, enabled = true) => {
   const query = useQuery({

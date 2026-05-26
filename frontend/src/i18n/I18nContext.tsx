@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import apiClient from "../services/client";
 import { Language } from "../types/enums";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 type Translations = Record<string, string>;
 
@@ -24,7 +25,7 @@ const I18nContext = createContext<I18nContextValue>({
   setLanguage: () => {},
 });
 
-const STORAGE_KEY = "sentinel_language";
+const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
 
 function interpolate(
   template: string,

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -81,7 +82,7 @@ public class BillingController : BaseController
 
             await _auditLog.LogAsync(
                 AuditAction.CheckoutStarted,
-                entityType: "Organization",
+                entityType: AuditEntityTypes.Organization,
                 organizationId: organizationId.Value,
                 userId: GetCurrentUserId(),
                 entityId: organizationId.Value,
@@ -114,7 +115,7 @@ public class BillingController : BaseController
 
             await _auditLog.LogAsync(
                 AuditAction.BillingPortalOpened,
-                entityType: "Organization",
+                entityType: AuditEntityTypes.Organization,
                 organizationId: organizationId.Value,
                 userId: GetCurrentUserId(),
                 entityId: organizationId.Value,
@@ -140,7 +141,7 @@ public class BillingController : BaseController
         using StreamReader reader = new StreamReader(Request.Body);
 
         string json = await reader.ReadToEndAsync();
-        string signature = Request.Headers["Stripe-Signature"].ToString();
+        string signature = Request.Headers[CustomHeaderNames.StripeSignature].ToString();
 
         try
         {

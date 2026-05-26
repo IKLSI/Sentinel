@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Sentinel.Domain.Constants;
 
 namespace Sentinel.Application.Services;
 
@@ -33,7 +34,7 @@ public class RepositoryHostClient
 
     public async Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform)
     {
-        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
 
         if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
         {
@@ -85,13 +86,13 @@ public class RepositoryHostClient
         if (host.Contains("github"))
             return await ListGitHubFilesAsync(owner, repo, tokenOverride);
         if (host.Contains("gitlab"))
-            return await ListGitLabFilesAsync(_httpClientFactory.CreateClient("Registry"), owner, repo, tokenOverride);
+            return await ListGitLabFilesAsync(_httpClientFactory.CreateClient(HttpClientNames.Registry), owner, repo, tokenOverride);
         return [];
     }
 
     public async Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null)
     {
-        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
 
         if (host.Contains("github"))
         {
@@ -120,7 +121,7 @@ public class RepositoryHostClient
     private async Task<(bool Success, List<(string Name, string Url)> Repos)> ListGitHubUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
-        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
         int page = 1;
 
         while (true)
@@ -171,7 +172,7 @@ public class RepositoryHostClient
     private async Task<(bool Success, List<(string Name, string Url)> Repos)> ListGitLabUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
-        HttpClient client = _httpClientFactory.CreateClient("Registry");
+        HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
         int page = 1;
 
         while (true)
@@ -233,7 +234,7 @@ public class RepositoryHostClient
         JsonElement treeResponse;
         try
         {
-            HttpClient client = _httpClientFactory.CreateClient("Registry");
+            HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                 $"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1", token);
             HttpResponseMessage response = await client.SendAsync(request);

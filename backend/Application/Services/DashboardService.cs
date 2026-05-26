@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Dashboard;
 using Sentinel.Domain.Models;
 
@@ -10,7 +11,6 @@ public class DashboardService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
-    private const string CacheKeyPrefix = "dashboard";
 
     public DashboardService(SentinelContext context, IMemoryCache cache)
     {
@@ -20,7 +20,7 @@ public class DashboardService
 
     public async Task<DashboardStatsDto> GetStatsAsync(Guid organizationId)
     {
-        string cacheKey = $"{CacheKeyPrefix}:{organizationId}";
+        string cacheKey = CacheKeys.Dashboard(organizationId);
 
         if (_cache.TryGetValue(cacheKey, out DashboardStatsDto? cached) && cached != null)
             return cached;

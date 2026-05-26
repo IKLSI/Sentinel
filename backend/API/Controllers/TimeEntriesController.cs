@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.TimeEntries;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -76,7 +77,7 @@ public class TimeEntriesController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TimeEntryCreated,
-            entityType: "TimeEntry",
+            entityType: AuditEntityTypes.TimeEntry,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: entry.Id,
@@ -99,7 +100,7 @@ public class TimeEntriesController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TimeEntryUpdated,
-            entityType: "TimeEntry",
+            entityType: AuditEntityTypes.TimeEntry,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: id,
@@ -122,7 +123,7 @@ public class TimeEntriesController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TimeEntryDeleted,
-            entityType: "TimeEntry",
+            entityType: AuditEntityTypes.TimeEntry,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: id,
@@ -133,8 +134,6 @@ public class TimeEntriesController : BaseController
 
     private bool IsAdmin()
     {
-        return User.Claims.Any(c =>
-            (c.Type == "role" || c.Type == ClaimTypes.Role) &&
-            c.Value == "Admin");
+        return User.IsInRole(UserRole.Admin.ToString());
     }
 }

@@ -41,6 +41,12 @@ const STATUS_I18N: Record<string, string> = {
 
 const PLAN_ORDER = ["Free", "Pro", "Business"];
 
+const BILLING_QUERY_PARAM = "billing";
+const BILLING_RESULT = {
+  SUCCESS: "success",
+  CANCEL: "cancel",
+} as const;
+
 export const BillingTab: React.FC = () => {
   const t = useT();
   const { showToast } = useToast();
@@ -66,9 +72,9 @@ export const BillingTab: React.FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const billing = params.get("billing");
-    if (billing === "success") showToast(t("settings.billing.checkout_success"), "success");
-    else if (billing === "cancel") showToast(t("settings.billing.checkout_cancel"), "info");
+    const billing = params.get(BILLING_QUERY_PARAM);
+    if (billing === BILLING_RESULT.SUCCESS) showToast(t("settings.billing.checkout_success"), "success");
+    else if (billing === BILLING_RESULT.CANCEL) showToast(t("settings.billing.checkout_cancel"), "info");
     if (billing) window.history.replaceState({}, "", window.location.pathname);
   }, [showToast, t]);
 

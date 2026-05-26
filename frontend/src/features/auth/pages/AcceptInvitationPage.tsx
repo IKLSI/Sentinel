@@ -8,6 +8,7 @@ import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { extractApiError } from "../../../utils/apiError";
+import { ROUTES } from "@/constants/routes";
 
 export const AcceptInvitationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -47,7 +48,7 @@ export const AcceptInvitationPage: React.FC = () => {
   const firstNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!token) navigate("/login", { replace: true });
+    if (!token) navigate(ROUTES.LOGIN, { replace: true });
     const id = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(id);
   }, [token, navigate]);
@@ -92,7 +93,7 @@ export const AcceptInvitationPage: React.FC = () => {
         password: form.password,
       });
       setDone(true);
-      setTimeout(() => navigate("/login", { replace: true }), 3500);
+      setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
     } catch (err) {
       showToast(
         extractApiError(err, t("auth.accept_invitation.error_invalid_token")),

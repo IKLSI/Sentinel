@@ -1,0 +1,9 @@
+namespace Sentinel.Domain.Constants;
+
+public static class RateLimitPolicies
+{
+    public const string Login = "login";
+    public const string PasswordReset = "password-reset";
+    public const string Register = "register";
+    public const string Invitation = "invitation";
+}

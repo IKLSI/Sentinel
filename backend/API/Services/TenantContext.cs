@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Services;
 
@@ -14,10 +15,10 @@ public class TenantContext : ITenantContext
         ClaimsPrincipal? user = httpContextAccessor.HttpContext?.User;
         if (user?.Identity?.IsAuthenticated != true) return;
 
-        string? orgClaim = user.FindFirst("organizationId")?.Value;
+        string? orgClaim = user.FindFirst(ClaimNames.OrganizationId)?.Value;
         if (Guid.TryParse(orgClaim, out Guid orgId)) OrganizationId = orgId;
 
-        string? userClaim = user.FindFirst("userId")?.Value;
+        string? userClaim = user.FindFirst(ClaimNames.UserId)?.Value;
         if (Guid.TryParse(userClaim, out Guid uid)) UserId = uid;
     }
 }

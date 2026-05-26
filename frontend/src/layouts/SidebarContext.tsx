@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 interface SidebarContextValue {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isOpen, setIsOpen] = useState(() => window.innerWidth >= 768);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
-      return localStorage.getItem("sidebar-collapsed") === "true";
+      return localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED) === "true";
     } catch {
       return false;
     }
@@ -54,7 +55,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsCollapsed((v) => {
       const next = !v;
       try {
-        localStorage.setItem("sidebar-collapsed", String(next));
+        localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
       } catch (e) {
         void e;
       }

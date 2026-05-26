@@ -17,6 +17,7 @@ import KeyboardReturnOutlined from "@mui/icons-material/KeyboardReturnOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { UserRole } from "@/types/enums";
+import { ROUTES } from "@/constants/routes";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
 export const TICKETS_OPEN_CREATE_EVENT = "tickets:open-create";
@@ -80,7 +81,7 @@ export const CommandPalette: React.FC = () => {
         icon: ConfirmationNumberOutlined,
         perform: () => {
           close();
-          navigate("/tickets");
+          navigate(ROUTES.TICKETS);
           window.setTimeout(
             () => window.dispatchEvent(new Event(TICKETS_OPEN_CREATE_EVENT)),
             50,
@@ -95,7 +96,7 @@ export const CommandPalette: React.FC = () => {
         icon: CloudDownloadOutlined,
         perform: () => {
           close();
-          navigate("/projects");
+          navigate(ROUTES.PROJECTS);
           window.setTimeout(
             () => window.dispatchEvent(new Event(PROJECTS_OPEN_IMPORT_EVENT)),
             50,
@@ -111,7 +112,7 @@ export const CommandPalette: React.FC = () => {
         icon: AccessTimeOutlined,
         perform: () => {
           close();
-          navigate("/time-tracking");
+          navigate(ROUTES.TIME_TRACKING);
           window.setTimeout(
             () =>
               window.dispatchEvent(new Event(TIME_TRACKING_OPEN_CREATE_EVENT)),
@@ -128,7 +129,7 @@ export const CommandPalette: React.FC = () => {
         icon: PersonAddOutlined,
         perform: () => {
           close();
-          navigate("/settings");
+          navigate(ROUTES.SETTINGS);
           window.setTimeout(
             () => window.dispatchEvent(new Event(SETTINGS_OPEN_INVITE_EVENT)),
             50,

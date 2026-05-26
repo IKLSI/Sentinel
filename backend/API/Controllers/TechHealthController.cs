@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -236,7 +237,7 @@ public class TechHealthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.ProjectCreated,
-            entityType: "Project",
+            entityType: AuditEntityTypes.Project,
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: project.Id,
@@ -265,7 +266,7 @@ public class TechHealthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.ProjectDeleted,
-            entityType: "Project",
+            entityType: AuditEntityTypes.Project,
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: id,
@@ -294,7 +295,7 @@ public class TechHealthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.ScanTriggered,
-            entityType: "Project",
+            entityType: AuditEntityTypes.Project,
             organizationId: organizationId.Value,
             userId: GetCurrentUserId(),
             entityId: id,

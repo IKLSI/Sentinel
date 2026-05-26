@@ -3,15 +3,19 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from "axios";
+import { API_BASE_URL, API_ROUTES } from "@/constants/api";
+import { CONTENT_TYPES, HTTP_HEADERS, bearerToken } from "@/constants/http";
+import { ROUTES } from "@/constants/routes";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
-  headers: { "Content-Type": "application/json" },
+  baseURL: API_BASE_URL,
+  headers: { [HTTP_HEADERS.CONTENT_TYPE]: CONTENT_TYPES.JSON },
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("accessToken");
-  if (token && config.headers) config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  if (token && config.headers) config.headers.Authorization = bearerToken(token);
   return config;
 });
 
@@ -31,21 +35,21 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/api/auth/login")
+      !originalRequest.url?.includes(API_ROUTES.auth.login)
     ) {
-      const refreshToken = localStorage.getItem("refreshToken");
+      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 
       if (!refreshToken) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        window.location.href = ROUTES.LOGIN;
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
         return new Promise((resolve) => {
           pendingRequests.push((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+            originalRequest.headers.Authorization = bearerToken(token);
             resolve(apiClient(originalRequest));
           });
         });
@@ -56,22 +60,22 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/refresh`,
+          `${API_BASE_URL}${API_ROUTES.auth.refresh}`,
           { refreshToken },
         );
         const { accessToken, refreshToken: newRefreshToken } = response.data;
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", newRefreshToken);
+        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
         processQueue(accessToken);
         isRefreshing = false;
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        originalRequest.headers.Authorization = bearerToken(accessToken);
         return apiClient(originalRequest);
       } catch (error) {
         console.error("Token refresh failed:", error);
         isRefreshing = false;
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        window.location.href = ROUTES.LOGIN;
         return Promise.reject(error);
       }
     }

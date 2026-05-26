@@ -7,6 +7,7 @@ import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
+import { ROUTES } from "@/constants/routes";
 import {
   ProjectDetailDto,
   deleteProject,
@@ -45,7 +46,7 @@ export const ProjectDetailPage: React.FC = () => {
     } catch {
       if (signal?.aborted) return;
       showToast(t("tech_health.error.load_failed"), "error");
-      navigate("/projects");
+      navigate(ROUTES.PROJECTS);
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
@@ -63,7 +64,7 @@ export const ProjectDetailPage: React.FC = () => {
     try {
       await deleteProject(id);
       showToast(t("tech_health.toast.deleted"), "success");
-      navigate("/projects");
+      navigate(ROUTES.PROJECTS);
     } catch (err) {
       showToast(extractApiError(err, t("tech_health.toast.delete_error")), "error");
       setDeleting(false);

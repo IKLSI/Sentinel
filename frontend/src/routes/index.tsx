@@ -4,6 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { UserRole } from "../types/enums";
+import { ROUTES } from "@/constants/routes";
 import { AppLayout } from "../layouts/AppLayout";
 import { ErrorPage } from "../pages/ErrorPage";
 
@@ -93,14 +94,15 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) return <FullScreenLoader />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to={ROUTES.LOGIN} replace />;
 
   return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  if (user?.role !== UserRole.Admin) return <Navigate to="/" replace />;
+  if (user?.role !== UserRole.Admin)
+    return <Navigate to={ROUTES.HOME} replace />;
   return <>{children}</>;
 };
 
@@ -108,7 +110,8 @@ const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
-  if (user?.role === UserRole.Client) return <Navigate to="/tickets" replace />;
+  if (user?.role === UserRole.Client)
+    return <Navigate to={ROUTES.TICKETS} replace />;
   return <>{children}</>;
 };
 

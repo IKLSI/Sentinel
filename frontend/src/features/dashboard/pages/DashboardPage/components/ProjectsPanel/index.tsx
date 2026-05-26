@@ -9,6 +9,7 @@ import HubOutlined from "@mui/icons-material/HubOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useT } from "@/i18n/I18nContext";
+import { ROUTES } from "@/constants/routes";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import {
   DashPalette,
@@ -82,7 +83,7 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
         </Box>
         <Box
           component="button"
-          onClick={() => navigate("/projects")}
+          onClick={() => navigate(ROUTES.PROJECTS)}
           sx={{
             all: "unset",
             cursor: "pointer",

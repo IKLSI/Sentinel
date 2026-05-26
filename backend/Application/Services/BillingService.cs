@@ -5,6 +5,7 @@ using Stripe;
 using Stripe.BillingPortal;
 using Stripe.Checkout;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Settings;
@@ -86,8 +87,8 @@ public class BillingService
             CancelUrl = $"{baseUrl}/settings?billing=cancel",
             Metadata = new Dictionary<string, string>
             {
-                ["organizationId"] = organization.Id.ToString(),
-                ["planTier"] = tier.ToString()
+                [StripeMetadataKeys.OrganizationId] = organization.Id.ToString(),
+                [StripeMetadataKeys.PlanTier] = tier.ToString()
             }
         };
 
@@ -163,7 +164,7 @@ public class BillingService
         organization.StripeSubscriptionId = session.SubscriptionId ?? organization.StripeSubscriptionId;
 
         if (session.Metadata != null
-            && session.Metadata.TryGetValue("planTier", out string? tierStr)
+            && session.Metadata.TryGetValue(StripeMetadataKeys.PlanTier, out string? tierStr)
             && Enum.TryParse(tierStr, out PlanTier tier))
         {
             organization.PlanTier = tier;
@@ -234,7 +235,7 @@ public class BillingService
         {
             Name = organization.Name,
             Email = adminEmail,
-            Metadata = new Dictionary<string, string> { ["organizationId"] = organization.Id.ToString() }
+            Metadata = new Dictionary<string, string> { [StripeMetadataKeys.OrganizationId] = organization.Id.ToString() }
         };
 
         CustomerService service = new CustomerService(_stripeClient);

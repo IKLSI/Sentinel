@@ -1,4 +1,5 @@
 import apiClient from "../../../services/client";
+import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
 import {
   Ticket,
   TicketComment,
@@ -255,7 +256,7 @@ export const uploadAttachment = async (
   const response = await apiClient.post<TicketAttachment>(
     `/api/tickets/${ticketId}/attachments`,
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    { headers: { [HTTP_HEADERS.CONTENT_TYPE]: CONTENT_TYPES.MULTIPART } },
   );
   return response.data;
 };

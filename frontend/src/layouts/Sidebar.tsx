@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import ViewKanbanOutlined from "@mui/icons-material/ViewKanbanOutlined";
@@ -59,7 +60,7 @@ const navSections: NavSection[] = [
     icon: ConfirmationNumberOutlined,
     items: [
       {
-        to: "/tickets",
+        to: ROUTES.TICKETS,
         icon: ConfirmationNumberOutlined,
         labelKey: "sidebar.item.list",
         end: true,
@@ -77,7 +78,7 @@ const navSections: NavSection[] = [
     icon: AccountTreeOutlined,
     items: [
       {
-        to: "/projects",
+        to: ROUTES.PROJECTS,
         icon: AccountTreeOutlined,
         labelKey: "sidebar.item.projects",
       },
@@ -88,7 +89,7 @@ const navSections: NavSection[] = [
     icon: AssessmentOutlined,
     items: [
       {
-        to: "/time-tracking",
+        to: ROUTES.TIME_TRACKING,
         icon: AccessTimeOutlined,
         labelKey: "sidebar.item.time_tracking",
       },
@@ -101,7 +102,7 @@ const navSections: NavSection[] = [
     group: "admin",
     items: [
       {
-        to: "/settings",
+        to: ROUTES.SETTINGS,
         icon: SettingsOutlined,
         labelKey: "sidebar.item.settings",
       },
@@ -184,7 +185,7 @@ export const Sidebar: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate(ROUTES.LOGIN);
   };
 
   const isAdmin = user?.role === UserRole.Admin;
@@ -759,7 +760,7 @@ export const Sidebar: React.FC = () => {
           >
             <Box
               component="button"
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate(ROUTES.PROFILE)}
               sx={{
                 all: "unset",
                 cursor: "pointer",

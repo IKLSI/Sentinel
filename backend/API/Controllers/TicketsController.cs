@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
@@ -150,7 +151,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TicketCreated,
-            entityType: "Ticket",
+            entityType: AuditEntityTypes.Ticket,
             organizationId: organizationId.Value,
             userId: userId.Value,
             entityId: ticket.Id,
@@ -200,7 +201,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TicketUpdated,
-            entityType: "Ticket",
+            entityType: AuditEntityTypes.Ticket,
             organizationId: organizationId,
             userId: userId.Value,
             entityId: id,
@@ -224,7 +225,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TicketDeleted,
-            entityType: "Ticket",
+            entityType: AuditEntityTypes.Ticket,
             organizationId: organizationId,
             userId: GetCurrentUserId(),
             entityId: id,
@@ -256,7 +257,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.CommentAdded,
-            entityType: "TicketComment",
+            entityType: AuditEntityTypes.TicketComment,
             organizationId: organizationId,
             userId: userId.Value,
             entityId: comment.Id,
@@ -301,7 +302,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.CommentUpdated,
-            entityType: "TicketComment",
+            entityType: AuditEntityTypes.TicketComment,
             organizationId: GetOrganizationId(),
             userId: userId.Value,
             entityId: commentId,
@@ -340,7 +341,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.CommentDeleted,
-            entityType: "TicketComment",
+            entityType: AuditEntityTypes.TicketComment,
             organizationId: GetOrganizationId(),
             userId: userId.Value,
             entityId: commentId,
@@ -453,7 +454,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.AttachmentUploaded,
-            entityType: "TicketAttachment",
+            entityType: AuditEntityTypes.TicketAttachment,
             organizationId: organizationId,
             userId: userId.Value,
             entityId: attachmentId,
@@ -525,7 +526,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.AttachmentDeleted,
-            entityType: "TicketAttachment",
+            entityType: AuditEntityTypes.TicketAttachment,
             organizationId: organizationId,
             userId: userId.Value,
             entityId: attachmentId,
@@ -554,7 +555,7 @@ public class TicketsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TicketStatusChanged,
-            entityType: "Ticket",
+            entityType: AuditEntityTypes.Ticket,
             organizationId: organizationId,
             userId: userId.Value,
             entityId: id,

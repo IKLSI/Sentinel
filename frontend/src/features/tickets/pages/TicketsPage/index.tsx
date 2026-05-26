@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { useTickets } from "@/features/tickets/hooks/useTickets";
+import { useTickets, TICKETS_QUERY_KEY } from "@/features/tickets/hooks/useTickets";
 import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import {
   createTicket,
@@ -191,7 +191,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) =>
         prev.map((tk) => (tk.id === updated.id ? updated : tk)),
       );
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setEditTarget(null);
       window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {
@@ -209,7 +209,7 @@ export const TicketsPage: React.FC = () => {
       setDisplayTickets((prev) =>
         prev.filter((tk) => tk.id !== deleteTarget.id),
       );
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setDeleteTarget(null);
       window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {

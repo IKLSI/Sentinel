@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Tickets;
@@ -31,7 +32,7 @@ public class TicketService
     }
 
     private void InvalidateDashboardCache(Guid organizationId) =>
-        _cache.Remove($"dashboard:{organizationId}");
+        _cache.Remove(CacheKeys.Dashboard(organizationId));
 
     public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto, Guid createdById, Guid organizationId)
     {

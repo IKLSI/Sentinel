@@ -18,6 +18,7 @@ import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
 import { DetailPalette } from "../../helpers";
 import { uploadAttachment } from "@/features/tickets/api/tickets";
+import { API_BASE_URL } from "@/constants/api";
 import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
 import { CommentMode, Theme } from "@/types/enums";
 
@@ -42,7 +43,7 @@ interface Props {
   markdownSx: object;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE_URL = API_BASE_URL;
 
 export const CommentComposer: React.FC<Props> = ({
   ticketId,

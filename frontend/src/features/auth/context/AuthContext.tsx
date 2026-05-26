@@ -6,6 +6,7 @@ import {
   me as apiMe,
 } from "../api/auth";
 import { useI18n } from "../../../i18n/I18nContext";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 interface AuthContextValue {
   user: User | null;
@@ -42,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     if (token) {
       apiMe()
         .then((u) => {
@@ -50,8 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           syncLanguage(u);
         })
         .catch(() => {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         })
         .finally(() => setLoading(false));
     } else {
@@ -62,8 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (email: string, password: string) => {
       const response = await apiLogin(email, password);
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
+      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
       setUser(response.user);
       syncLanguage(response.user);
       return response.user;
@@ -75,8 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await apiLogout();
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
       setUser(null);
     }
   }, []);

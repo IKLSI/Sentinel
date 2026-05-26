@@ -10,6 +10,7 @@ import { darkTheme, lightTheme } from "../styles/theme";
 import { updateUserTheme } from "../features/users/api/users";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { Theme } from "../types/enums";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -26,12 +27,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem("theme") as Theme) || Theme.Light;
+    return (localStorage.getItem(STORAGE_KEYS.THEME) as Theme) || Theme.Light;
   });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    localStorage.setItem(STORAGE_KEYS.THEME, theme);
   }, [theme]);
 
   useEffect(() => {

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.TechHealth;
@@ -65,7 +66,7 @@ public class TechHealthService
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
-        _osvClient = httpClientFactory.CreateClient("OSV");
+        _osvClient = httpClientFactory.CreateClient(HttpClientNames.Osv);
         _logger = logger;
         _repositoryScanner = repositoryScanner;
         _tokenProtector = tokenProtector;
@@ -466,7 +467,7 @@ public class TechHealthService
 
         try
         {
-            HttpClient eolClient = _httpClientFactory.CreateClient("EolDate");
+            HttpClient eolClient = _httpClientFactory.CreateClient(HttpClientNames.EolDate);
             HttpResponseMessage response = await eolClient.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
             if (!response.IsSuccessStatusCode) return;
 

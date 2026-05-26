@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useT } from "../i18n/I18nContext";
 import apiClient from "../services/client";
+import { ROUTES } from "@/constants/routes";
 
 interface ErrorPageProps {
   status?: number;
@@ -58,7 +59,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
               {t("error.retry")}
             </button>
           )}
-          <button className="ep-btn-primary" onClick={() => navigate("/")}>
+          <button className="ep-btn-primary" onClick={() => navigate(ROUTES.HOME)}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <path
                 d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z"

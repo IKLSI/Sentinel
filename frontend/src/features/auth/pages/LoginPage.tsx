@@ -10,6 +10,7 @@ import { useT } from "../../../i18n/I18nContext";
 import { resendVerification } from "../api/auth";
 import { extractApiError } from "../../../utils/apiError";
 import { UserRole } from "../../../types/enums";
+import { ROUTES } from "@/constants/routes";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { RegisterModal } from "./RegisterModal";
 
@@ -47,7 +48,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       const loggedUser = await login(email, password);
-      navigate(loggedUser.role === UserRole.Client ? "/tickets" : "/");
+      navigate(loggedUser.role === UserRole.Client ? ROUTES.TICKETS : ROUTES.HOME);
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
         ?.status;

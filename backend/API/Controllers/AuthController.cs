@@ -5,6 +5,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -30,7 +31,7 @@ public class AuthController : BaseController
     }
 
     [HttpPost("login")]
-    [EnableRateLimiting("login")]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         LoginResponse? result = await _authService.LoginAsync(request.Email, request.Password);
@@ -42,7 +43,7 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.Login,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: result.User.OrganizationId,
             userId: result.User.Id,
             entityId: result.User.Id);
@@ -51,7 +52,7 @@ public class AuthController : BaseController
     }
 
     [HttpPost("refresh")]
-    [EnableRateLimiting("login")]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<ActionResult<LoginResponse>> Refresh([FromBody] RefreshTokenRequest request)
     {
         LoginResponse? result = await _authService.RefreshTokenAsync(request.RefreshToken);
@@ -63,7 +64,7 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.TokenRefreshed,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: result.User.OrganizationId,
             userId: result.User.Id,
             entityId: result.User.Id);
@@ -95,7 +96,7 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.Logout,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: GetOrganizationId(),
             userId: userId.Value,
             entityId: userId.Value,
@@ -105,7 +106,7 @@ public class AuthController : BaseController
     }
 
     [HttpPost("forgot-password")]
-    [EnableRateLimiting("password-reset")]
+    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         PasswordResetToken? resetToken = await _authService.CreatePasswordResetTokenAsync(request.Email);
@@ -116,14 +117,14 @@ public class AuthController : BaseController
 
             await _auditLog.LogAsync(
                 AuditAction.PasswordResetRequested,
-                entityType: "User");
+                entityType: AuditEntityTypes.User);
         }
 
         return Ok(new { message = "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation." });
     }
 
     [HttpPost("reset-password")]
-    [EnableRateLimiting("password-reset")]
+    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
         bool success = await _authService.ResetPasswordAsync(request.Token, request.Password);
@@ -135,13 +136,13 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.PasswordReset,
-            entityType: "User");
+            entityType: AuditEntityTypes.User);
 
         return Ok(new { message = "Mot de passe réinitialisé avec succès." });
     }
 
     [HttpPost("register")]
-    [EnableRateLimiting("register")]
+    [EnableRateLimiting(RateLimitPolicies.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         EmailVerificationToken token;
@@ -159,13 +160,13 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.OrganizationRegistered,
-            entityType: "Organization");
+            entityType: AuditEntityTypes.Organization);
 
         return Accepted(new { message = "Compte créé. Consultez votre boîte de réception pour activer votre compte." });
     }
 
     [HttpPost("verify-email")]
-    [EnableRateLimiting("password-reset")]
+    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
     {
         bool success = await _authService.VerifyEmailAsync(request.Token);
@@ -175,13 +176,13 @@ public class AuthController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.EmailVerified,
-            entityType: "User");
+            entityType: AuditEntityTypes.User);
 
         return Ok(new { message = "Email vérifié avec succès. Vous pouvez maintenant vous connecter." });
     }
 
     [HttpPost("resend-verification")]
-    [EnableRateLimiting("password-reset")]
+    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
     {
         EmailVerificationToken? token = await _authService.ResendVerificationAsync(request.Email);
@@ -192,7 +193,7 @@ public class AuthController : BaseController
 
             await _auditLog.LogAsync(
                 AuditAction.EmailVerificationResent,
-                entityType: "User");
+                entityType: AuditEntityTypes.User);
         }
 
         return Ok(new { message = "Si un compte non vérifié existe pour cet email, un nouveau lien d'activation a été envoyé." });

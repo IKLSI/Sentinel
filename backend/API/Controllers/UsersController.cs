@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -93,7 +94,7 @@ public class UsersController : BaseController
 
         if (organizationId == null || currentUserId == null) return Unauthorized();
 
-        if (!User.IsInRole("Admin") && currentUserId != id)
+        if (!User.IsInRole(UserRole.Admin.ToString()) && currentUserId != id)
             return Forbid();
 
         User? user = await _context.Users
@@ -149,7 +150,7 @@ public class UsersController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.UserInvited,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: invitation.Id,
@@ -160,7 +161,7 @@ public class UsersController : BaseController
 
     [HttpPost("accept-invitation")]
     [AllowAnonymous]
-    [EnableRateLimiting("invitation")]
+    [EnableRateLimiting(RateLimitPolicies.Invitation)]
     public async Task<IActionResult> AcceptInvitation([FromBody] AcceptInvitationDto dto)
     {
         using IDisposable elevation = _systemScope.Enter();
@@ -197,7 +198,7 @@ public class UsersController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.InvitationAccepted,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: invitation.OrganizationId,
             entityId: user.Id,
             jti: GetCurrentJti());
@@ -257,7 +258,7 @@ public class UsersController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.UserUpdated,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: id,
@@ -311,7 +312,7 @@ public class UsersController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.ProfileUpdated,
-            entityType: "User",
+            entityType: AuditEntityTypes.User,
             organizationId: organizationId.Value,
             userId: currentUserId.Value,
             entityId: currentUserId.Value,

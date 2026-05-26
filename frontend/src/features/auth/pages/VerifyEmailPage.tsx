@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { verifyEmail } from "../api/auth";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
+import { ROUTES } from "@/constants/routes";
 
 type Status = "loading" | "success" | "error";
 
@@ -79,7 +80,7 @@ export const VerifyEmailPage: React.FC = () => {
                   type="button"
                   className="lp-submit"
                   style={{ marginTop: "24px" }}
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate(ROUTES.LOGIN)}
                 >
                   {t("auth.verify_email.go_to_login")}
                 </button>
@@ -111,7 +112,7 @@ export const VerifyEmailPage: React.FC = () => {
                   type="button"
                   className="lp-submit"
                   style={{ marginTop: "24px" }}
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate(ROUTES.LOGIN)}
                 >
                   {t("auth.verify_email.go_to_login")}
                 </button>

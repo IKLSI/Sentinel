@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
@@ -32,7 +33,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        string connectionString = configuration.GetConnectionString("DefaultConnection")
+        string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
         services.AddScoped<TenantCommandInterceptor>();
@@ -52,23 +53,23 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddSettings(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.Configure<EmailSettings>(configuration.GetSection("Email"));
-        services.Configure<FrontendSettings>(configuration.GetSection("Frontend"));
-        services.Configure<CorsSettings>(configuration.GetSection("Cors"));
-        services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
-        services.Configure<EncryptionSettings>(configuration.GetSection("Encryption"));
-        services.Configure<SupportSettings>(configuration.GetSection("Support"));
-        services.Configure<DataProtectionSettings>(configuration.GetSection("DataProtection"));
+        services.Configure<JwtSettings>(configuration.GetSection(ConfigurationKeys.Sections.Jwt));
+        services.Configure<EmailSettings>(configuration.GetSection(ConfigurationKeys.Sections.Email));
+        services.Configure<FrontendSettings>(configuration.GetSection(ConfigurationKeys.Sections.Frontend));
+        services.Configure<CorsSettings>(configuration.GetSection(ConfigurationKeys.Sections.Cors));
+        services.Configure<StripeSettings>(configuration.GetSection(ConfigurationKeys.Sections.Stripe));
+        services.Configure<EncryptionSettings>(configuration.GetSection(ConfigurationKeys.Sections.Encryption));
+        services.Configure<SupportSettings>(configuration.GetSection(ConfigurationKeys.Sections.Support));
+        services.Configure<DataProtectionSettings>(configuration.GetSection(ConfigurationKeys.Sections.DataProtection));
 
         return services;
     }
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        IConfigurationSection jwtSettings = configuration.GetSection("Jwt");
+        IConfigurationSection jwtSettings = configuration.GetSection(ConfigurationKeys.Sections.Jwt);
 
-        string jwtSecret = jwtSettings["Secret"]
+        string jwtSecret = jwtSettings[ConfigurationKeys.JwtKeys.Secret]
             ?? throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
 
         if (Encoding.UTF8.GetByteCount(jwtSecret) < 32)
@@ -80,9 +81,9 @@ public static class ServiceCollectionExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidIssuer = jwtSettings[ConfigurationKeys.JwtKeys.Issuer],
                     ValidateAudience = true,
-                    ValidAudience = jwtSettings["Audience"],
+                    ValidAudience = jwtSettings[ConfigurationKeys.JwtKeys.Audience],
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
                     ValidateLifetime = true,
@@ -104,8 +105,8 @@ public static class ServiceCollectionExtensions
                             return;
                         }
 
-                        string? userIdClaim = context.Principal?.FindFirst("userId")?.Value;
-                        string? versionClaim = context.Principal?.FindFirst("tokenVersion")?.Value;
+                        string? userIdClaim = context.Principal?.FindFirst(ClaimNames.UserId)?.Value;
+                        string? versionClaim = context.Principal?.FindFirst(ClaimNames.TokenVersion)?.Value;
 
                         if (!Guid.TryParse(userIdClaim, out Guid userId) || !int.TryParse(versionClaim, out int tokenVersion))
                         {
@@ -158,7 +159,7 @@ public static class ServiceCollectionExtensions
     {
         HashSet<string> origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        string[]? configured = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        string[]? configured = configuration.GetSection(ConfigurationKeys.CorsAllowedOrigins).Get<string[]>();
 
         if (configured != null)
         {
@@ -171,7 +172,7 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        string? frontendUrl = configuration["Frontend:BaseUrl"];
+        string? frontendUrl = configuration[ConfigurationKeys.FrontendBaseUrl];
 
         if (IsValidOrigin(frontendUrl))
         {
@@ -216,20 +217,20 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ResilientHttpHandler>();
 
-        services.AddHttpClient("OSV", client =>
+        services.AddHttpClient(HttpClientNames.Osv, client =>
         {
             client.BaseAddress = new Uri("https://api.osv.dev");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.Timeout = TimeSpan.FromSeconds(90);
         }).AddHttpMessageHandler<ResilientHttpHandler>();
 
-        services.AddHttpClient("Registry", client =>
+        services.AddHttpClient(HttpClientNames.Registry, client =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0");
             client.Timeout = TimeSpan.FromSeconds(90);
         }).AddHttpMessageHandler<ResilientHttpHandler>();
 
-        services.AddHttpClient("EolDate", client =>
+        services.AddHttpClient(HttpClientNames.EolDate, client =>
         {
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.Timeout = TimeSpan.FromSeconds(45);
@@ -274,7 +275,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddStripe(this IServiceCollection services, IConfiguration configuration)
     {
-        string apiKey = configuration["Stripe:SecretKey"] ?? string.Empty;
+        string apiKey = configuration[ConfigurationKeys.StripeSecretKey] ?? string.Empty;
 
         if (string.IsNullOrEmpty(apiKey)) apiKey = "sk_test_placeholder";
 
@@ -387,8 +388,8 @@ public static class ServiceCollectionExtensions
             options.ReportApiVersions = true;
             options.ApiVersionReader = ApiVersionReader.Combine(
                 new UrlSegmentApiVersionReader(),
-                new HeaderApiVersionReader("X-Api-Version"),
-                new QueryStringApiVersionReader("api-version"));
+                new HeaderApiVersionReader(CustomHeaderNames.ApiVersion),
+                new QueryStringApiVersionReader(CustomHeaderNames.ApiVersionQuery));
         }).AddApiExplorer(options =>
         {
             options.GroupNameFormat = "'v'VVV";
@@ -401,7 +402,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
     {
         services.AddHealthChecks()
-            .AddCheck<PostgresHealthCheck>("postgres", tags: new[] { "ready" });
+            .AddCheck<PostgresHealthCheck>(HealthCheckConstants.PostgresName, tags: new[] { HealthCheckConstants.ReadyTag });
 
         return services;
     }
@@ -456,17 +457,17 @@ public static class ServiceCollectionExtensions
             options.AddBasePolicy(builder => builder
                 .Expire(TimeSpan.FromSeconds(30))
                 .SetVaryByHeader("Authorization", "Accept-Language")
-                .Tag("default"));
+                .Tag(OutputCacheTags.Default));
 
-            options.AddPolicy("StatusesCache", builder => builder
+            options.AddPolicy(OutputCachePolicies.Statuses, builder => builder
                 .Expire(TimeSpan.FromMinutes(5))
                 .SetVaryByHeader("Authorization")
-                .Tag("statuses"));
+                .Tag(OutputCacheTags.Statuses));
 
-            options.AddPolicy("DashboardCache", builder => builder
+            options.AddPolicy(OutputCachePolicies.Dashboard, builder => builder
                 .Expire(TimeSpan.FromSeconds(60))
                 .SetVaryByHeader("Authorization")
-                .Tag("dashboard"));
+                .Tag(OutputCacheTags.Dashboard));
         });
 
         return services;
@@ -476,7 +477,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddRateLimiter(options =>
         {
-            options.AddPolicy("login", httpContext =>
+            options.AddPolicy(RateLimitPolicies.Login, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     factory: _ => new FixedWindowRateLimiterOptions
@@ -487,7 +488,7 @@ public static class ServiceCollectionExtensions
                         QueueLimit = 0
                     }));
 
-            options.AddPolicy("password-reset", httpContext =>
+            options.AddPolicy(RateLimitPolicies.PasswordReset, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     factory: _ => new FixedWindowRateLimiterOptions
@@ -498,7 +499,7 @@ public static class ServiceCollectionExtensions
                         QueueLimit = 0
                     }));
 
-            options.AddPolicy("invitation", httpContext =>
+            options.AddPolicy(RateLimitPolicies.Invitation, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     factory: _ => new FixedWindowRateLimiterOptions
@@ -509,7 +510,7 @@ public static class ServiceCollectionExtensions
                         QueueLimit = 0
                     }));
 
-            options.AddPolicy("register", httpContext =>
+            options.AddPolicy(RateLimitPolicies.Register, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     factory: _ => new FixedWindowRateLimiterOptions

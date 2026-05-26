@@ -1,11 +1,13 @@
 import apiClient from "../../../services/client";
 import { LoginResponse, User } from "../../../types";
+import { API_ROUTES } from "@/constants/api";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 export const login = async (
   email: string,
   password: string,
 ): Promise<LoginResponse> => {
-  const response = await apiClient.post<LoginResponse>("/api/auth/login", {
+  const response = await apiClient.post<LoginResponse>(API_ROUTES.auth.login, {
     email,
     password,
   });
@@ -13,24 +15,25 @@ export const login = async (
 };
 
 export const logout = async (): Promise<void> => {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (refreshToken) await apiClient.post("/api/auth/logout", { refreshToken });
+  const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  if (refreshToken)
+    await apiClient.post(API_ROUTES.auth.logout, { refreshToken });
 };
 
 export const me = async (): Promise<User> => {
-  const response = await apiClient.get<User>("/api/auth/me");
+  const response = await apiClient.get<User>(API_ROUTES.auth.me);
   return response.data;
 };
 
 export const forgotPassword = async (email: string): Promise<void> => {
-  await apiClient.post("/api/auth/forgot-password", { email });
+  await apiClient.post(API_ROUTES.auth.forgotPassword, { email });
 };
 
 export const resetPassword = async (
   token: string,
   password: string,
 ): Promise<void> => {
-  await apiClient.post("/api/auth/reset-password", { token, password });
+  await apiClient.post(API_ROUTES.auth.resetPassword, { token, password });
 };
 
 export interface RegisterPayload {
@@ -42,13 +45,13 @@ export interface RegisterPayload {
 }
 
 export const register = async (payload: RegisterPayload): Promise<void> => {
-  await apiClient.post("/api/auth/register", payload);
+  await apiClient.post(API_ROUTES.auth.register, payload);
 };
 
 export const verifyEmail = async (token: string): Promise<void> => {
-  await apiClient.post("/api/auth/verify-email", { token });
+  await apiClient.post(API_ROUTES.auth.verifyEmail, { token });
 };
 
 export const resendVerification = async (email: string): Promise<void> => {
-  await apiClient.post("/api/auth/resend-verification", { email });
+  await apiClient.post(API_ROUTES.auth.resendVerification, { email });
 };

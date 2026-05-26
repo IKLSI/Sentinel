@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
 using Sentinel.API.HealthChecks;
@@ -20,7 +21,7 @@ public static class Program
             .ReadFrom.Services(services)
             .Enrich.FromLogContext());
 
-        string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        string connectionString = builder.Configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
         builder.Services
@@ -42,7 +43,7 @@ public static class Program
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
-            .AddDataProtectionPolicy(builder.Configuration.GetSection("DataProtection").Get<DataProtectionSettings>() ?? new());
+            .AddDataProtectionPolicy(builder.Configuration.GetSection(ConfigurationKeys.Sections.DataProtection).Get<DataProtectionSettings>() ?? new());
 
         WebApplication app = builder.Build();
 
@@ -111,15 +112,15 @@ public static class Program
         app.UseOutputCache();
         app.ConfigureHangfire();
 
-        app.MapHealthChecks("/health/live", new HealthCheckOptions
+        app.MapHealthChecks(HealthCheckConstants.LivePath, new HealthCheckOptions
         {
             Predicate = _ => false,
             ResponseWriter = HealthCheckResponseWriter.WriteResponse
         });
 
-        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        app.MapHealthChecks(HealthCheckConstants.ReadyPath, new HealthCheckOptions
         {
-            Predicate = c => c.Tags.Contains("ready"),
+            Predicate = c => c.Tags.Contains(HealthCheckConstants.ReadyTag),
             ResponseWriter = HealthCheckResponseWriter.WriteResponse
         });
 

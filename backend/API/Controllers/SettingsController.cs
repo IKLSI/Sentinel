@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Services;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
@@ -87,7 +88,7 @@ public class SettingsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.GithubIntegrationSaved,
-            entityType: "Organization",
+            entityType: AuditEntityTypes.Organization,
             organizationId: orgId.Value,
             userId: GetCurrentUserId(),
             entityId: orgId.Value,
@@ -134,7 +135,7 @@ public class SettingsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.GitlabIntegrationSaved,
-            entityType: "Organization",
+            entityType: AuditEntityTypes.Organization,
             organizationId: orgId.Value,
             userId: GetCurrentUserId(),
             entityId: orgId.Value,
@@ -187,7 +188,7 @@ public class SettingsController : BaseController
 
         await _auditLog.LogAsync(
             AuditAction.OrganizationUpdated,
-            entityType: "Organization",
+            entityType: AuditEntityTypes.Organization,
             organizationId: orgId.Value,
             userId: GetCurrentUserId(),
             entityId: orgId.Value,

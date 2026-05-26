@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
@@ -45,7 +46,7 @@ public class DependencyRegistryClient
     {
         try
         {
-            HttpClient client = _httpClientFactory.CreateClient("Registry");
+            HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
             dep.LatestVersion = dep.Ecosystem switch
             {
                 DependencyEcosystem.Npm => await FetchNpmLatestAsync(client, dep.Name),
