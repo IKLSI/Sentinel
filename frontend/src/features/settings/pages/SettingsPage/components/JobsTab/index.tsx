@@ -139,9 +139,6 @@ export const JobsTab: React.FC = () => {
                     <Box component="td" sx={{ ...CELL_SX, color: "var(--text)", fontWeight: 500 }}>
                       {jobName(job.id)}
                     </Box>
-                    <Box component="td" sx={{ ...CELL_SX, fontFamily: "monospace", fontSize: "11px" }}>
-                      {job.cron}
-                    </Box>
                     <Box component="td" sx={CELL_SX}>
                       {formatDate(job.lastExecution, t)}
                     </Box>

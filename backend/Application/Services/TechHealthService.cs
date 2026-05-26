@@ -153,18 +153,34 @@ public class TechHealthService
 
         using SemaphoreSlim throttle = new SemaphoreSlim(10);
 
-        async Task RunThrottledAsync(Func<Task> work)
+        async Task<T> RunThrottledAsync<T>(Func<Task<T>> work)
         {
             await throttle.WaitAsync();
-            try { await work(); }
+            try { return await work(); }
             finally { throttle.Release(); }
         }
 
-        await Task.WhenAll(project.Dependencies.Select(d =>
-            RunThrottledAsync(() => CheckVulnerabilitiesAsync(d))));
+        VulnerabilityScanResult?[] vulnResults = await Task.WhenAll(project.Dependencies.Select(d =>
+            RunThrottledAsync(() => FetchVulnerabilitiesAsync(d))));
 
-        await Task.WhenAll(project.Runtimes.Select(r =>
-            RunThrottledAsync(() => CheckRuntimeEolAsync(r))));
+        RuntimeEolResult?[] eolResults = await Task.WhenAll(project.Runtimes.Select(r =>
+            RunThrottledAsync(() => FetchRuntimeEolAsync(r))));
+
+        foreach (VulnerabilityScanResult result in vulnResults.OfType<VulnerabilityScanResult>())
+        {
+            if (result.Status is { } status) result.Dependency.Status = status;
+            foreach (Vulnerability vuln in result.NewVulnerabilities)
+            {
+                result.Dependency.Vulnerabilities.Add(vuln);
+                _context.Entry(vuln).State = EntityState.Added;
+            }
+        }
+
+        foreach (RuntimeEolResult result in eolResults.OfType<RuntimeEolResult>())
+        {
+            if (result.IsEol is { } isEol) result.Runtime.IsEol = isEol;
+            if (result.EolDate is { } eolDate) result.Runtime.EolDate = eolDate;
+        }
 
         project.HealthScore = CalculateHealthScore(project);
         project.HealthGrade = ScoreToGrade(project.HealthScore);
@@ -255,9 +271,11 @@ public class TechHealthService
         }));
     }
 
-    private async Task CheckVulnerabilitiesAsync(Dependency dependency)
+    private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status, List<Vulnerability> NewVulnerabilities);
+
+    private async Task<VulnerabilityScanResult?> FetchVulnerabilitiesAsync(Dependency dependency)
     {
-        if (!OsvEcosystemMap.TryGetValue(dependency.Ecosystem, out string? ecosystem)) return;
+        if (!OsvEcosystemMap.TryGetValue(dependency.Ecosystem, out string? ecosystem)) return null;
 
         try
         {
@@ -268,15 +286,12 @@ public class TechHealthService
             };
 
             HttpResponseMessage response = await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/query", requestBody);
-            if (!response.IsSuccessStatusCode) return;
+            if (!response.IsSuccessStatusCode) return null;
 
             using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
             if (!doc.RootElement.TryGetProperty("vulns", out JsonElement vulns))
-            {
-                dependency.Status = DependencyStatus.UpToDate;
-                return;
-            }
+                return new VulnerabilityScanResult(dependency, DependencyStatus.UpToDate, new List<Vulnerability>());
 
             HashSet<string> existingCves = dependency.Vulnerabilities.Select(v => v.CveId).ToHashSet();
             List<Vulnerability> newVulns = new();
@@ -311,15 +326,14 @@ public class TechHealthService
                 });
             }
 
-            if (newVulns.Count > 0)
-            {
-                foreach (Vulnerability v in newVulns) dependency.Vulnerabilities.Add(v);
-                dependency.Status = DependencyStatus.Vulnerable;
-            }
+            return newVulns.Count > 0
+                ? new VulnerabilityScanResult(dependency, DependencyStatus.Vulnerable, newVulns)
+                : null;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Erreur CVE pour {Dependency}", dependency.Name);
+            return null;
         }
     }
 
@@ -451,12 +465,14 @@ public class TechHealthService
         return null;
     }
 
-    private async Task CheckRuntimeEolAsync(Runtime runtime)
+    private sealed record RuntimeEolResult(Runtime Runtime, bool? IsEol, DateTime? EolDate);
+
+    private async Task<RuntimeEolResult?> FetchRuntimeEolAsync(Runtime runtime)
     {
-        if (!EolProductMap.TryGetValue(runtime.Name, out string? product)) return;
+        if (!EolProductMap.TryGetValue(runtime.Name, out string? product)) return null;
 
         string[] parts = runtime.Version.Split('.');
-        if (parts.Length == 0 || parts[0] == "unknown") return;
+        if (parts.Length == 0 || parts[0] == "unknown") return null;
 
         string cycle = runtime.Name.ToLowerInvariant() switch
         {
@@ -469,32 +485,32 @@ public class TechHealthService
         {
             HttpClient eolClient = _httpClientFactory.CreateClient(HttpClientNames.EolDate);
             HttpResponseMessage response = await eolClient.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
-            if (!response.IsSuccessStatusCode) return;
+            if (!response.IsSuccessStatusCode) return null;
 
             using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             JsonElement root = doc.RootElement;
 
-            if (!root.TryGetProperty("eol", out JsonElement eolProp)) return;
+            if (!root.TryGetProperty("eol", out JsonElement eolProp)) return null;
 
             if (eolProp.ValueKind == JsonValueKind.True)
-            {
-                runtime.IsEol = true;
-            }
-            else if (eolProp.ValueKind == JsonValueKind.False)
-            {
-                runtime.IsEol = false;
-            }
-            else if (eolProp.ValueKind == JsonValueKind.String &&
-                     DateTime.TryParse(eolProp.GetString(), out DateTime eolDate))
+                return new RuntimeEolResult(runtime, true, null);
+
+            if (eolProp.ValueKind == JsonValueKind.False)
+                return new RuntimeEolResult(runtime, false, null);
+
+            if (eolProp.ValueKind == JsonValueKind.String &&
+                DateTime.TryParse(eolProp.GetString(), out DateTime eolDate))
             {
                 eolDate = DateTime.SpecifyKind(eolDate, DateTimeKind.Utc);
-                runtime.EolDate = eolDate;
-                runtime.IsEol = eolDate < DateTime.UtcNow;
+                return new RuntimeEolResult(runtime, eolDate < DateTime.UtcNow, eolDate);
             }
+
+            return null;
         }
         catch (Exception ex)
         {
             _logger.LogDebug(ex, "EOL check non disponible pour {Runtime} {Version}", runtime.Name, runtime.Version);
+            return null;
         }
     }
 
