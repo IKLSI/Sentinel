@@ -12,6 +12,7 @@ public class ManifestParserService
         "package.json",
         "package-lock.json",
         "yarn.lock",
+        "pnpm-lock.yaml",
         "requirements.txt",
         "Pipfile.lock",
         "go.mod",
@@ -30,6 +31,7 @@ public class ManifestParserService
     {
         "package-lock.json",
         "yarn.lock",
+        "pnpm-lock.yaml",
         "Pipfile.lock",
         "composer.lock",
     };
@@ -49,6 +51,7 @@ public class ManifestParserService
         if (lower == "package.json") ParsePackageJson(projectId, content, deps, runtimes);
         else if (lower == "package-lock.json") ParsePackageLockJson(projectId, content, deps);
         else if (lower == "yarn.lock") ParseYarnLock(projectId, content, deps);
+        else if (lower == "pnpm-lock.yaml") ParsePnpmLock(projectId, content, deps);
         else if (lower.EndsWith(".csproj")) ParseCsproj(projectId, content, deps, runtimes);
         else if (lower == "pom.xml") ParsePomXml(projectId, content, deps, runtimes);
         else if (lower == "requirements.txt") ParseRequirementsTxt(projectId, content, deps, runtimes);
@@ -723,6 +726,75 @@ public class ManifestParserService
             }
         }
         catch { }
+    }
+
+    private static void ParsePnpmLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        Match versionMatch = Regex.Match(content, @"lockfileVersion:\s*['""]?(\d+)");
+        int major = versionMatch.Success ? int.Parse(versionMatch.Groups[1].Value) : 9;
+
+        bool inPackages = false;
+
+        foreach (string raw in content.Split('\n'))
+        {
+            string line = raw.TrimEnd();
+            if (string.IsNullOrEmpty(line)) continue;
+
+            if (!line.StartsWith(' '))
+            {
+                inPackages = line.StartsWith("packages:", StringComparison.Ordinal);
+                continue;
+            }
+
+            if (!inPackages) continue;
+            if (!Regex.IsMatch(line, @"^  \S")) continue;
+            if (!line.EndsWith(':')) continue;
+
+            string key = line.Trim().TrimEnd(':').Trim().Trim('\'', '"');
+            (string? name, string? version) = ParsePnpmPackageKey(key, major);
+            if (name == null || version == null) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Npm,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static (string?, string?) ParsePnpmPackageKey(string key, int major)
+    {
+        if (string.IsNullOrEmpty(key)) return (null, null);
+        if (key.StartsWith('/')) key = key[1..];
+
+        int paren = key.IndexOf('(');
+        if (paren >= 0) key = key[..paren];
+
+        string name, version;
+
+        if (major <= 5)
+        {
+            int slash = key.LastIndexOf('/');
+            if (slash <= 0) return (null, null);
+            name = key[..slash];
+            version = key[(slash + 1)..];
+        }
+        else
+        {
+            int at = key.LastIndexOf('@');
+            if (at <= 0) return (null, null);
+            name = key[..at];
+            version = key[(at + 1)..];
+        }
+
+        if (name.Length == 0 || version.Length == 0 || !char.IsDigit(version[0]))
+            return (null, null);
+
+        return (name, version);
     }
 
     private static void ParsePipfileLock(Guid projectId, string content, List<Dependency> deps)

@@ -51,6 +51,18 @@ public class TechHealthService
         ["Go"] = "go",
         ["Java"] = "java",
         ["Rust"] = "rust",
+        ["React"] = "react",
+        ["Vue"] = "vue",
+        ["Angular"] = "angular",
+        ["Next.js"] = "nextjs",
+        ["Nuxt"] = "nuxt",
+        ["Svelte"] = "svelte",
+        ["Express"] = "express",
+        ["Django"] = "django",
+        ["Laravel"] = "laravel",
+        ["Symfony"] = "symfony",
+        ["Rails"] = "rails",
+        ["Kotlin"] = "kotlin",
     };
 
     public TechHealthService(
@@ -477,6 +489,7 @@ public class TechHealthService
         string cycle = runtime.Name.ToLowerInvariant() switch
         {
             "node.js" or "nodejs" => parts[0],
+            "react" or "angular" or "next.js" or "nuxt" or "svelte" or "express" or "laravel" => parts[0],
             ".net" or "dotnet" => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0],
             _ => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0]
         };
