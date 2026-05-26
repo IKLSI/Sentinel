@@ -24,7 +24,9 @@ public class DependencyRegistryClient
                 DependencyEcosystem.Go or
                 DependencyEcosystem.Composer or
                 DependencyEcosystem.Gem or
-                DependencyEcosystem.Cargo)
+                DependencyEcosystem.Cargo or
+                DependencyEcosystem.Hex or
+                DependencyEcosystem.Pub)
             .Select(FetchLatestVersionAsync);
         await Task.WhenAll(tasks);
     }
@@ -57,6 +59,8 @@ public class DependencyRegistryClient
                 DependencyEcosystem.Composer => await FetchPackagistLatestAsync(client, dep.Name),
                 DependencyEcosystem.Gem => await FetchRubyGemsLatestAsync(client, dep.Name),
                 DependencyEcosystem.Cargo => await FetchCratesLatestAsync(client, dep.Name),
+                DependencyEcosystem.Hex => await FetchHexLatestAsync(client, dep.Name),
+                DependencyEcosystem.Pub => await FetchPubLatestAsync(client, dep.Name),
                 _ => null,
             };
         }
@@ -146,5 +150,22 @@ public class DependencyRegistryClient
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return null;
         return crateObj.TryGetProperty("newest_version", out JsonElement v) ? v.GetString() : null;
+    }
+
+    private static async Task<string?> FetchHexLatestAsync(HttpClient client, string package)
+    {
+        HttpResponseMessage response = await client.GetAsync($"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}");
+        if (!response.IsSuccessStatusCode) return null;
+        using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.TryGetProperty("latest_stable_version", out JsonElement v) ? v.GetString() : null;
+    }
+
+    private static async Task<string?> FetchPubLatestAsync(HttpClient client, string package)
+    {
+        HttpResponseMessage response = await client.GetAsync($"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}");
+        if (!response.IsSuccessStatusCode) return null;
+        using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.TryGetProperty("latest", out JsonElement latest) && latest.TryGetProperty("version", out JsonElement v)
+            ? v.GetString() : null;
     }
 }

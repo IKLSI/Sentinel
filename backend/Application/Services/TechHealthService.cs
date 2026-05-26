@@ -39,6 +39,9 @@ public class TechHealthService
         [DependencyEcosystem.Gem] = "RubyGems",
         [DependencyEcosystem.Cargo] = "crates.io",
         [DependencyEcosystem.Gradle] = "Maven",
+        [DependencyEcosystem.Hex] = "Hex",
+        [DependencyEcosystem.Pub] = "Pub",
+        [DependencyEcosystem.Swift] = "SwiftURL",
     };
 
     private static readonly Dictionary<string, string> EolProductMap = new(StringComparer.OrdinalIgnoreCase)
@@ -63,6 +66,7 @@ public class TechHealthService
         ["Symfony"] = "symfony",
         ["Rails"] = "rails",
         ["Kotlin"] = "kotlin",
+        ["Elixir"] = "elixir",
     };
 
     public TechHealthService(

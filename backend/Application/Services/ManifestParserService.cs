@@ -25,6 +25,16 @@ public class ManifestParserService
         "Cargo.toml",
         "pyproject.toml",
         "CMakeLists.txt",
+        "Cargo.lock",
+        "packages.lock.json",
+        "poetry.lock",
+        "gradle.lockfile",
+        "mix.exs",
+        "mix.lock",
+        "pubspec.yaml",
+        "pubspec.lock",
+        "Package.swift",
+        "Package.resolved",
     };
 
     private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
@@ -34,6 +44,13 @@ public class ManifestParserService
         "pnpm-lock.yaml",
         "Pipfile.lock",
         "composer.lock",
+        "Cargo.lock",
+        "packages.lock.json",
+        "poetry.lock",
+        "gradle.lockfile",
+        "mix.lock",
+        "pubspec.lock",
+        "Package.resolved",
     };
 
     public static bool IsManifest(string name)
@@ -64,6 +81,16 @@ public class ManifestParserService
         else if (lower == "gemfile") ParseGemfile(projectId, content, deps, runtimes);
         else if (lower == "cargo.toml") ParseCargoToml(projectId, content, deps, runtimes);
         else if (lower == "cmakelists.txt") ParseCMakeLists(projectId, content, runtimes);
+        else if (lower == "cargo.lock") ParseCargoLock(projectId, content, deps);
+        else if (lower == "packages.lock.json") ParseNuGetLockJson(projectId, content, deps);
+        else if (lower == "poetry.lock") ParsePoetryLock(projectId, content, deps);
+        else if (lower == "gradle.lockfile") ParseGradleLockfile(projectId, content, deps);
+        else if (lower == "mix.exs") ParseMixExs(projectId, content, deps, runtimes);
+        else if (lower == "mix.lock") ParseMixLock(projectId, content, deps);
+        else if (lower == "pubspec.yaml") ParsePubspecYaml(projectId, content, deps, runtimes);
+        else if (lower == "pubspec.lock") ParsePubspecLock(projectId, content, deps);
+        else if (lower == "package.swift") ParsePackageSwift(projectId, content, runtimes);
+        else if (lower == "package.resolved") ParsePackageResolved(projectId, content, deps);
 
         return (deps, runtimes);
     }
@@ -795,6 +822,310 @@ public class ManifestParserService
             return (null, null);
 
         return (name, version);
+    }
+
+    private static void ParseCargoLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        foreach (Match block in Regex.Matches(content, @"\[\[package\]\](.*?)(?=\[\[package\]\]|\z)", RegexOptions.Singleline))
+        {
+            string b = block.Groups[1].Value;
+            Match nameMatch = Regex.Match(b, @"^\s*name\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            Match versionMatch = Regex.Match(b, @"^\s*version\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            if (!nameMatch.Success || !versionMatch.Success) continue;
+            if (!Regex.IsMatch(b, @"^\s*source\s*=", RegexOptions.Multiline)) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = nameMatch.Groups[1].Value,
+                CurrentVersion = versionMatch.Groups[1].Value,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Cargo,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParsePoetryLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        foreach (Match block in Regex.Matches(content, @"\[\[package\]\](.*?)(?=\[\[package\]\]|\z)", RegexOptions.Singleline))
+        {
+            string b = block.Groups[1].Value;
+            Match nameMatch = Regex.Match(b, @"^\s*name\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            Match versionMatch = Regex.Match(b, @"^\s*version\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            if (!nameMatch.Success || !versionMatch.Success) continue;
+
+            Match categoryMatch = Regex.Match(b, @"^\s*category\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            bool isDev = categoryMatch.Success && categoryMatch.Groups[1].Value.Equals("dev", StringComparison.OrdinalIgnoreCase);
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = nameMatch.Groups[1].Value,
+                CurrentVersion = versionMatch.Groups[1].Value,
+                Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.PyPI,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParseNuGetLockJson(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content);
+            if (!doc.RootElement.TryGetProperty("dependencies", out JsonElement frameworks)) return;
+
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (JsonProperty framework in frameworks.EnumerateObject())
+            {
+                foreach (JsonProperty pkg in framework.Value.EnumerateObject())
+                {
+                    string type = pkg.Value.TryGetProperty("type", out JsonElement t) ? t.GetString() ?? "" : "";
+                    if (type.Equals("Project", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    string version = pkg.Value.TryGetProperty("resolved", out JsonElement r) ? r.GetString() ?? "" : "";
+                    if (string.IsNullOrEmpty(version) || !seen.Add(pkg.Name)) continue;
+
+                    deps.Add(new Dependency
+                    {
+                        ProjectId = projectId,
+                        Name = pkg.Name,
+                        CurrentVersion = version,
+                        Type = DependencyType.Prod,
+                        Ecosystem = DependencyEcosystem.NuGet,
+                        Status = DependencyStatus.UpToDate,
+                    });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void ParseGradleLockfile(Guid projectId, string content, List<Dependency> deps)
+    {
+        foreach (string raw in content.Split('\n'))
+        {
+            string line = raw.Trim();
+            if (line.StartsWith('#') || string.IsNullOrEmpty(line)) continue;
+
+            int eq = line.IndexOf('=');
+            if (eq <= 0) continue;
+
+            string coord = line[..eq];
+            string configs = line[(eq + 1)..];
+            string[] parts = coord.Split(':');
+            if (parts.Length < 3) continue;
+
+            bool isTest = configs.Contains("test", StringComparison.OrdinalIgnoreCase);
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = $"{parts[0]}:{parts[1]}",
+                CurrentVersion = parts[2],
+                Type = isTest ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Maven,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParseMixExs(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
+    {
+        Match elixirMatch = Regex.Match(content, @"elixir:\s*[""']([^""']+)[""']");
+        if (elixirMatch.Success)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Elixir", Version = CleanVersion(elixirMatch.Groups[1].Value) });
+
+        foreach (Match m in Regex.Matches(content, @"\{:(\w+)\s*,\s*[""']([\^~>=<\s]*\d[^""']*)[""']"))
+        {
+            string version = CleanVersion(m.Groups[2].Value);
+            if (string.IsNullOrEmpty(version)) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = m.Groups[1].Value,
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Hex,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParseMixLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        foreach (Match m in Regex.Matches(content, @"[""']\w+[""']:\s*\{:hex,\s*:(\w+),\s*[""']([^""']+)[""']"))
+        {
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = m.Groups[1].Value,
+                CurrentVersion = m.Groups[2].Value,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Hex,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParsePubspecYaml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
+    {
+        Match envBlock = Regex.Match(content, @"^environment:\s*\n((?:[ \t]+.*\n?)*)", RegexOptions.Multiline);
+        if (envBlock.Success)
+        {
+            string env = envBlock.Groups[1].Value;
+            Match dartMatch = Regex.Match(env, @"sdk:\s*[""']?[\^~>=<\s]*(\d[\d.]*)");
+            if (dartMatch.Success)
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Dart", Version = dartMatch.Groups[1].Value });
+
+            Match flutterMatch = Regex.Match(env, @"flutter:\s*[""']?[\^~>=<\s]*(\d[\d.]*)");
+            if (flutterMatch.Success)
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Flutter", Version = flutterMatch.Groups[1].Value });
+        }
+
+        string? section = null;
+        foreach (string raw in content.Split('\n'))
+        {
+            string line = raw.TrimEnd();
+            if (line.Length == 0) continue;
+
+            if (!line.StartsWith(' '))
+            {
+                section = line.StartsWith("dependencies:") ? "prod"
+                        : line.StartsWith("dev_dependencies:") ? "dev"
+                        : null;
+                continue;
+            }
+
+            if (section == null) continue;
+
+            Match m = Regex.Match(line, @"^  ([a-zA-Z0-9_]+):\s*(.*)$");
+            if (!m.Success) continue;
+
+            string rest = m.Groups[2].Value.Trim();
+            if (rest.Length == 0) continue;
+
+            string version = CleanVersion(rest.Trim('"', '\''));
+            if (version.Length == 0 || !char.IsDigit(version[0])) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = m.Groups[1].Value,
+                CurrentVersion = version,
+                Type = section == "dev" ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Pub,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParsePubspecLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        bool inPackages = false;
+        string? name = null, version = null, dependency = null, source = null;
+
+        void Flush()
+        {
+            if (name != null && !string.IsNullOrEmpty(version) && (source == null || source == "hosted"))
+            {
+                bool isDev = dependency != null && dependency.Contains("dev");
+                deps.Add(new Dependency
+                {
+                    ProjectId = projectId,
+                    Name = name,
+                    CurrentVersion = version,
+                    Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Pub,
+                    Status = DependencyStatus.UpToDate,
+                });
+            }
+            name = version = dependency = source = null;
+        }
+
+        foreach (string raw in content.Split('\n'))
+        {
+            string line = raw.TrimEnd();
+            if (line.Length == 0) continue;
+
+            if (!line.StartsWith(' '))
+            {
+                Flush();
+                inPackages = line.StartsWith("packages:");
+                continue;
+            }
+
+            if (!inPackages) continue;
+
+            Match pkgStart = Regex.Match(line, @"^  (\S[^:]*):\s*$");
+            if (pkgStart.Success) { Flush(); name = pkgStart.Groups[1].Value; continue; }
+
+            Match prop = Regex.Match(line, @"^    (version|dependency|source):\s*[""']?([^""'\n]+?)[""']?\s*$");
+            if (!prop.Success) continue;
+
+            switch (prop.Groups[1].Value)
+            {
+                case "version": version = prop.Groups[2].Value; break;
+                case "dependency": dependency = prop.Groups[2].Value; break;
+                case "source": source = prop.Groups[2].Value; break;
+            }
+        }
+        Flush();
+    }
+
+    private static void ParsePackageSwift(Guid projectId, string content, List<Runtime> runtimes)
+    {
+        Match toolsMatch = Regex.Match(content, @"swift-tools-version:\s*([\d.]+)");
+        if (toolsMatch.Success)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Swift", Version = toolsMatch.Groups[1].Value });
+    }
+
+    private static void ParsePackageResolved(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content);
+            JsonElement root = doc.RootElement;
+
+            JsonElement pins;
+            if (root.TryGetProperty("pins", out JsonElement p)) pins = p;
+            else if (root.TryGetProperty("object", out JsonElement obj) && obj.TryGetProperty("pins", out JsonElement p1)) pins = p1;
+            else return;
+
+            foreach (JsonElement pin in pins.EnumerateArray())
+            {
+                string location =
+                    pin.TryGetProperty("location", out JsonElement l) ? l.GetString() ?? "" :
+                    pin.TryGetProperty("repositoryURL", out JsonElement r) ? r.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(location)) continue;
+
+                string? version = pin.TryGetProperty("state", out JsonElement state) && state.TryGetProperty("version", out JsonElement v)
+                    ? v.GetString() : null;
+                if (string.IsNullOrEmpty(version)) continue;
+
+                deps.Add(new Dependency
+                {
+                    ProjectId = projectId,
+                    Name = NormalizeSwiftUrl(location),
+                    CurrentVersion = version,
+                    Type = DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Swift,
+                    Status = DependencyStatus.UpToDate,
+                });
+            }
+        }
+        catch { }
+    }
+
+    private static string NormalizeSwiftUrl(string url)
+    {
+        string s = Regex.Replace(url.Trim(), @"^https?://", "");
+        s = Regex.Replace(s, @"\.git$", "");
+        return s.TrimEnd('/');
     }
 
     private static void ParsePipfileLock(Guid projectId, string content, List<Dependency> deps)

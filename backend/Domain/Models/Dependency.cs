@@ -16,7 +16,10 @@ public enum DependencyEcosystem
     Gradle,
     NuGet,
     Go,
-    Cargo
+    Cargo,
+    Hex,
+    Pub,
+    Swift
 }
 
 public enum DependencyStatus
