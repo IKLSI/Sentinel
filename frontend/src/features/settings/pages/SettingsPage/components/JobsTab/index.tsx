@@ -112,27 +112,37 @@ export const JobsTab: React.FC = () => {
     <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: "16px", pb: "8px" }}>
         <Box sx={CARD_SX}>
-          <Box
-            sx={{
-              px: "16px",
-              minHeight: "40px",
-              display: "flex",
-              alignItems: "center",
-              borderBottom: "1px solid var(--border)",
-              background: "var(--s2)",
-            }}
-          >
-            <Box sx={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              {t("settings.jobs.title")}
-            </Box>
-          </Box>
-
           {loading ? (
             <Box sx={{ p: "32px", display: "flex", justifyContent: "center" }}>
               <CircularProgress size={20} />
             </Box>
           ) : (
             <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+              <Box component="thead">
+                <Box component="tr">
+                  {(["col_job", "col_last_run", "col_status", "col_next_run"] as const).map((col) => (
+                    <Box
+                      component="th"
+                      key={col}
+                      sx={{
+                        px: "12px",
+                        py: "8px",
+                        textAlign: "left",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "var(--muted)",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        borderBottom: "1px solid var(--border)",
+                        background: "var(--s2)",
+                      }}
+                    >
+                      {t(`settings.jobs.${col}`)}
+                    </Box>
+                  ))}
+                  <Box component="th" sx={{ borderBottom: "1px solid var(--border)", background: "var(--s2)" }} />
+                </Box>
+              </Box>
               <Box component="tbody">
                 {jobs.map((job) => (
                   <Box component="tr" key={job.id} sx={{ "&:hover td": { background: "var(--s2)" }, "&:hover .row-actions": { opacity: "1 !important" } }}>

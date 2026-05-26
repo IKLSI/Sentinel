@@ -87,61 +87,61 @@ export const LoginPage: React.FC = () => {
     <Box className="lp-root">
       <Box className="lp-card">
         <Box className="lp-left">
-
-          <Box className="lp-logo">
-            <Box className="lp-logo-mark">
+          <Box className="lp-left-noise" aria-hidden />
+          <Box className="lp-left-body">
+            <Box className="lp-brand">
               <SentinelLogo width={18} height={21} />
+              {t("auth.login.brand")}
             </Box>
-            <Box className="lp-logo-wordmark">{t("auth.login.brand")}</Box>
-          </Box>
-
-          <Box className="lp-left-headline">
-            <Box component="h1">
-              {t("auth.login.headline_part1")}
-              <br />
-              {t("auth.login.headline_part2")}{" "}
-              <Box component="span" className="lp-headline-accent">
-                {t("auth.login.headline_accent")}
+            <Box className="lp-left-headline">
+              <Box component="h1">
+                {t("auth.login.headline_part1")}
+                <br />
+                <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+                  {t("auth.login.headline_part2")}{" "}
+                  <Box component="span" className="lp-headline-accent">
+                    {t("auth.login.headline_accent")}
+                  </Box>
+                </Box>
+              </Box>
+              <Box component="p" className="lp-headline-sub">
+                {t("auth.login.headline_sub")}
               </Box>
             </Box>
-            <Box component="p" className="lp-headline-sub">
-              {t("auth.login.headline_sub")}
-            </Box>
-          </Box>
 
           <Box className="lp-features">
             {[
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(165,180,252,0.9)" width="20" height="20">
                     <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>
                     <path d="m9 12 2 2 4-4"/>
                   </svg>
                 ),
                 title: t("auth.login.feature1_title"),
                 desc: t("auth.login.feature1_desc"),
-                iconBg: "#ffe0ef",
+                iconBg: "rgba(165,180,252,0.11)",
               },
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(249,168,212,0.85)" width="20" height="20">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                 ),
                 title: t("auth.login.feature2_title"),
                 desc: t("auth.login.feature2_desc"),
-                iconBg: "#fff0cf",
+                iconBg: "rgba(249,168,212,0.11)",
               },
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="#6f51e6" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(251,191,36,0.85)" width="20" height="20">
                     <rect x="3" y="4" width="18" height="13" rx="2"/>
                     <path d="M8 21h8M12 17v4"/>
                   </svg>
                 ),
                 title: t("auth.login.feature3_title"),
                 desc: t("auth.login.feature3_desc"),
-                iconBg: "#d9f7e8",
+                iconBg: "rgba(251,191,36,0.11)",
               },
             ].map((f, i) => (
               <Box
@@ -158,6 +158,7 @@ export const LoginPage: React.FC = () => {
                 </Box>
               </Box>
             ))}
+          </Box>
           </Box>
 
         </Box>
@@ -238,7 +239,7 @@ export const LoginPage: React.FC = () => {
                 </Box>
               </Box>
 
-              <button type="submit" className="lp-submit" disabled={loading} style={{ padding: "16px", fontSize: "1rem", background: "linear-gradient(135deg, #7257e6, #9a6cff)", boxShadow: "0 14px 28px -10px rgba(114,87,230,0.6)", borderRadius: "14px" }}>
+              <button type="submit" className="lp-submit" disabled={loading} style={{ fontFamily: "inherit" }}>
                 {loading ? (
                   <Box className="lp-submit-loader" />
                 ) : (
@@ -251,7 +252,7 @@ export const LoginPage: React.FC = () => {
               <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={() => setForgotOpen(true)}>
                 {t("auth.login.forgot_password_link")}
               </button>
-              <button type="button" className="lp-forgot" style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 600, color: "#1b1633" }} onClick={() => setRegisterOpen(true)}>
+              <button type="button" className="lp-forgot lp-forgot--register" style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }} onClick={() => setRegisterOpen(true)}>
                 {t("auth.login.register_link")}
               </button>
               {showResend && (

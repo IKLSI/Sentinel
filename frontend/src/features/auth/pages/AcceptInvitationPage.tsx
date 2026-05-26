@@ -70,7 +70,13 @@ export const AcceptInvitationPage: React.FC = () => {
       );
       return;
     }
-    if (form.password.length < 8) {
+    if (
+      form.password.length < 12 ||
+      !/[a-z]/.test(form.password) ||
+      !/[A-Z]/.test(form.password) ||
+      !/\d/.test(form.password) ||
+      !/[^A-Za-z0-9]/.test(form.password)
+    ) {
       showToast(
         t("auth.accept_invitation.error_password_min_length"),
         "warning",
@@ -112,55 +118,15 @@ export const AcceptInvitationPage: React.FC = () => {
         <Box className="aip-left">
           <Box className="aip-noise" aria-hidden />
 
-          <Box className="aip-decor" aria-hidden>
-            <svg
-              width="100%"
-              height="100%"
-              viewBox="0 0 450 600"
-              fill="none"
-              preserveAspectRatio="xMidYMid slice"
-            >
-              <defs>
-                <radialGradient id="aip-glow-tr" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(165,180,252,0.2)" />
-                  <stop offset="100%" stopColor="transparent" />
-                </radialGradient>
-              </defs>
-              <circle cx="450" cy="0" r="160" fill="url(#aip-glow-tr)" />
-              <circle
-                cx="450"
-                cy="0"
-                r="80"
-                stroke="rgba(255,255,255,0.30)"
-                strokeWidth="1.2"
-              />
-              <circle
-                cx="450"
-                cy="0"
-                r="125"
-                stroke="rgba(255,255,255,0.18)"
-                strokeWidth="1"
-              />
-              <circle
-                cx="450"
-                cy="0"
-                r="175"
-                stroke="rgba(255,255,255,0.11)"
-                strokeWidth="1"
-              />
-            </svg>
-          </Box>
-
-          <Box className="aip-logo">
-            <Box className="aip-logo-mark">
-              <SentinelLogo width={20} height={23} />
-            </Box>
-            <Box className="aip-logo-text">
-              {t("auth.accept_invitation.brand")}
-            </Box>
-          </Box>
-
           <Box className="aip-body">
+            <Box className="aip-logo">
+              <Box className="aip-logo-mark">
+                <SentinelLogo width={18} height={21} />
+              </Box>
+              <Box className="aip-logo-text">
+                {t("auth.accept_invitation.brand")}
+              </Box>
+            </Box>
             <Box className="aip-headline">
               <Box component="h1">
                 {t("auth.accept_invitation.headline_part1")}
@@ -348,28 +314,11 @@ export const AcceptInvitationPage: React.FC = () => {
                     type="submit"
                     className="lp-submit"
                     disabled={loading || !isValid}
+                    style={{ marginTop: "24px" }}
                   >
                     {loading ? (
                       <Box className="lp-submit-loader" />
-                    ) : (
-                      <>
-                        {t("auth.accept_invitation.submit")}
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                        >
-                          <path
-                            d="M3 8h10M9 4l4 4-4 4"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </>
-                    )}
+                    ) : t("auth.accept_invitation.submit")}
                   </button>
                 </form>
               </>
