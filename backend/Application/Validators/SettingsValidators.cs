@@ -10,6 +10,9 @@ public class UpdateOrganizationSettingsDtoValidator : AbstractValidator<UpdateOr
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Le nom de l'organisation est requis")
             .MaximumLength(200).WithMessage("Le nom ne peut pas dépasser 200 caractères");
+
+        RuleFor(x => x.AlertMinSeverity)
+            .IsInEnum().WithMessage("Sévérité d'alerte invalide");
     }
 }
 

@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import Switch from "@mui/material/Switch";
+import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import {
@@ -17,6 +19,7 @@ import {
   CARD_SX,
   CardHeader,
   FieldLabel,
+  SEVERITY_VALUES,
   inp,
 } from "../../helpers";
 import { IntegrationRow } from "../IntegrationRow";
@@ -26,9 +29,20 @@ export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
 
+  const SEVERITIES = useMemo(
+    () =>
+      SEVERITY_VALUES.map((value) => ({
+        value,
+        label: t(`settings.severity.${value}`),
+      })),
+    [t],
+  );
+
   const [org, setOrg] = useState<OrganizationSettings | null>(null);
   const [orgForm, setOrgForm] = useState({
     name: "",
+    securityAlertsEnabled: true,
+    alertMinSeverity: "High",
   });
   const [loadingOrg, setLoadingOrg] = useState(true);
   const [savingOrg, setSavingOrg] = useState(false);
@@ -48,7 +62,11 @@ export const OrganisationTab: React.FC = () => {
       .then(([o, i]) => {
         if (ctrl.signal.aborted) return;
         setOrg(o);
-        setOrgForm({ name: o.name });
+        setOrgForm({
+          name: o.name,
+          securityAlertsEnabled: o.securityAlertsEnabled,
+          alertMinSeverity: o.alertMinSeverity,
+        });
         setIntegrations(i);
       })
       .catch(() => {
@@ -70,7 +88,11 @@ export const OrganisationTab: React.FC = () => {
     try {
       const updated = await updateOrganizationSettings(orgForm);
       setOrg(updated);
-      setOrgForm({ name: updated.name });
+      setOrgForm({
+        name: updated.name,
+        securityAlertsEnabled: updated.securityAlertsEnabled,
+        alertMinSeverity: updated.alertMinSeverity,
+      });
       showToast(t("settings.toast.org_updated"), "success");
     } catch (err) {
       showToast(extractApiError(err, t("settings.toast.org_update_error")), "error");
@@ -115,7 +137,11 @@ export const OrganisationTab: React.FC = () => {
     }
   };
 
-  const orgUnchanged = org ? orgForm.name === org.name : true;
+  const orgUnchanged = org
+    ? orgForm.name === org.name &&
+      orgForm.securityAlertsEnabled === org.securityAlertsEnabled &&
+      orgForm.alertMinSeverity === org.alertMinSeverity
+    : true;
 
   return (
     <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
@@ -138,7 +164,7 @@ export const OrganisationTab: React.FC = () => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr",
+                  gridTemplateColumns: "1fr 1fr",
                   gap: "8px",
                   px: "16px",
                   py: "12px",
@@ -153,6 +179,77 @@ export const OrganisationTab: React.FC = () => {
                     value={orgForm.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setOrgForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                  />
+                </Box>
+                <Box>
+                  <FieldLabel>
+                    {t("settings.org.alert_min_severity_label")}
+                  </FieldLabel>
+                  <Box sx={{ position: "relative" }}>
+                    <Box
+                      component="select"
+                      disabled={!orgForm.securityAlertsEnabled}
+                      sx={{
+                        ...inp,
+                        pr: "28px",
+                        cursor: orgForm.securityAlertsEnabled
+                          ? "pointer"
+                          : "not-allowed",
+                        appearance: "none",
+                        opacity: orgForm.securityAlertsEnabled ? 1 : 0.5,
+                      }}
+                      value={orgForm.alertMinSeverity}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        setOrgForm((f) => ({
+                          ...f,
+                          alertMinSeverity: e.target.value,
+                        }))
+                      }
+                    >
+                      {SEVERITIES.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </Box>
+                    <KeyboardArrowDownOutlined
+                      sx={{
+                        fontSize: 14,
+                        color: "var(--muted)",
+                        position: "absolute",
+                        right: "8px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    gridColumn: "1 / -1",
+                    mt: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                  }}
+                >
+                  <Box>
+                    <FieldLabel>{t("settings.org.security_alerts_label")}</FieldLabel>
+                    <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {t("settings.org.security_alerts_help")}
+                    </Box>
+                  </Box>
+                  <Switch
+                    size="small"
+                    checked={orgForm.securityAlertsEnabled}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setOrgForm((f) => ({
+                        ...f,
+                        securityAlertsEnabled: e.target.checked,
+                      }))
                     }
                   />
                 </Box>

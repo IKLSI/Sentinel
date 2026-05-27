@@ -222,13 +222,18 @@ public class TechHealthService
     {
         try
         {
+            Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
+            if (org == null || !org.SecurityAlertsEnabled) return;
+
             List<Vulnerability> allVulns = project.Dependencies
                 .SelectMany(d => d.Vulnerabilities)
                 .ToList();
 
-            List<Vulnerability> newVulns = isFirstScan
+            List<Vulnerability> newVulns = (isFirstScan
                 ? allVulns
-                : allVulns.Where(v => !previousCveIds.Contains(v.CveId)).ToList();
+                : allVulns.Where(v => !previousCveIds.Contains(v.CveId)))
+                .Where(v => v.Severity <= org.AlertMinSeverity)
+                .ToList();
 
             if (newVulns.Count == 0) return;
 
@@ -239,8 +244,7 @@ public class TechHealthService
 
             if (adminEmails.Count == 0) return;
 
-            Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
-            string organizationName = org?.Name ?? string.Empty;
+            string organizationName = org.Name;
             string frontendBase = _frontend.BaseUrl;
             string projectUrl = $"{frontendBase}/projects/{project.Id}";
 

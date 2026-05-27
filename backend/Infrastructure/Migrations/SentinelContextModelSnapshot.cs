@@ -222,6 +222,11 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AlertMinSeverity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -279,6 +284,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<DateTime>("ScanCountPeriodStart")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SecurityAlertsEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Slug")
                         .IsRequired()

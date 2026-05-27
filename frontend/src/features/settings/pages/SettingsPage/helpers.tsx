@@ -5,6 +5,8 @@ import { SettingsTab } from "@/types/enums";
 export type Tab = SettingsTab;
 export { SettingsTab };
 
+export const SEVERITY_VALUES = ["Critical", "High", "Medium", "Low"] as const;
+
 export function getPageNumbers(
   page: number,
   totalPages: number,

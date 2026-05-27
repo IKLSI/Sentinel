@@ -5,6 +5,8 @@ public class Organization
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
+    public bool SecurityAlertsEnabled { get; set; } = true;
+    public VulnerabilitySeverity AlertMinSeverity { get; set; } = VulnerabilitySeverity.High;
     public string? GithubToken { get; set; }
     public string? GithubAccountId { get; set; }
     public string? GithubAccountLogin { get; set; }

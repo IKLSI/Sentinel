@@ -160,6 +160,8 @@ public class SettingsController : BaseController
         {
             Name = org.Name,
             Slug = org.Slug,
+            SecurityAlertsEnabled = org.SecurityAlertsEnabled,
+            AlertMinSeverity = org.AlertMinSeverity,
             CreatedAt = org.CreatedAt,
         });
     }
@@ -180,6 +182,8 @@ public class SettingsController : BaseController
             return BadRequest(new { message = "Le nom de l'organisation est requis" });
 
         org.Name = dto.Name.Trim();
+        org.SecurityAlertsEnabled = dto.SecurityAlertsEnabled;
+        org.AlertMinSeverity = dto.AlertMinSeverity;
         org.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -196,6 +200,8 @@ public class SettingsController : BaseController
         {
             Name = org.Name,
             Slug = org.Slug,
+            SecurityAlertsEnabled = org.SecurityAlertsEnabled,
+            AlertMinSeverity = org.AlertMinSeverity,
             CreatedAt = org.CreatedAt,
         });
     }
