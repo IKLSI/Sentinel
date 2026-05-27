@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import {
@@ -18,7 +17,6 @@ import {
   CARD_SX,
   CardHeader,
   FieldLabel,
-  TIMEZONE_VALUES,
   inp,
 } from "../../helpers";
 import { IntegrationRow } from "../IntegrationRow";
@@ -28,19 +26,9 @@ export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
 
-  const TIMEZONES = useMemo(
-    () =>
-      TIMEZONE_VALUES.map((value) => ({
-        value,
-        label: t(`settings.timezone.${value}`),
-      })),
-    [t],
-  );
-
   const [org, setOrg] = useState<OrganizationSettings | null>(null);
   const [orgForm, setOrgForm] = useState({
     name: "",
-    timezone: "Europe/Paris",
   });
   const [loadingOrg, setLoadingOrg] = useState(true);
   const [savingOrg, setSavingOrg] = useState(false);
@@ -60,7 +48,7 @@ export const OrganisationTab: React.FC = () => {
       .then(([o, i]) => {
         if (ctrl.signal.aborted) return;
         setOrg(o);
-        setOrgForm({ name: o.name, timezone: o.timezone });
+        setOrgForm({ name: o.name });
         setIntegrations(i);
       })
       .catch(() => {
@@ -82,7 +70,7 @@ export const OrganisationTab: React.FC = () => {
     try {
       const updated = await updateOrganizationSettings(orgForm);
       setOrg(updated);
-      setOrgForm({ name: updated.name, timezone: updated.timezone });
+      setOrgForm({ name: updated.name });
       showToast(t("settings.toast.org_updated"), "success");
     } catch (err) {
       showToast(extractApiError(err, t("settings.toast.org_update_error")), "error");
@@ -127,9 +115,7 @@ export const OrganisationTab: React.FC = () => {
     }
   };
 
-  const orgUnchanged = org
-    ? orgForm.name === org.name && orgForm.timezone === org.timezone
-    : true;
+  const orgUnchanged = org ? orgForm.name === org.name : true;
 
   return (
     <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
@@ -152,7 +138,7 @@ export const OrganisationTab: React.FC = () => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "1fr",
                   gap: "8px",
                   px: "16px",
                   py: "12px",
@@ -169,41 +155,6 @@ export const OrganisationTab: React.FC = () => {
                       setOrgForm((f) => ({ ...f, name: e.target.value }))
                     }
                   />
-                </Box>
-                <Box>
-                  <FieldLabel>{t("settings.org.timezone_label")}</FieldLabel>
-                  <Box sx={{ position: "relative" }}>
-                    <Box
-                      component="select"
-                      sx={{
-                        ...inp,
-                        pr: "28px",
-                        cursor: "pointer",
-                        appearance: "none",
-                      }}
-                      value={orgForm.timezone}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        setOrgForm((f) => ({ ...f, timezone: e.target.value }))
-                      }
-                    >
-                      {TIMEZONES.map((tz) => (
-                        <option key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </option>
-                      ))}
-                    </Box>
-                    <KeyboardArrowDownOutlined
-                      sx={{
-                        fontSize: 14,
-                        color: "var(--muted)",
-                        position: "absolute",
-                        right: "8px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  </Box>
                 </Box>
               </Box>
 

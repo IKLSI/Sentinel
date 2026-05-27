@@ -5,24 +5,6 @@ import { SettingsTab } from "@/types/enums";
 export type Tab = SettingsTab;
 export { SettingsTab };
 
-export const TIMEZONE_VALUES = [
-  "Europe/Paris",
-  "Europe/London",
-  "Europe/Berlin",
-  "Europe/Madrid",
-  "Europe/Rome",
-  "Europe/Zurich",
-  "America/New_York",
-  "America/Chicago",
-  "America/Los_Angeles",
-  "America/Sao_Paulo",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Dubai",
-  "Australia/Sydney",
-  "UTC",
-] as const;
-
 export function getPageNumbers(
   page: number,
   totalPages: number,

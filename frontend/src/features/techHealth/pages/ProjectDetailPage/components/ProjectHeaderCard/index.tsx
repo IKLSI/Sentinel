@@ -14,7 +14,7 @@ import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
 import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
 import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
 import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
 import { ProjectDetailDto } from "@/features/techHealth/api/projects";
 
 const GRADE_ICON: Record<string, { color: string; Icon: SvgIconComponent }> = {
@@ -35,7 +35,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   project,
   eolRuntimes,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   return (
     <Box
       sx={{
@@ -140,7 +140,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                   component="span"
                   sx={{ fontSize: "11px", color: "var(--muted)" }}
                 >
-                  {new Date(project.lastScanAt).toLocaleDateString("fr-FR", {
+                  {new Date(project.lastScanAt).toLocaleDateString(culture, {
                     day: "2-digit",
                     month: "short",
                     hour: "2-digit",

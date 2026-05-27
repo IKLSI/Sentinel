@@ -8,8 +8,8 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useT } from "@/i18n/I18nContext";
+import { getDateFnsLocale } from "@/utils/dateFnsLocale";
+import { useI18n } from "@/i18n/I18nContext";
 import { Ticket } from "@/types";
 import { DetailPalette, getInitials } from "../../helpers";
 
@@ -64,7 +64,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   onEdit,
   onDelete,
 }) {
-  const t = useT();
+  const { t, culture } = useI18n();
   const { mainText, attachments } = parseComment(c.content);
 
   return (
@@ -148,7 +148,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               fontSize: "11px",
             }}
           >
-            {format(new Date(c.createdAt), "HH:mm", { locale: fr })}
+            {format(new Date(c.createdAt), "HH:mm", { locale: getDateFnsLocale(culture) })}
           </Box>
 
           {isOwn && (

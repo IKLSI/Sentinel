@@ -232,7 +232,6 @@ public class AuthService
         {
             Name = request.OrganizationName.Trim(),
             Slug = await GenerateUniqueSlugAsync(request.OrganizationName),
-            Timezone = "Europe/Paris",
             PlanTier = PlanTier.Free,
             SubscriptionStatus = SubscriptionStatus.None,
             ScanCountPeriodStart = now,

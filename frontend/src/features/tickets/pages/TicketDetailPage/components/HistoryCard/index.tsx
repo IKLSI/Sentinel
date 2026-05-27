@@ -1,6 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
+import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { Ticket } from "@/types";
 import {
   DetailPalette,
@@ -25,7 +26,7 @@ export const HistoryCard: React.FC<Props> = ({
   statusConfig,
   priorityConfig,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   return (
     <Box
       sx={{
@@ -124,7 +125,7 @@ export const HistoryCard: React.FC<Props> = ({
                       mt: "4px",
                     }}
                   >
-                    {getRelativeShort(h.createdAt, t)} · {h.author.firstName}{" "}
+                    {getRelativeShort(h.createdAt, t, getDateFnsLocale(culture))} · {h.author.firstName}{" "}
                     {h.author.lastName}
                   </Box>
                 </Box>

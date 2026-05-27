@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { type Locale } from "date-fns/locale";
 import { Ticket, TicketHistory } from "@/types";
 
 export interface DetailPalette {
@@ -250,7 +250,7 @@ export function getInitials(firstName: string, lastName: string) {
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
 
-export function getRelativeShort(date: string, t: TFn) {
+export function getRelativeShort(date: string, t: TFn, locale: Locale) {
   const diff = Math.max(0, Date.now() - new Date(date).getTime());
   const min = Math.floor(diff / 60000);
   if (min < 1) return t("tickets.detail.relative_now");
@@ -259,7 +259,7 @@ export function getRelativeShort(date: string, t: TFn) {
   if (hours < 24) return t("tickets.detail.relative_hours", { n: hours });
   const days = Math.floor(hours / 24);
   if (days < 7) return t("tickets.detail.relative_days", { n: days });
-  return format(new Date(date), "dd MMM", { locale: fr });
+  return format(new Date(date), "dd MMM", { locale });
 }
 
 function normalizeStatusKey(value?: string) {

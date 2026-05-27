@@ -7,8 +7,8 @@ import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import HubOutlined from "@mui/icons-material/HubOutlined";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useT } from "@/i18n/I18nContext";
+import { getDateFnsLocale } from "@/utils/dateFnsLocale";
+import { useI18n } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import {
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   const navigate = useNavigate();
 
   const projectRows = projects.slice(0, 8);
@@ -39,7 +39,7 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
 
     if (!latestScan) return t("dashboard.projects_sync.none");
     return t("dashboard.projects_sync.last", {
-      value: formatDistanceToNow(latestScan, { addSuffix: true, locale: fr }),
+      value: formatDistanceToNow(latestScan, { addSuffix: true, locale: getDateFnsLocale(culture) }),
     });
   })();
 

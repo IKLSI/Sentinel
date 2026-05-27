@@ -119,7 +119,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Slug).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
-            entity.Property(e => e.Timezone).HasMaxLength(50);
             entity.Property(e => e.GithubToken).HasMaxLength(500);
             entity.Property(e => e.GithubAccountId).HasMaxLength(100);
             entity.Property(e => e.GithubAccountLogin).HasMaxLength(100);

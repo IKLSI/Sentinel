@@ -3,7 +3,6 @@ import apiClient from '../../../services/client'
 export interface OrganizationSettings {
   name: string
   slug: string
-  timezone: string
   createdAt: string
 }
 
@@ -12,7 +11,7 @@ export const getOrganizationSettings = async (signal?: AbortSignal): Promise<Org
   return response.data
 }
 
-export const updateOrganizationSettings = async (data: { name: string; timezone: string }): Promise<OrganizationSettings> => {
+export const updateOrganizationSettings = async (data: { name: string }): Promise<OrganizationSettings> => {
   const response = await apiClient.put<OrganizationSettings>('/api/settings/organization', data)
   return response.data
 }

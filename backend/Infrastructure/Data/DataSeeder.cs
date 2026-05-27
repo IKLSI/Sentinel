@@ -32,7 +32,6 @@ public class DataSeeder
             Id = Guid.NewGuid(),
             Name = "Sentinel",
             Slug = "sentinel",
-            Timezone = "Europe/Paris",
             PlanTier = PlanTier.Business,
             ScanCountPeriodStart = now,
             CreatedAt = now

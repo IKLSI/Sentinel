@@ -4,7 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useT, useI18n } from "@/i18n/I18nContext";
 import { getRecurringJobs, triggerTechHealthScan, RecurringJobStatus } from "@/features/settings/api/jobs";
 import { JobState } from "@/types/enums";
 import { extractApiError } from "@/utils/apiError";
@@ -42,9 +42,9 @@ function StatusBadge({ state, t }: { state: string | null; t: ReturnType<typeof 
   );
 }
 
-function formatDate(iso: string | null, t: ReturnType<typeof useT>): string {
+function formatDate(iso: string | null, t: ReturnType<typeof useT>, locale: string): string {
   if (!iso) return t("settings.jobs.never");
-  return new Date(iso).toLocaleString("fr-FR", {
+  return new Date(iso).toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -63,7 +63,7 @@ const CELL_SX = {
 
 export const JobsTab: React.FC = () => {
   const { showToast } = useToast();
-  const t = useT();
+  const { t, culture } = useI18n();
 
   const [jobs, setJobs] = useState<RecurringJobStatus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,13 +150,13 @@ export const JobsTab: React.FC = () => {
                       {jobName(job.id)}
                     </Box>
                     <Box component="td" sx={CELL_SX}>
-                      {formatDate(job.lastExecution, t)}
+                      {formatDate(job.lastExecution, t, culture)}
                     </Box>
                     <Box component="td" sx={CELL_SX}>
                       <StatusBadge state={job.lastJobState} t={t} />
                     </Box>
                     <Box component="td" sx={CELL_SX}>
-                      {formatDate(job.nextExecution, t)}
+                      {formatDate(job.nextExecution, t, culture)}
                     </Box>
                     <Box component="td" sx={{ ...CELL_SX, pl: "32px" }}>
                       {job.id === "tech-health-scan" && (

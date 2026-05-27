@@ -160,7 +160,6 @@ public class SettingsController : BaseController
         {
             Name = org.Name,
             Slug = org.Slug,
-            Timezone = org.Timezone,
             CreatedAt = org.CreatedAt,
         });
     }
@@ -181,7 +180,6 @@ public class SettingsController : BaseController
             return BadRequest(new { message = "Le nom de l'organisation est requis" });
 
         org.Name = dto.Name.Trim();
-        org.Timezone = dto.Timezone;
         org.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -198,7 +196,6 @@ public class SettingsController : BaseController
         {
             Name = org.Name,
             Slug = org.Slug,
-            Timezone = org.Timezone,
             CreatedAt = org.CreatedAt,
         });
     }

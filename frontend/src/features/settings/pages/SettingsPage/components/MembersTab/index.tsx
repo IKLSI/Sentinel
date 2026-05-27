@@ -13,11 +13,11 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { RowActions } from "@/components/RowActions";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
 import { getUsers, toggleUserActive } from "@/features/users/api/users";
 import { User } from "@/types";
 import { MemberPagination } from "../MemberPagination";
@@ -31,7 +31,7 @@ interface Props {
 export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const t = useT();
+  const { t, culture } = useI18n();
 
   const ROLE_LABELS: Record<string, string> = useMemo(
     () => ({
@@ -395,7 +395,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                         {m.lastLoginAt
                           ? formatDistanceToNow(new Date(m.lastLoginAt), {
                               addSuffix: true,
-                              locale: fr,
+                              locale: getDateFnsLocale(culture),
                             })
                           : "—"}
                       </Box>

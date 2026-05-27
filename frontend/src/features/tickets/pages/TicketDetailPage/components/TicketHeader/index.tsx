@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import LinkRounded from "@mui/icons-material/LinkRounded";
-import { useT } from "@/i18n/I18nContext";
+import { useI18n } from "@/i18n/I18nContext";
+import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { Ticket } from "@/types";
 import { DetailPalette, getRelativeShort } from "../../helpers";
 
@@ -20,7 +21,7 @@ export const TicketHeader: React.FC<Props> = ({
   endpointMatch,
   titleBeforeEndpoint,
 }) => {
-  const t = useT();
+  const { t, culture } = useI18n();
   return (
     <Box
       sx={{
@@ -69,7 +70,7 @@ export const TicketHeader: React.FC<Props> = ({
             component="span"
             sx={{ color: palette.strongText, fontWeight: 700 }}
           >
-            {getRelativeShort(ticket.createdAt, t)}
+            {getRelativeShort(ticket.createdAt, t, getDateFnsLocale(culture))}
           </Box>
         </Box>
       </Box>
