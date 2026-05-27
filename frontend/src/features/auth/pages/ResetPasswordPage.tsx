@@ -82,7 +82,13 @@ export const ResetPasswordPage: React.FC = () => {
             >
               <defs>
                 <radialGradient id="lp-glow-tr" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(165,180,252,0.2)" />
+                  <stop
+                    offset="0%"
+                    style={{
+                      stopColor:
+                        "color-mix(in srgb, var(--auth-indigo-300) 20%, transparent)",
+                    }}
+                  />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
               </defs>
@@ -158,8 +164,8 @@ export const ResetPasswordPage: React.FC = () => {
                   ),
                   title: t("auth.reset_password.feature1_title"),
                   desc: t("auth.reset_password.feature1_desc"),
-                  iconBg: "rgba(165,180,252,0.11)",
-                  iconColor: "rgba(165,180,252,0.9)",
+                  iconBg: "color-mix(in srgb, var(--auth-indigo-300) 11%, transparent)",
+                  iconColor: "color-mix(in srgb, var(--auth-indigo-300) 90%, transparent)",
                 },
                 {
                   icon: (
@@ -181,8 +187,8 @@ export const ResetPasswordPage: React.FC = () => {
                   ),
                   title: t("auth.reset_password.feature2_title"),
                   desc: t("auth.reset_password.feature2_desc"),
-                  iconBg: "rgba(251,191,36,0.11)",
-                  iconColor: "rgba(251,191,36,0.85)",
+                  iconBg: "color-mix(in srgb, var(--auth-amber-400) 11%, transparent)",
+                  iconColor: "color-mix(in srgb, var(--auth-amber-400) 85%, transparent)",
                 },
               ].map((f, i) => (
                 <Box
@@ -214,7 +220,7 @@ export const ResetPasswordPage: React.FC = () => {
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <path
                       d="M6 14l6 6 10-10"
-                      stroke="#6366f1"
+                      style={{ stroke: "var(--auth-indigo-500)" }}
                       strokeWidth="2.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"

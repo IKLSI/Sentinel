@@ -26,8 +26,8 @@ export const getProjectColor = (name: string): string => {
 };
 
 export const getUserAvatar = () => ({
-  bg: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
-  text: "#8b1c38",
+  bg: "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))",
+  text: "var(--prio-fg)",
 });
 
 export const getCurrentUserAvatar = () => ({

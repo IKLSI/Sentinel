@@ -63,7 +63,7 @@ export const VerifyEmailPage: React.FC = () => {
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <path
                       d="M6 14l6 6 10-10"
-                      stroke="#6366f1"
+                      style={{ stroke: "var(--auth-indigo-500)" }}
                       strokeWidth="2.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -91,12 +91,12 @@ export const VerifyEmailPage: React.FC = () => {
               <Box className="aip-success">
                 <Box
                   className="aip-success-icon"
-                  sx={{ background: "rgba(220,38,38,0.1) !important" }}
+                  sx={{ background: "color-mix(in srgb, var(--auth-red-600) 10%, transparent) !important" }}
                 >
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <path
                       d="M9 9l10 10M19 9L9 19"
-                      stroke="#dc2626"
+                      style={{ stroke: "var(--auth-red-600)" }}
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />

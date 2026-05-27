@@ -274,8 +274,8 @@ export const ProfilePage: React.FC = () => {
             </Box>
             <Box sx={{ display: "flex", gap: "8px" }}>
               {([
-                { code: Language.Fr, flag: "🇫🇷", label: t("profile.language.fr"), bg: "linear-gradient(150deg,#dce8ff 55%,#c4d8ff 100%)" },
-                { code: Language.En, flag: "🇬🇧", label: t("profile.language.en"), bg: "linear-gradient(150deg,#dce8ff 45%,#ffd8d8 100%)" },
+                { code: Language.Fr, flag: "🇫🇷", label: t("profile.language.fr"), bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)" },
+                { code: Language.En, flag: "🇬🇧", label: t("profile.language.en"), bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)" },
               ]).map(({ code, flag, label, bg }) => (
                 <Box
                   key={code}
@@ -373,23 +373,23 @@ export const ProfilePage: React.FC = () => {
                       height: 48,
                       background:
                         mode === Theme.Dark
-                          ? "linear-gradient(150deg,#0d1120 55%,#1a2340 100%)"
-                          : "linear-gradient(150deg,#ffffff 55%,#f0f2f8 100%)",
+                          ? "linear-gradient(150deg,var(--preview-dk-surface) 55%,var(--preview-dk-surface2) 100%)"
+                          : "linear-gradient(150deg,#fff 55%,var(--preview-lt-bg) 100%)",
                       p: "6px 8px",
                       display: "flex",
                       flexDirection: "column",
                       gap: "3px",
                     }}
                   >
-                    <Box sx={{ height: 3, width: "60%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "#263352" : "#dde3f2" }} />
-                    <Box sx={{ height: 3, width: "80%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "#192036" : "#eaedfa" }} />
-                    <Box sx={{ height: 3, width: "40%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "rgba(99,102,241,0.5)" : "rgba(79,70,229,0.35)" }} />
+                    <Box sx={{ height: 3, width: "60%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "var(--preview-dk-bar1)" : "var(--preview-lt-bar1)" }} />
+                    <Box sx={{ height: 3, width: "80%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "var(--preview-dk-bar2)" : "var(--preview-lt-bar2)" }} />
+                    <Box sx={{ height: 3, width: "40%", borderRadius: "var(--r-xs)", background: mode === "dark" ? "var(--preview-dk-accent)" : "var(--preview-lt-accent)" }} />
                   </Box>
                   <Box
                     sx={{
                       px: "8px",
                       py: "4px",
-                      background: mode === "dark" ? "#080c14" : "#f0f2f8",
+                      background: mode === "dark" ? "var(--preview-dk-bg)" : "var(--preview-lt-bg)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -397,15 +397,15 @@ export const ProfilePage: React.FC = () => {
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: "3px" }}>
                       {mode === "dark" ? (
-                        <DarkModeOutlined sx={{ fontSize: 8, color: "rgba(230,234,246,0.4)" }} />
+                        <DarkModeOutlined sx={{ fontSize: 8, color: "var(--preview-dk-text-soft)" }} />
                       ) : (
-                        <LightModeOutlined sx={{ fontSize: 8, color: "rgba(14,18,32,0.4)" }} />
+                        <LightModeOutlined sx={{ fontSize: 8, color: "var(--preview-lt-text-soft)" }} />
                       )}
                       <Box
                         sx={{
                           fontSize: "9px",
                           fontWeight: 600,
-                          color: mode === "dark" ? "rgba(230,234,246,0.55)" : "rgba(14,18,32,0.45)",
+                          color: mode === "dark" ? "var(--preview-dk-text-strong)" : "var(--preview-lt-text-strong)",
                         }}
                       >
                         {mode === "dark" ? t("profile.theme.dark") : t("profile.theme.light")}

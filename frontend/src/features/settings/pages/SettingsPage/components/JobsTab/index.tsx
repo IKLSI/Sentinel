@@ -11,10 +11,10 @@ import { extractApiError } from "@/utils/apiError";
 import { CARD_SX } from "../../helpers";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> = {
-  [JobState.Succeeded]: { bg: "color-mix(in srgb, var(--success, #22c55e) 15%, transparent)", color: "var(--success, #22c55e)" },
-  [JobState.Failed]: { bg: "color-mix(in srgb, #ef4444 15%, transparent)", color: "#ef4444" },
+  [JobState.Succeeded]: { bg: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)" },
+  [JobState.Failed]: { bg: "color-mix(in srgb, var(--red) 15%, transparent)", color: "var(--red)" },
   [JobState.Processing]: { bg: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" },
-  [JobState.Enqueued]: { bg: "color-mix(in srgb, #f59e0b 15%, transparent)", color: "#f59e0b" },
+  [JobState.Enqueued]: { bg: "color-mix(in srgb, var(--yellow) 15%, transparent)", color: "var(--yellow)" },
 };
 
 function StatusBadge({ state, t }: { state: string | null; t: ReturnType<typeof useT> }) {

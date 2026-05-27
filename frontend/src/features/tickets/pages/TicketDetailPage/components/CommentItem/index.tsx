@@ -90,8 +90,8 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           height: "30px",
           borderRadius: "var(--r)",
           background: c.isInternal
-            ? "linear-gradient(140deg, #c4b5fd 0%, #818cf8 100%)"
-            : "linear-gradient(140deg, #fda4af 0%, #fb7185 100%)",
+            ? "linear-gradient(140deg, var(--avatar-user-1) 0%, var(--avatar-user-2) 100%)"
+            : "linear-gradient(140deg, var(--avatar-peer-1) 0%, var(--avatar-peer-2) 100%)",
           color: "#fff",
           fontFamily: "var(--font-mono)",
           fontWeight: 800,

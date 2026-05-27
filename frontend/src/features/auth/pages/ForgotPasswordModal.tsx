@@ -74,7 +74,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         backdrop: {
           sx: {
             backdropFilter: "blur(6px)",
-            background: "rgba(240,241,248,0.75)",
+            background: "color-mix(in srgb, var(--auth-bg) 75%, transparent)",
           },
         },
       }}

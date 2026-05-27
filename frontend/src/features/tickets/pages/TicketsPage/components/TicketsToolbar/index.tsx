@@ -335,11 +335,11 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          background: "linear-gradient(135deg, #7C6FCD 0%, color-mix(in srgb, #7C6FCD 92%, white) 100%)",
+          background: "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
           borderColor: "transparent",
           color: "#fff",
           "&:hover": {
-            background: "linear-gradient(135deg, #6A5EB8 0%, #7C6FCD 100%)",
+            background: "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
             borderColor: "transparent",
             color: "#fff",
           },

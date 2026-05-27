@@ -851,7 +851,7 @@ export const Sidebar: React.FC = () => {
                       width: 5,
                       height: 5,
                       borderRadius: "50%",
-                      background: "var(--red, #ef4444)",
+                      background: "var(--red)",
                       border: "1px solid var(--s1)",
                     }}
                   />

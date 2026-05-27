@@ -298,8 +298,8 @@ export const SyncProjectModal: React.FC<Props> = ({
                   sx={{
                     height: "18px",
                     fontSize: "10px",
-                    background: repo.platform === Provider.GitHub ? "var(--s2)" : "color-mix(in srgb, #FC6D26 15%, transparent)",
-                    color: repo.platform === Provider.GitHub ? "var(--muted)" : "#FC6D26",
+                    background: repo.platform === Provider.GitHub ? "var(--s2)" : "color-mix(in srgb, var(--brand-gitlab) 15%, transparent)",
+                    color: repo.platform === Provider.GitHub ? "var(--muted)" : "var(--brand-gitlab)",
                     border: "none",
                     flexShrink: 0,
                   }}

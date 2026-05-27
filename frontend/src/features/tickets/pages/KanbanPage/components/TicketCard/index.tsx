@@ -198,13 +198,13 @@ export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
                   width: "22px",
                   height: "22px",
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg,#f6ced5,#eaa8b6)",
+                  background: "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "8.5px",
                   fontWeight: 700,
-                  color: "#8b1c38",
+                  color: "var(--prio-fg)",
                   fontFamily: "var(--font-mono)",
                 }}
               >

@@ -1,3 +1,90 @@
+:root {
+  --sky: #38bdf8;
+  --sky-subtle: rgba(56, 189, 248, 0.12);
+  --sky-border: rgba(56, 189, 248, 0.25);
+  --violet: #8b5cf6;
+  --violet-subtle: rgba(139, 92, 246, 0.12);
+  --violet-border: rgba(139, 92, 246, 0.25);
+  --emerald: #10b981;
+  --emerald-subtle: rgba(16, 185, 129, 0.12);
+  --emerald-border: rgba(16, 185, 129, 0.25);
+  --slate: #64748b;
+  --slate-subtle: rgba(100, 116, 139, 0.12);
+  --slate-border: rgba(100, 116, 139, 0.2);
+  --rose: #f43f5e;
+  --rose-subtle: rgba(244, 63, 94, 0.12);
+  --rose-border: rgba(244, 63, 94, 0.25);
+  --teal: #14b8a6;
+  --teal-subtle: rgba(20, 184, 166, 0.12);
+  --teal-border: rgba(20, 184, 166, 0.25);
+
+  --brand-github: #24292e;
+  --brand-gitlab: #fc6d26;
+  --brand-gitlab-2: #e24329;
+  --brand-gitlab-3: #fca326;
+
+  --cta: #7c6fcd;
+  --cta-2: #6a5eb8;
+
+  --prio-bg-1: #f6ced5;
+  --prio-bg-2: #eaa8b6;
+  --prio-fg: #8b1c38;
+
+  --avatar-user-1: #c4b5fd;
+  --avatar-user-2: #818cf8;
+  --avatar-peer-1: #fda4af;
+  --avatar-peer-2: #fb7185;
+
+  --flag-1: #dce8ff;
+  --flag-2: #c4d8ff;
+  --flag-3: #ffd8d8;
+
+  --overlay: rgba(8, 10, 16, 0.55);
+
+  --auth-bg: #f0f1f8;
+  --auth-indigo-950: #1e1b6e;
+  --auth-indigo-900: #312e9e;
+  --auth-indigo-800: #4338ca;
+  --auth-indigo-700: #4f46e5;
+  --auth-indigo-500: #6366f1;
+  --auth-indigo-400: #818cf8;
+  --auth-indigo-300: #a5b4fc;
+  --auth-indigo-200: #c7d2fe;
+  --auth-indigo-50: #eef2ff;
+  --auth-violet-400: #a78bfa;
+  --auth-pink-500: #ec4899;
+  --auth-pink-300: #f9a8d4;
+  --auth-amber-400: #fbbf24;
+  --auth-gray-900: #111827;
+  --auth-gray-500: #6b7280;
+  --auth-gray-400: #9ca3af;
+  --auth-gray-300: #d1d5db;
+  --auth-gray-200: #e5e7eb;
+  --auth-gray-50: #f9fafb;
+  --auth-red-600: #dc2626;
+  --auth-red-500: #ef4444;
+  --auth-red-300: #fca5a5;
+  --auth-red-50: #fff5f5;
+  --auth-register: #7257e6;
+  --auth-register-hover: #5b3fd6;
+  --auth-shadow: #5050a0;
+
+  --preview-dk-bg: #080c14;
+  --preview-dk-surface: #0d1120;
+  --preview-dk-surface2: #1a2340;
+  --preview-dk-bar1: #263352;
+  --preview-dk-bar2: #192036;
+  --preview-dk-accent: rgba(99, 102, 241, 0.5);
+  --preview-dk-text-soft: rgba(230, 234, 246, 0.4);
+  --preview-dk-text-strong: rgba(230, 234, 246, 0.55);
+  --preview-lt-bg: #f0f2f8;
+  --preview-lt-bar1: #dde3f2;
+  --preview-lt-bar2: #eaedfa;
+  --preview-lt-accent: rgba(79, 70, 229, 0.35);
+  --preview-lt-text-soft: rgba(14, 18, 32, 0.4);
+  --preview-lt-text-strong: rgba(14, 18, 32, 0.45);
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -597,7 +684,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #f0f1f8;
+  background: var(--auth-bg);
 }
 .lp-root::before {
   content: "";
@@ -606,7 +693,7 @@ a:hover {
   left: -200px;
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--auth-indigo-500) 8%, transparent) 0%, transparent 60%);
   pointer-events: none;
 }
 .lp-root::after {
@@ -616,7 +703,7 @@ a:hover {
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(129, 140, 248, 0.06) 0%, transparent 60%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--auth-indigo-400) 6%, transparent) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -631,9 +718,9 @@ a:hover {
   border-radius: var(--r-xl);
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.1),
-    0 8px 32px rgba(99, 102, 241, 0.08),
-    0 40px 80px rgba(80, 80, 160, 0.12);
+    0 0 0 1px color-mix(in srgb, var(--auth-indigo-500) 10%, transparent),
+    0 8px 32px color-mix(in srgb, var(--auth-indigo-500) 8%, transparent),
+    0 40px 80px color-mix(in srgb, var(--auth-shadow) 12%, transparent);
   opacity: 0;
   transform: translateY(20px);
   animation: lp-up 0.7s 0.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -644,10 +731,10 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(70% 60% at 110% 110%, rgba(236, 72, 153, 0.55), transparent 65%),
-    radial-gradient(55% 55% at -10% -5%, rgba(167, 139, 250, 0.6), transparent 60%),
-    radial-gradient(40% 35% at 100% 0%, rgba(99, 102, 241, 0.35), transparent 55%),
-    linear-gradient(145deg, #1e1b6e 0%, #312e9e 45%, #4f46e5 100%);
+    radial-gradient(70% 60% at 110% 110%, color-mix(in srgb, var(--auth-pink-500) 55%, transparent), transparent 65%),
+    radial-gradient(55% 55% at -10% -5%, color-mix(in srgb, var(--auth-violet-400) 60%, transparent), transparent 60%),
+    radial-gradient(40% 35% at 100% 0%, color-mix(in srgb, var(--auth-indigo-500) 35%, transparent), transparent 55%),
+    linear-gradient(145deg, var(--auth-indigo-950) 0%, var(--auth-indigo-900) 45%, var(--auth-indigo-700) 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -757,7 +844,7 @@ a:hover {
   margin: 0 0 16px;
 }
 .lp-headline-accent {
-  color: rgba(165, 180, 252, 0.72);
+  color: color-mix(in srgb, var(--auth-indigo-300) 72%, transparent);
 }
 .lp-headline-sub {
   font-size: 13.5px;
@@ -838,13 +925,13 @@ a:hover {
   font-family: "Bricolage Grotesque", var(--font-ui);
   font-size: 26px;
   font-weight: 800;
-  color: #111827;
+  color: var(--auth-gray-900);
   letter-spacing: -0.04em;
   margin: 0 0 5px;
 }
 .lp-form-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--auth-gray-400);
   margin: 0;
 }
 
@@ -862,7 +949,7 @@ a:hover {
   margin-bottom: 7px;
   font-size: 10.5px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--auth-gray-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-family: var(--font-ui);
@@ -873,10 +960,10 @@ a:hover {
 .lp-input {
   width: 100%;
   padding: 12px 15px;
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
+  background: var(--auth-gray-50);
+  border: 1.5px solid var(--auth-gray-200);
   border-radius: var(--r);
-  color: #111827;
+  color: var(--auth-gray-900);
   font-size: 14px;
   font-family: var(--font-ui);
   outline: none;
@@ -885,15 +972,15 @@ a:hover {
   -webkit-appearance: none;
 }
 .lp-input::placeholder {
-  color: #d1d5db;
+  color: var(--auth-gray-300);
   opacity: 1;
 }
 .lp-input:hover {
-  border-color: #c7d2fe;
+  border-color: var(--auth-indigo-200);
 }
 .lp-input:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+  border-color: var(--auth-indigo-500) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-indigo-500) 10%, transparent) !important;
   background: #fff;
 }
 .lp-pw-toggle {
@@ -903,7 +990,7 @@ a:hover {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--auth-gray-400);
   cursor: pointer;
   padding: 4px;
   display: grid;
@@ -911,22 +998,22 @@ a:hover {
   transition: color 0.2s;
 }
 .lp-pw-toggle:hover {
-  color: #6366f1;
+  color: var(--auth-indigo-500);
 }
 .lp-input--error {
-  border-color: #fca5a5 !important;
-  background: #fff5f5 !important;
+  border-color: var(--auth-red-300) !important;
+  background: var(--auth-red-50) !important;
 }
 .lp-input--error:focus {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+  border-color: var(--auth-red-500) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-red-500) 12%, transparent) !important;
 }
 
 /* Submit */
 .lp-submit {
   width: 100%;
   padding: 13px 16px;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: linear-gradient(135deg, var(--auth-indigo-700) 0%, var(--auth-indigo-500) 100%);
   border: none;
   border-radius: var(--r);
   color: #fff;
@@ -935,7 +1022,7 @@ a:hover {
   font-family: var(--font-ui);
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--auth-indigo-500) 35%, transparent);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -946,8 +1033,8 @@ a:hover {
   animation: lp-up 0.5s 0.66s forwards;
 }
 .lp-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg, var(--auth-indigo-800) 0%, var(--auth-indigo-700) 100%);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--auth-indigo-500) 45%, transparent);
   transform: translateY(-1px);
 }
 .lp-submit:active:not(:disabled) {
@@ -978,20 +1065,20 @@ a:hover {
 }
 .lp-forgot {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--auth-gray-400);
   text-decoration: none;
   transition: color 0.2s;
 }
 .lp-forgot:hover {
-  color: #6b7280;
+  color: var(--auth-gray-500);
 }
 .lp-forgot--register {
   font-weight: 600;
-  color: #7257e6;
+  color: var(--auth-register);
   font-size: 13px;
 }
 .lp-forgot--register:hover {
-  color: #5b3fd6;
+  color: var(--auth-register-hover);
 }
 
 /* ── Keyframes ── */
@@ -1018,7 +1105,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #f0f1f8;
+  background: var(--auth-bg);
 }
 .aip-root::before {
   content: "";
@@ -1029,7 +1116,7 @@ a:hover {
   height: 700px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.08) 0%,
+    color-mix(in srgb, var(--auth-indigo-500) 8%, transparent) 0%,
     transparent 60%
   );
   pointer-events: none;
@@ -1043,7 +1130,7 @@ a:hover {
   height: 600px;
   background: radial-gradient(
     circle,
-    rgba(129, 140, 248, 0.06) 0%,
+    color-mix(in srgb, var(--auth-indigo-400) 6%, transparent) 0%,
     transparent 60%
   );
   pointer-events: none;
@@ -1059,9 +1146,9 @@ a:hover {
   border-radius: var(--r-xl);
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.1),
-    0 8px 32px rgba(99, 102, 241, 0.08),
-    0 40px 80px rgba(80, 80, 160, 0.12);
+    0 0 0 1px color-mix(in srgb, var(--auth-indigo-500) 10%, transparent),
+    0 8px 32px color-mix(in srgb, var(--auth-indigo-500) 8%, transparent),
+    0 40px 80px color-mix(in srgb, var(--auth-shadow) 12%, transparent);
   opacity: 0;
   transform: translateY(20px);
   animation: lp-up 0.7s 0.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -1072,10 +1159,10 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(70% 60% at 110% 110%, rgba(236, 72, 153, 0.55), transparent 65%),
-    radial-gradient(55% 55% at -10% -5%, rgba(167, 139, 250, 0.6), transparent 60%),
-    radial-gradient(40% 35% at 100% 0%, rgba(99, 102, 241, 0.35), transparent 55%),
-    linear-gradient(145deg, #1e1b6e 0%, #312e9e 45%, #4f46e5 100%);
+    radial-gradient(70% 60% at 110% 110%, color-mix(in srgb, var(--auth-pink-500) 55%, transparent), transparent 65%),
+    radial-gradient(55% 55% at -10% -5%, color-mix(in srgb, var(--auth-violet-400) 60%, transparent), transparent 60%),
+    radial-gradient(40% 35% at 100% 0%, color-mix(in srgb, var(--auth-indigo-500) 35%, transparent), transparent 55%),
+    linear-gradient(145deg, var(--auth-indigo-950) 0%, var(--auth-indigo-900) 45%, var(--auth-indigo-700) 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1163,7 +1250,7 @@ a:hover {
   margin: 0 0 16px;
 }
 .aip-headline-accent {
-  color: rgba(165, 180, 252, 0.72);
+  color: color-mix(in srgb, var(--auth-indigo-300) 72%, transparent);
 }
 .aip-headline-sub {
   font-size: 13.5px;
@@ -1197,11 +1284,11 @@ a:hover {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(165, 180, 252, 0.15);
-  border: 1px solid rgba(165, 180, 252, 0.3);
+  background: color-mix(in srgb, var(--auth-indigo-300) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--auth-indigo-300) 30%, transparent);
   font-size: 11px;
   font-weight: 700;
-  color: rgba(165, 180, 252, 0.9);
+  color: color-mix(in srgb, var(--auth-indigo-300) 90%, transparent);
 }
 .aip-step-title {
   font-size: 13px;
@@ -1255,13 +1342,13 @@ a:hover {
   font-family: "Bricolage Grotesque", var(--font-ui);
   font-size: 24px;
   font-weight: 800;
-  color: #111827;
+  color: var(--auth-gray-900);
   letter-spacing: -0.04em;
   margin: 0 0 5px;
 }
 .aip-form-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--auth-gray-400);
   margin: 0;
 }
 .aip-form-wrap .lp-field {
@@ -1287,7 +1374,7 @@ a:hover {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #eef2ff;
+  background: var(--auth-indigo-50);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1296,13 +1383,13 @@ a:hover {
   font-family: var(--font-ui);
   font-size: 20px;
   font-weight: 800;
-  color: #111827;
+  color: var(--auth-gray-900);
   letter-spacing: -0.03em;
   margin: 0;
 }
 .aip-success-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--auth-gray-400);
   margin: 0;
   line-height: 1.6;
 }

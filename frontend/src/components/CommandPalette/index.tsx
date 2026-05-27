@@ -195,7 +195,7 @@ export const CommandPalette: React.FC = () => {
       slotProps={{
         backdrop: {
           sx: {
-            background: "rgba(8, 10, 16, 0.55)",
+            background: "var(--overlay)",
             backdropFilter: "blur(4px)",
           },
         },

@@ -190,22 +190,22 @@ export const WeekColumnsView: React.FC<Props> = ({
             {weekLabel}
           </Box>
           {canFilterByUser && (
-            <IconNavBtn onClick={onOpenUserFilter} title={t("time_tracking.filter_users_tooltip")} hoverColor="#1D4ED8">
+            <IconNavBtn onClick={onOpenUserFilter} title={t("time_tracking.filter_users_tooltip")} hoverColor="var(--accent)">
               <FilterListOutlined sx={{ fontSize: 13 }} />
             </IconNavBtn>
           )}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <IconNavBtn onClick={onPrev} title={t("time_tracking.btn_prev_week")} hoverColor="#1D4ED8">
+          <IconNavBtn onClick={onPrev} title={t("time_tracking.btn_prev_week")} hoverColor="var(--accent)">
             <ChevronLeftOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")} hoverColor="#1D4ED8">
+          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")} hoverColor="var(--accent)">
             <CalendarTodayOutlined sx={{ fontSize: 13, color: calendarAnchor ? "var(--accent)" : undefined }} />
           </IconNavBtn>
-          <IconNavBtn onClick={onNext} disabled={isCurrentWeek} title={t("time_tracking.btn_next_week")} hoverColor="#1D4ED8">
+          <IconNavBtn onClick={onNext} disabled={isCurrentWeek} title={t("time_tracking.btn_next_week")} hoverColor="var(--accent)">
             <ChevronRightOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={onExport} disabled={exporting} title={t("time_tracking.export")} hoverColor="#1D4ED8">
+          <IconNavBtn onClick={onExport} disabled={exporting} title={t("time_tracking.export")} hoverColor="var(--accent)">
             {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 13 }} />}
           </IconNavBtn>
         </Box>

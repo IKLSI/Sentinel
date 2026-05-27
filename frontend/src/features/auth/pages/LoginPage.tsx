@@ -113,35 +113,35 @@ export const LoginPage: React.FC = () => {
             {[
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(165,180,252,0.9)" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" style={{ stroke: "color-mix(in srgb, var(--auth-indigo-300) 90%, transparent)" }} width="20" height="20">
                     <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>
                     <path d="m9 12 2 2 4-4"/>
                   </svg>
                 ),
                 title: t("auth.login.feature1_title"),
                 desc: t("auth.login.feature1_desc"),
-                iconBg: "rgba(165,180,252,0.11)",
+                iconBg: "color-mix(in srgb, var(--auth-indigo-300) 11%, transparent)",
               },
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(249,168,212,0.85)" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" style={{ stroke: "color-mix(in srgb, var(--auth-pink-300) 85%, transparent)" }} width="20" height="20">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                 ),
                 title: t("auth.login.feature2_title"),
                 desc: t("auth.login.feature2_desc"),
-                iconBg: "rgba(249,168,212,0.11)",
+                iconBg: "color-mix(in srgb, var(--auth-pink-300) 11%, transparent)",
               },
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="rgba(251,191,36,0.85)" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" style={{ stroke: "color-mix(in srgb, var(--auth-amber-400) 85%, transparent)" }} width="20" height="20">
                     <rect x="3" y="4" width="18" height="13" rx="2"/>
                     <path d="M8 21h8M12 17v4"/>
                   </svg>
                 ),
                 title: t("auth.login.feature3_title"),
                 desc: t("auth.login.feature3_desc"),
-                iconBg: "rgba(251,191,36,0.11)",
+                iconBg: "color-mix(in srgb, var(--auth-amber-400) 11%, transparent)",
               },
             ].map((f, i) => (
               <Box

@@ -166,7 +166,7 @@ export const AcceptInvitationPage: React.FC = () => {
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <path
                       d="M6 14l6 6 10-10"
-                      stroke="#6366f1"
+                      style={{ stroke: "var(--auth-indigo-500)" }}
                       strokeWidth="2.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -202,7 +202,7 @@ export const AcceptInvitationPage: React.FC = () => {
                         htmlFor="aip-firstname"
                       >
                         {t("auth.accept_invitation.firstname_label")}{" "}
-                        <span style={{ color: "#ef4444" }}>*</span>
+                        <span style={{ color: "var(--auth-red-500)" }}>*</span>
                       </Box>
                       <input
                         id="aip-firstname"
@@ -247,7 +247,7 @@ export const AcceptInvitationPage: React.FC = () => {
                       htmlFor="aip-password"
                     >
                       {t("auth.accept_invitation.password_label")}{" "}
-                      <span style={{ color: "#ef4444" }}>*</span>
+                      <span style={{ color: "var(--auth-red-500)" }}>*</span>
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
@@ -291,7 +291,7 @@ export const AcceptInvitationPage: React.FC = () => {
                       htmlFor="aip-confirm"
                     >
                       {t("auth.accept_invitation.confirm_label")}{" "}
-                      <span style={{ color: "#ef4444" }}>*</span>
+                      <span style={{ color: "var(--auth-red-500)" }}>*</span>
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
