@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
 import { darkTheme, lightTheme } from "../styles/theme";
@@ -47,8 +48,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [isAuthenticated]);
 
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       <MuiThemeProvider theme={theme === Theme.Dark ? darkTheme : lightTheme}>
         <CssBaseline />
         {children}

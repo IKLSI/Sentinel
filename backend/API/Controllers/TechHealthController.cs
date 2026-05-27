@@ -138,13 +138,13 @@ public class TechHealthController : BaseController
     public async Task<IActionResult> ExportExcel()
     {
         Guid? organizationId = GetOrganizationId();
+        Guid? userId = GetCurrentUserId();
 
-        if (organizationId == null) return Unauthorized();
+        if (organizationId == null || userId == null) return Unauthorized();
 
-        byte[] bytes = await _exportService.ExportTechHealthExcelAsync(organizationId.Value);
-        string filename = $"techhealth-{DateTime.Now:yyyy-MM-dd}.xlsx";
+        ExportResult export = await _exportService.ExportTechHealthExcelAsync(organizationId.Value, userId.Value);
 
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        return File(export.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", export.FileName);
     }
 
     [HttpGet("projects")]

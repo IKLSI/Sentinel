@@ -1,4 +1,10 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { User } from "../../../types";
 import {
   login as apiLogin,
@@ -82,11 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const value = useMemo(
+    () => ({ user, isAuthenticated: !!user, loading, login, logout, setUser }),
+    [user, loading, login, logout],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, loading, login, logout, setUser }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 };

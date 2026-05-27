@@ -128,14 +128,14 @@ public class TicketsController : BaseController
         [FromQuery] string? search)
     {
         Guid? organizationId = GetOrganizationId();
+        Guid? userId = GetCurrentUserId();
 
-        if (organizationId == null) return Unauthorized();
+        if (organizationId == null || userId == null) return Unauthorized();
 
-        byte[] bytes = await _exportService.ExportTicketsExcelAsync(
-            organizationId.Value, status, priority, assignedTo, type, search);
-        string filename = $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
+        ExportResult export = await _exportService.ExportTicketsExcelAsync(
+            organizationId.Value, status, priority, assignedTo, type, search, userId.Value);
 
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        return File(export.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", export.FileName);
     }
 
     [HttpPost]

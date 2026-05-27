@@ -31,7 +31,7 @@ const OverflowTooltip: React.FC<{ title: string; sx?: object; children: React.Re
   useEffect(() => {
     const el = ref.current;
     if (el) setTruncated(el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth);
-  });
+  }, [children, title, sx]);
   return (
     <Tooltip title={truncated ? title : ""} placement="right" arrow enterDelay={600} enterNextDelay={300}>
       <Box ref={ref} sx={sx}>{children}</Box>
@@ -47,6 +47,41 @@ const GRID_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 const SNAP_MINUTES = 15;
 const SCROLL_VIEWPORT_OFFSET = 3;
+
+const CurrentTimeLine: React.FC = () => {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const top = (now.getHours() + now.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT;
+  if (top < 0 || top > GRID_HEIGHT) return null;
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        top: `${top}px`,
+        left: 0,
+        right: 0,
+        height: "1px",
+        background: "var(--accent)",
+        opacity: 0.7,
+        zIndex: 3,
+        pointerEvents: "none",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          left: 0,
+          top: "-3px",
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: "var(--accent)",
+        },
+      }}
+    />
+  );
+};
 
 interface Props {
   weekStart: Date;
@@ -94,13 +129,8 @@ export const WeekColumnsView: React.FC<Props> = ({
   const { t, culture } = useI18n();
   const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
   const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
-  const [now, setNow] = useState(() => new Date());
   const [hover, setHover] = useState<{ dayStr: string; top: number; label: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (loading || !isCurrentWeek) return;
@@ -409,35 +439,7 @@ export const WeekColumnsView: React.FC<Props> = ({
                     }}
                   >
                     {/* Current time line */}
-                    {today && isCurrentWeek && (() => {
-                      const top = (now.getHours() + now.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT;
-                      if (top < 0 || top > GRID_HEIGHT) return null;
-                      return (
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: `${top}px`,
-                            left: 0,
-                            right: 0,
-                            height: "1px",
-                            background: "var(--accent)",
-                            opacity: 0.7,
-                            zIndex: 3,
-                            pointerEvents: "none",
-                            "&::before": {
-                              content: '""',
-                              position: "absolute",
-                              left: 0,
-                              top: "-3px",
-                              width: "6px",
-                              height: "6px",
-                              borderRadius: "50%",
-                              background: "var(--accent)",
-                            },
-                          }}
-                        />
-                      );
-                    })()}
+                    {today && isCurrentWeek && <CurrentTimeLine />}
 
                     {/* Hover slot indicator */}
                     {hover?.dayStr === dayStr && hover.top > 0 && hover.top < GRID_HEIGHT && (

@@ -52,16 +52,16 @@ public class TimeEntriesController : BaseController
         [FromQuery] DateOnly? to)
     {
         Guid? organizationId = GetOrganizationId();
+        Guid? currentUserId = GetCurrentUserId();
 
-        if (organizationId == null) return Unauthorized();
+        if (organizationId == null || currentUserId == null) return Unauthorized();
 
-        Guid? filterUserId = IsAdmin() ? userId : GetCurrentUserId();
+        Guid? filterUserId = IsAdmin() ? userId : currentUserId;
 
-        byte[] bytes = await _exportService.ExportTimeEntriesExcelAsync(organizationId.Value, filterUserId, from, to);
-        string fromStr = from?.ToString("yyyy-MM-dd") ?? "debut";
-        string toStr = to?.ToString("yyyy-MM-dd") ?? "fin";
+        ExportResult export = await _exportService.ExportTimeEntriesExcelAsync(
+            organizationId.Value, filterUserId, from, to, currentUserId.Value);
 
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"temps-{fromStr}-{toStr}.xlsx");
+        return File(export.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", export.FileName);
     }
 
     [HttpPost]

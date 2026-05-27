@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
 } from "react";
 import apiClient from "../services/client";
 import { Language } from "../types/enums";
@@ -71,14 +72,15 @@ export const I18nProvider: React.FC<{
     [translations],
   );
 
+  const value = useMemo(
+    () => ({ t, ready: true, culture: language, setLanguage }),
+    [t, language, setLanguage],
+  );
+
   if (translations === null) return null;
 
   return (
-    <I18nContext.Provider
-      value={{ t, ready: true, culture: language, setLanguage }}
-    >
-      {children}
-    </I18nContext.Provider>
+    <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchNotifications,
@@ -19,11 +19,8 @@ export function useNotifications() {
     staleTime: 15_000,
   })
 
-  const items: NotificationItem[] = data?.items ?? []
+  const items: NotificationItem[] = useMemo(() => data?.items ?? [], [data])
   const unreadCount = data?.unreadCount ?? 0
-  const unreadTicketIds = new Set(
-    items.filter((n) => !n.isRead && n.ticketId).map((n) => n.ticketId!)
-  )
 
   const markRead = useMutation({
     mutationFn: markNotificationRead,
@@ -43,5 +40,5 @@ export function useNotifications() {
     if (notif) markRead.mutate(notif.id)
   }, [markRead.mutate]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { items, unreadCount, unreadTicketIds, markReadByTicketId, markAllRead: markAllRead.mutate }
+  return { items, unreadCount, markReadByTicketId, markAllRead: markAllRead.mutate }
 }
