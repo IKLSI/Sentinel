@@ -14,13 +14,13 @@ import { modalSelectSx } from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface Props {
   project: ProjectDto;
-  onDelete: () => void;
-  onScan: () => void;
-  onFrequencyChange: (freq: ScanFrequency) => void;
+  onDelete: (project: ProjectDto) => void;
+  onScan: (id: string) => void;
+  onFrequencyChange: (id: string, freq: ScanFrequency) => void;
   isScanning: boolean;
 }
 
-export const ProjectRow: React.FC<Props> = ({
+export const ProjectRow: React.FC<Props> = React.memo(({
   project,
   onDelete,
   onScan,
@@ -52,7 +52,7 @@ export const ProjectRow: React.FC<Props> = ({
     setSaving(true);
     try {
       await updateProjectFrequency(project.id, selected);
-      onFrequencyChange(selected);
+      onFrequencyChange(project.id, selected);
       setModalOpen(false);
     } finally {
       setSaving(false);
@@ -201,14 +201,14 @@ export const ProjectRow: React.FC<Props> = ({
                   />
                 ),
                 label: t("projects.action.scan"),
-                onClick: (e) => { e.stopPropagation(); onScan(); },
+                onClick: (e) => { e.stopPropagation(); onScan(project.id); },
                 color: "yellow",
                 disabled: isScanning,
               },
               {
                 icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />,
                 label: t("projects.action.delete"),
-                onClick: (e) => { e.stopPropagation(); onDelete(); },
+                onClick: (e) => { e.stopPropagation(); onDelete(project); },
                 color: "red",
               },
             ]}
@@ -267,4 +267,4 @@ export const ProjectRow: React.FC<Props> = ({
       </AppModal>
     </>
   );
-};
+});

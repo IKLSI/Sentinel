@@ -173,9 +173,9 @@ export const ProjectsSection: React.FC<Props> = ({
                 <ProjectRow
                   key={project.id}
                   project={project}
-                  onDelete={() => onDelete(project)}
-                  onScan={() => onScan(project.id)}
-                  onFrequencyChange={(freq) => onFrequencyChange(project.id, freq)}
+                  onDelete={onDelete}
+                  onScan={onScan}
+                  onFrequencyChange={onFrequencyChange}
                   isScanning={scanningId === project.id}
                 />
               ))}

@@ -10,21 +10,24 @@ import Box from "@mui/material/Box";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTickets, createTicket } from "@/features/tickets/api/tickets";
 import {
-  getTicketStatuses,
   createTicketStatus,
   deleteTicketStatus,
   changeTicketStatus,
 } from "@/features/tickets/api/ticketStatuses";
-import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
+import { useProjects } from "@/features/techHealth/hooks/useProjects";
+import { ProjectDto } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { User, Ticket } from "@/types";
 import { CreateTicketPayload } from "@/features/tickets/pages/TicketsPage/helpers";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
+import { useTicketStatuses, ticketStatusesQueryKey } from "@/features/tickets/hooks/useTicketStatuses";
+import { TicketStatusDef } from "@/features/tickets/api/ticketStatuses";
+import { PaginatedResponse } from "@/types";
 import {
   KanbanColumns,
-  KanbanColumnDef,
   KanbanTicket,
   KanbanDropResult,
   ProjectInfo,
@@ -37,8 +40,9 @@ import { ProjectPicker } from "./components/ProjectPicker";
 import { KanbanBoard } from "./components/KanbanBoard";
 import { AddColumnDialog } from "./components/AddColumnDialog";
 import { extractApiError } from "@/utils/apiError";
-import { useQueryClient } from "@tanstack/react-query";
 import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
+
+const KANBAN_QUERY_KEY = ["kanban", "board"] as const;
 
 export const KanbanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,9 +50,14 @@ export const KanbanPage: React.FC = () => {
   const t = useT();
   const queryClient = useQueryClient();
 
-  const [columnDefs, setColumnDefs] = useState<KanbanColumnDef[]>([]);
-  const [columns, setColumns] = useState<KanbanColumns>({});
-  const [loading, setLoading] = useState(true);
+  const [columns, setColumns] = useState<KanbanColumns>(() => {
+    const cachedTickets = queryClient.getQueryData<PaginatedResponse<Ticket>>(KANBAN_QUERY_KEY);
+    const cachedStatuses = queryClient.getQueryData<TicketStatusDef[]>(ticketStatusesQueryKey);
+    if (cachedTickets && cachedStatuses) {
+      return ticketsToColumns(cachedTickets.items, cachedStatuses.map(apiColToColDef));
+    }
+    return {};
+  });
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -77,15 +86,31 @@ export const KanbanPage: React.FC = () => {
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
   const [modalUsers, setModalUsers] = useState<User[]>([]);
 
-  const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
+  const { data: projectsData } = useProjects();
+  const { data: statusesData } = useTicketStatuses();
+
+  const { data: kanbanTickets, isLoading: loading, refetch: refetchBoard } = useQuery({
+    queryKey: KANBAN_QUERY_KEY,
+    queryFn: () => getTickets({ pageSize: 200 }),
+    staleTime: 30_000,
+    placeholderData: (prev) => prev,
+  });
+
+  const columnDefs = useMemo(
+    () => (statusesData ?? []).map(apiColToColDef),
+    [statusesData],
+  );
 
   useEffect(() => {
-    getProjects()
-      .then((projects) =>
-        setAllProjectNames([...new Set(projects.map((p) => p.name))].sort()),
-      )
-      .catch(() => {});
-  }, []);
+    if (kanbanTickets && columnDefs.length > 0) {
+      setColumns(ticketsToColumns(kanbanTickets.items, columnDefs));
+    }
+  }, [kanbanTickets, columnDefs]);
+
+  const allProjectNames = useMemo(
+    () => [...new Set((projectsData ?? []).map((p) => p.name))].sort(),
+    [projectsData],
+  );
 
   const allProjects = useMemo<ProjectInfo[]>(() => {
     const counts: Record<string, number> = {};
@@ -102,21 +127,10 @@ export const KanbanPage: React.FC = () => {
 
   const activeFilterCount = filteredProjects.length;
 
-  const loadModalRefs = () => {
-    Promise.all([
-      getProjects().catch(() => [] as ProjectDto[]),
-      getUsers().catch(() => ({ items: [] as User[] })),
-    ]).then(([p, u]) => {
-      setModalProjects(p);
-      setModalUsers(u.items);
-    });
-  };
-
   const openCreateModal = useCallback(() => {
     setCreateForm({ title: "", description: "", priority: "Medium", type: "Bug", isInternal: false });
     setCreateEstMinutes(0);
     setShowCreateModal(true);
-    loadModalRefs();
   }, []);
 
   const handleCreate = async () => {
@@ -130,7 +144,7 @@ export const KanbanPage: React.FC = () => {
       await createTicket(payload as unknown as Partial<Ticket>);
       setShowCreateModal(false);
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
-      load();
+      void refetchBoard();
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.create_error")), "error");
     } finally {
@@ -138,26 +152,15 @@ export const KanbanPage: React.FC = () => {
     }
   };
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [ticketsResult, apiCols] = await Promise.all([
-        getTickets({ pageSize: 200 }),
-        getTicketStatuses(),
-      ]);
-      const defs = apiCols.map(apiColToColDef);
-      setColumnDefs(defs);
-      setColumns(ticketsToColumns(ticketsResult.items, defs));
-    } catch {
-      showToast(t("tickets.kanban.error.load_failed"), "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast, t]);
+  useEffect(() => {
+    getUsers()
+      .then((u) => setModalUsers(u.items))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (projectsData) setModalProjects(projectsData);
+  }, [projectsData]);
 
   const filteredColumns = useMemo<KanbanColumns>(() => {
     const term = search.toLowerCase().trim();
@@ -225,28 +228,27 @@ export const KanbanPage: React.FC = () => {
           extractApiError(err, t("tickets.kanban.error.status_change_failed")),
           "error",
         );
-        load();
+        void refetchBoard();
       } finally {
         setUpdatingId(null);
       }
     },
-    [columns, filteredColumns, showToast, load, t],
+    [columns, filteredColumns, showToast, refetchBoard, t],
   );
 
   const handleAddColumn = useCallback(
     async (name: string, color: string) => {
       try {
         const created = await createTicketStatus(name, color);
-        const def = apiColToColDef(created);
-        setColumnDefs((prev) => [...prev, def]);
-        setColumns((prev) => ({ ...prev, [def.id]: [] }));
+        queryClient.setQueryData<TicketStatusDef[]>(ticketStatusesQueryKey, (prev) => [...(prev ?? []), created]);
+        setColumns((prev) => ({ ...prev, [created.id]: [] }));
         setAddColOpen(false);
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(extractApiError(err, "Impossible de créer la colonne"), "error");
       }
     },
-    [showToast],
+    [showToast, queryClient],
   );
 
   useEffect(() => {
@@ -275,7 +277,7 @@ export const KanbanPage: React.FC = () => {
     async (id: string) => {
       try {
         await deleteTicketStatus(id);
-        setColumnDefs((prev) => prev.filter((c) => c.id !== id));
+        queryClient.setQueryData<TicketStatusDef[]>(ticketStatusesQueryKey, (prev) => (prev ?? []).filter((s) => s.id !== id));
         setColumns((prev) => {
           const next = { ...prev };
           delete next[id];
@@ -286,7 +288,7 @@ export const KanbanPage: React.FC = () => {
         showToast(extractApiError(err, "Impossible de supprimer la colonne"), "error");
       }
     },
-    [showToast],
+    [showToast, queryClient],
   );
 
   return (

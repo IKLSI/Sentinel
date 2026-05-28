@@ -17,7 +17,7 @@ import {
 import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
-import { Ticket, TicketStatusDef, User } from "@/types";
+import { Ticket, TicketStatusDef, User, PaginatedResponse } from "@/types";
 import { CreateTicketPayload, PRIORITY_ORDER } from "./helpers";
 import { TicketsToolbar } from "./components/TicketsToolbar";
 import { TicketsTable, SortState } from "./components/TicketsTable";
@@ -33,7 +33,6 @@ export const TicketsPage: React.FC = () => {
   const location = useLocation();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState({
@@ -117,7 +116,6 @@ export const TicketsPage: React.FC = () => {
     });
     setCreateEstMinutes(0);
     setShowCreateModal(true);
-    loadModalRefs();
   }, []);
 
   const handleCreate = async () => {
@@ -154,7 +152,6 @@ export const TicketsPage: React.FC = () => {
       isInternal: ticket.isInternal,
     });
     setEditTarget(ticket);
-    loadModalRefs();
   }, []);
 
   const toggleSort = useCallback((col: string) => {
@@ -188,8 +185,9 @@ export const TicketsPage: React.FC = () => {
         editTarget.id,
         payload as Partial<Ticket>,
       );
-      setDisplayTickets((prev) =>
-        prev.map((tk) => (tk.id === updated.id ? updated : tk)),
+      queryClient.setQueryData<PaginatedResponse<Ticket>>(
+        [TICKETS_QUERY_KEY, ticketsFilters],
+        (prev) => prev ? { ...prev, items: prev.items.map((tk) => (tk.id === updated.id ? updated : tk)) } : prev,
       );
       queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setEditTarget(null);
@@ -206,8 +204,9 @@ export const TicketsPage: React.FC = () => {
     setDeleting(true);
     try {
       await deleteTicket(deleteTarget.id);
-      setDisplayTickets((prev) =>
-        prev.filter((tk) => tk.id !== deleteTarget.id),
+      queryClient.setQueryData<PaginatedResponse<Ticket>>(
+        [TICKETS_QUERY_KEY, ticketsFilters],
+        (prev) => prev ? { ...prev, items: prev.items.filter((tk) => tk.id !== deleteTarget.id) } : prev,
       );
       queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setDeleteTarget(null);
@@ -243,19 +242,14 @@ export const TicketsPage: React.FC = () => {
   }, [error, showToast, t]);
 
   useEffect(() => {
+    loadModalRefs();
     if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
       openCreateModal();
     }
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (tickets?.items !== undefined) {
-      setDisplayTickets(tickets.items);
-    }
-  }, [tickets]);
-
   const filtered = useMemo(() => {
-    return displayTickets.slice().sort((a, b) => {
+    return (tickets?.items ?? []).slice().sort((a, b) => {
       if (!sort) return 0;
       const mul = sort.dir === SortDirection.Asc ? 1 : -1;
       switch (sort.col) {
@@ -280,7 +274,7 @@ export const TicketsPage: React.FC = () => {
           return 0;
       }
     });
-  }, [displayTickets, sort]);
+  }, [tickets?.items, sort]);
 
   const hasFiltersApplied = !!(
     debouncedSearch ||
@@ -315,7 +309,7 @@ export const TicketsPage: React.FC = () => {
           statuses={statuses}
         />
 
-        {loading && displayTickets.length === 0 ? (
+        {loading && !tickets ? (
           <Box
             sx={{
               display: "flex",
