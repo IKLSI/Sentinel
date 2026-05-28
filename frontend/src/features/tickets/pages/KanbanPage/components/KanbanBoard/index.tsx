@@ -59,8 +59,8 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
         const targets = location.current.dropTargets;
         if (!targets.length) return;
 
-        const cardTarget = targets.find((t) => (t.data as any).type === "ticket");
-        const colTarget = targets.find((t) => (t.data as any).type === "column");
+        const cardTarget = targets.find((t) => (t.data as { type: string }).type === "ticket");
+        const colTarget = targets.find((t) => (t.data as { type: string }).type === "column");
 
         let destColId: string;
         let destIndex: number;

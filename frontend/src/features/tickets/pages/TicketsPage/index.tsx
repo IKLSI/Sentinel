@@ -17,7 +17,7 @@ import {
 import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
-import { Ticket, TicketStatusDef, User, PaginatedResponse } from "@/types";
+import { Ticket, TicketFilters, TicketPriority, TicketType, TicketStatusDef, User, PaginatedResponse } from "@/types";
 import { CreateTicketPayload, PRIORITY_ORDER } from "./helpers";
 import { TicketsToolbar } from "./components/TicketsToolbar";
 import { TicketsTable, SortState } from "./components/TicketsTable";
@@ -226,14 +226,14 @@ export const TicketsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const ticketsFilters = useMemo(() => {
-    const params: Record<string, unknown> = { page, pageSize };
-    if (debouncedSearch) params.search = debouncedSearch;
-    if (filters.priority) params.priority = filters.priority;
-    if (filters.status) params.status = filters.status;
-    if (filters.type) params.type = filters.type;
-    return params;
-  }, [page, pageSize, debouncedSearch, filters]);
+  const ticketsFilters: TicketFilters = {
+    page,
+    pageSize,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(filters.priority ? { priority: filters.priority as TicketPriority } : {}),
+    ...(filters.status ? { status: filters.status } : {}),
+    ...(filters.type ? { type: filters.type as TicketType } : {}),
+  };
 
   const { tickets, loading, error } = useTickets(ticketsFilters);
 

@@ -222,6 +222,15 @@ export const KanbanPage: React.FC = () => {
       setUpdatingId(ticketId);
       try {
         await changeTicketStatus(ticketId, destColId);
+        queryClient.setQueryData<PaginatedResponse<Ticket>>(KANBAN_QUERY_KEY, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((tk) =>
+              tk.id === ticketId ? { ...tk, statusId: destColId } : tk,
+            ),
+          };
+        });
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(
@@ -233,7 +242,7 @@ export const KanbanPage: React.FC = () => {
         setUpdatingId(null);
       }
     },
-    [columns, filteredColumns, showToast, refetchBoard, t],
+    [columns, filteredColumns, showToast, refetchBoard, queryClient, t],
   );
 
   const handleAddColumn = useCallback(
@@ -254,13 +263,14 @@ export const KanbanPage: React.FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem("sentinel:kanban:collapsed", JSON.stringify([...collapsedColumns]));
-    } catch {}
+    } catch { /* ignore */ }
   }, [collapsedColumns]);
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsedColumns((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);

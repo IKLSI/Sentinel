@@ -20,9 +20,6 @@ import { UserRole } from "@/types/enums";
 import { ROUTES } from "@/constants/routes";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
-export const TICKETS_OPEN_CREATE_EVENT = "tickets:open-create";
-export const PROJECTS_OPEN_IMPORT_EVENT = "projects:open-import";
-export const TIME_TRACKING_OPEN_CREATE_EVENT = "time-tracking:open-create";
 export const SETTINGS_OPEN_INVITE_EVENT = "settings:open-invite";
 
 interface PaletteItem {
