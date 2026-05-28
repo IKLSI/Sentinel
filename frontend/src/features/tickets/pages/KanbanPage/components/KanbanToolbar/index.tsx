@@ -1,5 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import AddOutlined from "@mui/icons-material/AddOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/i18n/I18nContext";
@@ -9,6 +11,7 @@ interface Props {
   onSearchChange: (v: string) => void;
   activeFilterCount: number;
   onOpenFilters: () => void;
+  onCreate: () => void;
 }
 
 export const KanbanToolbar: React.FC<Props> = ({
@@ -16,6 +19,7 @@ export const KanbanToolbar: React.FC<Props> = ({
   onSearchChange,
   activeFilterCount,
   onOpenFilters,
+  onCreate,
 }) => {
   const t = useT();
 
@@ -105,6 +109,33 @@ export const KanbanToolbar: React.FC<Props> = ({
         {t("tickets.kanban.filters_button")}
         {activeFilterCount > 0 && ` (${activeFilterCount})`}
       </Box>
+
+      <Box sx={{ flex: 1 }} />
+
+      <Button
+        variant="contained"
+        size="small"
+        disableElevation
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexShrink: 0,
+          textTransform: "none",
+          background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+          color: "#fff",
+          boxShadow: "none",
+          "&:hover": {
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+            boxShadow: "none",
+            transform: "none",
+          },
+        }}
+        onClick={onCreate}
+      >
+        <AddOutlined sx={{ fontSize: 14 }} />
+        {t("tickets.list.new_ticket")}
+      </Button>
     </Box>
   );
 };

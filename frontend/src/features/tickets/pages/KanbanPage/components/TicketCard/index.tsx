@@ -33,14 +33,10 @@ export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
         padding: "11px 12px",
         overflow: "hidden",
         cursor: isDragging ? "grabbing" : "pointer",
-        boxShadow: isDragging
-          ? "0 12px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)"
-          : "none",
+        boxShadow: "none",
         userSelect: "none",
         opacity: isUpdating ? 0.5 : 1,
-        transform: isDragging ? "rotate(1.2deg) scale(1.01)" : "none",
-        transition:
-          "opacity 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.12s",
+        transition: "opacity 0.15s, border-color 0.15s",
         "&:hover": !isDragging
           ? {
               borderColor: "var(--border2)",

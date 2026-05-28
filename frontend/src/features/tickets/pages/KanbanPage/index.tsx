@@ -8,21 +8,25 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import GlobalStyles from "@mui/material/GlobalStyles";
-import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { getTickets } from "@/features/tickets/api/tickets";
+import { getTickets, createTicket } from "@/features/tickets/api/tickets";
 import {
   getTicketStatuses,
   createTicketStatus,
   deleteTicketStatus,
   changeTicketStatus,
 } from "@/features/tickets/api/ticketStatuses";
-import { getProjects } from "@/features/techHealth/api/projects";
+import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
+import { getUsers } from "@/features/users/api/users";
+import { User, Ticket } from "@/types";
+import { CreateTicketPayload } from "@/features/tickets/pages/TicketsPage/helpers";
+import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import {
   KanbanColumns,
   KanbanColumnDef,
   KanbanTicket,
+  KanbanDropResult,
   ProjectInfo,
   arrayMove,
   apiColToColDef,
@@ -33,11 +37,14 @@ import { ProjectPicker } from "./components/ProjectPicker";
 import { KanbanBoard } from "./components/KanbanBoard";
 import { AddColumnDialog } from "./components/AddColumnDialog";
 import { extractApiError } from "@/utils/apiError";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 
 export const KanbanPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const t = useT();
+  const queryClient = useQueryClient();
 
   const [columnDefs, setColumnDefs] = useState<KanbanColumnDef[]>([]);
   const [columns, setColumns] = useState<KanbanColumns>({});
@@ -56,6 +63,19 @@ export const KanbanPage: React.FC = () => {
     }
   });
   const wasDragging = useRef(false);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateTicketPayload>({
+    title: "",
+    description: "",
+    priority: "Medium",
+    type: "Bug",
+    isInternal: false,
+  });
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createEstMinutes, setCreateEstMinutes] = useState(0);
+  const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
+  const [modalUsers, setModalUsers] = useState<User[]>([]);
 
   const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
 
@@ -81,6 +101,42 @@ export const KanbanPage: React.FC = () => {
   }, [allProjectNames, columns]);
 
   const activeFilterCount = filteredProjects.length;
+
+  const loadModalRefs = () => {
+    Promise.all([
+      getProjects().catch(() => [] as ProjectDto[]),
+      getUsers().catch(() => ({ items: [] as User[] })),
+    ]).then(([p, u]) => {
+      setModalProjects(p);
+      setModalUsers(u.items);
+    });
+  };
+
+  const openCreateModal = useCallback(() => {
+    setCreateForm({ title: "", description: "", priority: "Medium", type: "Bug", isInternal: false });
+    setCreateEstMinutes(0);
+    setShowCreateModal(true);
+    loadModalRefs();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!createForm.title.trim()) return;
+    setCreateSubmitting(true);
+    try {
+      const payload: CreateTicketPayload = { ...createForm };
+      if (!payload.projectId) delete payload.projectId;
+      if (!payload.assignedToId) delete payload.assignedToId;
+      if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
+      await createTicket(payload as unknown as Partial<Ticket>);
+      setShowCreateModal(false);
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
+      load();
+    } catch (err) {
+      showToast(extractApiError(err, t("tickets.list.create_error")), "error");
+    } finally {
+      setCreateSubmitting(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -122,28 +178,21 @@ export const KanbanPage: React.FC = () => {
     );
   }, [columns, columnDefs, search, filteredProjects]);
 
-  const onDragEnd = useCallback(
-    async (result: DropResult) => {
-      setTimeout(() => {
-        wasDragging.current = false;
-      }, 0);
+  const onDrop = useCallback(
+    async ({ ticketId, sourceColId, sourceIndex, destColId, destIndex }: KanbanDropResult) => {
+      if (sourceColId === destColId && sourceIndex === destIndex) return;
 
-      if (!result.destination) return;
-      const { draggableId, source, destination } = result;
-      const sourceCol = source.droppableId;
-      const destCol = destination.droppableId;
-      if (sourceCol === destCol && source.index === destination.index) return;
-
-      if (sourceCol === destCol) {
-        const visibleItems = filteredColumns[sourceCol];
-        const movedId = visibleItems[source.index]?.id;
-        const targetId = visibleItems[destination.index]?.id;
+      if (sourceColId === destColId) {
+        const visibleItems = filteredColumns[sourceColId];
+        const movedId = visibleItems[sourceIndex]?.id;
+        const clampedDest = Math.min(destIndex, visibleItems.length - 1);
+        const targetId = visibleItems[clampedDest]?.id;
         if (!movedId || !targetId) return;
         setColumns((prev) => {
-          const items = [...(prev[sourceCol] ?? [])];
+          const items = [...(prev[sourceColId] ?? [])];
           return {
             ...prev,
-            [sourceCol]: arrayMove(
+            [sourceColId]: arrayMove(
               items,
               items.findIndex((tk) => tk.id === movedId),
               items.findIndex((tk) => tk.id === targetId),
@@ -153,31 +202,23 @@ export const KanbanPage: React.FC = () => {
         return;
       }
 
-      const movedTicket = (columns[sourceCol] ?? []).find(
-        (tk) => tk.id === draggableId,
-      );
+      const movedTicket = (columns[sourceColId] ?? []).find((tk) => tk.id === ticketId);
       if (!movedTicket) return;
 
-      const afterId = (filteredColumns[destCol] ?? [])[destination.index]?.id;
+      const afterId = (filteredColumns[destColId] ?? [])[destIndex]?.id;
       setColumns((prev) => {
-        const sourceItems = (prev[sourceCol] ?? []).filter(
-          (tk) => tk.id !== draggableId,
-        );
-        const destItems = [...(prev[destCol] ?? [])];
+        const sourceItems = (prev[sourceColId] ?? []).filter((tk) => tk.id !== ticketId);
+        const destItems = [...(prev[destColId] ?? [])];
         const insertAt = afterId
           ? destItems.findIndex((tk) => tk.id === afterId)
           : destItems.length;
-        destItems.splice(
-          insertAt >= 0 ? insertAt : destItems.length,
-          0,
-          movedTicket,
-        );
-        return { ...prev, [sourceCol]: sourceItems, [destCol]: destItems };
+        destItems.splice(insertAt >= 0 ? insertAt : destItems.length, 0, movedTicket);
+        return { ...prev, [sourceColId]: sourceItems, [destColId]: destItems };
       });
 
-      setUpdatingId(draggableId);
+      setUpdatingId(ticketId);
       try {
-        await changeTicketStatus(draggableId, destCol);
+        await changeTicketStatus(ticketId, destColId);
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(
@@ -257,30 +298,24 @@ export const KanbanPage: React.FC = () => {
             scrollbarColor: "var(--border2) transparent",
           },
           ".kanban-col-body::-webkit-scrollbar": { width: "3px" },
-          ".kanban-col-body::-webkit-scrollbar-track": {
-            background: "transparent",
-          },
+          ".kanban-col-body::-webkit-scrollbar-track": { background: "transparent" },
           ".kanban-col-body::-webkit-scrollbar-thumb": {
             background: "var(--border2)",
-            borderRadius: 'var(--r-xs)',
+            borderRadius: "var(--r-xs)",
           },
         }}
       />
 
       <Box
         className="kanban-content"
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          overflow: "hidden",
-        }}
+        sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
       >
         <KanbanToolbar
           search={search}
           onSearchChange={setSearch}
           activeFilterCount={activeFilterCount}
           onOpenFilters={() => setFilterOpen(true)}
+          onCreate={openCreateModal}
         />
 
         <ProjectPicker
@@ -297,7 +332,7 @@ export const KanbanPage: React.FC = () => {
           columnDefs={columnDefs}
           updatingId={updatingId}
           wasDraggingRef={wasDragging}
-          onDragEnd={onDragEnd}
+          onDrop={onDrop}
           onCardClick={handleCardClick}
           onDeleteColumn={handleDeleteColumn}
           onAddColumn={handleOpenAddColumn}
@@ -311,6 +346,19 @@ export const KanbanPage: React.FC = () => {
           onConfirm={handleAddColumn}
         />
       </Box>
+
+      <CreateTicketModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        form={createForm}
+        onFormChange={setCreateForm}
+        estMinutes={createEstMinutes}
+        onEstMinutesChange={setCreateEstMinutes}
+        projects={modalProjects}
+        users={modalUsers}
+        submitting={createSubmitting}
+        onSubmit={handleCreate}
+      />
     </>
   );
 };

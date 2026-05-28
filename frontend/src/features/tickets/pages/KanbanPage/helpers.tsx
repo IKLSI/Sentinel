@@ -36,6 +36,14 @@ export interface ProjectInfo {
   ticketCount: number;
 }
 
+export interface KanbanDropResult {
+  ticketId: string;
+  sourceColId: string;
+  sourceIndex: number;
+  destColId: string;
+  destIndex: number;
+}
+
 export interface KanbanColumnDef {
   id: string;
   name: string;
