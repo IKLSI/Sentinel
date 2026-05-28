@@ -276,8 +276,14 @@ public class TechHealthService
             .Select(p => p.Id)
             .ToListAsync();
 
+        List<Guid> monthly = await _context.Projects
+            .Where(p => p.ScanFrequency == ScanFrequency.Monthly
+                && (p.LastScanAt == null || p.LastScanAt < DateTime.UtcNow.AddDays(-30)))
+            .Select(p => p.Id)
+            .ToListAsync();
+
         using SemaphoreSlim throttle = new SemaphoreSlim(5);
-        await Task.WhenAll(daily.Concat(weekly).Select(async projectId =>
+        await Task.WhenAll(daily.Concat(weekly).Concat(monthly).Select(async projectId =>
         {
             await throttle.WaitAsync();
             try

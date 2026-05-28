@@ -10,6 +10,7 @@ export interface ProjectDto {
   lastScanAt?: string
   healthScore: number
   healthGrade: string
+  scanFrequency: ScanFrequency
   totalDependencies: number
   vulnerableDependencies: number
   criticalVulnerabilities: number
@@ -103,6 +104,10 @@ export interface AvailableReposResult {
 export const getAvailableRepos = async (signal?: AbortSignal): Promise<AvailableReposResult> => {
   const response = await apiClient.get<AvailableReposResult>('/api/tech-health/projects/available-repos', { signal })
   return response.data
+}
+
+export const updateProjectFrequency = async (id: string, scanFrequency: ScanFrequency): Promise<void> => {
+  await apiClient.patch(`/api/tech-health/projects/${id}`, { scanFrequency })
 }
 
 export const exportProjectsExcel = async (): Promise<void> => {

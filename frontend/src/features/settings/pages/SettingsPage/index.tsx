@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
-import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
@@ -8,7 +7,6 @@ import { useT } from "@/i18n/I18nContext";
 import { AuthContext } from "@/features/auth/context/AuthContext";
 import { UserRole } from "@/types/enums";
 import { Tab, SettingsTab } from "./helpers";
-import { MembersTab } from "./components/MembersTab";
 import { OrganisationTab } from "./components/OrganisationTab";
 import { JobsTab } from "./components/JobsTab";
 import { BillingTab } from "./components/BillingTab";
@@ -27,7 +25,6 @@ export const SettingsPage: React.FC = () => {
         label: t("settings.tab.organisation"),
         icon: BusinessOutlined,
       },
-      { id: SettingsTab.Members, label: t("settings.tab.members"), icon: PeopleOutlined },
       ...(isAdmin
         ? [
             { id: SettingsTab.Jobs, label: t("settings.tab.jobs"), icon: TerminalOutlined },
@@ -42,7 +39,7 @@ export const SettingsPage: React.FC = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
-    const handler = () => { setActiveTab(SettingsTab.Members); setInviteOpen(true); };
+    const handler = () => { setInviteOpen(true); };
     window.addEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
     return () => window.removeEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
   }, []);
@@ -127,11 +124,7 @@ export const SettingsPage: React.FC = () => {
             p: "20px 28px",
           }}
         >
-          <Box sx={{ display: activeTab === SettingsTab.Members ? "contents" : "none" }}>
-            <MembersTab onInviteClick={() => setInviteOpen(true)} />
-          </Box>
-
-          {activeTab === SettingsTab.Organisation && <OrganisationTab />}
+            {activeTab === SettingsTab.Organisation && <OrganisationTab />}
           {activeTab === SettingsTab.Jobs && <JobsTab />}
           {activeTab === SettingsTab.Billing && <BillingTab />}
         </Box>

@@ -14,7 +14,7 @@ public class CreateProjectDtoValidator : AbstractValidator<CreateProjectDto>
 
         RuleFor(x => x.RepositoryUrl)
             .MaximumLength(500)
-            .Must(BeValidHttpUrl).WithMessage("URL de dépôt invalide")
+            .Must(TechHealthValidatorHelpers.BeValidHttpUrl).WithMessage("URL de dépôt invalide")
             .When(x => !string.IsNullOrEmpty(x.RepositoryUrl));
 
         RuleFor(x => x.RepositoryType)
@@ -31,6 +31,22 @@ public class CreateProjectDtoValidator : AbstractValidator<CreateProjectDto>
 
     }
 
+}
+
+public class UpdateProjectDtoValidator : AbstractValidator<UpdateProjectDto>
+{
+    public UpdateProjectDtoValidator()
+    {
+        RuleFor(x => x.ScanFrequency)
+            .NotEmpty()
+            .MaximumLength(50)
+            .Must(f => Enum.TryParse<ScanFrequency>(f, out _))
+            .WithMessage($"Fréquence invalide ({string.Join(", ", Enum.GetNames<ScanFrequency>())})");
+    }
+}
+
+public static class TechHealthValidatorHelpers
+{
     internal static bool BeValidHttpUrl(string? url)
     {
         if (string.IsNullOrEmpty(url)) return true;

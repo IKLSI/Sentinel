@@ -36,6 +36,14 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   eolRuntimes,
 }) => {
   const { t, culture } = useI18n();
+
+  const freqLabel = (f: string) => {
+    if (f === "Daily") return t("tech_health.scan_frequency.daily");
+    if (f === "Weekly") return t("tech_health.scan_frequency.weekly");
+    if (f === "Monthly") return t("tech_health.scan_frequency.monthly");
+    return t("tech_health.scan_frequency.manual");
+  };
+
   return (
     <Box
       sx={{
@@ -114,9 +122,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                   component="span"
                   sx={{ fontSize: "11px", color: "var(--muted)" }}
                 >
-                  {project.scanFrequency === "Daily"
-                    ? t("tech_health.scan_frequency.daily")
-                    : t("tech_health.scan_frequency.weekly")}
+                  {freqLabel(project.scanFrequency)}
                 </Box>
               </Box>
             )}

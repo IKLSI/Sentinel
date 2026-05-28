@@ -108,6 +108,19 @@ const navSections: NavSection[] = [
       },
     ],
   },
+  {
+    titleKey: "sidebar.section.users",
+    icon: PersonOutlined,
+    adminOnly: true,
+    group: "admin",
+    items: [
+      {
+        to: ROUTES.USERS,
+        icon: PersonOutlined,
+        labelKey: "sidebar.item.users",
+      },
+    ],
+  },
 ];
 
 function isSectionActive(section: NavSection, pathname: string): boolean {

@@ -62,6 +62,11 @@ public class CreateProjectDto
     public string ScanFrequency { get; set; } = "Weekly";
 }
 
+public class UpdateProjectDto
+{
+    public string ScanFrequency { get; set; } = "Weekly";
+}
+
 public class AvailableRepoDto
 {
     public string Name { get; set; } = string.Empty;

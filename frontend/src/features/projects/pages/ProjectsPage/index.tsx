@@ -22,6 +22,7 @@ import {
   exportProjectsExcel,
   ProjectDto,
 } from "@/features/techHealth/api/projects";
+import { ScanFrequency } from "@/types/enums";
 import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
@@ -156,6 +157,12 @@ export const ProjectsPage: React.FC = () => {
       showToast(extractApiError(err, t("projects.toast.scan_start_error")), "error");
       setScanningId(null);
     }
+  };
+
+  const handleFrequencyChange = (id: string, freq: ScanFrequency) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, scanFrequency: freq } : p)),
+    );
   };
 
   const filtered = useMemo(
@@ -293,6 +300,7 @@ export const ProjectsPage: React.FC = () => {
                     scanningId={scanningId}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}
+                    onFrequencyChange={handleFrequencyChange}
                   />
                 ))}
               </Box>

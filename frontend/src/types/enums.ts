@@ -94,6 +94,7 @@ export const ScanFrequency = {
   Daily: 'Daily',
   Weekly: 'Weekly',
   Monthly: 'Monthly',
+  Manual: 'Manual',
 } as const;
 export type ScanFrequency = typeof ScanFrequency[keyof typeof ScanFrequency];
 

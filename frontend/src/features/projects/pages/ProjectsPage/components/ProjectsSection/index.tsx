@@ -5,6 +5,7 @@ import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
 import { GRADE_VISUAL, GradeKey, HeadCell } from "../../helpers";
 import { ProjectRow } from "../ProjectRow";
+import { ScanFrequency } from "@/types/enums";
 
 interface Props {
   grade: GradeKey;
@@ -14,6 +15,7 @@ interface Props {
   scanningId: string | null;
   onDelete: (project: ProjectDto) => void;
   onScan: (id: string) => void;
+  onFrequencyChange: (id: string, freq: ScanFrequency) => void;
 }
 
 export const ProjectsSection: React.FC<Props> = ({
@@ -24,6 +26,7 @@ export const ProjectsSection: React.FC<Props> = ({
   scanningId,
   onDelete,
   onScan,
+  onFrequencyChange,
 }) => {
   const t = useT();
   const cfg = GRADE_VISUAL[grade];
@@ -172,6 +175,7 @@ export const ProjectsSection: React.FC<Props> = ({
                   project={project}
                   onDelete={() => onDelete(project)}
                   onScan={() => onScan(project.id)}
+                  onFrequencyChange={(freq) => onFrequencyChange(project.id, freq)}
                   isScanning={scanningId === project.id}
                 />
               ))}

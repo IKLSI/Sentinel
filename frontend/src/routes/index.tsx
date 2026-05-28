@@ -73,6 +73,11 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   })),
 );
+const UsersPage = lazy(() =>
+  import("../features/users/pages/UsersPage").then((m) => ({
+    default: m.UsersPage,
+  })),
+);
 
 const FullScreenLoader: React.FC = () => (
   <Box
@@ -172,6 +177,16 @@ export const AppRoutes: React.FC = () => (
             <NonClientRoute>
               <AdminRoute>
                 <SettingsPage />
+              </AdminRoute>
+            </NonClientRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <NonClientRoute>
+              <AdminRoute>
+                <UsersPage />
               </AdminRoute>
             </NonClientRoute>
           }

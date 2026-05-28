@@ -247,6 +247,37 @@ public class TechHealthController : BaseController
         return CreatedAtAction(nameof(GetProject), new { id = project.Id }, created);
     }
 
+    [HttpPatch("projects/{id:guid}")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto dto)
+    {
+        Guid? organizationId = GetOrganizationId();
+
+        if (organizationId == null) return Unauthorized();
+
+        Project? project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
+
+        if (project == null)
+            return NotFound(new { message = "Projet introuvable" });
+
+        if (!Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
+            return BadRequest(new { message = $"Fréquence invalide ({string.Join(", ", Enum.GetNames<ScanFrequency>())})" });
+
+        project.ScanFrequency = scanFreq;
+        await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.ProjectUpdated,
+            entityType: AuditEntityTypes.Project,
+            organizationId: organizationId.Value,
+            userId: GetCurrentUserId(),
+            entityId: id,
+            jti: GetCurrentJti());
+
+        return Ok(new { scanFrequency = project.ScanFrequency.ToString() });
+    }
+
     [HttpDelete("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> DeleteProject(Guid id)
