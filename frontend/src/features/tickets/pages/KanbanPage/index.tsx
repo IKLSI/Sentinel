@@ -47,6 +47,14 @@ export const KanbanPage: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<string[]>([]);
   const [addColOpen, setAddColOpen] = useState(false);
+  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("sentinel:kanban:collapsed");
+      return saved ? new Set<string>(JSON.parse(saved)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
   const wasDragging = useRef(false);
 
   const [allProjectNames, setAllProjectNames] = useState<string[]>([]);
@@ -200,6 +208,20 @@ export const KanbanPage: React.FC = () => {
     [showToast],
   );
 
+  useEffect(() => {
+    try {
+      localStorage.setItem("sentinel:kanban:collapsed", JSON.stringify([...collapsedColumns]));
+    } catch {}
+  }, [collapsedColumns]);
+
+  const toggleCollapse = useCallback((id: string) => {
+    setCollapsedColumns((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
   const handleCardClick = useCallback((id: string) => {
     navigate(`/tickets/${id}`);
   }, [navigate]);
@@ -279,6 +301,8 @@ export const KanbanPage: React.FC = () => {
           onCardClick={handleCardClick}
           onDeleteColumn={handleDeleteColumn}
           onAddColumn={handleOpenAddColumn}
+          collapsedColumns={collapsedColumns}
+          onToggleCollapse={toggleCollapse}
         />
 
         <AddColumnDialog

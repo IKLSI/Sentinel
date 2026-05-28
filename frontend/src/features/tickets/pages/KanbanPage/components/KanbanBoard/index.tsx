@@ -21,6 +21,8 @@ interface Props {
   onCardClick: (ticketId: string) => void;
   onDeleteColumn: (id: string) => void;
   onAddColumn: () => void;
+  collapsedColumns: Set<string>;
+  onToggleCollapse: (id: string) => void;
 }
 
 export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
@@ -33,6 +35,8 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   onCardClick,
   onDeleteColumn,
   onAddColumn,
+  collapsedColumns,
+  onToggleCollapse,
 }) {
   const safeCardClick = useCallback(
     (id: string) => {
@@ -125,34 +129,40 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
         >
           {columnDefs.map((colDef) => {
             const colTickets = filteredColumns[colDef.id] ?? [];
+            const isCollapsed = collapsedColumns.has(colDef.id);
 
             return (
               <div
                 key={colDef.id}
                 style={{
-                  width: "280px",
+                  width: isCollapsed ? "44px" : "280px",
+                  minWidth: isCollapsed ? "44px" : "280px",
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
+                  flexShrink: 0,
+                  transition: "width 0.2s ease, min-width 0.2s ease",
                 }}
               >
                 <KanbanColumnHeader
                   colDef={colDef}
                   count={colTickets.length}
                   onDelete={onDeleteColumn}
+                  isCollapsed={isCollapsed}
+                  onToggleCollapse={() => onToggleCollapse(colDef.id)}
                 />
 
-                <Droppable droppableId={colDef.id}>
+                <Droppable droppableId={colDef.id} isDropDisabled={isCollapsed}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className="kanban-col-body"
                       style={{
+                        display: isCollapsed ? "none" : "flex",
                         flex: 1,
                         minHeight: 0,
                         overflowY: "auto",
-                        display: "flex",
                         flexDirection: "column",
                         gap: "6px",
                         padding: "8px 8px 16px 8px",
@@ -160,7 +170,8 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
                           ? colDef.subtle
                           : "var(--s1)",
                         border: `1px solid ${snapshot.isDraggingOver ? colDef.border : "var(--border)"}`,
-                        borderRadius: "var(--r)",
+                        borderRadius: "0 0 var(--r) var(--r)",
+                        borderTop: "none",
                         transition: "background 0.15s, border-color 0.15s",
                       }}
                     >

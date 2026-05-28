@@ -584,6 +584,7 @@ public class TechHealthService
     {
         Project? project = await _context.Projects
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
             .Include(p => p.Runtimes)
             .FirstOrDefaultAsync(p => p.Id == projectId);

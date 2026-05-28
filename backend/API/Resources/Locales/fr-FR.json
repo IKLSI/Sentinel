@@ -525,6 +525,8 @@
   "tickets.kanban.column.delete_prefix": "Êtes-vous sûr de vouloir supprimer la colonne ",
   "tickets.kanban.column.delete_suffix": " ?",
   "tickets.kanban.column.delete_title": "Supprimer cette colonne ?",
+  "tickets.kanban.column.collapse_tooltip": "Réduire la colonne",
+  "tickets.kanban.column.expand_tooltip": "Développer la colonne",
   "tickets.kanban.column.delete_tooltip": "Supprimer la colonne",
   "tickets.kanban.error.load_failed": "Impossible de charger les tickets",
   "tickets.kanban.error.status_change_failed": "Erreur lors du changement de statut",
