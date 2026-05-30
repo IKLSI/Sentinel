@@ -1041,7 +1041,7 @@ a:hover {
   transform: translateY(0);
 }
 .lp-submit:disabled {
-  opacity: 0.5;
+  filter: opacity(0.5);
   cursor: not-allowed;
 }
 .lp-submit-loader {

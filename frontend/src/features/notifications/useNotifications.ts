@@ -5,7 +5,9 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
   NotificationItem,
+  NotificationsResponse,
 } from './api'
+import { useNotificationHub } from './useNotificationHub'
 
 const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const
 
@@ -15,8 +17,16 @@ export function useNotifications() {
   const { data } = useQuery({
     queryKey: NOTIFICATIONS_QUERY_KEY,
     queryFn: fetchNotifications,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+  })
+
+  useNotificationHub((incoming) => {
+    queryClient.setQueryData<NotificationsResponse>(NOTIFICATIONS_QUERY_KEY, (prev) => {
+      const items = prev?.items ?? []
+      return {
+        items: [incoming, ...items],
+        unreadCount: (prev?.unreadCount ?? 0) + 1,
+      }
+    })
   })
 
   const items: NotificationItem[] = useMemo(() => data?.items ?? [], [data])

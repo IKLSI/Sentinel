@@ -9,6 +9,8 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Npgsql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
+using Sentinel.API.Hubs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -98,6 +100,16 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        string? accessToken = context.Request.Query["access_token"];
+                        PathString path = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+                            context.Token = accessToken;
+
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = async context =>
                     {
                         IServiceProvider sp = context.HttpContext.RequestServices;
@@ -280,6 +292,10 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
+
+        services.AddSignalR();
+        services.AddSingleton<IUserIdProvider, NotificationUserIdProvider>();
+        services.AddScoped<INotificationPusher, SignalRNotificationPusher>();
 
         return services;
     }

@@ -8,6 +8,7 @@ using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
 using Sentinel.API.HealthChecks;
 using Sentinel.API.Middleware;
+using Sentinel.API.Hubs;
 namespace Sentinel.API;
 
 public static class Program
@@ -125,6 +126,7 @@ public static class Program
         });
 
         app.MapControllers();
+        app.MapHub<NotificationHub>("/hubs/notifications");
 
         app.Run();
     }

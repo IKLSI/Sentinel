@@ -16,23 +16,29 @@ public interface INotificationService
 public class NotificationService : INotificationService
 {
     private readonly SentinelContext _context;
+    private readonly INotificationPusher? _pusher;
 
-    public NotificationService(SentinelContext context)
+    public NotificationService(SentinelContext context, INotificationPusher? pusher = null)
     {
         _context = context;
+        _pusher = pusher;
     }
 
     public async Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string message, Guid? ticketId = null)
     {
-        _context.Notifications.Add(new Notification
+        Notification notification = new Notification
         {
             UserId = userId,
             OrganizationId = organizationId,
             Type = type,
             Message = message,
             TicketId = ticketId
-        });
+        };
+        _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
+
+        if (_pusher is not null)
+            await _pusher.PushAsync(userId, type, message, ticketId, notification.Id, notification.CreatedAt);
     }
 
     public async Task<List<Notification>> GetForUserAsync(Guid userId, int limit = 30)
