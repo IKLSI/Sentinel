@@ -321,6 +321,130 @@ public class UsersController : BaseController
         return Ok(MapToDto(user));
     }
 
+    [HttpGet("me/export")]
+    public async Task<IActionResult> ExportMyData()
+    {
+        Guid? currentUserId = GetCurrentUserId();
+        Guid? organizationId = GetOrganizationId();
+
+        if (currentUserId == null || organizationId == null) return Unauthorized();
+
+        User? user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
+
+        if (user == null) return NotFound(new { message = "Utilisateur introuvable" });
+
+        List<object> timeEntries = await _context.TimeEntries
+            .AsNoTracking()
+            .Where(te => te.UserId == currentUserId.Value)
+            .Include(te => te.Project)
+            .Include(te => te.Ticket)
+            .OrderByDescending(te => te.Date)
+            .Select(te => (object)new
+            {
+                te.Id,
+                te.Date,
+                te.DurationMinutes,
+                te.Title,
+                te.Description,
+                project = te.Project != null ? te.Project.Name : null,
+                ticket = te.Ticket != null ? te.Ticket.Title : null
+            })
+            .ToListAsync();
+
+        List<object> auditLogs = await _context.AuditLogs
+            .AsNoTracking()
+            .Where(al => al.UserId == currentUserId.Value)
+            .OrderByDescending(al => al.CreatedAt)
+            .Select(al => (object)new
+            {
+                al.Id,
+                action = al.Action.ToString(),
+                al.EntityType,
+                al.EntityId,
+                al.CreatedAt
+            })
+            .ToListAsync();
+
+        var export = new
+        {
+            exportedAt = DateTime.UtcNow,
+            profile = new
+            {
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                role = user.Role.ToString(),
+                user.CreatedAt,
+                user.LastLoginAt,
+                user.Language
+            },
+            timeEntries,
+            auditLogs
+        };
+
+        return Ok(export);
+    }
+
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteMyAccount([FromBody] DeleteAccountDto dto)
+    {
+        Guid? currentUserId = GetCurrentUserId();
+        Guid? organizationId = GetOrganizationId();
+
+        if (currentUserId == null || organizationId == null) return Unauthorized();
+
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
+
+        if (user == null) return NotFound(new { message = "Utilisateur introuvable" });
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            return BadRequest(new { message = "Mot de passe incorrect" });
+
+        if (user.Role == UserRole.Admin)
+        {
+            int activeAdmins = await _context.Users.CountAsync(u =>
+                u.OrganizationId == organizationId.Value
+                && u.Role == UserRole.Admin
+                && u.IsActive);
+
+            if (activeAdmins <= 1)
+                return BadRequest(new { message = "Impossible de supprimer le seul administrateur actif" });
+        }
+
+        await _context.AuditLogs
+            .Where(al => al.UserId == currentUserId.Value)
+            .ExecuteUpdateAsync(s => s.SetProperty(al => al.UserId, (Guid?)null));
+
+        await _context.Notifications
+            .Where(n => n.UserId == currentUserId.Value)
+            .ExecuteDeleteAsync();
+
+        user.Email = $"supprime_{user.Id}@sentinel.invalid";
+        user.FirstName = "Utilisateur";
+        user.LastName = "Supprimé";
+        user.PasswordHash = string.Empty;
+        user.RefreshToken = null;
+        user.RefreshTokenExpiry = null;
+        user.PreviousRefreshTokenHash = null;
+        user.IsActive = false;
+        user.TokenVersion++;
+
+        await _context.SaveChangesAsync();
+
+        await _auditLog.LogAsync(
+            AuditAction.AccountDeleted,
+            entityType: AuditEntityTypes.User,
+            organizationId: organizationId.Value,
+            entityId: currentUserId.Value,
+            jti: GetCurrentJti());
+
+        return NoContent();
+    }
+
     private static UserDto MapToDto(User user)
     {
         return new UserDto

@@ -5,14 +5,16 @@ import Button from "@mui/material/Button";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useTheme } from "../../../store/ThemeContext";
 import { useToast } from "../../../hooks/useToast";
-import { updateMyProfile, updatePreferences } from "../api/users";
+import { updateMyProfile, updatePreferences, exportMyGdprData, deleteMyAccount } from "../api/users";
 import { extractApiError } from "@/utils/apiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
+import { AppModal } from "@/components/AppModal";
 import { useT, useI18n } from "../../../i18n/I18nContext";
 import { Theme, Language, UserRole } from "../../../types/enums";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
@@ -85,6 +87,10 @@ export const ProfilePage: React.FC = () => {
     lastName: user?.lastName ?? "",
   });
   const [savingPf, setSavingPf] = useState(false);
+  const [exportingGdpr, setExportingGdpr] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const pfUnchanged =
     pf.firstName === user?.firstName && pf.lastName === user?.lastName;
@@ -111,6 +117,37 @@ export const ProfilePage: React.FC = () => {
     if (theme === mode) return;
     toggleTheme();
     updatePreferences({ theme: mode }).catch(() => {});
+  };
+
+  const handleExportGdpr = async () => {
+    setExportingGdpr(true);
+    try {
+      const data = await exportMyGdprData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sentinel-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast(extractApiError(err, t("profile.gdpr.export_error")), "error");
+    } finally {
+      setExportingGdpr(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) return;
+    setDeletingAccount(true);
+    try {
+      await deleteMyAccount(deletePassword);
+      Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
+      window.location.href = "/login";
+    } catch (err) {
+      showToast(extractApiError(err, t("profile.gdpr.delete_error")), "error");
+      setDeletingAccount(false);
+    }
   };
 
   const handleLanguageChange = (lang: Language) => {
@@ -433,6 +470,141 @@ export const ProfilePage: React.FC = () => {
           </Box>
         </Box>
       </Box>
+
+      <Box sx={CARD_SX}>
+        <InnerDivider label={t("profile.section.gdpr")} />
+
+        {/* Export row */}
+        <Box
+          sx={{
+            px: "16px",
+            py: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", mb: "2px" }}>
+              {t("profile.gdpr.export_label")}
+            </Box>
+            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+              {t("profile.gdpr.export_help")}
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleExportGdpr}
+            disabled={exportingGdpr}
+            sx={{ "&:hover": { transform: "none" } }}
+          >
+            {exportingGdpr ? t("profile.gdpr.exporting") : t("profile.gdpr.export_button")}
+          </Button>
+        </Box>
+
+        {/* Danger zone */}
+        <Box
+          sx={{
+            px: "16px",
+            py: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            background: "transparent",
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--red)", mb: "2px" }}>
+              {t("profile.gdpr.delete_label")}
+            </Box>
+            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+              {t("profile.gdpr.delete_help")}
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setDeleteDialogOpen(true)}
+            sx={{
+              background: "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background: "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
+          >
+            {t("profile.gdpr.delete_button")}
+          </Button>
+        </Box>
+      </Box>
+
+      <AppModal
+        open={deleteDialogOpen}
+        onClose={() => { if (!deletingAccount) { setDeleteDialogOpen(false); setDeletePassword(""); } }}
+        title={t("profile.gdpr.delete_confirm_title")}
+        maxWidth="xs"
+        actions={
+          <>
+            <Button
+              variant="contained"
+              size="small"
+              className="btn-cancel"
+              onClick={() => { setDeleteDialogOpen(false); setDeletePassword(""); }}
+              disabled={deletingAccount}
+            >
+              {t("profile.gdpr.cancel")}
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleDeleteAccount}
+              disabled={deletingAccount || !deletePassword.trim()}
+              sx={{
+                background: "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+                boxShadow: "none",
+                "&:hover": {
+                  background: "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+                  boxShadow: "none",
+                  transform: "none",
+                },
+                "&:disabled": { background: "var(--red)", opacity: 0.6 },
+              }}
+            >
+              {deletingAccount ? t("profile.gdpr.deleting") : t("profile.gdpr.delete_confirm")}
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <Box
+            sx={{
+              fontSize: "13px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.65,
+            }}
+          >
+            {t("profile.gdpr.delete_confirm_body")}
+          </Box>
+          <Box>
+            <Box sx={{ fontSize: "11px", fontWeight: 600, color: "var(--muted2)", letterSpacing: "0.06em", textTransform: "uppercase", mb: "7px" }}>
+              {t("profile.gdpr.delete_password_label")}
+            </Box>
+            <Box
+              component="input"
+              type="password"
+              sx={{ ...inp, py: "9px", px: "12px", fontSize: "13px" }}
+              value={deletePassword}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeletePassword(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" && deletePassword.trim()) handleDeleteAccount(); }}
+              autoFocus
+            />
+          </Box>
+        </Box>
+      </AppModal>
 
       <Box
         sx={{

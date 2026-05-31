@@ -32,3 +32,12 @@ export const toggleUserActive = async (userId: string, isActive: boolean): Promi
   const response = await apiClient.put<User>(`/api/users/${userId}`, { isActive })
   return response.data
 }
+
+export const exportMyGdprData = async (): Promise<object> => {
+  const response = await apiClient.get<object>('/api/users/me/export')
+  return response.data
+}
+
+export const deleteMyAccount = async (password: string): Promise<void> => {
+  await apiClient.delete('/api/users/me', { data: { password } })
+}

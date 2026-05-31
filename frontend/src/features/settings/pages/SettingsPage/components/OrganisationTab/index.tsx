@@ -86,7 +86,11 @@ export const OrganisationTab: React.FC = () => {
     }
     setSavingOrg(true);
     try {
-      const updated = await updateOrganizationSettings(orgForm);
+      const updated = await updateOrganizationSettings({
+        name: orgForm.name,
+        securityAlertsEnabled: orgForm.securityAlertsEnabled,
+        alertMinSeverity: orgForm.alertMinSeverity,
+      });
       setOrg(updated);
       setOrgForm({
         name: updated.name,
@@ -253,6 +257,7 @@ export const OrganisationTab: React.FC = () => {
                     }
                   />
                 </Box>
+
               </Box>
 
               <Box

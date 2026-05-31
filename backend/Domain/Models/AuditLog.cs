@@ -45,7 +45,9 @@ public enum AuditAction
     SubscriptionUpdated,
 
     ApiKeyCreated,
-    ApiKeyRevoked
+    ApiKeyRevoked,
+
+    AccountDeleted
 }
 
 public class AuditLog
