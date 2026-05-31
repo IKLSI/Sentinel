@@ -781,7 +781,7 @@ export const Sidebar: React.FC = () => {
           }}
         >
           <Tooltip
-            title={collapsed ? `${user?.firstName} ${user?.lastName}` : ""}
+            title={collapsed ? `${user?.firstName} ${user?.lastName?.[0]}.` : ""}
             placement="top"
             arrow
           >
@@ -798,13 +798,16 @@ export const Sidebar: React.FC = () => {
                 gap: "8px",
                 overflow: "hidden",
                 transition: "opacity 0.12s",
-                "&:hover": { opacity: 0.7 },
+                "&:hover": {
+                  opacity: 0.7,
+                  "& .profile-name": { color: "var(--accent)" },
+                },
               }}
             >
               <Box
                 sx={{
-                  width: 30,
-                  height: 30,
+                  width: collapsed ? 24 : 30,
+                  height: collapsed ? 24 : 30,
                   borderRadius: "50%",
                   background: "var(--s3)",
                   display: "flex",
@@ -814,22 +817,50 @@ export const Sidebar: React.FC = () => {
                   flexShrink: 0,
                 }}
               >
-                <PersonOutlined sx={{ fontSize: 18 }} />
+                <PersonOutlined sx={{ fontSize: collapsed ? 14 : 18 }} />
               </Box>
               {!collapsed && (
                 <Box
                   sx={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "var(--text)",
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1.3,
+                    display: "flex",
+                    flexDirection: "column",
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    minWidth: 0,
                   }}
                 >
-                  {user?.firstName} {user?.lastName}
+                  <Box
+                    className="profile-name"
+                    sx={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--text)",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.3,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      transition: "color 0.12s",
+                    }}
+                  >
+                    {user?.firstName} {user?.lastName?.[0]}.
+                  </Box>
+                  <Box
+                    className="profile-label"
+                    sx={{
+                      fontSize: "10px",
+                      fontWeight: 500,
+                      color: "var(--muted)",
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      lineHeight: 1.3,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      transition: "color 0.12s",
+                    }}
+                  >
+                    {t("sidebar.profile")}
+                  </Box>
                 </Box>
               )}
             </Box>
