@@ -5,4 +5,5 @@ public static class ClaimNames
     public const string UserId = "userId";
     public const string OrganizationId = "organizationId";
     public const string TokenVersion = "tokenVersion";
+    public const string ApiKeyId = "apiKeyId";
 }

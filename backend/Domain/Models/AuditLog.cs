@@ -42,7 +42,10 @@ public enum AuditAction
 
     CheckoutStarted,
     BillingPortalOpened,
-    SubscriptionUpdated
+    SubscriptionUpdated,
+
+    ApiKeyCreated,
+    ApiKeyRevoked
 }
 
 public class AuditLog

@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import type { SvgIconComponent } from "@mui/icons-material";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
+import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
@@ -36,6 +38,13 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   eolRuntimes,
 }) => {
   const { t, culture } = useI18n();
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleCopyId = async () => {
+    await navigator.clipboard.writeText(project.id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
 
   const freqLabel = (f: string) => {
     if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -103,7 +112,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               </Box>
             )}
           </Box>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
             {project.scanFrequency && (
               <Box
                 sx={{
@@ -155,6 +164,26 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                 </Box>
               </Box>
             )}
+            <Box
+              component="button"
+              onClick={handleCopyId}
+              sx={{
+                all: "unset", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "5px",
+                background: "var(--s2)", border: "1px solid var(--border)",
+                borderRadius: "var(--r-sm)", px: "8px", py: "3px",
+                transition: "border-color 0.15s, color 0.15s",
+                "&:hover": { borderColor: "var(--accent-border)", color: "var(--accent)" },
+              }}
+            >
+              {copiedId
+                ? <CheckOutlined sx={{ fontSize: 11, color: "var(--green)" }} />
+                : <ContentCopyOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
+              }
+              <Box component="span" sx={{ fontSize: "11px", color: copiedId ? "var(--green)" : "var(--muted)", fontFamily: "monospace" }}>
+                {project.id}
+              </Box>
+            </Box>
           </Box>
         </Box>
 
@@ -182,26 +211,30 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               value: project.totalDependencies,
               icon: <InventoryOutlined sx={{ fontSize: 13 }} />,
               alert: null,
+              dash: !project.lastScanAt,
             },
             {
               label: t("tech_health.stats.critical"),
               value: project.criticalVulnerabilities,
               icon: <GppBadOutlined sx={{ fontSize: 13 }} />,
               alert: project.criticalVulnerabilities > 0 ? "red" : null,
+              dash: !project.lastScanAt || project.totalDependencies === 0,
             },
             {
               label: t("tech_health.stats.vulnerabilities"),
               value: project.totalVulnerabilities,
               icon: <GppMaybeOutlined sx={{ fontSize: 13 }} />,
               alert: project.totalVulnerabilities > 0 ? "orange" : null,
+              dash: !project.lastScanAt || project.totalDependencies === 0,
             },
             {
               label: t("tech_health.stats.eol"),
               value: eolRuntimes,
               icon: <StorageOutlined sx={{ fontSize: 13 }} />,
               alert: eolRuntimes > 0 ? "red" : null,
+              dash: !project.lastScanAt,
             },
-          ] as const
+          ]
         ).map((s, i) => (
           <Box
             key={i}
@@ -247,7 +280,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                       : "var(--text)",
               }}
             >
-              {s.value}
+              {s.dash ? "—" : s.value}
             </Box>
           </Box>
         ))}

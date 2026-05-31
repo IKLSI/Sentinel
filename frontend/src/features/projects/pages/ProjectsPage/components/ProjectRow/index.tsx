@@ -112,10 +112,9 @@ export const ProjectRow: React.FC<Props> = React.memo(({
                   whiteSpace: "nowrap",
                 }}
               >
-                {project.totalDependencies}{" "}
-                {project.totalDependencies > 1
-                  ? t("projects.dependencies_plural")
-                  : t("projects.dependency_singular")}
+                {project.lastScanAt
+                  ? `${project.totalDependencies} ${project.totalDependencies > 1 ? t("projects.dependencies_plural") : t("projects.dependency_singular")}`
+                  : "—"}
               </Box>
             </Box>
           </Box>
@@ -127,14 +126,14 @@ export const ProjectRow: React.FC<Props> = React.memo(({
         >
           <Box
             sx={{
-              color: project.totalVulnerabilities > 0 ? "var(--orange)" : "var(--muted2)",
-              fontWeight: project.totalVulnerabilities > 0 ? 700 : 500,
+              color: (!project.lastScanAt || project.totalDependencies === 0 || project.totalVulnerabilities === 0) ? "var(--muted2)" : "var(--orange)",
+              fontWeight: (!project.lastScanAt || project.totalDependencies === 0 || project.totalVulnerabilities === 0) ? 500 : 700,
               fontSize: "13px",
               lineHeight: 1.25,
               fontFamily: "var(--font-mono)",
             }}
           >
-            {project.totalVulnerabilities}
+            {(!project.lastScanAt || project.totalDependencies === 0) ? "—" : project.totalVulnerabilities}
           </Box>
         </Box>
 
@@ -144,14 +143,14 @@ export const ProjectRow: React.FC<Props> = React.memo(({
         >
           <Box
             sx={{
-              color: project.criticalVulnerabilities > 0 ? "var(--red)" : "var(--muted2)",
-              fontWeight: project.criticalVulnerabilities > 0 ? 700 : 500,
+              color: (!project.lastScanAt || project.totalDependencies === 0 || project.criticalVulnerabilities === 0) ? "var(--muted2)" : "var(--red)",
+              fontWeight: (!project.lastScanAt || project.totalDependencies === 0 || project.criticalVulnerabilities === 0) ? 500 : 700,
               fontSize: "13px",
               lineHeight: 1.25,
               fontFamily: "var(--font-mono)",
             }}
           >
-            {project.criticalVulnerabilities}
+            {(!project.lastScanAt || project.totalDependencies === 0) ? "—" : project.criticalVulnerabilities}
           </Box>
         </Box>
 

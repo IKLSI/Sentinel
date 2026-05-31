@@ -35,6 +35,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureAuditLog(modelBuilder);
         ConfigureTicketAttachment(modelBuilder);
         ConfigureNotification(modelBuilder);
+        ConfigureApiKey(modelBuilder);
 
         ApplyTenantQueryFilters(modelBuilder);
     }
@@ -109,6 +111,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<Vulnerability>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.Project.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<ApiKey>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -488,6 +493,30 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .HasForeignKey(e => e.TicketId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureApiKey(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ApiKey>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.KeyHash).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.Prefix).HasMaxLength(16).IsRequired();
+            entity.HasIndex(e => e.KeyHash).IsUnique();
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.CreatedById);
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

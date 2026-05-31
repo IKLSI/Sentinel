@@ -282,6 +282,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TokenProtector>();
         services.AddScoped<QuotaService>();
         services.AddScoped<BillingService>();
+        services.AddScoped<ApiKeyService>();
 
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 

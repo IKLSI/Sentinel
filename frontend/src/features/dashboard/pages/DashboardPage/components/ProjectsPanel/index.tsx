@@ -203,7 +203,7 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
                   <ConfirmationNumberOutlined
                     sx={{ fontSize: 14, color: palette.vulnIcon }}
                   />
-                  <span>{p.totalTickets}</span>
+                  <span>{p.lastScanAt ? p.totalTickets : "—"}</span>
                 </Box>
                 <Box
                   sx={{
@@ -212,13 +212,13 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
                     gap: "4px",
                     fontSize: "11px",
                     fontWeight: 600,
-                    color: p.criticalVulnerabilities > 0
-                      ? "var(--red)"
-                      : palette.vulnNeutral,
+                    color: (!p.lastScanAt || p.totalDependencies === 0 || p.criticalVulnerabilities === 0)
+                      ? palette.vulnNeutral
+                      : "var(--red)",
                   }}
                 >
                   <GppBadOutlined sx={{ fontSize: 14 }} />
-                  <span>{p.criticalVulnerabilities}</span>
+                  <span>{(!p.lastScanAt || p.totalDependencies === 0) ? "—" : p.criticalVulnerabilities}</span>
                 </Box>
               </Box>
             </Box>

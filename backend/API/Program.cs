@@ -8,6 +8,7 @@ using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
 using Sentinel.API.HealthChecks;
 using Sentinel.API.Middleware;
+using Sentinel.Application.Services;
 using Sentinel.API.Hubs;
 namespace Sentinel.API;
 
@@ -109,6 +110,7 @@ public static class Program
         app.UseCors();
         app.UseRateLimiter();
         app.UseAuthentication();
+        app.UseMiddleware<ApiKeyMiddleware>();
         app.UseAuthorization();
         app.UseOutputCache();
         app.ConfigureHangfire();

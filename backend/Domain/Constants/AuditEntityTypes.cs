@@ -9,4 +9,5 @@ public static class AuditEntityTypes
     public const string TicketAttachment = "TicketAttachment";
     public const string TimeEntry = "TimeEntry";
     public const string Project = "Project";
+    public const string ApiKey = "ApiKey";
 }
