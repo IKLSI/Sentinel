@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
-import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
@@ -8,7 +7,6 @@ import { useT } from "@/i18n/I18nContext";
 import { AuthContext } from "@/features/auth/context/AuthContext";
 import { UserRole } from "@/types/enums";
 import { Tab, SettingsTab } from "./helpers";
-import { OrganisationTab } from "./components/OrganisationTab";
 import { JobsTab } from "./components/JobsTab";
 import { BillingTab } from "./components/BillingTab";
 import { ApiKeysTab } from "./components/ApiKeysTab";
@@ -21,24 +19,18 @@ export const SettingsPage: React.FC = () => {
   const isAdmin = user?.role === UserRole.Admin;
 
   const TABS: { id: Tab; label: string; icon: React.ElementType }[] = useMemo(
-    () => [
-      {
-        id: SettingsTab.Organisation,
-        label: t("settings.tab.organisation"),
-        icon: BusinessOutlined,
-      },
-      ...(isAdmin
+    () =>
+      isAdmin
         ? [
-            { id: SettingsTab.Jobs, label: t("settings.tab.jobs"), icon: TerminalOutlined },
             { id: SettingsTab.Billing, label: t("settings.tab.billing"), icon: CreditCardOutlined },
+            { id: SettingsTab.Jobs, label: t("settings.tab.jobs"), icon: TerminalOutlined },
             { id: SettingsTab.ApiKeys, label: t("settings.tab.api_keys"), icon: KeyOutlined },
           ]
-        : []),
-    ],
+        : [],
     [t, isAdmin],
   );
 
-  const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Organisation);
+  const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Billing);
   const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
@@ -127,8 +119,7 @@ export const SettingsPage: React.FC = () => {
             p: "20px 28px",
           }}
         >
-            {activeTab === SettingsTab.Organisation && <OrganisationTab />}
-          {activeTab === SettingsTab.Jobs && <JobsTab />}
+            {activeTab === SettingsTab.Jobs && <JobsTab />}
           {activeTab === SettingsTab.Billing && <BillingTab />}
           {activeTab === SettingsTab.ApiKeys && <ApiKeysTab />}
         </Box>

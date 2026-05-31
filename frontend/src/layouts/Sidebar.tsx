@@ -9,6 +9,7 @@ import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import AssessmentOutlined from "@mui/icons-material/AssessmentOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
+import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleArrowLeftOutlined";
 import PersonOutlined from "@mui/icons-material/PersonOutlined";
@@ -96,15 +97,15 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    titleKey: "sidebar.section.administration",
-    icon: SettingsOutlined,
+    titleKey: "sidebar.item.organisation",
+    icon: BusinessOutlined,
     adminOnly: true,
     group: "admin",
     items: [
       {
-        to: ROUTES.SETTINGS,
-        icon: SettingsOutlined,
-        labelKey: "sidebar.item.settings",
+        to: ROUTES.ORGANISATION,
+        icon: BusinessOutlined,
+        labelKey: "sidebar.item.organisation",
       },
     ],
   },
@@ -118,6 +119,19 @@ const navSections: NavSection[] = [
         to: ROUTES.USERS,
         icon: PersonOutlined,
         labelKey: "sidebar.item.users",
+      },
+    ],
+  },
+  {
+    titleKey: "sidebar.item.settings",
+    icon: SettingsOutlined,
+    adminOnly: true,
+    group: "admin",
+    items: [
+      {
+        to: ROUTES.SETTINGS,
+        icon: SettingsOutlined,
+        labelKey: "sidebar.item.settings",
       },
     ],
   },
