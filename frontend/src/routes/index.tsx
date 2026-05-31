@@ -8,6 +8,12 @@ import { ROUTES } from "@/constants/routes";
 import { AppLayout } from "../layouts/AppLayout";
 import { ErrorPage } from "../pages/ErrorPage";
 
+const PrivacyPage = lazy(() =>
+  import("../pages/PrivacyPage").then((m) => ({
+    default: m.PrivacyPage,
+  })),
+);
+
 const LoginPage = lazy(() =>
   import("../features/auth/pages/LoginPage").then((m) => ({
     default: m.LoginPage,
@@ -132,6 +138,7 @@ export const AppRoutes: React.FC = () => (
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route
         element={
           <PrivateRoute>

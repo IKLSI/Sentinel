@@ -15,6 +15,7 @@ import { AppModal } from "@/components/AppModal";
 import { useT, useI18n } from "../../../i18n/I18nContext";
 import { Theme, Language, UserRole } from "../../../types/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { ROUTES } from "@/constants/routes";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
@@ -539,6 +540,32 @@ export const ProfilePage: React.FC = () => {
           >
             {t("profile.gdpr.delete_button")}
           </Button>
+        </Box>
+
+        <Box
+          sx={{
+            px: "16px",
+            py: "10px",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <a
+            href={ROUTES.PRIVACY}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "var(--muted2)",
+              fontSize: "11px",
+              fontFamily: "inherit",
+              textDecoration: "underline",
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--muted2)")}
+          >
+            {t("privacy.title")}
+          </a>
         </Box>
       </Box>
 

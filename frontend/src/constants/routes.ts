@@ -8,4 +8,5 @@ export const ROUTES = {
   ORGANISATION: "/organisation",
   USERS: "/users",
   PROFILE: "/profile",
+  PRIVACY: "/privacy",
 } as const;

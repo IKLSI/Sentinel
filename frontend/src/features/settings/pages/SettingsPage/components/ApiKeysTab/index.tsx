@@ -117,27 +117,30 @@ export const ApiKeysTab: React.FC = () => {
 
   return (
     <>
+      <Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: "12px", flexShrink: 0 }}>
+        <Box sx={{ flex: 1 }} />
+        <Button
+          variant="contained"
+          size="small"
+          disableElevation
+          startIcon={<KeyOutlined sx={{ fontSize: "13px !important" }} />}
+          onClick={() => setCreateOpen(true)}
+          sx={BTN_SX}
+        >
+          {t("settings.api_keys.create")}
+        </Button>
+      </Box>
+
       <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: "16px", pb: "8px" }}>
           <Box sx={CARD_SX}>
             <Box sx={{
               px: "16px", py: "10px",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
               borderBottom: "1px solid var(--border)", background: "var(--s2)",
             }}>
               <Box sx={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 {t("settings.api_keys.title")}
               </Box>
-              <Button
-                variant="contained"
-                size="small"
-                disableElevation
-                startIcon={<KeyOutlined sx={{ fontSize: "13px !important" }} />}
-                onClick={() => setCreateOpen(true)}
-                sx={BTN_SX}
-              >
-                {t("settings.api_keys.create")}
-              </Button>
             </Box>
 
             <Box sx={{ overflow: "hidden" }}>
