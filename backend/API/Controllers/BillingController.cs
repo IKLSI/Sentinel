@@ -78,7 +78,7 @@ public class BillingController : BaseController
 
         try
         {
-            string url = await _billingService.CreateCheckoutSessionAsync(organizationId.Value, tier);
+            string url = await _billingService.CreateCheckoutSessionAsync(organizationId.Value, tier, request.BillingInterval);
 
             await _auditLog.LogAsync(
                 AuditAction.CheckoutStarted,

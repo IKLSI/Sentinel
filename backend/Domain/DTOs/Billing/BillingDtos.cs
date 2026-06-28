@@ -24,12 +24,14 @@ public class PlanOptionDto
     public int MaxMembers { get; set; }
     public int MaxScansPerMonth { get; set; }
     public decimal PriceMonthly { get; set; }
+    public decimal PriceAnnual { get; set; }
     public bool IsCurrent { get; set; }
 }
 
 public class CheckoutRequest
 {
     public string PlanTier { get; set; } = string.Empty;
+    public string BillingInterval { get; set; } = "monthly";
 }
 
 public class CheckoutSessionDto

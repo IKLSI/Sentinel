@@ -55,47 +55,56 @@ public class BillingService
 
     public async Task<List<PlanOptionDto>> GetPlansAsync(PlanTier currentTier)
     {
-        Dictionary<PlanTier, decimal> stripePrices = await _cache.GetOrCreateAsync("stripe:prices", async entry =>
+        Dictionary<PlanTier, (decimal Monthly, decimal Annual)> stripePrices = await _cache.GetOrCreateAsync("stripe:prices:v2", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
             var priceService = new PriceService(_stripeClient);
-            Dictionary<PlanTier, decimal> prices = new();
-            foreach (var (tier, priceId) in new[] {
-                (PlanTier.Pro, _stripe.Prices.Pro),
-                (PlanTier.Business, _stripe.Prices.Business)
+            Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = new();
+            foreach (var (tier, monthlyId, annualId) in new[] {
+                (PlanTier.Pro,      _stripe.Prices.Pro,      _stripe.Prices.ProAnnual),
+                (PlanTier.Business, _stripe.Prices.Business,  _stripe.Prices.BusinessAnnual)
             })
             {
-                if (string.IsNullOrEmpty(priceId)) continue;
-                try
+                decimal monthly = 0m, annual = 0m;
+                if (!string.IsNullOrEmpty(monthlyId))
                 {
-                    Price price = await priceService.GetAsync(priceId);
-                    prices[tier] = (price.UnitAmount ?? 0) / 100m;
+                    try { monthly = (await priceService.GetAsync(monthlyId)).UnitAmount ?? 0; monthly /= 100m; }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Impossible de récupérer le prix Stripe mensuel pour {Tier}", tier); }
                 }
-                catch (Exception ex)
+                if (!string.IsNullOrEmpty(annualId))
                 {
-                    _logger.LogWarning(ex, "Impossible de récupérer le prix Stripe pour {Tier}", tier);
+                    try { annual = (await priceService.GetAsync(annualId)).UnitAmount ?? 0; annual /= 100m; }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Impossible de récupérer le prix Stripe annuel pour {Tier}", tier); }
                 }
+                prices[tier] = (monthly, annual);
             }
             return prices;
         }) ?? new();
 
-        return PlanLimits.ByTier.Select(kvp => new PlanOptionDto
+        return PlanLimits.ByTier.Select(kvp =>
         {
-            Tier = kvp.Key.ToString(),
-            MaxProjects = kvp.Value.MaxProjects,
-            MaxMembers = kvp.Value.MaxMembers,
-            MaxScansPerMonth = kvp.Value.MaxScansPerMonth,
-            PriceMonthly = stripePrices.GetValueOrDefault(kvp.Key, 0m),
-            IsCurrent = kvp.Key == currentTier
+            var (monthly, annual) = stripePrices.GetValueOrDefault(kvp.Key, (0m, 0m));
+            return new PlanOptionDto
+            {
+                Tier = kvp.Key.ToString(),
+                MaxProjects = kvp.Value.MaxProjects,
+                MaxMembers = kvp.Value.MaxMembers,
+                MaxScansPerMonth = kvp.Value.MaxScansPerMonth,
+                PriceMonthly = monthly,
+                PriceAnnual = annual,
+                IsCurrent = kvp.Key == currentTier
+            };
         }).ToList();
     }
 
-    public async Task<string> CreateCheckoutSessionAsync(Guid organizationId, PlanTier tier)
+    public async Task<string> CreateCheckoutSessionAsync(Guid organizationId, PlanTier tier, string billingInterval = "monthly")
     {
         if (tier == PlanTier.Free)
             throw new InvalidOperationException("Le plan gratuit ne nécessite pas de paiement.");
 
-        string priceId = PriceIdForTier(tier);
+        string priceId = billingInterval == "annual"
+            ? AnnualPriceIdForTier(tier)
+            : PriceIdForTier(tier);
 
         using IDisposable elevation = _systemScope.Enter();
 
@@ -120,7 +129,8 @@ public class BillingService
             Metadata = new Dictionary<string, string>
             {
                 [StripeMetadataKeys.OrganizationId] = organization.Id.ToString(),
-                [StripeMetadataKeys.PlanTier] = tier.ToString()
+                [StripeMetadataKeys.PlanTier] = tier.ToString(),
+                [StripeMetadataKeys.BillingInterval] = billingInterval
             }
         };
 
@@ -328,7 +338,22 @@ public class BillingService
         };
 
         if (string.IsNullOrEmpty(priceId))
-            throw new InvalidOperationException($"Tarif Stripe non configuré pour le plan {tier}.");
+            throw new InvalidOperationException($"Tarif Stripe mensuel non configuré pour le plan {tier}.");
+
+        return priceId;
+    }
+
+    private string AnnualPriceIdForTier(PlanTier tier)
+    {
+        string? priceId = tier switch
+        {
+            PlanTier.Pro => _stripe.Prices.ProAnnual,
+            PlanTier.Business => _stripe.Prices.BusinessAnnual,
+            _ => null
+        };
+
+        if (string.IsNullOrEmpty(priceId))
+            throw new InvalidOperationException($"Tarif Stripe annuel non configuré pour le plan {tier}.");
 
         return priceId;
     }
@@ -336,8 +361,8 @@ public class BillingService
     private PlanTier? TierForPriceId(string? priceId)
     {
         if (string.IsNullOrEmpty(priceId)) return null;
-        if (priceId == _stripe.Prices.Pro) return PlanTier.Pro;
-        if (priceId == _stripe.Prices.Business) return PlanTier.Business;
+        if (priceId == _stripe.Prices.Pro || priceId == _stripe.Prices.ProAnnual) return PlanTier.Pro;
+        if (priceId == _stripe.Prices.Business || priceId == _stripe.Prices.BusinessAnnual) return PlanTier.Business;
         return null;
     }
 

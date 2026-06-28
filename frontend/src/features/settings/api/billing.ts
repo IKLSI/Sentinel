@@ -21,6 +21,7 @@ export interface PlanOption {
   maxMembers: number
   maxScansPerMonth: number
   priceMonthly: number
+  priceAnnual: number
   isCurrent: boolean
 }
 
@@ -34,8 +35,8 @@ export const getPlans = async (signal?: AbortSignal): Promise<PlanOption[]> => {
   return response.data
 }
 
-export const startCheckout = async (planTier: string): Promise<string> => {
-  const response = await apiClient.post<{ url: string }>('/api/billing/checkout', { planTier })
+export const startCheckout = async (planTier: string, billingInterval: 'monthly' | 'annual' = 'monthly'): Promise<string> => {
+  const response = await apiClient.post<{ url: string }>('/api/billing/checkout', { planTier, billingInterval })
   return response.data.url
 }
 

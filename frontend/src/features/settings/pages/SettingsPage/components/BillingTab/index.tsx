@@ -54,6 +54,7 @@ export const BillingTab: React.FC = () => {
   const [plans, setPlans] = useState<PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [interval, setInterval] = useState<'monthly' | 'annual'>('monthly');
 
   const load = () => {
     const controller = new AbortController();
@@ -81,7 +82,7 @@ export const BillingTab: React.FC = () => {
   const handleCheckout = async (tier: string) => {
     setActionLoading(true);
     try {
-      const url = await startCheckout(tier);
+      const url = await startCheckout(tier, interval);
       window.location.href = url;
     } catch (err) {
       showToast(extractApiError(err, t("settings.billing.error_generic")), "error");
@@ -273,7 +274,41 @@ export const BillingTab: React.FC = () => {
 
       {plans.length > 0 && (
         <Box sx={CARD_SX}>
-          <CardHeader label={t("settings.billing.available_plans")} />
+          <Box sx={{ px: "16px", pt: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+            <CardHeader label={t("settings.billing.available_plans")} />
+            <Box sx={{ display: "flex", gap: "4px", background: "var(--s2)", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", p: "3px" }}>
+              {(["monthly", "annual"] as const).map((iv) => (
+                <Box
+                  key={iv}
+                  component="button"
+                  onClick={() => setInterval(iv)}
+                  sx={{
+                    all: "unset",
+                    cursor: "pointer",
+                    px: "10px",
+                    height: "26px",
+                    borderRadius: "calc(var(--r-sm) - 2px)",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    color: interval === iv ? "var(--text)" : "var(--muted)",
+                    background: interval === iv ? "var(--s1)" : "transparent",
+                    boxShadow: interval === iv ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {iv === "monthly" ? t("settings.billing.interval_monthly") : t("settings.billing.interval_annual")}
+                  {iv === "annual" && (
+                    <Box sx={{ fontSize: "10px", fontWeight: 700, color: "var(--green)", background: "var(--green-subtle)", px: "5px", height: "16px", display: "inline-flex", alignItems: "center", borderRadius: "8px" }}>
+                      {t("settings.billing.annual_save")}
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </Box>
           <Box sx={{ p: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
             {plans.map((plan) => {
               const isRecommended = plan.tier === "Pro" && status.planTier === "Free";
@@ -322,11 +357,24 @@ export const BillingTab: React.FC = () => {
 
                   <Box>
                     <Box sx={{ fontSize: "16px", fontWeight: 800, color: "var(--text)", mb: "4px" }}>{plan.tier}</Box>
-                    <Box sx={{ fontSize: "20px", fontWeight: 700, color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
-                      {plan.priceMonthly === 0
-                        ? t("settings.billing.plan_free")
-                        : t("settings.billing.plan_price_monthly", { price: plan.priceMonthly })}
-                    </Box>
+                    {plan.priceMonthly === 0 ? (
+                      <Box sx={{ fontSize: "20px", fontWeight: 700, color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
+                        {t("settings.billing.plan_free")}
+                      </Box>
+                    ) : interval === "annual" && plan.priceAnnual > 0 ? (
+                      <Box>
+                        <Box sx={{ fontSize: "20px", fontWeight: 700, color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
+                          {t("settings.billing.plan_price_annual_monthly", { price: Math.round(plan.priceAnnual / 12) })}
+                        </Box>
+                        <Box sx={{ fontSize: "11px", color: "var(--muted)", mt: "2px" }}>
+                          {t("settings.billing.plan_price_annual_total", { total: plan.priceAnnual })}
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box sx={{ fontSize: "20px", fontWeight: 700, color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
+                        {t("settings.billing.plan_price_monthly", { price: plan.priceMonthly })}
+                      </Box>
+                    )}
                   </Box>
 
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
