@@ -148,8 +148,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
-            entity.HasIndex(e => e.Token).IsUnique();
+            entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => e.Email);
         });
     }
@@ -184,9 +184,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
+            entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
             entity.Property(e => e.Role).HasConversion<string>();
-            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => e.Email);
 
@@ -208,8 +208,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.Token).HasMaxLength(128).IsRequired();
-            entity.HasIndex(e => e.Token).IsUnique();
+            entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => e.Email);
         });
     }

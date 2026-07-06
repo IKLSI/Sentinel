@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -28,7 +30,7 @@ public class AuthService
 
     private int RefreshTokenExpirationDays => _jwt.RefreshTokenExpirationDays > 0 ? _jwt.RefreshTokenExpirationDays : 30;
 
-    public async Task<PasswordResetToken?> CreatePasswordResetTokenAsync(string email)
+    public async Task<(string Email, string RawToken)?> CreatePasswordResetTokenAsync(string email)
     {
         using IDisposable elevation = _systemScope.Enter();
 
@@ -41,27 +43,29 @@ public class AuthService
             .Where(t => t.Email == email.ToLower() && !t.IsUsed)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true));
 
-        string rawToken = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
+        string rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
 
         PasswordResetToken resetToken = new PasswordResetToken
         {
             Email = email.ToLower(),
-            Token = rawToken,
+            TokenHash = HashToken(rawToken),
             ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
 
         _context.PasswordResetTokens.Add(resetToken);
         await _context.SaveChangesAsync();
 
-        return resetToken;
+        return (resetToken.Email, rawToken);
     }
 
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
         using IDisposable elevation = _systemScope.Enter();
 
+        string tokenHash = HashToken(token);
+
         PasswordResetToken? resetToken = await _context.PasswordResetTokens
-            .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
 
         if (resetToken == null) return false;
 
@@ -215,7 +219,7 @@ public class AuthService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<EmailVerificationToken> RegisterAsync(RegisterRequest request)
+    public async Task<(string Email, string RawToken)> RegisterAsync(RegisterRequest request)
     {
         using IDisposable elevation = _systemScope.Enter();
 
@@ -257,10 +261,12 @@ public class AuthService
         await _context.Users.AddAsync(admin);
         await _context.TicketStatuses.AddRangeAsync(BuildDefaultStatuses(organization.Id));
 
+        string rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
+
         EmailVerificationToken verificationToken = new EmailVerificationToken
         {
             Email = normalizedEmail,
-            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            TokenHash = HashToken(rawToken),
             ExpiresAt = now.AddHours(48)
         };
 
@@ -268,15 +274,17 @@ public class AuthService
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Nouvelle organisation enregistrée {Slug} par {Email}", organization.Slug, normalizedEmail);
-        return verificationToken;
+        return (normalizedEmail, rawToken);
     }
 
     public async Task<bool> VerifyEmailAsync(string token)
     {
         using IDisposable elevation = _systemScope.Enter();
 
+        string tokenHash = HashToken(token);
+
         EmailVerificationToken? verificationToken = await _context.EmailVerificationTokens
-            .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
 
         if (verificationToken == null) return false;
 
@@ -293,7 +301,7 @@ public class AuthService
         return true;
     }
 
-    public async Task<EmailVerificationToken?> ResendVerificationAsync(string email)
+    public async Task<(string Email, string RawToken)?> ResendVerificationAsync(string email)
     {
         using IDisposable elevation = _systemScope.Enter();
 
@@ -307,17 +315,25 @@ public class AuthService
             .Where(t => t.Email == normalizedEmail && !t.IsUsed)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true));
 
+        string rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
+
         EmailVerificationToken verificationToken = new EmailVerificationToken
         {
             Email = normalizedEmail,
-            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            TokenHash = HashToken(rawToken),
             ExpiresAt = DateTime.UtcNow.AddHours(48)
         };
 
         await _context.EmailVerificationTokens.AddAsync(verificationToken);
         await _context.SaveChangesAsync();
 
-        return verificationToken;
+        return (normalizedEmail, rawToken);
+    }
+
+    private static string HashToken(string rawToken)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private async Task<string> GenerateUniqueSlugAsync(string name)

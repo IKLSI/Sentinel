@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
         services.Configure<EncryptionSettings>(configuration.GetSection(ConfigurationKeys.Sections.Encryption));
         services.Configure<SupportSettings>(configuration.GetSection(ConfigurationKeys.Sections.Support));
         services.Configure<DataProtectionSettings>(configuration.GetSection(ConfigurationKeys.Sections.DataProtection));
+        services.Configure<CookieSettings>(configuration.GetSection(ConfigurationKeys.Sections.Cookie));
 
         return services;
     }

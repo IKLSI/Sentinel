@@ -1,7 +1,6 @@
 import apiClient from "../../../services/client";
 import { LoginResponse, User } from "../../../types";
 import { API_ROUTES } from "@/constants/api";
-import { STORAGE_KEYS } from "@/constants/storage";
 
 export const login = async (
   email: string,
@@ -15,9 +14,7 @@ export const login = async (
 };
 
 export const logout = async (): Promise<void> => {
-  const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-  if (refreshToken)
-    await apiClient.post(API_ROUTES.auth.logout, { refreshToken });
+  await apiClient.post(API_ROUTES.auth.logout);
 };
 
 export const me = async (): Promise<User> => {

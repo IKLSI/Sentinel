@@ -58,7 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         })
         .catch(() => {
           localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         })
         .finally(() => setLoading(false));
     } else {
@@ -70,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     async (email: string, password: string) => {
       const response = await apiLogin(email, password);
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
-      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
       setUser(response.user);
       syncLanguage(response.user);
       return response.user;
@@ -83,7 +81,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       await apiLogout();
     } finally {
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
       setUser(null);
     }
   }, []);

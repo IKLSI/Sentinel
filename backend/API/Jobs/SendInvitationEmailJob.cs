@@ -30,7 +30,7 @@ public class SendInvitationEmailJob
         _systemScope = systemScope;
     }
 
-    public async Task ExecuteAsync(Guid invitationId)
+    public async Task ExecuteAsync(Guid invitationId, string rawToken)
     {
         using IDisposable elevation = _systemScope.Enter();
 
@@ -47,6 +47,7 @@ public class SendInvitationEmailJob
 
         await _emailService.SendInvitationAsync(
             invitation,
+            rawToken,
             invitation.Organization.Name,
             invitation.InvitedBy.FullName,
             _frontend.BaseUrl

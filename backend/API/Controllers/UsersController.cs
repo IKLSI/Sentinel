@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Asp.Versioning;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
@@ -27,14 +29,16 @@ public class UsersController : BaseController
     private readonly IAuditLogService _auditLog;
     private readonly ISystemScope _systemScope;
     private readonly QuotaService _quotaService;
+    private readonly ApiKeyService _apiKeyService;
 
-    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog, ISystemScope systemScope, QuotaService quotaService)
+    public UsersController(SentinelContext context, IBackgroundJobClient jobs, IAuditLogService auditLog, ISystemScope systemScope, QuotaService quotaService, ApiKeyService apiKeyService)
     {
         _context = context;
         _jobs = jobs;
         _auditLog = auditLog;
         _systemScope = systemScope;
         _quotaService = quotaService;
+        _apiKeyService = apiKeyService;
     }
 
     [HttpGet]
@@ -132,12 +136,14 @@ public class UsersController : BaseController
         if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
             return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Developer" });
 
+        string rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
+
         UserInvitation invitation = new UserInvitation
         {
             OrganizationId = organizationId.Value,
             Email = dto.Email.ToLower(),
             Role = role,
-            Token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
+            TokenHash = HashToken(rawToken),
             InvitedById = currentUserId.Value,
             ExpiresAt = DateTime.UtcNow.AddHours(48),
             CreatedAt = DateTime.UtcNow
@@ -146,7 +152,7 @@ public class UsersController : BaseController
         await _context.UserInvitations.AddAsync(invitation);
         await _context.SaveChangesAsync();
 
-        _jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id));
+        _jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, rawToken));
 
         await _auditLog.LogAsync(
             AuditAction.UserInvited,
@@ -166,8 +172,10 @@ public class UsersController : BaseController
     {
         using IDisposable elevation = _systemScope.Enter();
 
+        string tokenHash = HashToken(dto.Token);
+
         UserInvitation? invitation = await _context.UserInvitations
-            .FirstOrDefaultAsync(i => i.Token == dto.Token && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(i => i.TokenHash == tokenHash && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
 
         if (invitation == null)
             return BadRequest(new { message = "Invitation invalide ou expirée" });
@@ -255,6 +263,8 @@ public class UsersController : BaseController
         if (user.Role != originalRole || willDeactivate) user.TokenVersion++;
 
         await _context.SaveChangesAsync();
+
+        if (willDeactivate) await _apiKeyService.RevokeAllForUserAsync(user.Id);
 
         await _auditLog.LogAsync(
             AuditAction.UserUpdated,
@@ -435,6 +445,8 @@ public class UsersController : BaseController
 
         await _context.SaveChangesAsync();
 
+        await _apiKeyService.RevokeAllForUserAsync(user.Id);
+
         await _auditLog.LogAsync(
             AuditAction.AccountDeleted,
             entityType: AuditEntityTypes.User,
@@ -460,5 +472,11 @@ public class UsersController : BaseController
             Theme = user.Theme.ToString().ToLowerInvariant(),
             Language = user.Language,
         };
+    }
+
+    private static string HashToken(string rawToken)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

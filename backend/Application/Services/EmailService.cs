@@ -13,7 +13,7 @@ public record VulnerabilityAlertEntry(string CveId, string PackageName, string S
 
 public interface IEmailService
 {
-    Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl);
+    Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
     Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl);
     Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
@@ -33,9 +33,9 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task SendInvitationAsync(UserInvitation invitation, string organizationName, string invitedByName, string frontendBaseUrl)
+    public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl)
     {
-        string acceptUrl  = $"{frontendBaseUrl}/accept-invitation?token={invitation.Token}";
+        string acceptUrl  = $"{frontendBaseUrl}/accept-invitation?token={rawToken}";
         string roleLabel = invitation.Role == UserRole.Admin ? "Administrateur" : "Développeur";
         string roleColor = invitation.Role == UserRole.Admin ? "#dc2626" : "#4f46e5";
         string roleBg    = invitation.Role == UserRole.Admin ? "#fef2f2" : "#eef2ff";

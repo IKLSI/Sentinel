@@ -18,6 +18,7 @@ public static class ConfigurationKeys
         public const string Encryption = "Encryption";
         public const string Support = "Support";
         public const string DataProtection = "DataProtection";
+        public const string Cookie = "Cookie";
     }
 
     public static class JwtKeys

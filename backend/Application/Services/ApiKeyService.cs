@@ -90,11 +90,25 @@ public class ApiKeyService
         if (key == null) return null;
         if (key.ExpiresAt.HasValue && key.ExpiresAt.Value < DateTime.UtcNow) return null;
 
+        User user = key.CreatedBy;
+        if (!user.IsActive) return null;
+
         key.LastUsedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        User user = key.CreatedBy;
         return (key, user);
+    }
+
+    public async Task RevokeAllForUserAsync(Guid userId)
+    {
+        List<ApiKey> keys = await _context.ApiKeys
+            .Where(k => k.CreatedById == userId && !k.IsRevoked)
+            .ToListAsync();
+
+        foreach (ApiKey key in keys)
+            key.IsRevoked = true;
+
+        await _context.SaveChangesAsync();
     }
 
     private static string HashKey(string rawKey)

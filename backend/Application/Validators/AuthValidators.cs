@@ -41,16 +41,6 @@ public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRe
     }
 }
 
-public class RefreshTokenRequestValidator : AbstractValidator<RefreshTokenRequest>
-{
-    public RefreshTokenRequestValidator()
-    {
-        RuleFor(x => x.RefreshToken)
-            .NotEmpty().WithMessage("Le refresh token est requis")
-            .MaximumLength(500);
-    }
-}
-
 public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
 {
     public ResetPasswordRequestValidator()

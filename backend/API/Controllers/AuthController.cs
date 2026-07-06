@@ -5,9 +5,11 @@ using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Settings;
 using Sentinel.Application.Services;
 using Sentinel.API.Jobs;
 
@@ -22,12 +24,45 @@ public class AuthController : BaseController
     private readonly AuthService _authService;
     private readonly ITokenBlacklistService _blacklist;
     private readonly IAuditLogService _auditLog;
+    private readonly CookieSettings _cookieSettings;
+    private readonly JwtSettings _jwtSettings;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(AuthService authService, ITokenBlacklistService blacklist, IAuditLogService auditLog)
+    public AuthController(AuthService authService, ITokenBlacklistService blacklist, IAuditLogService auditLog, IOptions<CookieSettings> cookieSettings, IOptions<JwtSettings> jwtSettings, IWebHostEnvironment environment)
     {
         _authService = authService;
         _blacklist = blacklist;
         _auditLog = auditLog;
+        _cookieSettings = cookieSettings.Value;
+        _jwtSettings = jwtSettings.Value;
+        _environment = environment;
+    }
+
+    private void SetRefreshTokenCookie(string token)
+    {
+        int expirationDays = _jwtSettings.RefreshTokenExpirationDays > 0 ? _jwtSettings.RefreshTokenExpirationDays : 30;
+
+        Response.Cookies.Append(_cookieSettings.Name, token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !_environment.IsDevelopment(),
+            SameSite = Enum.Parse<SameSiteMode>(_cookieSettings.SameSite, ignoreCase: true),
+            Domain = string.IsNullOrEmpty(_cookieSettings.Domain) ? null : _cookieSettings.Domain,
+            Path = "/api/auth",
+            Expires = DateTime.UtcNow.AddDays(expirationDays),
+        });
+    }
+
+    private void ClearRefreshTokenCookie()
+    {
+        Response.Cookies.Delete(_cookieSettings.Name, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !_environment.IsDevelopment(),
+            SameSite = Enum.Parse<SameSiteMode>(_cookieSettings.SameSite, ignoreCase: true),
+            Domain = string.IsNullOrEmpty(_cookieSettings.Domain) ? null : _cookieSettings.Domain,
+            Path = "/api/auth",
+        });
     }
 
     [HttpPost("login")]
@@ -41,6 +76,9 @@ public class AuthController : BaseController
             return Unauthorized(new { message = "Email ou mot de passe incorrect" });
         }
 
+        SetRefreshTokenCookie(result.RefreshToken);
+        result.RefreshToken = string.Empty;
+
         await _auditLog.LogAsync(
             AuditAction.Login,
             entityType: AuditEntityTypes.User,
@@ -53,14 +91,25 @@ public class AuthController : BaseController
 
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Login)]
-    public async Task<ActionResult<LoginResponse>> Refresh([FromBody] RefreshTokenRequest request)
+    public async Task<ActionResult<LoginResponse>> Refresh()
     {
-        LoginResponse? result = await _authService.RefreshTokenAsync(request.RefreshToken);
+        string? refreshToken = Request.Cookies[_cookieSettings.Name];
 
-        if (result == null)
+        if (string.IsNullOrEmpty(refreshToken))
         {
             return Unauthorized(new { message = "Token de rafraîchissement invalide ou expiré" });
         }
+
+        LoginResponse? result = await _authService.RefreshTokenAsync(refreshToken);
+
+        if (result == null)
+        {
+            ClearRefreshTokenCookie();
+            return Unauthorized(new { message = "Token de rafraîchissement invalide ou expiré" });
+        }
+
+        SetRefreshTokenCookie(result.RefreshToken);
+        result.RefreshToken = string.Empty;
 
         await _auditLog.LogAsync(
             AuditAction.TokenRefreshed,
@@ -93,6 +142,7 @@ public class AuthController : BaseController
         }
 
         await _authService.LogoutAsync(userId.Value);
+        ClearRefreshTokenCookie();
 
         await _auditLog.LogAsync(
             AuditAction.Logout,
@@ -109,11 +159,11 @@ public class AuthController : BaseController
     [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
-        PasswordResetToken? resetToken = await _authService.CreatePasswordResetTokenAsync(request.Email);
+        (string Email, string RawToken)? resetToken = await _authService.CreatePasswordResetTokenAsync(request.Email);
 
         if (resetToken != null)
         {
-            BackgroundJob.Enqueue<SendPasswordResetEmailJob>(j => j.ExecuteAsync(resetToken.Id));
+            BackgroundJob.Enqueue<SendPasswordResetEmailJob>(j => j.ExecuteAsync(resetToken.Value.Email, resetToken.Value.RawToken));
 
             await _auditLog.LogAsync(
                 AuditAction.PasswordResetRequested,
@@ -145,7 +195,7 @@ public class AuthController : BaseController
     [EnableRateLimiting(RateLimitPolicies.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        EmailVerificationToken token;
+        (string Email, string RawToken) token;
 
         try
         {
@@ -156,7 +206,7 @@ public class AuthController : BaseController
             return Conflict(new { message = ex.Message });
         }
 
-        BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Id));
+        BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Email, token.RawToken));
 
         await _auditLog.LogAsync(
             AuditAction.OrganizationRegistered,
@@ -185,11 +235,11 @@ public class AuthController : BaseController
     [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
     {
-        EmailVerificationToken? token = await _authService.ResendVerificationAsync(request.Email);
+        (string Email, string RawToken)? token = await _authService.ResendVerificationAsync(request.Email);
 
         if (token != null)
         {
-            BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Id));
+            BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Value.Email, token.Value.RawToken));
 
             await _auditLog.LogAsync(
                 AuditAction.EmailVerificationResent,
