@@ -98,14 +98,13 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
         paper: {
           sx: {
             bgcolor: 'var(--s1)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--r-lg)',
+            border: '1px solid',
+            borderColor: 'divider',
             outline: 'none',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             maxHeight: '580px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.12)',
           },
         },
       }}
@@ -117,31 +116,16 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
           pt: '16px',
           pb: '14px',
           borderBottom: '1px solid var(--border)',
+          background: 'linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)',
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
         }}
       >
-        <Box
-          sx={{
-            width: 30,
-            height: 30,
-            borderRadius: 'var(--r)',
-            background: 'var(--accent-subtle)',
-            border: '1px solid var(--accent-border, var(--border))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <NotificationsNone sx={{ fontSize: 15, color: 'var(--accent)' }} />
-        </Box>
-
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Box sx={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+            <Box sx={{ fontSize: '14px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
               {t('notifications.title')}
             </Box>
             {unreadFiltered > 0 && (
@@ -287,36 +271,12 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
         }}
       >
         {filtered.length === 0 ? (
-          <Box
-            sx={{
-              py: '56px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-            }}
-          >
-            <Box
-              sx={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'var(--s3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <NotificationsNone sx={{ fontSize: 22, color: 'var(--muted)' }} />
+          <Box className="empty-state">
+            <Box className="empty-state-title">
+              {t('notifications.empty')}
             </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Box sx={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                {t('notifications.empty')}
-              </Box>
-              <Box sx={{ fontSize: '11px', color: 'var(--muted)', mt: '4px' }}>
-                {activeFilter === 'unread' ? 'Tout est à jour' : 'Aucune notification'}
-              </Box>
+            <Box className="empty-state-subtitle">
+              {activeFilter === 'unread' ? 'Tout est à jour' : 'Aucune notification'}
             </Box>
           </Box>
         ) : (

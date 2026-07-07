@@ -11,13 +11,16 @@ import Modal from "@mui/material/Modal";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import CloudDownloadOutlined from "@mui/icons-material/CloudDownloadOutlined";
-import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
+import RadarOutlined from "@mui/icons-material/RadarOutlined";
 import KeyboardReturnOutlined from "@mui/icons-material/KeyboardReturnOutlined";
 import { useT } from "@/i18n/I18nContext";
+import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { UserRole } from "@/types/enums";
 import { ROUTES } from "@/constants/routes";
+import { triggerTechHealthScan } from "@/features/settings/api/jobs";
+import { extractApiError } from "@/utils/apiError";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
 export const SETTINGS_OPEN_INVITE_EVENT = "settings:open-invite";
@@ -34,6 +37,7 @@ interface PaletteItem {
 
 export const CommandPalette: React.FC = () => {
   const t = useT();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -94,18 +98,6 @@ export const CommandPalette: React.FC = () => {
         roles: [UserRole.Admin, UserRole.Developer],
       },
       {
-        id: "log-time",
-        group: "palette.section_actions",
-        labelKey: "palette.action_log_time",
-        hintKey: "palette.action_log_time_hint",
-        icon: AccessTimeOutlined,
-        perform: () => {
-          close();
-          navigate(ROUTES.TIME_TRACKING, { state: { openCreate: true } });
-        },
-        roles: [UserRole.Admin, UserRole.Developer],
-      },
-      {
         id: "invite-member",
         group: "palette.section_actions",
         labelKey: "palette.action_invite_member",
@@ -121,6 +113,26 @@ export const CommandPalette: React.FC = () => {
         },
         roles: [UserRole.Admin],
       },
+      {
+        id: "trigger-scan",
+        group: "palette.section_actions",
+        labelKey: "palette.action_trigger_scan",
+        hintKey: "palette.action_trigger_scan_hint",
+        icon: RadarOutlined,
+        perform: async () => {
+          close();
+          try {
+            await triggerTechHealthScan();
+            showToast(t("projects.toast.scan_started"), "success");
+          } catch (err) {
+            showToast(
+              extractApiError(err, t("projects.toast.scan_start_error")),
+              "error",
+            );
+          }
+        },
+        roles: [UserRole.Admin],
+      },
     ];
     return items.filter((it) => {
       if (!it.roles) return true;
@@ -128,7 +140,7 @@ export const CommandPalette: React.FC = () => {
       if (isClient) return it.roles.includes(UserRole.Client);
       return it.roles.includes(UserRole.Developer);
     });
-  }, [isAdmin, isClient, navigate, close]);
+  }, [isAdmin, isClient, navigate, close, showToast, t]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -248,6 +260,10 @@ export const CommandPalette: React.FC = () => {
               fontSize: "14px",
               fontWeight: 500,
               "::placeholder": { color: "var(--muted)" },
+              "&:focus": {
+                border: "none !important",
+                boxShadow: "none !important",
+              },
             }}
           />
         </Box>

@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import Box from "@mui/material/Box";
 import type { SvgIconComponent } from "@mui/icons-material";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
-import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
@@ -38,13 +36,6 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   eolRuntimes,
 }) => {
   const { t, culture } = useI18n();
-  const [copiedId, setCopiedId] = useState(false);
-
-  const handleCopyId = async () => {
-    await navigator.clipboard.writeText(project.id);
-    setCopiedId(true);
-    setTimeout(() => setCopiedId(false), 2000);
-  };
 
   const freqLabel = (f: string) => {
     if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -164,26 +155,6 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                 </Box>
               </Box>
             )}
-            <Box
-              component="button"
-              onClick={handleCopyId}
-              sx={{
-                all: "unset", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "5px",
-                background: "var(--s2)", border: "1px solid var(--border)",
-                borderRadius: "var(--r-sm)", px: "8px", py: "3px",
-                transition: "border-color 0.15s, color 0.15s",
-                "&:hover": { borderColor: "var(--accent-border)", color: "var(--accent)" },
-              }}
-            >
-              {copiedId
-                ? <CheckOutlined sx={{ fontSize: 11, color: "var(--green)" }} />
-                : <ContentCopyOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
-              }
-              <Box component="span" sx={{ fontSize: "11px", color: copiedId ? "var(--green)" : "var(--muted)", fontFamily: "monospace" }}>
-                {project.id}
-              </Box>
-            </Box>
           </Box>
         </Box>
 

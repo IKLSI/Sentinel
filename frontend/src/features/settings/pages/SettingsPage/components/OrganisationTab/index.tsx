@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Switch from "@mui/material/Switch";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
@@ -31,7 +30,7 @@ export const OrganisationTab: React.FC = () => {
 
   const SEVERITIES = useMemo(
     () =>
-      SEVERITY_VALUES.map((value) => ({
+      ["None", ...SEVERITY_VALUES].map((value) => ({
         value,
         label: t(`settings.severity.${value}`),
       })),
@@ -193,22 +192,27 @@ export const OrganisationTab: React.FC = () => {
                   <Box sx={{ position: "relative" }}>
                     <Box
                       component="select"
-                      disabled={!orgForm.securityAlertsEnabled}
                       sx={{
                         ...inp,
                         pr: "28px",
-                        cursor: orgForm.securityAlertsEnabled
-                          ? "pointer"
-                          : "not-allowed",
+                        cursor: "pointer",
                         appearance: "none",
-                        opacity: orgForm.securityAlertsEnabled ? 1 : 0.5,
                       }}
-                      value={orgForm.alertMinSeverity}
+                      value={
+                        orgForm.securityAlertsEnabled
+                          ? orgForm.alertMinSeverity
+                          : "None"
+                      }
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        setOrgForm((f) => ({
-                          ...f,
-                          alertMinSeverity: e.target.value,
-                        }))
+                        setOrgForm((f) =>
+                          e.target.value === "None"
+                            ? { ...f, securityAlertsEnabled: false }
+                            : {
+                                ...f,
+                                securityAlertsEnabled: true,
+                                alertMinSeverity: e.target.value,
+                              },
+                        )
                       }
                     >
                       {SEVERITIES.map((s) => (
@@ -230,34 +234,6 @@ export const OrganisationTab: React.FC = () => {
                     />
                   </Box>
                 </Box>
-                <Box
-                  sx={{
-                    gridColumn: "1 / -1",
-                    mt: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                  }}
-                >
-                  <Box>
-                    <FieldLabel>{t("settings.org.security_alerts_label")}</FieldLabel>
-                    <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-                      {t("settings.org.security_alerts_help")}
-                    </Box>
-                  </Box>
-                  <Switch
-                    size="small"
-                    checked={orgForm.securityAlertsEnabled}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setOrgForm((f) => ({
-                        ...f,
-                        securityAlertsEnabled: e.target.checked,
-                      }))
-                    }
-                  />
-                </Box>
-
               </Box>
 
               <Box

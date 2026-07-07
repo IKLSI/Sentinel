@@ -3,10 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import ViewKanbanOutlined from "@mui/icons-material/ViewKanbanOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import AssessmentOutlined from "@mui/icons-material/AssessmentOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
@@ -63,14 +60,8 @@ const navSections: NavSection[] = [
       {
         to: ROUTES.TICKETS,
         icon: ConfirmationNumberOutlined,
-        labelKey: "sidebar.item.list",
-        end: true,
-        activeFor: /^\/tickets\/(?!kanban).+/,
-      },
-      {
-        to: "/tickets/kanban",
-        icon: ViewKanbanOutlined,
-        labelKey: "sidebar.item.kanban",
+        labelKey: "sidebar.section.tickets",
+        activeFor: /^\/tickets(\/.+)?$/,
       },
     ],
   },
@@ -82,17 +73,6 @@ const navSections: NavSection[] = [
         to: ROUTES.PROJECTS,
         icon: AccountTreeOutlined,
         labelKey: "sidebar.item.projects",
-      },
-    ],
-  },
-  {
-    titleKey: "sidebar.section.resources",
-    icon: AssessmentOutlined,
-    items: [
-      {
-        to: ROUTES.TIME_TRACKING,
-        icon: AccessTimeOutlined,
-        labelKey: "sidebar.item.time_tracking",
       },
     ],
   },

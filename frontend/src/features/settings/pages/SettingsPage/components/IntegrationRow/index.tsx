@@ -74,61 +74,51 @@ export const IntegrationRow: React.FC<Props> = ({
               <CheckCircleOutlineOutlined sx={{ fontSize: 13, color: "var(--green)" }} />
             )}
           </Box>
-          <Box
-            sx={{
-              fontSize: "11px",
-              color: "var(--muted)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {isConnected ? connectedLabel : t("settings.integrations.not_configured")}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <InfoOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
+            <Box sx={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
+              {isConnected ? connectedLabel : helpInstructions}
+            </Box>
+            {!isConnected && (
+              <Box sx={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+                {helpScopes.map((scope, i) => (
+                  <React.Fragment key={scope}>
+                    <Box
+                      component="code"
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        px: "7px",
+                        py: "2px",
+                        borderRadius: 'var(--r-sm)',
+                        background: "color-mix(in srgb, var(--accent) 12%, var(--s2))",
+                        border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+                        color: "var(--accent)",
+                        fontSize: "11px",
+                        fontFamily: "monospace",
+                        fontWeight: 500,
+                        letterSpacing: "0.01em",
+                      }}
+                    >
+                      {scope}
+                    </Box>
+                    {i < helpScopes.length - 1 && (
+                      <Box
+                        component="span"
+                        sx={{ fontSize: "11px", color: "var(--muted)", alignSelf: "center" }}
+                      >
+                        et
+                      </Box>
+                    )}
+                  </React.Fragment>
+                ))}
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
 
       <Box sx={{ px: "16px", pt: "12px", pb: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          <InfoOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
-          <Box sx={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
-            {helpInstructions}
-          </Box>
-          <Box sx={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-            {helpScopes.map((scope, i) => (
-              <React.Fragment key={scope}>
-                <Box
-                  component="code"
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    px: "7px",
-                    py: "2px",
-                    borderRadius: 'var(--r-sm)',
-                    background: "color-mix(in srgb, var(--accent) 12%, var(--s2))",
-                    border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
-                    color: "var(--accent)",
-                    fontSize: "11px",
-                    fontFamily: "monospace",
-                    fontWeight: 500,
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  {scope}
-                </Box>
-                {i < helpScopes.length - 1 && (
-                  <Box
-                    component="span"
-                    sx={{ fontSize: "11px", color: "var(--muted)", alignSelf: "center" }}
-                  >
-                    et
-                  </Box>
-                )}
-              </React.Fragment>
-            ))}
-          </Box>
-        </Box>
-
         <Box sx={{ display: "flex", gap: "8px" }}>
           <Box
             component="input"

@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
+import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
+import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
 import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/i18n/I18nContext";
 import { getRecurringJobs, triggerTechHealthScan, RecurringJobStatus } from "@/features/settings/api/jobs";
 import { JobState } from "@/types/enums";
 import { extractApiError } from "@/utils/apiError";
-import { CARD_SX } from "../../helpers";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> = {
   [JobState.Succeeded]: { bg: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)" },
@@ -57,8 +59,8 @@ const CELL_SX = {
   fontSize: "12px",
   color: "var(--text-secondary)",
   py: "10px",
-  px: "12px",
-  borderTop: "1px solid var(--border)",
+  px: "16px",
+  whiteSpace: "nowrap",
 };
 
 export const JobsTab: React.FC = () => {
@@ -109,43 +111,75 @@ export const JobsTab: React.FC = () => {
   };
 
   return (
-    <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "16px", pb: "8px" }}>
-        <Box sx={CARD_SX}>
-          {loading ? (
-            <Box sx={{ p: "32px", display: "flex", justifyContent: "center" }}>
-              <CircularProgress size={20} />
-            </Box>
-          ) : (
-            <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+    <Box
+      sx={{
+        flex: 1,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--s1)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--r)",
+      }}
+    >
+      {loading ? (
+        <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <CircularProgress size={20} />
+        </Box>
+      ) : jobs.length === 0 ? (
+        <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
+          <AutoModeOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+          <Box className="empty-state-title">{t("settings.jobs.empty")}</Box>
+          <Box className="empty-state-subtitle">{t("settings.jobs.empty_subtitle")}</Box>
+        </Box>
+      ) : (
+        <Box sx={{ flex: 1, overflow: "auto" }}>
+          <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
               <Box component="thead">
                 <Box component="tr">
-                  {(["col_job", "col_last_run", "col_status", "col_next_run"] as const).map((col) => (
+                  {[
+                    { key: "col_job",      width: "auto"  },
+                    { key: "col_last_run", width: "180px" },
+                    { key: "col_status",   width: "140px" },
+                    { key: "col_next_run", width: "180px" },
+                    { key: "actions",      width: "48px"  },
+                  ].map(({ key, width }) => (
                     <Box
                       component="th"
-                      key={col}
+                      key={key}
                       sx={{
-                        px: "12px",
-                        py: "8px",
+                        px: "16px",
+                        py: "10px",
                         textAlign: "left",
+                        width,
                         fontSize: "10px",
                         fontWeight: 700,
                         color: "var(--muted)",
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
+                        whiteSpace: "nowrap",
                         borderBottom: "1px solid var(--border)",
                         background: "var(--s2)",
                       }}
                     >
-                      {t(`settings.jobs.${col}`)}
+                      {key === "actions" ? "" : t(`settings.jobs.${key}`)}
                     </Box>
                   ))}
-                  <Box component="th" sx={{ borderBottom: "1px solid var(--border)", background: "var(--s2)" }} />
                 </Box>
               </Box>
               <Box component="tbody">
                 {jobs.map((job) => (
-                  <Box component="tr" key={job.id} sx={{ "&:hover td": { background: "var(--s2)" }, "&:hover .row-actions": { opacity: "1 !important" } }}>
+                  <Box
+                    component="tr"
+                    key={job.id}
+                    sx={{
+                      borderBottom: "1px solid var(--border)",
+                      "&:last-child": { borderBottom: "none" },
+                      "&:hover": { background: "var(--s2)" },
+                      "&:hover .row-actions": { opacity: "1 !important" },
+                      transition: "background 0.1s",
+                    }}
+                  >
                     <Box component="td" sx={{ ...CELL_SX, color: "var(--text)", fontWeight: 500 }}>
                       {jobName(job.id)}
                     </Box>
@@ -153,12 +187,19 @@ export const JobsTab: React.FC = () => {
                       {formatDate(job.lastExecution, t, culture)}
                     </Box>
                     <Box component="td" sx={CELL_SX}>
-                      <StatusBadge state={job.lastJobState} t={t} />
+                      <Box sx={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        <StatusBadge state={job.lastJobState} t={t} />
+                        {job.error && (
+                          <Tooltip title={job.error} placement="top" arrow>
+                            <ErrorOutlineOutlined sx={{ fontSize: 15, color: "var(--red)", cursor: "help" }} />
+                          </Tooltip>
+                        )}
+                      </Box>
                     </Box>
                     <Box component="td" sx={CELL_SX}>
                       {formatDate(job.nextExecution, t, culture)}
                     </Box>
-                    <Box component="td" sx={{ ...CELL_SX, pl: "32px" }}>
+                    <Box component="td" sx={{ ...CELL_SX, textAlign: "right" }}>
                       {job.id === "tech-health-scan" && (
                         <RowActions
                           actions={[{
@@ -175,9 +216,8 @@ export const JobsTab: React.FC = () => {
                 ))}
               </Box>
             </Box>
-          )}
-        </Box>
-      </Box>
+          </Box>
+        )}
     </Box>
   );
 };

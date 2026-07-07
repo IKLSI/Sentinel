@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/i18n/I18nContext";
 import { extractApiError } from "@/utils/apiError";
 import { ApiKey, CreatedApiKey, createApiKey, listApiKeys, revokeApiKey } from "@/features/settings/api/apiKeys";
-import { CARD_SX, FieldLabel, inp } from "../../helpers";
+import { FieldLabel, inp } from "../../helpers";
 
 const BTN_SX = {
   textTransform: "none" as const,
@@ -117,46 +117,46 @@ export const ApiKeysTab: React.FC = () => {
 
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: "12px", flexShrink: 0 }}>
-        <Box sx={{ flex: 1 }} />
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", mb: "12px", flexShrink: 0 }}>
         <Button
           variant="contained"
           size="small"
           disableElevation
           startIcon={<KeyOutlined sx={{ fontSize: "13px !important" }} />}
           onClick={() => setCreateOpen(true)}
-          sx={BTN_SX}
+          sx={{ ...BTN_SX, height: "34px", px: "16px", fontWeight: 600 }}
         >
           {t("settings.api_keys.create")}
         </Button>
       </Box>
 
-      <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "16px", pb: "8px" }}>
-          <Box sx={CARD_SX}>
-            <Box sx={{
-              px: "16px", py: "10px",
-              borderBottom: "1px solid var(--border)", background: "var(--s2)",
-            }}>
-              <Box sx={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                {t("settings.api_keys.title")}
-              </Box>
-            </Box>
-
-            <Box sx={{ overflow: "hidden" }}>
-              {loading ? (
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: "32px" }}>
-                  <CircularProgress size={20} />
-                </Box>
-              ) : keys.length === 0 ? (
-                <Box className="empty-state">
-                  <Box className="empty-state-title">{t("settings.api_keys.empty")}</Box>
-                </Box>
-              ) : (
-                <Box
-                  component="table"
-                  sx={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}
-                >
+      <Box
+        sx={{
+          flex: 1,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--r)",
+        }}
+      >
+        {loading ? (
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CircularProgress size={20} />
+          </Box>
+        ) : keys.length === 0 ? (
+          <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
+            <KeyOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+            <Box className="empty-state-title">{t("settings.api_keys.empty")}</Box>
+            <Box className="empty-state-subtitle">{t("settings.api_keys.empty_subtitle")}</Box>
+          </Box>
+        ) : (
+          <Box sx={{ flex: 1, overflow: "auto" }}>
+            <Box
+              component="table"
+              sx={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}
+            >
                   <Box component="thead">
                     <Box
                       component="tr"
@@ -206,8 +206,24 @@ export const ApiKeysTab: React.FC = () => {
                         <Box component="td" sx={{ px: "16px", py: "10px", fontWeight: 500, color: "var(--text)" }}>
                           {key.name}
                         </Box>
-                        <Box component="td" sx={{ px: "16px", py: "10px", fontFamily: "monospace", fontSize: "11px", color: "var(--text-secondary)" }}>
-                          {key.prefix}…
+                        <Box component="td" sx={{ px: "16px", py: "10px" }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              px: "7px",
+                              height: "20px",
+                              borderRadius: "var(--r-xs, 5px)",
+                              background: "var(--s3)",
+                              border: "1px solid var(--border)",
+                              fontFamily: "monospace",
+                              fontSize: "11px",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            {key.prefix}…
+                          </Box>
                         </Box>
                         <Box component="td" sx={{ px: "16px", py: "10px", color: "var(--text-secondary)" }}>
                           {key.createdByName}
@@ -215,8 +231,17 @@ export const ApiKeysTab: React.FC = () => {
                         <Box component="td" sx={{ px: "16px", py: "10px", color: "var(--text-secondary)" }}>
                           {fmtDate(key.createdAt, culture)}
                         </Box>
-                        <Box component="td" sx={{ px: "16px", py: "10px", color: key.expiresAt ? "var(--text-secondary)" : "var(--muted)" }}>
-                          {key.expiresAt ? fmtDate(key.expiresAt, culture) : t("settings.api_keys.no_expiry")}
+                        <Box component="td" sx={{ px: "16px", py: "10px" }}>
+                          {(() => {
+                            if (!key.expiresAt)
+                              return <Box component="span" sx={{ color: "var(--muted)" }}>{t("settings.api_keys.no_expiry")}</Box>;
+                            const expired = new Date(key.expiresAt).getTime() < Date.now();
+                            return (
+                              <Box component="span" sx={{ color: expired ? "var(--red)" : "var(--text-secondary)", fontWeight: expired ? 600 : 400 }}>
+                                {fmtDate(key.expiresAt, culture)}
+                              </Box>
+                            );
+                          })()}
                         </Box>
                         <Box component="td" sx={{ px: "16px", py: "10px", color: key.lastUsedAt ? "var(--text-secondary)" : "var(--muted)", fontSize: "11px" }}>
                           {key.lastUsedAt ? fmtDate(key.lastUsedAt, culture) : t("settings.api_keys.never_used")}
@@ -237,11 +262,9 @@ export const ApiKeysTab: React.FC = () => {
                     ))}
                   </Box>
                 </Box>
-              )}
             </Box>
-          </Box>
+          )}
         </Box>
-      </Box>
 
       {/* Modal — Créer */}
       <AppModal

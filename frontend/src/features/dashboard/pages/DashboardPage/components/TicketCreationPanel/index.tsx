@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Box from "@mui/material/Box";
+import ShowChartOutlined from "@mui/icons-material/ShowChartOutlined";
 import { useI18n } from "@/i18n/I18nContext";
 import { DashPalette, TicketCreationDataPoint, buildPanelSx } from "../../helpers";
 
@@ -95,8 +96,16 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
       {/* Chart */}
       <Box sx={{ flex: 1, minHeight: 0, px: "14px", py: "8px", display: "flex", alignItems: "center", overflow: "hidden" }}>
         {data.length === 0 ? (
-          <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: palette.textSecondary, fontSize: "12px" }}>
-            {t("dashboard.creation.empty")}
+          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+            <Box className="empty-state-icon">
+              <ShowChartOutlined sx={{ fontSize: 32 }} />
+            </Box>
+            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+              {t("dashboard.creation.empty")}
+            </Box>
+            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+              {t("dashboard.creation.empty_subtitle")}
+            </Box>
           </Box>
         ) : (
           <svg

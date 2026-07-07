@@ -6,7 +6,6 @@ import Dialog from "@mui/material/Dialog";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
-import Chip from "@mui/material/Chip";
 import { useT } from "@/i18n/I18nContext";
 import {
   getAvailableRepos,
@@ -14,7 +13,6 @@ import {
   AvailableRepoDto,
 } from "@/features/techHealth/api/projects";
 import { extractApiError } from "@/utils/apiError";
-import { Provider } from "@/types/enums";
 
 interface Props {
   open: boolean;
@@ -241,9 +239,9 @@ export const SyncProjectModal: React.FC<Props> = ({
             </Box>
           </Box>
         ) : visible.length === 0 ? (
-          <Box sx={{ py: "40px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-            <FolderOutlined sx={{ fontSize: "28px", color: "var(--muted2)", opacity: 0.4 }} />
-            <Box sx={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500, textAlign: "center" }}>
+          <Box className="empty-state">
+            <FolderOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+            <Box className="empty-state-title">
               {repos.length === 0 ? emptyMessage : t("projects.sync_modal.no_results")}
             </Box>
           </Box>
@@ -291,19 +289,6 @@ export const SyncProjectModal: React.FC<Props> = ({
                     {repo.url}
                   </Box>
                 </Box>
-
-                <Chip
-                  label={repo.platform}
-                  size="small"
-                  sx={{
-                    height: "18px",
-                    fontSize: "10px",
-                    background: repo.platform === Provider.GitHub ? "var(--s2)" : "color-mix(in srgb, var(--brand-gitlab) 15%, transparent)",
-                    color: repo.platform === Provider.GitHub ? "var(--muted)" : "var(--brand-gitlab)",
-                    border: "none",
-                    flexShrink: 0,
-                  }}
-                />
 
                 <Box
                   sx={{

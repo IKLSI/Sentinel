@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
+import GroupOutlined from "@mui/icons-material/GroupOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -252,9 +253,13 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             <CircularProgress size={20} />
           </Box>
         ) : filteredMembers.length === 0 ? (
-          <Box className="empty-state">
+          <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
+            <GroupOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
             <Box className="empty-state-title">
               {t("settings.members.empty")}
+            </Box>
+            <Box className="empty-state-subtitle">
+              {t("settings.members.empty_subtitle")}
             </Box>
           </Box>
         ) : (
