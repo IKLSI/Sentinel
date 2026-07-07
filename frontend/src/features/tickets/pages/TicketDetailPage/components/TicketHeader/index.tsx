@@ -35,6 +35,8 @@ export const TicketHeader: React.FC<Props> = ({
           fontWeight: 700,
           display: "flex",
           alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
           gap: "12px",
           flexWrap: "wrap",
         }}

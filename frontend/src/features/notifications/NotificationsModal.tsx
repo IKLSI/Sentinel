@@ -4,7 +4,6 @@ import Dialog from '@mui/material/Dialog'
 import Tooltip from '@mui/material/Tooltip'
 import NotificationsNone from '@mui/icons-material/NotificationsNone'
 import CheckOutlined from '@mui/icons-material/CheckOutlined'
-import CloseOutlined from '@mui/icons-material/CloseOutlined'
 import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined'
 import SyncOutlined from '@mui/icons-material/SyncOutlined'
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined'
@@ -177,25 +176,6 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
               </Box>
             </Tooltip>
           )}
-          <Box
-            component="button"
-            onClick={onClose}
-            sx={{
-              all: 'unset',
-              cursor: 'pointer',
-              width: 28,
-              height: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 'var(--r)',
-              color: 'var(--muted)',
-              transition: 'color 0.12s, background 0.12s',
-              '&:hover': { color: 'var(--text)', background: 'var(--s3)' },
-            }}
-          >
-            <CloseOutlined sx={{ fontSize: 15 }} />
-          </Box>
         </Box>
       </Box>
 
@@ -213,7 +193,7 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
       >
         {FILTERS.map(({ key, labelKey }) => {
           const isActive = activeFilter === key
-          const count = key === 'all' ? items.length : key === 'unread' ? items.filter(n => !n.isRead).length : items.filter(n => n.isRead).length
+          const count = key === 'unread' ? items.filter(n => !n.isRead).length : 0
           return (
             <Box
               key={key}

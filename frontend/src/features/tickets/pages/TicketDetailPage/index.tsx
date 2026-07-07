@@ -242,7 +242,6 @@ export const TicketDetailPage: React.FC = () => {
           sx={{
             flex: 1,
             minWidth: 0,
-            maxHeight: { xs: "calc(100vh - 22px)", md: "calc(100vh - 36px)" },
             background: palette.panelBg,
             border: `1px solid ${palette.panelBorder}`,
             borderRadius: 'var(--r-xl)',
@@ -260,9 +259,6 @@ export const TicketDetailPage: React.FC = () => {
 
           <Box
             sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
               px: { xs: "24px", md: "40px" },
               pt: { xs: "24px", md: "36px" },
               pb: { xs: "18px", md: "24px" },
@@ -287,7 +283,7 @@ export const TicketDetailPage: React.FC = () => {
             <SectionDivider
               palette={palette}
               icon={<ForumOutlined sx={{ fontSize: 13 }} />}
-              label={`${t("tickets.detail.section_conversation")}${ticket.comments.length > 0 ? ` · ${ticket.comments.length}` : ""}`}
+              label={t("tickets.detail.section_conversation")}
               my="28px"
             />
 
