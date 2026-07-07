@@ -1,7 +1,5 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import FolderOutlined from "@mui/icons-material/FolderOutlined";
-import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { Ticket } from "@/types";
 import {
@@ -51,20 +49,17 @@ export const PropertiesCard: React.FC<Props> = ({
       key: "type",
       label: t("tickets.detail.field_type"),
       value: (
-        <>
-          <ShieldOutlined sx={{ fontSize: 14, color: palette.typeIcon }} />
-          <Box
-            sx={{
-              color: palette.fieldValue,
-              fontWeight: 400,
-              fontSize: "12px",
-            }}
-          >
-            {typeLabelKeys[ticket.type]
-              ? t(typeLabelKeys[ticket.type])
-              : ticket.type}
-          </Box>
-        </>
+        <Box
+          sx={{
+            color: palette.fieldValue,
+            fontWeight: 400,
+            fontSize: "12px",
+          }}
+        >
+          {typeLabelKeys[ticket.type]
+            ? t(typeLabelKeys[ticket.type])
+            : ticket.type}
+        </Box>
       ),
     },
     {
@@ -85,19 +80,16 @@ export const PropertiesCard: React.FC<Props> = ({
     {
       key: "project",
       label: t("tickets.detail.field_project"),
-      value: (
-        <>
-          <FolderOutlined sx={{ fontSize: 14, color: palette.folderIcon }} />
-          <Box
-            sx={{
-              color: palette.fieldValue,
-              fontWeight: 400,
-              fontSize: "12px",
-            }}
-          >
-            {ticket.projectName ?? "—"}
-          </Box>
-        </>
+      value: ticket.projectName ? (
+        <Box
+          sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
+        >
+          {ticket.projectName}
+        </Box>
+      ) : (
+        <Box sx={{ color: palette.muted, fontWeight: 400, fontSize: "12px" }}>
+          {t("tickets.detail.unassigned")}
+        </Box>
       ),
     },
   ];

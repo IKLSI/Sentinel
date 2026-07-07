@@ -5,11 +5,12 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
+import { useToast } from "@/hooks/useToast";
+import { downloadAttachmentByUrl } from "@/features/tickets/api/tickets";
+import { extractApiError } from "@/utils/apiError";
 import { Ticket } from "@/types";
 import { DetailPalette, getInitials } from "../../helpers";
 
@@ -50,7 +51,6 @@ interface Props {
   isLast: boolean;
   isOwn: boolean;
   palette: DetailPalette;
-  markdownSx: object;
   onEdit: (id: string, content: string) => void;
   onDelete: (id: string) => void;
 }
@@ -60,12 +60,23 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   isLast,
   isOwn,
   palette,
-  markdownSx,
   onEdit,
   onDelete,
 }) {
   const { t, culture } = useI18n();
+  const { showToast } = useToast();
   const { mainText, attachments } = parseComment(c.content);
+
+  const handleDownload = async (a: Attachment) => {
+    try {
+      await downloadAttachmentByUrl(a.url, a.fileName);
+    } catch (err) {
+      showToast(
+        extractApiError(err, t("tickets.detail.attachments_download_error")),
+        "error",
+      );
+    }
+  };
 
   return (
     <Box
@@ -210,19 +221,16 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
         >
           {mainText && (
             <Box sx={{ p: "12px 16px", ...(attachments.length > 0 ? { pb: "8px" } : {}) }}>
-              <Box sx={markdownSx}>
-                <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a: ({ href, children }) => (
-                    <a href={href} target="_blank" rel="noopener noreferrer">
-                      {children}
-                    </a>
-                  ),
+              <Box
+                sx={{
+                  fontSize: "13px",
+                  color: palette.mdText,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  lineHeight: 1.6,
                 }}
               >
                 {mainText}
-              </ReactMarkdown>
               </Box>
             </Box>
           )}
@@ -241,11 +249,12 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               {attachments.map((a, i) => (
                 <Box
                   key={i}
-                  component="a"
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  component="button"
+                  type="button"
+                  onClick={() => handleDownload(a)}
                   sx={{
+                    all: "unset",
+                    cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "5px",
@@ -257,7 +266,6 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
                     fontSize: "11px",
                     fontWeight: 500,
                     color: palette.tabIdleFg,
-                    textDecoration: "none",
                     maxWidth: "220px",
                     transition: "background 0.12s, color 0.12s",
                     "&:hover": {

@@ -1,27 +1,19 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import FolderOutlined from "@mui/icons-material/FolderOutlined";
-import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import LinkRounded from "@mui/icons-material/LinkRounded";
-import { useI18n } from "@/i18n/I18nContext";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { Ticket } from "@/types";
-import { DetailPalette, getRelativeShort } from "../../helpers";
+import { DetailPalette } from "../../helpers";
 
 interface Props {
-  ticket: Ticket;
   palette: DetailPalette;
   endpointMatch: string | null;
   titleBeforeEndpoint: string;
 }
 
 export const TicketHeader: React.FC<Props> = ({
-  ticket,
   palette,
   endpointMatch,
   titleBeforeEndpoint,
 }) => {
-  const { t, culture } = useI18n();
   return (
     <Box
       sx={{
@@ -30,51 +22,6 @@ export const TicketHeader: React.FC<Props> = ({
         pb: 0,
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          mb: "24px",
-          color: palette.breadcrumbText,
-          fontSize: "13px",
-        }}
-      >
-        <Box
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            fontWeight: 600,
-          }}
-        >
-          <FolderOutlined sx={{ fontSize: 13, color: palette.folderIcon }} />
-          {ticket.projectName ?? t("tickets.detail.project_label")}
-        </Box>
-        <ChevronRightOutlined sx={{ fontSize: 12, color: palette.chevron }} />
-        <Box
-          sx={{
-            fontFamily: "var(--font-mono)",
-            letterSpacing: "0.08em",
-            fontSize: "12px",
-            color: palette.referenceText,
-            fontWeight: 700,
-          }}
-        >
-          {ticket.reference}
-        </Box>
-        <ChevronRightOutlined sx={{ fontSize: 12, color: palette.chevron }} />
-        <Box sx={{ color: palette.muted, fontSize: "12px" }}>
-          {t("tickets.detail.opened_label")}{" "}
-          <Box
-            component="span"
-            sx={{ color: palette.strongText, fontWeight: 700 }}
-          >
-            {getRelativeShort(ticket.createdAt, t, getDateFnsLocale(culture))}
-          </Box>
-        </Box>
-      </Box>
-
       <Box
         component="h1"
         sx={{

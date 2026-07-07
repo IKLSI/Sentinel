@@ -95,13 +95,11 @@ public class TicketService
 
         if (dto.Title != null && dto.Title != ticket.Title)
         {
-            changes.Add(CreateHistory(ticketId, userId, "Title", ticket.Title, dto.Title));
             ticket.Title = dto.Title;
         }
 
         if (dto.Description != null && dto.Description != ticket.Description)
         {
-            changes.Add(CreateHistory(ticketId, userId, "Description", ticket.Description, dto.Description));
             ticket.Description = dto.Description;
         }
 
@@ -119,7 +117,6 @@ public class TicketService
 
         if (dto.ProjectId != ticket.ProjectId)
         {
-            changes.Add(CreateHistory(ticketId, userId, "ProjectId", ticket.ProjectId?.ToString(), dto.ProjectId?.ToString()));
             ticket.ProjectId = dto.ProjectId;
         }
 
@@ -138,14 +135,11 @@ public class TicketService
 
         if (dto.Tags != null)
         {
-            string newTagsJson = JsonSerializer.Serialize(dto.Tags);
-            changes.Add(CreateHistory(ticketId, userId, "Tags", ticket.Tags, newTagsJson));
-            ticket.Tags = newTagsJson;
+            ticket.Tags = JsonSerializer.Serialize(dto.Tags);
         }
 
         if (dto.IsInternal.HasValue && dto.IsInternal.Value != ticket.IsInternal)
         {
-            changes.Add(CreateHistory(ticketId, userId, "IsInternal", ticket.IsInternal.ToString(), dto.IsInternal.Value.ToString()));
             ticket.IsInternal = dto.IsInternal.Value;
         }
 

@@ -9,7 +9,7 @@ import { AppModal } from "@/components/AppModal";
 import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
-import { User } from "@/types";
+import { TicketStatusDef, User } from "@/types";
 import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
 
 export interface EditFormState {
@@ -17,6 +17,7 @@ export interface EditFormState {
   description: string;
   priority: string;
   type: string;
+  status: string;
   projectId: string;
   assignedToId: string;
   estimatedMinutes: number;
@@ -29,6 +30,7 @@ interface Props {
   form: EditFormState;
   onFormChange: (updater: (f: EditFormState) => EditFormState) => void;
   projects: ProjectDto[];
+  statuses: TicketStatusDef[];
   users: User[];
   saving: boolean;
   onSubmit: () => void;
@@ -59,6 +61,7 @@ export const EditTicketModal: React.FC<Props> = ({
   form,
   onFormChange,
   projects,
+  statuses,
   users,
   saving,
   onSubmit,
@@ -117,27 +120,44 @@ export const EditTicketModal: React.FC<Props> = ({
             sx={modalInputSx}
           />
         </Box>
+        <Box>
+          <Label>{t("tickets.list.field_priority")}</Label>
+          <Box
+            component="select"
+            value={form.priority}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              onFormChange((f) => ({ ...f, priority: e.target.value }))
+            }
+            sx={modalSelectSx}
+          >
+            <option value="critical">
+              {t("tickets.list.priority_critical")}
+            </option>
+            <option value="high">{t("tickets.list.priority_high")}</option>
+            <option value="medium">
+              {t("tickets.list.priority_medium")}
+            </option>
+            <option value="low">{t("tickets.list.priority_low")}</option>
+          </Box>
+        </Box>
         <Box
           sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
         >
           <Box>
-            <Label>{t("tickets.list.field_priority")}</Label>
+            <Label>{t("tickets.list.field_status")}</Label>
             <Box
               component="select"
-              value={form.priority}
+              value={form.status}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, priority: e.target.value }))
+                onFormChange((f) => ({ ...f, status: e.target.value }))
               }
               sx={modalSelectSx}
             >
-              <option value="critical">
-                {t("tickets.list.priority_critical")}
-              </option>
-              <option value="high">{t("tickets.list.priority_high")}</option>
-              <option value="medium">
-                {t("tickets.list.priority_medium")}
-              </option>
-              <option value="low">{t("tickets.list.priority_low")}</option>
+              {statuses.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
             </Box>
           </Box>
           <Box>
@@ -180,7 +200,7 @@ export const EditTicketModal: React.FC<Props> = ({
               }
               sx={modalSelectSx}
             >
-              <option value="">{t("tickets.list.no_project")}</option>
+              <option value="">{t("tickets.list.unassigned")}</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

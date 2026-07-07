@@ -10,7 +10,6 @@ interface Props {
   comments: Ticket["comments"];
   currentUserId?: string;
   palette: DetailPalette;
-  markdownSx: object;
   onEdit: (id: string, content: string) => void;
   onDelete: (id: string) => void;
 }
@@ -19,7 +18,6 @@ export const CommentThread: React.FC<Props> = ({
   comments,
   currentUserId,
   palette,
-  markdownSx,
   onEdit,
   onDelete,
 }) => {
@@ -33,7 +31,6 @@ export const CommentThread: React.FC<Props> = ({
           isLast={idx === comments.length - 1}
           isOwn={currentUserId === c.authorId}
           palette={palette}
-          markdownSx={markdownSx}
           onEdit={onEdit}
           onDelete={onDelete}
         />

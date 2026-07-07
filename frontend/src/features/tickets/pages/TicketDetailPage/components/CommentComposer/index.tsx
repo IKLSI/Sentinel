@@ -6,11 +6,6 @@ import Tooltip from "@mui/material/Tooltip";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
-import SendRounded from "@mui/icons-material/SendRounded";
-import FormatBoldRounded from "@mui/icons-material/FormatBoldRounded";
-import FormatItalicRounded from "@mui/icons-material/FormatItalicRounded";
-import CodeRounded from "@mui/icons-material/CodeRounded";
-import LinkOutlined from "@mui/icons-material/LinkOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
@@ -68,18 +63,6 @@ export const CommentComposer: React.FC<Props> = ({
   const [uploading, setUploading] = useState(false);
 
   const hasContent = value.trim().length > 0 || attachments.length > 0;
-
-  const applyWrap = (before: string, after: string) => {
-    editorRef.current?.applyWrap(before, after);
-  };
-
-  const applyCode = () => {
-    // Use code block if selection spans multiple lines, else inline
-    const [from, to] = editorRef.current?.getSelection() ?? [0, 0];
-    const selected = value.slice(from, to);
-    if (selected.includes("\n")) applyWrap("```\n", "\n```");
-    else applyWrap("`", "`");
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -292,46 +275,6 @@ export const CommentComposer: React.FC<Props> = ({
             gap: "4px",
           }}
         >
-          <Tooltip title="Gras" placement="top">
-            <Box
-              component="button"
-              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-              onClick={() => applyWrap("**", "**")}
-              sx={toolbarBtnSx}
-            >
-              <FormatBoldRounded sx={{ fontSize: 16 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip title="Italique" placement="top">
-            <Box
-              component="button"
-              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-              onClick={() => applyWrap("*", "*")}
-              sx={toolbarBtnSx}
-            >
-              <FormatItalicRounded sx={{ fontSize: 16 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip title="Code" placement="top">
-            <Box
-              component="button"
-              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-              onClick={applyCode}
-              sx={toolbarBtnSx}
-            >
-              <CodeRounded sx={{ fontSize: 16 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip title="Lien" placement="top">
-            <Box
-              component="button"
-              onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-              onClick={() => editorRef.current?.insertLink()}
-              sx={toolbarBtnSx}
-            >
-              <LinkOutlined sx={{ fontSize: 16 }} />
-            </Box>
-          </Tooltip>
           <Tooltip title="Pièce jointe" placement="top">
             <Box
               component="button"
@@ -357,18 +300,12 @@ export const CommentComposer: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            disableElevation
             onClick={handleSubmit}
             disabled={!hasContent || submitting}
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              flexShrink: 0,
               textTransform: "none",
               background:
                 "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 background:
@@ -376,19 +313,13 @@ export const CommentComposer: React.FC<Props> = ({
                 boxShadow: "none",
                 transform: "none",
               },
-              minWidth: "100px",
-              height: "32px",
-              borderRadius: "var(--r)",
-              fontWeight: 700,
-              fontSize: "12px",
             }}
           >
-            {!submitting ? (
-              <SendRounded sx={{ fontSize: 15 }} />
+            {submitting ? (
+              <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
             ) : (
-              <CircularProgress size={14} sx={{ color: "#fff" }} />
+              t("tickets.detail.send")
             )}
-            {t("tickets.detail.send")}
           </Button>
         </Box>
       </Box>

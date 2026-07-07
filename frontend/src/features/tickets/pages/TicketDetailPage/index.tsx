@@ -30,7 +30,6 @@ import { CommentComposer } from "./components/CommentComposer";
 import { PropertiesCard } from "./components/PropertiesCard";
 import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
-import { AttachmentsCard } from "./components/AttachmentsCard";
 import { extractApiError } from "@/utils/apiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
 import { CommentMode, Theme } from "@/types/enums";
@@ -268,7 +267,6 @@ export const TicketDetailPage: React.FC = () => {
           }}
         >
           <TicketHeader
-            ticket={ticket}
             palette={palette}
             endpointMatch={endpointMatch}
             titleBeforeEndpoint={titleBeforeEndpoint}
@@ -284,23 +282,21 @@ export const TicketDetailPage: React.FC = () => {
               pb: { xs: "18px", md: "24px" },
             }}
           >
-            <SectionDivider
-              palette={palette}
-              icon={<DescriptionOutlined sx={{ fontSize: 13 }} />}
-              label={t("tickets.detail.section_description")}
-            />
+            {ticket.description && (
+              <>
+                <SectionDivider
+                  palette={palette}
+                  icon={<DescriptionOutlined sx={{ fontSize: 13 }} />}
+                  label={t("tickets.detail.section_description")}
+                />
 
-            <Box>
-              {ticket.description ? (
-                <Box sx={{ fontSize: "13px", color: palette.mdText, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-                  {ticket.description}
+                <Box>
+                  <Box sx={{ fontSize: "13px", color: palette.mdText, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                    {ticket.description}
+                  </Box>
                 </Box>
-              ) : (
-                <Box sx={{ color: palette.descFallback, fontSize: "13px" }}>
-                  {t("tickets.detail.no_description")}
-                </Box>
-              )}
-            </Box>
+              </>
+            )}
 
             <SectionDivider
               palette={palette}
@@ -313,7 +309,6 @@ export const TicketDetailPage: React.FC = () => {
               comments={ticket.comments}
               currentUserId={user?.id}
               palette={palette}
-              markdownSx={markdownSx}
               onEdit={(idValue, content) => {
                 setEditCommentTarget({ id: idValue, content });
                 setEditCommentValue(content);
@@ -352,8 +347,6 @@ export const TicketDetailPage: React.FC = () => {
             palette={palette}
             priorityConfig={priorityConfig}
           />
-
-          <AttachmentsCard ticketId={ticket.id} palette={palette} />
 
           <HistoryCard
             ticket={ticket}

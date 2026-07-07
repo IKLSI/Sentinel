@@ -15,6 +15,7 @@ import {
   updateTicket,
 } from "@/features/tickets/api/tickets";
 import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
+import { changeTicketStatus } from "@/features/tickets/api/ticketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { Ticket, TicketFilters, TicketPriority, TicketType, TicketStatusDef, User, PaginatedResponse } from "@/types";
@@ -66,6 +67,7 @@ export const TicketsPage: React.FC = () => {
     description: "",
     priority: "medium",
     type: "bug",
+    status: "",
     projectId: "",
     assignedToId: "",
     estimatedMinutes: 0,
@@ -143,6 +145,7 @@ export const TicketsPage: React.FC = () => {
       description: ticket.description ?? "",
       priority: ticket.priority,
       type: ticket.type,
+      status: ticket.statusId,
       projectId: ticket.projectId ?? "",
       assignedToId: ticket.assignee?.id ?? "",
       estimatedMinutes:
@@ -185,6 +188,9 @@ export const TicketsPage: React.FC = () => {
         editTarget.id,
         payload as Partial<Ticket>,
       );
+      if (editForm.status && editForm.status !== editTarget.statusId) {
+        await changeTicketStatus(editTarget.id, editForm.status);
+      }
       queryClient.setQueryData<PaginatedResponse<Ticket>>(
         [TICKETS_QUERY_KEY, ticketsFilters],
         (prev) => prev ? { ...prev, items: prev.items.map((tk) => (tk.id === updated.id ? updated : tk)) } : prev,
@@ -372,6 +378,7 @@ export const TicketsPage: React.FC = () => {
         form={editForm}
         onFormChange={setEditForm}
         projects={modalProjects}
+        statuses={statuses}
         users={modalUsers}
         saving={editSaving}
         onSubmit={handleEdit}

@@ -1,4 +1,5 @@
 import apiClient from "../../../services/client";
+import { API_BASE_URL } from "@/constants/api";
 import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
 import {
   Ticket,
@@ -279,6 +280,22 @@ export const downloadAttachment = async (
     `/api/tickets/${ticketId}/attachments/${attachmentId}`,
     { responseType: "blob" },
   );
+  const url = URL.createObjectURL(new Blob([response.data]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+export const downloadAttachmentByUrl = async (
+  attachmentUrl: string,
+  fileName: string,
+): Promise<void> => {
+  const path = attachmentUrl.startsWith(API_BASE_URL)
+    ? attachmentUrl.slice(API_BASE_URL.length)
+    : attachmentUrl;
+  const response = await apiClient.get(path, { responseType: "blob" });
   const url = URL.createObjectURL(new Blob([response.data]));
   const a = document.createElement("a");
   a.href = url;
