@@ -79,4 +79,5 @@ public class AvailableReposResponse
     public List<AvailableRepoDto> Repos { get; set; } = new();
     public bool HasToken { get; set; }
     public bool FetchFailed { get; set; }
+    public int? FetchFailedStatusCode { get; set; }
 }

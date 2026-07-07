@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Settings;
 
@@ -8,9 +9,11 @@ namespace Sentinel.Application.Services;
 public class TokenProtector
 {
     private readonly byte[] _key;
+    private readonly ILogger<TokenProtector> _logger;
 
-    public TokenProtector(IOptions<EncryptionSettings> options)
+    public TokenProtector(IOptions<EncryptionSettings> options, ILogger<TokenProtector> logger)
     {
+        _logger = logger;
         string keyString = options.Value.Key;
 
         if (string.IsNullOrEmpty(keyString))
@@ -66,8 +69,9 @@ public class TokenProtector
 
             return Encoding.UTF8.GetString(plaintext);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Échec du déchiffrement d'un token protégé");
             return null;
         }
     }

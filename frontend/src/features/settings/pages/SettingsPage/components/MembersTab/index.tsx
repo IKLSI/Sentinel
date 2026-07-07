@@ -37,7 +37,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const ROLE_LABELS: Record<string, string> = useMemo(
     () => ({
       Admin: t("settings.role.admin"),
-      Client: t("settings.role.client"),
       Developer: t("settings.role.developer"),
     }),
     [t],
@@ -202,7 +201,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
         >
           <option value="all">{t("settings.members.filter_all_roles")}</option>
           <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
-          <option value={UserRole.Client}>{t("settings.role.client")}</option>
           <option value={UserRole.Developer}>{t("settings.role.developer")}</option>
         </Box>
         <Box sx={{ flex: 1 }} />

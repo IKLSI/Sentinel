@@ -38,7 +38,6 @@ export interface TicketComment {
   authorId: string;
   author: User;
   content: string;
-  isInternal: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,7 +68,6 @@ export interface Ticket {
   statusName: string;
   statusColor: string;
   statusIsClosed: boolean;
-  isInternal: boolean;
   estimatedHours?: number;
   timeSpentMinutes?: number;
   comments: TicketComment[];

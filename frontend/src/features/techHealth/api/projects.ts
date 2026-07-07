@@ -99,6 +99,7 @@ export interface AvailableReposResult {
   repos: AvailableRepoDto[]
   hasToken: boolean
   fetchFailed: boolean
+  fetchFailedStatusCode?: number
 }
 
 export const getAvailableRepos = async (signal?: AbortSignal): Promise<AvailableReposResult> => {

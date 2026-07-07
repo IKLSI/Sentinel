@@ -33,7 +33,6 @@ public class Ticket
     public Guid CreatedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public bool IsInternal { get; set; } = false;
     public string Tags { get; set; } = "[]";
     public TicketStatus? TicketStatus { get; set; }
     public Organization Organization { get; set; } = null!;

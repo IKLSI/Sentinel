@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
 
 namespace Sentinel.API.Controllers;
 
@@ -21,7 +20,4 @@ public abstract class BaseController : ControllerBase
     }
 
     protected string? GetCurrentJti() => User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-
-    protected bool CurrentUserIsClient() =>
-        User.FindFirst(ClaimTypes.Role)?.Value == UserRole.Client.ToString();
 }

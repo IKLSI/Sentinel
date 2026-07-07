@@ -16,7 +16,7 @@ public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("Le rôle est requis")
             .Must(r => Enum.TryParse<UserRole>(r, out _))
-            .WithMessage("Rôle invalide (Admin, Developer ou Client)");
+            .WithMessage("Rôle invalide (Admin ou Developer)");
     }
 }
 

@@ -526,9 +526,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
-                    b.Property<bool>("IsInternal")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -650,9 +647,6 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsInternal")
-                        .HasColumnType("boolean");
 
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uuid");

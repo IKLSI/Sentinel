@@ -79,7 +79,6 @@ export const KanbanPage: React.FC = () => {
     description: "",
     priority: "Medium",
     type: "Bug",
-    isInternal: false,
   });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
@@ -128,7 +127,7 @@ export const KanbanPage: React.FC = () => {
   const activeFilterCount = filteredProjects.length;
 
   const openCreateModal = useCallback(() => {
-    setCreateForm({ title: "", description: "", priority: "Medium", type: "Bug", isInternal: false });
+    setCreateForm({ title: "", description: "", priority: "Medium", type: "Bug" });
     setCreateEstMinutes(0);
     setShowCreateModal(true);
   }, []);

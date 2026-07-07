@@ -79,6 +79,7 @@ public class TechHealthController : BaseController
 
         bool hasToken = !string.IsNullOrEmpty(org.GithubToken) || !string.IsNullOrEmpty(org.GitlabToken);
         bool fetchFailed = false;
+        int? fetchFailedStatusCode = null;
         List<AvailableRepoDto> result = new();
 
         if (!string.IsNullOrEmpty(org.GithubToken))
@@ -91,9 +92,13 @@ public class TechHealthController : BaseController
             }
             else
             {
-                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitHub.ToString().ToLower());
+                (bool success, int? statusCode, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitHub.ToString().ToLower());
 
-                if (!success) fetchFailed = true;
+                if (!success)
+                {
+                    fetchFailed = true;
+                    fetchFailedStatusCode ??= statusCode;
+                }
 
                 foreach ((string name, string url) in repos)
                 {
@@ -113,9 +118,13 @@ public class TechHealthController : BaseController
             }
             else
             {
-                (bool success, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitLab.ToString().ToLower());
+                (bool success, int? statusCode, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitLab.ToString().ToLower());
 
-                if (!success) fetchFailed = true;
+                if (!success)
+                {
+                    fetchFailed = true;
+                    fetchFailedStatusCode ??= statusCode;
+                }
 
                 foreach ((string name, string url) in repos)
                 {
@@ -129,7 +138,8 @@ public class TechHealthController : BaseController
         {
             Repos = result,
             HasToken = hasToken,
-            FetchFailed = fetchFailed
+            FetchFailed = fetchFailed,
+            FetchFailedStatusCode = fetchFailedStatusCode
         });
     }
 
@@ -148,7 +158,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
     {
         Guid? organizationId = GetOrganizationId();
@@ -182,7 +192,7 @@ public class TechHealthController : BaseController
     }
 
     [HttpGet("projects/{id:guid}")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<ProjectDto>> GetProject(Guid id)
     {
         Guid? organizationId = GetOrganizationId();

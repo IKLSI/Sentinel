@@ -20,7 +20,6 @@ public class TicketDto
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public bool IsInternal { get; set; }
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();
@@ -33,7 +32,6 @@ public class TicketCommentDto
     public Guid AuthorId { get; set; }
     public string AuthorName { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
-    public bool IsInternal { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -52,7 +50,6 @@ public class TicketHistoryDto
 public class CreateCommentDto
 {
     public string Content { get; set; } = string.Empty;
-    public bool IsInternal { get; set; } = false;
 }
 
 public class ChangeStatusDto

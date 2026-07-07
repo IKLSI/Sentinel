@@ -12,5 +12,4 @@ public class UpdateTicketDto
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public List<string>? Tags { get; set; }
-    public bool? IsInternal { get; set; }
 }

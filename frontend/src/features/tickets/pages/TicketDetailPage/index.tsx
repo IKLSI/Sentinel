@@ -32,7 +32,7 @@ import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
 import { extractApiError } from "@/utils/apiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
-import { CommentMode, Theme } from "@/types/enums";
+import { Theme } from "@/types/enums";
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
@@ -52,9 +52,6 @@ export const TicketDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [composerMode, setComposerMode] = useState<CommentMode>(
-    CommentMode.Reply,
-  );
   const [composerValue, setComposerValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -110,26 +107,17 @@ export const TicketDetailPage: React.FC = () => {
     if (!ticket || !content.trim()) return;
     setSubmitting(true);
     try {
-      const isInternal = composerMode === "internal";
-      const created = await addComment(ticket.id, content, isInternal);
+      const created = await addComment(ticket.id, content);
       setTicket((prev) =>
         prev
           ? {
               ...prev,
-              comments: [
-                ...prev.comments,
-                { ...created, isInternal: created.isInternal || isInternal },
-              ],
+              comments: [...prev.comments, created],
             }
           : prev,
       );
       setComposerValue("");
-      showToast(
-        isInternal
-          ? t("tickets.detail.internal_note_added")
-          : t("tickets.detail.reply_sent"),
-        "success",
-      );
+      showToast(t("tickets.detail.reply_sent"), "success");
     } catch (err) {
       showToast(
         extractApiError(err, t("tickets.detail.add_comment_error")),
@@ -154,9 +142,7 @@ export const TicketDetailPage: React.FC = () => {
           ? {
               ...prev,
               comments: prev.comments.map((c) =>
-                c.id === updated.id
-                  ? { ...updated, isInternal: c.isInternal }
-                  : c,
+                c.id === updated.id ? updated : c,
               ),
             }
           : prev,
@@ -319,8 +305,6 @@ export const TicketDetailPage: React.FC = () => {
 
             <CommentComposer
               ticketId={id ?? ""}
-              mode={composerMode}
-              onModeChange={setComposerMode}
               value={composerValue}
               onValueChange={setComposerValue}
               submitting={submitting}

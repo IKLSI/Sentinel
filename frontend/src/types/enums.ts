@@ -1,7 +1,6 @@
 export const UserRole = {
   Admin: 'Admin',
   Developer: 'Developer',
-  Client: 'Client',
 } as const;
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
@@ -103,12 +102,6 @@ export const SortDirection = {
   Desc: 'desc',
 } as const;
 export type SortDirection = typeof SortDirection[keyof typeof SortDirection];
-
-export const CommentMode = {
-  Reply: 'reply',
-  Internal: 'internal',
-} as const;
-export type CommentMode = typeof CommentMode[keyof typeof CommentMode];
 
 export const SettingsTab = {
   Members: 'members',

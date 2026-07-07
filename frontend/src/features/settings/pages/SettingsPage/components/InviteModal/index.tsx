@@ -212,7 +212,6 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                 }
               >
                 <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
-                <option value={UserRole.Client}>{t("settings.role.client")}</option>
                 <option value={UserRole.Developer}>
                   {t("settings.role.developer")}
                 </option>

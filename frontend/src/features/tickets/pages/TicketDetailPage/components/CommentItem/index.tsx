@@ -1,6 +1,5 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import LockOutlined from "@mui/icons-material/LockOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
@@ -100,9 +99,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           width: "30px",
           height: "30px",
           borderRadius: "var(--r)",
-          background: c.isInternal
-            ? "linear-gradient(140deg, var(--avatar-user-1) 0%, var(--avatar-user-2) 100%)"
-            : "linear-gradient(140deg, var(--avatar-peer-1) 0%, var(--avatar-peer-2) 100%)",
+          background: "linear-gradient(140deg, var(--avatar-peer-1) 0%, var(--avatar-peer-2) 100%)",
           color: "#fff",
           fontFamily: "var(--font-mono)",
           fontWeight: 800,
@@ -129,27 +126,6 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           >
             {c.author.firstName} {c.author.lastName}
           </Box>
-
-          {c.isInternal && (
-            <Box
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontSize: "11px",
-                color: palette.internalBadgeFg,
-                fontWeight: 800,
-                px: "10px",
-                py: "4px",
-                borderRadius: "var(--r)",
-              }}
-            >
-              <LockOutlined sx={{ fontSize: 14 }} />
-              {t("tickets.detail.internal_note_badge")}
-            </Box>
-          )}
 
           <Box sx={{ color: palette.chevron, fontSize: "11px" }}>·</Box>
           <Box
@@ -210,13 +186,9 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
 
         <Box
           sx={{
-            border: c.isInternal
-              ? `1px solid ${palette.commentBorderInternal}`
-              : `1px solid ${palette.commentBorderExternal}`,
+            border: `1px solid ${palette.commentBorderExternal}`,
             borderRadius: "var(--r-lg)",
-            background: c.isInternal
-              ? palette.commentBgInternal
-              : palette.commentBgExternal,
+            background: palette.commentBgExternal,
           }}
         >
           {mainText && (

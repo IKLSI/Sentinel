@@ -53,7 +53,6 @@ export const TicketsPage: React.FC = () => {
     description: "",
     priority: "Medium",
     type: "Bug",
-    isInternal: false,
   });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
@@ -71,7 +70,6 @@ export const TicketsPage: React.FC = () => {
     projectId: "",
     assignedToId: "",
     estimatedMinutes: 0,
-    isInternal: false,
   });
   const [editSaving, setEditSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -114,7 +112,6 @@ export const TicketsPage: React.FC = () => {
       description: "",
       priority: "Medium",
       type: "Bug",
-      isInternal: false,
     });
     setCreateEstMinutes(0);
     setShowCreateModal(true);
@@ -152,7 +149,6 @@ export const TicketsPage: React.FC = () => {
         ticket.estimatedHours != null
           ? Math.round(ticket.estimatedHours * 60)
           : 0,
-      isInternal: ticket.isInternal,
     });
     setEditTarget(ticket);
   }, []);
@@ -178,7 +174,6 @@ export const TicketsPage: React.FC = () => {
         description: editForm.description,
         priority: editForm.priority,
         type: editForm.type,
-        isInternal: editForm.isInternal,
       };
       if (editForm.projectId) payload.projectId = editForm.projectId;
       if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;

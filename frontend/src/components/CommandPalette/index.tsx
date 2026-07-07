@@ -69,7 +69,6 @@ export const CommandPalette: React.FC = () => {
     }
   }, [open]);
 
-  const isClient = user?.role === UserRole.Client;
   const isAdmin = user?.role === UserRole.Admin;
 
   const allItems: PaletteItem[] = useMemo(() => {
@@ -137,10 +136,9 @@ export const CommandPalette: React.FC = () => {
     return items.filter((it) => {
       if (!it.roles) return true;
       if (isAdmin) return it.roles.includes(UserRole.Admin);
-      if (isClient) return it.roles.includes(UserRole.Client);
       return it.roles.includes(UserRole.Developer);
     });
-  }, [isAdmin, isClient, navigate, close, showToast, t]);
+  }, [isAdmin, navigate, close, showToast, t]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

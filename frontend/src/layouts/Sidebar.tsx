@@ -196,20 +196,17 @@ export const Sidebar: React.FC = () => {
   };
 
   const isAdmin = user?.role === UserRole.Admin;
-  const isClient = user?.role === UserRole.Client;
   const { unreadCount } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
   const filteredSections = useMemo(() => {
-    const clientAllowed = ["sidebar.section.tickets"];
     return navSections
-      .filter((s) => !isClient || clientAllowed.includes(s.titleKey))
       .filter((s) => !s.adminOnly || isAdmin)
       .map((s) => ({
         ...s,
         items: s.items.filter((item) => !item.adminOnly || isAdmin),
       }))
       .filter((s) => s.items.length > 0);
-  }, [isClient, isAdmin]);
+  }, [isAdmin]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};

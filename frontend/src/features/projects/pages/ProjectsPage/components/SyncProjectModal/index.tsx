@@ -31,6 +31,7 @@ export const SyncProjectModal: React.FC<Props> = ({
   const [repos, setRepos] = useState<AvailableRepoDto[]>([]);
   const [hasToken, setHasToken] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
+  const [fetchFailedStatusCode, setFetchFailedStatusCode] = useState<number | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,7 @@ export const SyncProjectModal: React.FC<Props> = ({
     setError(false);
     setHasToken(true);
     setFetchFailed(false);
+    setFetchFailedStatusCode(undefined);
     setSearch("");
     setSelected(new Set());
     getAvailableRepos(ctrl.signal)
@@ -53,6 +55,7 @@ export const SyncProjectModal: React.FC<Props> = ({
         setRepos(data.repos);
         setHasToken(data.hasToken);
         setFetchFailed(data.fetchFailed);
+        setFetchFailedStatusCode(data.fetchFailedStatusCode);
       })
       .catch(() => { if (!ctrl.signal.aborted) setError(true); })
       .finally(() => { if (!ctrl.signal.aborted) setLoading(false); });
@@ -104,11 +107,17 @@ export const SyncProjectModal: React.FC<Props> = ({
       ? t("projects.import_modal.import_count", { count: selected.size })
       : t("projects.import_modal.import");
 
-  const emptyMessage = !hasToken
+  const emptyTitle = !hasToken
     ? t("projects.import_modal.no_token")
     : fetchFailed
-      ? t("projects.import_modal.fetch_failed")
+      ? t("projects.import_modal.fetch_failed_title")
       : t("projects.import_modal.empty");
+
+  const emptySubtitle = hasToken && fetchFailed
+    ? fetchFailedStatusCode != null
+      ? t("projects.import_modal.fetch_failed_subtitle", { status: fetchFailedStatusCode })
+      : t("projects.import_modal.fetch_failed_subtitle_generic")
+    : undefined;
 
   return (
     <Dialog
@@ -242,8 +251,11 @@ export const SyncProjectModal: React.FC<Props> = ({
           <Box className="empty-state">
             <FolderOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
             <Box className="empty-state-title">
-              {repos.length === 0 ? emptyMessage : t("projects.sync_modal.no_results")}
+              {repos.length === 0 ? emptyTitle : t("projects.sync_modal.no_results")}
             </Box>
+            {repos.length === 0 && emptySubtitle && (
+              <Box className="empty-state-subtitle">{emptySubtitle}</Box>
+            )}
           </Box>
         ) : (
           visible.map((repo) => {

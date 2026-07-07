@@ -122,15 +122,6 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
-const NonClientRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { user } = useAuth();
-  if (user?.role === UserRole.Client)
-    return <Navigate to={ROUTES.TICKETS} replace />;
-  return <>{children}</>;
-};
-
 export const AppRoutes: React.FC = () => (
   <Suspense fallback={<FullScreenLoader />}>
     <Routes>
@@ -146,71 +137,37 @@ export const AppRoutes: React.FC = () => (
           </PrivateRoute>
         }
       >
-        <Route
-          path="/"
-          element={
-            <NonClientRoute>
-              <DashboardPage />
-            </NonClientRoute>
-          }
-        />
+        <Route path="/" element={<DashboardPage />} />
         <Route path="/tickets" element={<TicketsPage />} />
         <Route path="/tickets/kanban" element={<KanbanPage />} />
         <Route path="/tickets/:id" element={<TicketDetailPage />} />
-        <Route
-          path="/projects"
-          element={
-            <NonClientRoute>
-              <ProjectsPage />
-            </NonClientRoute>
-          }
-        />
-        <Route
-          path="/projects/:id"
-          element={
-            <NonClientRoute>
-              <ProjectDetailPage />
-            </NonClientRoute>
-          }
-        />
-        <Route
-          path="/time-tracking"
-          element={
-            <NonClientRoute>
-              <TimeTrackingPage />
-            </NonClientRoute>
-          }
-        />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/time-tracking" element={<TimeTrackingPage />} />
 
         <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/settings"
           element={
-            <NonClientRoute>
-              <AdminRoute>
-                <SettingsPage />
-              </AdminRoute>
-            </NonClientRoute>
+            <AdminRoute>
+              <SettingsPage />
+            </AdminRoute>
           }
         />
         <Route
           path="/organisation"
           element={
-            <NonClientRoute>
-              <AdminRoute>
-                <OrganisationPage />
-              </AdminRoute>
-            </NonClientRoute>
+            <AdminRoute>
+              <OrganisationPage />
+            </AdminRoute>
           }
         />
         <Route
           path="/users"
           element={
-            <NonClientRoute>
-              <AdminRoute>
-                <UsersPage />
-              </AdminRoute>
-            </NonClientRoute>
+            <AdminRoute>
+              <UsersPage />
+            </AdminRoute>
           }
         />
       </Route>

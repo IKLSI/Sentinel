@@ -23,13 +23,13 @@ public class RepositoryHostClient
         _logger = logger;
     }
 
-    public async Task<(bool Success, List<(string Name, string Url)> Repos)> ListUserRepositoriesAsync(string token, string platform)
+    public async Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListUserRepositoriesAsync(string token, string platform)
     {
         if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
             return await ListGitHubUserRepositoriesAsync(token);
         if (platform.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
             return await ListGitLabUserRepositoriesAsync(token);
-        return (true, []);
+        return (true, null, []);
     }
 
     public async Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform)
@@ -118,7 +118,7 @@ public class RepositoryHostClient
         return false;
     }
 
-    private async Task<(bool Success, List<(string Name, string Url)> Repos)> ListGitHubUserRepositoriesAsync(string token)
+    private async Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListGitHubUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
         HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
@@ -135,13 +135,13 @@ public class RepositoryHostClient
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Échec récupération des dépôts GitHub");
-                return (false, result);
+                return (false, null, result);
             }
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Échec récupération des dépôts GitHub : statut {Status}", response.StatusCode);
-                return (false, result);
+                return (false, (int)response.StatusCode, result);
             }
 
             List<JsonElement>? repos;
@@ -149,7 +149,7 @@ public class RepositoryHostClient
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Échec lecture des dépôts GitHub");
-                return (false, result);
+                return (false, null, result);
             }
 
             if (repos == null || repos.Count == 0) break;
@@ -166,10 +166,10 @@ public class RepositoryHostClient
             page++;
         }
 
-        return (true, result);
+        return (true, null, result);
     }
 
-    private async Task<(bool Success, List<(string Name, string Url)> Repos)> ListGitLabUserRepositoriesAsync(string token)
+    private async Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListGitLabUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
         HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
@@ -186,13 +186,13 @@ public class RepositoryHostClient
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Échec récupération des dépôts GitLab");
-                return (false, result);
+                return (false, null, result);
             }
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Échec récupération des dépôts GitLab : statut {Status}", response.StatusCode);
-                return (false, result);
+                return (false, (int)response.StatusCode, result);
             }
 
             List<JsonElement>? projects;
@@ -200,7 +200,7 @@ public class RepositoryHostClient
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Échec lecture des dépôts GitLab");
-                return (false, result);
+                return (false, null, result);
             }
 
             if (projects == null || projects.Count == 0) break;
@@ -217,7 +217,7 @@ public class RepositoryHostClient
             page++;
         }
 
-        return (true, result);
+        return (true, null, result);
     }
 
     private static HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)

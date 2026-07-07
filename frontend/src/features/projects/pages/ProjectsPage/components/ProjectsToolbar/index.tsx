@@ -69,7 +69,7 @@ export const ProjectsToolbar: React.FC<Props> = ({
             sx={{
               all: "unset",
               flex: 1,
-              fontSize: "14px",
+              fontSize: "12.5px",
               color: "var(--text)",
               fontFamily: "var(--font-ui)",
               "&::placeholder": { color: "var(--muted)" },

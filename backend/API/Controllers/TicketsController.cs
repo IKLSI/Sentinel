@@ -177,9 +177,6 @@ public class TicketsController : BaseController
         if (!exists)
             return Forbid();
 
-        if (CurrentUserIsClient())
-            ticket.Comments = ticket.Comments.Where(c => !c.IsInternal).ToList();
-
         return Ok(ticket);
     }
 
@@ -251,7 +248,7 @@ public class TicketsController : BaseController
         if (string.IsNullOrWhiteSpace(dto.Content))
             return BadRequest(new { message = "Le contenu du commentaire est requis" });
 
-        TicketComment comment = await _ticketService.AddCommentAsync(id, dto.Content, userId.Value, dto.IsInternal);
+        TicketComment comment = await _ticketService.AddCommentAsync(id, dto.Content, userId.Value);
 
         User? user = await _context.Users.FindAsync(userId.Value);
 
@@ -269,7 +266,6 @@ public class TicketsController : BaseController
             AuthorId = comment.AuthorId,
             AuthorName = user?.FullName ?? string.Empty,
             Content = comment.Content,
-            IsInternal = comment.IsInternal,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         });
@@ -314,7 +310,6 @@ public class TicketsController : BaseController
             AuthorId = comment.AuthorId,
             AuthorName = comment.Author?.FullName ?? string.Empty,
             Content = comment.Content,
-            IsInternal = comment.IsInternal,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         });

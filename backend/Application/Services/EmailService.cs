@@ -16,7 +16,6 @@ public interface IEmailService
     Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl);
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
     Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl);
-    Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl);
     Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
     Task SendSubscriptionCanceledAsync(IEnumerable<string> adminEmails, string organizationName, string billingUrl);
     Task SendSubscriptionUpdatedAsync(IEnumerable<string> adminEmails, string organizationName, string oldPlan, string newPlan, string statusMessage, string billingUrl);
@@ -176,43 +175,6 @@ public class EmailService : IEmailService
         await client.DisconnectAsync(true);
 
         _logger.LogInformation("Email de vérification envoyé à {Email}", email);
-    }
-
-    public async Task SendNewClientTicketToAdminsAsync(IEnumerable<string> adminEmails, string clientName, string ticketTitle, string organizationName, string eventLabel, string contentLabel, string contentPreview, string ticketUrl)
-    {
-        string html = LoadTemplate("ticket-admin-new.html")
-            .Replace("{{CLIENT_NAME}}", clientName)
-            .Replace("{{TICKET_TITLE}}", ticketTitle)
-            .Replace("{{ORGANIZATION}}", organizationName)
-            .Replace("{{EVENT_LABEL}}", eventLabel)
-            .Replace("{{CONTENT_LABEL}}", contentLabel)
-            .Replace("{{CONTENT_PREVIEW}}", contentPreview)
-            .Replace("{{TICKET_URL}}", ticketUrl);
-
-        foreach (string adminEmail in adminEmails)
-        {
-            MimeMessage message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                _email.FromName,
-                _email.FromAddress
-            ));
-            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
-            message.Subject = $"[{organizationName}] {eventLabel} — {ticketTitle}";
-            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
-
-            using SmtpClient client = new SmtpClient();
-            string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
-            int    port     = _email.Port;
-            string username = _email.Username;
-            string password = _email.Password;
-            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-            if (!string.IsNullOrEmpty(username))
-                await client.AuthenticateAsync(username, password);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
-
-            _logger.LogInformation("Notification admin envoyée à {Email} pour ticket client", adminEmail);
-        }
     }
 
     public async Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)

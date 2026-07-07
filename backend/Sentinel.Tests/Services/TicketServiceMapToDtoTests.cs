@@ -23,7 +23,6 @@ public class TicketServiceMapToDtoTests
             CreatedById = Guid.NewGuid(),
             CreatedAt = now,
             UpdatedAt = now,
-            IsInternal = false,
             Tags = "[]",
             Comments = new List<TicketComment>(),
             History = new List<TicketHistory>(),
@@ -37,7 +36,6 @@ public class TicketServiceMapToDtoTests
         dto.Description.Should().Be("Détails");
         dto.Priority.Should().Be("critical");
         dto.Type.Should().Be("bug");
-        dto.IsInternal.Should().BeFalse();
         dto.Comments.Should().BeEmpty();
         dto.History.Should().BeEmpty();
         dto.TotalTimeMinutes.Should().Be(0);

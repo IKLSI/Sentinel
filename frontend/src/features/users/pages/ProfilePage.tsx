@@ -19,7 +19,6 @@ import { ROUTES } from "@/constants/routes";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
-  [UserRole.Client]: "profile.role.client",
   [UserRole.Developer]: "profile.role.developer",
 };
 

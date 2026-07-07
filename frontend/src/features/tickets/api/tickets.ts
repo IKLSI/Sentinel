@@ -45,7 +45,6 @@ interface TicketDto {
   createdByName: string;
   createdAt: string;
   updatedAt: string;
-  isInternal: boolean;
   tags: string[];
   comments: {
     id: string;
@@ -54,7 +53,6 @@ interface TicketDto {
     content: string;
     createdAt: string;
     updatedAt: string;
-    isInternal?: boolean;
   }[];
   history: {
     id: string;
@@ -97,7 +95,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
     statusName: dto.statusName,
     statusColor: dto.statusColor,
     statusIsClosed: dto.statusIsClosed,
-    isInternal: dto.isInternal ?? false,
     estimatedHours: dto.estimatedHours,
     timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({
@@ -106,7 +103,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
       authorId: c.authorId,
       author: createPartialUser(c.authorName, c.authorId, c.createdAt),
       content: c.content,
-      isInternal: c.isInternal ?? false,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     })),
@@ -168,7 +164,6 @@ export const deleteTicket = async (id: string): Promise<void> => {
 export const addComment = async (
   ticketId: string,
   content: string,
-  isInternal = false,
 ): Promise<TicketComment> => {
   const response = await apiClient.post<{
     id: string;
@@ -177,8 +172,7 @@ export const addComment = async (
     content: string;
     createdAt: string;
     updatedAt: string;
-    isInternal?: boolean;
-  }>(`/api/tickets/${ticketId}/comments`, { content, isInternal });
+  }>(`/api/tickets/${ticketId}/comments`, { content });
   const c = response.data;
   return {
     id: c.id,
@@ -186,7 +180,6 @@ export const addComment = async (
     authorId: c.authorId,
     author: createPartialUser(c.authorName, c.authorId, c.createdAt),
     content: c.content,
-    isInternal: c.isInternal ?? isInternal,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
@@ -204,7 +197,6 @@ export const updateComment = async (
     content: string;
     createdAt: string;
     updatedAt: string;
-    isInternal?: boolean;
   }>(`/api/tickets/${ticketId}/comments/${commentId}`, { content });
   const c = response.data;
   return {
@@ -213,7 +205,6 @@ export const updateComment = async (
     authorId: c.authorId,
     author: createPartialUser(c.authorName, c.authorId, c.createdAt),
     content: c.content,
-    isInternal: c.isInternal ?? false,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };

@@ -3,8 +3,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
-import MessageOutlined from "@mui/icons-material/MessageOutlined";
-import LockOutlined from "@mui/icons-material/LockOutlined";
 import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
@@ -15,9 +13,7 @@ import { DetailPalette } from "../../helpers";
 import { uploadAttachment } from "@/features/tickets/api/tickets";
 import { API_BASE_URL } from "@/constants/api";
 import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
-import { CommentMode, Theme } from "@/types/enums";
-
-type Mode = CommentMode;
+import { Theme } from "@/types/enums";
 
 interface Attachment {
   fileName: string;
@@ -27,8 +23,6 @@ interface Attachment {
 
 interface Props {
   ticketId: string;
-  mode: Mode;
-  onModeChange: (m: Mode) => void;
   value: string;
   onValueChange: (v: string) => void;
   submitting: boolean;
@@ -42,8 +36,6 @@ const BASE_URL = API_BASE_URL;
 
 export const CommentComposer: React.FC<Props> = ({
   ticketId,
-  mode,
-  onModeChange,
   value,
   onValueChange,
   submitting,
@@ -122,59 +114,6 @@ export const CommentComposer: React.FC<Props> = ({
 
   return (
     <Box sx={{ mt: "28px" }}>
-      {/* tab strip */}
-      <Box
-        sx={{
-          display: "inline-flex",
-          p: "3px",
-          background: palette.tabStripBg,
-          border: `1px solid ${palette.tabStripBorder}`,
-          borderRadius: "var(--r-md)",
-          mb: "8px",
-          gap: "3px",
-        }}
-      >
-        {[
-          {
-            key: "reply" as const,
-            label: t("tickets.detail.tab_reply"),
-            icon: <MessageOutlined sx={{ fontSize: 14 }} />,
-          },
-          {
-            key: "internal" as const,
-            label: t("tickets.detail.tab_internal_note"),
-            icon: <LockOutlined sx={{ fontSize: 14 }} />,
-          },
-        ].map((tab) => {
-          const active = mode === tab.key;
-          return (
-            <Box
-              key={tab.key}
-              component="button"
-              onClick={() => onModeChange(tab.key)}
-              sx={{
-                all: "unset",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                px: "12px",
-                height: "34px",
-                borderRadius: "var(--r)",
-                color: active ? palette.tabActiveFg : palette.tabIdleFg,
-                background: active ? palette.tabActiveBg : "transparent",
-                boxShadow: active ? palette.tabActiveShadow : "none",
-                fontSize: "12px",
-                fontWeight: 700,
-              }}
-            >
-              {tab.icon}
-              {tab.label}
-            </Box>
-          );
-        })}
-      </Box>
-
       <Box
         sx={{
           border: `1px solid ${palette.composerBorder}`,
@@ -190,11 +129,7 @@ export const CommentComposer: React.FC<Props> = ({
           value={value}
           onChange={onValueChange}
           onSubmit={handleSubmit}
-          placeholder={
-            mode === "internal"
-              ? t("tickets.detail.composer_internal_placeholder")
-              : t("tickets.detail.composer_reply_placeholder")
-          }
+          placeholder={t("tickets.detail.composer_reply_placeholder")}
           minHeight={90}
           isDark={isDark}
         />

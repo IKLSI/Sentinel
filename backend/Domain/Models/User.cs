@@ -16,8 +16,7 @@ public static class LanguageValues
 public enum UserRole
 {
     Admin,
-    Developer,
-    Client
+    Developer
 }
 
 public class User

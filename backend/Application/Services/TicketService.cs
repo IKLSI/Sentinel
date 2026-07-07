@@ -1,11 +1,8 @@
-using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
@@ -16,18 +13,14 @@ public class TicketService
 {
     private readonly SentinelContext _context;
     private readonly IMemoryCache _cache;
-    private readonly IBackgroundJobClient _backgroundJobs;
     private readonly INotificationService _notificationService;
-    private readonly FrontendSettings _frontend;
     private readonly ILogger<TicketService> _logger;
 
-    public TicketService(SentinelContext context, IMemoryCache cache, IBackgroundJobClient backgroundJobs, INotificationService notificationService, IOptions<FrontendSettings> frontendOptions, ILogger<TicketService> logger)
+    public TicketService(SentinelContext context, IMemoryCache cache, INotificationService notificationService, ILogger<TicketService> logger)
     {
         _context = context;
         _cache = cache;
-        _backgroundJobs = backgroundJobs;
         _notificationService = notificationService;
-        _frontend = frontendOptions.Value;
         _logger = logger;
     }
 
@@ -54,7 +47,6 @@ public class TicketService
             EstimatedHours = dto.EstimatedHours,
             CreatedById = createdById,
             Tags = JsonSerializer.Serialize(dto.Tags),
-            IsInternal = dto.IsInternal,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -62,8 +54,6 @@ public class TicketService
         await _context.Tickets.AddAsync(ticket);
         await _context.SaveChangesAsync();
         InvalidateDashboardCache(organizationId);
-
-        await NotifyAdminsIfClientTicketAsync(ticket, createdById, organizationId, "Nouveau ticket", "Description", dto.Description ?? string.Empty);
 
         if (dto.AssignedToId.HasValue && dto.AssignedToId.Value != createdById)
         {
@@ -136,11 +126,6 @@ public class TicketService
         if (dto.Tags != null)
         {
             ticket.Tags = JsonSerializer.Serialize(dto.Tags);
-        }
-
-        if (dto.IsInternal.HasValue && dto.IsInternal.Value != ticket.IsInternal)
-        {
-            ticket.IsInternal = dto.IsInternal.Value;
         }
 
         ticket.UpdatedAt = DateTime.UtcNow;
@@ -224,7 +209,7 @@ public class TicketService
         return true;
     }
 
-    public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId, bool isInternal = false)
+    public async Task<TicketComment> AddCommentAsync(Guid ticketId, string content, Guid authorId)
     {
         Ticket? ticket = await _context.Tickets
             .FirstOrDefaultAsync(t => t.Id == ticketId);
@@ -236,7 +221,6 @@ public class TicketService
             TicketId = ticketId,
             AuthorId = authorId,
             Content = content,
-            IsInternal = isInternal,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -307,7 +291,6 @@ public class TicketService
             CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
-            IsInternal = ticket.IsInternal,
             Tags = ticket.GetTags().ToList(),
             TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto
@@ -316,7 +299,6 @@ public class TicketService
                 AuthorId = c.AuthorId,
                 AuthorName = c.Author?.FullName ?? string.Empty,
                 Content = c.Content,
-                IsInternal = c.IsInternal,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt
             }).OrderBy(c => c.CreatedAt).ToList() ?? new List<TicketCommentDto>(),
@@ -331,41 +313,6 @@ public class TicketService
                 CreatedAt = h.CreatedAt
             }).OrderByDescending(h => h.CreatedAt).ToList() ?? new List<TicketHistoryDto>()
         };
-    }
-
-    private async Task NotifyAdminsIfClientTicketAsync(Ticket ticket, Guid actorId, Guid organizationId, string eventLabel, string contentLabel, string contentPreview)
-    {
-        User? actor = await _context.Users.FindAsync(actorId);
-        if (actor?.Role != UserRole.Client)
-            return;
-
-        List<string> adminEmails = await _context.Users
-            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive)
-            .Select(u => u.Email)
-            .ToListAsync();
-
-        if (adminEmails.Count == 0)
-            return;
-
-        string orgName = await _context.Organizations
-            .Where(o => o.Id == organizationId)
-            .Select(o => o.Name)
-            .FirstOrDefaultAsync() ?? string.Empty;
-
-        string ticketUrl = $"{_frontend.BaseUrl}/tickets/{ticket.Id}";
-        string preview = contentPreview.Length > 300 ? contentPreview[..300] + "…" : contentPreview;
-        string actorName = actor.FullName;
-        string ticketTitle = ticket.Title;
-
-        _backgroundJobs.Enqueue<IEmailService>(s => s.SendNewClientTicketToAdminsAsync(
-            adminEmails,
-            actorName,
-            ticketTitle,
-            orgName,
-            eventLabel,
-            contentLabel,
-            preview,
-            ticketUrl));
     }
 
     private static TicketHistory CreateHistory(Guid ticketId, Guid userId, string field, string? oldValue, string? newValue)

@@ -21,7 +21,6 @@ export interface CreateTicketPayload {
   projectId?: string;
   assignedToId?: string;
   estimatedHours?: number;
-  isInternal: boolean;
 }
 
 export function getPageNumbers(

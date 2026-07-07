@@ -3,8 +3,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
-import LockOutlined from "@mui/icons-material/LockOutlined";
-import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
 import { AppModal } from "@/components/AppModal";
 import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
@@ -219,107 +217,58 @@ export const CreateTicketModal: React.FC<Props> = ({
             </Box>
           </Box>
         </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
-          <Box>
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              mb: "8px",
+            }}
+          >
             <Box
+              component="label"
               sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                mb: "8px",
+                display: "block",
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "var(--muted2)",
+                letterSpacing: "0.04em",
               }}
             >
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {t("tickets.list.field_estimation")}
-              </Box>
-              <Tooltip
-                title={t("tickets.list.estimation_tooltip")}
-                placement="right"
-                arrow
-              >
-                <Box
-                  sx={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: "50%",
-                    border: "1px solid var(--border2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "9px",
-                    fontWeight: 700,
-                    color: "var(--muted)",
-                    cursor: "default",
-                    lineHeight: 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  i
-                </Box>
-              </Tooltip>
+              {t("tickets.list.field_estimation")}
             </Box>
-            <DurationPicker
-              value={estMinutes}
-              onChange={onEstMinutesChange}
-              width="100%"
-            />
-          </Box>
-          <Box>
-            <Label mb="8px">{t("tickets.list.field_visibility")}</Label>
-            <Box
-              onClick={() =>
-                onFormChange((f) => ({ ...f, isInternal: !f.isInternal }))
-              }
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                px: "12px",
-                py: "7px",
-                borderRadius: "var(--r)",
-                border: form.isInternal
-                  ? "1px solid var(--accent-border)"
-                  : "1px solid var(--border)",
-                background: form.isInternal
-                  ? "var(--accent-subtle)"
-                  : "var(--s1)",
-                cursor: "pointer",
-                userSelect: "none",
-                transition: "all 0.15s",
-              }}
+            <Tooltip
+              title={t("tickets.list.estimation_tooltip")}
+              placement="right"
+              arrow
             >
-              {form.isInternal ? (
-                <LockOutlined sx={{ fontSize: 14, color: "var(--accent)" }} />
-              ) : (
-                <LockOpenOutlined
-                  sx={{ fontSize: 14, color: "var(--muted)" }}
-                />
-              )}
               <Box
-                component="span"
                 sx={{
-                  fontSize: "13px",
-                  color: form.isInternal ? "var(--accent)" : "var(--muted)",
-                  fontWeight: form.isInternal ? 600 : 400,
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  color: "var(--muted)",
+                  cursor: "default",
+                  lineHeight: 1,
+                  flexShrink: 0,
                 }}
               >
-                {form.isInternal
-                  ? t("tickets.list.visibility_internal")
-                  : t("tickets.list.visibility_public")}
+                i
               </Box>
-            </Box>
+            </Tooltip>
           </Box>
+          <DurationPicker
+            value={estMinutes}
+            onChange={onEstMinutesChange}
+            width="100%"
+          />
         </Box>
         <Box>
           <Label>{t("tickets.list.field_description")}</Label>

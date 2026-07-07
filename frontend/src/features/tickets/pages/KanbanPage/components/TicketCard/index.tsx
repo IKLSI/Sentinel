@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
-import LockOutlined from "@mui/icons-material/LockOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { KanbanTicket, typeIcons, typeLabelKeys } from "../../helpers";
 
@@ -144,16 +143,6 @@ export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
             flexShrink: 0,
           }}
         >
-          {ticket.isInternal && (
-            <Tooltip
-              title={t("tickets.kanban.card.internal_tooltip")}
-              placement="top"
-              arrow
-            >
-              <LockOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
-            </Tooltip>
-          )}
-
           {ticket.commentCount > 0 && (
             <Tooltip
               title={

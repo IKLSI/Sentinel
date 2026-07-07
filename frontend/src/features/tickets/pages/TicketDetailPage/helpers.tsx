@@ -22,16 +22,13 @@ export interface DetailPalette {
   descFallback: string;
   threadLine: string;
   commentAuthor: string;
-  internalBadgeFg: string;
   commentTime: string;
   iconBtnIdle: string;
   iconBtnEditHoverBg: string;
   iconBtnEditHoverFg: string;
   iconBtnDelHoverBg: string;
   iconBtnDelHoverFg: string;
-  commentBorderInternal: string;
   commentBorderExternal: string;
-  commentBgInternal: string;
   commentBgExternal: string;
   emptyFg: string;
   emptySub: string;
@@ -94,16 +91,13 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   descFallback: "var(--muted2)",
   threadLine: "var(--border)",
   commentAuthor: "var(--text)",
-  internalBadgeFg: "var(--yellow)",
   commentTime: "var(--muted2)",
   iconBtnIdle: "var(--muted2)",
   iconBtnEditHoverBg: "var(--s2)",
   iconBtnEditHoverFg: "var(--text)",
   iconBtnDelHoverBg: "color-mix(in srgb, var(--red) 18%, transparent)",
   iconBtnDelHoverFg: "var(--red)",
-  commentBorderInternal: "color-mix(in srgb, var(--yellow) 35%, transparent)",
   commentBorderExternal: "var(--border)",
-  commentBgInternal: "var(--yellow-subtle)",
   commentBgExternal: "var(--s2)",
   emptyFg: "var(--muted2)",
   emptySub: "var(--muted)",
@@ -369,19 +363,6 @@ export function historyPresentation(
         from: mapPriorityLabel(entry.oldValue, t, priorityConfig),
         to: mapPriorityLabel(entry.newValue, t, priorityConfig),
       }),
-    };
-  }
-  if (field.includes("internal") || field === "isinternal") {
-    const mapBool = (v?: string) => {
-      if (v === undefined || v === null) return "—";
-      const s = String(v).trim().toLowerCase();
-      if (s === "true" || s === "1") return "Oui";
-      if (s === "false" || s === "0") return "Non";
-      return entry.newValue ?? entry.oldValue ?? s;
-    };
-    return {
-      tone: tones.default,
-      message: `Interne ${mapBool(entry.oldValue)} → ${mapBool(entry.newValue)}`,
     };
   }
   return {

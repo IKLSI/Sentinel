@@ -43,7 +43,7 @@ public class BillingController : BaseController
     }
 
     [HttpGet("status")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer, UserRole.Client)]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<BillingStatusDto>> GetStatus()
     {
         Guid? organizationId = GetOrganizationId();
