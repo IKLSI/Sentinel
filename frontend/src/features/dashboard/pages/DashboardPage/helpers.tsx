@@ -31,7 +31,7 @@ export interface UrgentTicket {
   commentCount: number;
 }
 
-export interface TicketCreationDataPoint {
+export interface VulnerabilityDetectionDataPoint {
   date: string;
   count: number;
 }
@@ -49,7 +49,7 @@ export interface StatsData {
   unassignedOpenTickets: number;
   urgentTickets: UrgentTicket[];
   recentActivity: ActivityItem[];
-  ticketsCreatedPerDay: TicketCreationDataPoint[];
+  vulnerabilitiesDetectedPerDay: VulnerabilityDetectionDataPoint[];
 }
 
 export const EMPTY_STATS: StatsData = {
@@ -65,7 +65,7 @@ export const EMPTY_STATS: StatsData = {
   unassignedOpenTickets: 0,
   urgentTickets: [],
   recentActivity: [],
-  ticketsCreatedPerDay: [],
+  vulnerabilitiesDetectedPerDay: [],
 };
 
 

@@ -17,7 +17,7 @@ import {
 } from "./helpers";
 import { UrgentTicketsPanel } from "./components/UrgentTicketsPanel";
 import { ActivityPanel } from "./components/ActivityPanel";
-import { TicketCreationPanel } from "./components/TicketCreationPanel";
+import { VulnerabilityDiscoveryPanel } from "./components/VulnerabilityDiscoveryPanel";
 import { ProjectsPanel } from "./components/ProjectsPanel";
 
 export const DashboardPage: React.FC = () => {
@@ -113,7 +113,7 @@ export const DashboardPage: React.FC = () => {
 
         <ActivityPanel activity={activity} palette={palette} />
 
-        <TicketCreationPanel data={stats.ticketsCreatedPerDay} palette={palette} />
+        <VulnerabilityDiscoveryPanel data={stats.vulnerabilitiesDetectedPerDay} palette={palette} />
       </Box>
     </Box>
   );

@@ -8,7 +8,7 @@ interface Props {
   payload?: ReadonlyArray<{ value?: number | string }>;
 }
 
-export const CreationChartTooltip: React.FC<Props> = ({
+export const DetectionChartTooltip: React.FC<Props> = ({
   active,
   label,
   payload,
@@ -51,8 +51,8 @@ export const CreationChartTooltip: React.FC<Props> = ({
         }}
       >
         {count === 1
-          ? t("dashboard.creation.tooltip_one")
-          : t("dashboard.creation.tooltip_other", { count })}
+          ? t("dashboard.discovery.tooltip_one")
+          : t("dashboard.discovery.tooltip_other", { count })}
       </Box>
     </Box>
   );
