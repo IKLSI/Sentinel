@@ -228,17 +228,6 @@ export interface TicketAttachment {
   createdAt: string;
 }
 
-export const listAttachments = async (
-  ticketId: string,
-  signal?: AbortSignal,
-): Promise<TicketAttachment[]> => {
-  const response = await apiClient.get<TicketAttachment[]>(
-    `/api/tickets/${ticketId}/attachments`,
-    { signal },
-  );
-  return response.data;
-};
-
 export const uploadAttachment = async (
   ticketId: string,
   file: File,
@@ -251,32 +240,6 @@ export const uploadAttachment = async (
     { headers: { [HTTP_HEADERS.CONTENT_TYPE]: CONTENT_TYPES.MULTIPART } },
   );
   return response.data;
-};
-
-export const deleteAttachment = async (
-  ticketId: string,
-  attachmentId: string,
-): Promise<void> => {
-  await apiClient.delete(
-    `/api/tickets/${ticketId}/attachments/${attachmentId}`,
-  );
-};
-
-export const downloadAttachment = async (
-  ticketId: string,
-  attachmentId: string,
-  fileName: string,
-): Promise<void> => {
-  const response = await apiClient.get(
-    `/api/tickets/${ticketId}/attachments/${attachmentId}`,
-    { responseType: "blob" },
-  );
-  const url = URL.createObjectURL(new Blob([response.data]));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(url);
 };
 
 export const downloadAttachmentByUrl = async (

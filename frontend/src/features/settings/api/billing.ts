@@ -39,8 +39,3 @@ export const startCheckout = async (planTier: string, billingInterval: 'monthly'
   const response = await apiClient.post<{ url: string }>('/api/billing/checkout', { planTier, billingInterval })
   return response.data.url
 }
-
-export const openBillingPortal = async (): Promise<string> => {
-  const response = await apiClient.post<{ url: string }>('/api/billing/portal', {})
-  return response.data.url
-}

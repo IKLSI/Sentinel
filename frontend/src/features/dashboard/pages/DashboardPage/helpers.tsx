@@ -267,27 +267,3 @@ export const scoreToGrade = (score: number): string => {
 };
 
 export const HEALTH_CRITICAL_THRESHOLD = 50;
-
-export const SCAN_LATE_HOURS = 48;
-
-const MS_PER_HOUR = 3_600_000;
-
-export const isScanLate = (lastScanAt?: string): boolean => {
-  if (!lastScanAt) return true;
-  const date = new Date(lastScanAt);
-  if (Number.isNaN(date.getTime())) return true;
-  return Date.now() - date.getTime() > SCAN_LATE_HOURS * MS_PER_HOUR;
-};
-
-export const repoPath = (
-  repositoryUrl?: string,
-  repositoryType?: string,
-): string => {
-  if (repositoryUrl && URL.canParse(repositoryUrl)) {
-    const path = new URL(repositoryUrl).pathname
-      .replace(/^\//, "")
-      .replace(/\.git$/, "");
-    if (path) return path;
-  }
-  return (repositoryType ?? "git").toLowerCase();
-};
