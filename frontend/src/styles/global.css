@@ -68,6 +68,7 @@
   --auth-register: #7257e6;
   --auth-register-hover: #5b3fd6;
   --auth-shadow: #5050a0;
+  --auth-photo: url("https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80");
 
   --preview-dk-bg: #080c14;
   --preview-dk-surface: #0d1120;
@@ -731,10 +732,12 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(70% 60% at 110% 110%, color-mix(in srgb, var(--auth-pink-500) 55%, transparent), transparent 65%),
-    radial-gradient(55% 55% at -10% -5%, color-mix(in srgb, var(--auth-violet-400) 60%, transparent), transparent 60%),
-    radial-gradient(40% 35% at 100% 0%, color-mix(in srgb, var(--auth-indigo-500) 35%, transparent), transparent 55%),
-    linear-gradient(145deg, var(--auth-indigo-950) 0%, var(--auth-indigo-900) 45%, var(--auth-indigo-700) 100%);
+    radial-gradient(60% 45% at 88% 8%, color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%, transparent 60%),
+    linear-gradient(160deg, rgba(24, 20, 62, 0.42) 0%, rgba(20, 17, 50, 0.34) 45%, rgba(14, 12, 38, 0.66) 100%),
+    radial-gradient(75% 65% at 5% 22%, rgba(16, 13, 45, 0.5) 0%, transparent 62%),
+    radial-gradient(80% 80% at 0% 100%, rgba(12, 10, 34, 0.42) 0%, transparent 60%),
+    var(--auth-photo) 40% 42% / cover no-repeat,
+    var(--auth-indigo-950);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -842,16 +845,18 @@ a:hover {
   letter-spacing: -0.04em;
   color: #fff;
   margin: 0 0 16px;
+  text-shadow: 0 1px 10px rgba(10, 10, 20, 0.5);
 }
 .lp-headline-accent {
   color: color-mix(in srgb, var(--auth-indigo-300) 72%, transparent);
 }
 .lp-headline-sub {
   font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.78);
   line-height: 1.65;
   margin: 0;
   max-width: 340px;
+  text-shadow: 0 1px 8px rgba(10, 10, 20, 0.55);
 }
 
 /* Points clés */
@@ -868,7 +873,9 @@ a:hover {
   gap: 15px;
   padding: 15px 18px;
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(48, 44, 96, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
   opacity: 0;
   transform: translateY(6px);
   animation: lp-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -891,7 +898,7 @@ a:hover {
 }
 .lp-feature-desc {
   font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.72);
   line-height: 1.5;
 }
 
@@ -1159,10 +1166,12 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(70% 60% at 110% 110%, color-mix(in srgb, var(--auth-pink-500) 55%, transparent), transparent 65%),
-    radial-gradient(55% 55% at -10% -5%, color-mix(in srgb, var(--auth-violet-400) 60%, transparent), transparent 60%),
-    radial-gradient(40% 35% at 100% 0%, color-mix(in srgb, var(--auth-indigo-500) 35%, transparent), transparent 55%),
-    linear-gradient(145deg, var(--auth-indigo-950) 0%, var(--auth-indigo-900) 45%, var(--auth-indigo-700) 100%);
+    radial-gradient(60% 45% at 88% 8%, color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%, transparent 60%),
+    linear-gradient(160deg, rgba(24, 20, 62, 0.42) 0%, rgba(20, 17, 50, 0.34) 45%, rgba(14, 12, 38, 0.66) 100%),
+    radial-gradient(75% 65% at 5% 22%, rgba(16, 13, 45, 0.5) 0%, transparent 62%),
+    radial-gradient(80% 80% at 0% 100%, rgba(12, 10, 34, 0.42) 0%, transparent 60%),
+    var(--auth-photo) 40% 42% / cover no-repeat,
+    var(--auth-indigo-950);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1248,16 +1257,18 @@ a:hover {
   letter-spacing: -0.04em;
   color: #fff;
   margin: 0 0 16px;
+  text-shadow: 0 1px 10px rgba(10, 10, 20, 0.5);
 }
 .aip-headline-accent {
   color: color-mix(in srgb, var(--auth-indigo-300) 72%, transparent);
 }
 .aip-headline-sub {
   font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.78);
   line-height: 1.65;
   margin: 0;
   max-width: 340px;
+  text-shadow: 0 1px 8px rgba(10, 10, 20, 0.55);
 }
 
 .aip-steps {
@@ -1271,7 +1282,9 @@ a:hover {
   gap: 15px;
   padding: 15px 18px;
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(48, 44, 96, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
   opacity: 0;
   transform: translateY(6px);
   animation: lp-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -1299,7 +1312,7 @@ a:hover {
 }
 .aip-step-desc {
   font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.72);
   line-height: 1.5;
 }
 
