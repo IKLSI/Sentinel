@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -56,6 +56,19 @@ export const ApiKeysTab: React.FC = () => {
   const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
   const [revoking, setRevoking] = useState(false);
 
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({
+    col: "expires",
+    dir: "asc",
+  });
+
+  const toggleSort = useCallback((col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  }, []);
+
   const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback((signal?: AbortSignal) => {
@@ -107,6 +120,40 @@ export const ApiKeysTab: React.FC = () => {
       setRevoking(false);
     }
   };
+
+  const sortedKeys = useMemo(() => {
+    if (!sort) return keys;
+    const mul = sort.dir === "asc" ? 1 : -1;
+    return keys.slice().sort((a, b) => {
+      switch (sort.col) {
+        case "name":
+          return mul * a.name.localeCompare(b.name);
+        case "prefix":
+          return mul * a.prefix.localeCompare(b.prefix);
+        case "created_by":
+          return mul * a.createdByName.localeCompare(b.createdByName);
+        case "created":
+          return (
+            mul *
+            (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          );
+        case "expires":
+          return (
+            mul *
+            ((a.expiresAt ? new Date(a.expiresAt).getTime() : Infinity) -
+              (b.expiresAt ? new Date(b.expiresAt).getTime() : Infinity))
+          );
+        case "last_used":
+          return (
+            mul *
+            ((a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0) -
+              (b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0))
+          );
+        default:
+          return 0;
+      }
+    });
+  }, [keys, sort]);
 
   const handleCopy = async () => {
     if (!secretKey) return;
@@ -168,30 +215,56 @@ export const ApiKeysTab: React.FC = () => {
                         { key: "created_by", label: t("settings.api_keys.col_created_by"), width: "160px" },
                         { key: "created",    label: t("settings.api_keys.col_created"),    width: "120px" },
                         { key: "expires",    label: t("settings.api_keys.col_expires"),    width: "120px" },
-                        { key: "last_used",  label: t("settings.api_keys.col_last_used"),  width: "150px" },
+                        { key: "last_used",  label: t("settings.api_keys.col_last_used"),  width: "200px" },
                         { key: "actions",    label: "",                                    width: "48px"  },
-                      ].map(({ key, label, width }) => (
-                        <Box
-                          component="th"
-                          key={key}
-                          sx={{
-                            px: "16px", py: "10px",
-                            textAlign: "left",
-                            fontSize: "10px", fontWeight: 700,
-                            color: "var(--muted)",
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
-                            whiteSpace: "nowrap",
-                            width,
-                          }}
-                        >
-                          {label}
-                        </Box>
-                      ))}
+                      ].map(({ key, label, width }) => {
+                        const sortable = key !== "actions";
+                        const isActive = sort?.col === key;
+                        return (
+                          <Box
+                            component="th"
+                            key={key}
+                            onClick={() => sortable && toggleSort(key)}
+                            sx={{
+                              px: "16px", py: "10px",
+                              textAlign: "left",
+                              fontSize: "10px", fontWeight: 700,
+                              color: isActive ? "var(--accent)" : "var(--muted)",
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              whiteSpace: "nowrap",
+                              width,
+                              cursor: sortable ? "pointer" : "default",
+                              userSelect: "none",
+                              transition: "color 0.12s",
+                              "&:hover": sortable
+                                ? { color: "var(--text-secondary)" }
+                                : {},
+                            }}
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              {label}
+                              {sortable && isActive && (
+                                <Box
+                                  sx={{
+                                    fontSize: "12px",
+                                    color: "var(--accent)",
+                                    lineHeight: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  {sort?.dir === "asc" ? "↑" : "↓"}
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      })}
                     </Box>
                   </Box>
                   <Box component="tbody">
-                    {keys.map((key) => (
+                    {sortedKeys.map((key) => (
                       <Box
                         component="tr"
                         key={key.id}

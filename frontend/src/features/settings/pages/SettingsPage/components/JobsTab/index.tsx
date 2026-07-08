@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -70,6 +70,18 @@ export const JobsTab: React.FC = () => {
   const [jobs, setJobs] = useState<RecurringJobStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({
+    col: "col_job",
+    dir: "asc",
+  });
+
+  const toggleSort = useCallback((col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  }, []);
 
   const loadJobs = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -110,6 +122,33 @@ export const JobsTab: React.FC = () => {
     return val === key ? id : val;
   };
 
+  const sortedJobs = useMemo(() => {
+    if (!sort) return jobs;
+    const mul = sort.dir === "asc" ? 1 : -1;
+    return jobs.slice().sort((a, b) => {
+      switch (sort.col) {
+        case "col_job":
+          return mul * jobName(a.id).localeCompare(jobName(b.id));
+        case "col_last_run":
+          return (
+            mul *
+            ((a.lastExecution ? new Date(a.lastExecution).getTime() : 0) -
+              (b.lastExecution ? new Date(b.lastExecution).getTime() : 0))
+          );
+        case "col_status":
+          return mul * (a.lastJobState ?? "").localeCompare(b.lastJobState ?? "");
+        case "col_next_run":
+          return (
+            mul *
+            ((a.nextExecution ? new Date(a.nextExecution).getTime() : 0) -
+              (b.nextExecution ? new Date(b.nextExecution).getTime() : 0))
+          );
+        default:
+          return 0;
+      }
+    });
+  }, [jobs, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Box
       sx={{
@@ -141,34 +180,60 @@ export const JobsTab: React.FC = () => {
                     { key: "col_job",      width: "auto"  },
                     { key: "col_last_run", width: "180px" },
                     { key: "col_status",   width: "140px" },
-                    { key: "col_next_run", width: "180px" },
+                    { key: "col_next_run", width: "230px" },
                     { key: "actions",      width: "48px"  },
-                  ].map(({ key, width }) => (
-                    <Box
-                      component="th"
-                      key={key}
-                      sx={{
-                        px: "16px",
-                        py: "10px",
-                        textAlign: "left",
-                        width,
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        color: "var(--muted)",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        whiteSpace: "nowrap",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--s2)",
-                      }}
-                    >
-                      {key === "actions" ? "" : t(`settings.jobs.${key}`)}
-                    </Box>
-                  ))}
+                  ].map(({ key, width }) => {
+                    const sortable = key !== "actions";
+                    const isActive = sort?.col === key;
+                    return (
+                      <Box
+                        component="th"
+                        key={key}
+                        onClick={() => sortable && toggleSort(key)}
+                        sx={{
+                          px: "16px",
+                          py: "10px",
+                          textAlign: "left",
+                          width,
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: isActive ? "var(--accent)" : "var(--muted)",
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                          borderBottom: "1px solid var(--border)",
+                          background: "var(--s2)",
+                          cursor: sortable ? "pointer" : "default",
+                          userSelect: "none",
+                          transition: "color 0.12s",
+                          "&:hover": sortable
+                            ? { color: "var(--text-secondary)" }
+                            : {},
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                          {key === "actions" ? "" : t(`settings.jobs.${key}`)}
+                          {sortable && isActive && (
+                            <Box
+                              sx={{
+                                fontSize: "12px",
+                                color: "var(--accent)",
+                                lineHeight: 1,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              {sort?.dir === "asc" ? "↑" : "↓"}
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+                    );
+                  })}
                 </Box>
               </Box>
               <Box component="tbody">
-                {jobs.map((job) => (
+                {sortedJobs.map((job) => (
                   <Box
                     component="tr"
                     key={job.id}

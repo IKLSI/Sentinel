@@ -38,26 +38,65 @@ export const getGrade = (grade: string | null | undefined): HealthGrade => {
   return HealthGrade.F;
 };
 
+export interface ProjectSortState {
+  col: string;
+  dir: "asc" | "desc";
+}
+
 export const HeadCell: React.FC<{
   children?: React.ReactNode;
   align?: "left" | "center" | "right";
-}> = ({ children, align = "left" }) => (
-  <Box
-    component="th"
-    sx={{
-      padding: "9px 12px",
-      borderBottom: "1px solid var(--border)",
-      background: "var(--s2)",
-      fontFamily: "var(--font-mono)",
-      fontSize: "10px",
-      fontWeight: 700,
-      letterSpacing: "0.08em",
-      textTransform: "uppercase",
-      color: "var(--muted2)",
-      textAlign: align,
-      whiteSpace: "nowrap",
-    }}
-  >
-    {children}
-  </Box>
-);
+  col?: string;
+  sort?: ProjectSortState | null;
+  onToggleSort?: (col: string) => void;
+}> = ({ children, align = "left", col, sort, onToggleSort }) => {
+  const sortable = !!col && !!onToggleSort;
+  const isActive = sortable && sort?.col === col;
+  return (
+    <Box
+      component="th"
+      onClick={() => sortable && onToggleSort!(col!)}
+      sx={{
+        padding: "9px 12px",
+        borderBottom: "1px solid var(--border)",
+        background: "var(--s2)",
+        fontFamily: "var(--font-mono)",
+        fontSize: "10px",
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: isActive ? "var(--accent)" : "var(--muted2)",
+        textAlign: align,
+        whiteSpace: "nowrap",
+        cursor: sortable ? "pointer" : "default",
+        userSelect: "none",
+        transition: "color 0.12s",
+        "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: align === "center" ? "center" : "flex-start",
+          gap: "5px",
+        }}
+      >
+        {children}
+        {isActive && (
+          <Box
+            sx={{
+              fontSize: "12px",
+              color: "var(--accent)",
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            {sort?.dir === "asc" ? "↑" : "↓"}
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+};

@@ -22,7 +22,7 @@ import {
   ProjectDto,
 } from "@/features/techHealth/api/projects";
 import { ScanFrequency } from "@/types/enums";
-import { GRADE_ORDER, GradeKey, getGrade } from "./helpers";
+import { GRADE_ORDER, GradeKey, getGrade, ProjectSortState } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { SyncProjectModal } from "./components/SyncProjectModal";
@@ -52,7 +52,19 @@ export const ProjectsPage: React.FC = () => {
     B: false,
     A: false,
   });
+  const [sort, setSort] = useState<ProjectSortState | null>({
+    col: "critical",
+    dir: "desc",
+  });
   const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const toggleSort = useCallback((col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  }, []);
 
   useEffect(
     () => () => {
@@ -166,14 +178,36 @@ export const ProjectsPage: React.FC = () => {
       map[getGrade(project.healthGrade)].push(project);
     });
     const sortGroup = (arr: ProjectDto[]) =>
-      arr.sort((a, b) =>
-        (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0) ||
-        (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0) ||
-        (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0)
-      );
+      arr.sort((a, b) => {
+        if (!sort) return 0;
+        const mul = sort.dir === "asc" ? 1 : -1;
+        switch (sort.col) {
+          case "name":
+            return mul * a.name.localeCompare(b.name);
+          case "vulnerabilities":
+            return (
+              mul *
+              ((a.totalVulnerabilities ?? 0) - (b.totalVulnerabilities ?? 0))
+            ) || (
+              (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
+            );
+          case "critical":
+            return (
+              mul *
+              ((a.criticalVulnerabilities ?? 0) -
+                (b.criticalVulnerabilities ?? 0))
+            ) || (
+              (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
+            );
+          case "tickets":
+            return mul * ((a.totalTickets ?? 0) - (b.totalTickets ?? 0));
+          default:
+            return 0;
+        }
+      });
     (Object.keys(map) as GradeKey[]).forEach((grade) => sortGroup(map[grade]));
     return map;
-  }, [filtered]);
+  }, [filtered, sort]);
 
   const visibleSections = useMemo(
     () => GRADE_ORDER.filter((grade) => grouped[grade].length > 0),
@@ -277,6 +311,8 @@ export const ProjectsPage: React.FC = () => {
                         [grade]: !prev[grade],
                       }))
                     }
+                    sort={sort}
+                    onToggleSort={toggleSort}
                     scanningId={scanningId}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}

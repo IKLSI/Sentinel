@@ -354,7 +354,7 @@
   "settings.invite.send": "Envoyer l'invitation",
   "settings.invite.sending": "Envoi…",
   "settings.invite.title": "Inviter un membre",
-  "settings.jobs.col_job": "Job",
+  "settings.jobs.col_job": "Nom",
   "settings.jobs.col_last_run": "Dernière exécution",
   "settings.jobs.col_next_run": "Prochaine exécution",
   "settings.jobs.col_schedule": "Planification",

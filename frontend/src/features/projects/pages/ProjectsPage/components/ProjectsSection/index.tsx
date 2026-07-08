@@ -4,7 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
-import { GRADE_VISUAL, GradeKey, HeadCell } from "../../helpers";
+import { GRADE_VISUAL, GradeKey, HeadCell, ProjectSortState } from "../../helpers";
 import { ProjectRow } from "../ProjectRow";
 import { ScanFrequency } from "@/types/enums";
 
@@ -13,6 +13,8 @@ interface Props {
   items: ProjectDto[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  sort: ProjectSortState | null;
+  onToggleSort: (col: string) => void;
   scanningId: string | null;
   onDelete: (project: ProjectDto) => void;
   onScan: (id: string) => void;
@@ -24,6 +26,8 @@ export const ProjectsSection: React.FC<Props> = ({
   items,
   collapsed,
   onToggleCollapsed,
+  sort,
+  onToggleSort,
   scanningId,
   onDelete,
   onScan,
@@ -183,14 +187,31 @@ export const ProjectsSection: React.FC<Props> = ({
             </Box>
             <Box component="thead">
               <Box component="tr">
-                <HeadCell>{t("projects.table.project")}</HeadCell>
-                <HeadCell align="center">
+                <HeadCell col="name" sort={sort} onToggleSort={onToggleSort}>
+                  {t("projects.table.project")}
+                </HeadCell>
+                <HeadCell
+                  align="center"
+                  col="vulnerabilities"
+                  sort={sort}
+                  onToggleSort={onToggleSort}
+                >
                   {t("projects.table.vulnerabilities")}
                 </HeadCell>
-                <HeadCell align="center">
+                <HeadCell
+                  align="center"
+                  col="critical"
+                  sort={sort}
+                  onToggleSort={onToggleSort}
+                >
                   {t("projects.table.critical")}
                 </HeadCell>
-                <HeadCell align="center">
+                <HeadCell
+                  align="center"
+                  col="tickets"
+                  sort={sort}
+                  onToggleSort={onToggleSort}
+                >
                   {t("projects.table.tickets")}
                 </HeadCell>
                 <HeadCell />

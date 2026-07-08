@@ -49,7 +49,19 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({
+    col: "member",
+    dir: "asc",
+  });
   const tableWrapRef = useRef<HTMLDivElement>(null);
+
+  const toggleSort = useCallback((col: string) => {
+    setSort((s) => {
+      if (s?.col !== col) return { col, dir: "asc" };
+      if (s.dir === "asc") return { col, dir: "desc" };
+      return null;
+    });
+  }, []);
 
   useEffect(() => {
     const el = tableWrapRef.current;
@@ -98,8 +110,36 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     }
     if (memberRoleFilter !== "all")
       list = list.filter((m) => m.role === memberRoleFilter);
+    if (sort) {
+      const mul = sort.dir === "asc" ? 1 : -1;
+      list = list.slice().sort((a, b) => {
+        switch (sort.col) {
+          case "member":
+            return (
+              mul *
+              `${a.firstName}${a.lastName}`.localeCompare(
+                `${b.firstName}${b.lastName}`,
+              )
+            );
+          case "role":
+            return mul * (ROLE_LABELS[a.role] ?? a.role).localeCompare(
+              ROLE_LABELS[b.role] ?? b.role,
+            );
+          case "status":
+            return mul * (Number(a.isActive) - Number(b.isActive));
+          case "last_login":
+            return (
+              mul *
+              ((a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : 0) -
+                (b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : 0))
+            );
+          default:
+            return 0;
+        }
+      });
+    }
     return list;
-  }, [members, memberSearch, memberRoleFilter]);
+  }, [members, memberSearch, memberRoleFilter, sort, ROLE_LABELS]);
 
   const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
   const paginatedMembers = filteredMembers.slice(
@@ -298,29 +338,61 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                       {
                         key: "last_login",
                         label: t("settings.members.col_last_login"),
-                        width: "160px",
+                        width: "220px",
                       },
                       { key: "actions", label: "", width: "48px" },
-                    ].map(({ key, label, width }) => (
-                      <Box
-                        component="th"
-                        key={key}
-                        sx={{
-                          px: "16px",
-                          py: "10px",
-                          textAlign: "left",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: "var(--muted)",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          whiteSpace: "nowrap",
-                          width,
-                        }}
-                      >
-                        {label}
-                      </Box>
-                    ))}
+                    ].map(({ key, label, width }) => {
+                      const sortable = key !== "actions";
+                      const isActive = sort?.col === key;
+                      return (
+                        <Box
+                          component="th"
+                          key={key}
+                          onClick={() => sortable && toggleSort(key)}
+                          sx={{
+                            px: "16px",
+                            py: "10px",
+                            textAlign: "left",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: isActive ? "var(--accent)" : "var(--muted)",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            whiteSpace: "nowrap",
+                            width,
+                            cursor: sortable ? "pointer" : "default",
+                            userSelect: "none",
+                            transition: "color 0.12s",
+                            "&:hover": sortable
+                              ? { color: "var(--text-secondary)" }
+                              : {},
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                            }}
+                          >
+                            {label}
+                            {sortable && isActive && (
+                              <Box
+                                sx={{
+                                  fontSize: "12px",
+                                  color: "var(--accent)",
+                                  lineHeight: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {sort?.dir === "asc" ? "↑" : "↓"}
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      );
+                    })}
                   </Box>
                 </Box>
                 <Box component="tbody">
