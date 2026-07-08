@@ -142,6 +142,8 @@
   "dashboard.creation.subtitle_week_one": "1 ticket créé ces 7 derniers jours",
   "dashboard.creation.subtitle_week_other": "{count} tickets créés ces 7 derniers jours",
   "dashboard.creation.title": "Créations de tickets",
+  "dashboard.creation.tooltip_one": "1 ticket créé",
+  "dashboard.creation.tooltip_other": "{count} tickets créés",
   "dashboard.park.below_none": "Tous les projets sont en bonne santé",
   "dashboard.park.below_one": "1 projet en mauvaise santé (score < 50)",
   "dashboard.park.below_other": "{count} projets en mauvaise santé (score < 50)",

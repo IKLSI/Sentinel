@@ -2,6 +2,9 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr, enUS, type Locale } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +26,13 @@ const DOT_COLORS: Record<string, string> = {
   red: "var(--red)",
   green: "var(--green)",
   accent: "var(--accent)",
+};
+
+const activityIcon = (type?: string) => {
+  if (type === "resolved") return CheckOutlined;
+  if (type === "created") return AddOutlined;
+  if (type === "vuln") return ReportProblemOutlined;
+  return HistoryOutlined;
 };
 
 const DATE_FNS_LOCALE: Record<string, Locale> = {
@@ -105,7 +115,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                 if (a.type === "resolved") {
                   return (
                     <>
-                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
                         {t("dashboard.activity.bold_resolved")}
                       </Box>
                       {t("dashboard.activity.suffix_resolved", { reference: a.reference ?? "" })}
@@ -115,7 +125,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                 if (a.type === "created") {
                   return (
                     <>
-                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
                         {t("dashboard.activity.bold_created")}
                       </Box>
                       {t("dashboard.activity.suffix_created", { reference: a.reference ?? "" })}
@@ -127,11 +137,11 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                   return (
                     <>
                       {isPlural && (
-                        <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                        <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
                           {a.count}&nbsp;
                         </Box>
                       )}
-                      <Box component="span" sx={{ fontWeight: 600, color: accentColor }}>
+                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
                         {isPlural
                           ? t("dashboard.activity.bold_critical_plural")
                           : t("dashboard.activity.bold_critical")}
@@ -166,6 +176,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               };
 
               const detail = renderDetail();
+              const Icon = activityIcon(a.type);
 
               return (
                 <Tooltip
@@ -194,11 +205,14 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                       "&:active": href ? { background: palette.rowActiveBg } : undefined,
                     }}
                   >
+                    <Icon sx={{ fontSize: 16, color: accentColor, flexShrink: 0 }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box
                         sx={{
-                          fontSize: "11px",
-                          color: palette.textPrimary,
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: palette.rowTitle,
+                          letterSpacing: "-0.01em",
                           lineHeight: 1.4,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -211,8 +225,9 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                         <Box
                           sx={{
                             mt: "2px",
-                            fontSize: "10px",
-                            color: palette.activityDetail,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "9.5px",
+                            color: palette.textMuted,
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
