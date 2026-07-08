@@ -19,7 +19,7 @@ import { changeTicketStatus } from "@/features/tickets/api/ticketStatuses";
 import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { Ticket, TicketFilters, TicketPriority, TicketType, TicketStatusDef, User, PaginatedResponse } from "@/types";
-import { CreateTicketPayload, PRIORITY_ORDER } from "./helpers";
+import { CreateTicketPayload, EMPTY_CREATE_TICKET_FORM, PRIORITY_ORDER } from "./helpers";
 import { TicketsToolbar } from "./components/TicketsToolbar";
 import { TicketsTable, SortState } from "./components/TicketsTable";
 import { Pagination } from "./components/Pagination";
@@ -48,12 +48,10 @@ export const TicketsPage: React.FC = () => {
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateTicketPayload>({
-    title: "",
-    description: "",
-    priority: "Medium",
-    type: "Bug",
-  });
+  const [createForm, setCreateForm] = useState<CreateTicketPayload>(
+    EMPTY_CREATE_TICKET_FORM,
+  );
+  const [createAnother, setCreateAnother] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
@@ -107,12 +105,7 @@ export const TicketsPage: React.FC = () => {
   };
 
   const openCreateModal = useCallback(() => {
-    setCreateForm({
-      title: "",
-      description: "",
-      priority: "Medium",
-      type: "Bug",
-    });
+    setCreateForm(EMPTY_CREATE_TICKET_FORM);
     setCreateEstMinutes(0);
     setShowCreateModal(true);
   }, []);
@@ -126,9 +119,19 @@ export const TicketsPage: React.FC = () => {
       if (!payload.assignedToId) delete payload.assignedToId;
       if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
       const created = await createTicket(payload as unknown as Partial<Ticket>);
-      setShowCreateModal(false);
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
-      navigate(`/tickets/${created.id}`);
+      if (createAnother) {
+        queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
+        setCreateForm(EMPTY_CREATE_TICKET_FORM);
+        setCreateEstMinutes(0);
+        showToast(
+          t("tickets.list.create_success", { reference: created.reference }),
+          "success",
+        );
+      } else {
+        setShowCreateModal(false);
+        navigate(`/tickets/${created.id}`);
+      }
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.create_error")), "error");
     } finally {
@@ -365,6 +368,8 @@ export const TicketsPage: React.FC = () => {
         users={modalUsers}
         submitting={createSubmitting}
         onSubmit={handleCreate}
+        createAnother={createAnother}
+        onCreateAnotherChange={setCreateAnother}
       />
 
       <EditTicketModal

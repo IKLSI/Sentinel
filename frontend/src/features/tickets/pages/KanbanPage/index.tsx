@@ -21,7 +21,7 @@ import { useProjects } from "@/features/techHealth/hooks/useProjects";
 import { ProjectDto } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
 import { User, Ticket } from "@/types";
-import { CreateTicketPayload } from "@/features/tickets/pages/TicketsPage/helpers";
+import { CreateTicketPayload, EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { useTicketStatuses, ticketStatusesQueryKey } from "@/features/tickets/hooks/useTicketStatuses";
 import { TicketStatusDef } from "@/features/tickets/api/ticketStatuses";
@@ -74,12 +74,10 @@ export const KanbanPage: React.FC = () => {
   const wasDragging = useRef(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateTicketPayload>({
-    title: "",
-    description: "",
-    priority: "Medium",
-    type: "Bug",
-  });
+  const [createForm, setCreateForm] = useState<CreateTicketPayload>(
+    EMPTY_CREATE_TICKET_FORM,
+  );
+  const [createAnother, setCreateAnother] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
@@ -127,7 +125,7 @@ export const KanbanPage: React.FC = () => {
   const activeFilterCount = filteredProjects.length;
 
   const openCreateModal = useCallback(() => {
-    setCreateForm({ title: "", description: "", priority: "Medium", type: "Bug" });
+    setCreateForm(EMPTY_CREATE_TICKET_FORM);
     setCreateEstMinutes(0);
     setShowCreateModal(true);
   }, []);
@@ -140,10 +138,19 @@ export const KanbanPage: React.FC = () => {
       if (!payload.projectId) delete payload.projectId;
       if (!payload.assignedToId) delete payload.assignedToId;
       if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
-      await createTicket(payload as unknown as Partial<Ticket>);
-      setShowCreateModal(false);
+      const created = await createTicket(payload as unknown as Partial<Ticket>);
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
       void refetchBoard();
+      if (createAnother) {
+        setCreateForm(EMPTY_CREATE_TICKET_FORM);
+        setCreateEstMinutes(0);
+        showToast(
+          t("tickets.list.create_success", { reference: created.reference }),
+          "success",
+        );
+      } else {
+        setShowCreateModal(false);
+      }
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.create_error")), "error");
     } finally {
@@ -369,6 +376,8 @@ export const KanbanPage: React.FC = () => {
         users={modalUsers}
         submitting={createSubmitting}
         onSubmit={handleCreate}
+        createAnother={createAnother}
+        onCreateAnotherChange={setCreateAnother}
       />
     </>
   );

@@ -28,6 +28,8 @@ interface Props {
   users: User[];
   submitting: boolean;
   onSubmit: () => void;
+  createAnother: boolean;
+  onCreateAnotherChange: (v: boolean) => void;
 }
 
 const Label: React.FC<{ children: React.ReactNode; mb?: string }> = ({
@@ -60,6 +62,8 @@ export const CreateTicketModal: React.FC<Props> = ({
   users,
   submitting,
   onSubmit,
+  createAnother,
+  onCreateAnotherChange,
 }) => {
   const t = useT();
 
@@ -70,6 +74,37 @@ export const CreateTicketModal: React.FC<Props> = ({
       title={t("tickets.list.create_title")}
       actions={
         <>
+          <Box
+            component="label"
+            sx={{
+              mr: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "7px",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--muted2)",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <Box
+              component="input"
+              type="checkbox"
+              checked={createAnother}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onCreateAnotherChange(e.target.checked)
+              }
+              sx={{
+                width: "14px",
+                height: "14px",
+                m: 0,
+                cursor: "pointer",
+                accentColor: "var(--accent)",
+              }}
+            />
+            {t("tickets.list.create_another")}
+          </Box>
           <Button
             variant="contained"
             size="small"

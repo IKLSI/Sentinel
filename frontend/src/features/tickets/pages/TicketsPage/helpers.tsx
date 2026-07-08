@@ -23,6 +23,13 @@ export interface CreateTicketPayload {
   estimatedHours?: number;
 }
 
+export const EMPTY_CREATE_TICKET_FORM: CreateTicketPayload = {
+  title: "",
+  description: "",
+  priority: "Medium",
+  type: "Bug",
+};
+
 export function getPageNumbers(
   page: number,
   totalPages: number,
