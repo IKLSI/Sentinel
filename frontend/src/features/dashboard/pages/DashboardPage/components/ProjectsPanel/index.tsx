@@ -1,22 +1,21 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
-import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import HubOutlined from "@mui/icons-material/HubOutlined";
-import { formatDistanceToNow } from "date-fns";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { useI18n } from "@/i18n/I18nContext";
+import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import {
   DashPalette,
+  HEALTH_CRITICAL_THRESHOLD,
   buildPanelSx,
   buildScrollSx,
-  repoPath,
+  gradeMeta,
+  scoreToGrade,
 } from "../../helpers";
+import { HealthGauge } from "../HealthGauge";
+import { ProjectRankRow } from "../ProjectRankRow";
 
 interface Props {
   projects: ProjectDto[];
@@ -24,61 +23,66 @@ interface Props {
 }
 
 export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
-  const { t, culture } = useI18n();
+  const t = useT();
   const navigate = useNavigate();
 
-  const projectRows = projects.slice(0, 8);
+  const { averageScore, belowCount } = useMemo(() => {
+    const scores = projects.map((p) => Math.max(0, Math.min(100, p.healthScore ?? 0)));
+    const averageScore = scores.length
+      ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+      : 0;
+    const belowCount = scores.filter((s) => s < HEALTH_CRITICAL_THRESHOLD).length;
+    return { averageScore, belowCount };
+  }, [projects]);
 
-  const projectsSyncText = (() => {
-    const latestScan = projects
-      .map((p) => p.lastScanAt)
-      .filter((value): value is string => Boolean(value))
-      .map((value) => new Date(value))
-      .filter((date) => !Number.isNaN(date.getTime()))
-      .sort((a, b) => b.getTime() - a.getTime())[0];
+  const belowText =
+    belowCount === 0
+      ? t("dashboard.park.below_none")
+      : belowCount === 1
+        ? t("dashboard.park.below_one")
+        : t("dashboard.park.below_other", { count: belowCount });
 
-    if (!latestScan) return t("dashboard.projects_sync.none");
-    return t("dashboard.projects_sync.last", {
-      value: formatDistanceToNow(latestScan, { addSuffix: true, locale: getDateFnsLocale(culture) }),
-    });
-  })();
+  const gaugeColor = gradeMeta(scoreToGrade(averageScore)).color;
 
   return (
     <Box
       sx={{
         ...buildPanelSx(palette),
-        gridColumn: "2",
-        gridRow: "3",
+        gridColumn: "1",
+        gridRow: "1 / 4",
         display: "flex",
         flexDirection: "column",
       }}
     >
       <Box
         sx={{
-          px: "18px",
-          py: "10px",
+          px: "16px",
+          py: "12px",
           borderBottom: `1px solid ${palette.headerBorder}`,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          gap: "14px",
+          flexShrink: 0,
         }}
       >
-        <Box>
+        <HealthGauge
+          score={averageScore}
+          color={gaugeColor}
+          label={t("dashboard.park.health_label")}
+        />
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              fontSize: "13px",
-              lineHeight: 1.1,
-              fontWeight: 600,
-              color: palette.textSecondary,
+              fontSize: "14px",
+              fontWeight: 700,
+              color: palette.textHeading,
               letterSpacing: "-0.01em",
             }}
           >
-            {t("dashboard.projects.title")}
+            {t("dashboard.park.title")}
           </Box>
-          <Box
-            sx={{ mt: "3px", color: palette.textMuted, fontSize: "11px" }}
-          >
-            {projectsSyncText}
+          <Box sx={{ mt: "3px", fontSize: "10.5px", color: palette.textMuted }}>
+            {belowText}
           </Box>
         </Box>
         <Box
@@ -94,7 +98,6 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
             alignItems: "center",
             gap: "2px",
             transition: "color 120ms ease",
-            textDecoration: "none",
             "&:hover, &:focus-visible": {
               color: "var(--accent2)",
             },
@@ -106,17 +109,17 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
       </Box>
       <Box
         sx={{
-          p: "10px",
+          p: "8px",
           display: "flex",
           flexDirection: "column",
-          gap: "8px",
+          gap: "4px",
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
           ...buildScrollSx(palette),
         }}
       >
-        {projectRows.length === 0 ? (
+        {projects.length === 0 ? (
           <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
             <Box className="empty-state-icon">
               <AccountTreeOutlined sx={{ fontSize: 32 }} />
@@ -128,102 +131,11 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
               {t("dashboard.projects.empty_subtitle")}
             </Box>
           </Box>
-        ) : projectRows.map((p) => {
-          return (
-            <Box
-              key={p.id}
-              component="button"
-              onClick={() => navigate(`/projects/${p.id}`)}
-              sx={{
-                all: "unset",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                minHeight: "48px",
-                px: "10px",
-                gap: "10px",
-                borderRadius: 'var(--r-md)',
-                background: palette.rowBg,
-                transition: "background 120ms ease, box-shadow 120ms ease",
-                "&:hover": {
-                  background: palette.rowHoverBg,
-                  boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
-                },
-                "&:active": { background: palette.rowActiveBg },
-              }}
-            >
-              <HubOutlined
-                sx={{ fontSize: 18, color: palette.typeIconDefault, flexShrink: 0 }}
-              />
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Box
-                  sx={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: palette.rowTitle,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {p.name}
-                </Box>
-                <Box
-                  sx={{
-                    mt: "2px",
-                    fontSize: "10px",
-                    fontFamily: "var(--font-mono)",
-                    color: palette.textMuted2,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {repoPath(p.repositoryUrl, p.repositoryType)}
-                </Box>
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  flexShrink: 0,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: palette.vulnNeutral,
-                  }}
-                >
-                  <ConfirmationNumberOutlined
-                    sx={{ fontSize: 14, color: palette.vulnIcon }}
-                  />
-                  <span>{p.lastScanAt ? p.totalTickets : "—"}</span>
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: (!p.lastScanAt || p.totalDependencies === 0 || p.criticalVulnerabilities === 0)
-                      ? palette.vulnNeutral
-                      : "var(--red)",
-                  }}
-                >
-                  <GppBadOutlined sx={{ fontSize: 14 }} />
-                  <span>{(!p.lastScanAt || p.totalDependencies === 0) ? "—" : p.criticalVulnerabilities}</span>
-                </Box>
-              </Box>
-            </Box>
-          );
-        })}
+        ) : (
+          projects.map((project) => (
+            <ProjectRankRow key={project.id} project={project} palette={palette} />
+          ))
+        )}
       </Box>
     </Box>
   );

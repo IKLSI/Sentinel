@@ -40,7 +40,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
       sx={{
         ...buildPanelSx(palette),
         gridColumn: "2",
-        gridRow: "1",
+        gridRow: "2",
         display: "flex",
         flexDirection: "column",
       }}
@@ -56,8 +56,8 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           sx={{
             fontSize: "13px",
             lineHeight: 1.1,
-            fontWeight: 600,
-            color: palette.textSecondary,
+            fontWeight: 700,
+            color: palette.textHeading,
             letterSpacing: "-0.01em",
           }}
         >

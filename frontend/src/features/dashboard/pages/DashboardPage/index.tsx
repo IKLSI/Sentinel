@@ -10,6 +10,7 @@ import { useTheme } from "@/store/ThemeContext";
 import { Theme } from "@/types/enums";
 import {
   EMPTY_STATS,
+  GRADE_ORDER,
   PRIORITY_ORDER,
   StatsData,
   buildPalette,
@@ -31,18 +32,18 @@ export const DashboardPage: React.FC = () => {
   const projectsQuery = useProjects();
 
   const stats: StatsData = (dashboardQuery.data as StatsData) ?? EMPTY_STATS;
-  const projects = useMemo(() => {
-    const sorted = [...(projectsQuery.data ?? [])].sort((a, b) => {
-      const gradeOrder: Record<string, number> = { F: 0, E: 1, D: 2, C: 3, B: 4, A: 5 };
-      const ga = gradeOrder[a.healthGrade?.toUpperCase() ?? "A"] ?? 5;
-      const gb = gradeOrder[b.healthGrade?.toUpperCase() ?? "A"] ?? 5;
-      return ga - gb
-        || (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
-        || (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
-        || (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0);
-    });
-    return sorted.slice(0, 8);
-  }, [projectsQuery.data]);
+  const projects = useMemo(
+    () =>
+      [...(projectsQuery.data ?? [])].sort((a, b) => {
+        const ga = GRADE_ORDER[a.healthGrade?.toUpperCase() ?? "A"] ?? 5;
+        const gb = GRADE_ORDER[b.healthGrade?.toUpperCase() ?? "A"] ?? 5;
+        return ga - gb
+          || (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
+          || (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
+          || (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0);
+      }),
+    [projectsQuery.data],
+  );
   const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
 
   useEffect(() => {
@@ -99,20 +100,20 @@ export const DashboardPage: React.FC = () => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gridTemplateRows: "1fr 1fr 1fr",
+          gridTemplateColumns: "6fr 5fr",
+          gridTemplateRows: "1fr 1fr 200px",
           gap: "14px",
           height: "calc(100vh - 40px)",
           minHeight: "580px",
         }}
       >
+        <ProjectsPanel projects={projects} palette={palette} />
+
         <UrgentTicketsPanel urgent={urgent} palette={palette} isDark={isDark} />
 
         <ActivityPanel activity={activity} palette={palette} />
 
         <TicketCreationPanel data={stats.ticketsCreatedPerDay} palette={palette} />
-
-        <ProjectsPanel projects={projects} palette={palette} />
       </Box>
     </Box>
   );

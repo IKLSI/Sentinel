@@ -57,8 +57,8 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
     <Box
       sx={{
         ...buildPanelSx(palette),
-        gridColumn: "1",
-        gridRow: "1 / 4",
+        gridColumn: "2",
+        gridRow: "1",
         display: "flex",
         flexDirection: "column",
       }}
@@ -78,8 +78,8 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
             sx={{
               fontSize: "13px",
               lineHeight: 1.1,
-              fontWeight: 600,
-              color: palette.textSecondary,
+              fontWeight: 700,
+              color: palette.textHeading,
               letterSpacing: "-0.01em",
             }}
           >
@@ -138,10 +138,7 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
               {t("dashboard.urgent.empty_subtitle")}
             </Box>
           </Box>
-        ) : Array.from({ length: 8 }).map((_, i) => {
-          const ticket = urgent[i];
-          if (!ticket)
-            return <Box key={`urgent-empty-${i}`} sx={{ minHeight: "48px" }} />;
+        ) : urgent.map((ticket, i) => {
           const Icon = ticketIcon(ticket.type);
           const badge = ticketPriority(ticket.priority, isDark);
           const av = avatars[i % avatars.length];

@@ -79,11 +79,11 @@ export const TicketCreationPanel: React.FC<Props> = ({ data, palette }) => {
   const hoveredPt = hovered !== null ? pts[hovered] : null;
 
   return (
-    <Box sx={{ ...buildPanelSx(palette), gridColumn: "2", gridRow: "2", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ ...buildPanelSx(palette), gridColumn: "2", gridRow: "3", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
       <Box sx={{ px: "18px", py: "10px", borderBottom: `1px solid ${palette.headerBorder}`, flexShrink: 0 }}>
-        <Box sx={{ fontSize: "13px", fontWeight: 600, color: palette.textSecondary, letterSpacing: "-0.01em", lineHeight: 1.1 }}>
+        <Box sx={{ fontSize: "13px", fontWeight: 700, color: palette.textHeading, letterSpacing: "-0.01em", lineHeight: 1.1 }}>
           {t("dashboard.creation.title")}
         </Box>
         <Box sx={{ mt: "3px", color: palette.textMuted, fontSize: "11px" }}>

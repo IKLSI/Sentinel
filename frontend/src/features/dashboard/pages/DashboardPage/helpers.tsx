@@ -228,6 +228,57 @@ export const PRIORITY_ORDER: Record<string, number> = {
   low: 1,
 };
 
+export const GRADE_ORDER: Record<string, number> = {
+  F: 0,
+  E: 1,
+  D: 2,
+  C: 3,
+  B: 4,
+  A: 5,
+};
+
+export interface GradeMeta {
+  color: string;
+  subtle: string;
+}
+
+const GRADE_METAS: Record<string, GradeMeta> = {
+  A: { color: "var(--green)", subtle: "var(--green-subtle)" },
+  B: { color: "var(--teal)", subtle: "var(--teal-subtle)" },
+  C: { color: "var(--yellow)", subtle: "var(--yellow-subtle)" },
+  D: { color: "var(--orange)", subtle: "var(--orange-subtle)" },
+  E: { color: "var(--red)", subtle: "var(--red-subtle)" },
+  F: { color: "var(--red)", subtle: "var(--red-subtle)" },
+};
+
+export const gradeMeta = (grade?: string): GradeMeta =>
+  GRADE_METAS[(grade ?? "A").toUpperCase()] ?? GRADE_METAS.A;
+
+const SCORE_GRADE_THRESHOLDS: Array<[number, string]> = [
+  [90, "A"],
+  [75, "B"],
+  [60, "C"],
+  [45, "D"],
+];
+
+export const scoreToGrade = (score: number): string => {
+  const match = SCORE_GRADE_THRESHOLDS.find(([min]) => score >= min);
+  return match ? match[1] : "E";
+};
+
+export const HEALTH_CRITICAL_THRESHOLD = 50;
+
+export const SCAN_LATE_HOURS = 48;
+
+const MS_PER_HOUR = 3_600_000;
+
+export const isScanLate = (lastScanAt?: string): boolean => {
+  if (!lastScanAt) return true;
+  const date = new Date(lastScanAt);
+  if (Number.isNaN(date.getTime())) return true;
+  return Date.now() - date.getTime() > SCAN_LATE_HOURS * MS_PER_HOUR;
+};
+
 export const repoPath = (
   repositoryUrl?: string,
   repositoryType?: string,
