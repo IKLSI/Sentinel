@@ -1,12 +1,11 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
-import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
-import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
 import { useI18n } from "@/i18n/I18nContext";
 import { ProjectDetailDto } from "@/features/techHealth/api/projects";
 import { GRADE_VISUAL, getGrade } from "@/features/projects/pages/ProjectsPage/helpers";
@@ -24,7 +23,6 @@ export const ProjectHeaderCard: React.FC<Props> = ({
 
   const grade = getGrade(project.healthGrade);
   const gradeCfg = GRADE_VISUAL[grade];
-  const { Icon: GradeIcon } = gradeCfg;
 
   const freqLabel = (f: string) => {
     if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -50,19 +48,45 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           alignItems: "center",
           gap: "16px",
           p: "20px 24px",
-          background: `linear-gradient(135deg, color-mix(in srgb, ${gradeCfg.iconColor} 6%, transparent), transparent 60%)`,
         }}
       >
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            position: "relative",
+            width: "48px",
+            height: "48px",
             flexShrink: 0,
-            color: gradeCfg.iconColor,
           }}
         >
-          <GradeIcon sx={{ fontSize: 32 }} />
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size={48}
+            thickness={2.5}
+            sx={{ position: "absolute", inset: 0, color: "var(--border)" }}
+          />
+          <CircularProgress
+            variant="determinate"
+            value={project.healthScore}
+            size={48}
+            thickness={2.5}
+            sx={{ position: "absolute", inset: 0, color: gradeCfg.iconColor }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: gradeCfg.iconColor,
+              fontFamily: "var(--font-mono)",
+              fontSize: "18px",
+              fontWeight: 700,
+            }}
+          >
+            {grade}
+          </Box>
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -105,54 +129,25 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             )}
           </Box>
           <Box
-            component="span"
             sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: gradeCfg.iconColor,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
               mt: "3px",
-              display: "block",
             }}
           >
-            {t(`projects.grade.${grade}.label`)}
-          </Box>
-        </Box>
-
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", flexShrink: 0 }}>
-          {project.scanFrequency && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "var(--s2)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-sm)",
-                px: "8px",
-                py: "4px",
-              }}
-            >
-              <RefreshOutlined sx={{ fontSize: 12, color: "var(--muted)" }} />
-              <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+            {project.scanFrequency && (
+              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted)" }}>
                 {freqLabel(project.scanFrequency)}
               </Box>
-            </Box>
-          )}
-          {project.lastScanAt && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "var(--s2)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-sm)",
-                px: "8px",
-                py: "4px",
-              }}
-            >
-              <AccessTimeOutlined sx={{ fontSize: 12, color: "var(--muted)" }} />
-              <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+            )}
+            {project.scanFrequency && project.lastScanAt && (
+              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted2)" }}>
+                ·
+              </Box>
+            )}
+            {project.lastScanAt && (
+              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted)" }}>
                 {new Date(project.lastScanAt).toLocaleDateString(culture, {
                   day: "2-digit",
                   month: "short",
@@ -160,8 +155,8 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Box>
-            </Box>
-          )}
+            )}
+          </Box>
         </Box>
       </Box>
 

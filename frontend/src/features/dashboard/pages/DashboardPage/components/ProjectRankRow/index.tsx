@@ -8,12 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
-import {
-  DashPalette,
-  gradeMeta,
-  isScanLate,
-  repoPath,
-} from "../../helpers";
+import { DashPalette, gradeMeta } from "../../helpers";
 
 interface Props {
   project: ProjectDto;
@@ -26,7 +21,6 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
 
   const meta = gradeMeta(project.healthGrade);
   const scanned = Boolean(project.lastScanAt);
-  const late = isScanLate(project.lastScanAt);
   const showCritical = scanned && project.criticalVulnerabilities > 0;
 
   const scanText = (() => {
@@ -103,17 +97,7 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
             textOverflow: "ellipsis",
           }}
         >
-          {repoPath(project.repositoryUrl, project.repositoryType)}
-          {" · "}
-          <Box
-            component="span"
-            sx={{
-              color: late ? "var(--yellow)" : palette.textMuted,
-              fontWeight: late ? 600 : 400,
-            }}
-          >
-            {scanText}
-          </Box>
+          {scanText}
         </Box>
       </Box>
       <Box

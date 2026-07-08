@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { ProjectDto } from "@/features/techHealth/api/projects";
@@ -30,7 +31,9 @@ export const ProjectsSection: React.FC<Props> = ({
 }) => {
   const t = useT();
   const cfg = GRADE_VISUAL[grade];
-  const { Icon } = cfg;
+  const avgScore = items.length
+    ? items.reduce((sum, p) => sum + p.healthScore, 0) / items.length
+    : 0;
 
   return (
     <Box
@@ -81,16 +84,41 @@ export const ProjectsSection: React.FC<Props> = ({
         >
           <Box
             sx={{
+              position: "relative",
               width: "34px",
               height: "34px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: cfg.iconColor,
               flexShrink: 0,
             }}
           >
-            <Icon sx={{ fontSize: 22 }} />
+            <CircularProgress
+              variant="determinate"
+              value={100}
+              size={34}
+              thickness={2.5}
+              sx={{ position: "absolute", inset: 0, color: "var(--border)" }}
+            />
+            <CircularProgress
+              variant="determinate"
+              value={avgScore}
+              size={34}
+              thickness={2.5}
+              sx={{ position: "absolute", inset: 0, color: cfg.iconColor }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: cfg.iconColor,
+                fontFamily: "var(--font-mono)",
+                fontSize: "14px",
+                fontWeight: 700,
+              }}
+            >
+              {grade}
+            </Box>
           </Box>
           <Box sx={{ minWidth: 0 }}>
             <Box
