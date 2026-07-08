@@ -58,17 +58,19 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
       <Box
         sx={{
           px: "18px",
-          py: "10px",
+          pt: "14px",
+          pb: "10px",
           borderBottom: `1px solid ${palette.headerBorder}`,
         }}
       >
         <Box
           sx={{
-            fontSize: "13px",
+            fontSize: "11.5px",
             lineHeight: 1.1,
             fontWeight: 700,
             color: palette.textHeading,
-            letterSpacing: "-0.01em",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
           }}
         >
           {t("dashboard.activity.title")}

@@ -75,7 +75,14 @@ export const BillingTab: React.FC = () => {
 
   if (loading || !status) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: "60px" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <CircularProgress size={26} />
       </Box>
     );

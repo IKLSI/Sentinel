@@ -188,7 +188,14 @@ export const TicketDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: "80px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress size={28} />
       </Box>
     );

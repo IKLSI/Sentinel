@@ -11,10 +11,9 @@ import {
 interface Props {
   score: number;
   color: string;
-  label: string;
 }
 
-export const HealthGauge: React.FC<Props> = ({ score, color, label }) => {
+export const HealthGauge: React.FC<Props> = ({ score, color }) => {
   const clamped = Math.max(0, Math.min(GAUGE_MAX_SCORE, score));
   const filled = (clamped / GAUGE_MAX_SCORE) * GAUGE_CIRCUMFERENCE;
   const center = GAUGE_SIZE / 2;
@@ -60,7 +59,6 @@ export const HealthGauge: React.FC<Props> = ({ score, color, label }) => {
           position: "absolute",
           inset: 0,
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -77,19 +75,6 @@ export const HealthGauge: React.FC<Props> = ({ score, color, label }) => {
           }}
         >
           {Math.round(clamped)}
-        </Box>
-        <Box
-          sx={{
-            mt: "2px",
-            fontFamily: "var(--font-mono)",
-            fontSize: "6.5px",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
-          }}
-        >
-          {label}
         </Box>
       </Box>
     </Box>

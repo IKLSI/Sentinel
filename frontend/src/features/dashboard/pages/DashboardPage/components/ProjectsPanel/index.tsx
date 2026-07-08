@@ -65,18 +65,15 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
           flexShrink: 0,
         }}
       >
-        <HealthGauge
-          score={averageScore}
-          color={gaugeColor}
-          label={t("dashboard.park.health_label")}
-        />
+        <HealthGauge score={averageScore} color={gaugeColor} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              fontSize: "14px",
+              fontSize: "12.5px",
               fontWeight: 700,
               color: palette.textHeading,
-              letterSpacing: "-0.01em",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
             }}
           >
             {t("dashboard.park.title")}

@@ -4,6 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
+import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
@@ -66,7 +67,8 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
       <Box
         sx={{
           px: "18px",
-          py: "10px",
+          pt: "14px",
+          pb: "10px",
           borderBottom: `1px solid ${palette.headerBorder}`,
           display: "flex",
           alignItems: "center",
@@ -76,11 +78,12 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
         <Box>
           <Box
             sx={{
-              fontSize: "13px",
+              fontSize: "11.5px",
               lineHeight: 1.1,
               fontWeight: 700,
               color: palette.textHeading,
-              letterSpacing: "-0.01em",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
             }}
           >
             {t("dashboard.urgent.title")}
@@ -227,26 +230,41 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(function UrgentTic
                 </Box>
               </Box>
               <Tooltip
-                title={ticket.assignedToName ?? ""}
+                title={ticket.assignedToName ?? t("dashboard.urgent.unassigned")}
                 placement="top"
                 arrow
-                disableHoverListener={!ticket.assignedToName}
               >
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: av.bg,
-                    color: av.text,
-                    fontWeight: 700,
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: "10px",
-                  }}
-                >
-                  {ticket.assignedToName ? initials(ticket.assignedToName) : "?"}
-                </Box>
+                {ticket.assignedToName ? (
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: av.bg,
+                      color: av.text,
+                      fontWeight: 700,
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: "10px",
+                    }}
+                  >
+                    {initials(ticket.assignedToName)}
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      border: `1.5px dashed ${palette.bullet}`,
+                      color: palette.textMuted,
+                      display: "grid",
+                      placeItems: "center",
+                    }}
+                  >
+                    <PersonOffOutlined sx={{ fontSize: 14 }} />
+                  </Box>
+                )}
               </Tooltip>
             </Box>
           );
