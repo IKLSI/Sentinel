@@ -265,7 +265,7 @@
   "projects.import_repos": "Importer depuis GitHub/GitLab",
   "projects.modal.cancel": "Annuler",
   "projects.modal.frequency_label": "Fréquence",
-  "projects.modal.frequency_title": "Fréquence de scan",
+  "projects.modal.frequency_title": "Modifier le projet",
   "projects.modal.save": "Enregistrer",
   "projects.modal.saving": "Enregistrement...",
   "projects.search_placeholder": "Rechercher...",

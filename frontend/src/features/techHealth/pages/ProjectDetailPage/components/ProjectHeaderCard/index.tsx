@@ -1,30 +1,15 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import type { SvgIconComponent } from "@mui/icons-material";
-import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
+import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
-import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
-import ReportOutlined from "@mui/icons-material/ReportOutlined";
-import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
-import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
-import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
-import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import { useI18n } from "@/i18n/I18nContext";
 import { ProjectDetailDto } from "@/features/techHealth/api/projects";
-
-const GRADE_ICON: Record<string, { color: string; Icon: SvgIconComponent }> = {
-  F: { color: "var(--red)", Icon: DangerousOutlined },
-  E: { color: "var(--orange)", Icon: ReportOutlined },
-  D: { color: "var(--yellow)", Icon: TrendingDownOutlined },
-  C: { color: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: LockOpenOutlined },
-  B: { color: "var(--accent)", Icon: ThumbUpAltOutlined },
-  A: { color: "var(--green)", Icon: WorkspacePremiumOutlined },
-};
+import { GRADE_VISUAL, getGrade } from "@/features/projects/pages/ProjectsPage/helpers";
 
 interface Props {
   project: ProjectDetailDto;
@@ -36,6 +21,10 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   eolRuntimes,
 }) => {
   const { t, culture } = useI18n();
+
+  const grade = getGrade(project.healthGrade);
+  const gradeCfg = GRADE_VISUAL[grade];
+  const { Icon: GradeIcon } = gradeCfg;
 
   const freqLabel = (f: string) => {
     if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -59,17 +48,29 @@ export const ProjectHeaderCard: React.FC<Props> = ({
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: "20px",
-          p: "20px 24px 20px 28px",
+          gap: "16px",
+          p: "20px 24px",
+          background: `linear-gradient(135deg, color-mix(in srgb, ${gradeCfg.iconColor} 6%, transparent), transparent 60%)`,
         }}
       >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            color: gradeCfg.iconColor,
+          }}
+        >
+          <GradeIcon sx={{ fontSize: 32 }} />
+        </Box>
+
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              mb: "10px",
             }}
           >
             <Box
@@ -103,69 +104,65 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               </Box>
             )}
           </Box>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
-            {project.scanFrequency && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  background: "var(--s2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 'var(--r-sm)',
-                  px: "8px",
-                  py: "3px",
-                }}
-              >
-                <RefreshOutlined sx={{ fontSize: 11, color: "var(--muted)" }} />
-                <Box
-                  component="span"
-                  sx={{ fontSize: "11px", color: "var(--muted)" }}
-                >
-                  {freqLabel(project.scanFrequency)}
-                </Box>
-              </Box>
-            )}
-            {project.lastScanAt && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  background: "var(--s2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 'var(--r-sm)',
-                  px: "8px",
-                  py: "3px",
-                }}
-              >
-                <AccessTimeOutlined
-                  sx={{ fontSize: 11, color: "var(--muted)" }}
-                />
-                <Box
-                  component="span"
-                  sx={{ fontSize: "11px", color: "var(--muted)" }}
-                >
-                  {new Date(project.lastScanAt).toLocaleDateString(culture, {
-                    day: "2-digit",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Box>
-              </Box>
-            )}
+          <Box
+            component="span"
+            sx={{
+              fontSize: "12px",
+              fontWeight: 600,
+              color: gradeCfg.iconColor,
+              mt: "3px",
+              display: "block",
+            }}
+          >
+            {t(`projects.grade.${grade}.label`)}
           </Box>
         </Box>
 
-        {(() => {
-          const cfg = GRADE_ICON[project.healthGrade ?? "F"] ?? GRADE_ICON["F"];
-          return (
-            <Box sx={{ color: cfg.color, flexShrink: 0 }}>
-              <cfg.Icon sx={{ fontSize: 28 }} />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+          {project.scanFrequency && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                background: "var(--s2)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-sm)",
+                px: "8px",
+                py: "4px",
+              }}
+            >
+              <RefreshOutlined sx={{ fontSize: 12, color: "var(--muted)" }} />
+              <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                {freqLabel(project.scanFrequency)}
+              </Box>
             </Box>
-          );
-        })()}
+          )}
+          {project.lastScanAt && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                background: "var(--s2)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-sm)",
+                px: "8px",
+                py: "4px",
+              }}
+            >
+              <AccessTimeOutlined sx={{ fontSize: 12, color: "var(--muted)" }} />
+              <Box component="span" sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                {new Date(project.lastScanAt).toLocaleDateString(culture, {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Box>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       <Box
@@ -180,81 +177,85 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             {
               label: t("tech_health.stats.dependencies"),
               value: project.totalDependencies,
-              icon: <InventoryOutlined sx={{ fontSize: 13 }} />,
+              icon: <InventoryOutlined sx={{ fontSize: 15 }} />,
               alert: null,
               dash: !project.lastScanAt,
             },
             {
               label: t("tech_health.stats.critical"),
               value: project.criticalVulnerabilities,
-              icon: <GppBadOutlined sx={{ fontSize: 13 }} />,
+              icon: <GppBadOutlined sx={{ fontSize: 15 }} />,
               alert: project.criticalVulnerabilities > 0 ? "red" : null,
               dash: !project.lastScanAt || project.totalDependencies === 0,
             },
             {
               label: t("tech_health.stats.vulnerabilities"),
               value: project.totalVulnerabilities,
-              icon: <GppMaybeOutlined sx={{ fontSize: 13 }} />,
+              icon: <GppMaybeOutlined sx={{ fontSize: 15 }} />,
               alert: project.totalVulnerabilities > 0 ? "orange" : null,
               dash: !project.lastScanAt || project.totalDependencies === 0,
             },
             {
               label: t("tech_health.stats.eol"),
               value: eolRuntimes,
-              icon: <StorageOutlined sx={{ fontSize: 13 }} />,
+              icon: <StorageOutlined sx={{ fontSize: 15 }} />,
               alert: eolRuntimes > 0 ? "red" : null,
               dash: !project.lastScanAt,
             },
           ]
-        ).map((s, i) => (
-          <Box
-            key={i}
-            sx={{
-              p: "14px 20px",
-              borderRight: i < 3 ? "1px solid var(--border)" : "none",
-              background: "transparent",
-            }}
-          >
+        ).map((s, i) => {
+          const accent =
+            s.alert === "red" ? "var(--red)" : s.alert === "orange" ? "var(--orange)" : "var(--muted)";
+          return (
             <Box
+              key={i}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                color: "var(--muted)",
-                mb: "6px",
+                p: "14px 20px",
+                borderRight: i < 3 ? "1px solid var(--border)" : "none",
               }}
             >
-              {s.icon}
               <Box
-                component="span"
                 sx={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "9px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: accent,
+                  mb: "8px",
                 }}
               >
-                {s.label}
+                {s.icon}
+                <Box
+                  component="span"
+                  sx={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "9px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {s.label}
+                </Box>
+              </Box>
+              <Box
+                sx={{
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1,
+                  color:
+                    s.alert === "red"
+                      ? "var(--red)"
+                      : s.alert === "orange"
+                        ? "var(--orange)"
+                        : "var(--text)",
+                }}
+              >
+                {s.dash ? "—" : s.value}
               </Box>
             </Box>
-            <Box
-              sx={{
-                fontSize: "28px",
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-                color:
-                  s.alert === "red"
-                    ? "var(--red)"
-                    : s.alert === "orange"
-                      ? "var(--orange)"
-                      : "var(--text)",
-              }}
-            >
-              {s.dash ? "—" : s.value}
-            </Box>
-          </Box>
-        ))}
+          );
+        })}
       </Box>
     </Box>
   );
