@@ -40,7 +40,6 @@ public class User
     public string Language { get; set; } = LanguageValues.Fr;
 
     public Organization Organization { get; set; } = null!;
-    public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
 
     public string FullName => $"{FirstName} {LastName}".Trim();
 }

@@ -6,7 +6,6 @@ public class DashboardStatsDto
     public int OpenTicketsDelta { get; set; }
     public int ResolvedThisMonth { get; set; }
     public int ResolvedThisMonthDelta { get; set; }
-    public int HoursThisMonth { get; set; }
     public int CriticalVulnerabilities { get; set; }
     public Dictionary<string, int> TicketsByStatus { get; set; } = [];
     public Dictionary<string, string> TicketsByStatusColor { get; set; } = [];

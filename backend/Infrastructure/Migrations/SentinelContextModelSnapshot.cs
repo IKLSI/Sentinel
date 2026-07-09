@@ -737,62 +737,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("TicketStatuses");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeOnly?>("EndTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<Guid?>("TicketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Date");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "Date");
-
-                    b.ToTable("TimeEntries");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1149,31 +1093,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
-                        .WithMany("TimeEntries")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Sentinel.Domain.Models.User", "User")
-                        .WithMany("TimeEntries")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
@@ -1241,18 +1160,11 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("History");
-
-                    b.Navigation("TimeEntries");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
                 {
                     b.Navigation("Tickets");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
-                {
-                    b.Navigation("TimeEntries");
                 });
 #pragma warning restore 612, 618
         }

@@ -10,9 +10,3 @@ public class TicketStatusDto
     public bool IsClosed { get; set; }
     public int TicketCount { get; set; }
 }
-
-public class CreateTicketStatusDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Color { get; set; } = "var(--muted2)";
-}

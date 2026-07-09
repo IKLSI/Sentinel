@@ -95,20 +95,7 @@ public class TicketsController : BaseController
             .Take(pageSize)
             .ToListAsync();
 
-        List<Guid> ticketIds = tickets.Select(t => t.Id).ToList();
-        Dictionary<Guid, int> totalsByTicket = await _context.TimeEntries
-            .AsNoTracking()
-            .Where(te => te.TicketId.HasValue && ticketIds.Contains(te.TicketId.Value))
-            .GroupBy(te => te.TicketId!.Value)
-            .Select(g => new { TicketId = g.Key, Total = g.Sum(x => x.DurationMinutes) })
-            .ToDictionaryAsync(x => x.TicketId, x => x.Total);
-
-        List<TicketDto> items = tickets.Select(t =>
-        {
-            TicketDto dto = TicketService.MapToDto(t);
-            dto.TotalTimeMinutes = totalsByTicket.TryGetValue(t.Id, out int sum) ? sum : 0;
-            return dto;
-        }).ToList();
+        List<TicketDto> items = tickets.Select(TicketService.MapToDto).ToList();
 
         return Ok(new PagedResult<TicketDto>
         {

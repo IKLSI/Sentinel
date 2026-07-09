@@ -260,7 +260,6 @@ public class TicketService
             .Include(t => t.CreatedBy)
             .Include(t => t.Comments).ThenInclude(c => c.Author)
             .Include(t => t.History).ThenInclude(h => h.User)
-            .Include(t => t.TimeEntries)
             .FirstOrDefaultAsync(t => t.Id == ticketId);
 
         if (ticket == null)
@@ -292,7 +291,6 @@ public class TicketService
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
             Tags = ticket.GetTags().ToList(),
-            TotalTimeMinutes = ticket.TimeEntries?.Sum(te => te.DurationMinutes) ?? 0,
             Comments = ticket.Comments?.Select(c => new TicketCommentDto
             {
                 Id = c.Id,

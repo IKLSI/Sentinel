@@ -2,9 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Infrastructure.Data;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 
@@ -18,7 +16,6 @@ namespace Sentinel.API.Controllers;
 public class TicketStatusesController : BaseController
 {
     private readonly SentinelContext _context;
-    private readonly IMemoryCache _cache;
 
     private static readonly (string Name, string Color, bool IsClosed, int Order, bool IsDefault)[] DefaultStatuses =
     [
@@ -29,10 +26,9 @@ public class TicketStatusesController : BaseController
         ("Fermé",    "var(--muted2)", true,  4, false),
     ];
 
-    public TicketStatusesController(SentinelContext context, IMemoryCache cache)
+    public TicketStatusesController(SentinelContext context)
     {
         _context = context;
-        _cache = cache;
     }
 
     [HttpGet]
@@ -78,79 +74,5 @@ public class TicketStatusesController : BaseController
             .ToListAsync();
 
         return Ok(statuses);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<TicketStatusDto>> CreateStatus([FromBody] CreateTicketStatusDto dto)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest(new { message = "Le nom du statut est requis" });
-
-        if (dto.Name.Length > 50)
-            return BadRequest(new { message = "Le nom ne peut pas dépasser 50 caractères" });
-
-        int maxOrder = await _context.TicketStatuses
-            .Where(s => s.OrganizationId == organizationId.Value)
-            .Select(s => (int?)s.Order)
-            .MaxAsync() ?? -1;
-
-        TicketStatus status = new TicketStatus
-        {
-            OrganizationId = organizationId.Value,
-            Name = dto.Name.Trim(),
-            Color = string.IsNullOrWhiteSpace(dto.Color) ? "var(--muted2)" : dto.Color,
-            Order = maxOrder + 1,
-            IsDefault = false,
-            IsClosed = false,
-        };
-
-        await _context.TicketStatuses.AddAsync(status);
-        await _context.SaveChangesAsync();
-
-        try { _cache.Remove(CacheKeys.Dashboard(organizationId.Value)); } catch {}
-
-        return CreatedAtAction(nameof(GetStatuses), new TicketStatusDto
-        {
-            Id = status.Id,
-            Name = status.Name,
-            Color = status.Color,
-            Order = status.Order,
-            IsDefault = false,
-            IsClosed = false,
-            TicketCount = 0,
-        });
-    }
-
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteStatus(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        TicketStatus? status = await _context.TicketStatuses
-            .FirstOrDefaultAsync(s => s.Id == id && s.OrganizationId == organizationId.Value);
-
-        if (status == null)
-            return NotFound(new { message = "Statut introuvable" });
-
-        if (status.IsDefault)
-            return BadRequest(new { message = "Impossible de supprimer le statut par défaut" });
-
-        bool hasTickets = await _context.Tickets.AnyAsync(t => t.TicketStatusId == id);
-
-        if (hasTickets)
-            return BadRequest(new { message = "Impossible de supprimer un statut contenant des tickets" });
-
-        _context.TicketStatuses.Remove(status);
-        await _context.SaveChangesAsync();
-
-        try { _cache.Remove(CacheKeys.Dashboard(organizationId.Value)); } catch {}
-
-        return NoContent();
     }
 }

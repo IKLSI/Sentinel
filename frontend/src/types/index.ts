@@ -74,7 +74,6 @@ export interface Ticket {
   statusColor: string;
   statusIsClosed: boolean;
   estimatedHours?: number;
-  timeSpentMinutes?: number;
   comments: TicketComment[];
   history: TicketHistory[];
   createdAt: string;

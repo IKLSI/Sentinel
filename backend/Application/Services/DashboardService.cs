@@ -71,11 +71,6 @@ public class DashboardService
         int resolvedLastMonth = ticketCounters?.ResolvedLast ?? 0;
         int unassignedOpenTickets = ticketCounters?.Unassigned ?? 0;
 
-        int hoursThisMonth = await _context.TimeEntries
-            .AsNoTracking()
-            .Where(te => te.User.OrganizationId == organizationId && te.Date >= monthStartDate && te.Date <= todayDate)
-            .SumAsync(te => (int?)te.DurationMinutes) ?? 0;
-
         int criticalVulnerabilities = await _context.Vulnerabilities
             .AsNoTracking()
             .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.Dependency.Project.OrganizationId == organizationId)
@@ -167,7 +162,6 @@ public class DashboardService
             OpenTicketsDelta = openTicketsDelta,
             ResolvedThisMonth = resolvedThisMonth,
             ResolvedThisMonthDelta = resolvedThisMonth - resolvedLastMonth,
-            HoursThisMonth = hoursThisMonth / 60,
             CriticalVulnerabilities = criticalVulnerabilities,
             TicketsByStatus = ticketsByStatus,
             TicketsByStatusColor = ticketsByStatusColor,

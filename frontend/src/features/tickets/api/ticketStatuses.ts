@@ -19,21 +19,6 @@ export const getTicketStatuses = async (
   return response.data;
 };
 
-export const createTicketStatus = async (
-  name: string,
-  color: string,
-): Promise<TicketStatusDef> => {
-  const response = await apiClient.post<TicketStatusDef>("/api/statuses", {
-    name,
-    color,
-  });
-  return response.data;
-};
-
-export const deleteTicketStatus = async (id: string): Promise<void> => {
-  await apiClient.delete(`/api/statuses/${id}`);
-};
-
 export const changeTicketStatus = async (
   ticketId: string,
   statusId: string,

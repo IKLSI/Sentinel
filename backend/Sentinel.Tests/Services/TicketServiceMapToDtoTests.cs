@@ -26,7 +26,6 @@ public class TicketServiceMapToDtoTests
             Tags = "[]",
             Comments = new List<TicketComment>(),
             History = new List<TicketHistory>(),
-            TimeEntries = new List<TimeEntry>()
         };
 
         var dto = TicketService.MapToDto(ticket);
@@ -38,30 +37,6 @@ public class TicketServiceMapToDtoTests
         dto.Type.Should().Be("bug");
         dto.Comments.Should().BeEmpty();
         dto.History.Should().BeEmpty();
-        dto.TotalTimeMinutes.Should().Be(0);
-    }
-
-    [Fact]
-    public void MapToDto_WithTimeEntries_SumsDurations()
-    {
-        Ticket ticket = new Ticket
-        {
-            Id = Guid.NewGuid(),
-            Title = "T",
-            CreatedById = Guid.NewGuid(),
-            Tags = "[]",
-            TimeEntries = new List<TimeEntry>
-            {
-                new() { DurationMinutes = 60, UserId = Guid.NewGuid(), Date = DateOnly.FromDateTime(DateTime.UtcNow) },
-                new() { DurationMinutes = 45, UserId = Guid.NewGuid(), Date = DateOnly.FromDateTime(DateTime.UtcNow) },
-            },
-            Comments = new List<TicketComment>(),
-            History = new List<TicketHistory>(),
-        };
-
-        var dto = TicketService.MapToDto(ticket);
-
-        dto.TotalTimeMinutes.Should().Be(105);
     }
 
     [Fact]
@@ -82,7 +57,6 @@ public class TicketServiceMapToDtoTests
                 new() { Id = Guid.NewGuid(), AuthorId = authorId, Content = "premier", CreatedAt = now.AddMinutes(1) },
             },
             History = new List<TicketHistory>(),
-            TimeEntries = new List<TimeEntry>(),
         };
 
         var dto = TicketService.MapToDto(ticket);

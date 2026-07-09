@@ -272,7 +272,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuthService>();
         services.AddScoped<TicketService>();
         services.AddScoped<ExportService>();
-        services.AddScoped<TimeTrackingService>();
         services.AddScoped<RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<DependencyRegistryClient>();

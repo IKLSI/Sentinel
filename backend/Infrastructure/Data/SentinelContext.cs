@@ -22,7 +22,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
     public DbSet<TicketHistory> TicketHistories => Set<TicketHistory>();
-    public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Vulnerability> Vulnerabilities => Set<Vulnerability>();
@@ -50,7 +49,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
-        ConfigureTimeEntry(modelBuilder);
         ConfigureProject(modelBuilder);
         ConfigureDependency(modelBuilder);
         ConfigureVulnerability(modelBuilder);
@@ -97,11 +95,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<Notification>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
-
-        modelBuilder.Entity<TimeEntry>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet
-                || (e.Ticket != null && e.Ticket.OrganizationId == _tenant.OrganizationId)
-                || (e.Project != null && e.Project.OrganizationId == _tenant.OrganizationId));
 
         modelBuilder.Entity<Dependency>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Project.OrganizationId == _tenant.OrganizationId);
@@ -318,38 +311,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
 
             entity.HasOne(e => e.User)
                 .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-    }
-
-    private static void ConfigureTimeEntry(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<TimeEntry>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
-            entity.Property(e => e.Title).HasMaxLength(500);
-            entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.TicketId);
-            entity.HasIndex(e => e.Date);
-            entity.HasIndex(e => new { e.UserId, e.Date });
-            entity.HasIndex(e => e.ProjectId);
-
-            entity.HasOne(e => e.Ticket)
-                .WithMany(t => t.TimeEntries)
-                .HasForeignKey(e => e.TicketId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(e => e.Project)
-                .WithMany()
-                .HasForeignKey(e => e.ProjectId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(e => e.User)
-                .WithMany(u => u.TimeEntries)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });

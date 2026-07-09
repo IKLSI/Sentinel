@@ -23,7 +23,6 @@ public class TicketDto
     public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();
-    public decimal TotalTimeMinutes { get; set; }
 }
 
 public class TicketCommentDto

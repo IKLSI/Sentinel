@@ -79,17 +79,3 @@ public class ChangeStatusDtoValidator : AbstractValidator<ChangeStatusDto>
             .NotEmpty().WithMessage("Le statut est requis");
     }
 }
-
-public class CreateTicketStatusDtoValidator : AbstractValidator<CreateTicketStatusDto>
-{
-    public CreateTicketStatusDtoValidator()
-    {
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Le nom du statut est requis")
-            .MaximumLength(50).WithMessage("Le nom ne peut pas dépasser 50 caractères");
-
-        RuleFor(x => x.Color)
-            .NotEmpty().WithMessage("La couleur est requise")
-            .MaximumLength(100);
-    }
-}

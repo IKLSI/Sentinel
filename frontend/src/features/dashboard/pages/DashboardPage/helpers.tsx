@@ -41,7 +41,6 @@ export interface StatsData {
   openTicketsDelta: number;
   resolvedThisMonth: number;
   resolvedThisMonthDelta: number;
-  hoursThisMonth: number;
   criticalVulnerabilities: number;
   ticketsByStatus: Record<string, number>;
   ticketsByStatusColor: Record<string, string>;
@@ -57,7 +56,6 @@ export const EMPTY_STATS: StatsData = {
   openTicketsDelta: 0,
   resolvedThisMonth: 0,
   resolvedThisMonthDelta: 0,
-  hoursThisMonth: 0,
   criticalVulnerabilities: 0,
   ticketsByStatus: {},
   ticketsByStatusColor: {},

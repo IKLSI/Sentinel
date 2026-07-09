@@ -27,9 +27,6 @@ public enum AuditAction
     AttachmentUploaded,
     AttachmentDeleted,
 
-    TimeEntryCreated,
-    TimeEntryUpdated,
-    TimeEntryDeleted,
 
     ProjectCreated,
     ProjectUpdated,

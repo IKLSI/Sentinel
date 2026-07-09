@@ -45,19 +45,9 @@ const TicketsPage = lazy(() =>
     default: m.TicketsPage,
   })),
 );
-const KanbanPage = lazy(() =>
-  import("../features/tickets/pages/KanbanPage").then((m) => ({
-    default: m.KanbanPage,
-  })),
-);
 const TicketDetailPage = lazy(() =>
   import("../features/tickets/pages/TicketDetailPage").then((m) => ({
     default: m.TicketDetailPage,
-  })),
-);
-const TimeTrackingPage = lazy(() =>
-  import("../features/timeTracking/pages/TimeTrackingPage").then((m) => ({
-    default: m.TimeTrackingPage,
   })),
 );
 const ProjectsPage = lazy(() =>
@@ -140,11 +130,9 @@ export const AppRoutes: React.FC = () => (
       >
         <Route path="/" element={<DashboardPage />} />
         <Route path="/tickets" element={<TicketsPage />} />
-        <Route path="/tickets/kanban" element={<KanbanPage />} />
         <Route path="/tickets/:id" element={<TicketDetailPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
-        <Route path="/time-tracking" element={<TimeTrackingPage />} />
 
         <Route path="/profile" element={<ProfilePage />} />
         <Route

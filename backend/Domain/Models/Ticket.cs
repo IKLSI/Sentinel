@@ -41,7 +41,6 @@ public class Ticket
     public User CreatedBy { get; set; } = null!;
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     public ICollection<TicketHistory> History { get; set; } = new List<TicketHistory>();
-    public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
     public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
 
     public string[] GetTags()

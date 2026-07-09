@@ -60,36 +60,6 @@ public class ExportService
         return ExportLabels.For(lang == LanguageValues.En);
     }
 
-    public async Task<ExportResult> ExportTimeEntriesExcelAsync(
-        Guid organizationId, Guid? userId, DateOnly? from, DateOnly? to, Guid currentUserId)
-    {
-        IQueryable<TimeEntry> query = _context.TimeEntries
-            .AsNoTracking()
-            .Include(te => te.User)
-            .Include(te => te.Ticket)
-            .Include(te => te.Project)
-            .Where(te => te.User.OrganizationId == organizationId);
-
-        if (userId.HasValue)
-            query = query.Where(te => te.UserId == userId.Value);
-
-        if (from.HasValue)
-            query = query.Where(te => te.Date >= from.Value);
-
-        if (to.HasValue)
-            query = query.Where(te => te.Date <= to.Value);
-
-        List<TimeEntry> entries = await query.OrderByDescending(te => te.Date).ToListAsync();
-        ExportLabels labels = await GetLabelsAsync(currentUserId);
-
-        byte[] bytes = WriteTimeEntriesExcel(entries, from, to, labels);
-        string fromStr = from?.ToString("yyyy-MM-dd") ?? (labels.IsEn ? "start" : "debut");
-        string toStr = to?.ToString("yyyy-MM-dd") ?? (labels.IsEn ? "end" : "fin");
-        string slug = labels.IsEn ? "time-entries" : "temps";
-
-        return new ExportResult(bytes, $"{slug}-{fromStr}-{toStr}.xlsx");
-    }
-
     public async Task<ExportResult> ExportTicketsExcelAsync(
         Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search, Guid currentUserId)
     {
@@ -127,17 +97,9 @@ public class ExportService
 
         List<Ticket> tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
-        List<Guid> ticketIds = tickets.Select(t => t.Id).ToList();
-        Dictionary<Guid, int> totalsByTicket = await _context.TimeEntries
-            .AsNoTracking()
-            .Where(te => te.TicketId.HasValue && ticketIds.Contains(te.TicketId.Value))
-            .GroupBy(te => te.TicketId!.Value)
-            .Select(g => new { TicketId = g.Key, Total = g.Sum(x => x.DurationMinutes) })
-            .ToDictionaryAsync(x => x.TicketId, x => x.Total);
-
         ExportLabels labels = await GetLabelsAsync(currentUserId);
 
-        byte[] bytes = WriteTicketsExcel(tickets, totalsByTicket, labels);
+        byte[] bytes = WriteTicketsExcel(tickets, labels);
         return new ExportResult(bytes, $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx");
     }
 
@@ -158,54 +120,7 @@ public class ExportService
         return new ExportResult(bytes, $"{slug}-{DateTime.Now:yyyy-MM-dd}.xlsx");
     }
 
-    private static byte[] WriteTimeEntriesExcel(List<TimeEntry> entries, DateOnly? from, DateOnly? to, ExportLabels L)
-    {
-        string[] headers = L.TimeHeaders;
-
-        using XLWorkbook workbook = new();
-        ApplyDocumentProperties(workbook, L.SubjectTimeEntries);
-        IXLWorksheet ws = workbook.Worksheets.Add(L.SheetTimeEntries);
-
-        ApplyTitle(ws, L.TitleTimeEntries, headers.Length);
-        ApplyMetaRow(ws, headers.Length, BuildMeta(L, $"{entries.Count} {L.UnitEntries}", FormatPeriod(L, from, to)));
-        ApplyHeadersAtRow(ws, headers, HeaderRow);
-
-        for (int i = 0; i < entries.Count; i++)
-        {
-            TimeEntry te = entries[i];
-            int row = i + FirstDataRow;
-
-            SetRowBackground(ws, row, headers.Length, i % 2 == 1 ? AltRowColor : XLColor.White);
-
-            SetDateCell(ws.Cell(row, 1), te.Date.ToDateTime(TimeOnly.MinValue), L.DateFormat);
-            ws.Cell(row, 2).Value = te.User?.FullName ?? string.Empty;
-            ws.Cell(row, 3).Value = te.Project?.Name ?? string.Empty;
-            ws.Cell(row, 4).Value = te.Ticket?.Title ?? string.Empty;
-
-            ws.Cell(row, 5).Value = (double)Math.Round(te.DurationMinutes / 60m, 2);
-            ws.Cell(row, 5).Style.NumberFormat.Format = HoursFormat;
-
-            ws.Cell(row, 6).Value = te.Title ?? string.Empty;
-            ws.Cell(row, 7).Value = te.Description ?? string.Empty;
-        }
-
-        int lastDataRow = entries.Count > 0 ? entries.Count + FirstDataRow - 1 : HeaderRow;
-
-        if (entries.Count > 0)
-        {
-            int totalsRow = lastDataRow + 1;
-            ApplyTotalsRow(ws, totalsRow, headers.Length);
-            ws.Range(totalsRow, 1, totalsRow, 4).Merge();
-            ws.Cell(totalsRow, 1).Value = $"{L.TotalWord} — {entries.Count} {L.UnitEntries}";
-            ws.Cell(totalsRow, 5).Value = (double)Math.Round(entries.Sum(e => e.DurationMinutes) / 60m, 2);
-            ws.Cell(totalsRow, 5).Style.NumberFormat.Format = HoursFormat;
-        }
-
-        FinalizeSheet(ws, headers.Length, HeaderRow, HeaderRow, lastDataRow, HeaderRow);
-        return SaveWorkbook(workbook);
-    }
-
-    private static byte[] WriteTicketsExcel(List<Ticket> tickets, Dictionary<Guid, int> totalsByTicket, ExportLabels L)
+    private static byte[] WriteTicketsExcel(List<Ticket> tickets, ExportLabels L)
     {
         string[] headers = L.TicketHeaders;
 
@@ -247,10 +162,6 @@ public class ExportService
                 ws.Cell(row, 11).Value = (double)t.EstimatedHours.Value;
                 ws.Cell(row, 11).Style.NumberFormat.Format = HoursFormat;
             }
-
-            int totalMinutes = totalsByTicket.TryGetValue(t.Id, out int sum) ? sum : 0;
-            ws.Cell(row, 12).Value = (double)Math.Round(totalMinutes / 60m, 2);
-            ws.Cell(row, 12).Style.NumberFormat.Format = HoursFormat;
         }
 
         int lastDataRow = tickets.Count > 0 ? tickets.Count + FirstDataRow - 1 : HeaderRow;
@@ -263,8 +174,6 @@ public class ExportService
             ws.Cell(totalsRow, 1).Value = $"{L.TotalWord} — {tickets.Count} {L.UnitTickets}";
             ws.Cell(totalsRow, 11).Value = tickets.Where(t => t.EstimatedHours.HasValue).Sum(t => (double)t.EstimatedHours!.Value);
             ws.Cell(totalsRow, 11).Style.NumberFormat.Format = HoursFormat;
-            ws.Cell(totalsRow, 12).Value = (double)Math.Round(totalsByTicket.Values.Sum() / 60m, 2);
-            ws.Cell(totalsRow, 12).Style.NumberFormat.Format = HoursFormat;
         }
 
         FinalizeSheet(ws, headers.Length, HeaderRow, HeaderRow, lastDataRow, HeaderRow);
@@ -562,17 +471,6 @@ public class ExportService
         FinalizeSheet(ws, Math.Max(runtimeHeaders.Length, Math.Max(depHeaders.Length, vulnHeaders.Length)), 0, 0, 0, 0);
     }
 
-    private static string FormatPeriod(ExportLabels L, DateOnly? from, DateOnly? to)
-    {
-        if (from.HasValue && to.HasValue)
-            return L.IsEn ? $"Period from {from.Value:MM/dd/yyyy} to {to.Value:MM/dd/yyyy}" : $"Période du {from.Value:dd/MM/yyyy} au {to.Value:dd/MM/yyyy}";
-        if (from.HasValue)
-            return L.IsEn ? $"From {from.Value:MM/dd/yyyy}" : $"À partir du {from.Value:dd/MM/yyyy}";
-        if (to.HasValue)
-            return L.IsEn ? $"Until {to.Value:MM/dd/yyyy}" : $"Jusqu'au {to.Value:dd/MM/yyyy}";
-        return L.PeriodAll;
-    }
-
     private static string BuildMeta(ExportLabels L, string count, string? extra)
     {
         string stamp = L.IsEn
@@ -862,22 +760,18 @@ public class ExportService
         public required bool IsEn { get; init; }
         public required string DateFormat { get; init; }
 
-        public required string[] TimeHeaders { get; init; }
         public required string[] TicketHeaders { get; init; }
         public required string[] RecapHeaders { get; init; }
         public required string[] RuntimeHeaders { get; init; }
         public required string[] DepHeaders { get; init; }
         public required string[] VulnHeaders { get; init; }
 
-        public required string TitleTimeEntries { get; init; }
         public required string TitleTickets { get; init; }
         public required string TitleTechHealth { get; init; }
 
-        public required string SheetTimeEntries { get; init; }
         public required string SheetTickets { get; init; }
         public required string SheetRecap { get; init; }
 
-        public required string SubjectTimeEntries { get; init; }
         public required string SubjectTickets { get; init; }
         public required string SubjectTechHealth { get; init; }
 
@@ -888,10 +782,8 @@ public class ExportService
         public required string GeneratedOn { get; init; }
         public required string AtWord { get; init; }
         public required string TotalWord { get; init; }
-        public required string UnitEntries { get; init; }
         public required string UnitTickets { get; init; }
         public required string UnitProjects { get; init; }
-        public required string PeriodAll { get; init; }
 
         public required string NoRuntimes { get; init; }
         public required string NoDependencies { get; init; }
@@ -907,19 +799,15 @@ public class ExportService
             {
                 IsEn = true,
                 DateFormat = "mm/dd/yyyy",
-                TimeHeaders = ["Date", "User", "Project", "Ticket", "Duration", "Title", "Description"],
-                TicketHeaders = ["Reference", "Title", "Status", "Priority", "Type", "Assignee", "Project", "Created by", "Created on", "Updated on", "Est. hours", "Logged hours"],
+                TicketHeaders = ["Reference", "Title", "Status", "Priority", "Type", "Assignee", "Project", "Created by", "Created on", "Updated on", "Est. hours"],
                 RecapHeaders = ["Project", "Grade", "Score /100", "Dependencies", "To update", "Vulnerable", "Critical", "Obsolete runtimes", "Last scan"],
                 RuntimeHeaders = ["Runtime", "Version", "Support ends", "Status"],
                 DepHeaders = ["Name", "Current version", "Latest version", "Ecosystem", "Type", "Status", "Vulnerabilities"],
                 VulnHeaders = ["CVE", "CVSS score", "Severity", "Dependency", "Fix", "Description"],
-                TitleTimeEntries = "Sentinel — Time Entries",
                 TitleTickets = "Sentinel — Tickets",
                 TitleTechHealth = "Sentinel — TechHealth",
-                SheetTimeEntries = "Time Entries",
                 SheetTickets = "Tickets",
                 SheetRecap = "Summary",
-                SubjectTimeEntries = "Time Entries Export",
                 SubjectTickets = "Tickets Export",
                 SubjectTechHealth = "TechHealth Export",
                 SectionRuntimes = "RUNTIMES",
@@ -928,10 +816,8 @@ public class ExportService
                 GeneratedOn = "Generated on",
                 AtWord = "at",
                 TotalWord = "TOTAL",
-                UnitEntries = "entries",
                 UnitTickets = "tickets",
                 UnitProjects = "projects",
-                PeriodAll = "All periods",
                 NoRuntimes = "No runtime detected",
                 NoDependencies = "No dependency detected",
                 NoVulnerabilities = "No vulnerability detected",
@@ -944,19 +830,15 @@ public class ExportService
             {
                 IsEn = false,
                 DateFormat = "dd/mm/yyyy",
-                TimeHeaders = ["Date", "Utilisateur", "Projet", "Ticket", "Durée", "Titre", "Description"],
-                TicketHeaders = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "H. estimées", "H. saisies"],
+                TicketHeaders = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "H. estimées"],
                 RecapHeaders = ["Projet", "Grade", "Score /100", "Dépendances", "À mettre à jour", "Vulnérables", "Critiques", "Runtimes obsolètes", "Dernier scan"],
                 RuntimeHeaders = ["Runtime", "Version", "Fin de support", "Statut"],
                 DepHeaders = ["Nom", "Version actuelle", "Dernière version", "Écosystème", "Type", "Statut", "Vulnérabilités"],
                 VulnHeaders = ["CVE", "Score CVSS", "Sévérité", "Dépendance", "Correctif", "Description"],
-                TitleTimeEntries = "Sentinel — Saisies de temps",
                 TitleTickets = "Sentinel — Tickets",
                 TitleTechHealth = "Sentinel — TechHealth",
-                SheetTimeEntries = "Saisies de temps",
                 SheetTickets = "Tickets",
                 SheetRecap = "Récapitulatif",
-                SubjectTimeEntries = "Export Saisies de temps",
                 SubjectTickets = "Export Tickets",
                 SubjectTechHealth = "Export TechHealth",
                 SectionRuntimes = "RUNTIMES",
@@ -965,10 +847,8 @@ public class ExportService
                 GeneratedOn = "Généré le",
                 AtWord = "à",
                 TotalWord = "TOTAL",
-                UnitEntries = "saisie(s)",
                 UnitTickets = "ticket(s)",
                 UnitProjects = "projet(s)",
-                PeriodAll = "Toutes périodes",
                 NoRuntimes = "Aucun runtime détecté",
                 NoDependencies = "Aucune dépendance détectée",
                 NoVulnerabilities = "Aucune vulnérabilité détectée",

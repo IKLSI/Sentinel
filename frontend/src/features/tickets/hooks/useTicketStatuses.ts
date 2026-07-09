@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTicketStatuses, type TicketStatusDef } from "../api/ticketStatuses";
 
-export const ticketStatusesQueryKey = ["ticket-statuses"] as const;
+const ticketStatusesQueryKey = ["ticket-statuses"] as const;
 
 export const useTicketStatuses = (enabled = true) => {
   return useQuery<TicketStatusDef[]>({

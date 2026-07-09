@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 
@@ -8,13 +7,11 @@ namespace Sentinel.Infrastructure.Data;
 public class DataSeeder
 {
     private readonly SentinelContext _context;
-    private readonly ILogger<DataSeeder> _logger;
     private readonly ISystemScope _systemScope;
 
-    public DataSeeder(SentinelContext context, ILogger<DataSeeder> logger, ISystemScope systemScope)
+    public DataSeeder(SentinelContext context, ISystemScope systemScope)
     {
         _context = context;
-        _logger = logger;
         _systemScope = systemScope;
     }
 

@@ -345,24 +345,6 @@ public class UsersController : BaseController
 
         if (user == null) return NotFound(new { message = "Utilisateur introuvable" });
 
-        List<object> timeEntries = await _context.TimeEntries
-            .AsNoTracking()
-            .Where(te => te.UserId == currentUserId.Value)
-            .Include(te => te.Project)
-            .Include(te => te.Ticket)
-            .OrderByDescending(te => te.Date)
-            .Select(te => (object)new
-            {
-                te.Id,
-                te.Date,
-                te.DurationMinutes,
-                te.Title,
-                te.Description,
-                project = te.Project != null ? te.Project.Name : null,
-                ticket = te.Ticket != null ? te.Ticket.Title : null
-            })
-            .ToListAsync();
-
         List<object> auditLogs = await _context.AuditLogs
             .AsNoTracking()
             .Where(al => al.UserId == currentUserId.Value)
@@ -391,7 +373,6 @@ public class UsersController : BaseController
                 user.LastLoginAt,
                 user.Language
             },
-            timeEntries,
             auditLogs
         };
 

@@ -40,7 +40,6 @@ interface TicketDto {
   assignedToId?: string;
   assignedToName?: string;
   estimatedHours?: number;
-  totalTimeMinutes?: number;
   createdById: string;
   createdByName: string;
   createdAt: string;
@@ -96,7 +95,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
     statusColor: dto.statusColor,
     statusIsClosed: dto.statusIsClosed,
     estimatedHours: dto.estimatedHours,
-    timeSpentMinutes: dto.totalTimeMinutes,
     comments: dto.comments.map((c) => ({
       id: c.id,
       ticketId: dto.id,

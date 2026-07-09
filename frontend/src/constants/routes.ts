@@ -3,7 +3,6 @@ export const ROUTES = {
   HOME: "/",
   TICKETS: "/tickets",
   PROJECTS: "/projects",
-  TIME_TRACKING: "/time-tracking",
   SETTINGS: "/settings",
   ORGANISATION: "/organisation",
   USERS: "/users",
