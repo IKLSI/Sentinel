@@ -10,6 +10,7 @@
     "lint:dead": "knip --reporter compact",
     "format": "biome format --write src",
     "check": "biome check src",
+    "ci:check": "biome ci src",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
