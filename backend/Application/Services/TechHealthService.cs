@@ -344,7 +344,6 @@ public class TechHealthService
                     CvssScore = cvss,
                     Description = summary,
                     PackageName = dependency.Name,
-                    AffectedVersion = dependency.CurrentVersion,
                     FixedVersion = fixedVersion,
                     AdvisoryUrl = advisoryUrl,
                     Severity = severity,

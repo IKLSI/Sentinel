@@ -1,6 +1,5 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
@@ -211,89 +210,81 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               const Icon = activityIcon(a.type);
 
               return (
-                <Tooltip
+                <Box
                   key={`${a.timestamp}-${a.text}-${idx}`}
-                  title={a.tooltipText ?? ""}
-                  disableHoverListener={!a.tooltipText}
-                  placement="top"
-                  arrow
+                  onClick={href ? () => navigate(href) : undefined}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    px: "10px",
+                    minHeight: "48px",
+                    borderRadius: "var(--r-md)",
+                    background: palette.rowBg,
+                    cursor: href ? "pointer" : "default",
+                    transition: "background 120ms ease, box-shadow 120ms ease",
+                    "&:hover": href
+                      ? {
+                          background: palette.rowHoverBg,
+                          boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
+                        }
+                      : undefined,
+                    "&:active": href
+                      ? { background: palette.rowActiveBg }
+                      : undefined,
+                  }}
                 >
-                  <Box
-                    onClick={href ? () => navigate(href) : undefined}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      px: "10px",
-                      minHeight: "48px",
-                      borderRadius: "var(--r-md)",
-                      background: palette.rowBg,
-                      cursor: href ? "pointer" : "default",
-                      transition:
-                        "background 120ms ease, box-shadow 120ms ease",
-                      "&:hover": href
-                        ? {
-                            background: palette.rowHoverBg,
-                            boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
-                          }
-                        : undefined,
-                      "&:active": href
-                        ? { background: palette.rowActiveBg }
-                        : undefined,
-                    }}
-                  >
-                    <Icon
-                      sx={{ fontSize: 16, color: accentColor, flexShrink: 0 }}
-                    />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Icon
+                    sx={{ fontSize: 16, color: accentColor, flexShrink: 0 }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: palette.rowTitle,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1.4,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {renderText()}
+                    </Box>
+                    {detail && (
                       <Box
                         sx={{
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          color: palette.rowTitle,
-                          letterSpacing: "-0.01em",
-                          lineHeight: 1.4,
+                          mt: "2px",
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "9.5px",
+                          color: palette.textMuted,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {renderText()}
-                      </Box>
-                      {detail && (
-                        <Box
-                          sx={{
-                            mt: "2px",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "9.5px",
-                            color: palette.textMuted,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {detail}
-                        </Box>
-                      )}
-                    </Box>
-                    {a.timestamp && (
-                      <Box
-                        sx={{
-                          fontSize: "10px",
-                          color: palette.textMuted,
-                          flexShrink: 0,
-                          fontVariantNumeric: "tabular-nums",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {formatDistanceToNow(new Date(a.timestamp), {
-                          addSuffix: true,
-                          locale: dateFnsLocale,
-                        })}
+                        {detail}
                       </Box>
                     )}
                   </Box>
-                </Tooltip>
+                  {a.timestamp && (
+                    <Box
+                      sx={{
+                        fontSize: "10px",
+                        color: palette.textMuted,
+                        flexShrink: 0,
+                        fontVariantNumeric: "tabular-nums",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {formatDistanceToNow(new Date(a.timestamp), {
+                        addSuffix: true,
+                        locale: dateFnsLocale,
+                      })}
+                    </Box>
+                  )}
+                </Box>
               );
             })}
           </Box>

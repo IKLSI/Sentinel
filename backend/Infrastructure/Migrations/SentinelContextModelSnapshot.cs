@@ -870,10 +870,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("AdvisoryUrl")
                         .HasColumnType("text");
 
-                    b.Property<string>("AffectedVersion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("CveId")
                         .IsRequired()
                         .HasMaxLength(50)

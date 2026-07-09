@@ -8,7 +8,6 @@ public interface INotificationService
 {
     Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string message, Guid? ticketId = null);
     Task<List<Notification>> GetForUserAsync(Guid userId, int limit = 30);
-    Task<int> GetUnreadCountAsync(Guid userId);
     Task MarkReadAsync(Guid notificationId, Guid userId);
     Task MarkAllReadAsync(Guid userId);
 }
@@ -48,13 +47,6 @@ public class NotificationService : INotificationService
             .OrderByDescending(n => n.CreatedAt)
             .Take(limit)
             .ToListAsync();
-    }
-
-    public async Task<int> GetUnreadCountAsync(Guid userId)
-    {
-        return await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .CountAsync();
     }
 
     public async Task MarkReadAsync(Guid notificationId, Guid userId)

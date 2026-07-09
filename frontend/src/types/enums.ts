@@ -109,8 +109,6 @@ export const SortDirection = {
 export type SortDirection = (typeof SortDirection)[keyof typeof SortDirection];
 
 export const SettingsTab = {
-  Members: "members",
-  Organisation: "organisation",
   Jobs: "jobs",
   Billing: "billing",
   ApiKeys: "api-keys",

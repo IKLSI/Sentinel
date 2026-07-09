@@ -11,13 +11,11 @@ import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
-import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import {
   type ProjectDetailDto,
-  deleteProject,
   getProject,
 } from "@/features/techHealth/api/projects";
 import type { TabDef } from "./helpers";
@@ -27,7 +25,6 @@ import { TabBar } from "./components/TabBar";
 import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
 import { DependenciesTab } from "./components/DependenciesTab";
 import { RuntimesTab } from "./components/RuntimesTab";
-import { extractApiError } from "@/utils/apiError";
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,8 +34,6 @@ export const ProjectDetailPage: React.FC = () => {
 
   const [project, setProject] = useState<ProjectDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [depSearch, setDepSearch] = useState("");
   const [, startTransition] = useTransition();
@@ -67,22 +62,6 @@ export const ProjectDetailPage: React.FC = () => {
     void load(ctrl.signal);
     return () => ctrl.abort();
   }, [load]);
-
-  const handleDelete = async () => {
-    if (!id) return;
-    setDeleting(true);
-    try {
-      await deleteProject(id);
-      showToast(t("tech_health.toast.deleted"), "success");
-      navigate(ROUTES.PROJECTS);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("tech_health.toast.delete_error")),
-        "error",
-      );
-      setDeleting(false);
-    }
-  };
 
   const allVulns = useMemo(
     () =>
@@ -148,118 +127,100 @@ export const ProjectDetailPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <Box
+      className="page-enter"
+      sx={{
+        p: "20px 28px",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      <ProjectHeaderCard project={project} eolRuntimes={eolRuntimes} />
+
       <Box
-        className="page-enter"
         sx={{
-          p: "20px 28px",
-          height: "100vh",
+          flex: "0 1 auto",
+          minHeight: 0,
           display: "flex",
           flexDirection: "column",
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--r)",
           overflow: "hidden",
         }}
       >
-        <ProjectHeaderCard project={project} eolRuntimes={eolRuntimes} />
+        <Box
+          sx={{
+            flexShrink: 0,
+            height: "44px",
+            display: "flex",
+            alignItems: "stretch",
+            justifyContent: "space-between",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--s2)",
+            px: "4px",
+          }}
+        >
+          <TabBar
+            tabs={tabDefs}
+            active={activeTab}
+            onChange={(i) => {
+              startTransition(() => {
+                setActiveTab(i);
+                setDepSearch("");
+              });
+            }}
+          />
+        </Box>
 
         <Box
           sx={{
-            flex: "0 1 auto",
+            flex: 1,
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            background: "var(--s1)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            overflow: "hidden",
+            p: "20px",
           }}
         >
           <Box
             sx={{
-              flexShrink: 0,
-              height: "44px",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "space-between",
-              borderBottom: "1px solid var(--border)",
-              background: "var(--s2)",
-              px: "4px",
+              flex: 1,
+              minHeight: 0,
+              display: activeTab === 0 ? "flex" : "none",
+              flexDirection: "column",
             }}
           >
-            <TabBar
-              tabs={tabDefs}
-              active={activeTab}
-              onChange={(i) => {
-                startTransition(() => {
-                  setActiveTab(i);
-                  setDepSearch("");
-                });
-              }}
-            />
+            <VulnerabilitiesTab vulns={sortedVulns} />
           </Box>
-
           <Box
             sx={{
               flex: 1,
               minHeight: 0,
-              display: "flex",
+              display: activeTab === 1 ? "flex" : "none",
               flexDirection: "column",
-              p: "20px",
             }}
           >
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display: activeTab === 0 ? "flex" : "none",
-                flexDirection: "column",
-              }}
-            >
-              <VulnerabilitiesTab vulns={sortedVulns} />
-            </Box>
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display: activeTab === 1 ? "flex" : "none",
-                flexDirection: "column",
-              }}
-            >
-              <DependenciesTab
-                dependencies={project.dependencies}
-                filteredDeps={filteredDeps}
-                search={depSearch}
-                onSearchChange={setDepSearch}
-              />
-            </Box>
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display: activeTab === 2 ? "flex" : "none",
-                flexDirection: "column",
-              }}
-            >
-              <RuntimesTab runtimes={project.runtimes} />
-            </Box>
+            <DependenciesTab
+              dependencies={project.dependencies}
+              filteredDeps={filteredDeps}
+              search={depSearch}
+              onSearchChange={setDepSearch}
+            />
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: activeTab === 2 ? "flex" : "none",
+              flexDirection: "column",
+            }}
+          >
+            <RuntimesTab runtimes={project.runtimes} />
           </Box>
         </Box>
       </Box>
-
-      <DeleteModal
-        open={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title={t("tech_health.delete.title")}
-      >
-        {t("tech_health.delete.prefix")}
-        <strong>{project.name}</strong>
-        {t("tech_health.delete.suffix")}
-        <br />
-        {t("common.action_irreversible_before")}
-        <b>{t("common.action_irreversible_word")}</b>
-        {t("common.action_irreversible_after")}
-      </DeleteModal>
-    </>
+    </Box>
   );
 };

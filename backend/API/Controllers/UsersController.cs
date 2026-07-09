@@ -90,26 +90,6 @@ public class UsersController : BaseController
         });
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<UserDto>> GetUser(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-        Guid? currentUserId = GetCurrentUserId();
-
-        if (organizationId == null || currentUserId == null) return Unauthorized();
-
-        if (!User.IsInRole(UserRole.Admin.ToString()) && currentUserId != id)
-            return Forbid();
-
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id && u.OrganizationId == organizationId.Value);
-
-        if (user == null)
-            return NotFound(new { message = "Utilisateur introuvable" });
-
-        return Ok(MapToDto(user));
-    }
-
     [HttpPost]
     [AuthorizeRoles(UserRole.Admin)]
     public async Task<IActionResult> InviteUser([FromBody] CreateUserDto dto)

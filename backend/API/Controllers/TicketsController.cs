@@ -345,39 +345,6 @@ public class TicketsController : BaseController
     private string GetAttachmentsRoot() =>
         Path.Combine(_env.ContentRootPath, "App_Data", "attachments");
 
-    [HttpGet("{id:guid}/attachments")]
-    public async Task<ActionResult<List<TicketAttachmentDto>>> ListAttachments(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
-
-        if (!ticketExists)
-            return NotFound(new { message = "Ticket introuvable" });
-
-        List<TicketAttachmentDto> attachments = await _context.TicketAttachments
-            .AsNoTracking()
-            .Where(a => a.TicketId == id)
-            .Include(a => a.UploadedBy)
-            .OrderByDescending(a => a.CreatedAt)
-            .Select(a => new TicketAttachmentDto
-            {
-                Id = a.Id,
-                TicketId = a.TicketId,
-                FileName = a.FileName,
-                ContentType = a.ContentType,
-                Size = a.Size,
-                UploadedById = a.UploadedById,
-                UploadedByName = a.UploadedBy.FirstName + " " + a.UploadedBy.LastName,
-                CreatedAt = a.CreatedAt
-            })
-            .ToListAsync();
-
-        return Ok(attachments);
-    }
-
     [HttpPost("{id:guid}/attachments")]
     [RequestSizeLimit(10_485_760)]
     public async Task<ActionResult<TicketAttachmentDto>> UploadAttachment(Guid id, IFormFile file)
@@ -475,46 +442,6 @@ public class TicketsController : BaseController
         FileStream stream = new FileStream(attachment.StoragePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         return File(stream, attachment.ContentType, attachment.FileName);
-    }
-
-    [HttpDelete("{id:guid}/attachments/{attachmentId:guid}")]
-    public async Task<IActionResult> DeleteAttachment(Guid id, Guid attachmentId)
-    {
-        Guid? userId = GetCurrentUserId();
-
-        if (userId == null) return Unauthorized();
-
-        Guid? organizationId = GetOrganizationId();
-        TicketAttachment? attachment = await _context.TicketAttachments
-            .Include(a => a.Ticket)
-            .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == id);
-
-        if (attachment == null || attachment.Ticket.OrganizationId != organizationId)
-            return NotFound(new { message = "Pièce jointe introuvable" });
-
-        bool isAdmin = User.IsInRole(UserRole.Admin.ToString());
-
-        if (!isAdmin && attachment.UploadedById != userId.Value)
-            return Forbid();
-
-        if (System.IO.File.Exists(attachment.StoragePath))
-        {
-            try { System.IO.File.Delete(attachment.StoragePath); }
-            catch { /* fichier déjà absent ou verrouillé : on supprime quand même la trace DB */ }
-        }
-
-        _context.TicketAttachments.Remove(attachment);
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.AttachmentDeleted,
-            entityType: AuditEntityTypes.TicketAttachment,
-            organizationId: organizationId,
-            userId: userId.Value,
-            entityId: attachmentId,
-            jti: GetCurrentJti());
-
-        return NoContent();
     }
 
     [HttpPatch("{id:guid}/status")]

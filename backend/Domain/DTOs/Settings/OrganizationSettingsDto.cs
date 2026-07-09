@@ -28,9 +28,3 @@ public class ConnectIntegrationDto
 {
     public string Token { get; set; } = string.Empty;
 }
-
-public class ImportResultDto
-{
-    public int ImportedCount { get; set; }
-    public int SkippedCount { get; set; }
-}

@@ -7,7 +7,6 @@ export interface ActivityItem {
   text: string;
   timestamp: string;
   detail?: string;
-  tooltipText?: string;
   ticketId?: string;
   projectId?: string;
   count?: number;
