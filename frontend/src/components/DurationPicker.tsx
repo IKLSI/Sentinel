@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 
 function parse(input: string): number {
   const s = input.trim().toLowerCase();
   if (!s) return 0;
   const hm = s.match(/^(\d+)\s*h\s*(\d+)\s*m?$/);
-  if (hm) return parseInt(hm[1]) * 60 + parseInt(hm[2]);
+  if (hm) return parseInt(hm[1], 10) * 60 + parseInt(hm[2], 10);
   const h = s.match(/^(\d+)\s*h$/);
-  if (h) return parseInt(h[1]) * 60;
+  if (h) return parseInt(h[1], 10) * 60;
   const m = s.match(/^(\d+)\s*m(in)?$/);
-  if (m) return parseInt(m[1]);
+  if (m) return parseInt(m[1], 10);
   const dec = s.match(/^(\d+\.\d+)$/);
   if (dec) return Math.round(parseFloat(dec[1]) * 60);
   const bare = s.match(/^(\d+)$/);
-  if (bare) return parseInt(bare[1]);
+  if (bare) return parseInt(bare[1], 10);
   return 0;
 }
 

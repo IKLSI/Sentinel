@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
 import { getPageNumbers, navBtnSx, pageBtnSx } from "../../helpers";
@@ -17,6 +17,10 @@ export const MemberPagination: React.FC<Props> = ({
   onChange,
 }) => {
   const pages = getPageNumbers(page, totalPages);
+  const pageItems = pages.map((value, index) => ({
+    value,
+    key: value === "..." ? `ellipsis-${pages[index - 1]}` : `page-${value}`,
+  }));
   const t = useT();
   return (
     <Box
@@ -54,10 +58,10 @@ export const MemberPagination: React.FC<Props> = ({
         <Box
           sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "2px" }}
         >
-          {pages.map((p, i) =>
-            p === "..." ? (
+          {pageItems.map(({ value, key }) =>
+            value === "..." ? (
               <Box
-                key={`e-${i}`}
+                key={key}
                 sx={{
                   minWidth: "24px",
                   textAlign: "center",
@@ -69,12 +73,12 @@ export const MemberPagination: React.FC<Props> = ({
               </Box>
             ) : (
               <Box
-                key={p}
+                key={key}
                 component="button"
-                sx={pageBtnSx(p === page)}
-                onClick={() => p !== page && onChange(p as number)}
+                sx={pageBtnSx(value === page)}
+                onClick={() => value !== page && onChange(value as number)}
               >
-                {p}
+                {value}
               </Box>
             ),
           )}

@@ -126,9 +126,9 @@ function sectionKey(section: NavSection): string {
 }
 
 function isItemActive(item: NavItem, pathname: string): boolean {
-  if (item.activeFor && item.activeFor.test(pathname)) return true;
+  if (item.activeFor?.test(pathname)) return true;
   if (item.end) return pathname === item.to;
-  return pathname === item.to || pathname.startsWith(item.to + "/");
+  return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
 
 const ITEM_SX = {
@@ -229,7 +229,7 @@ export const Sidebar: React.FC = () => {
 
   useEffect(() => {
     if (isMobile) close();
-  }, [location.pathname, isMobile, close]);
+  }, [isMobile, close]);
 
   useEffect(() => {
     if (isMobile && isOpen) {
@@ -464,57 +464,61 @@ export const Sidebar: React.FC = () => {
               </Box>
             </Box>
           )}
-          {collapsed ? (
-            filteredSections.map((section) => {
-              const sectionActive = isSectionActive(section, location.pathname);
-              const activeItem =
-                section.items.find((i) => isItemActive(i, location.pathname)) ??
-                section.items[0];
-              const ItemIcon = activeItem.icon ?? section.icon;
-              return (
-                <Tooltip
-                  key={section.titleKey}
-                  title={t(section.titleKey)}
-                  placement="right"
-                  arrow
-                >
-                  <Box
-                    component="button"
-                    onClick={() => navigate(activeItem.to)}
-                    sx={{
-                      all: "unset",
-                      height: "34px",
-                      width: "100%",
-                      boxSizing: "border-box",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: "var(--r)",
-                      cursor: "pointer",
-                      transition: "background 0.12s",
-                      position: "relative",
-                      background: sectionActive
-                        ? "var(--accent-subtle)"
-                        : "transparent",
-                      "&:hover": !sectionActive
-                        ? { background: "var(--s3)" }
-                        : {},
-                    }}
+          {collapsed
+            ? filteredSections.map((section) => {
+                const sectionActive = isSectionActive(
+                  section,
+                  location.pathname,
+                );
+                const activeItem =
+                  section.items.find((i) =>
+                    isItemActive(i, location.pathname),
+                  ) ?? section.items[0];
+                const ItemIcon = activeItem.icon ?? section.icon;
+                return (
+                  <Tooltip
+                    key={section.titleKey}
+                    title={t(section.titleKey)}
+                    placement="right"
+                    arrow
                   >
-                    <ItemIcon
+                    <Box
+                      component="button"
+                      onClick={() => navigate(activeItem.to)}
                       sx={{
-                        fontSize: 16,
-                        color: sectionActive ? "var(--accent)" : "var(--muted)",
-                        transition: "color 0.12s",
+                        all: "unset",
+                        height: "34px",
+                        width: "100%",
+                        boxSizing: "border-box",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "var(--r)",
+                        cursor: "pointer",
+                        transition: "background 0.12s",
+                        position: "relative",
+                        background: sectionActive
+                          ? "var(--accent-subtle)"
+                          : "transparent",
+                        "&:hover": !sectionActive
+                          ? { background: "var(--s3)" }
+                          : {},
                       }}
-                    />
-                  </Box>
-                </Tooltip>
-              );
-            })
-          ) : (
-            <>
-              {[
+                    >
+                      <ItemIcon
+                        sx={{
+                          fontSize: 16,
+                          color: sectionActive
+                            ? "var(--accent)"
+                            : "var(--muted)",
+                          transition: "color 0.12s",
+                        }}
+                      />
+                    </Box>
+                  </Tooltip>
+                );
+              })
+            : [
                 { groupKey: "nav" as const, headerKey: "sidebar.section.nav" },
                 {
                   groupKey: "admin" as const,
@@ -740,8 +744,6 @@ export const Sidebar: React.FC = () => {
                   </React.Fragment>
                 );
               })}
-            </>
-          )}
         </Box>
 
         <Box
@@ -758,7 +760,9 @@ export const Sidebar: React.FC = () => {
           }}
         >
           <Tooltip
-            title={collapsed ? `${user?.firstName} ${user?.lastName?.[0]}.` : ""}
+            title={
+              collapsed ? `${user?.firstName} ${user?.lastName?.[0]}.` : ""
+            }
             placement="top"
             arrow
           >

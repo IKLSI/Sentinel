@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getProjects, ProjectDto } from "../api/projects";
+import { getProjects, type ProjectDto } from "../api/projects";
 
 export const projectsQueryKey = ["projects"] as const;
 

@@ -1,8 +1,8 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { RuntimeDto } from "@/features/techHealth/api/projects";
+import type { RuntimeDto } from "@/features/techHealth/api/projects";
 import {
   EOL_COLOR,
   TD,

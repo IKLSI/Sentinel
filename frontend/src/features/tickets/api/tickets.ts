@@ -1,7 +1,7 @@
 import apiClient from "../../../services/client";
 import { API_BASE_URL } from "@/constants/api";
 import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
-import {
+import type {
   Ticket,
   TicketComment,
   TicketFilters,
@@ -139,8 +139,13 @@ export const getTickets = async (
   };
 };
 
-export const getTicket = async (id: string, signal?: AbortSignal): Promise<Ticket> => {
-  const response = await apiClient.get<TicketDto>(`/api/tickets/${id}`, { signal });
+export const getTicket = async (
+  id: string,
+  signal?: AbortSignal,
+): Promise<Ticket> => {
+  const response = await apiClient.get<TicketDto>(`/api/tickets/${id}`, {
+    signal,
+  });
   return mapTicketDto(response.data);
 };
 
@@ -257,8 +262,6 @@ export const downloadAttachmentByUrl = async (
   a.click();
   URL.revokeObjectURL(url);
 };
-
-
 
 export const exportTicketsExcel = async (params?: {
   status?: string;

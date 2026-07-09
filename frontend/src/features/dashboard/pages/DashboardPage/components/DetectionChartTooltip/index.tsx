@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
 

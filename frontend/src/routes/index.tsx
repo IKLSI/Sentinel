@@ -1,4 +1,5 @@
-import React, { lazy, Suspense } from "react";
+import type React from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";

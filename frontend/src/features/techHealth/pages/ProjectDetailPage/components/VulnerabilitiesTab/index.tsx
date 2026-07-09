@@ -1,8 +1,8 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { VulnerabilityDto } from "@/features/techHealth/api/projects";
+import type { VulnerabilityDto } from "@/features/techHealth/api/projects";
 import { SEV_CONFIG, TD, TH, TR } from "../../helpers";
 
 type VulnWithDep = VulnerabilityDto & { dependencyName: string };
@@ -25,7 +25,14 @@ const VulnRow: React.FC<{ vuln: VulnWithDep }> = ({ vuln }) => {
         </Box>
       </TD>
       <TD>
-        <Box component="span" sx={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--muted2)" }}>
+        <Box
+          component="span"
+          sx={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            color: "var(--muted2)",
+          }}
+        >
           {vuln.dependencyName}
         </Box>
       </TD>
@@ -40,7 +47,7 @@ const VulnRow: React.FC<{ vuln: VulnWithDep }> = ({ vuln }) => {
             background: "var(--cyan-subtle)",
             px: "7px",
             py: "3px",
-            borderRadius: 'var(--r-xs)',
+            borderRadius: "var(--r-xs)",
           }}
         >
           {vuln.cveId}

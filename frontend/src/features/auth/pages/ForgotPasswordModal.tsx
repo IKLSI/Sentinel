@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import type React from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -23,6 +24,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
+  const emailId = useId();
 
   useEffect(() => {
     if (open) {
@@ -134,7 +136,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 mb: "14px",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   d="M4 10l4 4 8-8"
                   stroke="var(--accent)"
@@ -166,6 +174,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               {t("auth.forgot_password.success_sub")}
             </Box>
             <button
+              type="button"
               className="lp-submit"
               onClick={onClose}
               style={{ animation: "none", opacity: 1 }}
@@ -179,15 +188,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               className="lp-field"
               sx={{ animation: "none !important", opacity: "1 !important" }}
             >
-              <Box
-                component="label"
-                className="lp-label"
-                htmlFor="fp-modal-email"
-              >
+              <Box component="label" className="lp-label" htmlFor={emailId}>
                 {t("auth.forgot_password.email_label")}
               </Box>
               <input
-                id="fp-modal-email"
+                id={emailId}
                 ref={emailRef}
                 type="email"
                 className="lp-input"

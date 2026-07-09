@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
 import { getPageNumbers, navBtnSx, pageBtnSx } from "../../helpers";
@@ -57,10 +57,10 @@ export const Pagination: React.FC<Props> = ({
         <Box
           sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}
         >
-          {pages.map((p, i) =>
-            p === "..." ? (
+          {pages.map(({ value, key }) =>
+            value === "..." ? (
               <Box
-                key={`e-${i}`}
+                key={key}
                 sx={{
                   minWidth: "28px",
                   textAlign: "center",
@@ -73,12 +73,12 @@ export const Pagination: React.FC<Props> = ({
               </Box>
             ) : (
               <Box
-                key={p}
+                key={key}
                 component="button"
-                sx={pageBtnSx(p === page)}
-                onClick={() => p !== page && onChange(p as number)}
+                sx={pageBtnSx(value === page)}
+                onClick={() => value !== page && onChange(value as number)}
               >
-                {p}
+                {value}
               </Box>
             ),
           )}

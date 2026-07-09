@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import { addDays, addWeeks, format, isSameWeek, startOfWeek } from "date-fns";
@@ -7,19 +8,22 @@ import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useT } from "@/i18n/I18nContext";
 import {
-  CreateTimeEntryDto,
-  TimeEntryDto,
+  type CreateTimeEntryDto,
+  type TimeEntryDto,
   createTimeEntry,
   deleteTimeEntry,
   exportTimeEntriesExcel,
   getTimeEntries,
   updateTimeEntry,
 } from "@/features/timeTracking/api/timeEntries";
-import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
+import {
+  type ProjectDto,
+  getProjects,
+} from "@/features/techHealth/api/projects";
 import { getTickets } from "@/features/tickets/api/tickets";
 import { getUsers } from "@/features/users/api/users";
-import { Ticket } from "@/types";
-import { FormState, emptyForm, parseDateLocal } from "./helpers";
+import type { Ticket } from "@/types";
+import { type FormState, emptyForm, parseDateLocal } from "./helpers";
 import { WeekColumnsView } from "./components/WeekColumnsView";
 import { UserPicker } from "./components/UserPicker";
 import { TimeEntryModal } from "./components/TimeEntryModal";
@@ -101,7 +105,9 @@ export const TimeTrackingPage: React.FC = () => {
             getUsers({ page: i + 2 }),
           ),
         );
-        remaining.forEach((p) => users.push(...p.items));
+        remaining.forEach((p) => {
+          users.push(...p.items);
+        });
       }
       setAllUsers(
         users.map((u) => ({
@@ -112,8 +118,12 @@ export const TimeTrackingPage: React.FC = () => {
       );
     };
 
-    getProjects().then(setProjects).catch(() => {});
-    getTickets({ pageSize: 200 }).then((r) => setTickets(r.items)).catch(() => {});
+    getProjects()
+      .then(setProjects)
+      .catch(() => {});
+    getTickets({ pageSize: 200 })
+      .then((r) => setTickets(r.items))
+      .catch(() => {});
     loadAllUsers().catch(() => {});
   }, []);
 
@@ -145,7 +155,9 @@ export const TimeTrackingPage: React.FC = () => {
 
   const entriesByDay = useMemo(() => {
     const map = new Map<string, TimeEntryDto[]>();
-    weekDays.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
+    weekDays.forEach((d) => {
+      map.set(format(d, "yyyy-MM-dd"), []);
+    });
     filteredEntries.forEach((e) => {
       const list = map.get(e.date);
       if (list) list.push(e);
@@ -155,7 +167,9 @@ export const TimeTrackingPage: React.FC = () => {
 
   const journalUsers = useMemo<JournalUserOption[]>(() => {
     const usersMap = new Map<string, JournalUserOption>();
-    allUsers.forEach((u) => usersMap.set(u.id, u));
+    allUsers.forEach((u) => {
+      usersMap.set(u.id, u);
+    });
     weekEntries.forEach((entry) => {
       if (!usersMap.has(entry.userId)) {
         usersMap.set(entry.userId, {
@@ -200,7 +214,7 @@ export const TimeTrackingPage: React.FC = () => {
     if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
       openCreate();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.state, openCreate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openEdit = (entry: TimeEntryDto) => {
     setEditingId(entry.id);
@@ -222,7 +236,7 @@ export const TimeTrackingPage: React.FC = () => {
     if (form.startTime && form.endTime) {
       const [sh, sm] = form.startTime.split(":").map(Number);
       const [eh, em] = form.endTime.split(":").map(Number);
-      const diff = (eh * 60 + em) - (sh * 60 + sm);
+      const diff = eh * 60 + em - (sh * 60 + sm);
       if (diff > 0) durationMinutes = diff;
     }
     if (!form.title.trim() || durationMinutes <= 0) return;

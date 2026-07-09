@@ -39,7 +39,9 @@ export const IntegrationRow: React.FC<Props> = ({
 }) => {
   const t = useT();
   return (
-    <Box sx={{ background: "var(--s1)", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{ background: "var(--s1)", display: "flex", flexDirection: "column" }}
+    >
       <Box
         sx={{
           px: "16px",
@@ -54,7 +56,7 @@ export const IntegrationRow: React.FC<Props> = ({
           sx={{
             width: 40,
             height: 40,
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             flexShrink: 0,
             background: iconBackground,
             border: iconBorder ?? "none",
@@ -66,17 +68,39 @@ export const IntegrationRow: React.FC<Props> = ({
           {icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: "6px", mb: "2px" }}>
-            <Box sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              mb: "2px",
+            }}
+          >
+            <Box
+              sx={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}
+            >
               {name}
             </Box>
             {isConnected && (
-              <CheckCircleOutlineOutlined sx={{ fontSize: 13, color: "var(--green)" }} />
+              <CheckCircleOutlineOutlined
+                sx={{ fontSize: 13, color: "var(--green)" }}
+              />
             )}
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <InfoOutlined sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }} />
-            <Box sx={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+            }}
+          >
+            <InfoOutlined
+              sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}
+            />
+            <Box
+              sx={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}
+            >
               {isConnected ? connectedLabel : helpInstructions}
             </Box>
             {!isConnected && (
@@ -90,9 +114,11 @@ export const IntegrationRow: React.FC<Props> = ({
                         alignItems: "center",
                         px: "7px",
                         py: "2px",
-                        borderRadius: 'var(--r-sm)',
-                        background: "color-mix(in srgb, var(--accent) 12%, var(--s2))",
-                        border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+                        borderRadius: "var(--r-sm)",
+                        background:
+                          "color-mix(in srgb, var(--accent) 12%, var(--s2))",
+                        border:
+                          "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
                         color: "var(--accent)",
                         fontSize: "11px",
                         fontFamily: "monospace",
@@ -105,7 +131,11 @@ export const IntegrationRow: React.FC<Props> = ({
                     {i < helpScopes.length - 1 && (
                       <Box
                         component="span"
-                        sx={{ fontSize: "11px", color: "var(--muted)", alignSelf: "center" }}
+                        sx={{
+                          fontSize: "11px",
+                          color: "var(--muted)",
+                          alignSelf: "center",
+                        }}
                       >
                         et
                       </Box>
@@ -118,7 +148,16 @@ export const IntegrationRow: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Box sx={{ px: "16px", pt: "12px", pb: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <Box
+        sx={{
+          px: "16px",
+          pt: "12px",
+          pb: "14px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+        }}
+      >
         <Box sx={{ display: "flex", gap: "8px" }}>
           <Box
             component="input"

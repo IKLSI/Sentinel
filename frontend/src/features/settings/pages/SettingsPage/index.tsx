@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
@@ -6,7 +7,7 @@ import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { AuthContext } from "@/features/auth/context/AuthContext";
 import { UserRole } from "@/types/enums";
-import { Tab, SettingsTab } from "./helpers";
+import { type Tab, SettingsTab } from "./helpers";
 import { JobsTab } from "./components/JobsTab";
 import { BillingTab } from "./components/BillingTab";
 import { ApiKeysTab } from "./components/ApiKeysTab";
@@ -22,9 +23,21 @@ export const SettingsPage: React.FC = () => {
     () =>
       isAdmin
         ? [
-            { id: SettingsTab.Billing, label: t("settings.tab.billing"), icon: CreditCardOutlined },
-            { id: SettingsTab.Jobs, label: t("settings.tab.jobs"), icon: TerminalOutlined },
-            { id: SettingsTab.ApiKeys, label: t("settings.tab.api_keys"), icon: KeyOutlined },
+            {
+              id: SettingsTab.Billing,
+              label: t("settings.tab.billing"),
+              icon: CreditCardOutlined,
+            },
+            {
+              id: SettingsTab.Jobs,
+              label: t("settings.tab.jobs"),
+              icon: TerminalOutlined,
+            },
+            {
+              id: SettingsTab.ApiKeys,
+              label: t("settings.tab.api_keys"),
+              icon: KeyOutlined,
+            },
           ]
         : [],
     [t, isAdmin],
@@ -34,9 +47,12 @@ export const SettingsPage: React.FC = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
-    const handler = () => { setInviteOpen(true); };
+    const handler = () => {
+      setInviteOpen(true);
+    };
     window.addEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
-    return () => window.removeEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
+    return () =>
+      window.removeEventListener(SETTINGS_OPEN_INVITE_EVENT, handler);
   }, []);
 
   return (
@@ -119,7 +135,7 @@ export const SettingsPage: React.FC = () => {
             p: "20px 28px",
           }}
         >
-            {activeTab === SettingsTab.Jobs && <JobsTab />}
+          {activeTab === SettingsTab.Jobs && <JobsTab />}
           {activeTab === SettingsTab.Billing && <BillingTab />}
           {activeTab === SettingsTab.ApiKeys && <ApiKeysTab />}
         </Box>

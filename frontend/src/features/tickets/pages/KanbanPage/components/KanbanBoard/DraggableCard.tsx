@@ -1,13 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import {
   attachClosestEdge,
   extractClosestEdge,
   type Edge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { KanbanTicket } from "../../helpers";
+import type { KanbanTicket } from "../../helpers";
 import { TicketCard } from "../TicketCard";
 
 export interface DragData {
@@ -67,13 +71,21 @@ const DropIndicator: React.FC<{ edge: "top" | "bottom" }> = ({ edge }) => (
   />
 );
 
-export const DraggableCard: React.FC<Props> = ({ ticket, index, colId, updatingId, onCardClick }) => {
+export const DraggableCard: React.FC<Props> = ({
+  ticket,
+  index,
+  colId,
+  updatingId,
+  onCardClick,
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
 
   const indexRef = useRef(index);
-  useEffect(() => { indexRef.current = index; }, [index]);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
 
   useEffect(() => {
     const el = ref.current;
@@ -82,21 +94,28 @@ export const DraggableCard: React.FC<Props> = ({ ticket, index, colId, updatingI
     return combine(
       draggable({
         element: el,
-        getInitialData: () => ({
-          type: "ticket",
-          ticketId: ticket.id,
-          sourceColId: colId,
-          sourceIndex: indexRef.current,
-        } satisfies DragData),
+        getInitialData: () =>
+          ({
+            type: "ticket",
+            ticketId: ticket.id,
+            sourceColId: colId,
+            sourceIndex: indexRef.current,
+          }) satisfies DragData,
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
         element: el,
-        canDrop: ({ source }) => (source.data as unknown as DragData).ticketId !== ticket.id,
+        canDrop: ({ source }) =>
+          (source.data as unknown as DragData).ticketId !== ticket.id,
         getData: ({ input }) =>
           attachClosestEdge(
-            { type: "ticket", ticketId: ticket.id, colId, index: indexRef.current },
+            {
+              type: "ticket",
+              ticketId: ticket.id,
+              colId,
+              index: indexRef.current,
+            },
             { element: el, input, allowedEdges: ["top", "bottom"] },
           ),
         onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),

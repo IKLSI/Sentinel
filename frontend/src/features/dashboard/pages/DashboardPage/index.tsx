@@ -1,9 +1,16 @@
-import React, { useEffect, useMemo } from "react";
+import type React from "react";
+import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useDashboard, dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
-import { useProjects, projectsQueryKey } from "@/features/techHealth/hooks/useProjects";
+import {
+  useDashboard,
+  dashboardQueryKey,
+} from "@/features/dashboard/hooks/useDashboard";
+import {
+  useProjects,
+  projectsQueryKey,
+} from "@/features/techHealth/hooks/useProjects";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
@@ -12,7 +19,7 @@ import {
   EMPTY_STATS,
   GRADE_ORDER,
   PRIORITY_ORDER,
-  StatsData,
+  type StatsData,
   buildPalette,
 } from "./helpers";
 import { UrgentTicketsPanel } from "./components/UrgentTicketsPanel";
@@ -37,21 +44,25 @@ export const DashboardPage: React.FC = () => {
       [...(projectsQuery.data ?? [])].sort((a, b) => {
         const ga = GRADE_ORDER[a.healthGrade?.toUpperCase() ?? "A"] ?? 5;
         const gb = GRADE_ORDER[b.healthGrade?.toUpperCase() ?? "A"] ?? 5;
-        return ga - gb
-          || (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
-          || (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
-          || (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0);
+        return (
+          ga - gb ||
+          (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0) ||
+          (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0) ||
+          (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0)
+        );
       }),
     [projectsQuery.data],
   );
   const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
 
   useEffect(() => {
-    if (dashboardQuery.error) showToast(t("dashboard.toast.stats_load_error"), "error");
+    if (dashboardQuery.error)
+      showToast(t("dashboard.toast.stats_load_error"), "error");
   }, [dashboardQuery.error, showToast, t]);
 
   useEffect(() => {
-    if (projectsQuery.error) showToast(t("dashboard.toast.projects_load_error"), "error");
+    if (projectsQuery.error)
+      showToast(t("dashboard.toast.projects_load_error"), "error");
   }, [projectsQuery.error, showToast, t]);
 
   useEffect(() => {
@@ -113,7 +124,10 @@ export const DashboardPage: React.FC = () => {
 
         <ActivityPanel activity={activity} palette={palette} />
 
-        <VulnerabilityDiscoveryPanel data={stats.vulnerabilitiesDetectedPerDay} palette={palette} />
+        <VulnerabilityDiscoveryPanel
+          data={stats.vulnerabilitiesDetectedPerDay}
+          palette={palette}
+        />
       </Box>
     </Box>
   );

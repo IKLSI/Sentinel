@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
@@ -7,7 +8,7 @@ import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import {
-  DashPalette,
+  type DashPalette,
   HEALTH_CRITICAL_THRESHOLD,
   buildPanelSx,
   buildScrollSx,
@@ -27,11 +28,15 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
   const navigate = useNavigate();
 
   const { averageScore, belowCount } = useMemo(() => {
-    const scores = projects.map((p) => Math.max(0, Math.min(100, p.healthScore ?? 0)));
+    const scores = projects.map((p) =>
+      Math.max(0, Math.min(100, p.healthScore ?? 0)),
+    );
     const averageScore = scores.length
       ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
       : 0;
-    const belowCount = scores.filter((s) => s < HEALTH_CRITICAL_THRESHOLD).length;
+    const belowCount = scores.filter(
+      (s) => s < HEALTH_CRITICAL_THRESHOLD,
+    ).length;
     return { averageScore, belowCount };
   }, [projects]);
 
@@ -117,20 +122,33 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
         }}
       >
         {projects.length === 0 ? (
-          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+          <Box
+            className="empty-state"
+            sx={{ flex: 1, padding: "24px !important" }}
+          >
             <Box className="empty-state-icon">
               <AccountTreeOutlined sx={{ fontSize: 32 }} />
             </Box>
-            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+            <Box
+              className="empty-state-title"
+              sx={{ fontSize: "12px !important" }}
+            >
               {t("dashboard.projects.empty_title")}
             </Box>
-            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+            <Box
+              className="empty-state-subtitle"
+              sx={{ fontSize: "11px !important" }}
+            >
               {t("dashboard.projects.empty_subtitle")}
             </Box>
           </Box>
         ) : (
           projects.map((project) => (
-            <ProjectRankRow key={project.id} project={project} palette={palette} />
+            <ProjectRankRow
+              key={project.id}
+              project={project}
+              palette={palette}
+            />
           ))
         )}
       </Box>

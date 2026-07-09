@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
@@ -7,8 +7,11 @@ import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useI18n } from "@/i18n/I18nContext";
-import { ProjectDetailDto } from "@/features/techHealth/api/projects";
-import { GRADE_VISUAL, getGrade } from "@/features/projects/pages/ProjectsPage/helpers";
+import type { ProjectDetailDto } from "@/features/techHealth/api/projects";
+import {
+  GRADE_VISUAL,
+  getGrade,
+} from "@/features/projects/pages/ProjectsPage/helpers";
 
 interface Props {
   project: ProjectDetailDto;
@@ -137,17 +140,26 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             }}
           >
             {project.scanFrequency && (
-              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted)" }}>
+              <Box
+                component="span"
+                sx={{ fontSize: "12px", color: "var(--muted)" }}
+              >
                 {freqLabel(project.scanFrequency)}
               </Box>
             )}
             {project.scanFrequency && project.lastScanAt && (
-              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted2)" }}>
+              <Box
+                component="span"
+                sx={{ fontSize: "12px", color: "var(--muted2)" }}
+              >
                 ·
               </Box>
             )}
             {project.lastScanAt && (
-              <Box component="span" sx={{ fontSize: "12px", color: "var(--muted)" }}>
+              <Box
+                component="span"
+                sx={{ fontSize: "12px", color: "var(--muted)" }}
+              >
                 {new Date(project.lastScanAt).toLocaleDateString(culture, {
                   day: "2-digit",
                   month: "short",
@@ -167,43 +179,45 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           borderTop: "1px solid var(--border)",
         }}
       >
-        {(
-          [
-            {
-              label: t("tech_health.stats.dependencies"),
-              value: project.totalDependencies,
-              icon: <InventoryOutlined sx={{ fontSize: 15 }} />,
-              alert: null,
-              dash: !project.lastScanAt,
-            },
-            {
-              label: t("tech_health.stats.critical"),
-              value: project.criticalVulnerabilities,
-              icon: <GppBadOutlined sx={{ fontSize: 15 }} />,
-              alert: project.criticalVulnerabilities > 0 ? "red" : null,
-              dash: !project.lastScanAt || project.totalDependencies === 0,
-            },
-            {
-              label: t("tech_health.stats.vulnerabilities"),
-              value: project.totalVulnerabilities,
-              icon: <GppMaybeOutlined sx={{ fontSize: 15 }} />,
-              alert: project.totalVulnerabilities > 0 ? "orange" : null,
-              dash: !project.lastScanAt || project.totalDependencies === 0,
-            },
-            {
-              label: t("tech_health.stats.eol"),
-              value: eolRuntimes,
-              icon: <StorageOutlined sx={{ fontSize: 15 }} />,
-              alert: eolRuntimes > 0 ? "red" : null,
-              dash: !project.lastScanAt,
-            },
-          ]
-        ).map((s, i) => {
+        {[
+          {
+            label: t("tech_health.stats.dependencies"),
+            value: project.totalDependencies,
+            icon: <InventoryOutlined sx={{ fontSize: 15 }} />,
+            alert: null,
+            dash: !project.lastScanAt,
+          },
+          {
+            label: t("tech_health.stats.critical"),
+            value: project.criticalVulnerabilities,
+            icon: <GppBadOutlined sx={{ fontSize: 15 }} />,
+            alert: project.criticalVulnerabilities > 0 ? "red" : null,
+            dash: !project.lastScanAt || project.totalDependencies === 0,
+          },
+          {
+            label: t("tech_health.stats.vulnerabilities"),
+            value: project.totalVulnerabilities,
+            icon: <GppMaybeOutlined sx={{ fontSize: 15 }} />,
+            alert: project.totalVulnerabilities > 0 ? "orange" : null,
+            dash: !project.lastScanAt || project.totalDependencies === 0,
+          },
+          {
+            label: t("tech_health.stats.eol"),
+            value: eolRuntimes,
+            icon: <StorageOutlined sx={{ fontSize: 15 }} />,
+            alert: eolRuntimes > 0 ? "red" : null,
+            dash: !project.lastScanAt,
+          },
+        ].map((s, i) => {
           const accent =
-            s.alert === "red" ? "var(--red)" : s.alert === "orange" ? "var(--orange)" : "var(--muted)";
+            s.alert === "red"
+              ? "var(--red)"
+              : s.alert === "orange"
+                ? "var(--orange)"
+                : "var(--muted)";
           return (
             <Box
-              key={i}
+              key={s.label}
               sx={{
                 p: "14px 20px",
                 borderRight: i < 3 ? "1px solid var(--border)" : "none",

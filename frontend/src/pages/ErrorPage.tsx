@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useT } from "../i18n/I18nContext";
 import apiClient from "../services/client";
@@ -46,8 +47,14 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
 
         <div className="ep-actions">
           {onRetry && (
-            <button className="ep-btn-ghost" onClick={onRetry}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <button type="button" className="ep-btn-ghost" onClick={onRetry}>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 13 13"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   d="M1.5 6.5a5 5 0 1 0 1.2-3.2M1.5 2v2.5H4"
                   stroke="currentColor"
@@ -59,8 +66,18 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
               {t("error.retry")}
             </button>
           )}
-          <button className="ep-btn-primary" onClick={() => navigate(ROUTES.HOME)}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <button
+            type="button"
+            className="ep-btn-primary"
+            onClick={() => navigate(ROUTES.HOME)}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
               <path
                 d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z"
                 stroke="currentColor"

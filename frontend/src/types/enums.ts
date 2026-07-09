@@ -1,121 +1,126 @@
 export const UserRole = {
-  Admin: 'Admin',
-  Developer: 'Developer',
+  Admin: "Admin",
+  Developer: "Developer",
 } as const;
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const Theme = {
-  Dark: 'dark',
-  Light: 'light',
+  Dark: "dark",
+  Light: "light",
 } as const;
-export type Theme = typeof Theme[keyof typeof Theme];
+export type Theme = (typeof Theme)[keyof typeof Theme];
 
 export const Language = {
-  Fr: 'fr-FR',
-  En: 'en-US',
+  Fr: "fr-FR",
+  En: "en-US",
 } as const;
-export type Language = typeof Language[keyof typeof Language];
+export type Language = (typeof Language)[keyof typeof Language];
 
 export const TicketPriority = {
-  Critical: 'critical',
-  High: 'high',
-  Medium: 'medium',
-  Low: 'low',
+  Critical: "critical",
+  High: "high",
+  Medium: "medium",
+  Low: "low",
 } as const;
-export type TicketPriority = typeof TicketPriority[keyof typeof TicketPriority];
+export type TicketPriority =
+  (typeof TicketPriority)[keyof typeof TicketPriority];
 
 export const TicketType = {
-  Bug: 'bug',
-  Feature: 'feature',
-  Security: 'security',
-  Performance: 'performance',
-  Maintenance: 'maintenance',
-  Question: 'question',
+  Bug: "bug",
+  Feature: "feature",
+  Security: "security",
+  Performance: "performance",
+  Maintenance: "maintenance",
+  Question: "question",
 } as const;
-export type TicketType = typeof TicketType[keyof typeof TicketType];
+export type TicketType = (typeof TicketType)[keyof typeof TicketType];
 
 export const HealthGrade = {
-  A: 'A',
-  B: 'B',
-  C: 'C',
-  D: 'D',
-  E: 'E',
-  F: 'F',
+  A: "A",
+  B: "B",
+  C: "C",
+  D: "D",
+  E: "E",
+  F: "F",
 } as const;
-export type HealthGrade = typeof HealthGrade[keyof typeof HealthGrade];
+export type HealthGrade = (typeof HealthGrade)[keyof typeof HealthGrade];
 
 export const Provider = {
-  GitHub: 'GitHub',
-  GitLab: 'GitLab',
+  GitHub: "GitHub",
+  GitLab: "GitLab",
 } as const;
-export type Provider = typeof Provider[keyof typeof Provider];
+export type Provider = (typeof Provider)[keyof typeof Provider];
 
 export const DependencyStatus = {
-  UpToDate: 'UpToDate',
-  MinorUpdate: 'MinorUpdate',
-  MajorUpdate: 'MajorUpdate',
-  EOL: 'EOL',
-  Vulnerable: 'Vulnerable',
+  UpToDate: "UpToDate",
+  MinorUpdate: "MinorUpdate",
+  MajorUpdate: "MajorUpdate",
+  EOL: "EOL",
+  Vulnerable: "Vulnerable",
 } as const;
-export type DependencyStatus = typeof DependencyStatus[keyof typeof DependencyStatus];
+export type DependencyStatus =
+  (typeof DependencyStatus)[keyof typeof DependencyStatus];
 
 export const VulnerabilitySeverity = {
-  Critical: 'Critical',
-  High: 'High',
-  Medium: 'Medium',
-  Low: 'Low',
+  Critical: "Critical",
+  High: "High",
+  Medium: "Medium",
+  Low: "Low",
 } as const;
-export type VulnerabilitySeverity = typeof VulnerabilitySeverity[keyof typeof VulnerabilitySeverity];
+export type VulnerabilitySeverity =
+  (typeof VulnerabilitySeverity)[keyof typeof VulnerabilitySeverity];
 
 export const DependencyType = {
-  Prod: 'Prod',
-  Dev: 'Dev',
+  Prod: "Prod",
+  Dev: "Dev",
 } as const;
-export type DependencyType = typeof DependencyType[keyof typeof DependencyType];
+export type DependencyType =
+  (typeof DependencyType)[keyof typeof DependencyType];
 
 export const RuntimeEolStatus = {
-  Eol: 'eol',
-  Danger: 'danger',
-  Warn: 'warn',
-  Ok: 'ok',
+  Eol: "eol",
+  Danger: "danger",
+  Warn: "warn",
+  Ok: "ok",
 } as const;
-export type RuntimeEolStatus = typeof RuntimeEolStatus[keyof typeof RuntimeEolStatus];
+export type RuntimeEolStatus =
+  (typeof RuntimeEolStatus)[keyof typeof RuntimeEolStatus];
 
 export const JobState = {
-  Succeeded: 'Succeeded',
-  Failed: 'Failed',
-  Processing: 'Processing',
-  Enqueued: 'Enqueued',
+  Succeeded: "Succeeded",
+  Failed: "Failed",
+  Processing: "Processing",
+  Enqueued: "Enqueued",
 } as const;
-export type JobState = typeof JobState[keyof typeof JobState];
+export type JobState = (typeof JobState)[keyof typeof JobState];
 
 export const ScanFrequency = {
-  Daily: 'Daily',
-  Weekly: 'Weekly',
-  Monthly: 'Monthly',
-  Manual: 'Manual',
+  Daily: "Daily",
+  Weekly: "Weekly",
+  Monthly: "Monthly",
+  Manual: "Manual",
 } as const;
-export type ScanFrequency = typeof ScanFrequency[keyof typeof ScanFrequency];
+export type ScanFrequency = (typeof ScanFrequency)[keyof typeof ScanFrequency];
 
 export const SortDirection = {
-  Asc: 'asc',
-  Desc: 'desc',
+  Asc: "asc",
+  Desc: "desc",
 } as const;
-export type SortDirection = typeof SortDirection[keyof typeof SortDirection];
+export type SortDirection = (typeof SortDirection)[keyof typeof SortDirection];
 
 export const SettingsTab = {
-  Members: 'members',
-  Organisation: 'organisation',
-  Jobs: 'jobs',
-  Billing: 'billing',
-  ApiKeys: 'api-keys',
+  Members: "members",
+  Organisation: "organisation",
+  Jobs: "jobs",
+  Billing: "billing",
+  ApiKeys: "api-keys",
 } as const;
-export type SettingsTab = typeof SettingsTab[keyof typeof SettingsTab];
+export type SettingsTab = (typeof SettingsTab)[keyof typeof SettingsTab];
 
 export const ToastSeverity = {
-  Success: 'success',
-  Error: 'error',
-  Warning: 'warning',
-  Info: 'info',
+  Success: "success",
+  Error: "error",
+  Warning: "warning",
+  Info: "info",
 } as const;
-export type ToastSeverity = typeof ToastSeverity[keyof typeof ToastSeverity];
+export type ToastSeverity = (typeof ToastSeverity)[keyof typeof ToastSeverity];

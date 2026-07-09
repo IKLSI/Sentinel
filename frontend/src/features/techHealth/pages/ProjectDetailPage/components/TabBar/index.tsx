@@ -1,6 +1,6 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
-import { TabDef } from "../../helpers";
+import type { TabDef } from "../../helpers";
 
 interface Props {
   tabs: TabDef[];
@@ -12,7 +12,7 @@ export const TabBar: React.FC<Props> = ({ tabs, active, onChange }) => (
   <Box sx={{ display: "flex", height: "100%" }}>
     {tabs.map((tab, i) => (
       <Box
-        key={i}
+        key={tab.label}
         component="button"
         onClick={() => onChange(i)}
         sx={{

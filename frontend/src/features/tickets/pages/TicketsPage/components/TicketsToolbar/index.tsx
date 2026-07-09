@@ -7,7 +7,7 @@ import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { TicketStatusDef } from "@/types";
+import type { TicketStatusDef } from "@/types";
 import { selectSx } from "../../helpers";
 
 interface FiltersState {
@@ -73,7 +73,7 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "8px",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: 'var(--r)',
+          borderRadius: "var(--r)",
           px: "10px",
           height: "32px",
           transition: "border-color 0.15s, box-shadow 0.15s",
@@ -133,7 +133,7 @@ export const TicketsToolbar: React.FC<Props> = ({
             height: "32px",
             background: filtersOpen ? "var(--accent-subtle)" : "var(--s1)",
             border: `1px solid ${filtersOpen ? "var(--accent-border)" : "var(--border)"}`,
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             fontSize: "13px",
             fontWeight: 500,
             color: filtersOpen ? "var(--accent)" : "var(--text-secondary)",
@@ -186,7 +186,7 @@ export const TicketsToolbar: React.FC<Props> = ({
               sx={{
                 background: "var(--s1)",
                 border: "1px solid var(--border)",
-                borderRadius: 'var(--r-md)',
+                borderRadius: "var(--r-md)",
                 p: "16px",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
                 minWidth: "220px",
@@ -280,13 +280,16 @@ export const TicketsToolbar: React.FC<Props> = ({
                     fontWeight: 600,
                     color: "var(--red)",
                     background: "var(--red-subtle)",
-                    border: "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
-                    borderRadius: 'var(--r-sm)',
+                    border:
+                      "1px solid color-mix(in srgb, var(--red) 20%, transparent)",
+                    borderRadius: "var(--r-sm)",
                     py: "8px",
                     transition: "background 0.12s, border-color 0.12s",
                     "&:hover": {
-                      background: "color-mix(in srgb, var(--red) 14%, transparent)",
-                      borderColor: "color-mix(in srgb, var(--red) 35%, transparent)",
+                      background:
+                        "color-mix(in srgb, var(--red) 14%, transparent)",
+                      borderColor:
+                        "color-mix(in srgb, var(--red) 35%, transparent)",
                     },
                   }}
                 >
@@ -310,11 +313,13 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+          background:
+            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
           color: "#fff",
           boxShadow: "none",
           "&:hover": {
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
             boxShadow: "none",
             transform: "none",
           },
@@ -335,11 +340,13 @@ export const TicketsToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          background: "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
+          background:
+            "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
           borderColor: "transparent",
           color: "#fff",
           "&:hover": {
-            background: "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
+            background:
+              "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
             borderColor: "transparent",
             color: "#fff",
           },

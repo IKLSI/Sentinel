@@ -1,5 +1,11 @@
-export type { UserRole, TicketPriority, TicketType } from './enums';
-import type { Theme, Language, UserRole, TicketPriority, TicketType } from './enums';
+export type { UserRole, TicketPriority, TicketType } from "./enums";
+import type {
+  Theme,
+  Language,
+  UserRole,
+  TicketPriority,
+  TicketType,
+} from "./enums";
 
 export interface User {
   id: string;
@@ -20,7 +26,6 @@ export interface LoginResponse {
   accessToken: string;
   user: User;
 }
-
 
 export interface TicketStatusDef {
   id: string;
@@ -76,7 +81,6 @@ export interface Ticket {
   updatedAt: string;
   resolvedAt?: string;
 }
-
 
 export interface PaginatedResponse<T> {
   items: T[];

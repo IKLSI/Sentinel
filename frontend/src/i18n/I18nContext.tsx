@@ -1,4 +1,5 @@
-import React, {
+import type React from "react";
+import {
   createContext,
   useContext,
   useEffect,
@@ -79,9 +80,7 @@ export const I18nProvider: React.FC<{
 
   if (translations === null) return null;
 
-  return (
-    <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
-  );
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };
 
 export const useT = () => useContext(I18nContext).t;

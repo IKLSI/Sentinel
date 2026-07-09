@@ -9,7 +9,11 @@ import { fr, enUS, type Locale } from "date-fns/locale";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 
-const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
+const DATE_FNS_LOCALE: Record<string, Locale> = {
+  [Language.Fr]: fr,
+  [Language.En]: enUS,
+};
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 import { IconNavBtn, parseDateLocal } from "../../helpers";
 
 interface Props {
@@ -51,7 +55,7 @@ export const DatePickerPopover: React.FC<Props> = ({
           sx: {
             mt: "4px",
             p: "12px",
-            borderRadius: 'var(--r-md)',
+            borderRadius: "var(--r-md)",
             border: "1px solid var(--border)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             background: "var(--s1)",
@@ -97,7 +101,7 @@ export const DatePickerPopover: React.FC<Props> = ({
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            borderRadius: 'var(--r-sm)',
+            borderRadius: "var(--r-sm)",
             px: "6px",
             py: "2px",
             fontFamily: "var(--font-ui)",
@@ -162,7 +166,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   border: isCurrent
                     ? "1px solid var(--accent-border)"
                     : "1px solid transparent",
-                  borderRadius: 'var(--r-sm)',
+                  borderRadius: "var(--r-sm)",
                   py: "7px",
                   cursor: "pointer",
                   fontFamily: "var(--font-ui)",
@@ -174,7 +178,9 @@ export const DatePickerPopover: React.FC<Props> = ({
                   },
                 }}
               >
-                {format(new Date(2000, monthIdx, 1), "MMM", { locale: dateFnsLocale })}
+                {format(new Date(2000, monthIdx, 1), "MMM", {
+                  locale: dateFnsLocale,
+                })}
               </Box>
             );
           })}
@@ -188,17 +194,9 @@ export const DatePickerPopover: React.FC<Props> = ({
               mb: "4px",
             }}
           >
-            {[
-              t("time_tracking.weekday_initial_mon"),
-              t("time_tracking.weekday_initial_tue"),
-              t("time_tracking.weekday_initial_wed"),
-              t("time_tracking.weekday_initial_thu"),
-              t("time_tracking.weekday_initial_fri"),
-              t("time_tracking.weekday_initial_sat"),
-              t("time_tracking.weekday_initial_sun"),
-            ].map((d, i) => (
+            {WEEKDAY_KEYS.map((wd) => (
               <Box
-                key={i}
+                key={wd}
                 sx={{
                   textAlign: "center",
                   fontSize: "9px",
@@ -208,7 +206,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   py: "3px",
                 }}
               >
-                {d}
+                {t(`time_tracking.weekday_initial_${wd}`)}
               </Box>
             ))}
           </Box>
@@ -227,14 +225,14 @@ export const DatePickerPopover: React.FC<Props> = ({
               );
               const start = startOfWeek(firstDay, { weekStartsOn: 1 });
               return Array.from({ length: 42 }, (_, i) => addDays(start, i));
-            })().map((day, i) => {
+            })().map((day) => {
               const isCurrentMonth =
                 day.getMonth() === calendarMonth.getMonth();
               const isSelected = selectedDate === format(day, "yyyy-MM-dd");
               const todayDay = isToday(day);
               return (
                 <Box
-                  key={i}
+                  key={format(day, "yyyy-MM-dd")}
                   component="button"
                   onClick={() => {
                     onSelect(format(day, "yyyy-MM-dd"));
@@ -244,7 +242,7 @@ export const DatePickerPopover: React.FC<Props> = ({
                   sx={{
                     background: isSelected ? "var(--accent)" : "transparent",
                     border: "none",
-                    borderRadius: 'var(--r-sm)',
+                    borderRadius: "var(--r-sm)",
                     height: "28px",
                     display: "flex",
                     alignItems: "center",

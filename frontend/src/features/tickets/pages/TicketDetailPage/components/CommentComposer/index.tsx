@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import type React from "react";
+import { useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -9,10 +10,13 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
-import { DetailPalette } from "../../helpers";
+import type { DetailPalette } from "../../helpers";
 import { uploadAttachment } from "@/features/tickets/api/tickets";
 import { API_BASE_URL } from "@/constants/api";
-import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
+import {
+  MarkdownEditor,
+  type MarkdownEditorHandle,
+} from "@/components/MarkdownEditor";
 import { Theme } from "@/types/enums";
 
 interface Attachment {
@@ -66,7 +70,11 @@ export const CommentComposer: React.FC<Props> = ({
       const path = `/api/tickets/${ticketId}/attachments/${created.id}`;
       setAttachments((prev) => [
         ...prev,
-        { fileName: created.fileName, url: `${BASE_URL}${path}`, isImage: file.type.startsWith("image/") },
+        {
+          fileName: created.fileName,
+          url: `${BASE_URL}${path}`,
+          isImage: file.type.startsWith("image/"),
+        },
       ]);
     } catch {
       // upload failed
@@ -82,7 +90,9 @@ export const CommentComposer: React.FC<Props> = ({
   const buildFullContent = (): string => {
     if (attachments.length === 0) return value;
     const links = attachments
-      .map((a) => (a.isImage ? `![${a.fileName}](${a.url})` : `[${a.fileName}](${a.url})`))
+      .map((a) =>
+        a.isImage ? `![${a.fileName}](${a.url})` : `[${a.fileName}](${a.url})`,
+      )
       .join("\n");
     const base = value.trimEnd();
     return base
@@ -148,7 +158,7 @@ export const CommentComposer: React.FC<Props> = ({
           >
             {attachments.map((a, i) => (
               <Box
-                key={i}
+                key={a.url}
                 sx={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -167,11 +177,17 @@ export const CommentComposer: React.FC<Props> = ({
                 {a.isImage ? (
                   <ImageOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
                 ) : (
-                  <InsertDriveFileOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
+                  <InsertDriveFileOutlined
+                    sx={{ fontSize: 13, flexShrink: 0 }}
+                  />
                 )}
                 <Box
                   component="span"
-                  sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
                 >
                   {a.fileName}
                 </Box>
@@ -258,7 +274,6 @@ export const CommentComposer: React.FC<Props> = ({
           </Button>
         </Box>
       </Box>
-
     </Box>
   );
 };

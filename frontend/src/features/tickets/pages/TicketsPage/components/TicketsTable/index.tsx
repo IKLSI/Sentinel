@@ -2,9 +2,9 @@ import React from "react";
 import Box from "@mui/material/Box";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { Ticket } from "@/types";
+import type { Ticket } from "@/types";
 import { TicketRow } from "../TicketRow";
-import { SortDirection } from "@/types/enums";
+import type { SortDirection } from "@/types/enums";
 
 export interface SortState {
   col: string;
@@ -71,8 +71,8 @@ const TicketsTableComponent: React.FC<Props> = ({
         }}
       >
         <Box component="colgroup">
-          {COLS.map((w, i) => (
-            <Box key={i} component="col" sx={{ width: w }} />
+          {COLS.map((w) => (
+            <Box key={w} component="col" sx={{ width: w }} />
           ))}
         </Box>
         <Box component="thead">
@@ -146,8 +146,8 @@ const TicketsTableComponent: React.FC<Props> = ({
           }}
         >
           <Box component="colgroup">
-            {COLS.map((w, i) => (
-              <Box key={i} component="col" sx={{ width: w }} />
+            {COLS.map((w) => (
+              <Box key={w} component="col" sx={{ width: w }} />
             ))}
           </Box>
           <Box component="tbody">

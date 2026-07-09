@@ -1,10 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -20,7 +15,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/i18n/I18nContext";
 import { getUsers, toggleUserActive } from "@/features/users/api/users";
-import { User } from "@/types";
+import type { User } from "@/types";
 import { MemberPagination } from "../MemberPagination";
 import { extractApiError } from "@/utils/apiError";
 import { UserRole } from "@/types/enums";
@@ -49,10 +44,12 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>({
-    col: "member",
-    dir: "asc",
-  });
+  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
+    {
+      col: "member",
+      dir: "asc",
+    },
+  );
   const tableWrapRef = useRef<HTMLDivElement>(null);
 
   const toggleSort = useCallback((col: string) => {
@@ -74,19 +71,22 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     return () => obs.disconnect();
   }, []);
 
-  const loadMembers = useCallback(async (signal?: AbortSignal) => {
-    setLoadingMembers(true);
-    try {
-      const res = await getUsers({}, signal);
-      if (signal?.aborted) return;
-      setMembers(res.items);
-    } catch {
-      if (signal?.aborted) return;
-      showToast(t("settings.toast.members_load_error"), "error");
-    } finally {
-      if (!signal?.aborted) setLoadingMembers(false);
-    }
-  }, [showToast, t]);
+  const loadMembers = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoadingMembers(true);
+      try {
+        const res = await getUsers({}, signal);
+        if (signal?.aborted) return;
+        setMembers(res.items);
+      } catch {
+        if (signal?.aborted) return;
+        showToast(t("settings.toast.members_load_error"), "error");
+      } finally {
+        if (!signal?.aborted) setLoadingMembers(false);
+      }
+    },
+    [showToast, t],
+  );
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -96,7 +96,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
 
   useEffect(() => {
     setPage(1);
-  }, [memberSearch, memberRoleFilter]);
+  }, []);
 
   const filteredMembers = useMemo(() => {
     let list = members;
@@ -122,8 +122,11 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
               )
             );
           case "role":
-            return mul * (ROLE_LABELS[a.role] ?? a.role).localeCompare(
-              ROLE_LABELS[b.role] ?? b.role,
+            return (
+              mul *
+              (ROLE_LABELS[a.role] ?? a.role).localeCompare(
+                ROLE_LABELS[b.role] ?? b.role,
+              )
             );
           case "status":
             return mul * (Number(a.isActive) - Number(b.isActive));
@@ -160,7 +163,10 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
         ),
       );
     } catch (err) {
-      showToast(extractApiError(err, t("settings.toast.toggle_error")), "error");
+      showToast(
+        extractApiError(err, t("settings.toast.toggle_error")),
+        "error",
+      );
     } finally {
       setTogglingId(null);
     }
@@ -185,7 +191,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             gap: "8px",
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             px: "10px",
             height: "32px",
             "&:focus-within": {
@@ -241,7 +247,9 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
         >
           <option value="all">{t("settings.members.filter_all_roles")}</option>
           <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
-          <option value={UserRole.Developer}>{t("settings.role.developer")}</option>
+          <option value={UserRole.Developer}>
+            {t("settings.role.developer")}
+          </option>
         </Box>
         <Box sx={{ flex: 1 }} />
         <Button
@@ -252,11 +260,13 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           startIcon={<PersonAddOutlined sx={{ fontSize: "13px !important" }} />}
           sx={{
             textTransform: "none",
-            background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+            background:
+              "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
             color: "#fff",
             boxShadow: "none",
             "&:hover": {
-              background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
               boxShadow: "none",
               transform: "none",
             },
@@ -276,7 +286,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           flexDirection: "column",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: 'var(--r)',
+          borderRadius: "var(--r)",
         }}
       >
         {loadingMembers ? (
@@ -291,7 +301,10 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             <CircularProgress size={20} />
           </Box>
         ) : filteredMembers.length === 0 ? (
-          <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
+          <Box
+            className="empty-state"
+            sx={{ flex: 1, justifyContent: "center" }}
+          >
             <GroupOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
             <Box className="empty-state-title">
               {t("settings.members.empty")}

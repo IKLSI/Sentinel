@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
@@ -8,7 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
-import { DashPalette, gradeMeta } from "../../helpers";
+import { type DashPalette, gradeMeta } from "../../helpers";
 
 interface Props {
   project: ProjectDto;
@@ -114,7 +114,10 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
         }}
       >
         <ReportProblemOutlined
-          sx={{ fontSize: 14, color: showCritical ? "var(--red)" : palette.vulnIcon }}
+          sx={{
+            fontSize: 14,
+            color: showCritical ? "var(--red)" : palette.vulnIcon,
+          }}
         />
         <span>{scanned ? project.criticalVulnerabilities : "—"}</span>
       </Box>
@@ -147,7 +150,9 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
           flexShrink: 0,
         }}
       >
-        <ConfirmationNumberOutlined sx={{ fontSize: 14, color: palette.vulnIcon }} />
+        <ConfirmationNumberOutlined
+          sx={{ fontSize: 14, color: palette.vulnIcon }}
+        />
         <span>{scanned ? project.totalTickets : "—"}</span>
       </Box>
     </Box>

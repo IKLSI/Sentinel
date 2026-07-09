@@ -1,9 +1,9 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { Ticket } from "@/types";
-import { DetailPalette } from "../../helpers";
+import type { Ticket } from "@/types";
+import type { DetailPalette } from "../../helpers";
 import { CommentItem } from "../CommentItem";
 
 interface Props {

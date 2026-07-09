@@ -1,7 +1,7 @@
 import axios, {
-  AxiosInstance,
-  InternalAxiosRequestConfig,
-  AxiosResponse,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
 } from "axios";
 import { API_BASE_URL, API_ROUTES } from "@/constants/api";
 import { CONTENT_TYPES, HTTP_HEADERS, bearerToken } from "@/constants/http";
@@ -16,7 +16,8 @@ const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-  if (token && config.headers) config.headers.Authorization = bearerToken(token);
+  if (token && config.headers)
+    config.headers.Authorization = bearerToken(token);
   return config;
 });
 
@@ -24,7 +25,9 @@ let isRefreshing = false;
 let pendingRequests: Array<(token: string) => void> = [];
 
 const processQueue = (token: string) => {
-  pendingRequests.forEach((resolve) => resolve(token));
+  pendingRequests.forEach((resolve) => {
+    resolve(token);
+  });
   pendingRequests = [];
 };
 

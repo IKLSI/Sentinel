@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { SettingsTab } from "@/types/enums";
 
@@ -30,7 +30,7 @@ export const navBtnSx = (disabled: boolean) => ({
   gap: "6px",
   height: "30px",
   px: "10px",
-  borderRadius: 'var(--r-sm)',
+  borderRadius: "var(--r-sm)",
   fontSize: "12px",
   fontWeight: 600,
   color: disabled ? "var(--muted)" : "var(--text-secondary)",
@@ -52,7 +52,7 @@ export const pageBtnSx = (active: boolean) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 'var(--r-sm)',
+  borderRadius: "var(--r-sm)",
   fontSize: "12px",
   fontWeight: active ? 700 : 500,
   color: active ? "var(--s1)" : "var(--text-secondary)",
@@ -70,7 +70,7 @@ export const inp = {
   boxSizing: "border-box",
   background: "var(--s2)",
   border: "1px solid var(--border)",
-  borderRadius: 'var(--r-sm)',
+  borderRadius: "var(--r-sm)",
   padding: "6px 10px",
   fontSize: "12px",
   color: "var(--text)",
@@ -86,7 +86,7 @@ export const inp = {
 export const CARD_SX = {
   background: "var(--s1)",
   border: "1px solid var(--border)",
-  borderRadius: 'var(--r-md)',
+  borderRadius: "var(--r-md)",
   overflow: "hidden",
 } as const;
 

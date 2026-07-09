@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import type React from "react";
+import { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,10 +11,18 @@ import { AppModal } from "@/components/AppModal";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 
-const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
-import { ProjectDto } from "@/features/techHealth/api/projects";
-import { Ticket } from "@/types";
-import { FormField, FormState, inputSx, parseDateLocal } from "../../helpers";
+const DATE_FNS_LOCALE: Record<string, Locale> = {
+  [Language.Fr]: fr,
+  [Language.En]: enUS,
+};
+import type { ProjectDto } from "@/features/techHealth/api/projects";
+import type { Ticket } from "@/types";
+import {
+  FormField,
+  type FormState,
+  inputSx,
+  parseDateLocal,
+} from "../../helpers";
 import { DatePickerPopover } from "../DatePickerPopover";
 import { TimePickerPopover } from "../TimePickerPopover";
 
@@ -45,7 +54,9 @@ export const TimeEntryModal: React.FC<Props> = ({
 }) => {
   const { t, culture } = useI18n();
   const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
-  const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(null);
+  const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(
+    null,
+  );
   const [timePicker, setTimePicker] = useState<{
     field: TimeFieldKey;
     anchor: HTMLElement;
@@ -55,7 +66,7 @@ export const TimeEntryModal: React.FC<Props> = ({
     if (!form.startTime || !form.endTime) return null;
     const [sh, sm] = form.startTime.split(":").map(Number);
     const [eh, em] = form.endTime.split(":").map(Number);
-    const diff = (eh * 60 + em) - (sh * 60 + sm);
+    const diff = eh * 60 + em - (sh * 60 + sm);
     return diff > 0 ? diff : null;
   }, [form.startTime, form.endTime]);
 
@@ -84,7 +95,18 @@ export const TimeEntryModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
             onClick={onSubmit}
             disabled={
               !form.title.trim() || submitting || effectiveDuration <= 0
@@ -102,7 +124,13 @@ export const TimeEntryModal: React.FC<Props> = ({
       }
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "14px",
+          }}
+        >
           <FormField label={t("time_tracking.field_date")}>
             <Box
               component="button"
@@ -119,9 +147,13 @@ export const TimeEntryModal: React.FC<Props> = ({
               }}
             >
               {form.date
-                ? format(parseDateLocal(form.date), "d MMMM yyyy", { locale: dateFnsLocale })
+                ? format(parseDateLocal(form.date), "d MMMM yyyy", {
+                    locale: dateFnsLocale,
+                  })
                 : t("time_tracking.choose_date")}
-              <CalendarTodayOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
+              <CalendarTodayOutlined
+                sx={{ fontSize: 13, color: "var(--muted2)" }}
+              />
             </Box>
             <DatePickerPopover
               anchor={datePickerAnchor}
@@ -132,7 +164,10 @@ export const TimeEntryModal: React.FC<Props> = ({
           </FormField>
           {(
             [
-              { field: "startTime", label: t("time_tracking.field_start_time") },
+              {
+                field: "startTime",
+                label: t("time_tracking.field_start_time"),
+              },
               { field: "endTime", label: t("time_tracking.field_end_time") },
             ] as const
           ).map(({ field, label }) => (
@@ -154,7 +189,9 @@ export const TimeEntryModal: React.FC<Props> = ({
                 }}
               >
                 {form[field] || TIME_PLACEHOLDER}
-                <AccessTimeOutlined sx={{ fontSize: 13, color: "var(--muted2)" }} />
+                <AccessTimeOutlined
+                  sx={{ fontSize: 13, color: "var(--muted2)" }}
+                />
               </Box>
             </FormField>
           ))}

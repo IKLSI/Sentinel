@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import type React from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -30,6 +31,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const orgRef = useRef<HTMLInputElement>(null);
+  const orgId = useId();
+  const firstNameId = useId();
+  const lastNameId = useId();
+  const emailId = useId();
+  const passwordId = useId();
 
   useEffect(() => {
     if (open) {
@@ -52,7 +58,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
     setLoading(true);
     try {
-      await register({ organizationName, firstName, lastName, email, password });
+      await register({
+        organizationName,
+        firstName,
+        lastName,
+        email,
+        password,
+      });
       setDone(true);
     } catch (err) {
       showToast(
@@ -160,7 +172,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 mb: "14px",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   d="M4 10l4 4 8-8"
                   stroke="var(--accent)"
@@ -192,6 +210,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               {t("auth.register.success_sub")}
             </Box>
             <button
+              type="button"
               className="lp-submit no-elevation"
               onClick={onClose}
               style={{ marginBottom: "12px", animation: "none", opacity: 1 }}
@@ -219,11 +238,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         ) : (
           <form onSubmit={handleSubmit} noValidate>
             <Box className="lp-field" sx={fieldStyle}>
-              <Box component="label" className="lp-label" htmlFor="rm-org">
+              <Box component="label" className="lp-label" htmlFor={orgId}>
                 {t("auth.register.organization_label")}
               </Box>
               <input
-                id="rm-org"
+                id={orgId}
                 ref={orgRef}
                 type="text"
                 className="lp-input"
@@ -240,12 +259,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 <Box
                   component="label"
                   className="lp-label"
-                  htmlFor="rm-firstname"
+                  htmlFor={firstNameId}
                 >
                   {t("auth.register.firstname_label")}
                 </Box>
                 <input
-                  id="rm-firstname"
+                  id={firstNameId}
                   type="text"
                   className="lp-input"
                   value={firstName}
@@ -259,12 +278,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 <Box
                   component="label"
                   className="lp-label"
-                  htmlFor="rm-lastname"
+                  htmlFor={lastNameId}
                 >
                   {t("auth.register.lastname_label")}
                 </Box>
                 <input
-                  id="rm-lastname"
+                  id={lastNameId}
                   type="text"
                   className="lp-input"
                   value={lastName}
@@ -277,11 +296,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </Box>
 
             <Box className="lp-field" sx={fieldStyle}>
-              <Box component="label" className="lp-label" htmlFor="rm-email">
+              <Box component="label" className="lp-label" htmlFor={emailId}>
                 {t("auth.register.email_label")}
               </Box>
               <input
-                id="rm-email"
+                id={emailId}
                 type="email"
                 className="lp-input"
                 value={email}
@@ -293,17 +312,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </Box>
 
             <Box className="lp-field" sx={fieldStyle}>
-              <Box
-                component="label"
-                className="lp-label"
-                htmlFor="rm-password"
-              >
+              <Box component="label" className="lp-label" htmlFor={passwordId}>
                 {t("auth.register.password_label")}
               </Box>
               <Box className="lp-input-wrap">
                 <Box
                   component="input"
-                  id="rm-password"
+                  id={passwordId}
                   type={showPassword ? "text" : "password"}
                   className="lp-input"
                   value={password}

@@ -1,12 +1,12 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/i18n/I18nContext";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { Ticket } from "@/types";
+import type { Ticket } from "@/types";
 import {
-  DetailPalette,
-  buildPriorityConfig,
-  buildStatusConfig,
+  type DetailPalette,
+  type buildPriorityConfig,
+  type buildStatusConfig,
   getRelativeShort,
   historyPresentation,
 } from "../../helpers";
@@ -31,7 +31,7 @@ export const HistoryCard: React.FC<Props> = ({
     <Box
       sx={{
         border: `1px solid ${palette.panelBorder}`,
-        borderRadius: 'var(--r-xl)',
+        borderRadius: "var(--r-xl)",
         background: palette.panelBg,
         boxShadow: palette.panelShadow,
         p: "8px 6px 4px",
@@ -99,7 +99,7 @@ export const HistoryCard: React.FC<Props> = ({
                     width: "8px",
                     height: "8px",
                     mt: "8px",
-                    borderRadius: '50%',
+                    borderRadius: "50%",
                     background: event.tone.dot,
                     border: `2px solid ${palette.historyDotBorder}`,
                     boxShadow: `0 0 0 2px ${event.tone.ring}`,
@@ -125,8 +125,12 @@ export const HistoryCard: React.FC<Props> = ({
                       mt: "4px",
                     }}
                   >
-                    {getRelativeShort(h.createdAt, t, getDateFnsLocale(culture))} · {h.author.firstName}{" "}
-                    {h.author.lastName}
+                    {getRelativeShort(
+                      h.createdAt,
+                      t,
+                      getDateFnsLocale(culture),
+                    )}{" "}
+                    · {h.author.firstName} {h.author.lastName}
                   </Box>
                 </Box>
               </Box>

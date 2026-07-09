@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -6,10 +7,7 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import { useT } from "@/i18n/I18nContext";
-import {
-  ProjectInfo,
-  toggleItem,
-} from "../../helpers";
+import { type ProjectInfo, toggleItem } from "../../helpers";
 
 interface Props {
   open: boolean;
@@ -104,7 +102,7 @@ export const ProjectPicker: React.FC<Props> = ({
             gap: "8px",
             background: "var(--bg)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             px: "10px",
             height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
@@ -225,7 +223,7 @@ export const ProjectPicker: React.FC<Props> = ({
                   gap: "11px",
                   px: "10px",
                   py: "9px",
-                  borderRadius: 'var(--r)',
+                  borderRadius: "var(--r)",
                   mb: "2px",
                   background: isSelected
                     ? "var(--accent-subtle)"
@@ -274,7 +272,7 @@ export const ProjectPicker: React.FC<Props> = ({
                   sx={{
                     width: "16px",
                     height: "16px",
-                    borderRadius: 'var(--r-xs)',
+                    borderRadius: "var(--r-xs)",
                     flexShrink: 0,
                     border: isSelected ? "none" : "1.5px solid var(--border2)",
                     background: isSelected ? "var(--accent)" : "transparent",

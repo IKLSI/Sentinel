@@ -1,11 +1,12 @@
-import React, {
+import type React from "react";
+import {
   createContext,
   useState,
   useEffect,
   useCallback,
   useMemo,
 } from "react";
-import { User } from "../../../types";
+import type { User } from "../../../types";
 import {
   login as apiLogin,
   logout as apiLogout,
@@ -90,7 +91,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [user, loading, login, logout],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

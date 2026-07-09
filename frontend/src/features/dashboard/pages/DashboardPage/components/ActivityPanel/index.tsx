@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
@@ -11,8 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 import {
-  ActivityItem,
-  DashPalette,
+  type ActivityItem,
+  type DashPalette,
   buildPanelSx,
   buildScrollSx,
 } from "../../helpers";
@@ -92,14 +92,23 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
         }}
       >
         {activity.length === 0 ? (
-          <Box className="empty-state" sx={{ flex: 1, padding: "24px !important" }}>
+          <Box
+            className="empty-state"
+            sx={{ flex: 1, padding: "24px !important" }}
+          >
             <Box className="empty-state-icon">
               <HistoryOutlined sx={{ fontSize: 32 }} />
             </Box>
-            <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+            <Box
+              className="empty-state-title"
+              sx={{ fontSize: "12px !important" }}
+            >
               {t("dashboard.activity.empty_title")}
             </Box>
-            <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+            <Box
+              className="empty-state-subtitle"
+              sx={{ fontSize: "11px !important" }}
+            >
               {t("dashboard.activity.empty_subtitle")}
             </Box>
           </Box>
@@ -117,20 +126,30 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                 if (a.type === "resolved") {
                   return (
                     <>
-                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
+                      <Box
+                        component="span"
+                        sx={{ fontWeight: 700, color: accentColor }}
+                      >
                         {t("dashboard.activity.bold_resolved")}
                       </Box>
-                      {t("dashboard.activity.suffix_resolved", { reference: a.reference ?? "" })}
+                      {t("dashboard.activity.suffix_resolved", {
+                        reference: a.reference ?? "",
+                      })}
                     </>
                   );
                 }
                 if (a.type === "created") {
                   return (
                     <>
-                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
+                      <Box
+                        component="span"
+                        sx={{ fontWeight: 700, color: accentColor }}
+                      >
                         {t("dashboard.activity.bold_created")}
                       </Box>
-                      {t("dashboard.activity.suffix_created", { reference: a.reference ?? "" })}
+                      {t("dashboard.activity.suffix_created", {
+                        reference: a.reference ?? "",
+                      })}
                     </>
                   );
                 }
@@ -139,18 +158,28 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                   return (
                     <>
                       {isPlural && (
-                        <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
+                        <Box
+                          component="span"
+                          sx={{ fontWeight: 700, color: accentColor }}
+                        >
                           {a.count}&nbsp;
                         </Box>
                       )}
-                      <Box component="span" sx={{ fontWeight: 700, color: accentColor }}>
+                      <Box
+                        component="span"
+                        sx={{ fontWeight: 700, color: accentColor }}
+                      >
                         {isPlural
                           ? t("dashboard.activity.bold_critical_plural")
                           : t("dashboard.activity.bold_critical")}
                       </Box>
                       {isPlural
-                        ? t("dashboard.activity.suffix_vuln_plural", { project: a.projectName ?? "" })
-                        : t("dashboard.activity.suffix_vuln", { project: a.projectName ?? "" })}
+                        ? t("dashboard.activity.suffix_vuln_plural", {
+                            project: a.projectName ?? "",
+                          })
+                        : t("dashboard.activity.suffix_vuln", {
+                            project: a.projectName ?? "",
+                          })}
                     </>
                   );
                 }
@@ -160,9 +189,10 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               const renderDetail = () => {
                 if (a.type === "vuln" && a.vulnCveId) {
                   if (a.vulnOtherCount != null && a.vulnOtherCount > 0) {
-                    const key = a.vulnOtherCount > 1
-                      ? "dashboard.activity.vuln_detail_more_plural"
-                      : "dashboard.activity.vuln_detail_more";
+                    const key =
+                      a.vulnOtherCount > 1
+                        ? "dashboard.activity.vuln_detail_more_plural"
+                        : "dashboard.activity.vuln_detail_more";
                     return t(key, {
                       cve: a.vulnCveId,
                       count: a.vulnOtherCount,
@@ -199,15 +229,22 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                       borderRadius: "var(--r-md)",
                       background: palette.rowBg,
                       cursor: href ? "pointer" : "default",
-                      transition: "background 120ms ease, box-shadow 120ms ease",
-                      "&:hover": href ? {
-                        background: palette.rowHoverBg,
-                        boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
-                      } : undefined,
-                      "&:active": href ? { background: palette.rowActiveBg } : undefined,
+                      transition:
+                        "background 120ms ease, box-shadow 120ms ease",
+                      "&:hover": href
+                        ? {
+                            background: palette.rowHoverBg,
+                            boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
+                          }
+                        : undefined,
+                      "&:active": href
+                        ? { background: palette.rowActiveBg }
+                        : undefined,
                     }}
                   >
-                    <Icon sx={{ fontSize: 16, color: accentColor, flexShrink: 0 }} />
+                    <Icon
+                      sx={{ fontSize: 16, color: accentColor, flexShrink: 0 }}
+                    />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box
                         sx={{
@@ -249,7 +286,10 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: dateFnsLocale })}
+                        {formatDistanceToNow(new Date(a.timestamp), {
+                          addSuffix: true,
+                          locale: dateFnsLocale,
+                        })}
                       </Box>
                     )}
                   </Box>

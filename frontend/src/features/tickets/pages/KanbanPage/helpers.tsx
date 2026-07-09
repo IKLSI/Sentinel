@@ -1,11 +1,11 @@
-import React from "react";
+import type React from "react";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { Ticket, TicketPriority } from "@/types";
+import type { Ticket, TicketPriority } from "@/types";
 import type { TicketStatusDef } from "../../api/ticketStatuses";
 
 type KanbanType =

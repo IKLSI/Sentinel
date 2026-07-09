@@ -149,8 +149,8 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -278,8 +278,8 @@ a:hover {
 }
 
 .kanban-content {
-  animation: fadeIn 0.4s ease-out both !important;
-  will-change: opacity !important;
+  animation: fadeIn 0.4s ease-out both;
+  will-change: opacity;
 }
 
 .page-progress-bar {
@@ -380,21 +380,17 @@ a:hover {
     135deg,
     var(--s3) 0%,
     color-mix(in srgb, var(--s3) 92%, white) 100%
-  ) !important;
-  color: var(--text-secondary) !important;
-  box-shadow: none !important;
-  border: none !important;
+  );
+  color: var(--text-secondary);
+  box-shadow: none;
+  border: none;
 }
 
 .btn-cancel.MuiButton-contained:hover {
-  background: linear-gradient(
-    135deg,
-    var(--border) 0%,
-    var(--border2) 100%
-  ) !important;
-  color: var(--text) !important;
-  box-shadow: none !important;
-  transform: none !important;
+  background: linear-gradient(135deg, var(--border) 0%, var(--border2) 100%);
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
 }
 
 @media (max-width: 767px) {
@@ -694,7 +690,11 @@ a:hover {
   left: -200px;
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--auth-indigo-500) 8%, transparent) 0%, transparent 60%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--auth-indigo-500) 8%, transparent) 0%,
+    transparent 60%
+  );
   pointer-events: none;
 }
 .lp-root::after {
@@ -704,7 +704,11 @@ a:hover {
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--auth-indigo-400) 6%, transparent) 0%, transparent 60%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--auth-indigo-400) 6%, transparent) 0%,
+    transparent 60%
+  );
   pointer-events: none;
 }
 
@@ -732,10 +736,27 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(60% 45% at 88% 8%, color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%, transparent 60%),
-    linear-gradient(160deg, rgba(24, 20, 62, 0.42) 0%, rgba(20, 17, 50, 0.34) 45%, rgba(14, 12, 38, 0.66) 100%),
-    radial-gradient(75% 65% at 5% 22%, rgba(16, 13, 45, 0.5) 0%, transparent 62%),
-    radial-gradient(80% 80% at 0% 100%, rgba(12, 10, 34, 0.42) 0%, transparent 60%),
+    radial-gradient(
+      60% 45% at 88% 8%,
+      color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%,
+      transparent 60%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(24, 20, 62, 0.42) 0%,
+      rgba(20, 17, 50, 0.34) 45%,
+      rgba(14, 12, 38, 0.66) 100%
+    ),
+    radial-gradient(
+      75% 65% at 5% 22%,
+      rgba(16, 13, 45, 0.5) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      80% 80% at 0% 100%,
+      rgba(12, 10, 34, 0.42) 0%,
+      transparent 60%
+    ),
     var(--auth-photo) 40% 42% / cover no-repeat,
     var(--auth-indigo-950);
   color: #fff;
@@ -754,7 +775,11 @@ a:hover {
   right: -80px;
   width: 340px;
   height: 340px;
-  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.1) 0%, transparent 65%);
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 65%
+  );
   pointer-events: none;
 }
 .lp-left::after {
@@ -766,14 +791,18 @@ a:hover {
   opacity: 0.18;
   pointer-events: none;
   z-index: 0;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.09) 1px, transparent 0);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.09) 1px,
+    transparent 0
+  );
   background-size: 28px 28px;
 }
 .lp-brand {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 12px;
   font-weight: 800;
   color: #fff;
@@ -838,7 +867,7 @@ a:hover {
 
 /* Headline */
 .lp-left-headline h1 {
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 38px;
   font-weight: 800;
   line-height: 1.05;
@@ -929,7 +958,7 @@ a:hover {
   animation: lp-up 0.5s 0.44s forwards;
 }
 .lp-form-title {
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 26px;
   font-weight: 800;
   color: var(--auth-gray-900);
@@ -975,7 +1004,10 @@ a:hover {
   font-family: var(--font-ui);
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
   -webkit-appearance: none;
 }
 .lp-input::placeholder {
@@ -986,8 +1018,9 @@ a:hover {
   border-color: var(--auth-indigo-200);
 }
 .lp-input:focus {
-  border-color: var(--auth-indigo-500) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-indigo-500) 10%, transparent) !important;
+  border-color: var(--auth-indigo-500);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--auth-indigo-500) 10%, transparent);
   background: #fff;
 }
 .lp-pw-toggle {
@@ -1008,19 +1041,23 @@ a:hover {
   color: var(--auth-indigo-500);
 }
 .lp-input--error {
-  border-color: var(--auth-red-300) !important;
-  background: var(--auth-red-50) !important;
+  border-color: var(--auth-red-300);
+  background: var(--auth-red-50);
 }
 .lp-input--error:focus {
-  border-color: var(--auth-red-500) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-red-500) 12%, transparent) !important;
+  border-color: var(--auth-red-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-red-500) 12%, transparent);
 }
 
 /* Submit */
 .lp-submit {
   width: 100%;
   padding: 13px 16px;
-  background: linear-gradient(135deg, var(--auth-indigo-700) 0%, var(--auth-indigo-500) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--auth-indigo-700) 0%,
+    var(--auth-indigo-500) 100%
+  );
   border: none;
   border-radius: var(--r);
   color: #fff;
@@ -1029,7 +1066,8 @@ a:hover {
   font-family: var(--font-ui);
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--auth-indigo-500) 35%, transparent);
+  box-shadow: 0 4px 14px
+    color-mix(in srgb, var(--auth-indigo-500) 35%, transparent);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -1040,8 +1078,13 @@ a:hover {
   animation: lp-up 0.5s 0.66s forwards;
 }
 .lp-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--auth-indigo-800) 0%, var(--auth-indigo-700) 100%);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--auth-indigo-500) 45%, transparent);
+  background: linear-gradient(
+    135deg,
+    var(--auth-indigo-800) 0%,
+    var(--auth-indigo-700) 100%
+  );
+  box-shadow: 0 6px 20px
+    color-mix(in srgb, var(--auth-indigo-500) 45%, transparent);
   transform: translateY(-1px);
 }
 .lp-submit:active:not(:disabled) {
@@ -1166,10 +1209,27 @@ a:hover {
   width: 50%;
   flex-shrink: 0;
   background:
-    radial-gradient(60% 45% at 88% 8%, color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%, transparent 60%),
-    linear-gradient(160deg, rgba(24, 20, 62, 0.42) 0%, rgba(20, 17, 50, 0.34) 45%, rgba(14, 12, 38, 0.66) 100%),
-    radial-gradient(75% 65% at 5% 22%, rgba(16, 13, 45, 0.5) 0%, transparent 62%),
-    radial-gradient(80% 80% at 0% 100%, rgba(12, 10, 34, 0.42) 0%, transparent 60%),
+    radial-gradient(
+      60% 45% at 88% 8%,
+      color-mix(in srgb, var(--auth-violet-400) 30%, transparent) 0%,
+      transparent 60%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(24, 20, 62, 0.42) 0%,
+      rgba(20, 17, 50, 0.34) 45%,
+      rgba(14, 12, 38, 0.66) 100%
+    ),
+    radial-gradient(
+      75% 65% at 5% 22%,
+      rgba(16, 13, 45, 0.5) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      80% 80% at 0% 100%,
+      rgba(12, 10, 34, 0.42) 0%,
+      transparent 60%
+    ),
     var(--auth-photo) 40% 42% / cover no-repeat,
     var(--auth-indigo-950);
   display: flex;
@@ -1187,7 +1247,11 @@ a:hover {
   right: -80px;
   width: 340px;
   height: 340px;
-  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.1) 0%, transparent 65%);
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 65%
+  );
   pointer-events: none;
 }
 .aip-left::after {
@@ -1212,7 +1276,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 12px;
   font-weight: 800;
   color: #fff;
@@ -1232,7 +1296,7 @@ a:hover {
   flex-shrink: 0;
 }
 .aip-logo-text {
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 12px;
   font-weight: 800;
   color: #fff;
@@ -1250,7 +1314,7 @@ a:hover {
 }
 
 .aip-headline h1 {
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 38px;
   font-weight: 800;
   line-height: 1.05;
@@ -1352,7 +1416,7 @@ a:hover {
   animation: lp-up 0.5s 0.44s forwards;
 }
 .aip-form-title {
-  font-family: "Bricolage Grotesque", var(--font-ui);
+  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
   font-size: 24px;
   font-weight: 800;
   color: var(--auth-gray-900);

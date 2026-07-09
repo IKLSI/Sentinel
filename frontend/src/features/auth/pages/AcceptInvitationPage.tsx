@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
@@ -46,6 +47,10 @@ export const AcceptInvitationPage: React.FC = () => {
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
   const firstNameRef = useRef<HTMLInputElement>(null);
+  const firstNameId = useId();
+  const lastNameId = useId();
+  const passwordId = useId();
+  const confirmId = useId();
 
   useEffect(() => {
     if (!token) navigate(ROUTES.LOGIN, { replace: true });
@@ -143,7 +148,7 @@ export const AcceptInvitationPage: React.FC = () => {
             <Box className="aip-steps">
               {STEPS.map((s, i) => (
                 <Box
-                  key={i}
+                  key={s.num}
                   className="aip-step"
                   style={{ animationDelay: `${0.52 + i * 0.1}s` }}
                 >
@@ -163,7 +168,13 @@ export const AcceptInvitationPage: React.FC = () => {
             {done ? (
               <Box className="aip-success">
                 <Box className="aip-success-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M6 14l6 6 10-10"
                       style={{ stroke: "var(--auth-indigo-500)" }}
@@ -199,13 +210,13 @@ export const AcceptInvitationPage: React.FC = () => {
                       <Box
                         component="label"
                         className="lp-label"
-                        htmlFor="aip-firstname"
+                        htmlFor={firstNameId}
                       >
                         {t("auth.accept_invitation.firstname_label")}{" "}
                         <span style={{ color: "var(--auth-red-500)" }}>*</span>
                       </Box>
                       <input
-                        id="aip-firstname"
+                        id={firstNameId}
                         ref={firstNameRef}
                         type="text"
                         className="lp-input"
@@ -222,12 +233,12 @@ export const AcceptInvitationPage: React.FC = () => {
                       <Box
                         component="label"
                         className="lp-label"
-                        htmlFor="aip-lastname"
+                        htmlFor={lastNameId}
                       >
                         {t("auth.accept_invitation.lastname_label")}
                       </Box>
                       <input
-                        id="aip-lastname"
+                        id={lastNameId}
                         type="text"
                         className="lp-input"
                         value={form.lastName}
@@ -244,7 +255,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     <Box
                       component="label"
                       className="lp-label"
-                      htmlFor="aip-password"
+                      htmlFor={passwordId}
                     >
                       {t("auth.accept_invitation.password_label")}{" "}
                       <span style={{ color: "var(--auth-red-500)" }}>*</span>
@@ -252,7 +263,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
-                        id="aip-password"
+                        id={passwordId}
                         type={showPassword ? "text" : "password"}
                         className="lp-input"
                         value={form.password}
@@ -288,7 +299,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     <Box
                       component="label"
                       className="lp-label"
-                      htmlFor="aip-confirm"
+                      htmlFor={confirmId}
                     >
                       {t("auth.accept_invitation.confirm_label")}{" "}
                       <span style={{ color: "var(--auth-red-500)" }}>*</span>
@@ -296,7 +307,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
-                        id="aip-confirm"
+                        id={confirmId}
                         type={showPassword ? "text" : "password"}
                         className="lp-input"
                         value={form.confirm}
@@ -318,7 +329,9 @@ export const AcceptInvitationPage: React.FC = () => {
                   >
                     {loading ? (
                       <Box className="lp-submit-loader" />
-                    ) : t("auth.accept_invitation.submit")}
+                    ) : (
+                      t("auth.accept_invitation.submit")
+                    )}
                   </button>
                 </form>
               </>

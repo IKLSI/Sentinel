@@ -1,10 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
@@ -186,11 +181,11 @@ export const CommandPalette: React.FC = () => {
     const map = new Map<string, PaletteItem[]>();
     for (const it of filtered) {
       if (!map.has(it.group)) map.set(it.group, []);
-      map.get(it.group)!.push(it);
+      map.get(it.group)?.push(it);
     }
     return order
       .filter((k) => map.has(k))
-      .map((k) => ({ key: k, items: map.get(k)! }));
+      .map((k) => ({ key: k, items: map.get(k) ?? [] }));
   }, [filtered]);
 
   let runningIdx = -1;

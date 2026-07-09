@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,7 +11,7 @@ import { useT } from "@/i18n/I18nContext";
 import {
   getAvailableRepos,
   createProject,
-  AvailableRepoDto,
+  type AvailableRepoDto,
 } from "@/features/techHealth/api/projects";
 import { extractApiError } from "@/utils/apiError";
 
@@ -18,7 +19,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onImported: () => void;
-  showToast: (msg: string, type: "success" | "error" | "info" | "warning") => void;
+  showToast: (
+    msg: string,
+    type: "success" | "error" | "info" | "warning",
+  ) => void;
 }
 
 export const SyncProjectModal: React.FC<Props> = ({
@@ -31,7 +35,9 @@ export const SyncProjectModal: React.FC<Props> = ({
   const [repos, setRepos] = useState<AvailableRepoDto[]>([]);
   const [hasToken, setHasToken] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
-  const [fetchFailedStatusCode, setFetchFailedStatusCode] = useState<number | undefined>(undefined);
+  const [fetchFailedStatusCode, setFetchFailedStatusCode] = useState<
+    number | undefined
+  >(undefined);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -57,8 +63,12 @@ export const SyncProjectModal: React.FC<Props> = ({
         setFetchFailed(data.fetchFailed);
         setFetchFailedStatusCode(data.fetchFailedStatusCode);
       })
-      .catch(() => { if (!ctrl.signal.aborted) setError(true); })
-      .finally(() => { if (!ctrl.signal.aborted) setLoading(false); });
+      .catch(() => {
+        if (!ctrl.signal.aborted) setError(true);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
     setTimeout(() => inputRef.current?.focus(), 80);
     return () => ctrl.abort();
   }, [open]);
@@ -90,12 +100,26 @@ export const SyncProjectModal: React.FC<Props> = ({
     setImporting(true);
     try {
       const toImport = repos.filter((r) => selected.has(r.url));
-      await Promise.all(toImport.map((r) => createProject({ name: r.name, repositoryUrl: r.url, repositoryType: r.platform })));
-      showToast(t("projects.toast.import_success", { count: toImport.length }), "success");
+      await Promise.all(
+        toImport.map((r) =>
+          createProject({
+            name: r.name,
+            repositoryUrl: r.url,
+            repositoryType: r.platform,
+          }),
+        ),
+      );
+      showToast(
+        t("projects.toast.import_success", { count: toImport.length }),
+        "success",
+      );
       onClose();
       onImported();
     } catch (err) {
-      showToast(extractApiError(err, t("projects.toast.import_error")), "error");
+      showToast(
+        extractApiError(err, t("projects.toast.import_error")),
+        "error",
+      );
     } finally {
       setImporting(false);
     }
@@ -113,11 +137,14 @@ export const SyncProjectModal: React.FC<Props> = ({
       ? t("projects.import_modal.fetch_failed_title")
       : t("projects.import_modal.empty");
 
-  const emptySubtitle = hasToken && fetchFailed
-    ? fetchFailedStatusCode != null
-      ? t("projects.import_modal.fetch_failed_subtitle", { status: fetchFailedStatusCode })
-      : t("projects.import_modal.fetch_failed_subtitle_generic")
-    : undefined;
+  const emptySubtitle =
+    hasToken && fetchFailed
+      ? fetchFailedStatusCode != null
+        ? t("projects.import_modal.fetch_failed_subtitle", {
+            status: fetchFailedStatusCode,
+          })
+        : t("projects.import_modal.fetch_failed_subtitle_generic")
+      : undefined;
 
   return (
     <Dialog
@@ -146,7 +173,8 @@ export const SyncProjectModal: React.FC<Props> = ({
           letterSpacing: "-0.02em",
           p: "16px 24px",
           borderBottom: "1px solid var(--border)",
-          background: "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
+          background:
+            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
           flexShrink: 0,
           color: "var(--text)",
         }}
@@ -172,14 +200,20 @@ export const SyncProjectModal: React.FC<Props> = ({
             },
           }}
         >
-          <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }} />
+          <SearchOutlined
+            sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
+          />
           <Box
             component="input"
             ref={inputRef}
             placeholder={t("projects.search_placeholder")}
             value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Escape") onClose(); }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setSearch(e.target.value)
+            }
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === "Escape") onClose();
+            }}
             sx={{
               all: "unset",
               flex: 1,
@@ -203,7 +237,15 @@ export const SyncProjectModal: React.FC<Props> = ({
           flexShrink: 0,
         }}
       >
-        <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        <Box
+          sx={{
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "var(--text)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
+        >
           {t("projects.sync_modal.projects_label")}
         </Box>
         {!loading && !error && repos.length > 0 && (
@@ -242,16 +284,36 @@ export const SyncProjectModal: React.FC<Props> = ({
             <CircularProgress size={24} />
           </Box>
         ) : error ? (
-          <Box sx={{ py: "40px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-            <Box sx={{ fontSize: "13px", color: "var(--red)", fontWeight: 500, textAlign: "center" }}>
+          <Box
+            sx={{
+              py: "40px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Box
+              sx={{
+                fontSize: "13px",
+                color: "var(--red)",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
               {t("projects.import_modal.error")}
             </Box>
           </Box>
         ) : visible.length === 0 ? (
           <Box className="empty-state">
-            <FolderOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+            <FolderOutlined
+              className="empty-state-icon"
+              sx={{ fontSize: 40 }}
+            />
             <Box className="empty-state-title">
-              {repos.length === 0 ? emptyTitle : t("projects.sync_modal.no_results")}
+              {repos.length === 0
+                ? emptyTitle
+                : t("projects.sync_modal.no_results")}
             </Box>
             {repos.length === 0 && emptySubtitle && (
               <Box className="empty-state-subtitle">{emptySubtitle}</Box>
@@ -273,7 +335,9 @@ export const SyncProjectModal: React.FC<Props> = ({
                   py: "9px",
                   borderRadius: "var(--r)",
                   mb: "2px",
-                  background: isSelected ? "var(--accent-subtle)" : "transparent",
+                  background: isSelected
+                    ? "var(--accent-subtle)"
+                    : "transparent",
                   cursor: "pointer",
                   userSelect: "none",
                   "&:hover": {
@@ -297,7 +361,16 @@ export const SyncProjectModal: React.FC<Props> = ({
                   >
                     {repo.name}
                   </Box>
-                  <Box sx={{ mt: "2px", fontSize: "11.5px", color: "var(--muted2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <Box
+                    sx={{
+                      mt: "2px",
+                      fontSize: "11.5px",
+                      color: "var(--muted2)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {repo.url}
                   </Box>
                 </Box>
@@ -316,7 +389,11 @@ export const SyncProjectModal: React.FC<Props> = ({
                     transition: "all 0.15s",
                   }}
                 >
-                  {isSelected && <CheckOutlined sx={{ fontSize: "11px", color: "var(--s1)" }} />}
+                  {isSelected && (
+                    <CheckOutlined
+                      sx={{ fontSize: "11px", color: "var(--s1)" }}
+                    />
+                  )}
                 </Box>
               </Box>
             );
@@ -353,11 +430,13 @@ export const SyncProjectModal: React.FC<Props> = ({
           disabled={selected.size === 0 || importing}
           sx={{
             textTransform: "none",
-            background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+            background:
+              "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
             color: "#fff",
             boxShadow: "none",
             "&:hover": {
-              background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
               boxShadow: "none",
               transform: "none",
             },

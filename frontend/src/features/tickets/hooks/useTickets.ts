@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { TicketFilters } from "../../../types";
+import type { TicketFilters } from "../../../types";
 import { getTickets } from "../api/tickets";
 
 export const TICKETS_QUERY_KEY = "tickets";

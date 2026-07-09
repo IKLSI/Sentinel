@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
@@ -6,7 +7,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { useTickets, TICKETS_QUERY_KEY } from "@/features/tickets/hooks/useTickets";
+import {
+  useTickets,
+  TICKETS_QUERY_KEY,
+} from "@/features/tickets/hooks/useTickets";
 import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import {
   createTicket,
@@ -16,15 +20,33 @@ import {
 } from "@/features/tickets/api/tickets";
 import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
 import { changeTicketStatus } from "@/features/tickets/api/ticketStatuses";
-import { ProjectDto, getProjects } from "@/features/techHealth/api/projects";
+import {
+  type ProjectDto,
+  getProjects,
+} from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
-import { Ticket, TicketFilters, TicketPriority, TicketType, TicketStatusDef, User, PaginatedResponse } from "@/types";
-import { CreateTicketPayload, EMPTY_CREATE_TICKET_FORM, PRIORITY_ORDER } from "./helpers";
+import type {
+  Ticket,
+  TicketFilters,
+  TicketPriority,
+  TicketType,
+  TicketStatusDef,
+  User,
+  PaginatedResponse,
+} from "@/types";
+import {
+  type CreateTicketPayload,
+  EMPTY_CREATE_TICKET_FORM,
+  PRIORITY_ORDER,
+} from "./helpers";
 import { TicketsToolbar } from "./components/TicketsToolbar";
-import { TicketsTable, SortState } from "./components/TicketsTable";
+import { TicketsTable, type SortState } from "./components/TicketsTable";
 import { Pagination } from "./components/Pagination";
 import { CreateTicketModal } from "./components/CreateTicketModal";
-import { EditTicketModal, EditFormState } from "./components/EditTicketModal";
+import {
+  EditTicketModal,
+  type EditFormState,
+} from "./components/EditTicketModal";
 import { extractApiError } from "@/utils/apiError";
 import { SortDirection } from "@/types/enums";
 
@@ -94,7 +116,7 @@ export const TicketsPage: React.FC = () => {
     }
   };
 
-  const loadModalRefs = () => {
+  const loadModalRefs = useCallback(() => {
     Promise.all([
       getProjects().catch(() => [] as ProjectDto[]),
       getUsers().catch(() => ({ items: [] as User[] })),
@@ -102,7 +124,7 @@ export const TicketsPage: React.FC = () => {
       setModalProjects(p);
       setModalUsers(u.items);
     });
-  };
+  }, []);
 
   const openCreateModal = useCallback(() => {
     setCreateForm(EMPTY_CREATE_TICKET_FORM);
@@ -191,7 +213,15 @@ export const TicketsPage: React.FC = () => {
       }
       queryClient.setQueryData<PaginatedResponse<Ticket>>(
         [TICKETS_QUERY_KEY, ticketsFilters],
-        (prev) => prev ? { ...prev, items: prev.items.map((tk) => (tk.id === updated.id ? updated : tk)) } : prev,
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                items: prev.items.map((tk) =>
+                  tk.id === updated.id ? updated : tk,
+                ),
+              }
+            : prev,
       );
       queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setEditTarget(null);
@@ -210,7 +240,13 @@ export const TicketsPage: React.FC = () => {
       await deleteTicket(deleteTarget.id);
       queryClient.setQueryData<PaginatedResponse<Ticket>>(
         [TICKETS_QUERY_KEY, ticketsFilters],
-        (prev) => prev ? { ...prev, items: prev.items.filter((tk) => tk.id !== deleteTarget.id) } : prev,
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                items: prev.items.filter((tk) => tk.id !== deleteTarget.id),
+              }
+            : prev,
       );
       queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setDeleteTarget(null);
@@ -234,7 +270,9 @@ export const TicketsPage: React.FC = () => {
     page,
     pageSize,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...(filters.priority ? { priority: filters.priority as TicketPriority } : {}),
+    ...(filters.priority
+      ? { priority: filters.priority as TicketPriority }
+      : {}),
     ...(filters.status ? { status: filters.status } : {}),
     ...(filters.type ? { type: filters.type as TicketType } : {}),
   };
@@ -250,7 +288,7 @@ export const TicketsPage: React.FC = () => {
     if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
       openCreateModal();
     }
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadModalRefs, location.state, openCreateModal]);
 
   const filtered = useMemo(() => {
     return (tickets?.items ?? []).slice().sort((a, b) => {
@@ -391,7 +429,13 @@ export const TicketsPage: React.FC = () => {
         loading={deleting}
         title={t("tickets.list.delete_title")}
       >
-        {t("tickets.list.delete_prefix")}<strong>{deleteTarget?.reference}</strong>{t("tickets.list.delete_suffix")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
+        {t("tickets.list.delete_prefix")}
+        <strong>{deleteTarget?.reference}</strong>
+        {t("tickets.list.delete_suffix")}
+        <br />
+        {t("common.action_irreversible_before")}
+        <b>{t("common.action_irreversible_word")}</b>
+        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

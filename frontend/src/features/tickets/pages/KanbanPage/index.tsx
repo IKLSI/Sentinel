@@ -1,10 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import GlobalStyles from "@mui/material/GlobalStyles";
@@ -18,19 +13,25 @@ import {
   changeTicketStatus,
 } from "@/features/tickets/api/ticketStatuses";
 import { useProjects } from "@/features/techHealth/hooks/useProjects";
-import { ProjectDto } from "@/features/techHealth/api/projects";
+import type { ProjectDto } from "@/features/techHealth/api/projects";
 import { getUsers } from "@/features/users/api/users";
-import { User, Ticket } from "@/types";
-import { CreateTicketPayload, EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
-import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
-import { useTicketStatuses, ticketStatusesQueryKey } from "@/features/tickets/hooks/useTicketStatuses";
-import { TicketStatusDef } from "@/features/tickets/api/ticketStatuses";
-import { PaginatedResponse } from "@/types";
+import type { User, Ticket } from "@/types";
 import {
-  KanbanColumns,
-  KanbanTicket,
-  KanbanDropResult,
-  ProjectInfo,
+  type CreateTicketPayload,
+  EMPTY_CREATE_TICKET_FORM,
+} from "@/features/tickets/pages/TicketsPage/helpers";
+import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
+import {
+  useTicketStatuses,
+  ticketStatusesQueryKey,
+} from "@/features/tickets/hooks/useTicketStatuses";
+import type { TicketStatusDef } from "@/features/tickets/api/ticketStatuses";
+import type { PaginatedResponse } from "@/types";
+import {
+  type KanbanColumns,
+  type KanbanTicket,
+  type KanbanDropResult,
+  type ProjectInfo,
   arrayMove,
   apiColToColDef,
   ticketsToColumns,
@@ -51,10 +52,16 @@ export const KanbanPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [columns, setColumns] = useState<KanbanColumns>(() => {
-    const cachedTickets = queryClient.getQueryData<PaginatedResponse<Ticket>>(KANBAN_QUERY_KEY);
-    const cachedStatuses = queryClient.getQueryData<TicketStatusDef[]>(ticketStatusesQueryKey);
+    const cachedTickets =
+      queryClient.getQueryData<PaginatedResponse<Ticket>>(KANBAN_QUERY_KEY);
+    const cachedStatuses = queryClient.getQueryData<TicketStatusDef[]>(
+      ticketStatusesQueryKey,
+    );
     if (cachedTickets && cachedStatuses) {
-      return ticketsToColumns(cachedTickets.items, cachedStatuses.map(apiColToColDef));
+      return ticketsToColumns(
+        cachedTickets.items,
+        cachedStatuses.map(apiColToColDef),
+      );
     }
     return {};
   });
@@ -86,7 +93,11 @@ export const KanbanPage: React.FC = () => {
   const { data: projectsData } = useProjects();
   const { data: statusesData } = useTicketStatuses();
 
-  const { data: kanbanTickets, isLoading: loading, refetch: refetchBoard } = useQuery({
+  const {
+    data: kanbanTickets,
+    isLoading: loading,
+    refetch: refetchBoard,
+  } = useQuery({
     queryKey: KANBAN_QUERY_KEY,
     queryFn: () => getTickets({ pageSize: 200 }),
     staleTime: 30_000,
@@ -188,7 +199,13 @@ export const KanbanPage: React.FC = () => {
   }, [columns, columnDefs, search, filteredProjects]);
 
   const onDrop = useCallback(
-    async ({ ticketId, sourceColId, sourceIndex, destColId, destIndex }: KanbanDropResult) => {
+    async ({
+      ticketId,
+      sourceColId,
+      sourceIndex,
+      destColId,
+      destIndex,
+    }: KanbanDropResult) => {
       if (sourceColId === destColId && sourceIndex === destIndex) return;
 
       if (sourceColId === destColId) {
@@ -211,32 +228,43 @@ export const KanbanPage: React.FC = () => {
         return;
       }
 
-      const movedTicket = (columns[sourceColId] ?? []).find((tk) => tk.id === ticketId);
+      const movedTicket = (columns[sourceColId] ?? []).find(
+        (tk) => tk.id === ticketId,
+      );
       if (!movedTicket) return;
 
       const afterId = (filteredColumns[destColId] ?? [])[destIndex]?.id;
       setColumns((prev) => {
-        const sourceItems = (prev[sourceColId] ?? []).filter((tk) => tk.id !== ticketId);
+        const sourceItems = (prev[sourceColId] ?? []).filter(
+          (tk) => tk.id !== ticketId,
+        );
         const destItems = [...(prev[destColId] ?? [])];
         const insertAt = afterId
           ? destItems.findIndex((tk) => tk.id === afterId)
           : destItems.length;
-        destItems.splice(insertAt >= 0 ? insertAt : destItems.length, 0, movedTicket);
+        destItems.splice(
+          insertAt >= 0 ? insertAt : destItems.length,
+          0,
+          movedTicket,
+        );
         return { ...prev, [sourceColId]: sourceItems, [destColId]: destItems };
       });
 
       setUpdatingId(ticketId);
       try {
         await changeTicketStatus(ticketId, destColId);
-        queryClient.setQueryData<PaginatedResponse<Ticket>>(KANBAN_QUERY_KEY, (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            items: old.items.map((tk) =>
-              tk.id === ticketId ? { ...tk, statusId: destColId } : tk,
-            ),
-          };
-        });
+        queryClient.setQueryData<PaginatedResponse<Ticket>>(
+          KANBAN_QUERY_KEY,
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              items: old.items.map((tk) =>
+                tk.id === ticketId ? { ...tk, statusId: destColId } : tk,
+              ),
+            };
+          },
+        );
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
         showToast(
@@ -255,12 +283,18 @@ export const KanbanPage: React.FC = () => {
     async (name: string, color: string) => {
       try {
         const created = await createTicketStatus(name, color);
-        queryClient.setQueryData<TicketStatusDef[]>(ticketStatusesQueryKey, (prev) => [...(prev ?? []), created]);
+        queryClient.setQueryData<TicketStatusDef[]>(
+          ticketStatusesQueryKey,
+          (prev) => [...(prev ?? []), created],
+        );
         setColumns((prev) => ({ ...prev, [created.id]: [] }));
         setAddColOpen(false);
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
-        showToast(extractApiError(err, "Impossible de créer la colonne"), "error");
+        showToast(
+          extractApiError(err, "Impossible de créer la colonne"),
+          "error",
+        );
       }
     },
     [showToast, queryClient],
@@ -268,8 +302,13 @@ export const KanbanPage: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem("sentinel:kanban:collapsed", JSON.stringify([...collapsedColumns]));
-    } catch { /* ignore */ }
+      localStorage.setItem(
+        "sentinel:kanban:collapsed",
+        JSON.stringify([...collapsedColumns]),
+      );
+    } catch {
+      /* ignore */
+    }
   }, [collapsedColumns]);
 
   const toggleCollapse = useCallback((id: string) => {
@@ -281,9 +320,12 @@ export const KanbanPage: React.FC = () => {
     });
   }, []);
 
-  const handleCardClick = useCallback((id: string) => {
-    navigate(`/tickets/${id}`);
-  }, [navigate]);
+  const handleCardClick = useCallback(
+    (id: string) => {
+      navigate(`/tickets/${id}`);
+    },
+    [navigate],
+  );
 
   const handleOpenAddColumn = useCallback(() => {
     setAddColOpen(true);
@@ -293,7 +335,10 @@ export const KanbanPage: React.FC = () => {
     async (id: string) => {
       try {
         await deleteTicketStatus(id);
-        queryClient.setQueryData<TicketStatusDef[]>(ticketStatusesQueryKey, (prev) => (prev ?? []).filter((s) => s.id !== id));
+        queryClient.setQueryData<TicketStatusDef[]>(
+          ticketStatusesQueryKey,
+          (prev) => (prev ?? []).filter((s) => s.id !== id),
+        );
         setColumns((prev) => {
           const next = { ...prev };
           delete next[id];
@@ -301,7 +346,10 @@ export const KanbanPage: React.FC = () => {
         });
         window.dispatchEvent(new Event("dashboard:refresh"));
       } catch (err) {
-        showToast(extractApiError(err, "Impossible de supprimer la colonne"), "error");
+        showToast(
+          extractApiError(err, "Impossible de supprimer la colonne"),
+          "error",
+        );
       }
     },
     [showToast, queryClient],
@@ -316,7 +364,9 @@ export const KanbanPage: React.FC = () => {
             scrollbarColor: "var(--border2) transparent",
           },
           ".kanban-col-body::-webkit-scrollbar": { width: "3px" },
-          ".kanban-col-body::-webkit-scrollbar-track": { background: "transparent" },
+          ".kanban-col-body::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
           ".kanban-col-body::-webkit-scrollbar-thumb": {
             background: "var(--border2)",
             borderRadius: "var(--r-xs)",
@@ -326,7 +376,12 @@ export const KanbanPage: React.FC = () => {
 
       <Box
         className="kanban-content"
-        sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden",
+        }}
       >
         <KanbanToolbar
           search={search}

@@ -6,7 +6,7 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/RowActions";
 import { useT } from "@/i18n/I18nContext";
-import { Ticket } from "@/types";
+import type { Ticket } from "@/types";
 import {
   priorityColor,
   priorityLabelKeys,

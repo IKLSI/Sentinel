@@ -11,13 +11,18 @@ interface Props {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTE_STEP = 5;
-const MINUTES = Array.from({ length: 60 / MINUTE_STEP }, (_, i) => i * MINUTE_STEP);
+const MINUTES = Array.from(
+  { length: 60 / MINUTE_STEP },
+  (_, i) => i * MINUTE_STEP,
+);
 const COLUMN_HEIGHT = 168;
 const CELL_HEIGHT = 30;
 
 const pad = (n: number): string => String(n).padStart(2, "0");
 
-const parseTime = (value: string): { hour: number | null; minute: number | null } => {
+const parseTime = (
+  value: string,
+): { hour: number | null; minute: number | null } => {
   if (!value) return { hour: null, minute: null };
   const [h, m] = value.split(":").map(Number);
   return {
@@ -100,7 +105,7 @@ export const TimePickerPopover: React.FC<Props> = ({
       openedRef.current = true;
     }, 0);
     return () => window.clearTimeout(id);
-  }, [anchor, value]);
+  }, [anchor]);
 
   const commit = (h: number, m: number) => onSelect(`${pad(h)}:${pad(m)}`);
 

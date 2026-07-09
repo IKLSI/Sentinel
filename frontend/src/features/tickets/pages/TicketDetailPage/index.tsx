@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -15,7 +16,7 @@ import {
   getTicket,
   updateComment,
 } from "@/features/tickets/api/tickets";
-import { Ticket } from "@/types";
+import type { Ticket } from "@/types";
 import {
   buildFieldSx,
   buildMarkdownSx,
@@ -251,7 +252,7 @@ export const TicketDetailPage: React.FC = () => {
             minWidth: 0,
             background: palette.panelBg,
             border: `1px solid ${palette.panelBorder}`,
-            borderRadius: 'var(--r-xl)',
+            borderRadius: "var(--r-xl)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -280,7 +281,14 @@ export const TicketDetailPage: React.FC = () => {
                 />
 
                 <Box>
-                  <Box sx={{ fontSize: "13px", color: palette.mdText, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                  <Box
+                    sx={{
+                      fontSize: "13px",
+                      color: palette.mdText,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.6,
+                    }}
+                  >
                     {ticket.description}
                   </Box>
                 </Box>
@@ -365,7 +373,11 @@ export const TicketDetailPage: React.FC = () => {
         loading={deleteCommentLoading}
         title={t("tickets.detail.delete_comment_title")}
       >
-        {t("tickets.detail.delete_comment_message")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
+        {t("tickets.detail.delete_comment_message")}
+        <br />
+        {t("common.action_irreversible_before")}
+        <b>{t("common.action_irreversible_word")}</b>
+        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

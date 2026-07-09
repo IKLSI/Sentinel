@@ -1,7 +1,7 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import LinkRounded from "@mui/icons-material/LinkRounded";
-import { DetailPalette } from "../../helpers";
+import type { DetailPalette } from "../../helpers";
 
 interface Props {
   palette: DetailPalette;
@@ -53,7 +53,7 @@ export const TicketHeader: React.FC<Props> = ({
               color: palette.endpointFg,
               background: palette.endpointBg,
               border: `1px solid ${palette.endpointBorder}`,
-              borderRadius: 'var(--r-md)',
+              borderRadius: "var(--r-md)",
               px: "11px",
               py: "5px",
               fontWeight: 600,

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -40,7 +41,11 @@ interface Props {
   onConfirm: (name: string, color: string) => Promise<void>;
 }
 
-export const AddColumnDialog: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+export const AddColumnDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  onConfirm,
+}) => {
   const [name, setName] = useState("");
   const [color, setColor] = useState(CUSTOM_COLUMN_COLORS[0]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +149,10 @@ export const AddColumnDialog: React.FC<Props> = ({ open, onClose, onConfirm }) =
                   borderRadius: "50%",
                   background: c,
                   cursor: "pointer",
-                  border: color === c ? "2px solid var(--text)" : "2px solid transparent",
+                  border:
+                    color === c
+                      ? "2px solid var(--text)"
+                      : "2px solid transparent",
                   outline: color === c ? "2px solid var(--s1)" : "none",
                   outlineOffset: "-3px",
                   transition: "border-color 0.12s",

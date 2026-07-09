@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
@@ -24,6 +25,9 @@ export const ResetPasswordPage: React.FC = () => {
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const glowId = useId();
+  const passwordId = useId();
+  const confirmId = useId();
 
   useEffect(() => {
     if (!token) navigate(ROUTES.LOGIN, { replace: true });
@@ -79,9 +83,10 @@ export const ResetPasswordPage: React.FC = () => {
               viewBox="0 0 450 600"
               fill="none"
               preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
             >
               <defs>
-                <radialGradient id="lp-glow-tr" cx="50%" cy="50%" r="50%">
+                <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
                   <stop
                     offset="0%"
                     style={{
@@ -92,7 +97,7 @@ export const ResetPasswordPage: React.FC = () => {
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
               </defs>
-              <circle cx="450" cy="0" r="160" fill="url(#lp-glow-tr)" />
+              <circle cx="450" cy="0" r="160" fill={`url(#${glowId})`} />
               <circle
                 cx="450"
                 cy="0"
@@ -144,7 +149,13 @@ export const ResetPasswordPage: React.FC = () => {
               {[
                 {
                   icon: (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      aria-hidden="true"
+                    >
                       <rect
                         x="2"
                         y="6"
@@ -164,12 +175,20 @@ export const ResetPasswordPage: React.FC = () => {
                   ),
                   title: t("auth.reset_password.feature1_title"),
                   desc: t("auth.reset_password.feature1_desc"),
-                  iconBg: "color-mix(in srgb, var(--auth-indigo-300) 11%, transparent)",
-                  iconColor: "color-mix(in srgb, var(--auth-indigo-300) 90%, transparent)",
+                  iconBg:
+                    "color-mix(in srgb, var(--auth-indigo-300) 11%, transparent)",
+                  iconColor:
+                    "color-mix(in srgb, var(--auth-indigo-300) 90%, transparent)",
                 },
                 {
                   icon: (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M7 1.5L12.5 4v4c0 2.8-2.5 5.2-5.5 6C3.5 13.2 1 10.8 1 8V4L7 1.5z"
                         stroke="currentColor"
@@ -187,12 +206,14 @@ export const ResetPasswordPage: React.FC = () => {
                   ),
                   title: t("auth.reset_password.feature2_title"),
                   desc: t("auth.reset_password.feature2_desc"),
-                  iconBg: "color-mix(in srgb, var(--auth-amber-400) 11%, transparent)",
-                  iconColor: "color-mix(in srgb, var(--auth-amber-400) 85%, transparent)",
+                  iconBg:
+                    "color-mix(in srgb, var(--auth-amber-400) 11%, transparent)",
+                  iconColor:
+                    "color-mix(in srgb, var(--auth-amber-400) 85%, transparent)",
                 },
               ].map((f, i) => (
                 <Box
-                  key={i}
+                  key={f.title}
                   className="lp-feature"
                   style={{ animationDelay: `${0.52 + i * 0.1}s` }}
                 >
@@ -217,7 +238,13 @@ export const ResetPasswordPage: React.FC = () => {
             {done ? (
               <Box className="aip-success">
                 <Box className="aip-success-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M6 14l6 6 10-10"
                       style={{ stroke: "var(--auth-indigo-500)" }}
@@ -252,14 +279,14 @@ export const ResetPasswordPage: React.FC = () => {
                     <Box
                       component="label"
                       className="lp-label"
-                      htmlFor="rp-password"
+                      htmlFor={passwordId}
                     >
                       {t("auth.reset_password.password_label")}
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
-                        id="rp-password"
+                        id={passwordId}
                         ref={passwordRef}
                         type={showPassword ? "text" : "password"}
                         className="lp-input"
@@ -298,14 +325,14 @@ export const ResetPasswordPage: React.FC = () => {
                     <Box
                       component="label"
                       className="lp-label"
-                      htmlFor="rp-confirm"
+                      htmlFor={confirmId}
                     >
                       {t("auth.reset_password.confirm_label")}
                     </Box>
                     <Box className="lp-input-wrap">
                       <Box
                         component="input"
-                        id="rp-confirm"
+                        id={confirmId}
                         type={showPassword ? "text" : "password"}
                         className="lp-input"
                         value={confirm}

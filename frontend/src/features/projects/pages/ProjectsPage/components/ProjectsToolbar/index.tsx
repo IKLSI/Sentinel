@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -45,7 +45,7 @@ export const ProjectsToolbar: React.FC<Props> = ({
             gap: "8px",
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             px: "10px",
             height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
@@ -90,14 +90,16 @@ export const ProjectsToolbar: React.FC<Props> = ({
               gap: "6px",
               flexShrink: 0,
               "&.MuiButton-root": {
-                background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+                background:
+                  "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
                 color: "#fff",
                 boxShadow: "none",
                 height: "32px",
                 px: "14px",
               },
               "&.MuiButton-root:hover": {
-                background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
                 boxShadow: "none",
                 transform: "none",
               },
@@ -118,11 +120,13 @@ export const ProjectsToolbar: React.FC<Props> = ({
             gap: "6px",
             flexShrink: 0,
             textTransform: "none",
-            background: "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
+            background:
+              "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
             borderColor: "transparent",
             color: "#fff",
             "&:hover": {
-              background: "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
+              background:
+                "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
               borderColor: "transparent",
               color: "#fff",
             },
@@ -131,10 +135,7 @@ export const ProjectsToolbar: React.FC<Props> = ({
           onClick={onExport}
         >
           {exporting ? (
-            <CircularProgress
-              size={12}
-              sx={{ color: "#fff" }}
-            />
+            <CircularProgress size={12} sx={{ color: "#fff" }} />
           ) : (
             <FileDownloadOutlined sx={{ fontSize: 14 }} />
           )}

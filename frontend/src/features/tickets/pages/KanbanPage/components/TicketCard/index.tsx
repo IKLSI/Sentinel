@@ -4,7 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { KanbanTicket, typeIcons, typeLabelKeys } from "../../helpers";
+import { type KanbanTicket, typeIcons, typeLabelKeys } from "../../helpers";
 
 interface Props {
   ticket: KanbanTicket;
@@ -55,7 +55,7 @@ export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
             fontWeight: 600,
             color: "var(--text-secondary)",
             background: "color-mix(in srgb, var(--muted2) 8%, transparent)",
-            borderRadius: 'var(--r-xs)',
+            borderRadius: "var(--r-xs)",
             padding: "2px 7px 2px 5px",
           }}
         >
@@ -183,7 +183,8 @@ export const TicketCard: React.FC<Props> = React.memo(function TicketCard({
                   width: "22px",
                   height: "22px",
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))",
+                  background:
+                    "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

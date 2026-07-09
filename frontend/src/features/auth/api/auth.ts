@@ -1,5 +1,5 @@
 import apiClient from "../../../services/client";
-import { LoginResponse, User } from "../../../types";
+import type { LoginResponse, User } from "../../../types";
 import { API_ROUTES } from "@/constants/api";
 
 export const login = async (

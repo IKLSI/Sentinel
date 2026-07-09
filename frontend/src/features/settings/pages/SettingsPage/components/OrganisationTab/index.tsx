@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -8,11 +9,11 @@ import { useT } from "@/i18n/I18nContext";
 import {
   getOrganizationSettings,
   updateOrganizationSettings,
-  OrganizationSettings,
+  type OrganizationSettings,
   getIntegrationSettings,
   connectGithub,
   connectGitlab,
-  IntegrationSettings,
+  type IntegrationSettings,
 } from "@/features/settings/api/settings";
 import {
   CARD_SX,
@@ -57,7 +58,10 @@ export const OrganisationTab: React.FC = () => {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    Promise.all([getOrganizationSettings(ctrl.signal), getIntegrationSettings(ctrl.signal)])
+    Promise.all([
+      getOrganizationSettings(ctrl.signal),
+      getIntegrationSettings(ctrl.signal),
+    ])
       .then(([o, i]) => {
         if (ctrl.signal.aborted) return;
         setOrg(o);
@@ -98,7 +102,10 @@ export const OrganisationTab: React.FC = () => {
       });
       showToast(t("settings.toast.org_updated"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("settings.toast.org_update_error")), "error");
+      showToast(
+        extractApiError(err, t("settings.toast.org_update_error")),
+        "error",
+      );
     } finally {
       setSavingOrg(false);
     }
@@ -116,7 +123,10 @@ export const OrganisationTab: React.FC = () => {
       setGithubToken("");
       showToast(t("settings.toast.github_connected"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("settings.toast.github_error")), "error");
+      showToast(
+        extractApiError(err, t("settings.toast.github_error")),
+        "error",
+      );
     } finally {
       setConnectingGithub(false);
     }
@@ -134,7 +144,10 @@ export const OrganisationTab: React.FC = () => {
       setGitlabToken("");
       showToast(t("settings.toast.gitlab_connected"), "success");
     } catch (err) {
-      showToast(extractApiError(err, t("settings.toast.gitlab_error")), "error");
+      showToast(
+        extractApiError(err, t("settings.toast.gitlab_error")),
+        "error",
+      );
     } finally {
       setConnectingGitlab(false);
     }
@@ -253,11 +266,13 @@ export const OrganisationTab: React.FC = () => {
                   sx={{
                     minWidth: "110px",
                     textTransform: "none",
-                    background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+                    background:
+                      "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
                     color: "#fff",
                     boxShadow: "none",
                     "&:hover": {
-                      background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                      background:
+                        "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
                       boxShadow: "none",
                       transform: "none",
                     },
@@ -297,7 +312,9 @@ export const OrganisationTab: React.FC = () => {
               name="GitHub"
               isConnected={integrations.hasGithubToken}
               connectedLabel={t("settings.integrations.github_token_set")}
-              helpInstructions={t("settings.integrations.github_help_instructions")}
+              helpInstructions={t(
+                "settings.integrations.github_help_instructions",
+              )}
               helpScopes={["repo", "read:org"]}
               placeholder={t("settings.integrations.github_placeholder")}
               token={githubToken}
@@ -336,7 +353,9 @@ export const OrganisationTab: React.FC = () => {
               name="GitLab"
               isConnected={integrations.hasGitlabToken}
               connectedLabel={t("settings.integrations.gitlab_token_set")}
-              helpInstructions={t("settings.integrations.gitlab_help_instructions")}
+              helpInstructions={t(
+                "settings.integrations.gitlab_help_instructions",
+              )}
               helpScopes={["read_api", "read_repository"]}
               placeholder={t("settings.integrations.gitlab_placeholder")}
               token={gitlabToken}

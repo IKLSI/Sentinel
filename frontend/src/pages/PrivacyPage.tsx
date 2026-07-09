@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import { useT } from "../i18n/I18nContext";
 import apiClient from "../services/client";
@@ -22,10 +23,16 @@ export const PrivacyPage: React.FC = () => {
   }, []);
 
   const sections: Section[] = [
-    { titleKey: "privacy.section.controller", bodyKey: "privacy.controller.body" },
+    {
+      titleKey: "privacy.section.controller",
+      bodyKey: "privacy.controller.body",
+    },
     { titleKey: "privacy.section.data", bodyKey: "privacy.data.body" },
     { titleKey: "privacy.section.purpose", bodyKey: "privacy.purpose.body" },
-    { titleKey: "privacy.section.retention", bodyKey: "privacy.retention.body" },
+    {
+      titleKey: "privacy.section.retention",
+      bodyKey: "privacy.retention.body",
+    },
     {
       titleKey: "privacy.section.rights",
       bodyKey: "privacy.rights.body",
@@ -85,7 +92,15 @@ export const PrivacyPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Box sx={{ px: 3, py: 3, display: "flex", flexDirection: "column", gap: 3 }}>
+          <Box
+            sx={{
+              px: 3,
+              py: 3,
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
             {sections.map((s) => (
               <Box key={s.titleKey}>
                 <Box

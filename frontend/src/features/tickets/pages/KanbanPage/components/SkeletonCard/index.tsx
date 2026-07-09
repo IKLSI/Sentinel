@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 
 export const SkeletonCard: React.FC = () => (
@@ -14,16 +14,26 @@ export const SkeletonCard: React.FC = () => (
   >
     <Box sx={{ display: "flex", gap: "6px", mb: "8px" }}>
       <Box
-        sx={{ width: 52, height: 16, borderRadius: 'var(--r-xs)', background: "var(--s2)" }}
+        sx={{
+          width: 52,
+          height: 16,
+          borderRadius: "var(--r-xs)",
+          background: "var(--s2)",
+        }}
       />
     </Box>
     <Box
-      sx={{ height: 12, borderRadius: 'var(--r-xs)', background: "var(--s2)", mb: "6px" }}
+      sx={{
+        height: 12,
+        borderRadius: "var(--r-xs)",
+        background: "var(--s2)",
+        mb: "6px",
+      }}
     />
     <Box
       sx={{
         height: 12,
-        borderRadius: 'var(--r-xs)',
+        borderRadius: "var(--r-xs)",
         background: "var(--s2)",
         width: "70%",
         mb: "9px",
@@ -39,7 +49,12 @@ export const SkeletonCard: React.FC = () => (
         }}
       />
       <Box
-        sx={{ width: 48, height: 10, borderRadius: 'var(--r-xs)', background: "var(--s2)" }}
+        sx={{
+          width: 48,
+          height: 10,
+          borderRadius: "var(--r-xs)",
+          background: "var(--s2)",
+        }}
       />
     </Box>
   </Box>

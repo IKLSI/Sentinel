@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import AddOutlined from "@mui/icons-material/AddOutlined";
@@ -45,7 +45,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           gap: "8px",
           background: "var(--s1)",
           border: "1px solid var(--border)",
-          borderRadius: 'var(--r)',
+          borderRadius: "var(--r)",
           px: "10px",
           height: "32px",
           transition: "border-color 0.15s, box-shadow 0.15s",
@@ -85,7 +85,7 @@ export const KanbanToolbar: React.FC<Props> = ({
           gap: "7px",
           height: "32px",
           px: "14px",
-          borderRadius: 'var(--r)',
+          borderRadius: "var(--r)",
           border: `1px solid ${activeFilterCount > 0 ? "var(--accent-border)" : "var(--border)"}`,
           background:
             activeFilterCount > 0 ? "var(--accent-subtle)" : "var(--s1)",
@@ -122,11 +122,13 @@ export const KanbanToolbar: React.FC<Props> = ({
           gap: "6px",
           flexShrink: 0,
           textTransform: "none",
-          background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+          background:
+            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
           color: "#fff",
           boxShadow: "none",
           "&:hover": {
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
             boxShadow: "none",
             transform: "none",
           },

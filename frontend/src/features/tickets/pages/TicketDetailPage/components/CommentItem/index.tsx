@@ -10,8 +10,8 @@ import { useI18n } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { downloadAttachmentByUrl } from "@/features/tickets/api/tickets";
 import { extractApiError } from "@/utils/apiError";
-import { Ticket } from "@/types";
-import { DetailPalette, getInitials } from "../../helpers";
+import type { Ticket } from "@/types";
+import { type DetailPalette, getInitials } from "../../helpers";
 
 type Comment = Ticket["comments"][number];
 
@@ -23,7 +23,10 @@ interface Attachment {
 
 const ATTACH_SEP = "<!-- attachments -->";
 
-function parseComment(content: string): { mainText: string; attachments: Attachment[] } {
+function parseComment(content: string): {
+  mainText: string;
+  attachments: Attachment[];
+} {
   const idx = content.indexOf(ATTACH_SEP);
   if (idx === -1) return { mainText: content, attachments: [] };
 
@@ -99,7 +102,8 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           width: "30px",
           height: "30px",
           borderRadius: "var(--r)",
-          background: "linear-gradient(140deg, var(--avatar-peer-1) 0%, var(--avatar-peer-2) 100%)",
+          background:
+            "linear-gradient(140deg, var(--avatar-peer-1) 0%, var(--avatar-peer-2) 100%)",
           color: "#fff",
           fontFamily: "var(--font-mono)",
           fontWeight: 800,
@@ -135,7 +139,9 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               fontSize: "11px",
             }}
           >
-            {format(new Date(c.createdAt), "HH:mm", { locale: getDateFnsLocale(culture) })}
+            {format(new Date(c.createdAt), "HH:mm", {
+              locale: getDateFnsLocale(culture),
+            })}
           </Box>
 
           {isOwn && (
@@ -192,7 +198,12 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           }}
         >
           {mainText && (
-            <Box sx={{ p: "12px 16px", ...(attachments.length > 0 ? { pb: "8px" } : {}) }}>
+            <Box
+              sx={{
+                p: "12px 16px",
+                ...(attachments.length > 0 ? { pb: "8px" } : {}),
+              }}
+            >
               <Box
                 sx={{
                   fontSize: "13px",
@@ -218,9 +229,9 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
                 gap: "6px",
               }}
             >
-              {attachments.map((a, i) => (
+              {attachments.map((a) => (
                 <Box
-                  key={i}
+                  key={a.url}
                   component="button"
                   type="button"
                   onClick={() => handleDownload(a)}
@@ -249,7 +260,9 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
                   {a.isImage ? (
                     <ImageOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
                   ) : (
-                    <InsertDriveFileOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
+                    <InsertDriveFileOutlined
+                      sx={{ fontSize: 13, flexShrink: 0 }}
+                    />
                   )}
                   <Box
                     component="span"

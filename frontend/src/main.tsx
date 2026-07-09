@@ -10,7 +10,10 @@ import { App } from "./App";
 import { queryClient } from "./lib/queryClient";
 import "./styles/global.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Élément racine introuvable");
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

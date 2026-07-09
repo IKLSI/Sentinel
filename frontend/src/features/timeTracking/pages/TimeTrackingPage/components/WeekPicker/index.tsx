@@ -4,12 +4,23 @@ import Popover from "@mui/material/Popover";
 import ChevronLeftOutlined from "@mui/icons-material/ChevronLeftOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
-import { addDays, endOfWeek, format, isSameWeek, isToday, startOfWeek } from "date-fns";
+import {
+  addDays,
+  endOfWeek,
+  format,
+  isSameWeek,
+  isToday,
+  startOfWeek,
+} from "date-fns";
 import { fr, enUS, type Locale } from "date-fns/locale";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 
-const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
+const DATE_FNS_LOCALE: Record<string, Locale> = {
+  [Language.Fr]: fr,
+  [Language.En]: enUS,
+};
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 import { IconNavBtn } from "../../helpers";
 
 interface Props {
@@ -38,13 +49,24 @@ export const WeekPicker: React.FC<Props> = ({
   }, [anchor, weekStart]);
 
   const calendarGrid = React.useMemo(() => {
-    const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
-    const lastDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+    const firstDay = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth(),
+      1,
+    );
+    const lastDay = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth() + 1,
+      0,
+    );
     const start = startOfWeek(firstDay, { weekStartsOn: 1 });
     const end = endOfWeek(lastDay, { weekStartsOn: 1 });
     const days: Date[] = [];
     let cur = start;
-    while (cur <= end) { days.push(cur); cur = addDays(cur, 1); }
+    while (cur <= end) {
+      days.push(cur);
+      cur = addDays(cur, 1);
+    }
     return days;
   }, [calendarMonth]);
 
@@ -64,7 +86,7 @@ export const WeekPicker: React.FC<Props> = ({
           sx: {
             background: "var(--s1)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r-md)',
+            borderRadius: "var(--r-md)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             p: "12px",
             mt: "4px",
@@ -110,7 +132,7 @@ export const WeekPicker: React.FC<Props> = ({
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            borderRadius: 'var(--r-sm)',
+            borderRadius: "var(--r-sm)",
             px: "6px",
             py: "2px",
             fontFamily: "var(--font-ui)",
@@ -179,7 +201,7 @@ export const WeekPicker: React.FC<Props> = ({
                   border: isCurrent
                     ? "1px solid var(--accent-border)"
                     : "1px solid transparent",
-                  borderRadius: 'var(--r-sm)',
+                  borderRadius: "var(--r-sm)",
                   py: "7px",
                   cursor: "pointer",
                   fontFamily: "var(--font-ui)",
@@ -205,17 +227,9 @@ export const WeekPicker: React.FC<Props> = ({
               mb: "4px",
             }}
           >
-            {[
-              t("time_tracking.weekday_initial_mon"),
-              t("time_tracking.weekday_initial_tue"),
-              t("time_tracking.weekday_initial_wed"),
-              t("time_tracking.weekday_initial_thu"),
-              t("time_tracking.weekday_initial_fri"),
-              t("time_tracking.weekday_initial_sat"),
-              t("time_tracking.weekday_initial_sun"),
-            ].map((d, i) => (
+            {WEEKDAY_KEYS.map((wd) => (
               <Box
-                key={i}
+                key={wd}
                 sx={{
                   textAlign: "center",
                   fontSize: "9px",
@@ -225,7 +239,7 @@ export const WeekPicker: React.FC<Props> = ({
                   py: "3px",
                 }}
               >
-                {d}
+                {t(`time_tracking.weekday_initial_${wd}`)}
               </Box>
             ))}
           </Box>
@@ -238,7 +252,7 @@ export const WeekPicker: React.FC<Props> = ({
             }}
             onMouseLeave={() => setHoveredWeekStart(null)}
           >
-            {calendarGrid.map((day, i) => {
+            {calendarGrid.map((day) => {
               const isCurrentMonth =
                 day.getMonth() === calendarMonth.getMonth();
               const isInSelectedWeek = isSameWeek(day, weekStart, {
@@ -254,7 +268,7 @@ export const WeekPicker: React.FC<Props> = ({
 
               return (
                 <Box
-                  key={i}
+                  key={format(day, "yyyy-MM-dd")}
                   component="button"
                   onClick={() => onPickDay(day)}
                   onMouseEnter={() =>
@@ -301,28 +315,31 @@ export const WeekPicker: React.FC<Props> = ({
         </>
       )}
       {!isSameWeek(weekStart, new Date(), { weekStartsOn: 1 }) && (
-      <Box sx={{ mt: "8px" }}>
-        <Box
-          component="button"
-          onClick={() => onPickDay(new Date())}
-          sx={{
-            width: "100%",
-            background: "transparent",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r-sm)",
-            py: "5px",
-            fontSize: "11px",
-            fontWeight: 600,
-            color: "var(--muted2)",
-            cursor: "pointer",
-            fontFamily: "var(--font-ui)",
-            transition: "color 0.12s, border-color 0.12s",
-            "&:hover": { color: "var(--accent)", borderColor: "var(--accent-border)" },
-          }}
-        >
-          {t("time_tracking.btn_today")}
+        <Box sx={{ mt: "8px" }}>
+          <Box
+            component="button"
+            onClick={() => onPickDay(new Date())}
+            sx={{
+              width: "100%",
+              background: "transparent",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-sm)",
+              py: "5px",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--muted2)",
+              cursor: "pointer",
+              fontFamily: "var(--font-ui)",
+              transition: "color 0.12s, border-color 0.12s",
+              "&:hover": {
+                color: "var(--accent)",
+                borderColor: "var(--accent-border)",
+              },
+            }}
+          >
+            {t("time_tracking.btn_today")}
+          </Box>
         </Box>
-      </Box>
       )}
     </Popover>
   );

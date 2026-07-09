@@ -1,12 +1,17 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/i18n/I18nContext";
-import { ProjectDto } from "@/features/techHealth/api/projects";
-import { GRADE_VISUAL, GradeKey, HeadCell, ProjectSortState } from "../../helpers";
+import type { ProjectDto } from "@/features/techHealth/api/projects";
+import {
+  GRADE_VISUAL,
+  type GradeKey,
+  HeadCell,
+  type ProjectSortState,
+} from "../../helpers";
 import { ProjectRow } from "../ProjectRow";
-import { ScanFrequency } from "@/types/enums";
+import type { ScanFrequency } from "@/types/enums";
 
 interface Props {
   grade: GradeKey;
@@ -181,8 +186,16 @@ export const ProjectsSection: React.FC<Props> = ({
             }}
           >
             <Box component="colgroup">
-              {(["56%", "12%", "10%", "12%", "10%"] as const).map((w, i) => (
-                <Box key={i} component="col" sx={{ width: w }} />
+              {(
+                [
+                  { id: "name", w: "56%" },
+                  { id: "vulnerabilities", w: "12%" },
+                  { id: "critical", w: "10%" },
+                  { id: "tickets", w: "12%" },
+                  { id: "actions", w: "10%" },
+                ] as const
+              ).map(({ id, w }) => (
+                <Box key={id} component="col" sx={{ width: w }} />
               ))}
             </Box>
             <Box component="thead">

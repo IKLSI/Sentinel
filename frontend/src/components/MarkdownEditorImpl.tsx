@@ -1,12 +1,12 @@
 import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
-import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import {
   EditorView,
   ViewPlugin,
-  ViewUpdate,
+  type ViewUpdate,
   Decoration,
-  DecorationSet,
+  type DecorationSet,
   placeholder as cmPlaceholder,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";

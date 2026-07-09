@@ -1,6 +1,6 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
-import { DetailPalette } from "../../helpers";
+import type { DetailPalette } from "../../helpers";
 
 interface Props {
   palette: DetailPalette;

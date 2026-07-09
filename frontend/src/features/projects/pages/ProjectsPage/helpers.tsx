@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { HealthGrade } from "@/types/enums";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
@@ -20,7 +20,10 @@ export const GRADE_VISUAL: Record<
   F: { iconColor: "var(--red)", Icon: DangerousOutlined },
   E: { iconColor: "var(--orange)", Icon: ReportOutlined },
   D: { iconColor: "var(--yellow)", Icon: TrendingDownOutlined },
-  C: { iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)", Icon: LockOpenOutlined },
+  C: {
+    iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)",
+    Icon: LockOpenOutlined,
+  },
   B: { iconColor: "var(--accent)", Icon: ThumbUpAltOutlined },
   A: { iconColor: "var(--green)", Icon: WorkspacePremiumOutlined },
 };
@@ -55,7 +58,9 @@ export const HeadCell: React.FC<{
   return (
     <Box
       component="th"
-      onClick={() => sortable && onToggleSort!(col!)}
+      onClick={() => {
+        if (sortable && col) onToggleSort?.(col);
+      }}
       sx={{
         padding: "9px 12px",
         borderBottom: "1px solid var(--border)",

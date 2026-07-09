@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
@@ -8,8 +9,8 @@ import { useT } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { extractApiError } from "@/utils/apiError";
 import {
-  BillingStatus,
-  PlanOption,
+  type BillingStatus,
+  type PlanOption,
   getBillingStatus,
   getPlans,
   startCheckout,
@@ -37,15 +38,22 @@ export const BillingTab: React.FC = () => {
   const [plans, setPlans] = useState<PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [interval, setInterval] = useState<'monthly' | 'annual'>('monthly');
+  const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
 
   const load = () => {
     const controller = new AbortController();
     setLoading(true);
-    Promise.all([getBillingStatus(controller.signal), getPlans(controller.signal)])
+    Promise.all([
+      getBillingStatus(controller.signal),
+      getPlans(controller.signal),
+    ])
       .then(([s, p]) => {
         setStatus(s);
-        setPlans(p.sort((a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier)));
+        setPlans(
+          p.sort(
+            (a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier),
+          ),
+        );
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -57,8 +65,10 @@ export const BillingTab: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const billing = params.get(BILLING_QUERY_PARAM);
-    if (billing === BILLING_RESULT.SUCCESS) showToast(t("settings.billing.checkout_success"), "success");
-    else if (billing === BILLING_RESULT.CANCEL) showToast(t("settings.billing.checkout_cancel"), "info");
+    if (billing === BILLING_RESULT.SUCCESS)
+      showToast(t("settings.billing.checkout_success"), "success");
+    else if (billing === BILLING_RESULT.CANCEL)
+      showToast(t("settings.billing.checkout_cancel"), "info");
     if (billing) window.history.replaceState({}, "", window.location.pathname);
   }, [showToast, t]);
 
@@ -68,7 +78,10 @@ export const BillingTab: React.FC = () => {
       const url = await startCheckout(tier, interval);
       window.location.href = url;
     } catch (err) {
-      showToast(extractApiError(err, t("settings.billing.error_generic")), "error");
+      showToast(
+        extractApiError(err, t("settings.billing.error_generic")),
+        "error",
+      );
       setActionLoading(false);
     }
   };
@@ -95,32 +108,96 @@ export const BillingTab: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px", width: "100%" }}>
+    <Box
+      sx={{
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        width: "100%",
+      }}
+    >
       <Box sx={CARD_SX}>
         <CardHeader label={t("settings.billing.usage")} />
-        <Box sx={{ p: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <Box
+          sx={{
+            p: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
           {quotas.map((q) => {
-            const isUnlimited = q.data.limit === UNLIMITED || q.data.limit === 0;
-            const pct = isUnlimited ? 0 : Math.min(100, Math.round((q.data.used / q.data.limit) * 100));
+            const isUnlimited =
+              q.data.limit === UNLIMITED || q.data.limit === 0;
+            const pct = isUnlimited
+              ? 0
+              : Math.min(100, Math.round((q.data.used / q.data.limit) * 100));
             const over = !isUnlimited && q.data.used >= q.data.limit;
-            const warn = !isUnlimited && !over && q.data.used / q.data.limit >= WARN_THRESHOLD;
-            const barColor = over ? "var(--red)" : warn ? "var(--orange)" : "var(--accent)";
+            const warn =
+              !isUnlimited &&
+              !over &&
+              q.data.used / q.data.limit >= WARN_THRESHOLD;
+            const barColor = over
+              ? "var(--red)"
+              : warn
+                ? "var(--orange)"
+                : "var(--accent)";
             return (
               <Box key={q.label}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "6px" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)" }}>{q.label}</Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: "6px",
+                  }}
+                >
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", gap: "6px" }}
+                  >
+                    <Box
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      {q.label}
+                    </Box>
                     {(over || warn) && (
-                      <Box sx={{ fontSize: "10px", fontWeight: 700, color: barColor, letterSpacing: "0.04em" }}>
-                        {over ? `${pct}%` : t("settings.billing.quota_near_limit")}
+                      <Box
+                        sx={{
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: barColor,
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {over
+                          ? `${pct}%`
+                          : t("settings.billing.quota_near_limit")}
                       </Box>
                     )}
                   </Box>
-                  <Box sx={{ fontSize: "12px", color: over ? "var(--red)" : "var(--muted)", fontWeight: 600 }}>
+                  <Box
+                    sx={{
+                      fontSize: "12px",
+                      color: over ? "var(--red)" : "var(--muted)",
+                      fontWeight: 600,
+                    }}
+                  >
                     {q.data.used} / {formatLimit(q.data.limit, t)}
                   </Box>
                 </Box>
-                <Box sx={{ height: "5px", borderRadius: "3px", background: "var(--s3)", overflow: "hidden" }}>
+                <Box
+                  sx={{
+                    height: "5px",
+                    borderRadius: "3px",
+                    background: "var(--s3)",
+                    overflow: "hidden",
+                  }}
+                >
                   <Box
                     sx={{
                       height: "100%",
@@ -152,10 +229,27 @@ export const BillingTab: React.FC = () => {
               background: "var(--s2)",
             }}
           >
-            <Box sx={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <Box
+              sx={{
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "var(--muted)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
               {t("settings.billing.available_plans")}
             </Box>
-            <Box sx={{ display: "flex", gap: "3px", background: "var(--s1)", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", p: "3px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: "3px",
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-sm)",
+                p: "3px",
+              }}
+            >
               {(["monthly", "annual"] as const).map((iv) => (
                 <Box
                   key={iv}
@@ -173,19 +267,26 @@ export const BillingTab: React.FC = () => {
                     alignItems: "center",
                     gap: "6px",
                     color: interval === iv ? "var(--s1)" : "var(--muted)",
-                    background: interval === iv ? "var(--accent)" : "transparent",
+                    background:
+                      interval === iv ? "var(--accent)" : "transparent",
                     transition: "all 0.15s",
                     "&:hover": interval === iv ? {} : { color: "var(--text)" },
                   }}
                 >
-                  {iv === "monthly" ? t("settings.billing.interval_monthly") : t("settings.billing.interval_annual")}
+                  {iv === "monthly"
+                    ? t("settings.billing.interval_monthly")
+                    : t("settings.billing.interval_annual")}
                   {iv === "annual" && (
                     <Box
                       sx={{
                         fontSize: "10px",
                         fontWeight: 700,
-                        color: interval === "annual" ? "var(--s1)" : "var(--green)",
-                        background: interval === "annual" ? "color-mix(in srgb, var(--s1) 22%, transparent)" : "var(--green-subtle)",
+                        color:
+                          interval === "annual" ? "var(--s1)" : "var(--green)",
+                        background:
+                          interval === "annual"
+                            ? "color-mix(in srgb, var(--s1) 22%, transparent)"
+                            : "var(--green-subtle)",
                         px: "5px",
                         height: "16px",
                         display: "inline-flex",
@@ -200,9 +301,19 @@ export const BillingTab: React.FC = () => {
               ))}
             </Box>
           </Box>
-          <Box sx={{ p: "16px", pt: "20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "14px", alignItems: "stretch" }}>
+          <Box
+            sx={{
+              p: "16px",
+              pt: "20px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+              gap: "14px",
+              alignItems: "stretch",
+            }}
+          >
             {plans.map((plan) => {
-              const isRecommended = plan.tier === "Pro" && status.planTier === "Free";
+              const isRecommended =
+                plan.tier === "Pro" && status.planTier === "Free";
               const highlight = plan.isCurrent || isRecommended;
               return (
                 <Box
@@ -211,8 +322,8 @@ export const BillingTab: React.FC = () => {
                     border: plan.isCurrent
                       ? "1.5px solid var(--accent)"
                       : isRecommended
-                      ? "1.5px solid var(--accent-border)"
-                      : "1px solid var(--border)",
+                        ? "1.5px solid var(--accent-border)"
+                        : "1px solid var(--border)",
                     borderRadius: "var(--r-md)",
                     p: "20px 18px 18px",
                     display: "flex",
@@ -221,8 +332,8 @@ export const BillingTab: React.FC = () => {
                     background: plan.isCurrent
                       ? "linear-gradient(180deg, var(--accent-subtle), var(--s1) 70%)"
                       : isRecommended
-                      ? "linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--s1)), var(--s1) 60%)"
-                      : "var(--s1)",
+                        ? "linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--s1)), var(--s1) 60%)"
+                        : "var(--s1)",
                     boxShadow: highlight
                       ? "0 8px 28px color-mix(in srgb, var(--accent) 14%, transparent)"
                       : "0 1px 2px rgba(0,0,0,0.04)",
@@ -249,10 +360,13 @@ export const BillingTab: React.FC = () => {
                         whiteSpace: "nowrap",
                         color: "var(--s1)",
                         background: "var(--accent)",
-                        boxShadow: "0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)",
+                        boxShadow:
+                          "0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)",
                       }}
                     >
-                      {!plan.isCurrent && <StarOutlined sx={{ fontSize: 11 }} />}
+                      {!plan.isCurrent && (
+                        <StarOutlined sx={{ fontSize: 11 }} />
+                      )}
                       {plan.isCurrent
                         ? t("settings.billing.current_badge")
                         : t("settings.billing.plan_recommended")}
@@ -260,38 +374,114 @@ export const BillingTab: React.FC = () => {
                   )}
 
                   <Box>
-                    <Box sx={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", mb: "8px" }}>
+                    <Box
+                      sx={{
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "var(--muted)",
+                        mb: "8px",
+                      }}
+                    >
                       {plan.tier}
                     </Box>
                     {plan.priceMonthly === 0 ? (
-                      <Box sx={{ fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em", color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
+                      <Box
+                        sx={{
+                          fontSize: "26px",
+                          fontWeight: 800,
+                          letterSpacing: "-0.02em",
+                          color: plan.isCurrent
+                            ? "var(--accent)"
+                            : "var(--text)",
+                        }}
+                      >
                         {t("settings.billing.plan_free")}
                       </Box>
                     ) : interval === "annual" && plan.priceAnnual > 0 ? (
                       <Box>
-                        <Box sx={{ fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em", color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
-                          {t("settings.billing.plan_price_annual_monthly", { price: Math.round(plan.priceAnnual / 12) })}
+                        <Box
+                          sx={{
+                            fontSize: "26px",
+                            fontWeight: 800,
+                            letterSpacing: "-0.02em",
+                            color: plan.isCurrent
+                              ? "var(--accent)"
+                              : "var(--text)",
+                          }}
+                        >
+                          {t("settings.billing.plan_price_annual_monthly", {
+                            price: Math.round(plan.priceAnnual / 12),
+                          })}
                         </Box>
-                        <Box sx={{ fontSize: "11px", color: "var(--muted)", mt: "3px" }}>
-                          {t("settings.billing.plan_price_annual_total", { total: plan.priceAnnual })}
+                        <Box
+                          sx={{
+                            fontSize: "11px",
+                            color: "var(--muted)",
+                            mt: "3px",
+                          }}
+                        >
+                          {t("settings.billing.plan_price_annual_total", {
+                            total: plan.priceAnnual,
+                          })}
                         </Box>
                       </Box>
                     ) : (
-                      <Box sx={{ fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em", color: plan.isCurrent ? "var(--accent)" : "var(--text)" }}>
-                        {t("settings.billing.plan_price_monthly", { price: plan.priceMonthly })}
+                      <Box
+                        sx={{
+                          fontSize: "26px",
+                          fontWeight: 800,
+                          letterSpacing: "-0.02em",
+                          color: plan.isCurrent
+                            ? "var(--accent)"
+                            : "var(--text)",
+                        }}
+                      >
+                        {t("settings.billing.plan_price_monthly", {
+                          price: plan.priceMonthly,
+                        })}
                       </Box>
                     )}
                   </Box>
 
-                  <Box sx={{ height: "1px", background: "var(--border)", opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      height: "1px",
+                      background: "var(--border)",
+                      opacity: 0.7,
+                    }}
+                  />
 
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                    }}
+                  >
                     {[
-                      { label: t("settings.billing.quota_projects"), value: formatLimit(plan.maxProjects, t) },
-                      { label: t("settings.billing.quota_members"), value: formatLimit(plan.maxMembers, t) },
-                      { label: t("settings.billing.quota_scans"), value: formatLimit(plan.maxScansPerMonth, t) },
+                      {
+                        label: t("settings.billing.quota_projects"),
+                        value: formatLimit(plan.maxProjects, t),
+                      },
+                      {
+                        label: t("settings.billing.quota_members"),
+                        value: formatLimit(plan.maxMembers, t),
+                      },
+                      {
+                        label: t("settings.billing.quota_scans"),
+                        value: formatLimit(plan.maxScansPerMonth, t),
+                      },
                     ].map((item) => (
-                      <Box key={item.label} sx={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                      <Box
+                        key={item.label}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "9px",
+                        }}
+                      >
                         <Box
                           sx={{
                             width: "18px",
@@ -304,11 +494,23 @@ export const BillingTab: React.FC = () => {
                             background: "var(--accent-subtle)",
                           }}
                         >
-                          <CheckOutlined sx={{ fontSize: 12, color: "var(--accent)" }} />
+                          <CheckOutlined
+                            sx={{ fontSize: 12, color: "var(--accent)" }}
+                          />
                         </Box>
-                        <Box sx={{ fontSize: "12.5px", color: "var(--text-secondary)" }}>
-                          <Box component="span" sx={{ fontWeight: 700, color: "var(--text)" }}>{item.value}</Box>
-                          {" "}{item.label.toLowerCase()}
+                        <Box
+                          sx={{
+                            fontSize: "12.5px",
+                            color: "var(--text-secondary)",
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{ fontWeight: 700, color: "var(--text)" }}
+                          >
+                            {item.value}
+                          </Box>{" "}
+                          {item.label.toLowerCase()}
                         </Box>
                       </Box>
                     ))}
@@ -334,20 +536,31 @@ export const BillingTab: React.FC = () => {
                         fontSize: "12.5px",
                         fontWeight: 700,
                         color: "var(--s1)",
-                        background: "linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent))",
-                        boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent)",
-                        transition: "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
+                        background:
+                          "linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent))",
+                        boxShadow:
+                          "0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent)",
+                        transition:
+                          "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
                         "& .arrow": { transition: "transform 0.15s" },
                         "&:hover": {
-                          boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 42%, transparent)",
+                          boxShadow:
+                            "0 6px 20px color-mix(in srgb, var(--accent) 42%, transparent)",
                           "& .arrow": { transform: "translateX(3px)" },
                         },
                         "&:active": { transform: "scale(0.98)" },
-                        "&:disabled": { opacity: 0.5, cursor: "not-allowed", boxShadow: "none" },
+                        "&:disabled": {
+                          opacity: 0.5,
+                          cursor: "not-allowed",
+                          boxShadow: "none",
+                        },
                       }}
                     >
                       {t("settings.billing.upgrade_to")} {plan.tier}
-                      <ArrowForwardOutlined className="arrow" sx={{ fontSize: 15 }} />
+                      <ArrowForwardOutlined
+                        className="arrow"
+                        sx={{ fontSize: 15 }}
+                      />
                     </Box>
                   )}
                 </Box>

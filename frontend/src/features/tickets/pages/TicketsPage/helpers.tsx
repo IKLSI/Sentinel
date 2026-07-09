@@ -1,11 +1,11 @@
-import React from "react";
+import type React from "react";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import SpeedOutlined from "@mui/icons-material/SpeedOutlined";
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { TicketPriority, TicketType } from "@/types";
+import type { TicketPriority, TicketType } from "@/types";
 
 export interface CreateTicketPayload {
   title: string;
@@ -33,15 +33,26 @@ export const EMPTY_CREATE_TICKET_FORM: CreateTicketPayload = {
 export function getPageNumbers(
   page: number,
   totalPages: number,
-): (number | "...")[] {
-  if (totalPages <= 3)
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  const pages: (number | "...")[] = [1, 2];
-  if (page > 3) pages.push("...");
-  if (page > 2 && page < totalPages) pages.push(page);
-  if (page < totalPages - 1) pages.push("...");
-  if (!pages.includes(totalPages)) pages.push(totalPages);
-  return pages;
+): { value: number | "..."; key: string }[] {
+  const pages: (number | "...")[] =
+    totalPages <= 3
+      ? Array.from({ length: totalPages }, (_, i) => i + 1)
+      : [1, 2];
+  if (totalPages > 3) {
+    if (page > 3) pages.push("...");
+    if (page > 2 && page < totalPages) pages.push(page);
+    if (page < totalPages - 1) pages.push("...");
+    if (!pages.includes(totalPages)) pages.push(totalPages);
+  }
+  let ellipsisIndex = 0;
+  return pages.map((value) => {
+    if (value === "...") {
+      const key = `ellipsis-${ellipsisIndex}`;
+      ellipsisIndex += 1;
+      return { value, key };
+    }
+    return { value, key: `page-${value}` };
+  });
 }
 
 export const navBtnSx = (disabled: boolean) => ({
@@ -53,7 +64,7 @@ export const navBtnSx = (disabled: boolean) => ({
   gap: "6px",
   height: "32px",
   px: "12px",
-  borderRadius: 'var(--r)',
+  borderRadius: "var(--r)",
   fontSize: "12px",
   fontWeight: 600,
   color: disabled ? "var(--muted)" : "var(--text-secondary)",
@@ -79,7 +90,7 @@ export const pageBtnSx = (active: boolean) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 'var(--r)',
+  borderRadius: "var(--r)",
   fontSize: "12px",
   fontWeight: active ? 700 : 500,
   color: active ? "var(--s1)" : "var(--text-secondary)",
@@ -100,12 +111,27 @@ export const priorityLabelKeys: Record<TicketPriority, string> = {
 
 export const typeBadgeStyle: Record<TicketType, { bg: string; color: string }> =
   {
-    bug: { bg: "color-mix(in srgb, var(--red) 12%, transparent)", color: "var(--red)" },
+    bug: {
+      bg: "color-mix(in srgb, var(--red) 12%, transparent)",
+      color: "var(--red)",
+    },
     feature: { bg: "var(--accent-subtle)", color: "var(--accent)" },
-    security: { bg: "color-mix(in srgb, var(--orange) 12%, transparent)", color: "var(--orange)" },
-    performance: { bg: "color-mix(in srgb, var(--cyan) 12%, transparent)", color: "var(--cyan)" },
-    maintenance: { bg: "color-mix(in srgb, var(--muted2) 10%, transparent)", color: "var(--muted2)" },
-    question: { bg: "color-mix(in srgb, var(--yellow) 12%, transparent)", color: "var(--yellow)" },
+    security: {
+      bg: "color-mix(in srgb, var(--orange) 12%, transparent)",
+      color: "var(--orange)",
+    },
+    performance: {
+      bg: "color-mix(in srgb, var(--cyan) 12%, transparent)",
+      color: "var(--cyan)",
+    },
+    maintenance: {
+      bg: "color-mix(in srgb, var(--muted2) 10%, transparent)",
+      color: "var(--muted2)",
+    },
+    question: {
+      bg: "color-mix(in srgb, var(--yellow) 12%, transparent)",
+      color: "var(--yellow)",
+    },
   };
 
 export const typeIcons: Record<TicketType, React.ReactElement> = {

@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import type React from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
@@ -9,11 +16,11 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import {
-  ProjectDetailDto,
+  type ProjectDetailDto,
   deleteProject,
   getProject,
 } from "@/features/techHealth/api/projects";
-import { TabDef } from "./helpers";
+import type { TabDef } from "./helpers";
 import { ProjectDetailSkeleton } from "./components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "./components/ProjectHeaderCard";
 import { TabBar } from "./components/TabBar";
@@ -36,21 +43,24 @@ export const ProjectDetailPage: React.FC = () => {
   const [depSearch, setDepSearch] = useState("");
   const [, startTransition] = useTransition();
 
-  const load = useCallback(async (signal?: AbortSignal) => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      const data = await getProject(id, signal);
-      if (signal?.aborted) return;
-      setProject(data);
-    } catch {
-      if (signal?.aborted) return;
-      showToast(t("tech_health.error.load_failed"), "error");
-      navigate(ROUTES.PROJECTS);
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [id, showToast, navigate, t]);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const data = await getProject(id, signal);
+        if (signal?.aborted) return;
+        setProject(data);
+      } catch {
+        if (signal?.aborted) return;
+        showToast(t("tech_health.error.load_failed"), "error");
+        navigate(ROUTES.PROJECTS);
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [id, showToast, navigate, t],
+  );
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -66,13 +76,19 @@ export const ProjectDetailPage: React.FC = () => {
       showToast(t("tech_health.toast.deleted"), "success");
       navigate(ROUTES.PROJECTS);
     } catch (err) {
-      showToast(extractApiError(err, t("tech_health.toast.delete_error")), "error");
+      showToast(
+        extractApiError(err, t("tech_health.toast.delete_error")),
+        "error",
+      );
       setDeleting(false);
     }
   };
 
   const allVulns = useMemo(
-    () => project?.dependencies.flatMap((d) => d.vulnerabilities.map((v) => ({ ...v, dependencyName: d.name }))) ?? [],
+    () =>
+      project?.dependencies.flatMap((d) =>
+        d.vulnerabilities.map((v) => ({ ...v, dependencyName: d.name })),
+      ) ?? [],
     [project],
   );
 
@@ -84,11 +100,14 @@ export const ProjectDetailPage: React.FC = () => {
   const filteredDeps = useMemo(() => {
     if (!project) return [];
     const deps = depSearch
-      ? project.dependencies.filter((d) => d.name.toLowerCase().includes(depSearch.toLowerCase()))
+      ? project.dependencies.filter((d) =>
+          d.name.toLowerCase().includes(depSearch.toLowerCase()),
+        )
       : [...project.dependencies];
-    return deps.sort((a, b) => b.vulnerabilities.length - a.vulnerabilities.length);
+    return deps.sort(
+      (a, b) => b.vulnerabilities.length - a.vulnerabilities.length,
+    );
   }, [project, depSearch]);
-
 
   const eolRuntimes = useMemo(
     () => project?.runtimes.filter((r) => r.isEol).length ?? 0,
@@ -140,10 +159,7 @@ export const ProjectDetailPage: React.FC = () => {
           overflow: "hidden",
         }}
       >
-        <ProjectHeaderCard
-          project={project}
-          eolRuntimes={eolRuntimes}
-        />
+        <ProjectHeaderCard project={project} eolRuntimes={eolRuntimes} />
 
         <Box
           sx={{
@@ -181,11 +197,33 @@ export const ProjectDetailPage: React.FC = () => {
             />
           </Box>
 
-          <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", p: "20px" }}>
-            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 0 ? "flex" : "none", flexDirection: "column" }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              p: "20px",
+            }}
+          >
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: activeTab === 0 ? "flex" : "none",
+                flexDirection: "column",
+              }}
+            >
               <VulnerabilitiesTab vulns={sortedVulns} />
             </Box>
-            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 1 ? "flex" : "none", flexDirection: "column" }}>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: activeTab === 1 ? "flex" : "none",
+                flexDirection: "column",
+              }}
+            >
               <DependenciesTab
                 dependencies={project.dependencies}
                 filteredDeps={filteredDeps}
@@ -193,7 +231,14 @@ export const ProjectDetailPage: React.FC = () => {
                 onSearchChange={setDepSearch}
               />
             </Box>
-            <Box sx={{ flex: 1, minHeight: 0, display: activeTab === 2 ? "flex" : "none", flexDirection: "column" }}>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: activeTab === 2 ? "flex" : "none",
+                flexDirection: "column",
+              }}
+            >
               <RuntimesTab runtimes={project.runtimes} />
             </Box>
           </Box>
@@ -207,7 +252,13 @@ export const ProjectDetailPage: React.FC = () => {
         loading={deleting}
         title={t("tech_health.delete.title")}
       >
-        {t("tech_health.delete.prefix")}<strong>{project.name}</strong>{t("tech_health.delete.suffix")}<br />{t("common.action_irreversible_before")}<b>{t("common.action_irreversible_word")}</b>{t("common.action_irreversible_after")}
+        {t("tech_health.delete.prefix")}
+        <strong>{project.name}</strong>
+        {t("tech_health.delete.suffix")}
+        <br />
+        {t("common.action_irreversible_before")}
+        <b>{t("common.action_irreversible_word")}</b>
+        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

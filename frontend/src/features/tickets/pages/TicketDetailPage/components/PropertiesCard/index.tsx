@@ -1,10 +1,10 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/i18n/I18nContext";
-import { Ticket } from "@/types";
+import type { Ticket } from "@/types";
 import {
-  DetailPalette,
-  buildPriorityConfig,
+  type DetailPalette,
+  type buildPriorityConfig,
   typeLabelKeys,
 } from "../../helpers";
 import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
@@ -98,7 +98,7 @@ export const PropertiesCard: React.FC<Props> = ({
     <Box
       sx={{
         border: `1px solid ${palette.panelBorder}`,
-        borderRadius: 'var(--r-xl)',
+        borderRadius: "var(--r-xl)",
         background: palette.panelBg,
         boxShadow: palette.panelShadow,
         p: "8px 6px 4px",
@@ -131,7 +131,7 @@ export const PropertiesCard: React.FC<Props> = ({
               gridTemplateColumns: "76px 1fr",
               alignItems: "center",
               gap: "8px",
-              borderRadius: 'var(--r)',
+              borderRadius: "var(--r)",
             }}
           >
             <Box

@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { KanbanColumns, KanbanColumnDef, KanbanDropResult } from "../../helpers";
+import type {
+  KanbanColumns,
+  KanbanColumnDef,
+  KanbanDropResult,
+} from "../../helpers";
 import { SkeletonCard } from "../SkeletonCard";
 import { KanbanColumnHeader } from "../KanbanColumnHeader";
 import { DroppableColumn } from "./DroppableColumn";
@@ -36,7 +40,9 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   onToggleCollapse,
 }) {
   const filteredColumnsRef = useRef(filteredColumns);
-  useEffect(() => { filteredColumnsRef.current = filteredColumns; }, [filteredColumns]);
+  useEffect(() => {
+    filteredColumnsRef.current = filteredColumns;
+  }, [filteredColumns]);
 
   const safeCardClick = useCallback(
     (id: string) => {
@@ -51,7 +57,9 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
         wasDraggingRef.current = true;
       },
       onDrop: ({ source, location }) => {
-        setTimeout(() => { wasDraggingRef.current = false; }, 0);
+        setTimeout(() => {
+          wasDraggingRef.current = false;
+        }, 0);
 
         const dragData = source.data as unknown as DragData;
         if (dragData.type !== "ticket") return;
@@ -59,8 +67,12 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
         const targets = location.current.dropTargets;
         if (!targets.length) return;
 
-        const cardTarget = targets.find((t) => (t.data as { type: string }).type === "ticket");
-        const colTarget = targets.find((t) => (t.data as { type: string }).type === "column");
+        const cardTarget = targets.find(
+          (t) => (t.data as { type: string }).type === "ticket",
+        );
+        const colTarget = targets.find(
+          (t) => (t.data as { type: string }).type === "column",
+        );
 
         let destColId: string;
         let destIndex: number;
@@ -90,19 +102,53 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
 
   if (loading) {
     return (
-      <Box sx={{ flex: 1, overflowX: "auto", overflowY: "hidden", px: "28px", pb: "20px", minHeight: 0 }}>
-        <div style={{ display: "flex", gap: "12px", minWidth: "fit-content", height: "100%" }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowX: "auto",
+          overflowY: "hidden",
+          px: "28px",
+          pb: "20px",
+          minHeight: 0,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            minWidth: "fit-content",
+            height: "100%",
+          }}
+        >
           {columnDefs.map((colDef) => (
-            <div key={colDef.id} style={{ width: "280px", height: "100%", display: "flex", flexDirection: "column" }}>
+            <div
+              key={colDef.id}
+              style={{
+                width: "280px",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <KanbanColumnHeader colDef={colDef} loading />
               <Box
                 sx={{
-                  flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
-                  gap: "6px", padding: "8px 0 16px", background: "var(--s1)",
-                  border: "1px solid var(--border)", borderRadius: "var(--r)", px: "8px", overflowY: "hidden",
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  padding: "8px 0 16px",
+                  background: "var(--s1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r)",
+                  px: "8px",
+                  overflowY: "hidden",
                 }}
               >
-                {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+                {[1, 2, 3].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
               </Box>
             </div>
           ))}
@@ -112,8 +158,24 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
   }
 
   return (
-    <Box sx={{ flex: 1, overflowX: "auto", overflowY: "hidden", px: "28px", pb: "20px", minHeight: 0 }}>
-      <div style={{ display: "flex", gap: "12px", minWidth: "fit-content", height: "100%" }}>
+    <Box
+      sx={{
+        flex: 1,
+        overflowX: "auto",
+        overflowY: "hidden",
+        px: "28px",
+        pb: "20px",
+        minHeight: 0,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          minWidth: "fit-content",
+          height: "100%",
+        }}
+      >
         {columnDefs.map((colDef) => {
           const isCollapsed = collapsedColumns.has(colDef.id);
           return (
@@ -133,23 +195,66 @@ export const KanbanBoard: React.FC<Props> = React.memo(function KanbanBoard({
         <Box
           onClick={onAddColumn}
           sx={{
-            width: "280px", height: "100%", flexShrink: 0, display: "flex", flexDirection: "column",
-            border: "2px dashed var(--border2)", borderRadius: "var(--r)", cursor: "pointer",
-            color: "var(--muted2)", transition: "border-color 0.2s, color 0.2s, background 0.2s",
+            width: "280px",
+            height: "100%",
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            border: "2px dashed var(--border2)",
+            borderRadius: "var(--r)",
+            cursor: "pointer",
+            color: "var(--muted2)",
+            transition: "border-color 0.2s, color 0.2s, background 0.2s",
             "&:hover": {
-              borderColor: "var(--accent)", color: "var(--accent)",
+              borderColor: "var(--accent)",
+              color: "var(--accent)",
               background: "color-mix(in srgb, var(--accent) 5%, transparent)",
               "& .add-col-icon-wrap": { transform: "rotate(90deg)" },
             },
           }}
         >
-          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
-            <Box className="add-col-icon-wrap" sx={{ display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+            }}
+          >
+            <Box
+              className="add-col-icon-wrap"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1)",
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </Box>
-            <Box className="add-col-label" sx={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.03em" }}>
+            <Box
+              className="add-col-label"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+                letterSpacing: "0.03em",
+              }}
+            >
               Ajouter une colonne
             </Box>
           </Box>

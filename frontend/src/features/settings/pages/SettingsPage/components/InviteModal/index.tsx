@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useId, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import EmailOutlined from "@mui/icons-material/EmailOutlined";
@@ -19,8 +20,12 @@ interface Props {
 export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   const { showToast } = useToast();
   const t = useT();
+  const formId = useId();
 
-  const [inv, setInv] = useState<{ email: string; role: UserRole }>({ email: "", role: UserRole.Developer });
+  const [inv, setInv] = useState<{ email: string; role: UserRole }>({
+    email: "",
+    role: UserRole.Developer,
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
@@ -40,7 +45,10 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
       showToast(t("settings.toast.invite_sent"), "success");
       handleClose();
     } catch (err) {
-      showToast(extractApiError(err, t("settings.toast.invite_error")), "error");
+      showToast(
+        extractApiError(err, t("settings.toast.invite_error")),
+        "error",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -65,9 +73,20 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             variant="contained"
             size="small"
             type="submit"
-            form="invite-form"
+            form={formId}
             disabled={submitting || !inv.email.trim()}
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
           >
             {submitting
               ? t("settings.invite.sending")
@@ -78,7 +97,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
     >
       <Box
         component="form"
-        id="invite-form"
+        id={formId}
         onSubmit={handleInvite}
         sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
@@ -88,7 +107,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             alignItems: "center",
             gap: "14px",
             p: "16px",
-            borderRadius: 'var(--r-md)',
+            borderRadius: "var(--r-md)",
             background:
               "linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent) 0%, color-mix(in srgb, var(--accent) 3%, transparent) 100%)",
             border: "1px solid var(--accent-border)",
@@ -98,7 +117,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             sx={{
               width: 44,
               height: 44,
-              borderRadius: 'var(--r-md)',
+              borderRadius: "var(--r-md)",
               flexShrink: 0,
               background:
                 "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, white) 100%)",
@@ -192,7 +211,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                   boxSizing: "border-box",
                   background: "var(--s2)",
                   border: "1px solid var(--border)",
-                  borderRadius: 'var(--r-sm)',
+                  borderRadius: "var(--r-sm)",
                   px: "12px",
                   py: "9px",
                   pr: "36px",
@@ -211,7 +230,9 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                   setInv((f) => ({ ...f, role: e.target.value as UserRole }))
                 }
               >
-                <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
+                <option value={UserRole.Admin}>
+                  {t("settings.role.admin")}
+                </option>
                 <option value={UserRole.Developer}>
                   {t("settings.role.developer")}
                 </option>

@@ -68,7 +68,6 @@ export const EMPTY_STATS: StatsData = {
   vulnerabilitiesDetectedPerDay: [],
 };
 
-
 export interface DashPalette {
   panelBg: string;
   panelBorder: string;
@@ -156,7 +155,7 @@ export const buildPalette = (_isDark: boolean): DashPalette => ({
 export const buildPanelSx = (p: DashPalette) =>
   ({
     background: p.panelBg,
-    borderRadius: 'var(--r-xl)',
+    borderRadius: "var(--r-xl)",
     border: `1px solid ${p.panelBorder}`,
     boxShadow: p.panelShadow,
     overflow: "hidden",
@@ -169,7 +168,7 @@ export const buildScrollSx = (p: DashPalette) => ({
   "&::-webkit-scrollbar": { width: "4px" },
   "&::-webkit-scrollbar-thumb": {
     background: "transparent",
-    borderRadius: 'var(--r-xs)',
+    borderRadius: "var(--r-xs)",
   },
   "&::-webkit-scrollbar-track": { background: "transparent" },
   "&:hover": { scrollbarColor: `${p.scrollThumb} transparent` },
@@ -177,7 +176,10 @@ export const buildScrollSx = (p: DashPalette) => ({
 });
 
 export const avatars = [
-  { bg: "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))", text: "var(--prio-fg)" },
+  {
+    bg: "linear-gradient(135deg,var(--prio-bg-1),var(--prio-bg-2))",
+    text: "var(--prio-fg)",
+  },
 ];
 
 export const initials = (s: string) => {

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -6,8 +6,8 @@ import Tooltip from "@mui/material/Tooltip";
 import { AppModal } from "@/components/AppModal";
 import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
-import { ProjectDto } from "@/features/techHealth/api/projects";
-import { TicketStatusDef, User } from "@/types";
+import type { ProjectDto } from "@/features/techHealth/api/projects";
+import type { TicketStatusDef, User } from "@/types";
 import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
 
 export interface EditFormState {
@@ -85,7 +85,18 @@ export const EditTicketModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)", boxShadow: "none", "&:hover": { background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)", boxShadow: "none", transform: "none" } }}
+            sx={{
+              textTransform: "none",
+              background:
+                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+              boxShadow: "none",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                boxShadow: "none",
+                transform: "none",
+              },
+            }}
             onClick={onSubmit}
             disabled={!form.title.trim() || saving}
           >

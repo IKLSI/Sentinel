@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -60,7 +61,13 @@ export const VerifyEmailPage: React.FC = () => {
             {status === "success" && (
               <Box className="aip-success">
                 <Box className="aip-success-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M6 14l6 6 10-10"
                       style={{ stroke: "var(--auth-indigo-500)" }}
@@ -91,9 +98,18 @@ export const VerifyEmailPage: React.FC = () => {
               <Box className="aip-success">
                 <Box
                   className="aip-success-icon"
-                  sx={{ background: "color-mix(in srgb, var(--auth-red-600) 10%, transparent) !important" }}
+                  sx={{
+                    background:
+                      "color-mix(in srgb, var(--auth-red-600) 10%, transparent) !important",
+                  }}
                 >
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M9 9l10 10M19 9L9 19"
                       style={{ stroke: "var(--auth-red-600)" }}

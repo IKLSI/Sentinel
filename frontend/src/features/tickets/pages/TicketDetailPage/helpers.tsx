@@ -1,6 +1,6 @@
 import { format } from "date-fns";
-import { type Locale } from "date-fns/locale";
-import { Ticket, TicketHistory } from "@/types";
+import type { Locale } from "date-fns/locale";
+import type { Ticket, TicketHistory } from "@/types";
 
 export interface DetailPalette {
   panelBg: string;
@@ -191,7 +191,7 @@ export const buildMarkdownSx = (p: DetailPalette) =>
       fontSize: "12px",
       background: p.mdInlineCodeBg,
       border: `1px solid ${p.mdInlineCodeBorder}`,
-      borderRadius: 'var(--r-sm)',
+      borderRadius: "var(--r-sm)",
       px: "6px",
       py: "2px",
       color: p.mdInlineCodeFg,
@@ -199,7 +199,7 @@ export const buildMarkdownSx = (p: DetailPalette) =>
     "& pre": {
       mt: "14px",
       mb: "6px",
-      borderRadius: 'var(--r-lg)',
+      borderRadius: "var(--r-lg)",
       border: `1px solid ${p.mdPreBorder}`,
       background: p.mdPreBg,
       overflow: "auto",
@@ -222,7 +222,7 @@ export const buildFieldSx = (p: DetailPalette) =>
   ({
     background: p.inputBg,
     border: `1px solid ${p.inputBorder}`,
-    borderRadius: 'var(--r-lg)',
+    borderRadius: "var(--r-lg)",
     px: "18px",
     py: "14px",
     fontSize: "14px",
@@ -343,7 +343,7 @@ export function historyPresentation(
       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     let nameLabel = raw || t("tickets.detail.unassigned");
     if (raw && uuidLike.test(raw)) {
-      if (ticket && ticket.assignee && ticket.assignee.id === raw) {
+      if (ticket?.assignee && ticket.assignee.id === raw) {
         nameLabel = `${ticket.assignee.firstName} ${ticket.assignee.lastName}`;
       } else {
         nameLabel = `${raw.slice(0, 8)}…`;

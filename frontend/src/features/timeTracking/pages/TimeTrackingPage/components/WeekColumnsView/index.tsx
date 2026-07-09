@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -14,8 +15,11 @@ import { fr, enUS, type Locale } from "date-fns/locale";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 
-const DATE_FNS_LOCALE: Record<string, Locale> = { [Language.Fr]: fr, [Language.En]: enUS };
-import { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
+const DATE_FNS_LOCALE: Record<string, Locale> = {
+  [Language.Fr]: fr,
+  [Language.En]: enUS,
+};
+import type { TimeEntryDto } from "@/features/timeTracking/api/timeEntries";
 import {
   WORK_HOURS_TARGET,
   formatDuration,
@@ -24,17 +28,31 @@ import {
 } from "../../helpers";
 import { WeekPicker } from "../WeekPicker";
 
-
-const OverflowTooltip: React.FC<{ title: string; sx?: object; children: React.ReactNode }> = ({ title, sx, children }) => {
+const OverflowTooltip: React.FC<{
+  title: string;
+  sx?: object;
+  children: React.ReactNode;
+}> = ({ title, sx, children }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [truncated, setTruncated] = useState(false);
   useEffect(() => {
     const el = ref.current;
-    if (el) setTruncated(el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth);
-  }, [children, title, sx]);
+    if (el)
+      setTruncated(
+        el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth,
+      );
+  }, []);
   return (
-    <Tooltip title={truncated ? title : ""} placement="right" arrow enterDelay={600} enterNextDelay={300}>
-      <Box ref={ref} sx={sx}>{children}</Box>
+    <Tooltip
+      title={truncated ? title : ""}
+      placement="right"
+      arrow
+      enterDelay={600}
+      enterNextDelay={300}
+    >
+      <Box ref={ref} sx={sx}>
+        {children}
+      </Box>
     </Tooltip>
   );
 };
@@ -44,7 +62,10 @@ const START_HOUR = 0;
 const END_HOUR = 24;
 const GUTTER_WIDTH = 44;
 const GRID_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
-const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
+const HOURS = Array.from(
+  { length: END_HOUR - START_HOUR },
+  (_, i) => START_HOUR + i,
+);
 const SNAP_MINUTES = 15;
 const SCROLL_VIEWPORT_OFFSET = 3;
 
@@ -54,7 +75,8 @@ const CurrentTimeLine: React.FC = () => {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const top = (now.getHours() + now.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT;
+  const top =
+    (now.getHours() + now.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT;
   if (top < 0 || top > GRID_HEIGHT) return null;
   return (
     <Box
@@ -128,8 +150,14 @@ export const WeekColumnsView: React.FC<Props> = ({
 }) => {
   const { t, culture } = useI18n();
   const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
-  const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
-  const [hover, setHover] = useState<{ dayStr: string; top: number; label: string } | null>(null);
+  const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(
+    null,
+  );
+  const [hover, setHover] = useState<{
+    dayStr: string;
+    top: number;
+    label: string;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -138,7 +166,8 @@ export const WeekColumnsView: React.FC<Props> = ({
     if (!el) return;
     const current = new Date();
     const target =
-      (current.getHours() + current.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT -
+      (current.getHours() + current.getMinutes() / 60 - START_HOUR) *
+        HOUR_HEIGHT -
       el.clientHeight / SCROLL_VIEWPORT_OFFSET;
     el.scrollTop = Math.max(0, target);
   }, [loading, isCurrentWeek]);
@@ -146,7 +175,10 @@ export const WeekColumnsView: React.FC<Props> = ({
   const computeSlot = (relY: number) => {
     const decimalHour = START_HOUR + relY / HOUR_HEIGHT;
     const snapped = Math.min(
-      Math.max(Math.round((decimalHour * 60) / SNAP_MINUTES) * SNAP_MINUTES, START_HOUR * 60),
+      Math.max(
+        Math.round((decimalHour * 60) / SNAP_MINUTES) * SNAP_MINUTES,
+        START_HOUR * 60,
+      ),
       END_HOUR * 60,
     );
     const h = Math.floor(snapped / 60);
@@ -183,30 +215,77 @@ export const WeekColumnsView: React.FC<Props> = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Box sx={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <Box
+            sx={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--muted)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
             {t("time_tracking.week_label")}
           </Box>
-          <Box sx={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", textTransform: "capitalize" }}>
+          <Box
+            sx={{
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "var(--text)",
+              letterSpacing: "-0.01em",
+              textTransform: "capitalize",
+            }}
+          >
             {weekLabel}
           </Box>
           {canFilterByUser && (
-            <IconNavBtn onClick={onOpenUserFilter} title={t("time_tracking.filter_users_tooltip")} hoverColor="var(--accent)">
+            <IconNavBtn
+              onClick={onOpenUserFilter}
+              title={t("time_tracking.filter_users_tooltip")}
+              hoverColor="var(--accent)"
+            >
               <FilterListOutlined sx={{ fontSize: 13 }} />
             </IconNavBtn>
           )}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <IconNavBtn onClick={onPrev} title={t("time_tracking.btn_prev_week")} hoverColor="var(--accent)">
+          <IconNavBtn
+            onClick={onPrev}
+            title={t("time_tracking.btn_prev_week")}
+            hoverColor="var(--accent)"
+          >
             <ChevronLeftOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={(e) => setCalendarAnchor(e.currentTarget)} title={t("time_tracking.btn_pick_week")} hoverColor="var(--accent)">
-            <CalendarTodayOutlined sx={{ fontSize: 13, color: calendarAnchor ? "var(--accent)" : undefined }} />
+          <IconNavBtn
+            onClick={(e) => setCalendarAnchor(e.currentTarget)}
+            title={t("time_tracking.btn_pick_week")}
+            hoverColor="var(--accent)"
+          >
+            <CalendarTodayOutlined
+              sx={{
+                fontSize: 13,
+                color: calendarAnchor ? "var(--accent)" : undefined,
+              }}
+            />
           </IconNavBtn>
-          <IconNavBtn onClick={onNext} disabled={isCurrentWeek} title={t("time_tracking.btn_next_week")} hoverColor="var(--accent)">
+          <IconNavBtn
+            onClick={onNext}
+            disabled={isCurrentWeek}
+            title={t("time_tracking.btn_next_week")}
+            hoverColor="var(--accent)"
+          >
             <ChevronRightOutlined sx={{ fontSize: 13 }} />
           </IconNavBtn>
-          <IconNavBtn onClick={onExport} disabled={exporting} title={t("time_tracking.export")} hoverColor="var(--accent)">
-            {exporting ? <CircularProgress size={11} sx={{ color: "var(--muted2)" }} /> : <FileDownloadOutlined sx={{ fontSize: 13 }} />}
+          <IconNavBtn
+            onClick={onExport}
+            disabled={exporting}
+            title={t("time_tracking.export")}
+            hoverColor="var(--accent)"
+          >
+            {exporting ? (
+              <CircularProgress size={11} sx={{ color: "var(--muted2)" }} />
+            ) : (
+              <FileDownloadOutlined sx={{ fontSize: 13 }} />
+            )}
           </IconNavBtn>
         </Box>
       </Box>
@@ -220,13 +299,22 @@ export const WeekColumnsView: React.FC<Props> = ({
         }}
       >
         {/* Gutter placeholder */}
-        <Box sx={{ width: GUTTER_WIDTH, flexShrink: 0, borderRight: "1px solid var(--border)" }} />
+        <Box
+          sx={{
+            width: GUTTER_WIDTH,
+            flexShrink: 0,
+            borderRight: "1px solid var(--border)",
+          }}
+        />
         {/* Day headers */}
         {weekDays.map((day, idx) => {
           const dayStr = format(day, "yyyy-MM-dd");
           const dayDate = parseDateLocal(dayStr);
           const today = isToday(dayDate);
-          const dayMinutes = (entriesByDay.get(dayStr) ?? []).reduce((s, e) => s + e.durationMinutes, 0);
+          const dayMinutes = (entriesByDay.get(dayStr) ?? []).reduce(
+            (s, e) => s + e.durationMinutes,
+            0,
+          );
           const isLast = idx === weekDays.length - 1;
 
           const headerColor =
@@ -249,7 +337,9 @@ export const WeekColumnsView: React.FC<Props> = ({
                 flexDirection: "column",
                 gap: "2px",
                 borderRight: isLast ? "none" : "1px solid var(--border)",
-                background: today ? "color-mix(in srgb, var(--accent) 4%, var(--s1))" : "transparent",
+                background: today
+                  ? "color-mix(in srgb, var(--accent) 4%, var(--s1))"
+                  : "transparent",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
@@ -294,8 +384,20 @@ export const WeekColumnsView: React.FC<Props> = ({
       </Box>
 
       {/* Add buttons row */}
-      <Box sx={{ display: "flex", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
-        <Box sx={{ width: GUTTER_WIDTH, flexShrink: 0, borderRight: "1px solid var(--border)" }} />
+      <Box
+        sx={{
+          display: "flex",
+          flexShrink: 0,
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <Box
+          sx={{
+            width: GUTTER_WIDTH,
+            flexShrink: 0,
+            borderRight: "1px solid var(--border)",
+          }}
+        />
         {weekDays.map((day, idx) => {
           const dayStr = format(day, "yyyy-MM-dd");
           const isLast = idx === weekDays.length - 1;
@@ -347,11 +449,21 @@ export const WeekColumnsView: React.FC<Props> = ({
 
       {/* Grid body */}
       {loading ? (
-        <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Box ref={scrollRef} sx={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex" }}>
+        <Box
+          ref={scrollRef}
+          sx={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex" }}
+        >
           {/* Hours gutter */}
           <Box
             sx={{
@@ -393,13 +505,13 @@ export const WeekColumnsView: React.FC<Props> = ({
                   top: (h - START_HOUR) * HOUR_HEIGHT,
                   left: 0,
                   right: 0,
-                  borderTop: h === START_HOUR ? "none" : "1px solid var(--border)",
+                  borderTop:
+                    h === START_HOUR ? "none" : "1px solid var(--border)",
                   zIndex: 0,
                   pointerEvents: "none",
                 }}
               />
             ))}
-
 
             {/* Day columns */}
             <Box
@@ -427,13 +539,19 @@ export const WeekColumnsView: React.FC<Props> = ({
                     }}
                     onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
                       const rect = e.currentTarget.getBoundingClientRect();
-                      const { startTime, top } = computeSlot(e.clientY - rect.top);
+                      const { startTime, top } = computeSlot(
+                        e.clientY - rect.top,
+                      );
                       setHover({ dayStr, top, label: startTime });
                     }}
-                    onMouseLeave={() => setHover((h) => (h?.dayStr === dayStr ? null : h))}
+                    onMouseLeave={() =>
+                      setHover((h) => (h?.dayStr === dayStr ? null : h))
+                    }
                     sx={{
                       borderRight: isLast ? "none" : "1px solid var(--border)",
-                      background: today ? "color-mix(in srgb, var(--accent) 3%, transparent)" : "transparent",
+                      background: today
+                        ? "color-mix(in srgb, var(--accent) 3%, transparent)"
+                        : "transparent",
                       position: "relative",
                       cursor: "pointer",
                     }}
@@ -442,50 +560,73 @@ export const WeekColumnsView: React.FC<Props> = ({
                     {today && isCurrentWeek && <CurrentTimeLine />}
 
                     {/* Hover slot indicator */}
-                    {hover?.dayStr === dayStr && hover.top > 0 && hover.top < GRID_HEIGHT && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: `${hover.top}px`,
-                          left: 0,
-                          right: 0,
-                          transform: "translateY(-50%)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          px: "6px",
-                          zIndex: 1,
-                          pointerEvents: "none",
-                        }}
-                      >
-                        <Box sx={{ flex: 1, height: "1px", background: "var(--accent)", opacity: 0.45 }} />
+                    {hover?.dayStr === dayStr &&
+                      hover.top > 0 &&
+                      hover.top < GRID_HEIGHT && (
                         <Box
                           sx={{
+                            position: "absolute",
+                            top: `${hover.top}px`,
+                            left: 0,
+                            right: 0,
+                            transform: "translateY(-50%)",
                             display: "flex",
                             alignItems: "center",
-                            gap: "3px",
-                            color: "var(--accent)",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            letterSpacing: "0.01em",
-                            whiteSpace: "nowrap",
+                            gap: "6px",
+                            px: "6px",
+                            zIndex: 1,
+                            pointerEvents: "none",
                           }}
                         >
-                          {hover.label}
-                          <AddOutlined sx={{ fontSize: 12 }} />
+                          <Box
+                            sx={{
+                              flex: 1,
+                              height: "1px",
+                              background: "var(--accent)",
+                              opacity: 0.45,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "3px",
+                              color: "var(--accent)",
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              letterSpacing: "0.01em",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {hover.label}
+                            <AddOutlined sx={{ fontSize: 12 }} />
+                          </Box>
+                          <Box
+                            sx={{
+                              flex: 1,
+                              height: "1px",
+                              background: "var(--accent)",
+                              opacity: 0.45,
+                            }}
+                          />
                         </Box>
-                        <Box sx={{ flex: 1, height: "1px", background: "var(--accent)", opacity: 0.45 }} />
-                      </Box>
-                    )}
+                      )}
 
                     {/* Entry blocks */}
                     <Box
-                      sx={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 2,
+                        pointerEvents: "none",
+                      }}
                     >
                       {dayEntries.map((entry) => {
                         const blockHeight = Math.max(
-                          Math.round((entry.durationMinutes / 60) * HOUR_HEIGHT),
+                          Math.round(
+                            (entry.durationMinutes / 60) * HOUR_HEIGHT,
+                          ),
                           32,
                         );
                         const isOwn = entry.userId === currentUserId;
@@ -495,8 +636,12 @@ export const WeekColumnsView: React.FC<Props> = ({
                         if (entry.startTime) {
                           const [h, m] = entry.startTime.split(":").map(Number);
                           const decimalHour = h + m / 60;
-                          if (decimalHour >= START_HOUR && decimalHour < END_HOUR) {
-                            topOffset = (decimalHour - START_HOUR) * HOUR_HEIGHT;
+                          if (
+                            decimalHour >= START_HOUR &&
+                            decimalHour < END_HOUR
+                          ) {
+                            topOffset =
+                              (decimalHour - START_HOUR) * HOUR_HEIGHT;
                           }
                         }
 
@@ -507,18 +652,31 @@ export const WeekColumnsView: React.FC<Props> = ({
                         return (
                           <Box
                             key={entry.id}
-                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); if (canEdit) onEdit(entry); }}
-                            onMouseMove={(e: React.MouseEvent) => { e.stopPropagation(); setHover(null); }}
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              if (canEdit) onEdit(entry);
+                            }}
+                            onMouseMove={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              setHover(null);
+                            }}
                             sx={{
-                              position: topOffset !== null ? "absolute" : "relative",
+                              position:
+                                topOffset !== null ? "absolute" : "relative",
                               ...(topOffset !== null
-                                ? { top: `${topOffset}px`, left: "4px", right: "4px" }
+                                ? {
+                                    top: `${topOffset}px`,
+                                    left: "4px",
+                                    right: "4px",
+                                  }
                                 : { mx: "4px", mt: "4px" }),
                               height: `${blockHeight}px`,
                               flexShrink: 0,
                               pointerEvents: "auto",
-                              background: "color-mix(in srgb, var(--accent) 5%, var(--s1))",
-                              border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
+                              background:
+                                "color-mix(in srgb, var(--accent) 5%, var(--s1))",
+                              border:
+                                "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
                               borderRadius: "var(--r)",
                               pl: "8px",
                               pr: "8px",
@@ -528,56 +686,81 @@ export const WeekColumnsView: React.FC<Props> = ({
                               display: "flex",
                               flexDirection: "column",
                               overflow: "hidden",
-                              transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
-                              "&:hover": canEdit ? {
-                                background: "color-mix(in srgb, var(--accent) 8%, var(--s1))",
-                                borderColor: "color-mix(in srgb, var(--accent) 35%, var(--border))",
-                                boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
-                              } : {},
+                              transition:
+                                "border-color 0.15s, box-shadow 0.15s, background 0.15s",
+                              "&:hover": canEdit
+                                ? {
+                                    background:
+                                      "color-mix(in srgb, var(--accent) 8%, var(--s1))",
+                                    borderColor:
+                                      "color-mix(in srgb, var(--accent) 35%, var(--border))",
+                                    boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
+                                  }
+                                : {},
                               "&:hover .entry-actions": { opacity: 1 },
                             }}
                           >
-                            <OverflowTooltip title={entry.title ?? ""} sx={{
+                            <OverflowTooltip
+                              title={entry.title ?? ""}
+                              sx={{
                                 fontSize: "11px",
                                 fontWeight: 600,
                                 color: "var(--text)",
                                 lineHeight: 1.4,
                                 overflow: "hidden",
                                 display: "-webkit-box",
-                                WebkitLineClamp: Math.max(1, Math.floor((blockHeight - 48) / 16) + 1),
+                                WebkitLineClamp: Math.max(
+                                  1,
+                                  Math.floor((blockHeight - 48) / 16) + 1,
+                                ),
                                 WebkitBoxOrient: "vertical",
                                 letterSpacing: "-0.01em",
                                 wordBreak: "break-word",
-                              }}>
+                              }}
+                            >
                               {entry.title ?? "—"}
                             </OverflowTooltip>
 
                             {blockHeight >= 60 && entry.description && (
-                              <OverflowTooltip title={entry.description} sx={{
+                              <OverflowTooltip
+                                title={entry.description}
+                                sx={{
                                   fontSize: "10px",
                                   color: "var(--muted2)",
                                   overflow: "hidden",
                                   display: "-webkit-box",
-                                  WebkitLineClamp: Math.max(1, Math.floor((blockHeight - 80) / 14)),
+                                  WebkitLineClamp: Math.max(
+                                    1,
+                                    Math.floor((blockHeight - 80) / 14),
+                                  ),
                                   WebkitBoxOrient: "vertical",
                                   lineHeight: 1.4,
                                   wordBreak: "break-word",
                                   mt: "4px",
                                   fontStyle: "italic",
-                                }}>
+                                }}
+                              >
                                 {entry.description}
                               </OverflowTooltip>
                             )}
 
                             <Box sx={{ flex: 1 }} />
 
-                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 0 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                minWidth: 0,
+                              }}
+                            >
                               <Box
                                 sx={{
                                   fontFamily: "var(--font-mono)",
                                   fontSize: "9.5px",
                                   fontWeight: 500,
-                                  color: "color-mix(in srgb, var(--accent) 70%, var(--muted))",
+                                  color:
+                                    "color-mix(in srgb, var(--accent) 70%, var(--muted))",
                                   letterSpacing: "0.02em",
                                   whiteSpace: "nowrap",
                                 }}
@@ -587,15 +770,40 @@ export const WeekColumnsView: React.FC<Props> = ({
                               {canEdit && (
                                 <Box
                                   className="entry-actions"
-                                  sx={{ opacity: 0, transition: "opacity 0.15s", display: "flex", alignItems: "center" }}
+                                  sx={{
+                                    opacity: 0,
+                                    transition: "opacity 0.15s",
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
                                 >
-                                  <Tooltip title={t("time_tracking.action_delete")} placement="top" arrow>
+                                  <Tooltip
+                                    title={t("time_tracking.action_delete")}
+                                    placement="top"
+                                    arrow
+                                  >
                                     <Box
                                       component="button"
-                                      onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(entry); }}
-                                      sx={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "3px", color: "var(--muted2)", "&:hover": { color: "var(--red)" } }}
+                                      onClick={(e: React.MouseEvent) => {
+                                        e.stopPropagation();
+                                        onDelete(entry);
+                                      }}
+                                      sx={{
+                                        all: "unset",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 16,
+                                        height: 16,
+                                        borderRadius: "3px",
+                                        color: "var(--muted2)",
+                                        "&:hover": { color: "var(--red)" },
+                                      }}
                                     >
-                                      <DeleteOutlineOutlined sx={{ fontSize: 11 }} />
+                                      <DeleteOutlineOutlined
+                                        sx={{ fontSize: 11 }}
+                                      />
                                     </Box>
                                   </Tooltip>
                                 </Box>

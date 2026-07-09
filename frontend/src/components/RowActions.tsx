@@ -53,10 +53,15 @@ export const RowActions: React.FC<{
         gap: "2px",
       }}
     >
-      {visible.map((action, i) => {
+      {visible.map((action) => {
         const c = COLOR_MAP[action.color ?? "accent"];
         return (
-          <Tooltip key={i} title={action.label} placement="top" arrow>
+          <Tooltip
+            key={action.label}
+            title={action.label}
+            placement="top"
+            arrow
+          >
             <Box
               component="button"
               type="button"

@@ -1,7 +1,11 @@
-import React from "react";
+import type React from "react";
 import Box from "@mui/material/Box";
-import { RuntimeDto } from "@/features/techHealth/api/projects";
-import { DependencyStatus, VulnerabilitySeverity, RuntimeEolStatus } from "@/types/enums";
+import type { RuntimeDto } from "@/features/techHealth/api/projects";
+import {
+  type DependencyStatus,
+  type VulnerabilitySeverity,
+  RuntimeEolStatus,
+} from "@/types/enums";
 
 export interface TabDef {
   icon: React.ReactNode;

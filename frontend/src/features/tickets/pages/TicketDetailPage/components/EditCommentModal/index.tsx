@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import type React from "react";
+import { useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,7 +11,10 @@ import { AppModal } from "@/components/AppModal";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
 import { Theme } from "@/types/enums";
-import { MarkdownEditor, MarkdownEditorHandle } from "@/components/MarkdownEditor";
+import {
+  MarkdownEditor,
+  type MarkdownEditorHandle,
+} from "@/components/MarkdownEditor";
 
 interface Props {
   open: boolean;
@@ -179,7 +183,6 @@ export const EditCommentModal: React.FC<Props> = ({
           />
         </Box>
       </Box>
-
     </AppModal>
   );
 };

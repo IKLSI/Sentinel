@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -80,10 +81,13 @@ export const UserPicker: React.FC<Props> = ({
                 letterSpacing: "0.03em",
               }}
             >
-              {isOwn
-                ? <AccountCircleOutlined sx={{ fontSize: "20px", color: avatar.text }} />
-                : getUserInitials(u.name)
-              }
+              {isOwn ? (
+                <AccountCircleOutlined
+                  sx={{ fontSize: "20px", color: avatar.text }}
+                />
+              ) : (
+                getUserInitials(u.name)
+              )}
             </Box>
           ),
         };
@@ -141,7 +145,7 @@ export const UserPicker: React.FC<Props> = ({
             gap: "8px",
             background: "var(--bg)",
             border: "1px solid var(--border)",
-            borderRadius: 'var(--r)',
+            borderRadius: "var(--r)",
             px: "10px",
             height: "32px",
             transition: "border-color 0.15s, box-shadow 0.15s",
@@ -246,7 +250,7 @@ export const UserPicker: React.FC<Props> = ({
                   gap: "11px",
                   px: "10px",
                   py: "9px",
-                  borderRadius: 'var(--r)',
+                  borderRadius: "var(--r)",
                   mb: "2px",
                   background: isSelected
                     ? "var(--accent-subtle)"
@@ -265,7 +269,7 @@ export const UserPicker: React.FC<Props> = ({
                   sx={{
                     width: "36px",
                     height: "36px",
-                    borderRadius: 'var(--r)',
+                    borderRadius: "var(--r)",
                     background:
                       option.id === "all"
                         ? "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 82%, white) 100%)"
@@ -299,7 +303,7 @@ export const UserPicker: React.FC<Props> = ({
                   sx={{
                     width: "16px",
                     height: "16px",
-                    borderRadius: 'var(--r-xs)',
+                    borderRadius: "var(--r-xs)",
                     flexShrink: 0,
                     border: isSelected ? "none" : "1.5px solid var(--border2)",
                     background: isSelected ? "var(--accent)" : "transparent",

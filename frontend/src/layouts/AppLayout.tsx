@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import { Sidebar } from "./Sidebar";

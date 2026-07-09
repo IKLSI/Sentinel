@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import { MembersTab } from "@/features/settings/pages/SettingsPage/components/MembersTab";
 import { InviteModal } from "@/features/settings/pages/SettingsPage/components/InviteModal";
