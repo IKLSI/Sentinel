@@ -76,6 +76,14 @@ export const ProjectsPage: React.FC = () => {
     [],
   );
 
+  useEffect(() => {
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: projectsQueryKey });
+    };
+    window.addEventListener("dashboard:refresh", handler);
+    return () => window.removeEventListener("dashboard:refresh", handler);
+  }, [queryClient]);
+
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -146,6 +154,7 @@ export const ProjectsPage: React.FC = () => {
               );
               setScanningId(null);
               showToast(t("projects.toast.scan_done"), "success");
+              window.dispatchEvent(new Event("dashboard:refresh"));
             } else {
               scanPollRef.current = setTimeout(poll, 3000);
             }
