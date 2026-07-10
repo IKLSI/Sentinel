@@ -1,11 +1,5 @@
 import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
@@ -14,10 +8,7 @@ import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
-import {
-  type ProjectDetailDto,
-  getProject,
-} from "@/features/techHealth/api/projects";
+import { useProject } from "@/features/techHealth/hooks/useProject";
 import type { TabDef } from "./helpers";
 import { ProjectDetailSkeleton } from "./components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "./components/ProjectHeaderCard";
@@ -32,36 +23,17 @@ export const ProjectDetailPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
 
-  const [project, setProject] = useState<ProjectDetailDto | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [depSearch, setDepSearch] = useState("");
   const [, startTransition] = useTransition();
 
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const data = await getProject(id, signal);
-        if (signal?.aborted) return;
-        setProject(data);
-      } catch {
-        if (signal?.aborted) return;
-        showToast(t("tech_health.error.load_failed"), "error");
-        navigate(ROUTES.PROJECTS);
-      } finally {
-        if (!signal?.aborted) setLoading(false);
-      }
-    },
-    [id, showToast, navigate, t],
-  );
+  const { project, loading, error } = useProject(id);
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    void load(ctrl.signal);
-    return () => ctrl.abort();
-  }, [load]);
+    if (!error) return;
+    showToast(t("tech_health.error.load_failed"), "error");
+    navigate(ROUTES.PROJECTS);
+  }, [error, showToast, navigate, t]);
 
   const allVulns = useMemo(
     () =>

@@ -7,6 +7,8 @@ public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes,
 
 public class RepositoryScannerService
 {
+    private const int MaxConcurrentDownloads = 10;
+
     private readonly RepositoryHostClient _hostClient;
     private readonly ManifestParserService _parser;
     private readonly DependencyRegistryClient _registry;
@@ -41,12 +43,24 @@ public class RepositoryScannerService
             List<Dependency> lockDeps = new();
             List<Runtime> allRuntimes = new();
 
-            foreach ((string fileName, string url) in files)
+            List<(string Name, string Url)> manifestFiles = files
+                .Where(f => ManifestParserService.IsManifest(f.Name))
+                .ToList();
+
+            using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
+            string?[] contents = await Task.WhenAll(manifestFiles.Select(async file =>
             {
-                if (!ManifestParserService.IsManifest(fileName)) continue;
-                string? content = await _hostClient.FetchTextAsync(host, url, tokenOverride);
+                await throttle.WaitAsync();
+                try { return await _hostClient.FetchTextAsync(host, file.Url, tokenOverride); }
+                finally { throttle.Release(); }
+            }));
+
+            for (int i = 0; i < manifestFiles.Count; i++)
+            {
+                string? content = contents[i];
                 if (content == null) continue;
 
+                string fileName = manifestFiles[i].Name;
                 (List<Dependency> deps, List<Runtime> rts) = _parser.Parse(projectId, fileName, content);
 
                 if (ManifestParserService.IsLockFile(fileName))

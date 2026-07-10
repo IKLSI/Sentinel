@@ -6,6 +6,8 @@ namespace Sentinel.Application.Services;
 
 public class DependencyRegistryClient
 {
+    private const int MaxConcurrentRegistryRequests = 10;
+
     private readonly IHttpClientFactory _httpClientFactory;
 
     public DependencyRegistryClient(IHttpClientFactory httpClientFactory)
@@ -15,6 +17,9 @@ public class DependencyRegistryClient
 
     public async Task FetchLatestVersionsAsync(List<Dependency> deps)
     {
+        HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
+        using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentRegistryRequests);
+
         IEnumerable<Task> tasks = deps
             .Where(d => d.Ecosystem is
                 DependencyEcosystem.Npm or
@@ -27,7 +32,12 @@ public class DependencyRegistryClient
                 DependencyEcosystem.Cargo or
                 DependencyEcosystem.Hex or
                 DependencyEcosystem.Pub)
-            .Select(FetchLatestVersionAsync);
+            .Select(async dep =>
+            {
+                await throttle.WaitAsync();
+                try { await FetchLatestVersionAsync(client, dep); }
+                finally { throttle.Release(); }
+            });
         await Task.WhenAll(tasks);
     }
 
@@ -44,11 +54,10 @@ public class DependencyRegistryClient
         return latMajor > curMajor ? DependencyStatus.MajorUpdate : DependencyStatus.MinorUpdate;
     }
 
-    private async Task FetchLatestVersionAsync(Dependency dep)
+    private static async Task FetchLatestVersionAsync(HttpClient client, Dependency dep)
     {
         try
         {
-            HttpClient client = _httpClientFactory.CreateClient(HttpClientNames.Registry);
             dep.LatestVersion = dep.Ecosystem switch
             {
                 DependencyEcosystem.Npm => await FetchNpmLatestAsync(client, dep.Name),

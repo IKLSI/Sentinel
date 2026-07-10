@@ -1,6 +1,7 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
@@ -13,9 +14,12 @@ import { useTheme } from "@/store/ThemeContext";
 import {
   addComment,
   deleteComment,
-  getTicket,
   updateComment,
 } from "@/features/tickets/api/tickets";
+import {
+  ticketQueryKey,
+  useTicket,
+} from "@/features/tickets/hooks/useTicket";
 import type { Ticket } from "@/types";
 import {
   buildFieldSx,
@@ -42,6 +46,7 @@ export const TicketDetailPage: React.FC = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
   const statusConfig = useMemo(() => buildStatusConfig(isDark), [isDark]);
@@ -49,9 +54,14 @@ export const TicketDetailPage: React.FC = () => {
   const markdownSx = useMemo(() => buildMarkdownSx(palette), [palette]);
   const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
 
-  const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { ticket, loading, notFound } = useTicket(id);
+
+  const updateCachedTicket = (updater: (prev: Ticket) => Ticket) => {
+    if (!id) return;
+    queryClient.setQueryData<Ticket>(ticketQueryKey(id), (prev) =>
+      prev ? updater(prev) : prev,
+    );
+  };
 
   const [composerValue, setComposerValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -69,26 +79,12 @@ export const TicketDetailPage: React.FC = () => {
   const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    const ctrl = new AbortController();
-    setLoading(true);
-    setNotFound(false);
-    getTicket(id, ctrl.signal)
-      .then((tk) => {
-        if (ctrl.signal.aborted) return;
-        setTicket(tk);
-        markReadByTicketId(id);
-      })
-      .catch(() => {
-        if (ctrl.signal.aborted) return;
-        setNotFound(true);
-        showToast(t("tickets.detail.not_found_toast"), "error");
-      })
-      .finally(() => {
-        if (!ctrl.signal.aborted) setLoading(false);
-      });
-    return () => ctrl.abort();
-  }, [id, showToast, t, markReadByTicketId]);
+    if (ticket && id) markReadByTicketId(id);
+  }, [ticket, id, markReadByTicketId]);
+
+  useEffect(() => {
+    if (notFound) showToast(t("tickets.detail.not_found_toast"), "error");
+  }, [notFound, showToast, t]);
 
   const endpointMatch = useMemo(() => {
     if (!ticket) return null;
@@ -109,14 +105,10 @@ export const TicketDetailPage: React.FC = () => {
     setSubmitting(true);
     try {
       const created = await addComment(ticket.id, content);
-      setTicket((prev) =>
-        prev
-          ? {
-              ...prev,
-              comments: [...prev.comments, created],
-            }
-          : prev,
-      );
+      updateCachedTicket((prev) => ({
+        ...prev,
+        comments: [...prev.comments, created],
+      }));
       setComposerValue("");
       showToast(t("tickets.detail.reply_sent"), "success");
     } catch (err) {
@@ -138,16 +130,12 @@ export const TicketDetailPage: React.FC = () => {
         editCommentTarget.id,
         editCommentValue,
       );
-      setTicket((prev) =>
-        prev
-          ? {
-              ...prev,
-              comments: prev.comments.map((c) =>
-                c.id === updated.id ? updated : c,
-              ),
-            }
-          : prev,
-      );
+      updateCachedTicket((prev) => ({
+        ...prev,
+        comments: prev.comments.map((c) =>
+          c.id === updated.id ? updated : c,
+        ),
+      }));
       setEditCommentTarget(null);
       showToast(t("tickets.detail.comment_updated"), "success");
     } catch (err) {
@@ -165,16 +153,10 @@ export const TicketDetailPage: React.FC = () => {
     setDeleteCommentLoading(true);
     try {
       await deleteComment(ticket.id, deleteCommentTarget);
-      setTicket((prev) =>
-        prev
-          ? {
-              ...prev,
-              comments: prev.comments.filter(
-                (c) => c.id !== deleteCommentTarget,
-              ),
-            }
-          : prev,
-      );
+      updateCachedTicket((prev) => ({
+        ...prev,
+        comments: prev.comments.filter((c) => c.id !== deleteCommentTarget),
+      }));
       setDeleteCommentTarget(null);
       showToast(t("tickets.detail.comment_deleted"), "success");
     } catch (err) {
