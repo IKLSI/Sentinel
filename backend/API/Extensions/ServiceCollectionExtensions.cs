@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
@@ -45,7 +46,7 @@ public static class ServiceCollectionExtensions
 
         NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
         {
-            MaxPoolSize = 8
+            MaxPoolSize = 50
         };
 
         services.AddDbContext<SentinelContext>((sp, options) =>
@@ -135,17 +136,32 @@ public static class ServiceCollectionExtensions
                             return;
                         }
 
-                        SentinelContext db = sp.GetRequiredService<SentinelContext>();
-                        ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
+                        IMemoryCache cache = sp.GetRequiredService<IMemoryCache>();
+                        string cacheKey = CacheKeys.AuthAccount(userId);
 
-                        using IDisposable elevation = systemScope.Enter();
+                        if (!cache.TryGetValue(cacheKey, out (bool IsActive, int TokenVersion) account))
+                        {
+                            SentinelContext db = sp.GetRequiredService<SentinelContext>();
+                            ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
 
-                        var account = await db.Users
-                            .Where(u => u.Id == userId)
-                            .Select(u => new { u.IsActive, u.TokenVersion })
-                            .FirstOrDefaultAsync();
+                            using IDisposable elevation = systemScope.Enter();
 
-                        if (account == null || !account.IsActive || account.TokenVersion != tokenVersion)
+                            var found = await db.Users
+                                .Where(u => u.Id == userId)
+                                .Select(u => new { u.IsActive, u.TokenVersion })
+                                .FirstOrDefaultAsync();
+
+                            if (found == null)
+                            {
+                                context.Fail("Session expirée");
+                                return;
+                            }
+
+                            account = (found.IsActive, found.TokenVersion);
+                            cache.Set(cacheKey, account, CacheKeys.AuthAccountTtl);
+                        }
+
+                        if (!account.IsActive || account.TokenVersion != tokenVersion)
                         {
                             context.Fail("Session expirée");
                         }

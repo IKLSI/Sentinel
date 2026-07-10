@@ -157,6 +157,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             ).HasMaxLength(10);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.OrganizationId, e.Email }).IsUnique();
+            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.RefreshToken).HasFilter("\"RefreshToken\" IS NOT NULL");
+            entity.HasIndex(e => e.PreviousRefreshTokenHash).HasFilter("\"PreviousRefreshTokenHash\" IS NOT NULL");
 
             entity.HasOne(e => e.Organization)
                 .WithMany(o => o.Users)

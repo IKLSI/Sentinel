@@ -6,8 +6,13 @@ import Box from "@mui/material/Box";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { UserRole } from "../types/enums";
 import { ROUTES } from "@/constants/routes";
-import { AppLayout } from "../layouts/AppLayout";
 import { ErrorPage } from "../pages/ErrorPage";
+
+const AppLayout = lazy(() =>
+  import("../layouts/AppLayout").then((m) => ({
+    default: m.AppLayout,
+  })),
+);
 
 const PrivacyPage = lazy(() =>
   import("../pages/PrivacyPage").then((m) => ({

@@ -18,7 +18,7 @@ export const useTickets = (filters: TicketFilters, enabled = true) => {
 
   return {
     tickets: query.data ?? null,
-    loading: query.isLoading || query.isFetching,
+    loading: query.isLoading,
     error: query.error ? "tickets.list.error_loading" : null,
     refetch: query.refetch,
   };

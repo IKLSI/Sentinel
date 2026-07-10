@@ -768,7 +768,15 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("PreviousRefreshTokenHash")
+                        .HasFilter("\"PreviousRefreshTokenHash\" IS NOT NULL");
+
+                    b.HasIndex("RefreshToken")
+                        .HasFilter("\"RefreshToken\" IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "Email")
                         .IsUnique();
