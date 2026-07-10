@@ -81,7 +81,10 @@ const VulnRow = memo<RowProps>(({ vuln, index, measureRef }) => {
             {vuln.fixedVersion}
           </Box>
         ) : (
-          <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>
+          <Box
+            component="span"
+            sx={{ color: "var(--muted)", fontSize: "12px" }}
+          >
             —
           </Box>
         )}
@@ -109,7 +112,10 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
   if (vulns.length === 0) {
     return (
       <Box className="empty-state">
-        <CheckCircleOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+        <CheckCircleOutlined
+          className="empty-state-icon"
+          sx={{ fontSize: 40 }}
+        />
         <Box className="empty-state-title">
           {t("tech_health.empty.no_vulns_title")}
         </Box>

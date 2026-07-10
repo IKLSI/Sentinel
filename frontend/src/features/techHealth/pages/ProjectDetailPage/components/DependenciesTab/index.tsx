@@ -61,7 +61,10 @@ interface RowProps {
 
 const DependencyRow = memo<RowProps>(
   ({ d, typeProd, typeDev, index, measureRef }) => {
-    const s = DEP_STATUS[d.status] ?? { labelKey: "", variant: "gray" as const };
+    const s = DEP_STATUS[d.status] ?? {
+      labelKey: "",
+      variant: "gray" as const,
+    };
     const t = useT();
     return (
       <Box component="tr" ref={measureRef} data-index={index} sx={rowSx}>

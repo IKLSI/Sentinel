@@ -16,10 +16,7 @@ import {
   deleteComment,
   updateComment,
 } from "@/features/tickets/api/tickets";
-import {
-  ticketQueryKey,
-  useTicket,
-} from "@/features/tickets/hooks/useTicket";
+import { ticketQueryKey, useTicket } from "@/features/tickets/hooks/useTicket";
 import type { Ticket } from "@/types";
 import {
   buildFieldSx,
@@ -132,9 +129,7 @@ export const TicketDetailPage: React.FC = () => {
       );
       updateCachedTicket((prev) => ({
         ...prev,
-        comments: prev.comments.map((c) =>
-          c.id === updated.id ? updated : c,
-        ),
+        comments: prev.comments.map((c) => (c.id === updated.id ? updated : c)),
       }));
       setEditCommentTarget(null);
       showToast(t("tickets.detail.comment_updated"), "success");
