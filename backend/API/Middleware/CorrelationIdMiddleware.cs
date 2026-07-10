@@ -4,7 +4,7 @@ namespace Sentinel.API.Middleware;
 
 public class CorrelationIdMiddleware
 {
-    public const string HeaderName = "X-Correlation-Id";
+    internal const string HeaderName = "X-Correlation-Id";
     private readonly RequestDelegate _next;
 
     public CorrelationIdMiddleware(RequestDelegate next)

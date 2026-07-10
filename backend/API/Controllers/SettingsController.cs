@@ -2,7 +2,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Services;
 using Sentinel.Domain.Constants;
@@ -71,20 +70,9 @@ public class SettingsController : BaseController
             return BadRequest(new { message = "Le token GitHub est invalide ou ne peut pas être vérifié auprès du fournisseur" });
 
         org.GithubToken = _tokenProtector.Protect(dto.Token);
-        org.GithubAccountId = account.Value.Id;
-        org.GithubAccountLogin = account.Value.Login;
-        org.GithubConnectedAt = DateTime.UtcNow;
-        org.GithubConnectedById = GetCurrentUserId();
         org.UpdatedAt = DateTime.UtcNow;
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == "23505")
-        {
-            return Conflict(new { message = "Ce compte GitHub est déjà associé à une autre organisation" });
-        }
+        await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
             AuditAction.GithubIntegrationSaved,
@@ -118,20 +106,9 @@ public class SettingsController : BaseController
             return BadRequest(new { message = "Le token GitLab est invalide ou ne peut pas être vérifié auprès du fournisseur" });
 
         org.GitlabToken = _tokenProtector.Protect(dto.Token);
-        org.GitlabAccountId = account.Value.Id;
-        org.GitlabAccountLogin = account.Value.Login;
-        org.GitlabConnectedAt = DateTime.UtcNow;
-        org.GitlabConnectedById = GetCurrentUserId();
         org.UpdatedAt = DateTime.UtcNow;
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == "23505")
-        {
-            return Conflict(new { message = "Ce compte GitLab est déjà associé à une autre organisation" });
-        }
+        await _context.SaveChangesAsync();
 
         await _auditLog.LogAsync(
             AuditAction.GitlabIntegrationSaved,

@@ -31,7 +31,7 @@ public class DependencyRegistryClient
         await Task.WhenAll(tasks);
     }
 
-    public static DependencyStatus ComputeStatus(string current, string? latest)
+    internal static DependencyStatus ComputeStatus(string current, string? latest)
     {
         if (string.IsNullOrEmpty(latest) || current == latest) return DependencyStatus.UpToDate;
 

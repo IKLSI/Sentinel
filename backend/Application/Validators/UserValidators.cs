@@ -72,19 +72,3 @@ public class UpdateMyProfileDtoValidator : AbstractValidator<UpdateMyProfileDto>
         RuleFor(x => x.LastName).MaximumLength(100).When(x => x.LastName != null);
     }
 }
-
-public class ChangePasswordDtoValidator : AbstractValidator<ChangePasswordDto>
-{
-    public ChangePasswordDtoValidator()
-    {
-        RuleFor(x => x.CurrentPassword)
-            .NotEmpty().WithMessage("L'ancien mot de passe est requis")
-            .MaximumLength(128);
-
-        RuleFor(x => x.NewPassword).StrongPassword();
-
-        RuleFor(x => x.NewPassword)
-            .NotEqual(x => x.CurrentPassword)
-            .WithMessage("Le nouveau mot de passe doit être différent de l'ancien");
-    }
-}

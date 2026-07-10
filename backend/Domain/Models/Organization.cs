@@ -8,15 +8,7 @@ public class Organization
     public bool SecurityAlertsEnabled { get; set; } = true;
     public VulnerabilitySeverity AlertMinSeverity { get; set; } = VulnerabilitySeverity.High;
     public string? GithubToken { get; set; }
-    public string? GithubAccountId { get; set; }
-    public string? GithubAccountLogin { get; set; }
-    public DateTime? GithubConnectedAt { get; set; }
-    public Guid? GithubConnectedById { get; set; }
     public string? GitlabToken { get; set; }
-    public string? GitlabAccountId { get; set; }
-    public string? GitlabAccountLogin { get; set; }
-    public DateTime? GitlabConnectedAt { get; set; }
-    public Guid? GitlabConnectedById { get; set; }
 
     public PlanTier PlanTier { get; set; } = PlanTier.Free;
     public SubscriptionStatus SubscriptionStatus { get; set; } = SubscriptionStatus.None;

@@ -119,13 +119,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.AlertMinSeverity).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.GithubToken).HasMaxLength(500);
-            entity.Property(e => e.GithubAccountId).HasMaxLength(100);
-            entity.Property(e => e.GithubAccountLogin).HasMaxLength(100);
             entity.Property(e => e.GitlabToken).HasMaxLength(500);
-            entity.Property(e => e.GitlabAccountId).HasMaxLength(100);
-            entity.Property(e => e.GitlabAccountLogin).HasMaxLength(100);
-            entity.HasIndex(e => e.GithubAccountId).IsUnique().HasFilter("\"GithubAccountId\" IS NOT NULL");
-            entity.HasIndex(e => e.GitlabAccountId).IsUnique().HasFilter("\"GitlabAccountId\" IS NOT NULL");
             entity.Property(e => e.PlanTier).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.SubscriptionStatus).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.StripeCustomerId).HasMaxLength(255);

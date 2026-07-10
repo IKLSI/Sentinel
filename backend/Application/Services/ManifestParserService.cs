@@ -1195,6 +1195,6 @@ public class ManifestParserService
         catch { }
     }
 
-    public static string CleanVersion(string version)
+    internal static string CleanVersion(string version)
         => Regex.Replace(version.Trim(), @"^[\^~>=<\s=]+", "").Split([' ', ','])[0].Trim();
 }

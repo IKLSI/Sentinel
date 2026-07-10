@@ -17,7 +17,7 @@ public class QuotaService
         _systemScope = systemScope;
     }
 
-    public static bool ResetScanPeriodIfElapsed(Organization organization)
+    internal static bool ResetScanPeriodIfElapsed(Organization organization)
     {
         if (DateTime.UtcNow >= organization.ScanCountPeriodStart.AddMonths(1))
         {

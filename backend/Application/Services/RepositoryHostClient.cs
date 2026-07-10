@@ -108,7 +108,7 @@ public class RepositoryHostClient
         return await FetchTextAsync(client, url, host.Contains("gitlab") ? tokenOverride : null);
     }
 
-    public static bool IsInSkippedDirectory(string filePath)
+    private static bool IsInSkippedDirectory(string filePath)
     {
         string[] segments = filePath.Split('/');
         for (int i = 0; i < segments.Length - 1; i++)

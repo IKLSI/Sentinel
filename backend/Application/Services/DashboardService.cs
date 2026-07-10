@@ -181,7 +181,7 @@ public class DashboardService
         return result;
     }
 
-    public async Task<List<ActivityItemDto>> BuildRecentActivityAsync(Guid organizationId, DateTime now)
+    private async Task<List<ActivityItemDto>> BuildRecentActivityAsync(Guid organizationId, DateTime now)
     {
         DateTime since = now.AddDays(-7);
         List<ActivityItemDto> items = new List<ActivityItemDto>();
