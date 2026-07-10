@@ -35,6 +35,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<RemediationRequest> RemediationRequests => Set<RemediationRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureTicketAttachment(modelBuilder);
         ConfigureNotification(modelBuilder);
         ConfigureApiKey(modelBuilder);
+        ConfigureRemediationRequest(modelBuilder);
 
         ApplyTenantQueryFilters(modelBuilder);
     }
@@ -106,6 +108,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.Project.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<ApiKey>()
+            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+
+        modelBuilder.Entity<RemediationRequest>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
     }
 
@@ -475,6 +480,25 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureRemediationRequest(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RemediationRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.PullRequestUrl).HasMaxLength(500);
+            entity.Property(e => e.BranchName).HasMaxLength(200);
+            entity.Property(e => e.Error).HasMaxLength(2000);
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => new { e.ProjectId, e.Status });
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

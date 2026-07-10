@@ -16,11 +16,13 @@ import {
 interface Props {
   project: ProjectDetailDto;
   eolRuntimes: number;
+  action?: React.ReactNode;
 }
 
 export const ProjectHeaderCard: React.FC<Props> = ({
   project,
   eolRuntimes,
+  action,
 }) => {
   const { t, culture } = useI18n();
 
@@ -170,6 +172,12 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             )}
           </Box>
         </Box>
+
+        {action && (
+          <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+            {action}
+          </Box>
+        )}
       </Box>
 
       <Box

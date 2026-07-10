@@ -12,6 +12,7 @@ import { useProject } from "@/features/techHealth/hooks/useProject";
 import type { TabDef } from "./helpers";
 import { ProjectDetailSkeleton } from "./components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "./components/ProjectHeaderCard";
+import { RemediateButton } from "./components/RemediateButton";
 import { TabBar } from "./components/TabBar";
 import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
 import { DependenciesTab } from "./components/DependenciesTab";
@@ -109,7 +110,15 @@ export const ProjectDetailPage: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      <ProjectHeaderCard project={project} eolRuntimes={eolRuntimes} />
+      <ProjectHeaderCard
+        project={project}
+        eolRuntimes={eolRuntimes}
+        action={
+          project.totalVulnerabilities > 0 ? (
+            <RemediateButton projectId={project.id} />
+          ) : undefined
+        }
+      />
 
       <Box
         sx={{

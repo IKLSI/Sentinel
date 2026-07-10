@@ -292,8 +292,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ExportService>();
         services.AddScoped<RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
+        services.AddScoped<ManifestPatcherService>();
         services.AddScoped<DependencyRegistryClient>();
         services.AddScoped<RepositoryScannerService>();
+        services.AddScoped<RemediationService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<DashboardService>();
         services.AddScoped<DataSeeder>();

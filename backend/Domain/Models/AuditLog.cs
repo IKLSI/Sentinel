@@ -43,6 +43,8 @@ public enum AuditAction
     ApiKeyCreated,
     ApiKeyRevoked,
 
+    RemediationRequested,
+
     AccountDeleted
 }
 
