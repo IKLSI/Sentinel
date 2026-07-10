@@ -1,12 +1,17 @@
 import type React from "react";
-import { memo } from "react";
+import { memo, useRef } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { StatusChip } from "@/components/StatusChip";
 import { useT } from "@/i18n/I18nContext";
 import type { DependencyDto } from "@/features/techHealth/api/projects";
-import { DEP_STATUS, TD, TH, TR } from "../../helpers";
+import { DEP_STATUS, TD, TH } from "../../helpers";
+
+const ESTIMATED_ROW_HEIGHT = 45;
+const OVERSCAN = 10;
+const COLUMN_COUNT = 6;
 
 const iconSx = { fontSize: 13, color: "var(--muted)", flexShrink: 0 } as const;
 const nameSx = {
@@ -43,68 +48,74 @@ const latestSx = {
   fontFamily: "var(--font-mono)",
 } as const;
 const noVulnSx = { color: "var(--muted)", fontSize: "12px" } as const;
+const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
+const spacerCellSx = { height: 0, padding: 0, border: 0 } as const;
 
 interface RowProps {
   d: DependencyDto;
   typeProd: string;
   typeDev: string;
+  index: number;
+  measureRef: (el: HTMLElement | null) => void;
 }
 
-const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev }) => {
-  const s = DEP_STATUS[d.status] ?? { labelKey: "", variant: "gray" as const };
-  const t = useT();
-  return (
-    <TR>
-      <TD>
-        <Box sx={nameWrapSx}>
-          <InventoryOutlined sx={iconSx} />
-          <Box component="span" sx={nameSx}>
-            {d.name}
+const DependencyRow = memo<RowProps>(
+  ({ d, typeProd, typeDev, index, measureRef }) => {
+    const s = DEP_STATUS[d.status] ?? { labelKey: "", variant: "gray" as const };
+    const t = useT();
+    return (
+      <Box component="tr" ref={measureRef} data-index={index} sx={rowSx}>
+        <TD>
+          <Box sx={nameWrapSx}>
+            <InventoryOutlined sx={iconSx} />
+            <Box component="span" sx={nameSx}>
+              {d.name}
+            </Box>
           </Box>
-        </Box>
-      </TD>
-      <TD>
-        <Box component="span" sx={ecoSx}>
-          {d.ecosystem}
-        </Box>
-      </TD>
-      <TD>
-        <StatusChip variant="gray">
-          {d.type === "Prod" ? typeProd : typeDev}
-        </StatusChip>
-      </TD>
-      <TD mono muted>
-        <Box sx={versionWrapSx}>
-          <span>{d.currentVersion}</span>
-          {d.latestVersion && d.latestVersion !== d.currentVersion && (
-            <>
-              <Box component="span" sx={arrowSx}>
-                →
-              </Box>
-              <Box component="span" sx={latestSx}>
-                {d.latestVersion}
-              </Box>
-            </>
+        </TD>
+        <TD>
+          <Box component="span" sx={ecoSx}>
+            {d.ecosystem}
+          </Box>
+        </TD>
+        <TD>
+          <StatusChip variant="gray">
+            {d.type === "Prod" ? typeProd : typeDev}
+          </StatusChip>
+        </TD>
+        <TD mono muted>
+          <Box sx={versionWrapSx}>
+            <span>{d.currentVersion}</span>
+            {d.latestVersion && d.latestVersion !== d.currentVersion && (
+              <>
+                <Box component="span" sx={arrowSx}>
+                  →
+                </Box>
+                <Box component="span" sx={latestSx}>
+                  {d.latestVersion}
+                </Box>
+              </>
+            )}
+          </Box>
+        </TD>
+        <TD>
+          <StatusChip variant={s.variant}>
+            {s.labelKey ? t(s.labelKey) : d.status}
+          </StatusChip>
+        </TD>
+        <TD>
+          {d.vulnerabilities.length > 0 ? (
+            <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+          ) : (
+            <Box component="span" sx={noVulnSx}>
+              —
+            </Box>
           )}
-        </Box>
-      </TD>
-      <TD>
-        <StatusChip variant={s.variant}>
-          {s.labelKey ? t(s.labelKey) : d.status}
-        </StatusChip>
-      </TD>
-      <TD>
-        {d.vulnerabilities.length > 0 ? (
-          <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
-        ) : (
-          <Box component="span" sx={noVulnSx}>
-            —
-          </Box>
-        )}
-      </TD>
-    </TR>
-  );
-});
+        </TD>
+      </Box>
+    );
+  },
+);
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
@@ -123,6 +134,14 @@ export const DependenciesTab: React.FC<Props> = ({
   const t = useT();
   const typeProd = t("tech_health.dep.type_prod");
   const typeDev = t("tech_health.dep.type_dev");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredDeps.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: OVERSCAN,
+  });
 
   if (dependencies.length === 0) {
     return (
@@ -137,6 +156,12 @@ export const DependenciesTab: React.FC<Props> = ({
       </Box>
     );
   }
+
+  const items = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+  const paddingTop = items.length > 0 ? items[0].start : 0;
+  const paddingBottom =
+    items.length > 0 ? totalSize - items[items.length - 1].end : 0;
 
   return (
     <Box
@@ -244,7 +269,7 @@ export const DependenciesTab: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Box sx={{ overflowY: "auto", flex: 1 }}>
+      <Box ref={scrollRef} sx={{ overflowY: "auto", flex: 1 }}>
         <Box
           component="table"
           sx={{
@@ -266,7 +291,7 @@ export const DependenciesTab: React.FC<Props> = ({
               <Box component="tr">
                 <Box
                   component="td"
-                  colSpan={6}
+                  colSpan={COLUMN_COUNT}
                   sx={{
                     padding: "32px",
                     textAlign: "center",
@@ -279,14 +304,39 @@ export const DependenciesTab: React.FC<Props> = ({
                 </Box>
               </Box>
             ) : (
-              filteredDeps.map((d) => (
-                <DependencyRow
-                  key={d.id}
-                  d={d}
-                  typeProd={typeProd}
-                  typeDev={typeDev}
-                />
-              ))
+              <>
+                {paddingTop > 0 && (
+                  <Box component="tr">
+                    <Box
+                      component="td"
+                      colSpan={COLUMN_COUNT}
+                      sx={{ ...spacerCellSx, height: `${paddingTop}px` }}
+                    />
+                  </Box>
+                )}
+                {items.map((item) => {
+                  const d = filteredDeps[item.index];
+                  return (
+                    <DependencyRow
+                      key={d.id}
+                      d={d}
+                      typeProd={typeProd}
+                      typeDev={typeDev}
+                      index={item.index}
+                      measureRef={virtualizer.measureElement}
+                    />
+                  );
+                })}
+                {paddingBottom > 0 && (
+                  <Box component="tr">
+                    <Box
+                      component="td"
+                      colSpan={COLUMN_COUNT}
+                      sx={{ ...spacerCellSx, height: `${paddingBottom}px` }}
+                    />
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         </Box>

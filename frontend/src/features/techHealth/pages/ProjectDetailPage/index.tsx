@@ -113,7 +113,7 @@ export const ProjectDetailPage: React.FC = () => {
 
       <Box
         sx={{
-          flex: "0 1 auto",
+          flex: "1 1 auto",
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
@@ -156,41 +156,16 @@ export const ProjectDetailPage: React.FC = () => {
             p: "20px",
           }}
         >
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              display: activeTab === 0 ? "flex" : "none",
-              flexDirection: "column",
-            }}
-          >
-            <VulnerabilitiesTab vulns={sortedVulns} />
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              display: activeTab === 1 ? "flex" : "none",
-              flexDirection: "column",
-            }}
-          >
+          {activeTab === 0 && <VulnerabilitiesTab vulns={sortedVulns} />}
+          {activeTab === 1 && (
             <DependenciesTab
               dependencies={project.dependencies}
               filteredDeps={filteredDeps}
               search={depSearch}
               onSearchChange={setDepSearch}
             />
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              display: activeTab === 2 ? "flex" : "none",
-              flexDirection: "column",
-            }}
-          >
-            <RuntimesTab runtimes={project.runtimes} />
-          </Box>
+          )}
+          {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
         </Box>
       </Box>
     </Box>

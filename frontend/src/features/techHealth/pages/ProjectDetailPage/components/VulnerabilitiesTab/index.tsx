@@ -1,16 +1,31 @@
 import type React from "react";
+import { memo, useRef } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useT } from "@/i18n/I18nContext";
 import type { VulnerabilityDto } from "@/features/techHealth/api/projects";
-import { SEV_CONFIG, TD, TH, TR } from "../../helpers";
+import { SEV_CONFIG, TD, TH } from "../../helpers";
 
 type VulnWithDep = VulnerabilityDto & { dependencyName: string };
 
-const VulnRow: React.FC<{ vuln: VulnWithDep }> = ({ vuln }) => {
+const ESTIMATED_ROW_HEIGHT = 44;
+const OVERSCAN = 10;
+const COLUMN_COUNT = 5;
+
+const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
+const spacerCellSx = { height: 0, padding: 0, border: 0 } as const;
+
+interface RowProps {
+  vuln: VulnWithDep;
+  index: number;
+  measureRef: (el: HTMLElement | null) => void;
+}
+
+const VulnRow = memo<RowProps>(({ vuln, index, measureRef }) => {
   const cfg = SEV_CONFIG[vuln.severity] ?? SEV_CONFIG.Low;
   return (
-    <TR>
+    <Box component="tr" ref={measureRef} data-index={index} sx={rowSx}>
       <TD>
         <Box
           component="span"
@@ -66,17 +81,15 @@ const VulnRow: React.FC<{ vuln: VulnWithDep }> = ({ vuln }) => {
             {vuln.fixedVersion}
           </Box>
         ) : (
-          <Box
-            component="span"
-            sx={{ color: "var(--muted)", fontSize: "12px" }}
-          >
+          <Box component="span" sx={{ color: "var(--muted)", fontSize: "12px" }}>
             —
           </Box>
         )}
       </TD>
-    </TR>
+    </Box>
   );
-};
+});
+VulnRow.displayName = "VulnRow";
 
 interface Props {
   vulns: VulnWithDep[];
@@ -84,14 +97,19 @@ interface Props {
 
 export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
   const t = useT();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: vulns.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: OVERSCAN,
+  });
 
   if (vulns.length === 0) {
     return (
       <Box className="empty-state">
-        <CheckCircleOutlined
-          className="empty-state-icon"
-          sx={{ fontSize: 40 }}
-        />
+        <CheckCircleOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
         <Box className="empty-state-title">
           {t("tech_health.empty.no_vulns_title")}
         </Box>
@@ -101,6 +119,12 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
       </Box>
     );
   }
+
+  const items = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+  const paddingTop = items.length > 0 ? items[0].start : 0;
+  const paddingBottom =
+    items.length > 0 ? totalSize - items[items.length - 1].end : 0;
 
   return (
     <Box
@@ -141,7 +165,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
           </Box>
         </Box>
       </Box>
-      <Box sx={{ overflowY: "auto", flex: 1 }}>
+      <Box ref={scrollRef} sx={{ overflowY: "auto", flex: 1 }}>
         <Box
           component="table"
           sx={{
@@ -158,9 +182,35 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
             <Box component="col" sx={{ width: "12%" }} />
           </Box>
           <Box component="tbody">
-            {vulns.map((v) => (
-              <VulnRow key={v.id} vuln={v} />
-            ))}
+            {paddingTop > 0 && (
+              <Box component="tr">
+                <Box
+                  component="td"
+                  colSpan={COLUMN_COUNT}
+                  sx={{ ...spacerCellSx, height: `${paddingTop}px` }}
+                />
+              </Box>
+            )}
+            {items.map((item) => {
+              const v = vulns[item.index];
+              return (
+                <VulnRow
+                  key={v.id}
+                  vuln={v}
+                  index={item.index}
+                  measureRef={virtualizer.measureElement}
+                />
+              );
+            })}
+            {paddingBottom > 0 && (
+              <Box component="tr">
+                <Box
+                  component="td"
+                  colSpan={COLUMN_COUNT}
+                  sx={{ ...spacerCellSx, height: `${paddingBottom}px` }}
+                />
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>

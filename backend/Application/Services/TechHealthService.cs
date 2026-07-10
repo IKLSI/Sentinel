@@ -180,13 +180,13 @@ public class TechHealthService
             finally { throttle.Release(); }
         }
 
-        VulnerabilityScanResult?[] vulnResults = await Task.WhenAll(project.Dependencies.Select(d =>
-            RunThrottledAsync(() => FetchVulnerabilitiesAsync(d))));
+        List<VulnerabilityScanResult> vulnResults =
+            await FetchVulnerabilitiesBatchAsync(project.Dependencies.ToList());
 
         RuntimeEolResult?[] eolResults = await Task.WhenAll(project.Runtimes.Select(r =>
             RunThrottledAsync(() => FetchRuntimeEolAsync(r))));
 
-        foreach (VulnerabilityScanResult result in vulnResults.OfType<VulnerabilityScanResult>())
+        foreach (VulnerabilityScanResult result in vulnResults)
         {
             if (result.Status is { } status) result.Dependency.Status = status;
             foreach (Vulnerability vuln in result.NewVulnerabilities)
@@ -305,67 +305,172 @@ public class TechHealthService
 
     private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status, List<Vulnerability> NewVulnerabilities);
 
-    private async Task<VulnerabilityScanResult?> FetchVulnerabilitiesAsync(Dependency dependency)
+    private const int OsvBatchSize = 500;
+
+    private async Task<List<VulnerabilityScanResult>> FetchVulnerabilitiesBatchAsync(IReadOnlyList<Dependency> dependencies)
     {
-        if (!OsvEcosystemMap.TryGetValue(dependency.Ecosystem, out string? ecosystem)) return null;
+        List<(Dependency Dep, string Ecosystem)> mapped = new();
+        foreach (Dependency dep in dependencies)
+        {
+            if (OsvEcosystemMap.TryGetValue(dep.Ecosystem, out string? ecosystem))
+                mapped.Add((dep, ecosystem));
+        }
+
+        if (mapped.Count == 0) return new List<VulnerabilityScanResult>();
+
+        List<string>?[] depVulnIds = new List<string>?[mapped.Count];
+
+        for (int start = 0; start < mapped.Count; start += OsvBatchSize)
+        {
+            List<(Dependency Dep, string Ecosystem)> chunk = mapped.Skip(start).Take(OsvBatchSize).ToList();
+
+            var batchBody = new
+            {
+                queries = chunk.Select(m => new
+                {
+                    version = m.Dep.CurrentVersion,
+                    package = new { name = m.Dep.Name, ecosystem = m.Ecosystem }
+                }).ToArray()
+            };
+
+            try
+            {
+                HttpResponseMessage response =
+                    await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/querybatch", batchBody);
+                if (!response.IsSuccessStatusCode) continue;
+
+                using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                if (!doc.RootElement.TryGetProperty("results", out JsonElement results)) continue;
+
+                int i = 0;
+                foreach (JsonElement result in results.EnumerateArray())
+                {
+                    if (i >= chunk.Count) break;
+
+                    List<string> ids = new();
+                    if (result.TryGetProperty("vulns", out JsonElement vulns))
+                    {
+                        foreach (JsonElement v in vulns.EnumerateArray())
+                        {
+                            if (v.TryGetProperty("id", out JsonElement idProp) && idProp.GetString() is { } id)
+                                ids.Add(id);
+                        }
+                    }
+
+                    depVulnIds[start + i] = ids;
+                    i++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erreur OSV querybatch (lot {Start})", start);
+            }
+        }
+
+        HashSet<string> idsToHydrate = new();
+        for (int i = 0; i < mapped.Count; i++)
+        {
+            List<string>? ids = depVulnIds[i];
+            if (ids == null) continue;
+
+            HashSet<string> existing = mapped[i].Dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
+            foreach (string id in ids)
+            {
+                if (!existing.Contains(id)) idsToHydrate.Add(id);
+            }
+        }
+
+        Dictionary<string, JsonDocument> details = await FetchVulnDetailsAsync(idsToHydrate);
 
         try
         {
-            var requestBody = new
+            List<VulnerabilityScanResult> scanResults = new();
+
+            for (int i = 0; i < mapped.Count; i++)
             {
-                version = dependency.CurrentVersion,
-                package = new { name = dependency.Name, ecosystem }
-            };
+                Dependency dep = mapped[i].Dep;
+                List<string>? ids = depVulnIds[i];
+                if (ids == null) continue;
 
-            HttpResponseMessage response = await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/query", requestBody);
-            if (!response.IsSuccessStatusCode) return null;
-
-            using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-
-            if (!doc.RootElement.TryGetProperty("vulns", out JsonElement vulns))
-                return new VulnerabilityScanResult(dependency, DependencyStatus.UpToDate, new List<Vulnerability>());
-
-            HashSet<string> existingCves = dependency.Vulnerabilities.Select(v => v.CveId).ToHashSet();
-            List<Vulnerability> newVulns = new();
-
-            foreach (JsonElement vuln in vulns.EnumerateArray())
-            {
-                string id = vuln.TryGetProperty("id", out JsonElement idProp)
-                    ? idProp.GetString() ?? string.Empty
-                    : string.Empty;
-
-                if (existingCves.Contains(id)) continue;
-
-                (decimal cvss, VulnerabilitySeverity severity) = ExtractSeverity(vuln);
-                string? fixedVersion = ExtractFixedVersion(vuln, dependency.Name);
-                string? advisoryUrl = ExtractAdvisoryUrl(vuln, id);
-                string summary = vuln.TryGetProperty("summary", out JsonElement sumProp)
-                    ? sumProp.GetString() ?? string.Empty
-                    : string.Empty;
-
-                newVulns.Add(new Vulnerability
+                if (ids.Count == 0)
                 {
-                    DependencyId = dependency.Id,
-                    CveId = id,
-                    CvssScore = cvss,
-                    Description = summary,
-                    PackageName = dependency.Name,
-                    FixedVersion = fixedVersion,
-                    AdvisoryUrl = advisoryUrl,
-                    Severity = severity,
-                    DetectedAt = DateTime.UtcNow
-                });
+                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.UpToDate, new List<Vulnerability>()));
+                    continue;
+                }
+
+                HashSet<string> existingCves = dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
+                List<Vulnerability> newVulns = new();
+
+                foreach (string id in ids)
+                {
+                    if (existingCves.Contains(id)) continue;
+                    if (!details.TryGetValue(id, out JsonDocument? detailDoc)) continue;
+
+                    JsonElement vuln = detailDoc.RootElement;
+                    (decimal cvss, VulnerabilitySeverity severity) = ExtractSeverity(vuln);
+                    string? fixedVersion = ExtractFixedVersion(vuln, dep.Name);
+                    string? advisoryUrl = ExtractAdvisoryUrl(vuln, id);
+                    string summary = vuln.TryGetProperty("summary", out JsonElement sumProp)
+                        ? sumProp.GetString() ?? string.Empty
+                        : string.Empty;
+
+                    newVulns.Add(new Vulnerability
+                    {
+                        DependencyId = dep.Id,
+                        CveId = id,
+                        CvssScore = cvss,
+                        Description = summary,
+                        PackageName = dep.Name,
+                        FixedVersion = fixedVersion,
+                        AdvisoryUrl = advisoryUrl,
+                        Severity = severity,
+                        DetectedAt = DateTime.UtcNow
+                    });
+                }
+
+                if (newVulns.Count > 0)
+                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.Vulnerable, newVulns));
             }
 
-            return newVulns.Count > 0
-                ? new VulnerabilityScanResult(dependency, DependencyStatus.Vulnerable, newVulns)
-                : null;
+            return scanResults;
         }
-        catch (Exception ex)
+        finally
         {
-            _logger.LogWarning(ex, "Erreur CVE pour {Dependency}", dependency.Name);
-            return null;
+            foreach (JsonDocument doc in details.Values) doc.Dispose();
         }
+    }
+
+    private async Task<Dictionary<string, JsonDocument>> FetchVulnDetailsAsync(HashSet<string> ids)
+    {
+        Dictionary<string, JsonDocument> details = new();
+        if (ids.Count == 0) return details;
+
+        using SemaphoreSlim throttle = new SemaphoreSlim(10);
+
+        IEnumerable<Task<(string Id, JsonDocument? Doc)>> tasks = ids.Select(async id =>
+        {
+            await throttle.WaitAsync();
+            try
+            {
+                HttpResponseMessage response = await _osvClient.GetAsync($"https://api.osv.dev/v1/vulns/{id}");
+                if (!response.IsSuccessStatusCode) return (id, (JsonDocument?)null);
+
+                return (id, (JsonDocument?)JsonDocument.Parse(await response.Content.ReadAsStringAsync()));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erreur détail OSV pour {VulnId}", id);
+                return (id, (JsonDocument?)null);
+            }
+            finally { throttle.Release(); }
+        });
+
+        foreach ((string id, JsonDocument? doc) in await Task.WhenAll(tasks))
+        {
+            if (doc != null) details[id] = doc;
+        }
+
+        return details;
     }
 
     private static (decimal cvss, VulnerabilitySeverity severity) ExtractSeverity(JsonElement vuln)
