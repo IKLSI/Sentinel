@@ -5,8 +5,20 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
-public class ManifestParserService
+public partial class ManifestParserService
 {
+    [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testRuntimeOnly|annotationProcessor|classpath)\s*[(""]([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+)[)""]", RegexOptions.Multiline)]
+    private static partial Regex CoordPatternRegex();
+
+    [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation)\s+group\s*:\s*['""]([^'""]+)['""]\s*,\s*name\s*:\s*['""]([^'""]+)['""]\s*,\s*version\s*:\s*['""]([^'""]+)['""]", RegexOptions.Multiline)]
+    private static partial Regex NamedPatternRegex();
+
+    [GeneratedRegex(@"^gem\s+['""]([^'""]+)['""](?:\s*,\s*['""]([^'""]*)['""])?", RegexOptions.Multiline)]
+    private static partial Regex GemPatternRegex();
+
+    [GeneratedRegex(@"^[\^~>=<\s=]+")]
+    private static partial Regex CleanVersionPrefixRegex();
+
     private static readonly HashSet<string> ManifestFileNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "package.json",
@@ -253,14 +265,6 @@ public class ManifestParserService
 
     private static void ParseBuildGradle(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Regex coordPattern = new Regex(
-            @"(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testRuntimeOnly|annotationProcessor|classpath)\s*[(""]([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+)[)""]",
-            RegexOptions.Multiline);
-
-        Regex namedPattern = new Regex(
-            @"(?:implementation|api|compileOnly|runtimeOnly|testImplementation)\s+group\s*:\s*['""]([^'""]+)['""]\s*,\s*name\s*:\s*['""]([^'""]+)['""]\s*,\s*version\s*:\s*['""]([^'""]+)['""]",
-            RegexOptions.Multiline);
-
         Match javaVersionMatch = Regex.Match(content, @"sourceCompatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?");
         if (javaVersionMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersionMatch.Groups[1].Value });
@@ -269,7 +273,7 @@ public class ManifestParserService
         if (kotlinMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Kotlin", Version = kotlinMatch.Groups[1].Value });
 
-        foreach (Match m in coordPattern.Matches(content))
+        foreach (Match m in CoordPatternRegex().Matches(content))
         {
             string coord = m.Groups[1].Value;
             string[] parts = coord.Split(':');
@@ -291,7 +295,7 @@ public class ManifestParserService
             });
         }
 
-        foreach (Match m in namedPattern.Matches(content))
+        foreach (Match m in NamedPatternRegex().Matches(content))
         {
             deps.Add(new Dependency
             {
@@ -519,8 +523,6 @@ public class ManifestParserService
             ["hanami"] = "Hanami",
         };
 
-        Regex gemPattern = new Regex(@"^gem\s+['""]([^'""]+)['""](?:\s*,\s*['""]([^'""]*)['""])?", RegexOptions.Multiline);
-
         bool isInTest = false;
         foreach (string raw in content.Split('\n'))
         {
@@ -528,7 +530,7 @@ public class ManifestParserService
             if (line.StartsWith("group") && (line.Contains(":test") || line.Contains(":development"))) { isInTest = true; continue; }
             if (line == "end") { isInTest = false; continue; }
 
-            Match m = gemPattern.Match(line);
+            Match m = GemPatternRegex().Match(line);
             if (!m.Success) continue;
 
             string name = m.Groups[1].Value;
@@ -1196,5 +1198,5 @@ public class ManifestParserService
     }
 
     internal static string CleanVersion(string version)
-        => Regex.Replace(version.Trim(), @"^[\^~>=<\s=]+", "").Split([' ', ','])[0].Trim();
+        => CleanVersionPrefixRegex().Replace(version.Trim(), "").Split([' ', ','])[0].Trim();
 }

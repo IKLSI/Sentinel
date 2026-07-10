@@ -6,4 +6,5 @@ public static class RateLimitPolicies
     public const string PasswordReset = "password-reset";
     public const string Register = "register";
     public const string Invitation = "invitation";
+    public const string Scan = "scan";
 }

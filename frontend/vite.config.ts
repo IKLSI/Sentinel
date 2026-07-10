@@ -27,20 +27,13 @@ export default defineConfig({
             id.includes("/scheduler/")
           )
             return "react-vendor";
-          if (
-            id.includes("react-markdown") ||
-            id.includes("remark-") ||
-            id.includes("micromark") ||
-            id.includes("mdast-")
-          )
-            return "markdown";
+          if (id.includes("recharts") || id.includes("d3-")) return "recharts";
           if (
             id.includes("@codemirror/") ||
             id.includes("@uiw/react-codemirror") ||
             id.includes("@lezer/")
           )
             return "codemirror";
-          if (id.includes("@hello-pangea/dnd")) return "dnd";
           if (id.includes("date-fns")) return "date";
         },
       },

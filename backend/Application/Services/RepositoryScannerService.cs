@@ -100,7 +100,7 @@ public class RepositoryScannerService
         {
             _logger.LogWarning(ex, "Erreur lors du scan du dépôt {RepoUrl}", repoUrl);
             return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
-                $"Échec du scan du dépôt : {ex.Message}");
+                "Échec du scan du dépôt. Vérifiez l'URL, l'accès et le token de l'organisation.");
         }
     }
 

@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -27,6 +28,7 @@ public class TechHealthService
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
+    private readonly IMemoryCache _cache;
 
     private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
     {
@@ -78,7 +80,8 @@ public class TechHealthService
         IServiceScopeFactory scopeFactory,
         IBackgroundJobClient backgroundJobs,
         IOptions<FrontendSettings> frontendOptions,
-        ISystemScope systemScope)
+        ISystemScope systemScope,
+        IMemoryCache cache)
     {
         _context = context;
         _httpClientFactory = httpClientFactory;
@@ -90,6 +93,7 @@ public class TechHealthService
         _backgroundJobs = backgroundJobs;
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
+        _cache = cache;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
@@ -214,6 +218,8 @@ public class TechHealthService
         }
 
         await _context.SaveChangesAsync();
+
+        _cache.Remove(CacheKeys.Dashboard(project.OrganizationId));
 
         await TrySendVulnerabilityAlertAsync(project, isFirstScan, previousCveIds);
     }

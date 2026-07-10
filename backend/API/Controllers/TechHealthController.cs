@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
@@ -318,6 +319,7 @@ public class TechHealthController : BaseController
 
     [HttpPost("projects/{id:guid}/scan")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    [EnableRateLimiting(RateLimitPolicies.Scan)]
     public async Task<IActionResult> TriggerScan(Guid id)
     {
         Guid? organizationId = GetOrganizationId();

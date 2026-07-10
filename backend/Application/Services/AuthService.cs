@@ -215,6 +215,7 @@ public class AuthService
 
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
+        user.TokenVersion++;
 
         await _context.SaveChangesAsync();
     }
