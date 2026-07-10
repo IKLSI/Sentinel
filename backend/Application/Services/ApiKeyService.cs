@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
@@ -11,10 +12,12 @@ public class ApiKeyService
 {
     private const string Prefix = "sen_";
     private readonly SentinelContext _context;
+    private readonly ISystemScope _systemScope;
 
-    public ApiKeyService(SentinelContext context)
+    public ApiKeyService(SentinelContext context, ISystemScope systemScope)
     {
         _context = context;
+        _systemScope = systemScope;
     }
 
     public async Task<CreatedApiKeyDto> CreateAsync(Guid organizationId, Guid userId, CreateApiKeyDto dto)
@@ -81,6 +84,8 @@ public class ApiKeyService
     public async Task<(ApiKey key, User user)?> ValidateAsync(string rawKey)
     {
         string keyHash = HashKey(rawKey);
+
+        using IDisposable elevation = _systemScope.Enter();
 
         ApiKey? key = await _context.ApiKeys
             .IgnoreQueryFilters()

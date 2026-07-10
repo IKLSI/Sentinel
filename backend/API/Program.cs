@@ -39,6 +39,7 @@ public static class Program
             .AddSwaggerWithJwt()
             .AddRequestValidation()
             .AddControllersWithJsonOptions()
+            .AddForwardedHeadersPolicy(builder.Configuration)
             .AddLoginRateLimiting()
             .AddMemoryCache()
             .AddAppHealthChecks()
@@ -48,6 +49,8 @@ public static class Program
             .AddDataProtectionPolicy(builder.Configuration.GetSection(ConfigurationKeys.Sections.DataProtection).Get<DataProtectionSettings>() ?? new());
 
         WebApplication app = builder.Build();
+
+        app.UseForwardedHeaders();
 
         if (!app.Environment.IsDevelopment())
         {

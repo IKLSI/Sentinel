@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.IO.Compression;
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -9,6 +10,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Npgsql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Sentinel.API.Hubs;
 using Microsoft.AspNetCore.DataProtection;
@@ -496,6 +498,36 @@ public static class ServiceCollectionExtensions
                 .Expire(TimeSpan.FromSeconds(60))
                 .SetVaryByHeader("Authorization")
                 .Tag(OutputCacheTags.Dashboard));
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddForwardedHeadersPolicy(this IServiceCollection services, IConfiguration configuration)
+    {
+        ForwardedHeadersSettings settings = configuration
+            .GetSection(ConfigurationKeys.Sections.ForwardedHeaders)
+            .Get<ForwardedHeadersSettings>() ?? new ForwardedHeadersSettings();
+
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.ForwardLimit = settings.ForwardLimit;
+            options.KnownProxies.Clear();
+            options.KnownNetworks.Clear();
+
+            foreach (string proxy in settings.KnownProxies)
+            {
+                if (IPAddress.TryParse(proxy, out IPAddress? address))
+                    options.KnownProxies.Add(address);
+            }
+
+            foreach (string network in settings.KnownNetworks)
+            {
+                if (System.Net.IPNetwork.TryParse(network, out System.Net.IPNetwork parsed))
+                    options.KnownNetworks.Add(
+                        new Microsoft.AspNetCore.HttpOverrides.IPNetwork(parsed.BaseAddress, parsed.PrefixLength));
+            }
         });
 
         return services;
