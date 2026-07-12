@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useT } from "@/i18n/I18nContext";
 import {
@@ -75,22 +78,46 @@ export const RemediateModal: React.FC<Props> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <Box sx={{ p: "24px", background: "var(--s1)", color: "var(--text)" }}>
-        <Box sx={{ fontSize: "16px", fontWeight: 700, mb: "4px" }}>
-          {t("remediation.title")}
-        </Box>
-        <Box sx={{ fontSize: "12px", color: "var(--muted)", mb: "16px" }}>
-          {t("remediation.subtitle")}
-        </Box>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: "var(--s1)",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "10px",
+            overflow: "hidden",
+          },
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          fontSize: "14px",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          p: "16px 20px",
+          borderBottom: "1px solid var(--border)",
+          background:
+            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
+        }}
+      >
+        {t("remediation.title")}
+      </DialogTitle>
 
+      <DialogContent sx={{ pt: "18px !important", pb: "18px" }}>
         {phase === "loading" && (
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "10px",
-              py: "16px",
+              py: "24px",
             }}
           >
             <CircularProgress size={18} />
@@ -112,47 +139,76 @@ export const RemediateModal: React.FC<Props> = ({
         {phase === "result" && result && (
           <ResultContent result={result} t={t} />
         )}
+      </DialogContent>
 
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "8px",
-            mt: "20px",
-          }}
-        >
-          {phase === "preview" && preview?.canRemediate && (
-            <>
-              <Button onClick={onClose} sx={{ color: "var(--muted)" }}>
-                {t("remediation.cancel")}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleConfirm}
-                sx={{ background: "var(--accent)" }}
-              >
-                {t("remediation.confirm")}
-              </Button>
-            </>
-          )}
-          {phase === "executing" && (
+      <DialogActions
+        sx={{
+          p: "12px 20px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--s2)",
+          gap: "8px",
+        }}
+      >
+        {phase === "preview" && preview?.canRemediate && (
+          <>
             <Button
-              disabled
               variant="contained"
-              sx={{ background: "var(--accent)" }}
+              size="small"
+              className="btn-cancel"
+              sx={{ textTransform: "none" }}
+              onClick={onClose}
             >
-              <CircularProgress size={16} sx={{ mr: "8px", color: "#fff" }} />
-              {t("remediation.executing")}
+              {t("remediation.cancel")}
             </Button>
-          )}
-          {(phase === "result" ||
-            (phase === "preview" && !preview?.canRemediate)) && (
-            <Button onClick={onClose} sx={{ color: "var(--muted)" }}>
-              {t("remediation.close")}
+            <Button
+              variant="contained"
+              size="small"
+              sx={{
+                textTransform: "none",
+                background:
+                  "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+                boxShadow: "none",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+                  boxShadow: "none",
+                  transform: "none",
+                },
+              }}
+              onClick={handleConfirm}
+            >
+              {t("remediation.confirm")}
             </Button>
-          )}
-        </Box>
-      </Box>
+          </>
+        )}
+        {phase === "executing" && (
+          <Button
+            disabled
+            variant="contained"
+            size="small"
+            sx={{
+              textTransform: "none",
+              background: "var(--accent)",
+              "&.Mui-disabled": { background: "var(--accent)", opacity: 0.7 },
+            }}
+          >
+            <CircularProgress size={16} sx={{ mr: "8px", color: "#fff" }} />
+            {t("remediation.executing")}
+          </Button>
+        )}
+        {(phase === "result" ||
+          (phase === "preview" && !preview?.canRemediate)) && (
+          <Button
+            variant="contained"
+            size="small"
+            className="btn-cancel"
+            sx={{ textTransform: "none" }}
+            onClick={onClose}
+          >
+            {t("remediation.close")}
+          </Button>
+        )}
+      </DialogActions>
     </Dialog>
   );
 };

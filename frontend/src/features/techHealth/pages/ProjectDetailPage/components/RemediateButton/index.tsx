@@ -18,17 +18,12 @@ export const RemediateButton: React.FC<Props> = ({ projectId }) => {
   return (
     <>
       <Button
+        variant="contained"
         size="small"
-        startIcon={<AutoFixHighOutlined sx={{ fontSize: 16 }} />}
+        startIcon={<AutoFixHighOutlined sx={{ fontSize: 14 }} />}
         onClick={() => setOpen(true)}
         sx={{
-          textTransform: "none",
-          fontSize: "12px",
-          color: "var(--accent)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r)",
-          px: "10px",
-          "&:hover": { background: "var(--s2)" },
+          "&.MuiButton-root:hover": { transform: "none" },
         }}
       >
         {t("remediation.button")}

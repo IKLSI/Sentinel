@@ -636,6 +636,7 @@
   "remediation.none": "Aucune vulnérabilité corrigeable détectée.",
   "remediation.breaking_warning": "Certaines mises à jour sont des changements majeurs (risque de rupture).",
   "remediation.col.dependency": "Dépendance",
+  "remediation.group_title": "Mises à jour proposées",
   "remediation.col.current": "Actuelle",
   "remediation.col.target": "Cible",
   "remediation.col.cve": "CVE",

@@ -636,6 +636,7 @@
   "remediation.none": "No fixable vulnerability detected.",
   "remediation.breaking_warning": "Some updates are major changes (breaking risk).",
   "remediation.col.dependency": "Dependency",
+  "remediation.group_title": "Proposed updates",
   "remediation.col.current": "Current",
   "remediation.col.target": "Target",
   "remediation.col.cve": "CVE",

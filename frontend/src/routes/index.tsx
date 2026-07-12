@@ -118,10 +118,28 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <FullScreenLoader />;
+  if (isAuthenticated) return <Navigate to={ROUTES.HOME} replace />;
+
+  return <>{children}</>;
+};
+
 export const AppRoutes: React.FC = () => (
   <Suspense fallback={<FullScreenLoader />}>
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/login"
+        element={
+          <PublicOnlyRoute>
+            <LoginPage />
+          </PublicOnlyRoute>
+        }
+      />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

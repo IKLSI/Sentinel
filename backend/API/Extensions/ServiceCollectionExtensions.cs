@@ -532,7 +532,7 @@ public static class ServiceCollectionExtensions
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             options.ForwardLimit = settings.ForwardLimit;
             options.KnownProxies.Clear();
-            options.KnownNetworks.Clear();
+            options.KnownIPNetworks.Clear();
 
             foreach (string proxy in settings.KnownProxies)
             {
@@ -543,8 +543,7 @@ public static class ServiceCollectionExtensions
             foreach (string network in settings.KnownNetworks)
             {
                 if (System.Net.IPNetwork.TryParse(network, out System.Net.IPNetwork parsed))
-                    options.KnownNetworks.Add(
-                        new Microsoft.AspNetCore.HttpOverrides.IPNetwork(parsed.BaseAddress, parsed.PrefixLength));
+                    options.KnownIPNetworks.Add(parsed);
             }
         });
 
