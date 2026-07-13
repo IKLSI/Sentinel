@@ -6,7 +6,8 @@ import { useT } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import {
   GRADE_VISUAL,
-  type GradeKey,
+  type SectionKey,
+  UNTRACKED_SECTION,
   HeadCell,
   type ProjectSortState,
 } from "../../helpers";
@@ -14,7 +15,7 @@ import { ProjectRow } from "../ProjectRow";
 import type { ScanFrequency } from "@/types/enums";
 
 interface Props {
-  grade: GradeKey;
+  grade: SectionKey;
   items: ProjectDto[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
@@ -40,9 +41,11 @@ export const ProjectsSection: React.FC<Props> = ({
 }) => {
   const t = useT();
   const cfg = GRADE_VISUAL[grade];
-  const avgScore = items.length
-    ? items.reduce((sum, p) => sum + p.healthScore, 0) / items.length
-    : 0;
+  const isUntrackedSection = grade === UNTRACKED_SECTION;
+  const avgScore =
+    !isUntrackedSection && items.length
+      ? items.reduce((sum, p) => sum + p.healthScore, 0) / items.length
+      : 0;
 
   return (
     <Box
@@ -99,20 +102,28 @@ export const ProjectsSection: React.FC<Props> = ({
               flexShrink: 0,
             }}
           >
-            <CircularProgress
-              variant="determinate"
-              value={100}
-              size={34}
-              thickness={2.5}
-              sx={{ position: "absolute", inset: 0, color: "var(--border)" }}
-            />
-            <CircularProgress
-              variant="determinate"
-              value={avgScore}
-              size={34}
-              thickness={2.5}
-              sx={{ position: "absolute", inset: 0, color: cfg.iconColor }}
-            />
+            {!isUntrackedSection && (
+              <>
+                <CircularProgress
+                  variant="determinate"
+                  value={100}
+                  size={34}
+                  thickness={2.5}
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    color: "var(--border)",
+                  }}
+                />
+                <CircularProgress
+                  variant="determinate"
+                  value={avgScore}
+                  size={34}
+                  thickness={2.5}
+                  sx={{ position: "absolute", inset: 0, color: cfg.iconColor }}
+                />
+              </>
+            )}
             <Box
               sx={{
                 position: "absolute",
@@ -126,7 +137,7 @@ export const ProjectsSection: React.FC<Props> = ({
                 fontWeight: 700,
               }}
             >
-              {grade}
+              {isUntrackedSection ? <cfg.Icon sx={{ fontSize: 18 }} /> : grade}
             </Box>
           </Box>
           <Box sx={{ minWidth: 0 }}>

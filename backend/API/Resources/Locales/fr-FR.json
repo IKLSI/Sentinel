@@ -250,6 +250,8 @@
   "projects.grade.E.subtitle": "Vulnérabilités actives, traitement prioritaire",
   "projects.grade.F.label": "Critique",
   "projects.grade.F.subtitle": "Exposition critique, action immédiate requise",
+  "projects.grade.NONE.label": "Non suivi",
+  "projects.grade.NONE.subtitle": "Aucune dépendance détectée, exclu des statistiques",
   "projects.import_modal.cancel": "Annuler",
   "projects.import_modal.empty": "Tous vos dépôts sont déjà importés.",
   "projects.import_modal.error": "Impossible de charger les dépôts",

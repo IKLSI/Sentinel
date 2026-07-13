@@ -21,9 +21,11 @@ import {
 } from "@/features/techHealth/api/projects";
 import type { ScanFrequency } from "@/types/enums";
 import {
-  GRADE_ORDER,
-  type GradeKey,
+  SECTION_ORDER,
+  type SectionKey,
+  UNTRACKED_SECTION,
   getGrade,
+  isUntracked,
   type ProjectSortState,
 } from "./helpers";
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
@@ -46,7 +48,7 @@ export const ProjectsPage: React.FC = () => {
     () => !!(location.state as { openImport?: boolean } | null)?.openImport,
   );
   const [collapsedSections, setCollapsedSections] = useState<
-    Record<GradeKey, boolean>
+    Record<SectionKey, boolean>
   >({
     F: false,
     E: false,
@@ -54,6 +56,7 @@ export const ProjectsPage: React.FC = () => {
     C: false,
     B: false,
     A: false,
+    [UNTRACKED_SECTION]: false,
   });
   const [sort, setSort] = useState<ProjectSortState | null>({
     col: "critical",
@@ -194,16 +197,20 @@ export const ProjectsPage: React.FC = () => {
   );
 
   const grouped = useMemo(() => {
-    const map: Record<GradeKey, ProjectDto[]> = {
+    const map: Record<SectionKey, ProjectDto[]> = {
       F: [],
       E: [],
       D: [],
       C: [],
       B: [],
       A: [],
+      [UNTRACKED_SECTION]: [],
     };
     filtered.forEach((project) => {
-      map[getGrade(project.healthGrade)].push(project);
+      const section = isUntracked(project)
+        ? UNTRACKED_SECTION
+        : getGrade(project.healthGrade);
+      map[section].push(project);
     });
     const sortGroup = (arr: ProjectDto[]) =>
       arr.sort((a, b) => {
@@ -233,14 +240,14 @@ export const ProjectsPage: React.FC = () => {
             return 0;
         }
       });
-    (Object.keys(map) as GradeKey[]).forEach((grade) => {
+    (Object.keys(map) as SectionKey[]).forEach((grade) => {
       sortGroup(map[grade]);
     });
     return map;
   }, [filtered, sort]);
 
   const visibleSections = useMemo(
-    () => GRADE_ORDER.filter((grade) => grouped[grade].length > 0),
+    () => SECTION_ORDER.filter((grade) => grouped[grade].length > 0),
     [grouped],
   );
 

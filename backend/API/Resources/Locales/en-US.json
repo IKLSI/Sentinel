@@ -250,6 +250,8 @@
   "projects.grade.E.subtitle": "Active vulnerabilities, priority treatment",
   "projects.grade.F.label": "Critical",
   "projects.grade.F.subtitle": "Critical exposure, immediate action required",
+  "projects.grade.NONE.label": "Not tracked",
+  "projects.grade.NONE.subtitle": "No dependencies detected, excluded from stats",
   "projects.import_modal.cancel": "Cancel",
   "projects.import_modal.empty": "All your repositories are already imported.",
   "projects.import_modal.error": "Unable to load repositories",
