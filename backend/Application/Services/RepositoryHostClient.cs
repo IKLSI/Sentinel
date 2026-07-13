@@ -377,29 +377,47 @@ public class RepositoryHostClient
 
         string baseSha = shaProp.GetString() ?? "";
 
-        HostApiResponse created = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/refs", token,
-            new { @ref = $"refs/heads/{branch}", sha = baseSha });
-        if (created.Json == null)
-            return new HostWriteResult(false, null, $"Impossible de créer la branche de remédiation (GitHub {created.Status}) : {WriteHint(created.Status)}");
+        HostApiResponse baseCommit = await SendGitHubAsync(client, HttpMethod.Get, $"{apiBase}/git/commits/{baseSha}", token, null);
+        if (baseCommit.Json is not { } commitObj
+            || !commitObj.TryGetProperty("tree", out JsonElement treeObj)
+            || !treeObj.TryGetProperty("sha", out JsonElement baseTreeShaProp))
+            return new HostWriteResult(false, null, $"Impossible de résoudre l'arbre de base (GitHub {baseCommit.Status}).");
 
+        string baseTreeSha = baseTreeShaProp.GetString() ?? "";
+
+        List<object> treeEntries = new();
         foreach ((string path, string content) in files)
         {
-            HostApiResponse existing = await SendGitHubAsync(client, HttpMethod.Get, $"{apiBase}/contents/{path}?ref={branch}", token, null);
-            string? fileSha = existing.Json is { } exist && exist.TryGetProperty("sha", out JsonElement fileShaProp)
-                ? fileShaProp.GetString()
-                : null;
-
-            HostApiResponse put = await SendGitHubAsync(client, HttpMethod.Put, $"{apiBase}/contents/{path}", token, new
+            HostApiResponse blob = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/blobs", token, new
             {
-                message = $"chore(deps): {title}",
                 content = Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
-                branch,
-                sha = fileSha
+                encoding = "base64"
             });
 
-            if (put.Json == null)
-                return new HostWriteResult(false, null, $"Échec de la mise à jour du fichier {path} (GitHub {put.Status}) : {WriteHint(put.Status)}");
+            if (blob.Json is not { } blobObj || !blobObj.TryGetProperty("sha", out JsonElement blobShaProp))
+                return new HostWriteResult(false, null, $"Échec de l'envoi du fichier {path} (GitHub {blob.Status}) : {WriteHint(blob.Status)}");
+
+            treeEntries.Add(new { path, mode = "100644", type = "blob", sha = blobShaProp.GetString() });
         }
+
+        HostApiResponse newTree = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/trees", token,
+            new { base_tree = baseTreeSha, tree = treeEntries });
+        if (newTree.Json is not { } newTreeObj || !newTreeObj.TryGetProperty("sha", out JsonElement newTreeShaProp))
+            return new HostWriteResult(false, null, $"Impossible de créer l'arbre de remédiation (GitHub {newTree.Status}) : {WriteHint(newTree.Status)}");
+
+        HostApiResponse newCommit = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/commits", token, new
+        {
+            message = $"chore(deps): {title}",
+            tree = newTreeShaProp.GetString(),
+            parents = new[] { baseSha }
+        });
+        if (newCommit.Json is not { } newCommitObj || !newCommitObj.TryGetProperty("sha", out JsonElement newCommitShaProp))
+            return new HostWriteResult(false, null, $"Impossible de créer le commit de remédiation (GitHub {newCommit.Status}) : {WriteHint(newCommit.Status)}");
+
+        HostApiResponse created = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/refs", token,
+            new { @ref = $"refs/heads/{branch}", sha = newCommitShaProp.GetString() });
+        if (created.Json == null)
+            return new HostWriteResult(false, null, $"Impossible de créer la branche de remédiation (GitHub {created.Status}) : {WriteHint(created.Status)}");
 
         HostApiResponse pr = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/pulls", token, new
         {

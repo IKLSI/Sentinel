@@ -494,6 +494,10 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Error).HasMaxLength(2000);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.ProjectId, e.Status });
+            entity.HasIndex(e => e.ProjectId)
+                .IsUnique()
+                .HasFilter("\"Status\" IN ('Pending', 'PullRequestOpen')")
+                .HasDatabaseName("IX_RemediationRequests_ActiveProject");
 
             entity.HasOne(e => e.Project)
                 .WithMany()

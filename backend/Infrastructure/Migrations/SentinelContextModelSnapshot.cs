@@ -485,6 +485,11 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
+                    b.HasIndex("ProjectId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_RemediationRequests_ActiveProject")
+                        .HasFilter("\"Status\" IN ('Pending', 'PullRequestOpen')");
+
                     b.HasIndex("ProjectId", "Status");
 
                     b.ToTable("RemediationRequests");
