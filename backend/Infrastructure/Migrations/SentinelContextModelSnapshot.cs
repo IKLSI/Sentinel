@@ -389,12 +389,15 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("HealthGrade")
+                    b.Property<string>("Coverage")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HealthGrade")
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
 
-                    b.Property<int>("HealthScore")
+                    b.Property<int?>("HealthScore")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastScanAt")

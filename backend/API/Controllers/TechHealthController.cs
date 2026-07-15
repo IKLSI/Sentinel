@@ -173,6 +173,7 @@ public class TechHealthController : BaseController
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId.Value)
             .OrderByDescending(p => p.Dependencies.Any(d => d.Vulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical)))
+            .ThenBy(p => p.Coverage == ScanCoverage.Covered ? 0 : 1)
             .ThenBy(p => p.HealthScore)
             .ThenBy(p => p.Name)
             .ToListAsync();
@@ -238,9 +239,7 @@ public class TechHealthController : BaseController
             Name = dto.Name,
             RepositoryUrl = dto.RepositoryUrl,
             RepositoryType = repoType,
-            ScanFrequency = scanFreq,
-            HealthScore = 100,
-            HealthGrade = "A"
+            ScanFrequency = scanFreq
         };
 
         await _context.Projects.AddAsync(project);

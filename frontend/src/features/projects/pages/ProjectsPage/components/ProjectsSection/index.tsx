@@ -42,9 +42,11 @@ export const ProjectsSection: React.FC<Props> = ({
   const t = useT();
   const cfg = GRADE_VISUAL[grade];
   const isUntrackedSection = grade === UNTRACKED_SECTION;
+  const scoredItems = items.filter((p) => p.healthScore !== null);
   const avgScore =
-    !isUntrackedSection && items.length
-      ? items.reduce((sum, p) => sum + p.healthScore, 0) / items.length
+    !isUntrackedSection && scoredItems.length
+      ? scoredItems.reduce((sum, p) => sum + (p.healthScore ?? 0), 0) /
+        scoredItems.length
       : 0;
 
   return (

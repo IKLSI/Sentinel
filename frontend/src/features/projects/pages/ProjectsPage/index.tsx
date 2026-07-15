@@ -145,6 +145,9 @@ export const ProjectsPage: React.FC = () => {
                         ...p,
                         healthScore: updated.healthScore,
                         healthGrade: updated.healthGrade,
+                        coverage: updated.coverage,
+                        lastScanAt: updated.lastScanAt,
+                        lastScanError: updated.lastScanError,
                         totalDependencies: updated.totalDependencies,
                         vulnerableDependencies: updated.vulnerableDependencies,
                         criticalVulnerabilities:

@@ -7,6 +7,7 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { isCovered } from "@/utils/coverage";
 import {
   type DashPalette,
   HEALTH_CRITICAL_THRESHOLD,
@@ -27,17 +28,18 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
   const t = useT();
   const navigate = useNavigate();
 
-  const { averageScore, belowCount } = useMemo(() => {
-    const scores = projects.map((p) =>
-      Math.max(0, Math.min(100, p.healthScore ?? 0)),
-    );
+  const { averageScore, belowCount, uncoveredCount } = useMemo(() => {
+    const scores = projects
+      .filter((p) => p.healthScore !== null)
+      .map((p) => Math.max(0, Math.min(100, p.healthScore ?? 0)));
     const averageScore = scores.length
       ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
       : 0;
     const belowCount = scores.filter(
       (s) => s < HEALTH_CRITICAL_THRESHOLD,
     ).length;
-    return { averageScore, belowCount };
+    const uncoveredCount = projects.filter((p) => !isCovered(p)).length;
+    return { averageScore, belowCount, uncoveredCount };
   }, [projects]);
 
   const belowText =
@@ -46,6 +48,11 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
       : belowCount === 1
         ? t("dashboard.park.below_one")
         : t("dashboard.park.below_other", { count: belowCount });
+
+  const uncoveredText =
+    uncoveredCount > 0
+      ? t("dashboard.park.uncovered", { count: uncoveredCount })
+      : null;
 
   const gaugeColor = gradeMeta(scoreToGrade(averageScore)).color;
 
@@ -86,6 +93,13 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
           <Box sx={{ mt: "3px", fontSize: "10.5px", color: palette.textMuted }}>
             {belowText}
           </Box>
+          {uncoveredText && (
+            <Box
+              sx={{ mt: "2px", fontSize: "10.5px", color: palette.textMuted2 }}
+            >
+              {uncoveredText}
+            </Box>
+          )}
         </Box>
         <Box
           component="button"

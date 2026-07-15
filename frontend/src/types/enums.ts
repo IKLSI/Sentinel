@@ -45,6 +45,15 @@ export const HealthGrade = {
 } as const;
 export type HealthGrade = (typeof HealthGrade)[keyof typeof HealthGrade];
 
+export const ScanCoverage = {
+  NotScanned: "NotScanned",
+  Failed: "Failed",
+  NoManifest: "NoManifest",
+  NoDependencies: "NoDependencies",
+  Covered: "Covered",
+} as const;
+export type ScanCoverage = (typeof ScanCoverage)[keyof typeof ScanCoverage];
+
 export const Provider = {
   GitHub: "GitHub",
   GitLab: "GitLab",

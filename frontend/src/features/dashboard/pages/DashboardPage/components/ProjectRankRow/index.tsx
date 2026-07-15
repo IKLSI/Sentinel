@@ -8,6 +8,11 @@ import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
+import {
+  GRADE_NOT_AVAILABLE,
+  coverageReasonKey,
+  isCovered,
+} from "@/utils/coverage";
 import { type DashPalette, gradeMeta } from "../../helpers";
 
 interface Props {
@@ -20,10 +25,11 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
   const navigate = useNavigate();
 
   const meta = gradeMeta(project.healthGrade);
-  const scanned = Boolean(project.lastScanAt);
-  const showCritical = scanned && project.criticalVulnerabilities > 0;
+  const covered = isCovered(project);
+  const showCritical = covered && project.criticalVulnerabilities > 0;
 
   const scanText = (() => {
+    if (!covered) return t(coverageReasonKey(project));
     if (!project.lastScanAt) return t("dashboard.park.scan_none");
     const date = new Date(project.lastScanAt);
     if (Number.isNaN(date.getTime())) return t("dashboard.park.scan_none");
@@ -64,13 +70,13 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
           display: "grid",
           placeItems: "center",
           fontFamily: "var(--font-mono)",
-          fontSize: "17px",
+          fontSize: project.healthGrade ? "17px" : "10px",
           fontWeight: 800,
           color: meta.color,
           flexShrink: 0,
         }}
       >
-        {(project.healthGrade ?? "A").toUpperCase()}
+        {project.healthGrade?.toUpperCase() ?? GRADE_NOT_AVAILABLE}
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box
@@ -119,7 +125,7 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
             color: showCritical ? "var(--red)" : palette.vulnIcon,
           }}
         />
-        <span>{scanned ? project.criticalVulnerabilities : "—"}</span>
+        <span>{covered ? project.criticalVulnerabilities : "—"}</span>
       </Box>
       <Box
         sx={{
@@ -135,7 +141,7 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
         }}
       >
         <GppBadOutlined sx={{ fontSize: 14, color: palette.vulnIcon }} />
-        <span>{scanned ? project.totalVulnerabilities : "—"}</span>
+        <span>{covered ? project.totalVulnerabilities : "—"}</span>
       </Box>
       <Box
         sx={{
@@ -153,7 +159,7 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
         <ConfirmationNumberOutlined
           sx={{ fontSize: 14, color: palette.vulnIcon }}
         />
-        <span>{scanned ? project.totalTickets : "—"}</span>
+        <span>{covered ? project.totalTickets : "—"}</span>
       </Box>
     </Box>
   );

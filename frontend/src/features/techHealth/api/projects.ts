@@ -4,6 +4,7 @@ import {
   ScanFrequency,
   type DependencyStatus,
   type DependencyType,
+  type ScanCoverage,
   type VulnerabilitySeverity,
   Provider,
 } from "../../../types/enums";
@@ -14,8 +15,10 @@ export interface ProjectDto {
   repositoryUrl?: string;
   repositoryType: string;
   lastScanAt?: string;
-  healthScore: number;
-  healthGrade: string;
+  lastScanError?: string;
+  healthScore: number | null;
+  healthGrade: string | null;
+  coverage: ScanCoverage;
   scanFrequency: ScanFrequency;
   totalDependencies: number;
   vulnerableDependencies: number;

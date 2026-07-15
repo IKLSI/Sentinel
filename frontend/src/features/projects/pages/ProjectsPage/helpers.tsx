@@ -10,6 +10,7 @@ import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlin
 import RemoveCircleOutlineOutlined from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { isCovered } from "@/utils/coverage";
 
 export const UNTRACKED_SECTION = "NONE" as const;
 
@@ -46,7 +47,7 @@ export const GRADE_VISUAL: Record<
 };
 
 export const isUntracked = (project: ProjectDto): boolean =>
-  project.totalDependencies === 0;
+  !isCovered(project);
 
 export const getGrade = (grade: string | null | undefined): HealthGrade => {
   if (

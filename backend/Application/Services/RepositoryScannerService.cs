@@ -3,7 +3,7 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
 
-public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error);
+public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0);
 
 public class RepositoryScannerService
 {
@@ -94,7 +94,7 @@ public class RepositoryScannerService
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyRegistryClient.ComputeStatus(dep.CurrentVersion, dep.LatestVersion);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, contents.Count(c => c != null));
         }
         catch (Exception ex)
         {

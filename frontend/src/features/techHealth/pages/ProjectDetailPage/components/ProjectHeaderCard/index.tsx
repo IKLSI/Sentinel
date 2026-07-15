@@ -10,8 +10,14 @@ import { useI18n } from "@/i18n/I18nContext";
 import type { ProjectDetailDto } from "@/features/techHealth/api/projects";
 import {
   GRADE_VISUAL,
+  UNTRACKED_SECTION,
   getGrade,
 } from "@/features/projects/pages/ProjectsPage/helpers";
+import {
+  GRADE_NOT_AVAILABLE,
+  coverageReasonKey,
+  isCovered,
+} from "@/utils/coverage";
 
 interface Props {
   project: ProjectDetailDto;
@@ -26,7 +32,8 @@ export const ProjectHeaderCard: React.FC<Props> = ({
 }) => {
   const { t, culture } = useI18n();
 
-  const grade = getGrade(project.healthGrade);
+  const covered = isCovered(project);
+  const grade = covered ? getGrade(project.healthGrade) : UNTRACKED_SECTION;
   const gradeCfg = GRADE_VISUAL[grade];
 
   const freqLabel = (f: string) => {
@@ -72,7 +79,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           />
           <CircularProgress
             variant="determinate"
-            value={project.healthScore}
+            value={project.healthScore ?? 0}
             size={48}
             thickness={2.5}
             sx={{ position: "absolute", inset: 0, color: gradeCfg.iconColor }}
@@ -86,11 +93,11 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               justifyContent: "center",
               color: gradeCfg.iconColor,
               fontFamily: "var(--font-mono)",
-              fontSize: "18px",
+              fontSize: covered ? "18px" : "11px",
               fontWeight: 700,
             }}
           >
-            {grade}
+            {covered ? grade : GRADE_NOT_AVAILABLE}
           </Box>
         </Box>
 
@@ -130,6 +137,27 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                 }}
               >
                 <OpenInNewOutlined sx={{ fontSize: 15 }} />
+              </Box>
+            )}
+            {!covered && (
+              <Box
+                component="span"
+                sx={{
+                  px: "8px",
+                  py: "2px",
+                  borderRadius: "var(--r-xs)",
+                  background: "var(--s3)",
+                  color: "var(--muted2)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t("tech_health.coverage.badge")} ·{" "}
+                {t(coverageReasonKey(project))}
               </Box>
             )}
           </Box>
@@ -193,28 +221,28 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             value: project.totalDependencies,
             icon: <InventoryOutlined sx={{ fontSize: 15 }} />,
             alert: null,
-            dash: !project.lastScanAt,
+            dash: !covered,
           },
           {
             label: t("tech_health.stats.critical"),
             value: project.criticalVulnerabilities,
             icon: <GppBadOutlined sx={{ fontSize: 15 }} />,
             alert: project.criticalVulnerabilities > 0 ? "red" : null,
-            dash: !project.lastScanAt || project.totalDependencies === 0,
+            dash: !covered,
           },
           {
             label: t("tech_health.stats.vulnerabilities"),
             value: project.totalVulnerabilities,
             icon: <GppMaybeOutlined sx={{ fontSize: 15 }} />,
             alert: project.totalVulnerabilities > 0 ? "orange" : null,
-            dash: !project.lastScanAt || project.totalDependencies === 0,
+            dash: !covered,
           },
           {
             label: t("tech_health.stats.eol"),
             value: eolRuntimes,
             icon: <StorageOutlined sx={{ fontSize: 15 }} />,
             alert: eolRuntimes > 0 ? "red" : null,
-            dash: !project.lastScanAt,
+            dash: !covered,
           },
         ].map((s, i) => {
           const accent =
