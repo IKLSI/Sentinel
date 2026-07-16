@@ -14,7 +14,6 @@ import { isCovered } from "@/utils/coverage";
 
 export const UNTRACKED_SECTION = "NONE" as const;
 
-export type GradeKey = HealthGrade;
 export type SectionKey = HealthGrade | typeof UNTRACKED_SECTION;
 
 export const SECTION_ORDER: SectionKey[] = [
