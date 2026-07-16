@@ -658,5 +658,12 @@
   "remediation.failed": "Remediation failed",
   "remediation.view_pr": "View pull request",
   "remediation.error_generic": "An error occurred during remediation.",
-  "remediation.lockfiles": "Lockfiles to regenerate"
+  "remediation.lockfiles": "Lockfiles to regenerate",
+  "tech_health.export.menu": "Export",
+  "tech_health.export.sbom_group": "Software Bill of Materials (SBOM)",
+  "tech_health.export.report_group": "Compliance",
+  "tech_health.export.sbom_cyclonedx": "SBOM · CycloneDX",
+  "tech_health.export.sbom_spdx": "SBOM · SPDX",
+  "tech_health.export.compliance_report": "Compliance report (PDF)",
+  "tech_health.export.error": "Export failed"
 }

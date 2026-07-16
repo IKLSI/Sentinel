@@ -658,5 +658,12 @@
   "remediation.failed": "Échec de la remédiation",
   "remediation.view_pr": "Voir la pull request",
   "remediation.error_generic": "Une erreur est survenue lors de la remédiation.",
-  "remediation.lockfiles": "Fichiers de verrouillage à régénérer"
+  "remediation.lockfiles": "Fichiers de verrouillage à régénérer",
+  "tech_health.export.menu": "Exporter",
+  "tech_health.export.sbom_group": "Nomenclature logicielle (SBOM)",
+  "tech_health.export.report_group": "Conformité",
+  "tech_health.export.sbom_cyclonedx": "SBOM · CycloneDX",
+  "tech_health.export.sbom_spdx": "SBOM · SPDX",
+  "tech_health.export.compliance_report": "Rapport de conformité (PDF)",
+  "tech_health.export.error": "Échec de l'export"
 }
