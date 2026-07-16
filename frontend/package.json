@@ -40,15 +40,15 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@testing-library/jest-dom": "^6.9.1",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.7",
     "jsdom": "^29.1.1",
     "knip": "^6.14.1",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.16",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
     "vitest": "^4.1.7"
   }
 }
