@@ -141,8 +141,12 @@ export const PreviewContent: React.FC<Props> = ({ preview, t }) => {
                   fontSize: "11px",
                 }}
               >
-                <Box sx={{ color: "var(--muted)" }}>{target.currentVersion}</Box>
-                <ArrowForwardOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
+                <Box sx={{ color: "var(--muted)" }}>
+                  {target.currentVersion}
+                </Box>
+                <ArrowForwardOutlined
+                  sx={{ fontSize: 12, color: "var(--muted2)" }}
+                />
                 <Box sx={{ color: "var(--accent)", fontWeight: 700 }}>
                   {target.targetVersion}
                 </Box>
