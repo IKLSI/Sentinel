@@ -90,7 +90,27 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
         onClose={() => setAnchorEl(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        slotProps={{ paper: { sx: { minWidth: 244, mt: "4px" } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              minWidth: 244,
+              mt: "10px",
+              overflow: "visible",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                right: 16,
+                width: 10,
+                height: 10,
+                bgcolor: "background.paper",
+                transform: "translateY(-50%) rotate(45deg)",
+                borderTop: "1px solid var(--border)",
+                borderLeft: "1px solid var(--border)",
+              },
+            },
+          },
+        }}
       >
         <ListSubheader
           sx={{

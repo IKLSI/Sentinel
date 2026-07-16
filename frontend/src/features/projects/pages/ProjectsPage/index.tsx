@@ -56,7 +56,7 @@ export const ProjectsPage: React.FC = () => {
     C: false,
     B: false,
     A: false,
-    [UNTRACKED_SECTION]: false,
+    [UNTRACKED_SECTION]: true,
   });
   const [sort, setSort] = useState<ProjectSortState | null>({
     col: "critical",
