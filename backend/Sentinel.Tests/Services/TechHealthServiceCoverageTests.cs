@@ -31,6 +31,21 @@ public class TechHealthServiceCoverageTests
         return project;
     }
 
+    private static void AddVulnerability(Dependency dependency, VulnerabilitySeverity severity)
+    {
+        dependency.Vulnerabilities.Add(new Vulnerability
+        {
+            CveId = $"CVE-2026-{dependency.Vulnerabilities.Count}-{dependency.Name}",
+            Severity = severity,
+        });
+    }
+
+    private static void AddVulnerabilities(Project project, VulnerabilitySeverity severity, int count)
+    {
+        for (int i = 0; i < count; i++)
+            AddVulnerability(project.Dependencies.ElementAt(i % project.Dependencies.Count), severity);
+    }
+
     [Fact]
     public void ResolveCoverage_WhenNeverScanned_ReturnsNotScanned()
     {
@@ -92,7 +107,7 @@ public class TechHealthServiceCoverageTests
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.MajorUpdate);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(60);
+        TechHealthService.CalculateHealthScore(project).Should().Be(77);
     }
 
     [Fact]
@@ -100,7 +115,7 @@ public class TechHealthServiceCoverageTests
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.MinorUpdate);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(80);
+        TechHealthService.CalculateHealthScore(project).Should().Be(88);
     }
 
     [Fact]
@@ -115,13 +130,9 @@ public class TechHealthServiceCoverageTests
     public void CalculateHealthScore_CriticalVulnerabilityPenaltyIsAbsolute()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
-        project.Dependencies.First().Vulnerabilities.Add(new Vulnerability
-        {
-            CveId = "CVE-2026-0001",
-            Severity = VulnerabilitySeverity.Critical,
-        });
+        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(85);
+        TechHealthService.CalculateHealthScore(project).Should().Be(90);
     }
 
     [Fact]
@@ -130,6 +141,41 @@ public class TechHealthServiceCoverageTests
         Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
         project.Runtimes.Add(new Runtime { Name = "Python", Version = "3.8", IsEol = true });
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(85);
+        TechHealthService.CalculateHealthScore(project).Should().Be(90);
+    }
+
+    [Fact]
+    public void CalculateHealthScore_MassiveVulnerabilityCount_NeverSaturatesAtZero()
+    {
+        Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        AddVulnerabilities(project, VulnerabilitySeverity.High, 60);
+
+        TechHealthService.CalculateHealthScore(project).Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CalculateHealthScore_FixingVulnerabilities_AlwaysRaisesScore()
+    {
+        Project heavilyAffected = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        AddVulnerabilities(heavilyAffected, VulnerabilitySeverity.High, 60);
+
+        Project partiallyFixed = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        AddVulnerabilities(partiallyFixed, VulnerabilitySeverity.High, 30);
+
+        TechHealthService.CalculateHealthScore(partiallyFixed)
+            .Should().BeGreaterThan(TechHealthService.CalculateHealthScore(heavilyAffected));
+    }
+
+    [Fact]
+    public void CalculateHealthScore_WorseProject_AlwaysScoresLowerThanBadProject()
+    {
+        Project bad = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        AddVulnerabilities(bad, VulnerabilitySeverity.High, 20);
+
+        Project worse = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        AddVulnerabilities(worse, VulnerabilitySeverity.High, 80);
+
+        TechHealthService.CalculateHealthScore(worse)
+            .Should().BeLessThan(TechHealthService.CalculateHealthScore(bad));
     }
 }
