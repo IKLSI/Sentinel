@@ -118,7 +118,7 @@ export const createProject = async (
   return response.data;
 };
 
-export interface AvailableRepoDto {
+interface AvailableRepoDto {
   name: string;
   url: string;
   platform: Provider;

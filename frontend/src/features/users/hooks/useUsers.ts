@@ -12,7 +12,7 @@ import {
   deleteMyAccount,
 } from "../api/users";
 
-export const USERS_QUERY_KEY = "users";
+const USERS_QUERY_KEY = "users";
 
 const usersQueryKey = (
   params: { page?: number; role?: UserRole; search?: string } = {},

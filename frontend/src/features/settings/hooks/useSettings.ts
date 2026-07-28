@@ -7,8 +7,8 @@ import {
   connectGitlab,
 } from "../api/settings";
 
-export const ORGANIZATION_QUERY_KEY = ["settings", "organization"] as const;
-export const INTEGRATIONS_QUERY_KEY = ["settings", "integrations"] as const;
+const ORGANIZATION_QUERY_KEY = ["settings", "organization"] as const;
+const INTEGRATIONS_QUERY_KEY = ["settings", "integrations"] as const;
 
 export const useOrganizationSettings = () => {
   const query = useQuery({

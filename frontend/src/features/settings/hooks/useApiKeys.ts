@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createApiKey, listApiKeys, revokeApiKey } from "../api/apiKeys";
 
-export const API_KEYS_QUERY_KEY = ["settings", "apiKeys"] as const;
+const API_KEYS_QUERY_KEY = ["settings", "apiKeys"] as const;
 
 export const useApiKeys = () => {
   const query = useQuery({

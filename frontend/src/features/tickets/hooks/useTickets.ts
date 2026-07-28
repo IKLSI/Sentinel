@@ -10,7 +10,7 @@ import {
 import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import { ticketQueryKey } from "./useTicket";
 
-export const TICKETS_QUERY_KEY = "tickets";
+const TICKETS_QUERY_KEY = "tickets";
 
 const ticketsQueryKey = (filters: TicketFilters) =>
   [TICKETS_QUERY_KEY, filters] as const;

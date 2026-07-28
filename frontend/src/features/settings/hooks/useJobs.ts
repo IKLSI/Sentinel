@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRecurringJobs, triggerTechHealthScan } from "../api/jobs";
 
-export const JOBS_QUERY_KEY = ["settings", "jobs"] as const;
+const JOBS_QUERY_KEY = ["settings", "jobs"] as const;
 
 export const useRecurringJobs = () => {
   const query = useQuery({

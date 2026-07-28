@@ -27,7 +27,6 @@ using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
 using Sentinel.API.Http;
-using Sentinel.API.HealthChecks;
 using Sentinel.API.Jobs;
 using Sentinel.API.Services;
 using Sentinel.Application.Services;
@@ -445,14 +444,6 @@ public static class ServiceCollectionExtensions
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
-
-        return services;
-    }
-
-    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
-    {
-        services.AddHealthChecks()
-            .AddCheck<PostgresHealthCheck>(HealthCheckConstants.PostgresName, tags: new[] { HealthCheckConstants.ReadyTag });
 
         return services;
     }

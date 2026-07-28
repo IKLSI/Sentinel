@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
@@ -6,7 +5,6 @@ using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
-using Sentinel.API.HealthChecks;
 using Sentinel.API.Middleware;
 using Sentinel.Application.Services;
 using Sentinel.API.Hubs;
@@ -44,7 +42,6 @@ public static class Program
             .AddForwardedHeadersPolicy(builder.Configuration)
             .AddLoginRateLimiting()
             .AddMemoryCache()
-            .AddAppHealthChecks()
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
@@ -119,18 +116,6 @@ public static class Program
         app.UseAuthorization();
         app.UseOutputCache();
         app.ConfigureHangfire();
-
-        app.MapHealthChecks(HealthCheckConstants.LivePath, new HealthCheckOptions
-        {
-            Predicate = _ => false,
-            ResponseWriter = HealthCheckResponseWriter.WriteResponse
-        });
-
-        app.MapHealthChecks(HealthCheckConstants.ReadyPath, new HealthCheckOptions
-        {
-            Predicate = c => c.Tags.Contains(HealthCheckConstants.ReadyTag),
-            ResponseWriter = HealthCheckResponseWriter.WriteResponse
-        });
 
         app.MapControllers();
         app.MapHub<NotificationHub>("/hubs/notifications");
