@@ -15,7 +15,10 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { getProject, type ProjectDto } from "@/features/techHealth/api/projects";
+import {
+  getProject,
+  type ProjectDto,
+} from "@/features/techHealth/api/projects";
 import {
   SECTION_ORDER,
   type SectionKey,

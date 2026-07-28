@@ -76,7 +76,10 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
       {
         onError: (err) =>
           showToast(
-            extractApiError(err, t("tickets.detail.attachments_download_error")),
+            extractApiError(
+              err,
+              t("tickets.detail.attachments_download_error"),
+            ),
             "error",
           ),
       },

@@ -12,7 +12,10 @@ import PictureAsPdfOutlined from "@mui/icons-material/PictureAsPdfOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { SBOM_FORMAT, type SbomFormat } from "@/features/techHealth/api/projects";
+import {
+  SBOM_FORMAT,
+  type SbomFormat,
+} from "@/features/techHealth/api/projects";
 import {
   useDownloadSbom,
   useDownloadComplianceReport,
@@ -29,7 +32,8 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const downloadSbomMutation = useDownloadSbom();
   const downloadReportMutation = useDownloadComplianceReport();
-  const busy = downloadSbomMutation.isPending || downloadReportMutation.isPending;
+  const busy =
+    downloadSbomMutation.isPending || downloadReportMutation.isPending;
 
   const open = Boolean(anchorEl);
 

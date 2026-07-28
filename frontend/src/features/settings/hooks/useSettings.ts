@@ -38,7 +38,10 @@ export const useIntegrationSettings = () => {
   });
 
   return {
-    integrations: query.data ?? { hasGithubToken: false, hasGitlabToken: false },
+    integrations: query.data ?? {
+      hasGithubToken: false,
+      hasGitlabToken: false,
+    },
     loading: query.isLoading,
   };
 };

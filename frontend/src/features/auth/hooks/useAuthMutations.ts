@@ -13,13 +13,8 @@ import {
 
 export const useLoginMutation = () => {
   return useMutation({
-    mutationFn: ({
-      email,
-      password,
-    }: {
-      email: string;
-      password: string;
-    }) => login(email, password),
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      login(email, password),
   });
 };
 
@@ -43,13 +38,8 @@ export const useForgotPasswordMutation = () => {
 
 export const useResetPasswordMutation = () => {
   return useMutation({
-    mutationFn: ({
-      token,
-      password,
-    }: {
-      token: string;
-      password: string;
-    }) => resetPassword(token, password),
+    mutationFn: ({ token, password }: { token: string; password: string }) =>
+      resetPassword(token, password),
   });
 };
 

@@ -52,13 +52,8 @@ export const useAcceptInvitation = () => {
 export const useToggleUserActive = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      userId,
-      isActive,
-    }: {
-      userId: string;
-      isActive: boolean;
-    }) => toggleUserActive(userId, isActive),
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
+      toggleUserActive(userId, isActive),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] }),
   });

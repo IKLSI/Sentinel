@@ -70,7 +70,10 @@ export const useDeleteComment = (ticketId: string) => {
     onSuccess: (_data, commentId) => {
       queryClient.setQueryData<Ticket>(ticketQueryKey(ticketId), (prev) =>
         prev
-          ? { ...prev, comments: prev.comments.filter((c) => c.id !== commentId) }
+          ? {
+              ...prev,
+              comments: prev.comments.filter((c) => c.id !== commentId),
+            }
           : prev,
       );
     },

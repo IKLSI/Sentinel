@@ -140,7 +140,10 @@ export const TicketsPage: React.FC = () => {
         }
       },
       onError: (err) =>
-        showToast(extractApiError(err, t("tickets.list.create_error")), "error"),
+        showToast(
+          extractApiError(err, t("tickets.list.create_error")),
+          "error",
+        ),
     });
   };
 
@@ -207,7 +210,10 @@ export const TicketsPage: React.FC = () => {
     deleteTicketMutation.mutate(deleteTarget.id, {
       onSuccess: () => setDeleteTarget(null),
       onError: (err) =>
-        showToast(extractApiError(err, t("tickets.list.delete_error")), "error"),
+        showToast(
+          extractApiError(err, t("tickets.list.delete_error")),
+          "error",
+        ),
     });
   };
 

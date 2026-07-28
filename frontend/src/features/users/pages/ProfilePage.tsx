@@ -119,7 +119,10 @@ export const ProfilePage: React.FC = () => {
         showToast(t("profile.toast.updated"), "success");
       },
       onError: (err) =>
-        showToast(extractApiError(err, t("profile.toast.update_error")), "error"),
+        showToast(
+          extractApiError(err, t("profile.toast.update_error")),
+          "error",
+        ),
     });
   };
 
@@ -143,7 +146,10 @@ export const ProfilePage: React.FC = () => {
         URL.revokeObjectURL(url);
       },
       onError: (err) =>
-        showToast(extractApiError(err, t("profile.gdpr.export_error")), "error"),
+        showToast(
+          extractApiError(err, t("profile.gdpr.export_error")),
+          "error",
+        ),
     });
   };
 
@@ -157,7 +163,10 @@ export const ProfilePage: React.FC = () => {
         window.location.href = "/login";
       },
       onError: (err) =>
-        showToast(extractApiError(err, t("profile.gdpr.delete_error")), "error"),
+        showToast(
+          extractApiError(err, t("profile.gdpr.delete_error")),
+          "error",
+        ),
     });
   };
 
