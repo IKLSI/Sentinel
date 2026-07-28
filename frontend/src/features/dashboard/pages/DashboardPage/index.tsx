@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
 import { Theme } from "@/types/enums";
+import { isCovered } from "@/utils/coverage";
 import {
   EMPTY_STATS,
   GRADE_ORDER,
@@ -42,9 +43,12 @@ export const DashboardPage: React.FC = () => {
   const projects = useMemo(
     () =>
       [...(projectsQuery.data ?? [])].sort((a, b) => {
-        const ga = GRADE_ORDER[a.healthGrade?.toUpperCase() ?? "A"] ?? 5;
-        const gb = GRADE_ORDER[b.healthGrade?.toUpperCase() ?? "A"] ?? 5;
+        const ca = isCovered(a) ? 0 : 1;
+        const cb = isCovered(b) ? 0 : 1;
+        const ga = GRADE_ORDER[a.healthGrade?.toUpperCase() ?? ""] ?? 5;
+        const gb = GRADE_ORDER[b.healthGrade?.toUpperCase() ?? ""] ?? 5;
         return (
+          ca - cb ||
           ga - gb ||
           (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0) ||
           (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0) ||

@@ -1,6 +1,6 @@
 import apiClient from "../../../services/client";
 
-export interface RemediationTargetDto {
+interface RemediationTargetDto {
   name: string;
   ecosystem: string;
   currentVersion: string;
@@ -9,7 +9,7 @@ export interface RemediationTargetDto {
   cveIds: string[];
 }
 
-export interface StaleLockfileDto {
+interface StaleLockfileDto {
   path: string;
   command: string;
 }

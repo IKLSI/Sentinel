@@ -7,8 +7,11 @@ public class SentinelContextDesignTimeFactory : IDesignTimeDbContextFactory<Sent
 {
     public SentinelContext CreateDbContext(string[] args)
     {
+        string connection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+            ?? "Host=localhost;Database=sentinel_design;Username=postgres;Password=postgres";
+
         DbContextOptionsBuilder<SentinelContext> optionsBuilder = new DbContextOptionsBuilder<SentinelContext>();
-        optionsBuilder.UseNpgsql("Host=localhost;Database=sentinel_design;Username=postgres;Password=postgres");
+        optionsBuilder.UseNpgsql(connection);
         return new SentinelContext(optionsBuilder.Options);
     }
 }

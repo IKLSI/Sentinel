@@ -54,6 +54,30 @@ public class SafeVersionResolverTests
     }
 
     [Fact]
+    public void Resolve_PrereleaseCurrent_ReleaseFix_ReturnsRelease()
+    {
+        string? target = SafeVersionResolver.Resolve("2.0.0-rc", new[] { "2.0.0" });
+
+        target.Should().Be("2.0.0");
+    }
+
+    [Fact]
+    public void Resolve_PrereleaseCurrent_SameCoreLowerPrerelease_ReturnsNull()
+    {
+        string? target = SafeVersionResolver.Resolve("2.0.0-rc.2", new[] { "2.0.0-rc.1" });
+
+        target.Should().BeNull();
+    }
+
+    [Fact]
+    public void Resolve_PrereleaseCurrent_HigherPrerelease_ReturnsFix()
+    {
+        string? target = SafeVersionResolver.Resolve("2.0.0-rc.1", new[] { "2.0.0-rc.2" });
+
+        target.Should().Be("2.0.0");
+    }
+
+    [Fact]
     public void IsBreaking_MajorBump_ReturnsTrue()
     {
         SafeVersionResolver.IsBreaking("1.9.0", "2.0.0").Should().BeTrue();

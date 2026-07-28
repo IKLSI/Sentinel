@@ -15,7 +15,14 @@ export const ResultContent: React.FC<Props> = ({ result, t }) => {
   const success = result.status === STATUS_SUCCESS;
   const accent = success ? "var(--accent)" : "var(--red)";
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: "20px" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        py: "20px",
+      }}
+    >
       <Box
         sx={{
           display: "flex",

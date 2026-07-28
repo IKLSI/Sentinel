@@ -8,8 +8,9 @@ public class ProjectDto
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }
-    public int HealthScore { get; set; }
-    public string HealthGrade { get; set; } = string.Empty;
+    public int? HealthScore { get; set; }
+    public string? HealthGrade { get; set; }
+    public string Coverage { get; set; } = string.Empty;
     public string ScanFrequency { get; set; } = string.Empty;
     public int TotalDependencies { get; set; }
     public int VulnerableDependencies { get; set; }

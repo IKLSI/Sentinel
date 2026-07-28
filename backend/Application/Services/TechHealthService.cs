@@ -18,6 +18,18 @@ namespace Sentinel.Application.Services;
 
 public class TechHealthService
 {
+    private const int MaxOutdatedPenalty = 40;
+    private const int MajorUpdateWeight = 2;
+    private const int MinorUpdateWeight = 1;
+    private const int CriticalPenalty = 15;
+    private const int HighPenalty = 10;
+    private const int MediumPenalty = 5;
+    private const int LowPenalty = 2;
+    private const int EolDependencyPenalty = 10;
+    private const int EolRuntimePenalty = 15;
+    private const int ScoreDecayConstant = 150;
+    private const int MaxScore = 100;
+
     private readonly SentinelContext _context;
     private readonly HttpClient _osvClient;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -113,9 +125,12 @@ public class TechHealthService
             .ToHashSetAsync();
 
         string? scanError = null;
+        int manifestsRead = 0;
+        bool scanRan = false;
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
+            scanRan = true;
             string? tokenOverride = null;
             Organization? org = await _context.Organizations.FindAsync(project.OrganizationId);
             if (org != null)
@@ -129,6 +144,7 @@ public class TechHealthService
             ScanOutcome outcome =
                 await _repositoryScanner.ScanRepositoryAsync(project.Id, project.RepositoryUrl, tokenOverride);
             scanError = outcome.Error;
+            manifestsRead = outcome.ManifestsRead;
 
             if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
             {
@@ -202,8 +218,9 @@ public class TechHealthService
             if (result.EolDate is { } eolDate) result.Runtime.EolDate = eolDate;
         }
 
-        project.HealthScore = CalculateHealthScore(project);
-        project.HealthGrade = ScoreToGrade(project.HealthScore);
+        project.Coverage = ResolveCoverage(project, scanRan, scanError, manifestsRead);
+        project.HealthScore = project.Coverage == ScanCoverage.Covered ? CalculateHealthScore(project) : null;
+        project.HealthGrade = project.HealthScore is { } score ? ScoreToGrade(score) : null;
         project.LastScanAt = DateTime.UtcNow;
         project.LastScanError = scanError;
 
@@ -651,39 +668,53 @@ public class TechHealthService
         }
     }
 
-    private static int CalculateHealthScore(Project project)
+    public static ScanCoverage ResolveCoverage(Project project, bool scanRan, string? scanError, int manifestsRead)
     {
-        int score = 100;
+        if (project.Dependencies.Any() || project.Runtimes.Any()) return ScanCoverage.Covered;
+        if (!scanRan) return ScanCoverage.NotScanned;
+        if (scanError != null) return ScanCoverage.Failed;
+        return manifestsRead == 0 ? ScanCoverage.NoManifest : ScanCoverage.NoDependencies;
+    }
+
+    private static int SeverityPenalty(VulnerabilitySeverity severity) => severity switch
+    {
+        VulnerabilitySeverity.Critical => CriticalPenalty,
+        VulnerabilitySeverity.High => HighPenalty,
+        VulnerabilitySeverity.Medium => MediumPenalty,
+        VulnerabilitySeverity.Low => LowPenalty,
+        _ => 0
+    };
+
+    private static int OutdatedPenalty(Project project)
+    {
+        if (project.Dependencies.Count == 0) return 0;
+
+        int outdatedWeight = project.Dependencies.Sum(d => d.Status switch
+        {
+            DependencyStatus.MajorUpdate => MajorUpdateWeight,
+            DependencyStatus.MinorUpdate => MinorUpdateWeight,
+            _ => 0
+        });
+
+        double maxWeight = project.Dependencies.Count * MajorUpdateWeight;
+
+        return (int)Math.Round(outdatedWeight / maxWeight * MaxOutdatedPenalty);
+    }
+
+    public static int CalculateHealthScore(Project project)
+    {
+        int penalty = OutdatedPenalty(project);
 
         foreach (Dependency dep in project.Dependencies)
         {
-            score -= dep.Status switch
-            {
-                DependencyStatus.MajorUpdate => 2,
-                DependencyStatus.MinorUpdate => 1,
-                DependencyStatus.EOL => 10,
-                _ => 0
-            };
+            if (dep.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty;
 
-            foreach (Vulnerability vuln in dep.Vulnerabilities)
-            {
-                score -= vuln.Severity switch
-                {
-                    VulnerabilitySeverity.Critical => 15,
-                    VulnerabilitySeverity.High => 10,
-                    VulnerabilitySeverity.Medium => 5,
-                    VulnerabilitySeverity.Low => 2,
-                    _ => 0
-                };
-            }
+            penalty += dep.Vulnerabilities.Sum(v => SeverityPenalty(v.Severity));
         }
 
-        foreach (Runtime rt in project.Runtimes)
-        {
-            if (rt.IsEol) score -= 15;
-        }
+        penalty += project.Runtimes.Count(r => r.IsEol) * EolRuntimePenalty;
 
-        return Math.Max(0, Math.Min(100, score));
+        return (int)Math.Round(MaxScore * Math.Exp(-penalty / (double)ScoreDecayConstant));
     }
 
     private static string ScoreToGrade(int score) => score switch
@@ -720,6 +751,7 @@ public class TechHealthService
             LastScanError = project.LastScanError,
             HealthScore = project.HealthScore,
             HealthGrade = project.HealthGrade,
+            Coverage = project.Coverage.ToString(),
             ScanFrequency = project.ScanFrequency.ToString(),
             TotalDependencies = project.Dependencies?.Count ?? 0,
             VulnerableDependencies = project.Dependencies?.Count(d => d.Status == DependencyStatus.Vulnerable) ?? 0,

@@ -67,66 +67,83 @@ public class RemediationService
 
     public async Task<RemediationResultDto> ExecuteAsync(Guid projectId, Guid organizationId, Guid? userId)
     {
-        RemediationRequest? openRequest = await _context.RemediationRequests
-            .AsNoTracking()
-            .Where(r => r.ProjectId == projectId && r.Status == RemediationStatus.PullRequestOpen)
-            .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (openRequest != null)
-            return new RemediationResultDto
-            {
-                Id = openRequest.Id,
-                Status = openRequest.Status.ToString(),
-                PullRequestUrl = openRequest.PullRequestUrl,
-                DependenciesPatched = openRequest.DependenciesPatched,
-                HasBreakingChanges = openRequest.HasBreakingChanges,
-                Error = "Une pull request de remédiation est déjà ouverte pour ce projet. Fusionnez-la ou fermez-la avant d'en générer une nouvelle."
-            };
-
-        RemediationPlan plan = await BuildPlanAsync(projectId);
+        RemediationRequest? existing = await FindActiveRequestAsync(projectId);
+        if (existing != null)
+            return AlreadyActive(existing);
 
         RemediationRequest request = new RemediationRequest
         {
             ProjectId = projectId,
             OrganizationId = organizationId,
             CreatedByUserId = userId,
-            HasBreakingChanges = plan.Targets.Any(t => t.IsBreaking),
-            DependenciesPatched = plan.Targets.Count,
-            TargetsJson = System.Text.Json.JsonSerializer.Serialize(plan.Targets.Select(ToTargetDto))
+            Status = RemediationStatus.Pending
         };
 
-        if (plan.FileChanges.Count == 0)
+        _context.RemediationRequests.Add(request);
+
+        try
         {
-            request.Status = RemediationStatus.NoChanges;
-            request.Error = plan.Reason;
-            request.CompletedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
-        else
+        catch (DbUpdateException)
         {
-            string branch = $"sentinel/remediate-{request.Id:N}".Substring(0, 34);
-            string title = BuildTitle(plan.Targets);
-            string body = BuildBody(plan.Targets, plan.StaleLockfiles);
+            _context.Entry(request).State = EntityState.Detached;
+            RemediationRequest? concurrent = await FindActiveRequestAsync(projectId);
+            return concurrent != null
+                ? AlreadyActive(concurrent)
+                : new RemediationResultDto
+                {
+                    Status = RemediationStatus.Failed.ToString(),
+                    Error = "Une remédiation est déjà en cours pour ce projet. Réessayez dans un instant."
+                };
+        }
 
-            HostWriteResult result = await _hostClient.CreatePullRequestAsync(
-                plan.Host, plan.Owner, plan.Repo, plan.Token ?? "", branch, title, body, plan.FileChanges);
+        RemediationPlan? plan = null;
 
-            request.BranchName = branch;
-            request.CompletedAt = DateTime.UtcNow;
+        try
+        {
+            plan = await BuildPlanAsync(projectId);
 
-            if (result.Success)
+            request.HasBreakingChanges = plan.Targets.Any(t => t.IsBreaking);
+            request.DependenciesPatched = plan.Targets.Count;
+            request.TargetsJson = System.Text.Json.JsonSerializer.Serialize(plan.Targets.Select(ToTargetDto));
+
+            if (plan.FileChanges.Count == 0)
             {
-                request.Status = RemediationStatus.PullRequestOpen;
-                request.PullRequestUrl = result.Url;
+                request.Status = RemediationStatus.NoChanges;
+                request.Error = plan.Reason;
             }
             else
             {
-                request.Status = RemediationStatus.Failed;
-                request.Error = result.Error;
+                string branch = $"sentinel/remediate-{request.Id:N}".Substring(0, 34);
+                string title = BuildTitle(plan.Targets);
+                string body = BuildBody(plan.Targets, plan.StaleLockfiles);
+
+                HostWriteResult result = await _hostClient.CreatePullRequestAsync(
+                    plan.Host, plan.Owner, plan.Repo, plan.Token ?? "", branch, title, body, plan.FileChanges);
+
+                request.BranchName = branch;
+
+                if (result.Success)
+                {
+                    request.Status = RemediationStatus.PullRequestOpen;
+                    request.PullRequestUrl = result.Url;
+                }
+                else
+                {
+                    request.Status = RemediationStatus.Failed;
+                    request.Error = result.Error;
+                }
             }
         }
+        catch (Exception ex)
+        {
+            request.Status = RemediationStatus.Failed;
+            request.Error = "Erreur interne lors de la génération de la remédiation.";
+            _logger.LogError(ex, "Échec de la remédiation pour le projet {ProjectId}", projectId);
+        }
 
-        _context.RemediationRequests.Add(request);
+        request.CompletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return new RemediationResultDto
@@ -137,9 +154,30 @@ public class RemediationService
             Error = request.Error,
             DependenciesPatched = request.DependenciesPatched,
             HasBreakingChanges = request.HasBreakingChanges,
-            StaleLockfiles = plan.StaleLockfiles.Select(ToLockfileDto).ToList()
+            StaleLockfiles = plan?.StaleLockfiles.Select(ToLockfileDto).ToList() ?? new List<StaleLockfileDto>()
         };
     }
+
+    private Task<RemediationRequest?> FindActiveRequestAsync(Guid projectId)
+        => _context.RemediationRequests
+            .AsNoTracking()
+            .Where(r => r.ProjectId == projectId
+                && (r.Status == RemediationStatus.PullRequestOpen || r.Status == RemediationStatus.Pending))
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefaultAsync();
+
+    private static RemediationResultDto AlreadyActive(RemediationRequest request)
+        => new RemediationResultDto
+        {
+            Id = request.Id,
+            Status = request.Status.ToString(),
+            PullRequestUrl = request.PullRequestUrl,
+            DependenciesPatched = request.DependenciesPatched,
+            HasBreakingChanges = request.HasBreakingChanges,
+            Error = request.Status == RemediationStatus.PullRequestOpen
+                ? "Une pull request de remédiation est déjà ouverte pour ce projet. Fusionnez-la ou fermez-la avant d'en générer une nouvelle."
+                : "Une remédiation est déjà en cours pour ce projet. Réessayez dans un instant."
+        };
 
     private async Task<RemediationPlan> BuildPlanAsync(Guid projectId)
     {

@@ -223,15 +223,23 @@ public class ExportService
             ws.Cell(row, 1).Value = p.Name;
 
             (_, XLColor grFg) = GradeColor(p.HealthGrade);
-            ApplyStatusCell(ws.Cell(row, 2), p.HealthGrade, grFg);
+            ApplyStatusCell(ws.Cell(row, 2), p.HealthGrade ?? L.GradeNotAvailable, grFg);
 
             IXLCell scoreCell = ws.Cell(row, 3);
-            scoreCell.Value = p.HealthScore;
-            scoreCell.Style.NumberFormat.Format = "0";
             scoreCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            (_, XLColor scoreFg) = ScoreColor(p.HealthScore);
-            scoreCell.Style.Font.FontColor = scoreFg;
-            scoreCell.Style.Font.Bold = true;
+            if (p.HealthScore is { } score)
+            {
+                scoreCell.Value = score;
+                scoreCell.Style.NumberFormat.Format = "0";
+                (_, XLColor scoreFg) = ScoreColor(score);
+                scoreCell.Style.Font.FontColor = scoreFg;
+                scoreCell.Style.Font.Bold = true;
+            }
+            else
+            {
+                scoreCell.Value = L.GradeNotAvailable;
+                scoreCell.Style.Font.FontColor = GrayFg;
+            }
 
             int toUpdate = p.Dependencies.Count(d => d.Status == DependencyStatus.MinorUpdate || d.Status == DependencyStatus.MajorUpdate);
             int vulnerableDeps = p.Dependencies.Count(d => d.Vulnerabilities.Any());
@@ -639,8 +647,9 @@ public class ExportService
         ws.Row(row).Height = 22;
     }
 
-    private static (XLColor bg, XLColor fg) GradeColor(string grade) => grade switch
+    private static (XLColor bg, XLColor fg) GradeColor(string? grade) => grade switch
     {
+        null => (GrayBg, GrayFg),
         "A" => (GreenBg, GreenFg),
         "B" => (GreenBg2, GreenFg2),
         "C" => (YellowBg, YellowFg),
@@ -789,6 +798,7 @@ public class ExportService
         public required string NoDependencies { get; init; }
         public required string NoVulnerabilities { get; init; }
         public required string StatusUnknown { get; init; }
+        public required string GradeNotAvailable { get; init; }
 
         public required string RuntimeActive { get; init; }
         public required string RuntimeSoonEol { get; init; }
@@ -822,6 +832,7 @@ public class ExportService
                 NoDependencies = "No dependency detected",
                 NoVulnerabilities = "No vulnerability detected",
                 StatusUnknown = "Unknown",
+                GradeNotAvailable = "N/A",
                 RuntimeActive = "Active",
                 RuntimeSoonEol = "Soon obsolete",
                 RuntimeEol = "Obsolete",
@@ -853,6 +864,7 @@ public class ExportService
                 NoDependencies = "Aucune dépendance détectée",
                 NoVulnerabilities = "Aucune vulnérabilité détectée",
                 StatusUnknown = "Inconnu",
+                GradeNotAvailable = "N/A",
                 RuntimeActive = "Actif",
                 RuntimeSoonEol = "Bientôt obsolète",
                 RuntimeEol = "Obsolète",

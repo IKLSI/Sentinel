@@ -327,6 +327,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.RepositoryType).HasConversion<string>();
             entity.Property(e => e.ScanFrequency).HasConversion<string>();
+            entity.Property(e => e.Coverage).HasConversion<string>();
             entity.Property(e => e.HealthGrade).HasMaxLength(2);
             entity.HasIndex(e => e.OrganizationId);
 
@@ -494,6 +495,10 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Error).HasMaxLength(2000);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.ProjectId, e.Status });
+            entity.HasIndex(e => e.ProjectId)
+                .IsUnique()
+                .HasFilter("\"Status\" IN ('Pending', 'PullRequestOpen')")
+                .HasDatabaseName("IX_RemediationRequests_ActiveProject");
 
             entity.HasOne(e => e.Project)
                 .WithMany()

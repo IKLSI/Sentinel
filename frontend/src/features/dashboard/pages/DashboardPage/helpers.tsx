@@ -250,8 +250,15 @@ const GRADE_METAS: Record<string, GradeMeta> = {
   F: { color: "var(--red)", subtle: "var(--red-subtle)" },
 };
 
-export const gradeMeta = (grade?: string): GradeMeta =>
-  GRADE_METAS[(grade ?? "A").toUpperCase()] ?? GRADE_METAS.A;
+const NOT_AVAILABLE_META: GradeMeta = {
+  color: "var(--muted2)",
+  subtle: "var(--s3)",
+};
+
+export const gradeMeta = (grade?: string | null): GradeMeta =>
+  grade
+    ? (GRADE_METAS[grade.toUpperCase()] ?? NOT_AVAILABLE_META)
+    : NOT_AVAILABLE_META;
 
 const SCORE_GRADE_THRESHOLDS: Array<[number, string]> = [
   [90, "A"],

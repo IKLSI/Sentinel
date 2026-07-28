@@ -297,6 +297,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<RemediationService>();
         services.AddScoped<TechHealthService>();
+        services.AddScoped<SbomService>();
+        services.AddScoped<ComplianceReportService>();
         services.AddScoped<DashboardService>();
         services.AddScoped<DataSeeder>();
         services.AddScoped<TokenProtector>();

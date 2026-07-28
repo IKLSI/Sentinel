@@ -44,17 +44,21 @@ public class TechHealthController : BaseController
     private readonly TechHealthService _techHealthService;
     private readonly IBackgroundJobClient _backgroundJobs;
     private readonly ExportService _exportService;
+    private readonly SbomService _sbomService;
+    private readonly ComplianceReportService _complianceReportService;
     private readonly IAuditLogService _auditLog;
     private readonly RepositoryHostClient _repositoryHostClient;
     private readonly TokenProtector _tokenProtector;
     private readonly QuotaService _quotaService;
 
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, QuotaService quotaService)
+    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, SbomService sbomService, ComplianceReportService complianceReportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, QuotaService quotaService)
     {
         _context = context;
         _techHealthService = techHealthService;
         _backgroundJobs = backgroundJobs;
         _exportService = exportService;
+        _sbomService = sbomService;
+        _complianceReportService = complianceReportService;
         _auditLog = auditLog;
         _repositoryHostClient = repositoryHostClient;
         _tokenProtector = tokenProtector;
@@ -158,6 +162,42 @@ public class TechHealthController : BaseController
         return File(export.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", export.FileName);
     }
 
+    [HttpGet("projects/{id:guid}/sbom")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<IActionResult> ExportSbom(Guid id, [FromQuery] string format, CancellationToken cancellationToken)
+    {
+        Guid? organizationId = GetOrganizationId();
+
+        if (organizationId == null) return Unauthorized();
+
+        SbomFormat sbomFormat = string.Equals(format, "spdx", StringComparison.OrdinalIgnoreCase)
+            ? SbomFormat.Spdx
+            : SbomFormat.CycloneDx;
+
+        ExportResult? export = await _sbomService.GenerateAsync(id, organizationId.Value, sbomFormat, cancellationToken);
+
+        if (export == null)
+            return NotFound(new { message = "Projet introuvable" });
+
+        return File(export.Content, "application/json", export.FileName);
+    }
+
+    [HttpGet("projects/{id:guid}/compliance-report")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<IActionResult> ExportComplianceReport(Guid id, CancellationToken cancellationToken)
+    {
+        Guid? organizationId = GetOrganizationId();
+
+        if (organizationId == null) return Unauthorized();
+
+        ExportResult? export = await _complianceReportService.GenerateAsync(id, organizationId.Value, cancellationToken);
+
+        if (export == null)
+            return NotFound(new { message = "Projet introuvable" });
+
+        return File(export.Content, "application/pdf", export.FileName);
+    }
+
     [HttpGet("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
@@ -173,6 +213,7 @@ public class TechHealthController : BaseController
             .Include(p => p.Runtimes)
             .Where(p => p.OrganizationId == organizationId.Value)
             .OrderByDescending(p => p.Dependencies.Any(d => d.Vulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical)))
+            .ThenBy(p => p.Coverage == ScanCoverage.Covered ? 0 : 1)
             .ThenBy(p => p.HealthScore)
             .ThenBy(p => p.Name)
             .ToListAsync();
@@ -238,9 +279,7 @@ public class TechHealthController : BaseController
             Name = dto.Name,
             RepositoryUrl = dto.RepositoryUrl,
             RepositoryType = repoType,
-            ScanFrequency = scanFreq,
-            HealthScore = 100,
-            HealthGrade = "A"
+            ScanFrequency = scanFreq
         };
 
         await _context.Projects.AddAsync(project);

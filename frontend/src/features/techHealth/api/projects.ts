@@ -1,9 +1,14 @@
 import apiClient from "../../../services/client";
-import { downloadExcel } from "../../../utils/download";
+import {
+  downloadExcel,
+  downloadFile,
+  MIME_TYPES,
+} from "../../../utils/download";
 import {
   ScanFrequency,
   type DependencyStatus,
   type DependencyType,
+  type ScanCoverage,
   type VulnerabilitySeverity,
   Provider,
 } from "../../../types/enums";
@@ -14,8 +19,10 @@ export interface ProjectDto {
   repositoryUrl?: string;
   repositoryType: string;
   lastScanAt?: string;
-  healthScore: number;
-  healthGrade: string;
+  lastScanError?: string;
+  healthScore: number | null;
+  healthGrade: string | null;
+  coverage: ScanCoverage;
   scanFrequency: ScanFrequency;
   totalDependencies: number;
   vulnerableDependencies: number;
@@ -145,5 +152,42 @@ export const exportProjectsExcel = async (): Promise<void> => {
   await downloadExcel(
     "/api/tech-health/projects/export/excel",
     `techhealth-${new Date().toISOString().split("T")[0]}.xlsx`,
+  );
+};
+
+export const SBOM_FORMAT = {
+  CycloneDx: "cyclonedx",
+  Spdx: "spdx",
+} as const;
+
+export type SbomFormat = (typeof SBOM_FORMAT)[keyof typeof SBOM_FORMAT];
+
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "projet";
+
+export const downloadSbom = async (
+  projectId: string,
+  projectName: string,
+  format: SbomFormat,
+): Promise<void> => {
+  await downloadFile(
+    `/api/tech-health/projects/${projectId}/sbom`,
+    `sbom-${slugify(projectName)}-${format}.json`,
+    MIME_TYPES.JSON,
+    { format },
+  );
+};
+
+export const downloadComplianceReport = async (
+  projectId: string,
+  projectName: string,
+): Promise<void> => {
+  await downloadFile(
+    `/api/tech-health/projects/${projectId}/compliance-report`,
+    `rapport-conformite-${slugify(projectName)}.pdf`,
+    MIME_TYPES.PDF,
   );
 };

@@ -9,6 +9,106 @@ namespace Sentinel.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        private static readonly (string Table, string OrgExpression)[] DirectTenantTables =
+        {
+            ("Organizations", "\"Id\"::text"),
+            ("Users", "\"OrganizationId\"::text"),
+            ("UserInvitations", "\"OrganizationId\"::text"),
+            ("TicketStatuses", "\"OrganizationId\"::text"),
+            ("Tickets", "\"OrganizationId\"::text"),
+            ("Projects", "\"OrganizationId\"::text"),
+            ("AuditLogs", "\"OrganizationId\"::text"),
+            ("Notifications", "\"OrganizationId\"::text"),
+            ("ApiKeys", "\"OrganizationId\"::text"),
+            ("RemediationRequests", "\"OrganizationId\"::text"),
+        };
+
+        private static readonly (string Table, string Subquery)[] IndirectTenantTables =
+        {
+            ("TicketComments", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketComments\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+            ("TicketHistories", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketHistories\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+            ("TicketAttachments", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketAttachments\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+            ("Dependencies", "EXISTS (SELECT 1 FROM \"Projects\" p WHERE p.\"Id\" = \"Dependencies\".\"ProjectId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+            ("Runtimes", "EXISTS (SELECT 1 FROM \"Projects\" p WHERE p.\"Id\" = \"Runtimes\".\"ProjectId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+            ("Vulnerabilities", "EXISTS (SELECT 1 FROM \"Dependencies\" d JOIN \"Projects\" p ON p.\"Id\" = d.\"ProjectId\" WHERE d.\"Id\" = \"Vulnerabilities\".\"DependencyId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
+        };
+
+        private static string FailClosedPolicy(string table, string match) => $@"
+DROP POLICY IF EXISTS tenant_isolation ON ""{table}"";
+CREATE POLICY tenant_isolation ON ""{table}""
+USING (
+    current_setting('app.current_org', true) = 'system'
+    OR (
+        current_setting('app.current_org', true) <> ''
+        AND current_setting('app.current_org', true) IS NOT NULL
+        AND ({match})
+    )
+);";
+
+        private static string FailOpenPolicy(string table, string match) => $@"
+DROP POLICY IF EXISTS tenant_isolation ON ""{table}"";
+CREATE POLICY tenant_isolation ON ""{table}""
+USING (
+    current_setting('app.current_org', true) = ''
+    OR current_setting('app.current_org', true) IS NULL
+    OR ({match})
+);";
+
+        private static void ApplyRowLevelSecurity(MigrationBuilder migrationBuilder)
+        {
+            foreach ((string table, string orgExpr) in DirectTenantTables)
+            {
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" ENABLE ROW LEVEL SECURITY;");
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" FORCE ROW LEVEL SECURITY;");
+                migrationBuilder.Sql(FailClosedPolicy(table, $"{orgExpr} = current_setting('app.current_org', true)"));
+            }
+
+            foreach ((string table, string subquery) in IndirectTenantTables)
+            {
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" ENABLE ROW LEVEL SECURITY;");
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" FORCE ROW LEVEL SECURITY;");
+                migrationBuilder.Sql(FailClosedPolicy(table, subquery));
+            }
+        }
+
+        private static void RevertRowLevelSecurity(MigrationBuilder migrationBuilder)
+        {
+            foreach ((string table, string orgExpr) in DirectTenantTables)
+            {
+                migrationBuilder.Sql(FailOpenPolicy(table, $"{orgExpr} = current_setting('app.current_org', true)"));
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" DISABLE ROW LEVEL SECURITY;");
+            }
+
+            foreach ((string table, string subquery) in IndirectTenantTables)
+            {
+                migrationBuilder.Sql(FailOpenPolicy(table, subquery));
+                migrationBuilder.Sql($"ALTER TABLE \"{table}\" DISABLE ROW LEVEL SECURITY;");
+            }
+        }
+
+        private static void ApplyTrigramIndexes(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Title_trgm""
+                ON ""Tickets""
+                USING gin (""Title"" gin_trgm_ops);
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Description_trgm""
+                ON ""Tickets""
+                USING gin (""Description"" gin_trgm_ops);
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_TicketComments_Content_trgm""
+                ON ""TicketComments""
+                USING gin (""Content"" gin_trgm_ops);
+            ");
+        }
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -50,7 +150,7 @@ namespace Sentinel.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsUsed = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -67,17 +167,10 @@ namespace Sentinel.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Timezone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    SecurityAlertsEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AlertMinSeverity = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     GithubToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    GithubAccountId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    GithubAccountLogin = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    GithubConnectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    GithubConnectedById = table.Column<Guid>(type: "uuid", nullable: true),
                     GitlabToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    GitlabAccountId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    GitlabAccountLogin = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    GitlabConnectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    GitlabConnectedById = table.Column<Guid>(type: "uuid", nullable: true),
                     PlanTier = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     SubscriptionStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     StripeCustomerId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
@@ -99,7 +192,7 @@ namespace Sentinel.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsUsed = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -218,6 +311,35 @@ namespace Sentinel.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RemediationRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    PullRequestUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    BranchName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    DependenciesPatched = table.Column<int>(type: "integer", nullable: false),
+                    HasBreakingChanges = table.Column<bool>(type: "boolean", nullable: false),
+                    TargetsJson = table.Column<string>(type: "text", nullable: true),
+                    Error = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RemediationRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RemediationRequests_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Runtimes",
                 columns: table => new
                 {
@@ -240,6 +362,38 @@ namespace Sentinel.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ApiKeys",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    KeyHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Prefix = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastUsedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApiKeys", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ApiKeys_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ApiKeys_Users_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tickets",
                 columns: table => new
                 {
@@ -256,7 +410,6 @@ namespace Sentinel.Infrastructure.Migrations
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsInternal = table.Column<bool>(type: "boolean", nullable: false),
                     Tags = table.Column<string>(type: "jsonb", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
@@ -303,7 +456,7 @@ namespace Sentinel.Infrastructure.Migrations
                     OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Role = table.Column<string>(type: "text", nullable: false),
-                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     InvitedById = table.Column<Guid>(type: "uuid", nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     AcceptedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -336,7 +489,6 @@ namespace Sentinel.Infrastructure.Migrations
                     CvssScore = table.Column<decimal>(type: "numeric(4,1)", precision: 4, scale: 1, nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     PackageName = table.Column<string>(type: "text", nullable: false),
-                    AffectedVersion = table.Column<string>(type: "text", nullable: false),
                     FixedVersion = table.Column<string>(type: "text", nullable: true),
                     AdvisoryUrl = table.Column<string>(type: "text", nullable: true),
                     Severity = table.Column<string>(type: "text", nullable: false),
@@ -421,7 +573,6 @@ namespace Sentinel.Infrastructure.Migrations
                     TicketId = table.Column<Guid>(type: "uuid", nullable: false),
                     AuthorId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
-                    IsInternal = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -471,44 +622,21 @@ namespace Sentinel.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "TimeEntries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TicketId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: true),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Date = table.Column<DateOnly>(type: "date", nullable: false),
-                    DurationMinutes = table.Column<int>(type: "integer", nullable: false),
-                    StartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    EndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TimeEntries", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TimeEntries_Projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_TimeEntries_Tickets_TicketId",
-                        column: x => x.TicketId,
-                        principalTable: "Tickets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_TimeEntries_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
+            migrationBuilder.CreateIndex(
+                name: "IX_ApiKeys_CreatedById",
+                table: "ApiKeys",
+                column: "CreatedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApiKeys_KeyHash",
+                table: "ApiKeys",
+                column: "KeyHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApiKeys_OrganizationId",
+                table: "ApiKeys",
+                column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_Action",
@@ -556,9 +684,9 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "Email");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmailVerificationTokens_Token",
+                name: "IX_EmailVerificationTokens_TokenHash",
                 table: "EmailVerificationTokens",
-                column: "Token",
+                column: "TokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -587,20 +715,6 @@ namespace Sentinel.Infrastructure.Migrations
                 columns: new[] { "UserId", "IsRead" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Organizations_GithubAccountId",
-                table: "Organizations",
-                column: "GithubAccountId",
-                unique: true,
-                filter: "\"GithubAccountId\" IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Organizations_GitlabAccountId",
-                table: "Organizations",
-                column: "GitlabAccountId",
-                unique: true,
-                filter: "\"GitlabAccountId\" IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_Slug",
                 table: "Organizations",
                 column: "Slug",
@@ -626,15 +740,32 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "Email");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PasswordResetTokens_Token",
+                name: "IX_PasswordResetTokens_TokenHash",
                 table: "PasswordResetTokens",
-                column: "Token",
+                column: "TokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_OrganizationId",
                 table: "Projects",
                 column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RemediationRequests_ActiveProject",
+                table: "RemediationRequests",
+                column: "ProjectId",
+                unique: true,
+                filter: "\"Status\" IN ('Pending', 'PullRequestOpen')");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RemediationRequests_OrganizationId",
+                table: "RemediationRequests",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RemediationRequests_ProjectId_Status",
+                table: "RemediationRequests",
+                columns: new[] { "ProjectId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Runtimes_ProjectId",
@@ -747,31 +878,6 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TimeEntries_Date",
-                table: "TimeEntries",
-                column: "Date");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TimeEntries_ProjectId",
-                table: "TimeEntries",
-                column: "ProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TimeEntries_TicketId",
-                table: "TimeEntries",
-                column: "TicketId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TimeEntries_UserId",
-                table: "TimeEntries",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TimeEntries_UserId_Date",
-                table: "TimeEntries",
-                columns: new[] { "UserId", "Date" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UserInvitations_Email",
                 table: "UserInvitations",
                 column: "Email");
@@ -787,10 +893,15 @@ namespace Sentinel.Infrastructure.Migrations
                 column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserInvitations_Token",
+                name: "IX_UserInvitations_TokenHash",
                 table: "UserInvitations",
-                column: "Token",
+                column: "TokenHash",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_OrganizationId",
@@ -802,6 +913,18 @@ namespace Sentinel.Infrastructure.Migrations
                 table: "Users",
                 columns: new[] { "OrganizationId", "Email" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_PreviousRefreshTokenHash",
+                table: "Users",
+                column: "PreviousRefreshTokenHash",
+                filter: "\"PreviousRefreshTokenHash\" IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_RefreshToken",
+                table: "Users",
+                column: "RefreshToken",
+                filter: "\"RefreshToken\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Vulnerabilities_DependencyId",
@@ -817,11 +940,18 @@ namespace Sentinel.Infrastructure.Migrations
                 name: "IX_Vulnerabilities_Severity_DependencyId",
                 table: "Vulnerabilities",
                 columns: new[] { "Severity", "DependencyId" });
+
+            ApplyTrigramIndexes(migrationBuilder);
+            ApplyRowLevelSecurity(migrationBuilder);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            RevertRowLevelSecurity(migrationBuilder);
+            migrationBuilder.DropTable(
+                name: "ApiKeys");
+
             migrationBuilder.DropTable(
                 name: "AuditLogs");
 
@@ -838,6 +968,9 @@ namespace Sentinel.Infrastructure.Migrations
                 name: "PasswordResetTokens");
 
             migrationBuilder.DropTable(
+                name: "RemediationRequests");
+
+            migrationBuilder.DropTable(
                 name: "Runtimes");
 
             migrationBuilder.DropTable(
@@ -848,9 +981,6 @@ namespace Sentinel.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "TicketHistories");
-
-            migrationBuilder.DropTable(
-                name: "TimeEntries");
 
             migrationBuilder.DropTable(
                 name: "UserInvitations");

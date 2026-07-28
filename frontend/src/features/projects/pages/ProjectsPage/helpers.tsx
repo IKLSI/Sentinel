@@ -7,14 +7,27 @@ import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
 import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
 import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
 import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
+import RemoveCircleOutlineOutlined from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
+import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { isCovered } from "@/utils/coverage";
 
-export type GradeKey = HealthGrade;
+export const UNTRACKED_SECTION = "NONE" as const;
 
-export const GRADE_ORDER: HealthGrade[] = ["F", "E", "D", "C", "B", "A"];
+export type SectionKey = HealthGrade | typeof UNTRACKED_SECTION;
+
+export const SECTION_ORDER: SectionKey[] = [
+  "F",
+  "E",
+  "D",
+  "C",
+  "B",
+  "A",
+  UNTRACKED_SECTION,
+];
 
 export const GRADE_VISUAL: Record<
-  HealthGrade,
+  SectionKey,
   { iconColor: string; Icon: SvgIconComponent }
 > = {
   F: { iconColor: "var(--red)", Icon: DangerousOutlined },
@@ -26,7 +39,14 @@ export const GRADE_VISUAL: Record<
   },
   B: { iconColor: "var(--accent)", Icon: ThumbUpAltOutlined },
   A: { iconColor: "var(--green)", Icon: WorkspacePremiumOutlined },
+  [UNTRACKED_SECTION]: {
+    iconColor: "var(--muted2)",
+    Icon: RemoveCircleOutlineOutlined,
+  },
 };
+
+export const isUntracked = (project: ProjectDto): boolean =>
+  !isCovered(project);
 
 export const getGrade = (grade: string | null | undefined): HealthGrade => {
   if (

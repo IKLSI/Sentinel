@@ -12,8 +12,8 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260527074642_RemoveOrganizationTimezone")]
-    partial class RemoveOrganizationTimezone
+    [Migration("20260713140341_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,6 +42,57 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DataProtectionKeys");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.ApiKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("KeyHash")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("ApiKeys");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.AuditLog", b =>
@@ -159,7 +210,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Token")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
@@ -168,7 +219,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Email");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.ToTable("EmailVerificationTokens");
@@ -225,43 +276,20 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AlertMinSeverity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("CurrentPeriodEnd")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GithubAccountId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("GithubAccountLogin")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime?>("GithubConnectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("GithubConnectedById")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("GithubToken")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<string>("GitlabAccountId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("GitlabAccountLogin")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime?>("GitlabConnectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("GitlabConnectedById")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("GitlabToken")
                         .HasMaxLength(500)
@@ -282,6 +310,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<DateTime>("ScanCountPeriodStart")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SecurityAlertsEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -305,14 +336,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GithubAccountId")
-                        .IsUnique()
-                        .HasFilter("\"GithubAccountId\" IS NOT NULL");
-
-                    b.HasIndex("GitlabAccountId")
-                        .IsUnique()
-                        .HasFilter("\"GitlabAccountId\" IS NOT NULL");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -348,7 +371,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Token")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
@@ -357,7 +380,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Email");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.ToTable("PasswordResetTokens");
@@ -415,6 +438,66 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.RemediationRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BranchName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DependenciesPatched")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("HasBreakingChanges")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PullRequestUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetsJson")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProjectId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_RemediationRequests_ActiveProject")
+                        .HasFilter("\"Status\" IN ('Pending', 'PullRequestOpen')");
+
+                    b.HasIndex("ProjectId", "Status");
+
+                    b.ToTable("RemediationRequests");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
                 {
                     b.Property<Guid>("Id")
@@ -469,9 +552,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<decimal?>("EstimatedHours")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
-
-                    b.Property<bool>("IsInternal")
-                        .HasColumnType("boolean");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
@@ -595,9 +675,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsInternal")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uuid");
 
@@ -687,62 +764,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("TicketStatuses");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeOnly?>("EndTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<Guid?>("TicketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Date");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "Date");
-
-                    b.ToTable("TimeEntries");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -810,7 +831,15 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("PreviousRefreshTokenHash")
+                        .HasFilter("\"PreviousRefreshTokenHash\" IS NOT NULL");
+
+                    b.HasIndex("RefreshToken")
+                        .HasFilter("\"RefreshToken\" IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "Email")
                         .IsUnique();
@@ -848,7 +877,7 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Token")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
@@ -861,7 +890,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.ToTable("UserInvitations");
@@ -874,10 +903,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AdvisoryUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AffectedVersion")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("CveId")
@@ -921,6 +946,25 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Vulnerabilities");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Models.ApiKey", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Project", "Project")
@@ -959,6 +1003,17 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.RemediationRequest", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
@@ -1080,31 +1135,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TimeEntry", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
-                        .WithMany("TimeEntries")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Sentinel.Domain.Models.User", "User")
-                        .WithMany("TimeEntries")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
@@ -1172,18 +1202,11 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("History");
-
-                    b.Navigation("TimeEntries");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
                 {
                     b.Navigation("Tickets");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
-                {
-                    b.Navigation("TimeEntries");
                 });
 #pragma warning restore 612, 618
         }

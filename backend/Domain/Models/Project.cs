@@ -14,6 +14,15 @@ public enum ScanFrequency
     Manual
 }
 
+public enum ScanCoverage
+{
+    NotScanned,
+    Failed,
+    NoManifest,
+    NoDependencies,
+    Covered
+}
+
 public class Project
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -23,8 +32,9 @@ public class Project
     public RepositoryType RepositoryType { get; set; } = RepositoryType.GitHub;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }
-    public int HealthScore { get; set; } = 100;
-    public string HealthGrade { get; set; } = "A";
+    public int? HealthScore { get; set; }
+    public string? HealthGrade { get; set; }
+    public ScanCoverage Coverage { get; set; } = ScanCoverage.NotScanned;
     public ScanFrequency ScanFrequency { get; set; } = ScanFrequency.Weekly;
 
     public Organization Organization { get; set; } = null!;
