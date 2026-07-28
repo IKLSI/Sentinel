@@ -7,14 +7,12 @@ import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutl
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import {
-  getOrganizationSettings,
-  updateOrganizationSettings,
-  type OrganizationSettings,
-  getIntegrationSettings,
-  connectGithub,
-  connectGitlab,
-  type IntegrationSettings,
-} from "@/features/settings/api/settings";
+  useOrganizationSettings,
+  useUpdateOrganizationSettings,
+  useIntegrationSettings,
+  useConnectGithub,
+  useConnectGitlab,
+} from "@/features/settings/hooks/useSettings";
 import {
   CARD_SX,
   CardHeader,
@@ -38,119 +36,89 @@ export const OrganisationTab: React.FC = () => {
     [t],
   );
 
-  const [org, setOrg] = useState<OrganizationSettings | null>(null);
+  const { org, loading: loadingOrg } = useOrganizationSettings();
+  const updateOrg = useUpdateOrganizationSettings();
+  const savingOrg = updateOrg.isPending;
+
+  const { integrations } = useIntegrationSettings();
+  const connectGithubMutation = useConnectGithub();
+  const connectGitlabMutation = useConnectGitlab();
+  const connectingGithub = connectGithubMutation.isPending;
+  const connectingGitlab = connectGitlabMutation.isPending;
+
   const [orgForm, setOrgForm] = useState({
     name: "",
     securityAlertsEnabled: true,
     alertMinSeverity: "High",
   });
-  const [loadingOrg, setLoadingOrg] = useState(true);
-  const [savingOrg, setSavingOrg] = useState(false);
-
-  const [integrations, setIntegrations] = useState<IntegrationSettings>({
-    hasGithubToken: false,
-    hasGitlabToken: false,
-  });
   const [githubToken, setGithubToken] = useState("");
   const [gitlabToken, setGitlabToken] = useState("");
-  const [connectingGithub, setConnectingGithub] = useState(false);
-  const [connectingGitlab, setConnectingGitlab] = useState(false);
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    Promise.all([
-      getOrganizationSettings(ctrl.signal),
-      getIntegrationSettings(ctrl.signal),
-    ])
-      .then(([o, i]) => {
-        if (ctrl.signal.aborted) return;
-        setOrg(o);
-        setOrgForm({
-          name: o.name,
-          securityAlertsEnabled: o.securityAlertsEnabled,
-          alertMinSeverity: o.alertMinSeverity,
-        });
-        setIntegrations(i);
-      })
-      .catch(() => {
-        if (ctrl.signal.aborted) return;
-        showToast(t("settings.toast.settings_load_error"), "error");
-      })
-      .finally(() => {
-        if (!ctrl.signal.aborted) setLoadingOrg(false);
-      });
-    return () => ctrl.abort();
-  }, [showToast, t]);
+    if (!org) return;
+    setOrgForm({
+      name: org.name,
+      securityAlertsEnabled: org.securityAlertsEnabled,
+      alertMinSeverity: org.alertMinSeverity,
+    });
+  }, [org]);
 
-  const handleSaveOrg = async () => {
+  const handleSaveOrg = () => {
     if (!orgForm.name.trim()) {
       showToast(t("settings.toast.name_required"), "warning");
       return;
     }
-    setSavingOrg(true);
-    try {
-      const updated = await updateOrganizationSettings({
+    updateOrg.mutate(
+      {
         name: orgForm.name,
         securityAlertsEnabled: orgForm.securityAlertsEnabled,
         alertMinSeverity: orgForm.alertMinSeverity,
-      });
-      setOrg(updated);
-      setOrgForm({
-        name: updated.name,
-        securityAlertsEnabled: updated.securityAlertsEnabled,
-        alertMinSeverity: updated.alertMinSeverity,
-      });
-      showToast(t("settings.toast.org_updated"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.toast.org_update_error")),
-        "error",
-      );
-    } finally {
-      setSavingOrg(false);
-    }
+      },
+      {
+        onSuccess: () => showToast(t("settings.toast.org_updated"), "success"),
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("settings.toast.org_update_error")),
+            "error",
+          ),
+      },
+    );
   };
 
-  const handleConnectGithub = async () => {
+  const handleConnectGithub = () => {
     if (!githubToken.trim()) {
       showToast(t("settings.toast.token_required"), "warning");
       return;
     }
-    setConnectingGithub(true);
-    try {
-      await connectGithub(githubToken.trim());
-      setIntegrations((prev) => ({ ...prev, hasGithubToken: true }));
-      setGithubToken("");
-      showToast(t("settings.toast.github_connected"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.toast.github_error")),
-        "error",
-      );
-    } finally {
-      setConnectingGithub(false);
-    }
+    connectGithubMutation.mutate(githubToken.trim(), {
+      onSuccess: () => {
+        setGithubToken("");
+        showToast(t("settings.toast.github_connected"), "success");
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("settings.toast.github_error")),
+          "error",
+        ),
+    });
   };
 
-  const handleConnectGitlab = async () => {
+  const handleConnectGitlab = () => {
     if (!gitlabToken.trim()) {
       showToast(t("settings.toast.token_required"), "warning");
       return;
     }
-    setConnectingGitlab(true);
-    try {
-      await connectGitlab(gitlabToken.trim());
-      setIntegrations((prev) => ({ ...prev, hasGitlabToken: true }));
-      setGitlabToken("");
-      showToast(t("settings.toast.gitlab_connected"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.toast.gitlab_error")),
-        "error",
-      );
-    } finally {
-      setConnectingGitlab(false);
-    }
+    connectGitlabMutation.mutate(gitlabToken.trim(), {
+      onSuccess: () => {
+        setGitlabToken("");
+        showToast(t("settings.toast.gitlab_connected"), "success");
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("settings.toast.gitlab_error")),
+          "error",
+        ),
+    });
   };
 
   const orgUnchanged = org

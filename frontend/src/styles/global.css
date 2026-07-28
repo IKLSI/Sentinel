@@ -907,7 +907,7 @@ a:hover {
 }
 .lp-feature-desc {
   font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.5;
 }
 
@@ -947,7 +947,7 @@ a:hover {
 }
 .lp-form-sub {
   font-size: 13px;
-  color: var(--auth-gray-400);
+  color: var(--auth-gray-500);
   margin: 0;
 }
 
@@ -991,7 +991,7 @@ a:hover {
   -webkit-appearance: none;
 }
 .lp-input::placeholder {
-  color: var(--auth-gray-300);
+  color: var(--auth-gray-400);
   opacity: 1;
 }
 .lp-input:hover {
@@ -1010,7 +1010,7 @@ a:hover {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--auth-gray-400);
+  color: var(--auth-gray-500);
   cursor: pointer;
   padding: 4px;
   display: grid;
@@ -1095,12 +1095,12 @@ a:hover {
 }
 .lp-forgot {
   font-size: 13px;
-  color: var(--auth-gray-400);
+  color: var(--auth-gray-500);
   text-decoration: none;
   transition: color 0.2s;
 }
 .lp-forgot:hover {
-  color: var(--auth-gray-500);
+  color: var(--auth-gray-900);
 }
 .lp-forgot--register {
   font-weight: 600;

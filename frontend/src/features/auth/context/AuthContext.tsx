@@ -8,10 +8,10 @@ import {
 } from "react";
 import type { User } from "../../../types";
 import {
-  login as apiLogin,
-  logout as apiLogout,
-  me as apiMe,
-} from "../api/auth";
+  useLoginMutation,
+  useLogoutMutation,
+  useMeMutation,
+} from "../hooks/useAuthMutations";
 import { useI18n } from "../../../i18n/I18nContext";
 import { STORAGE_KEYS } from "@/constants/storage";
 
@@ -41,6 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { setLanguage } = useI18n();
+  const meMutation = useMeMutation();
+  const loginMutation = useLoginMutation();
+  const logoutMutation = useLogoutMutation();
+  const runMe = meMutation.mutate;
+  const runLogin = loginMutation.mutateAsync;
+  const runLogout = logoutMutation.mutateAsync;
 
   const syncLanguage = useCallback(
     (u: User) => {
@@ -52,39 +58,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     if (token) {
-      apiMe()
-        .then((u) => {
+      runMe(undefined, {
+        onSuccess: (u) => {
           setUser(u);
           syncLanguage(u);
-        })
-        .catch(() => {
+        },
+        onError: () => {
           localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-        })
-        .finally(() => setLoading(false));
+        },
+        onSettled: () => setLoading(false),
+      });
     } else {
       setLoading(false);
     }
-  }, [syncLanguage]);
+  }, [runMe, syncLanguage]);
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const response = await apiLogin(email, password);
+      const response = await runLogin({ email, password });
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
       setUser(response.user);
       syncLanguage(response.user);
       return response.user;
     },
-    [syncLanguage],
+    [runLogin, syncLanguage],
   );
 
   const logout = useCallback(async () => {
     try {
-      await apiLogout();
+      await runLogout();
     } finally {
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       setUser(null);
     }
-  }, []);
+  }, [runLogout]);
 
   const value = useMemo(
     () => ({ user, isAuthenticated: !!user, loading, login, logout, setUser }),

@@ -7,7 +7,7 @@ import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutl
 import { AppModal } from "@/components/AppModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import { inviteUser } from "@/features/users/api/users";
+import { useInviteUser } from "@/features/users/hooks/useUsers";
 import { UserRole } from "@/types/enums";
 import { inp } from "../../helpers";
 import { extractApiError } from "@/utils/apiError";
@@ -26,32 +26,31 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
     email: "",
     role: UserRole.Developer,
   });
-  const [submitting, setSubmitting] = useState(false);
+  const inviteMutation = useInviteUser();
+  const submitting = inviteMutation.isPending;
 
   const handleClose = () => {
     onClose();
     setInv({ email: "", role: UserRole.Developer as UserRole });
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inv.email) {
       showToast(t("settings.toast.required_fields"), "warning");
       return;
     }
-    setSubmitting(true);
-    try {
-      await inviteUser(inv);
-      showToast(t("settings.toast.invite_sent"), "success");
-      handleClose();
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.toast.invite_error")),
-        "error",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    inviteMutation.mutate(inv, {
+      onSuccess: () => {
+        showToast(t("settings.toast.invite_sent"), "success");
+        handleClose();
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("settings.toast.invite_error")),
+          "error",
+        ),
+    });
   };
 
   return (

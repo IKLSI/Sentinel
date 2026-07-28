@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -10,10 +10,9 @@ import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
 import { type useT, useI18n } from "@/i18n/I18nContext";
 import {
-  getRecurringJobs,
-  triggerTechHealthScan,
-  type RecurringJobStatus,
-} from "@/features/settings/api/jobs";
+  useRecurringJobs,
+  useTriggerTechHealthScan,
+} from "@/features/settings/hooks/useJobs";
 import { JobState } from "@/types/enums";
 import { extractApiError } from "@/utils/apiError";
 
@@ -99,9 +98,9 @@ export const JobsTab: React.FC = () => {
   const { showToast } = useToast();
   const { t, culture } = useI18n();
 
-  const [jobs, setJobs] = useState<RecurringJobStatus[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [triggering, setTriggering] = useState(false);
+  const { jobs, loading } = useRecurringJobs();
+  const triggerScan = useTriggerTechHealthScan();
+  const triggering = triggerScan.isPending;
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
     {
       col: "col_job",
@@ -117,44 +116,16 @@ export const JobsTab: React.FC = () => {
     });
   }, []);
 
-  const loadJobs = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true);
-      try {
-        const data = await getRecurringJobs(signal);
-        if (signal?.aborted) return;
-        setJobs(data);
-      } catch (err) {
-        if (signal?.aborted) return;
-        showToast(extractApiError(err, t("settings.jobs.load_error")), "error");
-      } finally {
-        if (!signal?.aborted) setLoading(false);
-      }
-    },
-    [showToast, t],
-  );
-
-  const handleTrigger = async () => {
-    setTriggering(true);
-    try {
-      await triggerTechHealthScan();
-      showToast(t("settings.jobs.trigger_success"), "success");
-      setTimeout(() => loadJobs(), 1500);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.jobs.trigger_error")),
-        "error",
-      );
-    } finally {
-      setTriggering(false);
-    }
+  const handleTrigger = () => {
+    triggerScan.mutate(undefined, {
+      onSuccess: () => showToast(t("settings.jobs.trigger_success"), "success"),
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("settings.jobs.trigger_error")),
+          "error",
+        ),
+    });
   };
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    void loadJobs(ctrl.signal);
-    return () => ctrl.abort();
-  }, [loadJobs]);
 
   const jobName = useCallback(
     (id: string) => {

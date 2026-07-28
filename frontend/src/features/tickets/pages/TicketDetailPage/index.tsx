@@ -1,7 +1,6 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
@@ -12,12 +11,11 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
 import {
-  addComment,
-  deleteComment,
-  updateComment,
-} from "@/features/tickets/api/tickets";
-import { ticketQueryKey, useTicket } from "@/features/tickets/hooks/useTicket";
-import type { Ticket } from "@/types";
+  useTicket,
+  useAddComment,
+  useUpdateComment,
+  useDeleteComment,
+} from "@/features/tickets/hooks/useTicket";
 import {
   buildFieldSx,
   buildMarkdownSx,
@@ -43,7 +41,6 @@ export const TicketDetailPage: React.FC = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
   const { theme } = useTheme();
-  const queryClient = useQueryClient();
   const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
   const statusConfig = useMemo(() => buildStatusConfig(isDark), [isDark]);
@@ -52,16 +49,12 @@ export const TicketDetailPage: React.FC = () => {
   const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
 
   const { ticket, loading, notFound } = useTicket(id);
-
-  const updateCachedTicket = (updater: (prev: Ticket) => Ticket) => {
-    if (!id) return;
-    queryClient.setQueryData<Ticket>(ticketQueryKey(id), (prev) =>
-      prev ? updater(prev) : prev,
-    );
-  };
+  const addCommentMutation = useAddComment(id ?? "");
+  const updateCommentMutation = useUpdateComment(id ?? "");
+  const deleteCommentMutation = useDeleteComment(id ?? "");
 
   const [composerValue, setComposerValue] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const submitting = addCommentMutation.isPending;
 
   const [editCommentTarget, setEditCommentTarget] = useState<{
     id: string;
@@ -69,11 +62,11 @@ export const TicketDetailPage: React.FC = () => {
   } | null>(null);
   const [editCommentValue, setEditCommentValue] = useState("");
   const [editCommentPreview, setEditCommentPreview] = useState(false);
-  const [editCommentSaving, setEditCommentSaving] = useState(false);
+  const editCommentSaving = updateCommentMutation.isPending;
   const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(
     null,
   );
-  const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
+  const deleteCommentLoading = deleteCommentMutation.isPending;
 
   useEffect(() => {
     if (ticket && id) markReadByTicketId(id);
@@ -97,71 +90,52 @@ export const TicketDetailPage: React.FC = () => {
     return ticket.title;
   }, [ticket, endpointMatch]);
 
-  const handleAddComment = async (content: string) => {
+  const handleAddComment = (content: string) => {
     if (!ticket || !content.trim()) return;
-    setSubmitting(true);
-    try {
-      const created = await addComment(ticket.id, content);
-      updateCachedTicket((prev) => ({
-        ...prev,
-        comments: [...prev.comments, created],
-      }));
-      setComposerValue("");
-      showToast(t("tickets.detail.reply_sent"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("tickets.detail.add_comment_error")),
-        "error",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    addCommentMutation.mutate(content, {
+      onSuccess: () => {
+        setComposerValue("");
+        showToast(t("tickets.detail.reply_sent"), "success");
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("tickets.detail.add_comment_error")),
+          "error",
+        ),
+    });
   };
 
-  const handleEditComment = async () => {
+  const handleEditComment = () => {
     if (!ticket || !editCommentTarget || !editCommentValue.trim()) return;
-    setEditCommentSaving(true);
-    try {
-      const updated = await updateComment(
-        ticket.id,
-        editCommentTarget.id,
-        editCommentValue,
-      );
-      updateCachedTicket((prev) => ({
-        ...prev,
-        comments: prev.comments.map((c) => (c.id === updated.id ? updated : c)),
-      }));
-      setEditCommentTarget(null);
-      showToast(t("tickets.detail.comment_updated"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("tickets.detail.update_error")),
-        "error",
-      );
-    } finally {
-      setEditCommentSaving(false);
-    }
+    updateCommentMutation.mutate(
+      { commentId: editCommentTarget.id, content: editCommentValue },
+      {
+        onSuccess: () => {
+          setEditCommentTarget(null);
+          showToast(t("tickets.detail.comment_updated"), "success");
+        },
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("tickets.detail.update_error")),
+            "error",
+          ),
+      },
+    );
   };
 
-  const handleDeleteComment = async () => {
+  const handleDeleteComment = () => {
     if (!ticket || !deleteCommentTarget) return;
-    setDeleteCommentLoading(true);
-    try {
-      await deleteComment(ticket.id, deleteCommentTarget);
-      updateCachedTicket((prev) => ({
-        ...prev,
-        comments: prev.comments.filter((c) => c.id !== deleteCommentTarget),
-      }));
-      setDeleteCommentTarget(null);
-      showToast(t("tickets.detail.comment_deleted"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("tickets.detail.delete_error")),
-        "error",
-      );
-    } finally {
-      setDeleteCommentLoading(false);
-    }
+    deleteCommentMutation.mutate(deleteCommentTarget, {
+      onSuccess: () => {
+        setDeleteCommentTarget(null);
+        showToast(t("tickets.detail.comment_deleted"), "success");
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("tickets.detail.delete_error")),
+          "error",
+        ),
+    });
   };
 
   if (loading) {

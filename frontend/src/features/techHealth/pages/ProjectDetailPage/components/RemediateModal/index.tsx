@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -8,12 +8,14 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useT } from "@/i18n/I18nContext";
-import {
-  getRemediationPreview,
-  executeRemediation,
-  type RemediationPreviewDto,
-  type RemediationResultDto,
+import type {
+  RemediationPreviewDto,
+  RemediationResultDto,
 } from "@/features/techHealth/api/remediation";
+import {
+  useRemediationPreview,
+  useExecuteRemediation,
+} from "@/features/techHealth/hooks/useRemediation";
 import { extractApiError } from "@/utils/apiError";
 import { STATUS_SUCCESS, type Phase } from "./constants";
 import { PreviewContent } from "./PreviewContent";
@@ -36,45 +38,41 @@ export const RemediateModal: React.FC<Props> = ({
   showToast,
 }) => {
   const t = useT();
-  const [phase, setPhase] = useState<Phase>("loading");
-  const [preview, setPreview] = useState<RemediationPreviewDto | null>(null);
-  const [result, setResult] = useState<RemediationResultDto | null>(null);
+  const previewQuery = useRemediationPreview(projectId, open);
+  const executeMutation = useExecuteRemediation();
+  const preview: RemediationPreviewDto | null = previewQuery.data ?? null;
+  const result: RemediationResultDto | null = executeMutation.data ?? null;
+
+  const phase: Phase = executeMutation.isPending
+    ? "executing"
+    : result
+      ? "result"
+      : previewQuery.isLoading
+        ? "loading"
+        : "preview";
+
+  const resetExecution = executeMutation.reset;
+  useEffect(() => {
+    if (open) resetExecution();
+  }, [open, resetExecution]);
 
   useEffect(() => {
-    if (!open) return;
-    const ctrl = new AbortController();
-    setPhase("loading");
-    setPreview(null);
-    setResult(null);
-
-    getRemediationPreview(projectId, ctrl.signal)
-      .then((data) => {
-        if (ctrl.signal.aborted) return;
-        setPreview(data);
-        setPhase("preview");
-      })
-      .catch(() => {
-        if (ctrl.signal.aborted) return;
-        showToast(t("remediation.error_generic"), "error");
-        onClose();
-      });
-
-    return () => ctrl.abort();
-  }, [open, projectId, showToast, onClose, t]);
-
-  const handleConfirm = async () => {
-    setPhase("executing");
-    try {
-      const data = await executeRemediation(projectId);
-      setResult(data);
-      setPhase("result");
-      if (data.status === STATUS_SUCCESS)
-        showToast(t("remediation.success"), "success");
-      else showToast(data.error ?? t("remediation.failed"), "error");
-    } catch (e) {
-      showToast(extractApiError(e, t("remediation.error_generic")), "error");
-      setPhase("preview");
+    if (open && previewQuery.isError) {
+      showToast(t("remediation.error_generic"), "error");
+      onClose();
     }
+  }, [open, previewQuery.isError, showToast, onClose, t]);
+
+  const handleConfirm = () => {
+    executeMutation.mutate(projectId, {
+      onSuccess: (data) => {
+        if (data.status === STATUS_SUCCESS)
+          showToast(t("remediation.success"), "success");
+        else showToast(data.error ?? t("remediation.failed"), "error");
+      },
+      onError: (e) =>
+        showToast(extractApiError(e, t("remediation.error_generic")), "error"),
+    });
   };
 
   return (

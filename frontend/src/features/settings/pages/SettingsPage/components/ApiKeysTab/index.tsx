@@ -1,12 +1,5 @@
 import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -20,13 +13,12 @@ import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/i18n/I18nContext";
 import { extractApiError } from "@/utils/apiError";
+import type { CreatedApiKey, ApiKey } from "@/features/settings/api/apiKeys";
 import {
-  type ApiKey,
-  type CreatedApiKey,
-  createApiKey,
-  listApiKeys,
-  revokeApiKey,
-} from "@/features/settings/api/apiKeys";
+  useApiKeys,
+  useCreateApiKey,
+  useRevokeApiKey,
+} from "@/features/settings/hooks/useApiKeys";
 import { FieldLabel, inp } from "../../helpers";
 
 const BTN_SX = {
@@ -59,19 +51,20 @@ export const ApiKeysTab: React.FC = () => {
   const { showToast } = useToast();
   const formId = useId();
 
-  const [keys, setKeys] = useState<ApiKey[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { keys, loading } = useApiKeys();
+  const createKeyMutation = useCreateApiKey();
+  const revokeKeyMutation = useRevokeApiKey();
+  const creating = createKeyMutation.isPending;
+  const revoking = revokeKeyMutation.isPending;
 
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const [secretKey, setSecretKey] = useState<CreatedApiKey | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
-  const [revoking, setRevoking] = useState(false);
 
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
     {
@@ -88,71 +81,37 @@ export const ApiKeysTab: React.FC = () => {
     });
   }, []);
 
-  const abortRef = useRef<AbortController | null>(null);
-
-  const load = useCallback(
-    (signal?: AbortSignal) => {
-      setLoading(true);
-      listApiKeys(signal)
-        .then(setKeys)
-        .catch((err) => {
-          if ((err as { name?: string }).name !== "CanceledError")
-            showToast(
-              extractApiError(err, t("settings.api_keys.load_error")),
-              "error",
-            );
-        })
-        .finally(() => setLoading(false));
-    },
-    [showToast, t],
-  );
-
-  useEffect(() => {
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
-    load(abortRef.current.signal);
-    return () => abortRef.current?.abort();
-  }, [load]);
-
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setCreating(true);
-    try {
-      const created = await createApiKey({
-        name: name.trim(),
-        expiresAt: expiresAt || null,
-      });
-      setCreateOpen(false);
-      setName("");
-      setExpiresAt("");
-      setSecretKey(created);
-      load();
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.api_keys.create_error")),
-        "error",
-      );
-    } finally {
-      setCreating(false);
-    }
+    createKeyMutation.mutate(
+      { name: name.trim(), expiresAt: expiresAt || null },
+      {
+        onSuccess: (created) => {
+          setCreateOpen(false);
+          setName("");
+          setExpiresAt("");
+          setSecretKey(created);
+        },
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("settings.api_keys.create_error")),
+            "error",
+          ),
+      },
+    );
   };
 
-  const handleRevoke = async () => {
+  const handleRevoke = () => {
     if (!revokeTarget) return;
-    setRevoking(true);
-    try {
-      await revokeApiKey(revokeTarget.id);
-      setKeys((prev) => prev.filter((k) => k.id !== revokeTarget.id));
-      setRevokeTarget(null);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.api_keys.revoke_error")),
-        "error",
-      );
-    } finally {
-      setRevoking(false);
-    }
+    revokeKeyMutation.mutate(revokeTarget.id, {
+      onSuccess: () => setRevokeTarget(null),
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("settings.api_keys.revoke_error")),
+          "error",
+        ),
+    });
   };
 
   const sortedKeys = useMemo(() => {

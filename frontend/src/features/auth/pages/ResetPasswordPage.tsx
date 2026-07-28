@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { resetPassword } from "../api/auth";
+import { useResetPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
@@ -21,7 +21,8 @@ export const ResetPasswordPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const resetPasswordMutation = useResetPasswordMutation();
+  const loading = resetPasswordMutation.isPending;
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -55,19 +56,20 @@ export const ResetPasswordPage: React.FC = () => {
       showToast(t("auth.reset_password.error_passwords_mismatch"), "warning");
       return;
     }
-    setLoading(true);
-    try {
-      await resetPassword(token, password);
-      setDone(true);
-      setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("auth.reset_password.error_invalid_token")),
-        "error",
-      );
-    } finally {
-      setLoading(false);
-    }
+    resetPasswordMutation.mutate(
+      { token, password },
+      {
+        onSuccess: () => {
+          setDone(true);
+          setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
+        },
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("auth.reset_password.error_invalid_token")),
+            "error",
+          ),
+      },
+    );
   };
 
   return (

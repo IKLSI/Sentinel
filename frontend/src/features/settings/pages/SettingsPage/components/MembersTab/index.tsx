@@ -14,8 +14,7 @@ import { RowActions } from "@/components/RowActions";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/i18n/I18nContext";
-import { getUsers, toggleUserActive } from "@/features/users/api/users";
-import type { User } from "@/types";
+import { useUsers, useToggleUserActive } from "@/features/users/hooks/useUsers";
 import { MemberPagination } from "../MemberPagination";
 import { extractApiError } from "@/utils/apiError";
 import { UserRole } from "@/types/enums";
@@ -37,11 +36,10 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     [t],
   );
 
-  const [members, setMembers] = useState<User[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
+  const { users: members, loading: loadingMembers } = useUsers();
+  const toggleActive = useToggleUserActive();
   const [memberSearch, setMemberSearch] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("all");
-  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
@@ -70,29 +68,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
-  const loadMembers = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoadingMembers(true);
-      try {
-        const res = await getUsers({}, signal);
-        if (signal?.aborted) return;
-        setMembers(res.items);
-      } catch {
-        if (signal?.aborted) return;
-        showToast(t("settings.toast.members_load_error"), "error");
-      } finally {
-        if (!signal?.aborted) setLoadingMembers(false);
-      }
-    },
-    [showToast, t],
-  );
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    void loadMembers(ctrl.signal);
-    return () => ctrl.abort();
-  }, [loadMembers]);
 
   useEffect(() => {
     setPage(1);
@@ -150,26 +125,17 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     page * pageSize,
   );
 
-  const handleToggleActive = async (
-    memberId: string,
-    currentlyActive: boolean,
-  ) => {
-    setTogglingId(memberId);
-    try {
-      await toggleUserActive(memberId, !currentlyActive);
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === memberId ? { ...m, isActive: !currentlyActive } : m,
-        ),
-      );
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.toast.toggle_error")),
-        "error",
-      );
-    } finally {
-      setTogglingId(null);
-    }
+  const handleToggleActive = (memberId: string, currentlyActive: boolean) => {
+    toggleActive.mutate(
+      { userId: memberId, isActive: !currentlyActive },
+      {
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("settings.toast.toggle_error")),
+            "error",
+          ),
+      },
+    );
   };
 
   return (
@@ -492,7 +458,8 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                         sx={{ px: "16px", py: "10px", textAlign: "right" }}
                       >
                         {m.id !== user?.id &&
-                          (togglingId === m.id ? (
+                          (toggleActive.isPending &&
+                          toggleActive.variables?.userId === m.id ? (
                             <CircularProgress size={13} />
                           ) : (
                             <RowActions

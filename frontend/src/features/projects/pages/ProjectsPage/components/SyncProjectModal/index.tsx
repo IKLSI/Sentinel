@@ -9,16 +9,14 @@ import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import { useT } from "@/i18n/I18nContext";
 import {
-  getAvailableRepos,
-  createProject,
-  type AvailableRepoDto,
-} from "@/features/techHealth/api/projects";
+  useAvailableRepos,
+  useCreateProject,
+} from "@/features/techHealth/hooks/useProjects";
 import { extractApiError } from "@/utils/apiError";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onImported: () => void;
   showToast: (
     msg: string,
     type: "success" | "error" | "info" | "warning",
@@ -28,49 +26,28 @@ interface Props {
 export const SyncProjectModal: React.FC<Props> = ({
   open,
   onClose,
-  onImported,
   showToast,
 }) => {
   const t = useT();
-  const [repos, setRepos] = useState<AvailableRepoDto[]>([]);
-  const [hasToken, setHasToken] = useState(true);
-  const [fetchFailed, setFetchFailed] = useState(false);
-  const [fetchFailedStatusCode, setFetchFailedStatusCode] = useState<
-    number | undefined
-  >(undefined);
+  const {
+    repos,
+    hasToken,
+    fetchFailed,
+    fetchFailedStatusCode,
+    loading,
+    error,
+  } = useAvailableRepos(open);
+  const createProjectMutation = useCreateProject();
+  const importing = createProjectMutation.isPending;
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [error, setError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const ctrl = new AbortController();
-    setLoading(true);
-    setError(false);
-    setHasToken(true);
-    setFetchFailed(false);
-    setFetchFailedStatusCode(undefined);
     setSearch("");
     setSelected(new Set());
-    getAvailableRepos(ctrl.signal)
-      .then((data) => {
-        if (ctrl.signal.aborted) return;
-        setRepos(data.repos);
-        setHasToken(data.hasToken);
-        setFetchFailed(data.fetchFailed);
-        setFetchFailedStatusCode(data.fetchFailedStatusCode);
-      })
-      .catch(() => {
-        if (!ctrl.signal.aborted) setError(true);
-      })
-      .finally(() => {
-        if (!ctrl.signal.aborted) setLoading(false);
-      });
     setTimeout(() => inputRef.current?.focus(), 80);
-    return () => ctrl.abort();
   }, [open]);
 
   const visible = repos.filter((r) =>
@@ -97,12 +74,11 @@ export const SyncProjectModal: React.FC<Props> = ({
 
   const handleImport = async () => {
     if (selected.size === 0) return;
-    setImporting(true);
+    const toImport = repos.filter((r) => selected.has(r.url));
     try {
-      const toImport = repos.filter((r) => selected.has(r.url));
       await Promise.all(
         toImport.map((r) =>
-          createProject({
+          createProjectMutation.mutateAsync({
             name: r.name,
             repositoryUrl: r.url,
             repositoryType: r.platform,
@@ -114,14 +90,11 @@ export const SyncProjectModal: React.FC<Props> = ({
         "success",
       );
       onClose();
-      onImported();
     } catch (err) {
       showToast(
         extractApiError(err, t("projects.toast.import_error")),
         "error",
       );
-    } finally {
-      setImporting(false);
     }
   };
 

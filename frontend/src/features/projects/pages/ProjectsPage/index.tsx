@@ -5,6 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useProjects,
   projectsQueryKey,
+  useDeleteProject,
+  useScanProject,
+  useExportProjectsExcel,
 } from "@/features/techHealth/hooks/useProjects";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -12,14 +15,7 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { DeleteModal } from "@/components/DeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
-import {
-  getProject,
-  deleteProject,
-  scanProject,
-  exportProjectsExcel,
-  type ProjectDto,
-} from "@/features/techHealth/api/projects";
-import type { ScanFrequency } from "@/types/enums";
+import { getProject, type ProjectDto } from "@/features/techHealth/api/projects";
 import {
   GRADE_ORDER,
   type GradeKey,
@@ -37,11 +33,14 @@ export const ProjectsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { data: projects = [], isLoading: loading } = useProjects();
+  const deleteProjectMutation = useDeleteProject();
+  const scanProjectMutation = useScanProject();
+  const exportProjectsMutation = useExportProjectsExcel();
+  const deleting = deleteProjectMutation.isPending;
+  const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [scanningId, setScanningId] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(
     () => !!(location.state as { openImport?: boolean } | null)?.openImport,
   );
@@ -84,105 +83,90 @@ export const ProjectsPage: React.FC = () => {
     return () => window.removeEventListener("dashboard:refresh", handler);
   }, [queryClient]);
 
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      await exportProjectsExcel();
-    } catch {
-      showToast(t("projects.toast.export_error"), "error");
-    } finally {
-      setExporting(false);
-    }
+  const handleExport = () => {
+    exportProjectsMutation.mutate(undefined, {
+      onError: () => showToast(t("projects.toast.export_error"), "error"),
+    });
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await deleteProject(deleteTarget.id);
-      queryClient.setQueryData<ProjectDto[]>(projectsQueryKey, (prev) =>
-        (prev ?? []).filter((p) => p.id !== deleteTarget.id),
-      );
-      setDeleteTarget(null);
-      showToast(t("projects.toast.delete_success"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("projects.toast.delete_error")),
-        "error",
-      );
-    } finally {
-      setDeleting(false);
-    }
+    deleteProjectMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        setDeleteTarget(null);
+        showToast(t("projects.toast.delete_success"), "success");
+      },
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("projects.toast.delete_error")),
+          "error",
+        ),
+    });
   };
 
   const handleScan = useCallback(
-    async (id: string) => {
+    (id: string) => {
       if (scanningId) return;
       setScanningId(id);
       const previousLastScanAt = queryClient
         .getQueryData<ProjectDto[]>(projectsQueryKey)
         ?.find((p) => p.id === id)?.lastScanAt;
       const deadline = Date.now() + 10 * 60 * 1000;
-      try {
-        await scanProject(id);
-        showToast(t("projects.toast.scan_started"), "info");
-        const poll = async () => {
-          if (Date.now() > deadline) {
-            setScanningId(null);
-            showToast(t("projects.toast.scan_timeout"), "warning");
-            return;
-          }
-          try {
-            const updated = await getProject(id);
-            if (updated.lastScanAt !== previousLastScanAt) {
-              queryClient.setQueryData<ProjectDto[]>(projectsQueryKey, (prev) =>
-                (prev ?? []).map((p) =>
-                  p.id === id
-                    ? {
-                        ...p,
-                        healthScore: updated.healthScore,
-                        healthGrade: updated.healthGrade,
-                        totalDependencies: updated.totalDependencies,
-                        vulnerableDependencies: updated.vulnerableDependencies,
-                        criticalVulnerabilities:
-                          updated.criticalVulnerabilities,
-                        totalVulnerabilities: updated.totalVulnerabilities,
-                        totalTickets: updated.totalTickets,
-                      }
-                    : p,
-                ),
-              );
-              setScanningId(null);
-              showToast(t("projects.toast.scan_done"), "success");
-              window.dispatchEvent(new Event("dashboard:refresh"));
-            } else {
-              scanPollRef.current = setTimeout(poll, 3000);
-            }
-          } catch {
-            scanPollRef.current = setTimeout(poll, 5000);
-          }
-        };
-        scanPollRef.current = setTimeout(poll, 2000);
-      } catch (err) {
-        showToast(
-          extractApiError(err, t("projects.toast.scan_start_error")),
-          "error",
-        );
-        setScanningId(null);
-      }
-    },
-    [scanningId, queryClient, showToast, t],
-  );
 
-  const handleFrequencyChange = useCallback(
-    (id: string, freq: ScanFrequency) => {
-      queryClient.setQueryData<ProjectDto[]>(projectsQueryKey, (prev) =>
-        (prev ?? []).map((p) =>
-          p.id === id ? { ...p, scanFrequency: freq } : p,
-        ),
-      );
+      const poll = async () => {
+        if (Date.now() > deadline) {
+          setScanningId(null);
+          showToast(t("projects.toast.scan_timeout"), "warning");
+          return;
+        }
+        try {
+          const updated = await queryClient.fetchQuery({
+            queryKey: ["project", id],
+            queryFn: ({ signal }) => getProject(id, signal),
+          });
+          if (updated.lastScanAt !== previousLastScanAt) {
+            queryClient.setQueryData<ProjectDto[]>(projectsQueryKey, (prev) =>
+              (prev ?? []).map((p) =>
+                p.id === id
+                  ? {
+                      ...p,
+                      healthScore: updated.healthScore,
+                      healthGrade: updated.healthGrade,
+                      totalDependencies: updated.totalDependencies,
+                      vulnerableDependencies: updated.vulnerableDependencies,
+                      criticalVulnerabilities: updated.criticalVulnerabilities,
+                      totalVulnerabilities: updated.totalVulnerabilities,
+                      totalTickets: updated.totalTickets,
+                    }
+                  : p,
+              ),
+            );
+            setScanningId(null);
+            showToast(t("projects.toast.scan_done"), "success");
+            window.dispatchEvent(new Event("dashboard:refresh"));
+          } else {
+            scanPollRef.current = setTimeout(poll, 3000);
+          }
+        } catch {
+          scanPollRef.current = setTimeout(poll, 5000);
+        }
+      };
+
+      scanProjectMutation.mutate(id, {
+        onSuccess: () => {
+          showToast(t("projects.toast.scan_started"), "info");
+          scanPollRef.current = setTimeout(poll, 2000);
+        },
+        onError: (err) => {
+          showToast(
+            extractApiError(err, t("projects.toast.scan_start_error")),
+            "error",
+          );
+          setScanningId(null);
+        },
+      });
     },
-    [queryClient],
+    [scanningId, queryClient, showToast, t, scanProjectMutation],
   );
 
   const filtered = useMemo(
@@ -346,7 +330,6 @@ export const ProjectsPage: React.FC = () => {
                     scanningId={scanningId}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}
-                    onFrequencyChange={handleFrequencyChange}
                   />
                 ))}
               </Box>
@@ -358,9 +341,6 @@ export const ProjectsPage: React.FC = () => {
       <SyncProjectModal
         open={showSyncModal}
         onClose={() => setShowSyncModal(false)}
-        onImported={() =>
-          void queryClient.invalidateQueries({ queryKey: projectsQueryKey })
-        }
         showToast={showToast}
       />
 

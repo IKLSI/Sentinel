@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { acceptInvitation } from "../../users/api/users";
+import { useAcceptInvitation } from "../../users/hooks/useUsers";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
@@ -43,7 +43,8 @@ export const AcceptInvitationPage: React.FC = () => {
     confirm: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const acceptInvitationMutation = useAcceptInvitation();
+  const loading = acceptInvitationMutation.isPending;
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -95,24 +96,28 @@ export const AcceptInvitationPage: React.FC = () => {
       );
       return;
     }
-    setLoading(true);
-    try {
-      await acceptInvitation({
+    acceptInvitationMutation.mutate(
+      {
         token,
         firstName: form.firstName,
         lastName: form.lastName,
         password: form.password,
-      });
-      setDone(true);
-      setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("auth.accept_invitation.error_invalid_token")),
-        "error",
-      );
-    } finally {
-      setLoading(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setDone(true);
+          setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
+        },
+        onError: (err) =>
+          showToast(
+            extractApiError(
+              err,
+              t("auth.accept_invitation.error_invalid_token"),
+            ),
+            "error",
+          ),
+      },
+    );
   };
 
   const isValid = form.firstName.trim() && form.password && form.confirm;

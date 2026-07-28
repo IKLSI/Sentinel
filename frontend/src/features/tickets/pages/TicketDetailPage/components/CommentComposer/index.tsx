@@ -11,7 +11,7 @@ import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
 import type { DetailPalette } from "../../helpers";
-import { uploadAttachment } from "@/features/tickets/api/tickets";
+import { useUploadAttachment } from "@/features/tickets/hooks/useTicket";
 import { API_BASE_URL } from "@/constants/api";
 import {
   MarkdownEditor,
@@ -56,31 +56,28 @@ export const CommentComposer: React.FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const uploadMutation = useUploadAttachment(ticketId);
+  const uploading = uploadMutation.isPending;
 
   const hasContent = value.trim().length > 0 || attachments.length > 0;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    setUploading(true);
-    try {
-      const created = await uploadAttachment(ticketId, file);
-      const path = `/api/tickets/${ticketId}/attachments/${created.id}`;
-      setAttachments((prev) => [
-        ...prev,
-        {
-          fileName: created.fileName,
-          url: `${BASE_URL}${path}`,
-          isImage: file.type.startsWith("image/"),
-        },
-      ]);
-    } catch {
-      // upload failed
-    } finally {
-      setUploading(false);
-    }
+    uploadMutation.mutate(file, {
+      onSuccess: (created) => {
+        const path = `/api/tickets/${ticketId}/attachments/${created.id}`;
+        setAttachments((prev) => [
+          ...prev,
+          {
+            fileName: created.fileName,
+            url: `${BASE_URL}${path}`,
+            isImage: file.type.startsWith("image/"),
+          },
+        ]);
+      },
+    });
   };
 
   const removeAttachment = (index: number) => {

@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
-import { downloadAttachmentByUrl } from "@/features/tickets/api/tickets";
+import { useDownloadAttachment } from "@/features/tickets/hooks/useTicket";
 import { extractApiError } from "@/utils/apiError";
 import type { Ticket } from "@/types";
 import { type DetailPalette, getInitials } from "../../helpers";
@@ -68,16 +68,19 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   const { t, culture } = useI18n();
   const { showToast } = useToast();
   const { mainText, attachments } = parseComment(c.content);
+  const downloadMutation = useDownloadAttachment();
 
-  const handleDownload = async (a: Attachment) => {
-    try {
-      await downloadAttachmentByUrl(a.url, a.fileName);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("tickets.detail.attachments_download_error")),
-        "error",
-      );
-    }
+  const handleDownload = (a: Attachment) => {
+    downloadMutation.mutate(
+      { url: a.url, fileName: a.fileName },
+      {
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("tickets.detail.attachments_download_error")),
+            "error",
+          ),
+      },
+    );
   };
 
   return (

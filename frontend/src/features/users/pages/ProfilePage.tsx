@@ -7,11 +7,11 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import { useTheme } from "../../../store/ThemeContext";
 import { useToast } from "../../../hooks/useToast";
 import {
-  updateMyProfile,
-  updatePreferences,
-  exportMyGdprData,
-  deleteMyAccount,
-} from "../api/users";
+  useUpdateMyProfile,
+  useUpdatePreferences,
+  useExportGdprData,
+  useDeleteMyAccount,
+} from "../hooks/useUsers";
 import { extractApiError } from "@/utils/apiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
@@ -92,79 +92,80 @@ export const ProfilePage: React.FC = () => {
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
   });
-  const [savingPf, setSavingPf] = useState(false);
-  const [exportingGdpr, setExportingGdpr] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
-  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const updateProfile = useUpdateMyProfile();
+  const updatePrefs = useUpdatePreferences();
+  const exportGdpr = useExportGdprData();
+  const deleteAccount = useDeleteMyAccount();
+
+  const savingPf = updateProfile.isPending;
+  const exportingGdpr = exportGdpr.isPending;
+  const deletingAccount = deleteAccount.isPending;
 
   const pfUnchanged =
     pf.firstName === user?.firstName && pf.lastName === user?.lastName;
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (pfUnchanged) return;
     if (!pf.firstName.trim() || !pf.lastName.trim()) {
       showToast(t("profile.toast.name_required"), "warning");
       return;
     }
-    setSavingPf(true);
-    try {
-      const updated = await updateMyProfile(pf);
-      setUser({ ...user, ...updated });
-      showToast(t("profile.toast.updated"), "success");
-    } catch (err) {
-      showToast(extractApiError(err, t("profile.toast.update_error")), "error");
-    } finally {
-      setSavingPf(false);
-    }
+    updateProfile.mutate(pf, {
+      onSuccess: (updated) => {
+        setUser({ ...user, ...updated });
+        showToast(t("profile.toast.updated"), "success");
+      },
+      onError: (err) =>
+        showToast(extractApiError(err, t("profile.toast.update_error")), "error"),
+    });
   };
 
   const handleThemeToggle = (mode: Theme) => {
     if (theme === mode) return;
     toggleTheme();
-    updatePreferences({ theme: mode }).catch(() => {});
+    updatePrefs.mutate({ theme: mode });
   };
 
-  const handleExportGdpr = async () => {
-    setExportingGdpr(true);
-    try {
-      const data = await exportMyGdprData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `sentinel-export-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      showToast(extractApiError(err, t("profile.gdpr.export_error")), "error");
-    } finally {
-      setExportingGdpr(false);
-    }
+  const handleExportGdpr = () => {
+    exportGdpr.mutate(undefined, {
+      onSuccess: (data) => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sentinel-export-${new Date().toISOString().split("T")[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      onError: (err) =>
+        showToast(extractApiError(err, t("profile.gdpr.export_error")), "error"),
+    });
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!deletePassword.trim()) return;
-    setDeletingAccount(true);
-    try {
-      await deleteMyAccount(deletePassword);
-      Object.values(STORAGE_KEYS).forEach((k) => {
-        localStorage.removeItem(k);
-      });
-      window.location.href = "/login";
-    } catch (err) {
-      showToast(extractApiError(err, t("profile.gdpr.delete_error")), "error");
-      setDeletingAccount(false);
-    }
+    deleteAccount.mutate(deletePassword, {
+      onSuccess: () => {
+        Object.values(STORAGE_KEYS).forEach((k) => {
+          localStorage.removeItem(k);
+        });
+        window.location.href = "/login";
+      },
+      onError: (err) =>
+        showToast(extractApiError(err, t("profile.gdpr.delete_error")), "error"),
+    });
   };
 
   const handleLanguageChange = (lang: Language) => {
     if (culture === lang || !user) return;
     setLanguage(lang);
     setUser({ ...user, language: lang });
-    updatePreferences({ language: lang }).catch(() => {});
+    updatePrefs.mutate({ language: lang });
   };
 
   return (

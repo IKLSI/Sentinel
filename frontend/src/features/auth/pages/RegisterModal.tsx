@@ -6,7 +6,10 @@ import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { register, resendVerification } from "../api/auth";
+import {
+  useRegisterMutation,
+  useResendVerificationMutation,
+} from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
 import { extractApiError } from "../../../utils/apiError";
@@ -28,7 +31,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const registerMutation = useRegisterMutation();
+  const resendVerificationMutation = useResendVerificationMutation();
+  const loading = registerMutation.isPending;
   const [done, setDone] = useState(false);
   const orgRef = useRef<HTMLInputElement>(null);
   const orgId = useId();
@@ -56,36 +61,28 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       showToast(t("auth.register.fill_all_fields"), "warning");
       return;
     }
-    setLoading(true);
-    try {
-      await register({
-        organizationName,
-        firstName,
-        lastName,
-        email,
-        password,
-      });
-      setDone(true);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("auth.register.error_generic")),
-        "error",
-      );
-    } finally {
-      setLoading(false);
-    }
+    registerMutation.mutate(
+      { organizationName, firstName, lastName, email, password },
+      {
+        onSuccess: () => setDone(true),
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("auth.register.error_generic")),
+            "error",
+          ),
+      },
+    );
   };
 
-  const handleResend = async () => {
-    try {
-      await resendVerification(email);
-      showToast(t("auth.register.resend_done"), "success");
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("auth.register.error_generic")),
-        "error",
-      );
-    }
+  const handleResend = () => {
+    resendVerificationMutation.mutate(email, {
+      onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("auth.register.error_generic")),
+          "error",
+        ),
+    });
   };
 
   const fieldStyle = { animation: "none !important", opacity: "1 !important" };

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { verifyEmail } from "../api/auth";
+import { useVerifyEmailMutation } from "../hooks/useAuthMutations";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { ROUTES } from "@/constants/routes";
@@ -15,6 +15,8 @@ export const VerifyEmailPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const t = useT();
   const [status, setStatus] = useState<Status>("loading");
+  const verifyEmailMutation = useVerifyEmailMutation();
+  const verify = verifyEmailMutation.mutate;
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -22,10 +24,11 @@ export const VerifyEmailPage: React.FC = () => {
       setStatus("error");
       return;
     }
-    verifyEmail(token)
-      .then(() => setStatus("success"))
-      .catch(() => setStatus("error"));
-  }, [searchParams]);
+    verify(token, {
+      onSuccess: () => setStatus("success"),
+      onError: () => setStatus("error"),
+    });
+  }, [searchParams, verify]);
 
   return (
     <Box className="lp-root">

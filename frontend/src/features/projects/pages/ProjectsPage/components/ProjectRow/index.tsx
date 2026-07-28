@@ -8,10 +8,8 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import { RowActions } from "@/components/RowActions";
 import { AppModal } from "@/components/AppModal";
 import { useT } from "@/i18n/I18nContext";
-import {
-  type ProjectDto,
-  updateProjectFrequency,
-} from "@/features/techHealth/api/projects";
+import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { useUpdateProjectFrequency } from "@/features/techHealth/hooks/useProjects";
 import { ScanFrequency } from "@/types/enums";
 import { modalSelectSx } from "@/features/tickets/pages/TicketsPage/helpers";
 
@@ -19,12 +17,11 @@ interface Props {
   project: ProjectDto;
   onDelete: (project: ProjectDto) => void;
   onScan: (id: string) => void;
-  onFrequencyChange: (id: string, freq: ScanFrequency) => void;
   isScanning: boolean;
 }
 
 export const ProjectRow: React.FC<Props> = React.memo(
-  ({ project, onDelete, onScan, onFrequencyChange, isScanning }) => {
+  ({ project, onDelete, onScan, isScanning }) => {
     const navigate = useNavigate();
     const t = useT();
     const ticketCount = 0;
@@ -32,7 +29,8 @@ export const ProjectRow: React.FC<Props> = React.memo(
     const [selected, setSelected] = useState<ScanFrequency>(
       project.scanFrequency,
     );
-    const [saving, setSaving] = useState(false);
+    const updateFrequencyMutation = useUpdateProjectFrequency();
+    const saving = updateFrequencyMutation.isPending;
 
     const freqLabel = (f: string) => {
       if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -47,19 +45,15 @@ export const ProjectRow: React.FC<Props> = React.memo(
       setModalOpen(true);
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
       if (selected === project.scanFrequency) {
         setModalOpen(false);
         return;
       }
-      setSaving(true);
-      try {
-        await updateProjectFrequency(project.id, selected);
-        onFrequencyChange(project.id, selected);
-        setModalOpen(false);
-      } finally {
-        setSaving(false);
-      }
+      updateFrequencyMutation.mutate(
+        { id: project.id, scanFrequency: selected },
+        { onSuccess: () => setModalOpen(false) },
+      );
     };
 
     return (

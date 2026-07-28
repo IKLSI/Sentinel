@@ -9,7 +9,7 @@ import {
 } from "react";
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
 import { darkTheme, lightTheme } from "../styles/theme";
-import { updateUserTheme } from "../features/users/api/users";
+import { useUpdateUserTheme } from "../features/users/hooks/useUsers";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { Theme } from "../types/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
@@ -28,6 +28,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user, isAuthenticated } = useAuth();
+  const updateThemeMutation = useUpdateUserTheme();
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem(STORAGE_KEYS.THEME) as Theme) || Theme.Light;
   });
@@ -41,13 +42,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user?.theme) setTheme(user.theme as Theme);
   }, [user]);
 
+  const updateTheme = updateThemeMutation.mutate;
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === Theme.Dark ? Theme.Light : Theme.Dark;
-      if (isAuthenticated) updateUserTheme(next).catch(() => {});
+      if (isAuthenticated) updateTheme(next);
       return next;
     });
-  }, [isAuthenticated]);
+  }, [isAuthenticated, updateTheme]);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
 

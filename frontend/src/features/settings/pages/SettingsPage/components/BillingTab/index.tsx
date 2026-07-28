@@ -9,12 +9,10 @@ import { useT } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { extractApiError } from "@/utils/apiError";
 import {
-  type BillingStatus,
-  type PlanOption,
-  getBillingStatus,
-  getPlans,
-  startCheckout,
-} from "@/features/settings/api/billing";
+  useBillingStatus,
+  useBillingPlans,
+  useStartCheckout,
+} from "@/features/settings/hooks/useBilling";
 import { CARD_SX, CardHeader } from "../../helpers";
 
 const UNLIMITED = -1;
@@ -34,33 +32,16 @@ const BILLING_RESULT = {
 export const BillingTab: React.FC = () => {
   const t = useT();
   const { showToast } = useToast();
-  const [status, setStatus] = useState<BillingStatus | null>(null);
-  const [plans, setPlans] = useState<PlanOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  const { status, loading: loadingStatus } = useBillingStatus();
+  const { plans: rawPlans, loading: loadingPlans } = useBillingPlans();
+  const startCheckoutMutation = useStartCheckout();
+  const loading = loadingStatus || loadingPlans;
+  const actionLoading = startCheckoutMutation.isPending;
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
 
-  const load = () => {
-    const controller = new AbortController();
-    setLoading(true);
-    Promise.all([
-      getBillingStatus(controller.signal),
-      getPlans(controller.signal),
-    ])
-      .then(([s, p]) => {
-        setStatus(s);
-        setPlans(
-          p.sort(
-            (a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier),
-          ),
-        );
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  };
-
-  useEffect(load, []);
+  const plans = [...rawPlans].sort(
+    (a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier),
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -72,18 +53,20 @@ export const BillingTab: React.FC = () => {
     if (billing) window.history.replaceState({}, "", window.location.pathname);
   }, [showToast, t]);
 
-  const handleCheckout = async (tier: string) => {
-    setActionLoading(true);
-    try {
-      const url = await startCheckout(tier, interval);
-      window.location.href = url;
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("settings.billing.error_generic")),
-        "error",
-      );
-      setActionLoading(false);
-    }
+  const handleCheckout = (tier: string) => {
+    startCheckoutMutation.mutate(
+      { tier, interval },
+      {
+        onSuccess: (url) => {
+          window.location.href = url;
+        },
+        onError: (err) =>
+          showToast(
+            extractApiError(err, t("settings.billing.error_generic")),
+            "error",
+          ),
+      },
+    );
   };
 
   if (loading || !status) {

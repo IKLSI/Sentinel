@@ -1,7 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "@/components/DeleteModal";
@@ -9,30 +8,23 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/i18n/I18nContext";
 import {
   useTickets,
-  TICKETS_QUERY_KEY,
+  useCreateTicket,
+  useUpdateTicket,
+  useDeleteTicket,
+  useExportTicketsExcel,
 } from "@/features/tickets/hooks/useTickets";
-import { dashboardQueryKey } from "@/features/dashboard/hooks/useDashboard";
 import {
-  createTicket,
-  deleteTicket,
-  exportTicketsExcel,
-  updateTicket,
-} from "@/features/tickets/api/tickets";
-import { useTicketStatuses } from "@/features/tickets/hooks/useTicketStatuses";
-import { changeTicketStatus } from "@/features/tickets/api/ticketStatuses";
-import {
-  type ProjectDto,
-  getProjects,
-} from "@/features/techHealth/api/projects";
-import { getUsers } from "@/features/users/api/users";
+  useTicketStatuses,
+  useChangeTicketStatus,
+} from "@/features/tickets/hooks/useTicketStatuses";
+import { useProjects } from "@/features/techHealth/hooks/useProjects";
+import { useUsers } from "@/features/users/hooks/useUsers";
 import type {
   Ticket,
   TicketFilters,
   TicketPriority,
   TicketType,
   TicketStatusDef,
-  User,
-  PaginatedResponse,
 } from "@/types";
 import {
   type CreateTicketPayload,
@@ -55,7 +47,6 @@ export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState({
@@ -68,16 +59,15 @@ export const TicketsPage: React.FC = () => {
     id: string;
     reference: string;
   } | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState<CreateTicketPayload>(
     EMPTY_CREATE_TICKET_FORM,
   );
   const [createAnother, setCreateAnother] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createEstMinutes, setCreateEstMinutes] = useState(0);
-  const [modalProjects, setModalProjects] = useState<ProjectDto[]>([]);
-  const [modalUsers, setModalUsers] = useState<User[]>([]);
+  const { data: projectsData } = useProjects();
+  const modalProjects = projectsData ?? [];
+  const { users: modalUsers } = useUsers();
   const { data: statusesData } = useTicketStatuses();
   const statuses: TicketStatusDef[] = statusesData ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
@@ -91,8 +81,6 @@ export const TicketsPage: React.FC = () => {
     assignedToId: "",
     estimatedMinutes: 0,
   });
-  const [editSaving, setEditSaving] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [sort, setSort] = useState<SortState | null>({
     col: "priority",
     dir: SortDirection.Asc,
@@ -100,31 +88,30 @@ export const TicketsPage: React.FC = () => {
 
   const pageSize = 20;
 
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      await exportTicketsExcel({
+  const createTicketMutation = useCreateTicket();
+  const updateTicketMutation = useUpdateTicket();
+  const changeStatusMutation = useChangeTicketStatus();
+  const deleteTicketMutation = useDeleteTicket();
+  const exportTicketsMutation = useExportTicketsExcel();
+
+  const createSubmitting = createTicketMutation.isPending;
+  const editSaving = updateTicketMutation.isPending;
+  const deleting = deleteTicketMutation.isPending;
+  const exporting = exportTicketsMutation.isPending;
+
+  const handleExport = () => {
+    exportTicketsMutation.mutate(
+      {
         priority: filters.priority || undefined,
         status: filters.status || undefined,
         type: filters.type || undefined,
         search: debouncedSearch || undefined,
-      });
-    } catch {
-      showToast(t("tickets.list.export_error"), "error");
-    } finally {
-      setExporting(false);
-    }
+      },
+      {
+        onError: () => showToast(t("tickets.list.export_error"), "error"),
+      },
+    );
   };
-
-  const loadModalRefs = useCallback(() => {
-    Promise.all([
-      getProjects().catch(() => [] as ProjectDto[]),
-      getUsers().catch(() => ({ items: [] as User[] })),
-    ]).then(([p, u]) => {
-      setModalProjects(p);
-      setModalUsers(u.items);
-    });
-  }, []);
 
   const openCreateModal = useCallback(() => {
     setCreateForm(EMPTY_CREATE_TICKET_FORM);
@@ -132,33 +119,29 @@ export const TicketsPage: React.FC = () => {
     setShowCreateModal(true);
   }, []);
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!createForm.title.trim()) return;
-    setCreateSubmitting(true);
-    try {
-      const payload: CreateTicketPayload = { ...createForm };
-      if (!payload.projectId) delete payload.projectId;
-      if (!payload.assignedToId) delete payload.assignedToId;
-      if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
-      const created = await createTicket(payload as unknown as Partial<Ticket>);
-      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
-      if (createAnother) {
-        queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
-        setCreateForm(EMPTY_CREATE_TICKET_FORM);
-        setCreateEstMinutes(0);
-        showToast(
-          t("tickets.list.create_success", { reference: created.reference }),
-          "success",
-        );
-      } else {
-        setShowCreateModal(false);
-        navigate(`/tickets/${created.id}`);
-      }
-    } catch (err) {
-      showToast(extractApiError(err, t("tickets.list.create_error")), "error");
-    } finally {
-      setCreateSubmitting(false);
-    }
+    const payload: CreateTicketPayload = { ...createForm };
+    if (!payload.projectId) delete payload.projectId;
+    if (!payload.assignedToId) delete payload.assignedToId;
+    if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
+    createTicketMutation.mutate(payload as unknown as Partial<Ticket>, {
+      onSuccess: (created) => {
+        if (createAnother) {
+          setCreateForm(EMPTY_CREATE_TICKET_FORM);
+          setCreateEstMinutes(0);
+          showToast(
+            t("tickets.list.create_success", { reference: created.reference }),
+            "success",
+          );
+        } else {
+          setShowCreateModal(false);
+          navigate(`/tickets/${created.id}`);
+        }
+      },
+      onError: (err) =>
+        showToast(extractApiError(err, t("tickets.list.create_error")), "error"),
+    });
   };
 
   const openEditModal = useCallback((ticket: Ticket) => {
@@ -192,70 +175,40 @@ export const TicketsPage: React.FC = () => {
 
   const handleEdit = async () => {
     if (!editTarget) return;
-    setEditSaving(true);
+    const payload: Record<string, unknown> = {
+      title: editForm.title,
+      description: editForm.description,
+      priority: editForm.priority,
+      type: editForm.type,
+    };
+    if (editForm.projectId) payload.projectId = editForm.projectId;
+    if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
+    if (editForm.estimatedMinutes > 0)
+      payload.estimatedHours = editForm.estimatedMinutes / 60;
     try {
-      const payload: Record<string, unknown> = {
-        title: editForm.title,
-        description: editForm.description,
-        priority: editForm.priority,
-        type: editForm.type,
-      };
-      if (editForm.projectId) payload.projectId = editForm.projectId;
-      if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
-      if (editForm.estimatedMinutes > 0)
-        payload.estimatedHours = editForm.estimatedMinutes / 60;
-      const updated = await updateTicket(
-        editTarget.id,
-        payload as Partial<Ticket>,
-      );
+      await updateTicketMutation.mutateAsync({
+        id: editTarget.id,
+        data: payload as Partial<Ticket>,
+      });
       if (editForm.status && editForm.status !== editTarget.statusId) {
-        await changeTicketStatus(editTarget.id, editForm.status);
+        await changeStatusMutation.mutateAsync({
+          ticketId: editTarget.id,
+          statusId: editForm.status,
+        });
       }
-      queryClient.setQueryData<PaginatedResponse<Ticket>>(
-        [TICKETS_QUERY_KEY, ticketsFilters],
-        (prev) =>
-          prev
-            ? {
-                ...prev,
-                items: prev.items.map((tk) =>
-                  tk.id === updated.id ? updated : tk,
-                ),
-              }
-            : prev,
-      );
-      queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
       setEditTarget(null);
-      window.dispatchEvent(new Event("dashboard:refresh"));
     } catch (err) {
       showToast(extractApiError(err, t("tickets.list.edit_error")), "error");
-    } finally {
-      setEditSaving(false);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await deleteTicket(deleteTarget.id);
-      queryClient.setQueryData<PaginatedResponse<Ticket>>(
-        [TICKETS_QUERY_KEY, ticketsFilters],
-        (prev) =>
-          prev
-            ? {
-                ...prev,
-                items: prev.items.filter((tk) => tk.id !== deleteTarget.id),
-              }
-            : prev,
-      );
-      queryClient.invalidateQueries({ queryKey: [TICKETS_QUERY_KEY] });
-      setDeleteTarget(null);
-      window.dispatchEvent(new Event("dashboard:refresh"));
-    } catch (err) {
-      showToast(extractApiError(err, t("tickets.list.delete_error")), "error");
-    } finally {
-      setDeleting(false);
-    }
+    deleteTicketMutation.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+      onError: (err) =>
+        showToast(extractApiError(err, t("tickets.list.delete_error")), "error"),
+    });
   };
 
   useEffect(() => {
@@ -284,11 +237,10 @@ export const TicketsPage: React.FC = () => {
   }, [error, showToast, t]);
 
   useEffect(() => {
-    loadModalRefs();
     if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
       openCreateModal();
     }
-  }, [loadModalRefs, location.state, openCreateModal]);
+  }, [location.state, openCreateModal]);
 
   const filtered = useMemo(() => {
     return (tickets?.items ?? []).slice().sort((a, b) => {

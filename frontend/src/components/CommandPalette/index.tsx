@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { UserRole } from "@/types/enums";
 import { ROUTES } from "@/constants/routes";
-import { triggerTechHealthScan } from "@/features/settings/api/jobs";
+import { useTriggerTechHealthScan } from "@/features/settings/hooks/useJobs";
 import { extractApiError } from "@/utils/apiError";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
@@ -35,6 +35,7 @@ export const CommandPalette: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const triggerScanMutation = useTriggerTechHealthScan();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
@@ -113,17 +114,17 @@ export const CommandPalette: React.FC = () => {
         labelKey: "palette.action_trigger_scan",
         hintKey: "palette.action_trigger_scan_hint",
         icon: RadarOutlined,
-        perform: async () => {
+        perform: () => {
           close();
-          try {
-            await triggerTechHealthScan();
-            showToast(t("projects.toast.scan_started"), "success");
-          } catch (err) {
-            showToast(
-              extractApiError(err, t("projects.toast.scan_start_error")),
-              "error",
-            );
-          }
+          triggerScanMutation.mutate(undefined, {
+            onSuccess: () =>
+              showToast(t("projects.toast.scan_started"), "success"),
+            onError: (err) =>
+              showToast(
+                extractApiError(err, t("projects.toast.scan_start_error")),
+                "error",
+              ),
+          });
         },
         roles: [UserRole.Admin],
       },
@@ -133,7 +134,7 @@ export const CommandPalette: React.FC = () => {
       if (isAdmin) return it.roles.includes(UserRole.Admin);
       return it.roles.includes(UserRole.Developer);
     });
-  }, [isAdmin, navigate, close, showToast, t]);
+  }, [isAdmin, navigate, close, showToast, t, triggerScanMutation]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

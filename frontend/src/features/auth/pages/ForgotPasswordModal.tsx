@@ -4,7 +4,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
-import { forgotPassword } from "../api/auth";
+import { useForgotPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
 import { extractApiError } from "../../../utils/apiError";
@@ -21,7 +21,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const { showToast } = useToast();
   const t = useT();
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const forgotPasswordMutation = useForgotPasswordMutation();
+  const loading = forgotPasswordMutation.isPending;
   const [done, setDone] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const emailId = useId();
@@ -40,18 +41,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       showToast(t("auth.forgot_password.error_email_required"), "warning");
       return;
     }
-    setLoading(true);
-    try {
-      await forgotPassword(email);
-      setDone(true);
-    } catch (err) {
-      showToast(
-        extractApiError(err, t("auth.forgot_password.error_generic")),
-        "error",
-      );
-    } finally {
-      setLoading(false);
-    }
+    forgotPasswordMutation.mutate(email, {
+      onSuccess: () => setDone(true),
+      onError: (err) =>
+        showToast(
+          extractApiError(err, t("auth.forgot_password.error_generic")),
+          "error",
+        ),
+    });
   };
 
   return (
