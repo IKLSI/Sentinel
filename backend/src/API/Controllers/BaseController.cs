@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
-using System.Security.Claims;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Common;
 
@@ -8,32 +7,70 @@ namespace Sentinel.API.Controllers;
 
 public abstract class BaseController : ControllerBase
 {
-    protected Guid? GetCurrentUserId()
+    protected ActionResult ToActionResult(Result result) => result.Status switch
     {
-        string? claim = User.FindFirst(ClaimNames.UserId)?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
-    }
+        ResultStatus.Success => Ok(),
+        ResultStatus.NoContent => NoContent(),
+        ResultStatus.Accepted => Accepted(),
+        _ => ToErrorResult(result)
+    };
 
-    protected Guid? GetOrganizationId()
+    protected ActionResult ToActionResult<T>(Result<T> result) => result.Status switch
     {
-        string? claim = User.FindFirst(ClaimNames.OrganizationId)?.Value;
-        return Guid.TryParse(claim, out Guid id) ? id : null;
+        ResultStatus.Success => result.Value is null ? Ok() : Ok(result.Value),
+        ResultStatus.Accepted => result.Value is null ? Accepted() : Accepted(result.Value),
+        ResultStatus.NoContent => NoContent(),
+        _ => ToErrorResult(result)
+    };
+
+    protected ActionResult ToFileResult(Result<FileDownload> result) => result.IsSuccess
+        ? File(result.Value!.Content, result.Value.ContentType, result.Value.FileName)
+        : ToErrorResult(result);
+
+    private ActionResult ToErrorResult(Result result) => result.Status switch
+    {
+        ResultStatus.Invalid => BadRequest(BuildValidationError(result)),
+        ResultStatus.NotFound => result.Code == null
+            ? NotFound()
+            : NotFound(BuildError(result, StatusCodes.Status404NotFound)),
+        ResultStatus.Unauthorized => result.Code == null
+            ? Unauthorized()
+            : Unauthorized(BuildError(result, StatusCodes.Status401Unauthorized)),
+        ResultStatus.Forbidden => result.Code == null
+            ? Forbid()
+            : StatusCode(StatusCodes.Status403Forbidden, BuildError(result, StatusCodes.Status403Forbidden)),
+        ResultStatus.PaymentRequired => StatusCode(StatusCodes.Status402PaymentRequired,
+            BuildError(result, StatusCodes.Status402PaymentRequired)),
+        ResultStatus.Conflict => Conflict(BuildError(result, StatusCodes.Status409Conflict)),
+        _ => result.Code == null
+            ? BadRequest()
+            : BadRequest(BuildError(result, StatusCodes.Status400BadRequest))
+    };
+
+    private static ApiErrorResponse BuildError(Result result, int status) =>
+        new() { Code = result.Code ?? ErrorCodes.Unexpected, Status = status, Params = result.Params };
+
+    private static ApiValidationErrorResponse BuildValidationError(Result result) => new()
+    {
+        Code = ErrorCodes.ValidationFailed,
+        Status = StatusCodes.Status400BadRequest,
+        Errors = result.ValidationErrors
+            .GroupBy(error => ToCamelCase(error.Identifier))
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(error => new ValidationErrorItem { Code = error.Code, Params = error.Params })
+                    .ToArray())
+    };
+
+    private static string ToCamelCase(string name)
+    {
+        if (string.IsNullOrEmpty(name) || char.IsLower(name[0])) return name;
+
+        return string.Create(name.Length, name, static (span, source) =>
+        {
+            source.AsSpan().CopyTo(span);
+            span[0] = char.ToLowerInvariant(span[0]);
+        });
     }
-
-    protected string? GetCurrentJti() => User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-
-    protected BadRequestObjectResult BadRequestCode(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        BadRequest(BuildError(code, StatusCodes.Status400BadRequest, parameters));
-
-    protected UnauthorizedObjectResult UnauthorizedCode(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        Unauthorized(BuildError(code, StatusCodes.Status401Unauthorized, parameters));
-
-    protected NotFoundObjectResult NotFoundCode(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        NotFound(BuildError(code, StatusCodes.Status404NotFound, parameters));
-
-    protected ConflictObjectResult ConflictCode(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        Conflict(BuildError(code, StatusCodes.Status409Conflict, parameters));
-
-    private static ApiErrorResponse BuildError(string code, int status, IReadOnlyDictionary<string, string>? parameters) =>
-        new() { Code = code, Status = status, Params = parameters };
 }

@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
-using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Npgsql;
@@ -30,12 +29,24 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
-using Sentinel.API.Filters;
+using Sentinel.Infrastructure.Email;
+using Sentinel.Infrastructure.Http;
 using Sentinel.API.Http;
-using Sentinel.API.Jobs;
 using Sentinel.API.Services;
-using Sentinel.Application.Services;
-using Sentinel.Application.Validators;
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Billing;
+using Sentinel.Application.Dashboard;
+using Sentinel.Application.Jobs;
+using Sentinel.Application.Notifications;
+using Sentinel.Application.Audit;
+using Sentinel.Application.Common;
+using Sentinel.Application.Exports;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth;
+using Sentinel.Application.TechHealth.ComplianceReport;
+using Sentinel.Application.TechHealth.ExportSbom;
+using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Remediation;
 
 namespace Sentinel.API.Extensions;
 
@@ -323,24 +334,23 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<TokenService>();
-        services.AddScoped<AuthService>();
-        services.AddScoped<TicketService>();
         services.AddScoped<ExportService>();
-        services.AddScoped<RepositoryHostClient>();
+        services.AddScoped<NotificationPublisher>();
+        services.AddScoped<DashboardCache>();
+        services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<ManifestPatcherService>();
-        services.AddScoped<DependencyRegistryClient>();
+        services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<RemediationService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
-        services.AddScoped<DashboardService>();
+        services.AddScoped<QuotaGuard>();
         services.AddScoped<DataSeeder>();
         services.AddScoped<TokenProtector>();
-        services.AddScoped<QuotaService>();
-        services.AddScoped<BillingService>();
-        services.AddScoped<ApiKeyService>();
+        services.AddScoped<StripePriceCatalog>();
+        services.AddScoped<StripeCustomerProvisioner>();
 
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 
@@ -350,11 +360,25 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SendEmailVerificationJob>();
 
         services.AddSingleton<IEmailService, EmailService>();
-        services.AddScoped<INotificationService, NotificationService>();
 
         services.AddSignalR();
         services.AddSingleton<IUserIdProvider, NotificationUserIdProvider>();
         services.AddScoped<INotificationPusher, SignalRNotificationPusher>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddUseCases(this IServiceCollection services)
+    {
+        IEnumerable<Type> useCaseTypes = typeof(IService).Assembly
+            .GetTypes()
+            .Where(type => type is { IsClass: true, IsAbstract: false }
+                && (typeof(IService).IsAssignableFrom(type) || typeof(IValidator).IsAssignableFrom(type)));
+
+        foreach (Type useCaseType in useCaseTypes)
+        {
+            services.AddScoped(useCaseType);
+        }
 
         return services;
     }
@@ -455,10 +479,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddControllersWithJsonOptions(this IServiceCollection services)
     {
-        services.AddControllers(options =>
-        {
-            options.Filters.Add<ValidationFilter>();
-        }).AddJsonOptions(options =>
+        services.AddControllers().AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -485,12 +506,6 @@ public static class ServiceCollectionExtensions
             };
         });
 
-        return services;
-    }
-
-    public static IServiceCollection AddRequestValidation(this IServiceCollection services)
-    {
-        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
         return services;
     }
 
@@ -531,6 +546,8 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddSingleton<ISystemScope, SystemScope>();
+        services.AddSingleton<IContentPathProvider, ContentPathProvider>();
+        services.AddScoped<IRefreshTokenStore, RefreshTokenCookie>();
 
         return services;
     }

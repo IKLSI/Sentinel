@@ -1,0 +1,83 @@
+using Hangfire;
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Billing;
+using Sentinel.Application.Common;
+using Sentinel.Application.Jobs;
+using Sentinel.Application.Audit;
+using Sentinel.Application.Exports;
+using Sentinel.Application.Notifications;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
+using Sentinel.Domain.DTOs.Users;
+using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
+
+namespace Sentinel.Application.Users.Invite;
+
+public class UserInviteService(
+    IUserInvitationRepository invitationRepository,
+    IUnitOfWorkManager unitOfWorkManager,
+    IBackgroundJobClient jobs,
+    IAuditLogService auditLog,
+    QuotaGuard quotaGuard,
+    ITenantContext tenant,
+    UserInviteValidator validator) : IService
+{
+    private const int InvitationValidityHours = 48;
+
+    public async Task<Result<ApiMessageResponse>> ExecuteAsync(CreateUserDto model, CancellationToken cancellationToken)
+    {
+        if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid currentUserId)
+            return Result<ApiMessageResponse>.Unauthorized();
+
+        Result validationResult = await validator.ValidateAsync(model, organizationId, cancellationToken);
+
+        if (!validationResult.IsSuccess)
+            return Result<ApiMessageResponse>.From(validationResult);
+
+        Result quotaResult = await quotaGuard.EnsureCanInviteMemberAsync(organizationId, cancellationToken);
+
+        if (!quotaResult.IsSuccess)
+            return Result<ApiMessageResponse>.From(quotaResult);
+
+        Result roleResult = validator.ValidateRole(model, out UserRole role);
+
+        if (!roleResult.IsSuccess)
+            return Result<ApiMessageResponse>.From(roleResult);
+
+        string rawToken = SecureToken.Generate();
+
+        UserInvitation invitation = new UserInvitation
+        {
+            OrganizationId = organizationId,
+            Email = model.Email.ToLower(),
+            Role = role,
+            TokenHash = SecureToken.Hash(rawToken),
+            InvitedById = currentUserId,
+            ExpiresAt = DateTime.UtcNow.AddHours(InvitationValidityHours),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        {
+            await invitationRepository.AddAsync(invitation, cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
+        }
+
+        jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, rawToken));
+
+        await auditLog.LogAsync(
+            AuditAction.UserInvited,
+            entityType: AuditEntityTypes.User,
+            organizationId: organizationId,
+            userId: currentUserId,
+            entityId: invitation.Id,
+            jti: tenant.Jti);
+
+        return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
+    }
+}

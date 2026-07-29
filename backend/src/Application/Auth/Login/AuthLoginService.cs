@@ -1,0 +1,130 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Common;
+using Sentinel.Application.Audit;
+using Sentinel.Application.Exports;
+using Sentinel.Application.Notifications;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Auth;
+using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
+using Sentinel.Domain.Settings;
+
+namespace Sentinel.Application.Auth.Login;
+
+public class AuthLoginService : IService
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly TokenService _tokenService;
+    private readonly JwtSettings _jwt;
+    private readonly ISystemScope _systemScope;
+    private readonly IAuditLogService _auditLog;
+    private readonly IRefreshTokenStore _refreshTokenStore;
+    private readonly ILogger<AuthLoginService> _logger;
+    private readonly AuthLoginValidator _validator;
+
+    public AuthLoginService(
+        IUserRepository userRepository,
+        IPasswordHasher passwordHasher,
+        IUnitOfWorkManager unitOfWorkManager,
+        TokenService tokenService,
+        IOptions<JwtSettings> jwtOptions,
+        ISystemScope systemScope,
+        IAuditLogService auditLog,
+        IRefreshTokenStore refreshTokenStore,
+        ILogger<AuthLoginService> logger,
+        AuthLoginValidator validator)
+    {
+        _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
+        _unitOfWorkManager = unitOfWorkManager;
+        _tokenService = tokenService;
+        _jwt = jwtOptions.Value;
+        _systemScope = systemScope;
+        _auditLog = auditLog;
+        _refreshTokenStore = refreshTokenStore;
+        _logger = logger;
+        _validator = validator;
+    }
+
+    public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest model, CancellationToken cancellationToken)
+    {
+        Result validationResult = await _validator.ValidateAsync(model, cancellationToken);
+
+        if (!validationResult.IsSuccess)
+            return Result<LoginResponse>.From(validationResult);
+
+        using IDisposable elevation = _systemScope.Enter();
+
+        List<User> candidates = await _userRepository
+            .GetActiveByEmail(model.Email, QueryableQueryOptions.Tracked)
+            .ToListAsync(cancellationToken);
+
+        User? user = ResolveSingleMatch(candidates, model.Password);
+
+        if (user == null)
+            return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidCredentials);
+
+        if (!user.IsEmailVerified)
+            return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);
+
+        string accessToken = _tokenService.GenerateAccessToken(user);
+        string refreshToken = _tokenService.GenerateRefreshToken();
+
+        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        {
+            user.RefreshToken = _tokenService.HashRefreshToken(refreshToken);
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
+            user.LastLoginAt = DateTime.UtcNow;
+
+            await unitOfWork.CommitAsync(cancellationToken);
+        }
+
+        _refreshTokenStore.Write(refreshToken);
+
+        await _auditLog.LogAsync(
+            AuditAction.Login,
+            entityType: AuditEntityTypes.User,
+            organizationId: user.OrganizationId,
+            userId: user.Id,
+            entityId: user.Id);
+
+        return new LoginResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = string.Empty,
+            ExpiresAt = _tokenService.GetAccessTokenExpiry(),
+            User = UserProfileMapper.ToProfile(user)
+        };
+    }
+
+    private User? ResolveSingleMatch(List<User> candidates, string password)
+    {
+        User? match = null;
+
+        foreach (User candidate in candidates)
+        {
+            if (!_passwordHasher.Verify(password, candidate.PasswordHash)) continue;
+
+            if (match != null)
+            {
+                _logger.LogWarning(
+                    "Plusieurs comptes correspondent au login {Email} — connexion refusée par ambiguïté",
+                    candidate.Email);
+                return null;
+            }
+
+            match = candidate;
+        }
+
+        return match;
+    }
+}

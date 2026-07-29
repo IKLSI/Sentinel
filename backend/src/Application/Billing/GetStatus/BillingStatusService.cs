@@ -1,0 +1,52 @@
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Common;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.DTOs.Billing;
+using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
+
+namespace Sentinel.Application.Billing.GetStatus;
+
+public class BillingStatusService(
+    QuotaGuard quotaGuard,
+    IProjectRepository projectRepository,
+    IUserRepository userRepository,
+    ISystemScope systemScope,
+    ITenantContext tenant) : IService
+{
+
+    public async Task<Result<BillingStatusDto>> ExecuteAsync(CancellationToken cancellationToken)
+    {
+        if (tenant.OrganizationId is not Guid organizationId)
+            return Result<BillingStatusDto>.Unauthorized();
+
+        using IDisposable elevation = systemScope.Enter();
+
+        Result<Organization> organizationResult = await quotaGuard
+            .LoadOrganizationAsync(organizationId, cancellationToken);
+
+        if (!organizationResult.IsSuccess)
+            return Result<BillingStatusDto>.From(organizationResult);
+
+        Organization organization = organizationResult.Value!;
+
+        await quotaGuard.ResetScanPeriodIfElapsedAsync(organization, cancellationToken);
+
+        PlanLimits limits = PlanLimits.For(organization.PlanTier);
+
+        int projects = await projectRepository.CountByOrganizationAsync(organizationId, cancellationToken);
+        int members = await userRepository.CountActiveAsync(organizationId, cancellationToken);
+
+        return new BillingStatusDto
+        {
+            PlanTier = organization.PlanTier.ToString(),
+            SubscriptionStatus = organization.SubscriptionStatus.ToString(),
+            CurrentPeriodEnd = organization.CurrentPeriodEnd,
+            HasActiveSubscription = organization.SubscriptionStatus
+                is SubscriptionStatus.Active or SubscriptionStatus.Trialing,
+            Projects = new PlanQuotaDto { Used = projects, Limit = limits.MaxProjects },
+            Members = new PlanQuotaDto { Used = members, Limit = limits.MaxMembers },
+            Scans = new PlanQuotaDto { Used = organization.MonthlyScanCount, Limit = limits.MaxScansPerMonth }
+        };
+    }
+}

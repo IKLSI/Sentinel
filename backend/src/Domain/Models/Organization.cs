@@ -1,6 +1,7 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
-public class Organization
+public class Organization : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;

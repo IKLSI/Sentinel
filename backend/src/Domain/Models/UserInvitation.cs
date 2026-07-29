@@ -1,6 +1,7 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
-public class UserInvitation
+public class UserInvitation : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }

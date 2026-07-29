@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum DependencyType
@@ -31,7 +32,7 @@ public enum DependencyStatus
     Vulnerable
 }
 
-public class Dependency
+public class Dependency : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid ProjectId { get; set; }

@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum AuditAction
@@ -48,7 +49,7 @@ public enum AuditAction
     AccountDeleted
 }
 
-public class AuditLog
+public class AuditLog : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid? OrganizationId { get; set; }

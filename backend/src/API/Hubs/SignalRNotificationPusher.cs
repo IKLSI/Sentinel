@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.SignalR;
-using Sentinel.Application.Services;
+using Sentinel.Application.Audit;
+using Sentinel.Application.Common;
+using Sentinel.Application.Exports;
+using Sentinel.Application.Notifications;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.API.Hubs;

@@ -3,10 +3,7 @@
   <ItemGroup>
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="CycloneDX.Core" />
-    <PackageReference Include="FluentValidation" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Hangfire.AspNetCore" />
-    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
@@ -24,11 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Domain/Sentinel.Domain.csproj" />
-    <ProjectReference Include="../Infrastructure/Sentinel.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Templates/**/*.html" />
   </ItemGroup>
 
 </Project>

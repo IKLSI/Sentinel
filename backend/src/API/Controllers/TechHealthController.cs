@@ -1,37 +1,24 @@
 using Asp.Versioning;
-using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
-using Sentinel.Infrastructure.Data;
+using Sentinel.Application.Common;
+using Sentinel.Application.TechHealth.AvailableRepos;
+using Sentinel.Application.TechHealth.ComplianceReport;
+using Sentinel.Application.TechHealth.CreateProject;
+using Sentinel.Application.TechHealth.DeleteProject;
+using Sentinel.Application.TechHealth.ExportExcel;
+using Sentinel.Application.TechHealth.ExportSbom;
+using Sentinel.Application.TechHealth.GetProject;
+using Sentinel.Application.TechHealth.Projects;
+using Sentinel.Application.TechHealth.TriggerScan;
+using Sentinel.Application.TechHealth.UpdateProject;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
-using Sentinel.Application.Services;
 
 namespace Sentinel.API.Controllers;
-
-internal static class RepositoryUrlGuard
-{
-    private static readonly HashSet<string> AllowedHosts = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "github.com",
-        "www.github.com",
-        "gitlab.com",
-        "www.gitlab.com",
-    };
-
-    public static bool IsValid(string? url)
-    {
-        if (string.IsNullOrWhiteSpace(url)) return true;
-        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)) return false;
-        if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
-
-        return AllowedHosts.Contains(uri.Host);
-    }
-}
 
 [ApiController]
 [ApiVersion("1.0")]
@@ -40,350 +27,89 @@ internal static class RepositoryUrlGuard
 [Authorize]
 public class TechHealthController : BaseController
 {
-    private readonly SentinelContext _context;
-    private readonly TechHealthService _techHealthService;
-    private readonly IBackgroundJobClient _backgroundJobs;
-    private readonly ExportService _exportService;
-    private readonly SbomService _sbomService;
-    private readonly ComplianceReportService _complianceReportService;
-    private readonly IAuditLogService _auditLog;
-    private readonly RepositoryHostClient _repositoryHostClient;
-    private readonly TokenProtector _tokenProtector;
-    private readonly QuotaService _quotaService;
-
-    public TechHealthController(SentinelContext context, TechHealthService techHealthService, IBackgroundJobClient backgroundJobs, ExportService exportService, SbomService sbomService, ComplianceReportService complianceReportService, IAuditLogService auditLog, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, QuotaService quotaService)
-    {
-        _context = context;
-        _techHealthService = techHealthService;
-        _backgroundJobs = backgroundJobs;
-        _exportService = exportService;
-        _sbomService = sbomService;
-        _complianceReportService = complianceReportService;
-        _auditLog = auditLog;
-        _repositoryHostClient = repositoryHostClient;
-        _tokenProtector = tokenProtector;
-        _quotaService = quotaService;
-    }
-
     [HttpGet("projects/available-repos")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<IEnumerable<AvailableRepoDto>>> GetAvailableRepos()
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        Organization? org = await _context.Organizations.FindAsync(organizationId.Value);
-
-        if (org == null) return NotFound();
-
-        List<string?> existingUrls = await _context.Projects
-            .Where(p => p.OrganizationId == organizationId.Value)
-            .Select(p => p.RepositoryUrl)
-            .ToListAsync();
-
-        bool hasToken = !string.IsNullOrEmpty(org.GithubToken) || !string.IsNullOrEmpty(org.GitlabToken);
-        bool fetchFailed = false;
-        int? fetchFailedStatusCode = null;
-        List<AvailableRepoDto> result = new();
-
-        if (!string.IsNullOrEmpty(org.GithubToken))
-        {
-            string? token = _tokenProtector.Unprotect(org.GithubToken);
-
-            if (string.IsNullOrEmpty(token))
-            {
-                fetchFailed = true;
-            }
-            else
-            {
-                (bool success, int? statusCode, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitHub.ToString().ToLower());
-
-                if (!success)
-                {
-                    fetchFailed = true;
-                    fetchFailedStatusCode ??= statusCode;
-                }
-
-                foreach ((string name, string url) in repos)
-                {
-                    if (!existingUrls.Contains(url))
-                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = RepositoryType.GitHub.ToString() });
-                }
-            }
-        }
-
-        if (!string.IsNullOrEmpty(org.GitlabToken))
-        {
-            string? token = _tokenProtector.Unprotect(org.GitlabToken);
-
-            if (string.IsNullOrEmpty(token))
-            {
-                fetchFailed = true;
-            }
-            else
-            {
-                (bool success, int? statusCode, List<(string Name, string Url)> repos) = await _repositoryHostClient.ListUserRepositoriesAsync(token, RepositoryType.GitLab.ToString().ToLower());
-
-                if (!success)
-                {
-                    fetchFailed = true;
-                    fetchFailedStatusCode ??= statusCode;
-                }
-
-                foreach ((string name, string url) in repos)
-                {
-                    if (!existingUrls.Contains(url))
-                        result.Add(new AvailableRepoDto { Name = name, Url = url, Platform = RepositoryType.GitLab.ToString() });
-                }
-            }
-        }
-
-        return Ok(new AvailableReposResponse
-        {
-            Repos = result,
-            HasToken = hasToken,
-            FetchFailed = fetchFailed,
-            FetchFailedStatusCode = fetchFailedStatusCode
-        });
-    }
+    public async Task<ActionResult<AvailableReposResponse>> GetAvailableRepos(
+        [FromServices] AvailableReposService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/export/excel")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<IActionResult> ExportExcel()
-    {
-        Guid? organizationId = GetOrganizationId();
-        Guid? userId = GetCurrentUserId();
-
-        if (organizationId == null || userId == null) return Unauthorized();
-
-        ExportResult export = await _exportService.ExportTechHealthExcelAsync(organizationId.Value, userId.Value);
-
-        return File(export.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", export.FileName);
-    }
+    public async Task<IActionResult> ExportExcel(
+        [FromServices] TechHealthExportExcelService service,
+        CancellationToken cancellationToken) =>
+        ToFileResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/{id:guid}/sbom")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<IActionResult> ExportSbom(Guid id, [FromQuery] string format, CancellationToken cancellationToken)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        SbomFormat sbomFormat = string.Equals(format, "spdx", StringComparison.OrdinalIgnoreCase)
-            ? SbomFormat.Spdx
-            : SbomFormat.CycloneDx;
-
-        ExportResult? export = await _sbomService.GenerateAsync(id, organizationId.Value, sbomFormat, cancellationToken);
-
-        if (export == null)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        return File(export.Content, "application/json", export.FileName);
-    }
+    public async Task<IActionResult> ExportSbom(
+        Guid id,
+        [FromQuery] string? format,
+        [FromServices] ProjectSbomExportService service,
+        CancellationToken cancellationToken) =>
+        ToFileResult(await service.ExecuteAsync(id, format, cancellationToken));
 
     [HttpGet("projects/{id:guid}/compliance-report")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<IActionResult> ExportComplianceReport(Guid id, CancellationToken cancellationToken)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        ExportResult? export = await _complianceReportService.GenerateAsync(id, organizationId.Value, cancellationToken);
-
-        if (export == null)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        return File(export.Content, "application/pdf", export.FileName);
-    }
+    public async Task<IActionResult> ExportComplianceReport(
+        Guid id,
+        [FromServices] ProjectComplianceReportService service,
+        CancellationToken cancellationToken) =>
+        ToFileResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpGet("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        List<Project> projects = await _context.Projects
-            .AsNoTracking()
-            .AsSplitQuery()
-            .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-            .Include(p => p.Runtimes)
-            .Where(p => p.OrganizationId == organizationId.Value)
-            .OrderByDescending(p => p.Dependencies.Any(d => d.Vulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical)))
-            .ThenBy(p => p.Coverage == ScanCoverage.Covered ? 0 : 1)
-            .ThenBy(p => p.HealthScore)
-            .ThenBy(p => p.Name)
-            .ToListAsync();
-
-        List<Guid> projectIds = projects.Select(p => p.Id).ToList();
-        Dictionary<Guid, int> ticketCounts = await _context.Tickets
-            .Where(t => t.ProjectId != null && projectIds.Contains(t.ProjectId.Value))
-            .GroupBy(t => t.ProjectId!.Value)
-            .Select(g => new { ProjectId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
-
-        return Ok(projects.Select(p =>
-        {
-            ProjectDto dto = TechHealthService.MapToDto(p);
-            dto.TotalTickets = ticketCounts.GetValueOrDefault(p.Id);
-            return dto;
-        }));
-    }
+    public async Task<ActionResult<List<ProjectDto>>> GetProjects(
+        [FromServices] ProjectListService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<ProjectDto>> GetProject(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        ProjectDto? project = await _techHealthService.GetProjectWithDetailsAsync(id);
-
-        if (project == null)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        bool belongs = await _context.Projects
-            .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (!belongs) return Forbid();
-
-        return Ok(project);
-    }
+    public async Task<ActionResult<ProjectDto>> GetProject(
+        Guid id,
+        [FromServices] ProjectGetByIdService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpPost("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<ProjectDto>> CreateProject([FromBody] CreateProjectDto dto)
+    public async Task<ActionResult<ProjectDto>> CreateProject(
+        [FromBody] CreateProjectDto dto,
+        [FromServices] ProjectCreateService service,
+        CancellationToken cancellationToken)
     {
-        Guid? organizationId = GetOrganizationId();
+        Result<ProjectDto> result = await service.ExecuteAsync(dto, cancellationToken);
 
-        if (organizationId == null) return Unauthorized();
-
-        if (!RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
-            return BadRequestCode(ErrorCodes.ProjectInvalidRepositoryUrl);
-
-        await _quotaService.EnsureCanAddProjectAsync(organizationId.Value);
-
-        if (!Enum.TryParse<RepositoryType>(dto.RepositoryType, true, out RepositoryType repoType))
-            repoType = RepositoryType.GitHub;
-
-        if (!Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
-            scanFreq = ScanFrequency.Weekly;
-
-        Project project = new Project
-        {
-            OrganizationId = organizationId.Value,
-            Name = dto.Name,
-            RepositoryUrl = dto.RepositoryUrl,
-            RepositoryType = repoType,
-            ScanFrequency = scanFreq
-        };
-
-        await _context.Projects.AddAsync(project);
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.ProjectCreated,
-            entityType: AuditEntityTypes.Project,
-            organizationId: organizationId.Value,
-            userId: GetCurrentUserId(),
-            entityId: project.Id,
-            jti: GetCurrentJti());
-
-        ProjectDto? created = await _techHealthService.GetProjectWithDetailsAsync(project.Id);
-        return CreatedAtAction(nameof(GetProject), new { id = project.Id }, created);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetProject), new { id = result.Value!.Id }, result.Value)
+            : ToActionResult(result);
     }
 
     [HttpPatch("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto dto)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        Project? project = await _context.Projects
-            .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (project == null)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        if (!Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
-            return BadRequestCode(ErrorCodes.ProjectInvalidScanFrequency,
-                new Dictionary<string, string> { ["values"] = string.Join(", ", Enum.GetNames<ScanFrequency>()) });
-
-        project.ScanFrequency = scanFreq;
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.ProjectUpdated,
-            entityType: AuditEntityTypes.Project,
-            organizationId: organizationId.Value,
-            userId: GetCurrentUserId(),
-            entityId: id,
-            jti: GetCurrentJti());
-
-        return Ok(new { scanFrequency = project.ScanFrequency.ToString() });
-    }
+    public async Task<ActionResult<ProjectScanFrequencyDto>> UpdateProject(
+        Guid id,
+        [FromBody] UpdateProjectDto dto,
+        [FromServices] ProjectUpdateService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
 
     [HttpDelete("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> DeleteProject(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        Project? project = await _context.Projects
-            .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (project == null)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        _context.Projects.Remove(project);
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.ProjectDeleted,
-            entityType: AuditEntityTypes.Project,
-            organizationId: organizationId.Value,
-            userId: GetCurrentUserId(),
-            entityId: id,
-            jti: GetCurrentJti());
-
-        return NoContent();
-    }
+    public async Task<IActionResult> DeleteProject(
+        Guid id,
+        [FromServices] ProjectDeleteService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpPost("projects/{id:guid}/scan")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Scan)]
-    public async Task<IActionResult> TriggerScan(Guid id)
-    {
-        Guid? organizationId = GetOrganizationId();
-
-        if (organizationId == null) return Unauthorized();
-
-        bool belongs = await _context.Projects
-            .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
-
-        if (!belongs)
-            return NotFoundCode(ErrorCodes.ProjectNotFound);
-
-        await _quotaService.EnsureCanScanAsync(organizationId.Value);
-
-        _backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectAsync(id));
-
-        await _auditLog.LogAsync(
-            AuditAction.ScanTriggered,
-            entityType: AuditEntityTypes.Project,
-            organizationId: organizationId.Value,
-            userId: GetCurrentUserId(),
-            entityId: id,
-            jti: GetCurrentJti());
-
-        return Accepted();
-    }
+    public async Task<IActionResult> TriggerScan(
+        Guid id,
+        [FromServices] ProjectScanTriggerService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 }

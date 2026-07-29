@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Config.Get;
+using Sentinel.Domain.DTOs.Config;
 
 namespace Sentinel.API.Controllers;
 
@@ -11,19 +11,7 @@ namespace Sentinel.API.Controllers;
 [Route("api/v{version:apiVersion}/config")]
 public class ConfigController : BaseController
 {
-    private readonly SupportSettings _support;
-
-    public ConfigController(IOptions<SupportSettings> supportOptions)
-    {
-        _support = supportOptions.Value;
-    }
-
     [HttpGet]
-    public IActionResult Get()
-    {
-        return Ok(new
-        {
-            supportEmail = _support.Email,
-        });
-    }
+    public ActionResult<AppConfigDto> Get([FromServices] AppConfigGetService service) =>
+        ToActionResult(service.Execute());
 }

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Sentinel.Application.Services;
+using Sentinel.Application.ApiKeys.Validate;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 
@@ -16,13 +16,13 @@ public class ApiKeyMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, ApiKeyService apiKeyService)
+    public async Task InvokeAsync(HttpContext context, ApiKeyValidateService apiKeyValidateService)
     {
         if (!context.User.Identity?.IsAuthenticated == true
             && context.Request.Headers.TryGetValue(ApiKeyHeader, out Microsoft.Extensions.Primitives.StringValues rawKey)
             && !string.IsNullOrWhiteSpace(rawKey))
         {
-            var result = await apiKeyService.ValidateAsync(rawKey.ToString());
+            var result = await apiKeyValidateService.ExecuteAsync(rawKey.ToString(), context.RequestAborted);
             if (result.HasValue)
             {
                 (ApiKey key, User user) = result.Value;
