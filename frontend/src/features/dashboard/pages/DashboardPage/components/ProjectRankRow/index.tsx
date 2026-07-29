@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
@@ -44,7 +44,9 @@ export const ProjectRankRow: React.FC<Props> = ({ project, palette }) => {
   return (
     <Box
       component="button"
-      onClick={() => navigate(`/projects/${project.id}`)}
+      onClick={() =>
+        navigate({ to: "/projects/$id", params: { id: project.id } })
+      }
       sx={{
         all: "unset",
         cursor: "pointer",

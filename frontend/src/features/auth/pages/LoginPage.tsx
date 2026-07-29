@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useEffect, useRef, useId } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../../../hooks/useToast";
 import Box from "@mui/material/Box";
@@ -51,7 +51,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(email, password);
-      navigate(ROUTES.HOME);
+      navigate({ to: ROUTES.HOME });
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
         ?.status;

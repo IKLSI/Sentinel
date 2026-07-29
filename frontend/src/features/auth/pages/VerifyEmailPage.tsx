@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useVerifyEmailMutation } from "../hooks/useAuthMutations";
@@ -10,16 +10,17 @@ import { ROUTES } from "@/constants/routes";
 
 type Status = "loading" | "success" | "error";
 
+const routeApi = getRouteApi("/verify-email");
+
 export const VerifyEmailPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const navigate = routeApi.useNavigate();
+  const { token } = routeApi.useSearch();
   const t = useT();
   const [status, setStatus] = useState<Status>("loading");
   const verifyEmailMutation = useVerifyEmailMutation();
   const verify = verifyEmailMutation.mutate;
 
   useEffect(() => {
-    const token = searchParams.get("token");
     if (!token) {
       setStatus("error");
       return;
@@ -28,7 +29,7 @@ export const VerifyEmailPage: React.FC = () => {
       onSuccess: () => setStatus("success"),
       onError: () => setStatus("error"),
     });
-  }, [searchParams, verify]);
+  }, [token, verify]);
 
   return (
     <Box className="lp-root">
@@ -90,7 +91,7 @@ export const VerifyEmailPage: React.FC = () => {
                   type="button"
                   className="lp-submit"
                   style={{ marginTop: "24px" }}
-                  onClick={() => navigate(ROUTES.LOGIN)}
+                  onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
                   {t("auth.verify_email.go_to_login")}
                 </button>
@@ -131,7 +132,7 @@ export const VerifyEmailPage: React.FC = () => {
                   type="button"
                   className="lp-submit"
                   style={{ marginTop: "24px" }}
-                  onClick={() => navigate(ROUTES.LOGIN)}
+                  onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
                   {t("auth.verify_email.go_to_login")}
                 </button>

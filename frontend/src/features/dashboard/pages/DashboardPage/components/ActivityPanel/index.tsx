@@ -6,7 +6,7 @@ import AddOutlined from "@mui/icons-material/AddOutlined";
 import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr, enUS, type Locale } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/I18nContext";
 import { Language } from "@/types/enums";
 import {
@@ -115,10 +115,16 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             {activity.map((a, idx) => {
               const accentColor = DOT_COLORS[a.color] ?? "var(--accent)";
-              const href = a.ticketId
-                ? `/tickets/${a.ticketId}`
+              const target = a.ticketId
+                ? ({
+                    to: "/tickets/$id",
+                    params: { id: a.ticketId },
+                  } as const)
                 : a.projectId
-                  ? `/projects/${a.projectId}`
+                  ? ({
+                      to: "/projects/$id",
+                      params: { id: a.projectId },
+                    } as const)
                   : null;
 
               const renderText = () => {
@@ -212,7 +218,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               return (
                 <Box
                   key={`${a.timestamp}-${a.text}-${idx}`}
-                  onClick={href ? () => navigate(href) : undefined}
+                  onClick={target ? () => navigate(target) : undefined}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -221,15 +227,15 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                     minHeight: "48px",
                     borderRadius: "var(--r-md)",
                     background: palette.rowBg,
-                    cursor: href ? "pointer" : "default",
+                    cursor: target ? "pointer" : "default",
                     transition: "background 120ms ease, box-shadow 120ms ease",
-                    "&:hover": href
+                    "&:hover": target
                       ? {
                           background: palette.rowHoverBg,
                           boxShadow: `0 0 0 1.5px ${palette.rowHoverRing}`,
                         }
                       : undefined,
-                    "&:active": href
+                    "&:active": target
                       ? { background: palette.rowActiveBg }
                       : undefined,
                   }}

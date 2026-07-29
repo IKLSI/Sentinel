@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -60,7 +60,9 @@ export const ProjectRow: React.FC<Props> = React.memo(
       <>
         <Box
           component="tr"
-          onClick={() => navigate(`/projects/${project.id}`)}
+          onClick={() =>
+            navigate({ to: "/projects/$id", params: { id: project.id } })
+          }
           sx={{
             cursor: "pointer",
             position: "relative",

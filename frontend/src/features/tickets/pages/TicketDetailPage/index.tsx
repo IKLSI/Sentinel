@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
@@ -34,9 +34,11 @@ import { extractApiError } from "@/utils/apiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
 import { Theme } from "@/types/enums";
 
+const routeApi = getRouteApi("/_authenticated/tickets/$id");
+
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
-  const { id } = useParams<{ id: string }>();
+  const { id } = routeApi.useParams();
   const { markReadByTicketId } = useNotifications();
   const { showToast } = useToast();
   const { user } = useAuth();

@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
@@ -19,9 +19,11 @@ import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
 import { DependenciesTab } from "./components/DependenciesTab";
 import { RuntimesTab } from "./components/RuntimesTab";
 
+const routeApi = getRouteApi("/_authenticated/projects/$id");
+
 export const ProjectDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { id } = routeApi.useParams();
+  const navigate = routeApi.useNavigate();
   const { showToast } = useToast();
   const t = useT();
 
@@ -34,7 +36,7 @@ export const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     if (!error) return;
     showToast(t("tech_health.error.load_failed"), "error");
-    navigate(ROUTES.PROJECTS);
+    navigate({ to: ROUTES.PROJECTS });
   }, [error, showToast, navigate, t]);
 
   const allVulns = useMemo(

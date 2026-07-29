@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
@@ -91,7 +91,7 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
           </Box>
           <Box
             component="button"
-            onClick={() => navigate(ROUTES.TICKETS)}
+            onClick={() => navigate({ to: ROUTES.TICKETS })}
             sx={{
               all: "unset",
               cursor: "pointer",
@@ -154,7 +154,9 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
                 <Box
                   key={ticket.id}
                   component="button"
-                  onClick={() => navigate(`/tickets/${ticket.id}`)}
+                  onClick={() =>
+                    navigate({ to: "/tickets/$id", params: { id: ticket.id } })
+                  }
                   sx={{
                     all: "unset",
                     cursor: "pointer",

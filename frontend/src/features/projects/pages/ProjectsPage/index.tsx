@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useProjects,
@@ -32,11 +32,13 @@ import { ProjectsSection } from "./components/ProjectsSection";
 import { SyncProjectModal } from "./components/SyncProjectModal";
 import { extractApiError } from "@/utils/apiError";
 
+const routeApi = getRouteApi("/_authenticated/projects/");
+
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
   const queryClient = useQueryClient();
-  const location = useLocation();
+  const { openImport } = routeApi.useSearch();
   const { data: projects = [], isLoading: loading } = useProjects();
   const deleteProjectMutation = useDeleteProject();
   const scanProjectMutation = useScanProject();
@@ -46,9 +48,7 @@ export const ProjectsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
   const [scanningId, setScanningId] = useState<string | null>(null);
-  const [showSyncModal, setShowSyncModal] = useState(
-    () => !!(location.state as { openImport?: boolean } | null)?.openImport,
-  );
+  const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<SectionKey, boolean>
   >({

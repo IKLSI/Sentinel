@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/RowActions";
@@ -28,7 +28,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   return (
     <Box
       component="tr"
-      onClick={() => navigate(`/tickets/${ticket.id}`)}
+      onClick={() =>
+        navigate({ to: "/tickets/$id", params: { id: ticket.id } })
+      }
       sx={{
         cursor: "pointer",
         "&:hover td": { background: "var(--s2)" },

@@ -9,7 +9,7 @@ import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import SyncOutlined from "@mui/icons-material/SyncOutlined";
 import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { useT } from "@/i18n/I18nContext";
 import { useNotifications } from "./useNotifications";
 import type { NotificationItem } from "./api";
@@ -90,7 +90,7 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
     if (!notif.isRead && notif.ticketId) markReadByTicketId(notif.ticketId);
     if (notif.ticketId) {
       onClose();
-      navigate(`/tickets/${notif.ticketId}`);
+      navigate({ to: "/tickets/$id", params: { id: notif.ticketId } });
     }
   };
 

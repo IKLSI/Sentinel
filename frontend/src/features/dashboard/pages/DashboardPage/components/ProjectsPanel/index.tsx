@@ -1,7 +1,7 @@
 import type React from "react";
 import { useMemo } from "react";
 import Box from "@mui/material/Box";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { useT } from "@/i18n/I18nContext";
@@ -103,7 +103,7 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
         </Box>
         <Box
           component="button"
-          onClick={() => navigate(ROUTES.PROJECTS)}
+          onClick={() => navigate({ to: ROUTES.PROJECTS })}
           sx={{
             all: "unset",
             cursor: "pointer",

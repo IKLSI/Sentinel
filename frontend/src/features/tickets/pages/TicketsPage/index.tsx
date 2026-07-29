@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteModal } from "@/components/DeleteModal";
@@ -42,10 +42,12 @@ import {
 import { extractApiError } from "@/utils/apiError";
 import { SortDirection } from "@/types/enums";
 
+const routeApi = getRouteApi("/_authenticated/tickets/");
+
 export const TicketsPage: React.FC = () => {
   const t = useT();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = routeApi.useNavigate();
+  const { openCreate } = routeApi.useSearch();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -136,7 +138,7 @@ export const TicketsPage: React.FC = () => {
           );
         } else {
           setShowCreateModal(false);
-          navigate(`/tickets/${created.id}`);
+          navigate({ to: "/tickets/$id", params: { id: created.id } });
         }
       },
       onError: (err) =>
@@ -243,10 +245,8 @@ export const TicketsPage: React.FC = () => {
   }, [error, showToast, t]);
 
   useEffect(() => {
-    if ((location.state as { openCreate?: boolean } | null)?.openCreate) {
-      openCreateModal();
-    }
-  }, [location.state, openCreateModal]);
+    if (openCreate) openCreateModal();
+  }, [openCreate, openCreateModal]);
 
   const filtered = useMemo(() => {
     return (tickets?.items ?? []).slice().sort((a, b) => {

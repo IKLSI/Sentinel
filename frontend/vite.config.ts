@@ -1,12 +1,21 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/routeTree.gen.ts",
+    }),
+    react(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -22,7 +31,7 @@ export default defineConfig({
           if (id.includes("@mui/") || id.includes("@emotion/")) return "mui";
           if (
             id.includes("/react-dom/") ||
-            id.includes("/react-router") ||
+            id.includes("/@tanstack/react-router/") ||
             id.includes("/react/") ||
             id.includes("/scheduler/")
           )

@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useEffect, useRef, useId } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
@@ -11,12 +11,13 @@ import { useT } from "../../../i18n/I18nContext";
 import { extractApiError } from "../../../utils/apiError";
 import { ROUTES } from "@/constants/routes";
 
+const routeApi = getRouteApi("/reset-password");
+
 export const ResetPasswordPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { token = "" } = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
   const { showToast } = useToast();
   const t = useT();
-  const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -31,7 +32,7 @@ export const ResetPasswordPage: React.FC = () => {
   const confirmId = useId();
 
   useEffect(() => {
-    if (!token) navigate(ROUTES.LOGIN, { replace: true });
+    if (!token) navigate({ to: ROUTES.LOGIN, replace: true });
     const id = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(id);
   }, [token, navigate]);
@@ -61,7 +62,7 @@ export const ResetPasswordPage: React.FC = () => {
       {
         onSuccess: () => {
           setDone(true);
-          setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3500);
+          setTimeout(() => navigate({ to: ROUTES.LOGIN, replace: true }), 3500);
         },
         onError: (err) =>
           showToast(

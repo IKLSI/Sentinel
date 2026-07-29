@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { useT } from "../i18n/I18nContext";
 import apiClient from "../services/client";
 import { ROUTES } from "@/constants/routes";
@@ -69,7 +69,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
           <button
             type="button"
             className="ep-btn-primary"
-            onClick={() => navigate(ROUTES.HOME)}
+            onClick={() => navigate({ to: ROUTES.HOME })}
           >
             <svg
               width="14"

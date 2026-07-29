@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
@@ -77,7 +77,7 @@ export const CommandPalette: React.FC = () => {
         icon: ConfirmationNumberOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.TICKETS, { state: { openCreate: true } });
+          navigate({ to: ROUTES.TICKETS, search: { openCreate: true } });
         },
       },
       {
@@ -88,7 +88,7 @@ export const CommandPalette: React.FC = () => {
         icon: CloudDownloadOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.PROJECTS, { state: { openImport: true } });
+          navigate({ to: ROUTES.PROJECTS, search: { openImport: true } });
         },
         roles: [UserRole.Admin, UserRole.Developer],
       },
@@ -100,7 +100,7 @@ export const CommandPalette: React.FC = () => {
         icon: PersonAddOutlined,
         perform: () => {
           close();
-          navigate(ROUTES.SETTINGS);
+          navigate({ to: ROUTES.SETTINGS });
           window.setTimeout(
             () => window.dispatchEvent(new Event(SETTINGS_OPEN_INVITE_EVENT)),
             50,

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "@tanstack/react-router";
+import type { FileRouteTypes } from "@/routeTree.gen";
 import { ROUTES } from "@/constants/routes";
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
@@ -23,8 +24,10 @@ import { useNotifications } from "../features/notifications/useNotifications";
 import { UserRole } from "../types/enums";
 import { NotificationsModal } from "../features/notifications/NotificationsModal";
 
+type NavPath = FileRouteTypes["to"];
+
 interface NavItem {
-  to: string;
+  to: NavPath;
   icon: React.ElementType;
   labelKey: string;
   end?: boolean;
@@ -192,7 +195,7 @@ export const Sidebar: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate(ROUTES.LOGIN);
+    navigate({ to: ROUTES.LOGIN });
   };
 
   const isAdmin = user?.role === UserRole.Admin;
@@ -484,7 +487,7 @@ export const Sidebar: React.FC = () => {
                   >
                     <Box
                       component="button"
-                      onClick={() => navigate(activeItem.to)}
+                      onClick={() => navigate({ to: activeItem.to })}
                       sx={{
                         all: "unset",
                         height: "34px",
@@ -624,10 +627,10 @@ export const Sidebar: React.FC = () => {
                                   location.pathname,
                                 );
                                 return (
-                                  <NavLink
+                                  <Link
                                     key={item.to}
                                     to={item.to}
-                                    end={item.end ?? false}
+                                    activeOptions={{ exact: item.end ?? false }}
                                     style={{
                                       textDecoration: "none",
                                       display: "block",
@@ -680,7 +683,7 @@ export const Sidebar: React.FC = () => {
                                         {t(item.labelKey)}
                                       </Box>
                                     </Box>
-                                  </NavLink>
+                                  </Link>
                                 );
                               })}
                             </Box>
@@ -690,10 +693,12 @@ export const Sidebar: React.FC = () => {
 
                       const Icon = section.items[0].icon;
                       return (
-                        <NavLink
+                        <Link
                           key={section.titleKey}
                           to={section.items[0].to}
-                          end={section.items[0].end ?? false}
+                          activeOptions={{
+                            exact: section.items[0].end ?? false,
+                          }}
                           style={{ textDecoration: "none", display: "block" }}
                         >
                           {({ isActive }) => (
@@ -738,7 +743,7 @@ export const Sidebar: React.FC = () => {
                               </Box>
                             </Box>
                           )}
-                        </NavLink>
+                        </Link>
                       );
                     })}
                   </React.Fragment>
@@ -768,7 +773,7 @@ export const Sidebar: React.FC = () => {
           >
             <Box
               component="button"
-              onClick={() => navigate(ROUTES.PROFILE)}
+              onClick={() => navigate({ to: ROUTES.PROFILE })}
               sx={{
                 all: "unset",
                 cursor: "pointer",
