@@ -75,23 +75,22 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: preview
 
       - name: Cache NuGet packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
       - name: Restore
-        run: dotnet restore Sentinel.sln
+        run: dotnet restore Sentinel.slnx
 
       - name: Build
-        run: dotnet build Sentinel.sln --no-restore --configuration Release
+        run: dotnet build Sentinel.slnx --no-restore --configuration Release
 
       - name: Test + Coverage
-        run: dotnet test backend/Sentinel.Tests/Sentinel.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test backend/tests/Sentinel.Tests/Sentinel.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload backend coverage
         if: always()
@@ -102,7 +101,7 @@ jobs:
 
       - name: Audit NuGet dependencies (gated)
         run: |
-          output=$(dotnet list Sentinel.sln package --vulnerable --include-transitive 2>&1)
+          output=$(dotnet list Sentinel.slnx package --vulnerable --include-transitive 2>&1)
           echo "$output"
           if echo "$output" | grep -qiE "has the following vulnerable|>= "; then
             echo "::error::Des paquets NuGet vulnérables ont été détectés"

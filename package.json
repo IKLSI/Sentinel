@@ -2,7 +2,7 @@
   "name": "sentinel",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names \"api,web\" --prefix-colors \"cyan,green\" \"dotnet run --project backend/API/Sentinel.API.csproj\" \"pnpm --prefix frontend dev\"",
+    "dev": "concurrently --names \"api,web\" --prefix-colors \"cyan,green\" \"dotnet run --project backend/src/API/Sentinel.API.csproj\" \"pnpm --prefix frontend dev\"",
     "install-deps": "pnpm --prefix frontend install"
   },
   "devDependencies": {
