@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-vi.mock("../services/client", () => ({
+vi.mock("@/services/client", () => ({
   default: {
     get: vi.fn().mockResolvedValue({ data: new Blob(["fake"]) }),
   },
 }));
 
-import apiClient from "../services/client";
-import { downloadExcel } from "./download";
+import apiClient from "@/services/client";
+import { downloadExcel } from "@/utils/download";
 
 describe("downloadExcel", () => {
   beforeEach(() => {

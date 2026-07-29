@@ -4,7 +4,7 @@ import {
   evaluateAdminGuard,
   evaluateAuthGuard,
   evaluateGuestGuard,
-} from "./routeGuards";
+} from "@/features/auth/routeGuards";
 
 describe("evaluateAuthGuard", () => {
   it("returns loading while auth is loading", () => {

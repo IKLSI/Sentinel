@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractApiErrorCode } from "./apiError";
+import { extractApiErrorCode } from "@/utils/apiError";
 
 describe("extractApiErrorCode", () => {
   it("returns null when err undefined", () => {
