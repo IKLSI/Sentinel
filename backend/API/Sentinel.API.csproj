@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Sentinel.API</RootNamespace>
     <AssemblyName>Sentinel.API</AssemblyName>
-    <UserSecretsId>614fd345-107f-4786-a7ee-d53cc76f515d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

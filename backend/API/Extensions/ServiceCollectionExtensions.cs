@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO.Compression;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -19,6 +22,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
@@ -61,29 +65,64 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddSettings(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddSettings(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        services.Configure<JwtSettings>(configuration.GetSection(ConfigurationKeys.Sections.Jwt));
-        services.Configure<EmailSettings>(configuration.GetSection(ConfigurationKeys.Sections.Email));
-        services.Configure<FrontendSettings>(configuration.GetSection(ConfigurationKeys.Sections.Frontend));
-        services.Configure<CorsSettings>(configuration.GetSection(ConfigurationKeys.Sections.Cors));
-        services.Configure<StripeSettings>(configuration.GetSection(ConfigurationKeys.Sections.Stripe));
-        services.Configure<EncryptionSettings>(configuration.GetSection(ConfigurationKeys.Sections.Encryption));
-        services.Configure<SupportSettings>(configuration.GetSection(ConfigurationKeys.Sections.Support));
-        services.Configure<DataProtectionSettings>(configuration.GetSection(ConfigurationKeys.Sections.DataProtection));
-        services.Configure<CookieSettings>(configuration.GetSection(ConfigurationKeys.Sections.Cookie));
+        bool validateDeploymentSettings = !environment.IsDevelopment();
+
+        services.BindSettings<JwtSettings>(configuration, ConfigurationKeys.Sections.Jwt, true);
+        services.BindSettings<EmailSettings>(configuration, ConfigurationKeys.Sections.Email, validateDeploymentSettings);
+        services.BindSettings<FrontendSettings>(configuration, ConfigurationKeys.Sections.Frontend, validateDeploymentSettings);
+        services.BindSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe, validateDeploymentSettings);
+        services.BindSettings<SupportSettings>(configuration, ConfigurationKeys.Sections.Support, false);
+        services.BindSettings<CorsSettings>(configuration, ConfigurationKeys.Sections.Cors, false);
+        services.BindSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection, false);
+        services.BindSettings<CookieSettings>(configuration, ConfigurationKeys.Sections.Cookie, false);
+
+        services.AddOptions<SupportSettings>()
+            .Validate(settings => string.IsNullOrWhiteSpace(settings.Email) || new EmailAddressAttribute().IsValid(settings.Email),
+                "Support:Email doit être une adresse email valide lorsqu'elle est renseignée")
+            .ValidateOnStart();
+
+        if (validateDeploymentSettings)
+        {
+            services.AddOptions<FrontendSettings>()
+                .Validate(settings => !IsLoopbackUrl(settings.BaseUrl),
+                    "Frontend:BaseUrl doit être renseigné hors développement : l'URL de repli localhost casserait les liens des emails");
+        }
 
         return services;
     }
 
+    private static bool IsLoopbackUrl(string value)
+        => Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) && uri.IsLoopback;
+
+    private static IServiceCollection BindSettings<TSettings>(this IServiceCollection services, IConfiguration configuration, string section, bool validate)
+        where TSettings : class
+    {
+        OptionsBuilder<TSettings> builder = services
+            .AddOptions<TSettings>()
+            .Bind(configuration.GetSection(section));
+
+        if (validate)
+        {
+            builder.ValidateDataAnnotations().ValidateOnStart();
+        }
+
+        return services;
+    }
+
+    private static TSettings ReadSettings<TSettings>(IConfiguration configuration, string section)
+        where TSettings : class, new()
+        => configuration.GetSection(section).Get<TSettings>() ?? new TSettings();
+
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        IConfigurationSection jwtSettings = configuration.GetSection(ConfigurationKeys.Sections.Jwt);
+        JwtSettings jwt = ReadSettings<JwtSettings>(configuration, ConfigurationKeys.Sections.Jwt);
 
-        string jwtSecret = jwtSettings[ConfigurationKeys.JwtKeys.Secret]
-            ?? throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
+        if (string.IsNullOrWhiteSpace(jwt.Secret))
+            throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
 
-        if (Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+        if (Encoding.UTF8.GetByteCount(jwt.Secret) < 32)
             throw new InvalidOperationException("La clé JWT doit contenir au moins 256 bits (32 octets UTF-8)");
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -92,11 +131,11 @@ public static class ServiceCollectionExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtSettings[ConfigurationKeys.JwtKeys.Issuer],
+                    ValidIssuer = jwt.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = jwtSettings[ConfigurationKeys.JwtKeys.Audience],
+                    ValidAudience = jwt.Audience,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret)),
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
@@ -195,29 +234,26 @@ public static class ServiceCollectionExtensions
     {
         HashSet<string> origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        string[]? configured = configuration.GetSection(ConfigurationKeys.CorsAllowedOrigins).Get<string[]>();
+        CorsSettings cors = ReadSettings<CorsSettings>(configuration, ConfigurationKeys.Sections.Cors);
 
-        if (configured != null)
+        foreach (string origin in cors.AllowedOrigins)
         {
-            foreach (string origin in configured)
+            if (IsValidOrigin(origin))
             {
-                if (IsValidOrigin(origin))
-                {
-                    origins.Add(origin.TrimEnd('/'));
-                }
+                origins.Add(origin.TrimEnd('/'));
             }
         }
 
-        string? frontendUrl = configuration[ConfigurationKeys.FrontendBaseUrl];
+        FrontendSettings frontend = ReadSettings<FrontendSettings>(configuration, ConfigurationKeys.Sections.Frontend);
 
-        if (IsValidOrigin(frontendUrl))
+        if (IsValidOrigin(frontend.BaseUrl))
         {
-            origins.Add(frontendUrl!.TrimEnd('/'));
+            origins.Add(frontend.BaseUrl.TrimEnd('/'));
         }
 
         if (origins.Count == 0)
         {
-            origins.Add("http://localhost:3000");
+            origins.Add(FrontendSettings.DefaultBaseUrl);
         }
 
         return origins.ToArray();
@@ -324,32 +360,62 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddStripe(this IServiceCollection services, IConfiguration configuration)
     {
-        string apiKey = configuration[ConfigurationKeys.StripeSecretKey] ?? string.Empty;
+        StripeSettings stripe = ReadSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe);
 
-        if (string.IsNullOrEmpty(apiKey)) apiKey = "sk_test_placeholder";
+        string apiKey = string.IsNullOrEmpty(stripe.SecretKey) ? "sk_test_placeholder" : stripe.SecretKey;
 
         services.AddSingleton<Stripe.IStripeClient>(new Stripe.StripeClient(apiKey));
 
         return services;
     }
 
-    public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services, DataProtectionSettings settings)
+    public static IServiceCollection AddDataProtectionPolicy(this IServiceCollection services, IConfiguration configuration)
     {
-        IDataProtectionBuilder dp = services.AddDataProtection()
+        DataProtectionSettings settings = ReadSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection);
+
+        if (string.IsNullOrWhiteSpace(settings.CertBase64))
+            throw new InvalidOperationException(
+                "DataProtection:CertBase64 est requis : sans certificat, le trousseau de clés est écrit en clair dans la base, à côté des données qu'il chiffre");
+
+        services.AddDataProtection()
             .SetApplicationName("Sentinel")
-            .PersistKeysToDbContext<SentinelContext>();
-
-        if (!string.IsNullOrWhiteSpace(settings.CertBase64))
-        {
-            byte[] pfxBytes = Convert.FromBase64String(settings.CertBase64);
-            System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
-                System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(
-                    pfxBytes, null, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.DefaultKeySet);
-
-            dp.ProtectKeysWithCertificate(cert);
-        }
+            .PersistKeysToDbContext<SentinelContext>()
+            .ProtectKeysWithCertificate(LoadKeyRingCertificate(settings.CertBase64));
 
         return services;
+    }
+
+    private static X509Certificate2 LoadKeyRingCertificate(string certBase64)
+    {
+        byte[] pfxBytes;
+
+        try
+        {
+            pfxBytes = Convert.FromBase64String(certBase64);
+        }
+        catch (FormatException exception)
+        {
+            throw new InvalidOperationException(
+                "DataProtection:CertBase64 doit contenir un certificat PKCS#12 encodé en base64", exception);
+        }
+
+        X509Certificate2 certificate;
+
+        try
+        {
+            certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, null, X509KeyStorageFlags.DefaultKeySet);
+        }
+        catch (CryptographicException exception)
+        {
+            throw new InvalidOperationException(
+                "DataProtection:CertBase64 n'est pas un certificat PKCS#12 valide", exception);
+        }
+
+        if (!certificate.HasPrivateKey)
+            throw new InvalidOperationException(
+                "DataProtection:CertBase64 doit contenir la clé privée du certificat, sinon le trousseau ne peut pas être déchiffré au redémarrage");
+
+        return certificate;
     }
 
     public static IServiceCollection AddSwaggerWithJwt(this IServiceCollection services)
@@ -516,9 +582,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddForwardedHeadersPolicy(this IServiceCollection services, IConfiguration configuration)
     {
-        ForwardedHeadersSettings settings = configuration
-            .GetSection(ConfigurationKeys.Sections.ForwardedHeaders)
-            .Get<ForwardedHeadersSettings>() ?? new ForwardedHeadersSettings();
+        ForwardedHeadersSettings settings = ReadSettings<ForwardedHeadersSettings>(configuration, ConfigurationKeys.Sections.ForwardedHeaders);
 
         services.Configure<ForwardedHeadersOptions>(options =>
         {

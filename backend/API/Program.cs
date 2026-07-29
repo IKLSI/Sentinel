@@ -3,7 +3,6 @@ using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
 using Sentinel.Application.Services;
@@ -27,7 +26,7 @@ public static class Program
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
         builder.Services
-            .AddSettings(builder.Configuration)
+            .AddSettings(builder.Configuration, builder.Environment)
             .AddTenantContext()
             .AddDatabase(builder.Configuration)
             .AddJwtAuthentication(builder.Configuration)
@@ -45,7 +44,7 @@ public static class Program
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
-            .AddDataProtectionPolicy(builder.Configuration.GetSection(ConfigurationKeys.Sections.DataProtection).Get<DataProtectionSettings>() ?? new());
+            .AddDataProtectionPolicy(builder.Configuration);
 
         WebApplication app = builder.Build();
 
