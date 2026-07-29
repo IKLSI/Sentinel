@@ -45,10 +45,10 @@ public class ApiKeysController : BaseController
         if (orgId == null || userId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest(new { message = "Le nom de la clé est requis" });
+            return BadRequestCode(ErrorCodes.ApiKeyNameRequired);
 
         if (dto.Name.Length > 100)
-            return BadRequest(new { message = "Le nom ne peut pas dépasser 100 caractères" });
+            return BadRequestCode(ErrorCodes.ApiKeyNameTooLong, new Dictionary<string, string> { ["maxLength"] = "100" });
 
         CreatedApiKeyDto created = await _apiKeyService.CreateAsync(orgId.Value, userId.Value, dto);
 

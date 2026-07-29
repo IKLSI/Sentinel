@@ -27,6 +27,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Filters;
@@ -467,21 +468,20 @@ public static class ServiceCollectionExtensions
         {
             options.InvalidModelStateResponseFactory = ctx =>
             {
-                Dictionary<string, string[]> errors = ctx.ModelState
+                Dictionary<string, ValidationErrorItem[]> errors = ctx.ModelState
                     .Where(kv => kv.Value != null && kv.Value.Errors.Count > 0)
                     .ToDictionary(
                         kv => ToCamelCase(kv.Key),
-                        kv => kv.Value!.Errors.Select(e => string.IsNullOrEmpty(e.ErrorMessage) ? "Valeur invalide" : e.ErrorMessage).ToArray());
+                        kv => kv.Value!.Errors
+                            .Select(_ => new ValidationErrorItem { Code = ValidationCodes.InvalidValue })
+                            .ToArray());
 
-                ValidationProblemDetails problem = new ValidationProblemDetails(errors)
+                return new BadRequestObjectResult(new ApiValidationErrorResponse
                 {
+                    Code = ErrorCodes.ValidationFailed,
                     Status = StatusCodes.Status400BadRequest,
-                    Title = "Validation échouée",
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                    Instance = ctx.HttpContext.Request.Path
-                };
-
-                return new BadRequestObjectResult(problem);
+                    Errors = errors
+                });
             };
         });
 
@@ -673,7 +673,7 @@ public static class ServiceCollectionExtensions
                 context.HttpContext.Response.StatusCode = 429;
                 context.HttpContext.Response.ContentType = "application/json";
                 await context.HttpContext.Response.WriteAsJsonAsync(
-                    new { message = "Trop de requêtes. Veuillez réessayer plus tard." },
+                    ApiErrorResponse.Create(ErrorCodes.TooManyRequests, StatusCodes.Status429TooManyRequests),
                     cancellationToken);
             };
         });

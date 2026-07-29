@@ -100,7 +100,7 @@ public class BillingService
     public async Task<string> CreateCheckoutSessionAsync(Guid organizationId, PlanTier tier, string billingInterval = "monthly")
     {
         if (tier == PlanTier.Free)
-            throw new InvalidOperationException("Le plan gratuit ne nécessite pas de paiement.");
+            throw new BusinessRuleException(ErrorCodes.BillingFreePlanNoPayment);
 
         string priceId = billingInterval == "annual"
             ? AnnualPriceIdForTier(tier)
@@ -148,7 +148,7 @@ public class BillingService
             ?? throw new KeyNotFoundException();
 
         if (string.IsNullOrEmpty(organization.StripeCustomerId))
-            throw new InvalidOperationException("Aucun abonnement actif pour cette organisation.");
+            throw new BusinessRuleException(ErrorCodes.BillingNoActiveSubscription);
 
         PortalSessionCreateOptions options = new PortalSessionCreateOptions
         {
@@ -338,7 +338,8 @@ public class BillingService
         };
 
         if (string.IsNullOrEmpty(priceId))
-            throw new InvalidOperationException($"Tarif Stripe mensuel non configuré pour le plan {tier}.");
+            throw new BusinessRuleException(ErrorCodes.BillingPriceNotConfigured,
+                new Dictionary<string, string> { ["plan"] = tier.ToString() });
 
         return priceId;
     }
@@ -353,7 +354,8 @@ public class BillingService
         };
 
         if (string.IsNullOrEmpty(priceId))
-            throw new InvalidOperationException($"Tarif Stripe annuel non configuré pour le plan {tier}.");
+            throw new BusinessRuleException(ErrorCodes.BillingPriceNotConfigured,
+                new Dictionary<string, string> { ["plan"] = tier.ToString() });
 
         return priceId;
     }

@@ -8,7 +8,7 @@ import { useAcceptInvitation } from "../../users/hooks/useUsers";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
-import { extractApiError } from "../../../utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
 
 const routeApi = getRouteApi("/accept-invitation");
@@ -18,6 +18,7 @@ export const AcceptInvitationPage: React.FC = () => {
   const navigate = routeApi.useNavigate();
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
 
   const STEPS = [
     {
@@ -111,10 +112,7 @@ export const AcceptInvitationPage: React.FC = () => {
         },
         onError: (err) =>
           showToast(
-            extractApiError(
-              err,
-              t("auth.accept_invitation.error_invalid_token"),
-            ),
+            apiError(err, t("auth.accept_invitation.error_invalid_token")),
             "error",
           ),
       },

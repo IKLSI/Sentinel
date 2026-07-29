@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Services;
@@ -109,7 +110,8 @@ public class RepositoryScannerService
         Uri uri = new Uri(url.TrimEnd('/'));
         string[] segments = uri.AbsolutePath.Trim('/').Split('/');
         if (segments.Length < 2)
-            throw new ArgumentException($"URL de dépôt invalide : {url}");
+            throw new BusinessRuleException(ErrorCodes.ProjectInvalidRepositoryUrl,
+                new Dictionary<string, string> { ["url"] = url });
         return (uri.Host.ToLowerInvariant(), segments[0], segments[1].Replace(".git", "", StringComparison.OrdinalIgnoreCase));
     }
 }

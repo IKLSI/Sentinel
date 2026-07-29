@@ -15,7 +15,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { UserRole } from "@/types/enums";
 import { ROUTES } from "@/constants/routes";
 import { useTriggerTechHealthScan } from "@/features/settings/hooks/useJobs";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 export const PALETTE_OPEN_EVENT = "command-palette:open";
 export const SETTINGS_OPEN_INVITE_EVENT = "settings:open-invite";
@@ -32,6 +32,7 @@ interface PaletteItem {
 
 export const CommandPalette: React.FC = () => {
   const t = useT();
+  const apiError = useApiError();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -121,7 +122,7 @@ export const CommandPalette: React.FC = () => {
               showToast(t("projects.toast.scan_started"), "success"),
             onError: (err) =>
               showToast(
-                extractApiError(err, t("projects.toast.scan_start_error")),
+                apiError(err, t("projects.toast.scan_start_error")),
                 "error",
               ),
           });
@@ -134,7 +135,7 @@ export const CommandPalette: React.FC = () => {
       if (isAdmin) return it.roles.includes(UserRole.Admin);
       return it.roles.includes(UserRole.Developer);
     });
-  }, [isAdmin, navigate, close, showToast, t, triggerScanMutation]);
+  }, [isAdmin, navigate, close, showToast, t, triggerScanMutation, apiError]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

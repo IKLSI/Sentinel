@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
 using Sentinel.API.Jobs;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.API.Controllers;
@@ -56,6 +58,6 @@ public class JobsController : BaseController
     public IActionResult TriggerTechHealthScan()
     {
         _backgroundJobs.Enqueue<TechHealthScanJob>(j => j.ExecuteAsync());
-        return Ok(new { message = "Job déclenché avec succès" });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.JobTriggered));
     }
 }

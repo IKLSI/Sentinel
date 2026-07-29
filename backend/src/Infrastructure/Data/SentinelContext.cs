@@ -441,7 +441,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Type).HasConversion<string>().IsRequired();
-            entity.Property(e => e.Message).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.MessageKey).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.MessageParams).HasMaxLength(2000);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => e.CreatedAt);

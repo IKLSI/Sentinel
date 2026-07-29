@@ -30,13 +30,14 @@ import {
 import { ProjectsToolbar } from "./components/ProjectsToolbar";
 import { ProjectsSection } from "./components/ProjectsSection";
 import { SyncProjectModal } from "./components/SyncProjectModal";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const queryClient = useQueryClient();
   const { openImport } = routeApi.useSearch();
   const { data: projects = [], isLoading: loading } = useProjects();
@@ -103,10 +104,7 @@ export const ProjectsPage: React.FC = () => {
         showToast(t("projects.toast.delete_success"), "success");
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("projects.toast.delete_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("projects.toast.delete_error")), "error"),
     });
   };
 
@@ -165,14 +163,14 @@ export const ProjectsPage: React.FC = () => {
         },
         onError: (err) => {
           showToast(
-            extractApiError(err, t("projects.toast.scan_start_error")),
+            apiError(err, t("projects.toast.scan_start_error")),
             "error",
           );
           setScanningId(null);
         },
       });
     },
-    [scanningId, queryClient, showToast, t, scanProjectMutation],
+    [scanningId, queryClient, showToast, t, scanProjectMutation, apiError],
   );
 
   const filtered = useMemo(

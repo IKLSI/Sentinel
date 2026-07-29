@@ -10,7 +10,7 @@ import { useT } from "@/i18n/I18nContext";
 import { useInviteUser } from "@/features/users/hooks/useUsers";
 import { UserRole } from "@/types/enums";
 import { inp } from "../../helpers";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 interface Props {
   open: boolean;
@@ -20,6 +20,7 @@ interface Props {
 export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const formId = useId();
 
   const [inv, setInv] = useState<{ email: string; role: UserRole }>({
@@ -46,10 +47,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
         handleClose();
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("settings.toast.invite_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("settings.toast.invite_error")), "error"),
     });
   };
 

@@ -177,7 +177,7 @@ public class TechHealthController : BaseController
         ExportResult? export = await _sbomService.GenerateAsync(id, organizationId.Value, sbomFormat, cancellationToken);
 
         if (export == null)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         return File(export.Content, "application/json", export.FileName);
     }
@@ -193,7 +193,7 @@ public class TechHealthController : BaseController
         ExportResult? export = await _complianceReportService.GenerateAsync(id, organizationId.Value, cancellationToken);
 
         if (export == null)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         return File(export.Content, "application/pdf", export.FileName);
     }
@@ -244,7 +244,7 @@ public class TechHealthController : BaseController
         ProjectDto? project = await _techHealthService.GetProjectWithDetailsAsync(id);
 
         if (project == null)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         bool belongs = await _context.Projects
             .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
@@ -263,7 +263,7 @@ public class TechHealthController : BaseController
         if (organizationId == null) return Unauthorized();
 
         if (!RepositoryUrlGuard.IsValid(dto.RepositoryUrl))
-            return BadRequest(new { message = "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com" });
+            return BadRequestCode(ErrorCodes.ProjectInvalidRepositoryUrl);
 
         await _quotaService.EnsureCanAddProjectAsync(organizationId.Value);
 
@@ -309,10 +309,11 @@ public class TechHealthController : BaseController
             .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (project == null)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         if (!Enum.TryParse<ScanFrequency>(dto.ScanFrequency, true, out ScanFrequency scanFreq))
-            return BadRequest(new { message = $"Fréquence invalide ({string.Join(", ", Enum.GetNames<ScanFrequency>())})" });
+            return BadRequestCode(ErrorCodes.ProjectInvalidScanFrequency,
+                new Dictionary<string, string> { ["values"] = string.Join(", ", Enum.GetNames<ScanFrequency>()) });
 
         project.ScanFrequency = scanFreq;
         await _context.SaveChangesAsync();
@@ -340,7 +341,7 @@ public class TechHealthController : BaseController
             .FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (project == null)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         _context.Projects.Remove(project);
         await _context.SaveChangesAsync();
@@ -369,7 +370,7 @@ public class TechHealthController : BaseController
             .AnyAsync(p => p.Id == id && p.OrganizationId == organizationId.Value);
 
         if (!belongs)
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         await _quotaService.EnsureCanScanAsync(organizationId.Value);
 

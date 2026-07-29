@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 import { useForgotPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
-import { extractApiError } from "../../../utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -20,6 +20,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 }) => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const [email, setEmail] = useState("");
   const forgotPasswordMutation = useForgotPasswordMutation();
   const loading = forgotPasswordMutation.isPending;
@@ -45,7 +46,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       onSuccess: () => setDone(true),
       onError: (err) =>
         showToast(
-          extractApiError(err, t("auth.forgot_password.error_generic")),
+          apiError(err, t("auth.forgot_password.error_generic")),
           "error",
         ),
     });

@@ -12,7 +12,7 @@ import {
   useAvailableRepos,
   useCreateProject,
 } from "@/features/techHealth/hooks/useProjects";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 interface Props {
   open: boolean;
@@ -29,6 +29,7 @@ export const SyncProjectModal: React.FC<Props> = ({
   showToast,
 }) => {
   const t = useT();
+  const apiError = useApiError();
   const {
     repos,
     hasToken,
@@ -91,10 +92,7 @@ export const SyncProjectModal: React.FC<Props> = ({
       );
       onClose();
     } catch (err) {
-      showToast(
-        extractApiError(err, t("projects.toast.import_error")),
-        "error",
-      );
+      showToast(apiError(err, t("projects.toast.import_error")), "error");
     }
   };
 

@@ -234,10 +234,14 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Message")
+                    b.Property<string>("MessageKey")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("MessageParams")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");

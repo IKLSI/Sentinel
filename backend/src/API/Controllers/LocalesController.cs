@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Controllers;
 
@@ -24,17 +25,17 @@ public class LocalesController : BaseController
     public async Task<IActionResult> Get(string culture, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(culture) || !CulturePattern.IsMatch(culture))
-            return BadRequest(new { message = "Format de culture invalide" });
+            return BadRequestCode(ErrorCodes.LocaleInvalidCulture);
 
         string baseDir = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "Resources", "Locales"));
         string fileName = $"{culture}.json";
         string fullPath = Path.GetFullPath(Path.Combine(baseDir, fileName));
 
         if (!fullPath.StartsWith(baseDir + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            return BadRequest(new { message = "Chemin invalide" });
+            return BadRequestCode(ErrorCodes.LocaleInvalidPath);
 
         if (!System.IO.File.Exists(fullPath))
-            return NotFound(new { message = $"Locale {culture} introuvable" });
+            return NotFoundCode(ErrorCodes.LocaleNotFound, new Dictionary<string, string> { ["culture"] = culture });
 
         await using FileStream stream = System.IO.File.OpenRead(fullPath);
         using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);

@@ -8,7 +8,7 @@ import { useResetPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
-import { extractApiError } from "../../../utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
 
 const routeApi = getRouteApi("/reset-password");
@@ -18,6 +18,7 @@ export const ResetPasswordPage: React.FC = () => {
   const navigate = routeApi.useNavigate();
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -66,7 +67,7 @@ export const ResetPasswordPage: React.FC = () => {
         },
         onError: (err) =>
           showToast(
-            extractApiError(err, t("auth.reset_password.error_invalid_token")),
+            apiError(err, t("auth.reset_password.error_invalid_token")),
             "error",
           ),
       },

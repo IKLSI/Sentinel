@@ -7,7 +7,7 @@ import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import StarOutlined from "@mui/icons-material/StarOutlined";
 import { useT } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import {
   useBillingStatus,
   useBillingPlans,
@@ -31,6 +31,7 @@ const BILLING_RESULT = {
 
 export const BillingTab: React.FC = () => {
   const t = useT();
+  const apiError = useApiError();
   const { showToast } = useToast();
   const { status, loading: loadingStatus } = useBillingStatus();
   const { plans: rawPlans, loading: loadingPlans } = useBillingPlans();
@@ -62,7 +63,7 @@ export const BillingTab: React.FC = () => {
         },
         onError: (err) =>
           showToast(
-            extractApiError(err, t("settings.billing.error_generic")),
+            apiError(err, t("settings.billing.error_generic")),
             "error",
           ),
       },

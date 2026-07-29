@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Settings;
 
 namespace Sentinel.Application.Validators;
@@ -8,11 +9,11 @@ public class UpdateOrganizationSettingsDtoValidator : AbstractValidator<UpdateOr
     public UpdateOrganizationSettingsDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Le nom de l'organisation est requis")
-            .MaximumLength(200).WithMessage("Le nom ne peut pas dépasser 200 caractères");
+            .NotEmpty().WithMessage(ValidationCodes.OrganizationNameRequired)
+            .MaximumLength(200).WithMessage(ValidationCodes.OrganizationNameMaxLength);
 
         RuleFor(x => x.AlertMinSeverity)
-            .IsInEnum().WithMessage("Sévérité d'alerte invalide");
+            .IsInEnum().WithMessage(ValidationCodes.OrganizationAlertSeverityInvalid);
     }
 }
 
@@ -21,7 +22,7 @@ public class ConnectIntegrationDtoValidator : AbstractValidator<ConnectIntegrati
     public ConnectIntegrationDtoValidator()
     {
         RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Le token est requis")
-            .MaximumLength(500).WithMessage("Le token est trop long");
+            .NotEmpty().WithMessage(ValidationCodes.OrganizationTokenRequired)
+            .MaximumLength(500).WithMessage(ValidationCodes.OrganizationTokenMaxLength);
     }
 }

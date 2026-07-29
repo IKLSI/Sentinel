@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
@@ -34,8 +35,8 @@ public class QuotaService
         int current = await _context.Projects.CountAsync(p => p.OrganizationId == organizationId);
 
         if (!PlanLimits.IsWithin(current, limits.MaxProjects))
-            throw new QuotaExceededException(
-                $"Limite de projets atteinte pour votre plan ({limits.MaxProjects}). Passez à un plan supérieur pour en ajouter davantage.");
+            throw new QuotaExceededException(ErrorCodes.QuotaProjectsExceeded,
+                new Dictionary<string, string> { ["limit"] = limits.MaxProjects.ToString() });
     }
 
     public async Task EnsureCanInviteMemberAsync(Guid organizationId)
@@ -47,8 +48,8 @@ public class QuotaService
             i.OrganizationId == organizationId && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
 
         if (!PlanLimits.IsWithin(activeMembers + pendingInvitations, limits.MaxMembers))
-            throw new QuotaExceededException(
-                $"Limite de membres atteinte pour votre plan ({limits.MaxMembers}). Passez à un plan supérieur pour inviter davantage de membres.");
+            throw new QuotaExceededException(ErrorCodes.QuotaMembersExceeded,
+                new Dictionary<string, string> { ["limit"] = limits.MaxMembers.ToString() });
     }
 
     public async Task EnsureCanScanAsync(Guid organizationId)
@@ -64,8 +65,12 @@ public class QuotaService
         PlanLimits limits = PlanLimits.For(organization.PlanTier);
 
         if (!PlanLimits.IsWithin(organization.MonthlyScanCount, limits.MaxScansPerMonth))
-            throw new QuotaExceededException(
-                $"Limite de scans mensuels atteinte pour votre plan ({limits.MaxScansPerMonth}). Le compteur se réinitialise le {organization.ScanCountPeriodStart.AddMonths(1):dd/MM/yyyy}.");
+            throw new QuotaExceededException(ErrorCodes.QuotaScansExceeded,
+                new Dictionary<string, string>
+                {
+                    ["limit"] = limits.MaxScansPerMonth.ToString(),
+                    ["resetAt"] = organization.ScanCountPeriodStart.AddMonths(1).ToString("O")
+                });
     }
 
     public async Task<BillingStatusDto> GetStatusAsync(Guid organizationId)

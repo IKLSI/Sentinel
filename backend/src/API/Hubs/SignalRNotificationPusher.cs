@@ -13,12 +13,14 @@ public class SignalRNotificationPusher : INotificationPusher
         _hubContext = hubContext;
     }
 
-    public Task PushAsync(Guid userId, NotificationType type, string message, Guid? ticketId, Guid notificationId, DateTime createdAt)
+    public Task PushAsync(Guid userId, NotificationType type, string messageKey,
+        IReadOnlyDictionary<string, string>? messageParams, Guid? ticketId, Guid notificationId, DateTime createdAt)
         => _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
         {
             id = notificationId,
             type = type.ToString(),
-            message,
+            messageKey,
+            messageParams,
             ticketId,
             isRead = false,
             createdAt

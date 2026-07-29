@@ -10,6 +10,7 @@ using Sentinel.API.Attributes;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Application.Services;
@@ -103,18 +104,18 @@ public class UsersController : BaseController
             .AnyAsync(u => u.Email == dto.Email.ToLower() && u.OrganizationId == organizationId.Value);
 
         if (userExists)
-            return Conflict(new { message = "Un utilisateur avec cet email existe déjà" });
+            return ConflictCode(ErrorCodes.UserEmailAlreadyExists);
 
         bool pendingInvitation = await _context.UserInvitations
             .AnyAsync(i => i.Email == dto.Email.ToLower() && i.OrganizationId == organizationId.Value && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
 
         if (pendingInvitation)
-            return Conflict(new { message = "Une invitation est déjà en attente pour cet email" });
+            return ConflictCode(ErrorCodes.UserInvitationAlreadyPending);
 
         await _quotaService.EnsureCanInviteMemberAsync(organizationId.Value);
 
         if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
-            return BadRequest(new { message = "Rôle invalide. Valeurs acceptées : Admin, Developer" });
+            return BadRequestCode(ErrorCodes.UserInvalidRole);
 
         string rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
 
@@ -142,7 +143,7 @@ public class UsersController : BaseController
             entityId: invitation.Id,
             jti: GetCurrentJti());
 
-        return Accepted(new { message = "Invitation envoyée" });
+        return Accepted(ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
     }
 
     [HttpPost("accept-invitation")]
@@ -158,13 +159,13 @@ public class UsersController : BaseController
             .FirstOrDefaultAsync(i => i.TokenHash == tokenHash && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow);
 
         if (invitation == null)
-            return BadRequest(new { message = "Invitation invalide ou expirée" });
+            return BadRequestCode(ErrorCodes.UserInvitationInvalid);
 
         bool emailExists = await _context.Users
             .AnyAsync(u => u.Email == invitation.Email && u.OrganizationId == invitation.OrganizationId);
 
         if (emailExists)
-            return Conflict(new { message = "Un compte existe déjà avec cet email" });
+            return ConflictCode(ErrorCodes.AuthEmailAlreadyUsed);
 
         User user = new User
         {
@@ -191,7 +192,7 @@ public class UsersController : BaseController
             entityId: user.Id,
             jti: GetCurrentJti());
 
-        return Ok(new { message = "Compte créé avec succès" });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.UserAccountCreated));
     }
 
     [HttpPut("{id:guid}")]
@@ -207,7 +208,7 @@ public class UsersController : BaseController
             .FirstOrDefaultAsync(u => u.Id == id && u.OrganizationId == organizationId.Value);
 
         if (user == null)
-            return NotFound(new { message = "Utilisateur introuvable" });
+            return NotFoundCode(ErrorCodes.UserNotFound);
 
         if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
         if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
@@ -227,7 +228,7 @@ public class UsersController : BaseController
                 && u.IsActive);
 
             if (activeAdmins <= 1)
-                return BadRequest(new { message = "Au moins un administrateur actif est requis" });
+                return BadRequestCode(ErrorCodes.UserLastAdminRequired);
         }
 
         if (dto.IsActive.HasValue) user.IsActive = dto.IsActive.Value;
@@ -235,7 +236,7 @@ public class UsersController : BaseController
         if (!string.IsNullOrEmpty(dto.Role))
         {
             if (!Enum.TryParse<UserRole>(dto.Role, true, out UserRole role))
-                return BadRequest(new { message = "Rôle invalide" });
+                return BadRequestCode(ErrorCodes.UserInvalidRole);
 
             user.Role = role;
         }
@@ -269,7 +270,7 @@ public class UsersController : BaseController
             .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
 
         if (user == null)
-            return NotFound(new { message = "Utilisateur introuvable" });
+            return NotFoundCode(ErrorCodes.UserNotFound);
 
         if (!string.IsNullOrEmpty(dto.Theme) && Enum.TryParse<ThemeType>(dto.Theme, ignoreCase: true, out ThemeType parsedTheme))
             user.Theme = parsedTheme;
@@ -293,7 +294,7 @@ public class UsersController : BaseController
             .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
 
         if (user == null)
-            return NotFound(new { message = "Utilisateur introuvable" });
+            return NotFoundCode(ErrorCodes.UserNotFound);
 
         if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
         if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
@@ -323,7 +324,7 @@ public class UsersController : BaseController
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
 
-        if (user == null) return NotFound(new { message = "Utilisateur introuvable" });
+        if (user == null) return NotFoundCode(ErrorCodes.UserNotFound);
 
         List<object> auditLogs = await _context.AuditLogs
             .AsNoTracking()
@@ -370,10 +371,10 @@ public class UsersController : BaseController
         User? user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == currentUserId.Value && u.OrganizationId == organizationId.Value);
 
-        if (user == null) return NotFound(new { message = "Utilisateur introuvable" });
+        if (user == null) return NotFoundCode(ErrorCodes.UserNotFound);
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return BadRequest(new { message = "Mot de passe incorrect" });
+            return BadRequestCode(ErrorCodes.UserWrongPassword);
 
         if (user.Role == UserRole.Admin)
         {
@@ -383,7 +384,7 @@ public class UsersController : BaseController
                 && u.IsActive);
 
             if (activeAdmins <= 1)
-                return BadRequest(new { message = "Impossible de supprimer le seul administrateur actif" });
+                return BadRequestCode(ErrorCodes.UserCannotDeleteLastAdmin);
         }
 
         await _context.AuditLogs

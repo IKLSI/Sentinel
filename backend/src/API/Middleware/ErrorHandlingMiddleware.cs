@@ -2,6 +2,8 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Services;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
 
 namespace Sentinel.API.Middleware;
 
@@ -33,25 +35,27 @@ public class ErrorHandlingMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        (HttpStatusCode statusCode, string message) = exception switch
+        (HttpStatusCode statusCode, string code, IReadOnlyDictionary<string, string>? parameters) = exception switch
         {
-            QuotaExceededException quota => (HttpStatusCode.PaymentRequired, quota.Message),
-            EmailNotVerifiedException notVerified => (HttpStatusCode.Forbidden, notVerified.Message),
-            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, "La ressource a été modifiée par une autre opération. Rechargez puis réessayez."),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Accès non autorisé"),
-            KeyNotFoundException => (HttpStatusCode.NotFound, "Ressource introuvable"),
-            InvalidOperationException => (HttpStatusCode.BadRequest, "Opération invalide"),
-            ArgumentException => (HttpStatusCode.BadRequest, "Requête invalide"),
-            _ => (HttpStatusCode.InternalServerError, "Une erreur interne s'est produite")
+            QuotaExceededException quota => (HttpStatusCode.PaymentRequired, quota.Code, quota.Params),
+            EmailNotVerifiedException notVerified => (HttpStatusCode.Forbidden, notVerified.Code, notVerified.Params),
+            ResourceNotFoundException notFound => (HttpStatusCode.NotFound, notFound.Code, notFound.Params),
+            BusinessRuleException businessRule => (businessRule.StatusCode, businessRule.Code, businessRule.Params),
+            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency, null),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ErrorCodes.Unauthorized, null),
+            KeyNotFoundException => (HttpStatusCode.NotFound, ErrorCodes.NotFound, null),
+            InvalidOperationException => (HttpStatusCode.BadRequest, ErrorCodes.InvalidOperation, null),
+            ArgumentException => (HttpStatusCode.BadRequest, ErrorCodes.InvalidRequest, null),
+            _ => (HttpStatusCode.InternalServerError, ErrorCodes.Unexpected, null)
         };
 
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new
+        ApiErrorResponse response = new()
         {
-            status = (int)statusCode,
-            message,
-            timestamp = DateTime.UtcNow
+            Code = code,
+            Status = (int)statusCode,
+            Params = parameters
         };
 
         string json = JsonSerializer.Serialize(response, new JsonSerializerOptions

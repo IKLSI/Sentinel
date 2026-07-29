@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Auth;
+using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Settings;
 using Sentinel.Application.Services;
@@ -73,7 +74,7 @@ public class AuthController : BaseController
 
         if (result == null)
         {
-            return Unauthorized(new { message = "Email ou mot de passe incorrect" });
+            return UnauthorizedCode(ErrorCodes.AuthInvalidCredentials);
         }
 
         SetRefreshTokenCookie(result.RefreshToken);
@@ -97,7 +98,7 @@ public class AuthController : BaseController
 
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Unauthorized(new { message = "Token de rafraîchissement invalide ou expiré" });
+            return UnauthorizedCode(ErrorCodes.AuthInvalidRefreshToken);
         }
 
         LoginResponse? result = await _authService.RefreshTokenAsync(refreshToken);
@@ -105,7 +106,7 @@ public class AuthController : BaseController
         if (result == null)
         {
             ClearRefreshTokenCookie();
-            return Unauthorized(new { message = "Token de rafraîchissement invalide ou expiré" });
+            return UnauthorizedCode(ErrorCodes.AuthInvalidRefreshToken);
         }
 
         SetRefreshTokenCookie(result.RefreshToken);
@@ -170,7 +171,7 @@ public class AuthController : BaseController
                 entityType: AuditEntityTypes.User);
         }
 
-        return Ok(new { message = "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation." });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.AuthPasswordResetRequested));
     }
 
     [HttpPost("reset-password")]
@@ -181,14 +182,14 @@ public class AuthController : BaseController
 
         if (!success)
         {
-            return BadRequest(new { message = "Le lien de réinitialisation est invalide ou expiré." });
+            return BadRequestCode(ErrorCodes.AuthInvalidResetLink);
         }
 
         await _auditLog.LogAsync(
             AuditAction.PasswordReset,
             entityType: AuditEntityTypes.User);
 
-        return Ok(new { message = "Mot de passe réinitialisé avec succès." });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.AuthPasswordReset));
     }
 
     [HttpPost("register")]
@@ -201,9 +202,9 @@ public class AuthController : BaseController
         {
             token = await _authService.RegisterAsync(request);
         }
-        catch (InvalidOperationException ex)
+        catch (BusinessRuleException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return ConflictCode(ex.Code, ex.Params);
         }
 
         BackgroundJob.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(token.Email, token.RawToken));
@@ -212,7 +213,7 @@ public class AuthController : BaseController
             AuditAction.OrganizationRegistered,
             entityType: AuditEntityTypes.Organization);
 
-        return Accepted(new { message = "Compte créé. Consultez votre boîte de réception pour activer votre compte." });
+        return Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }
 
     [HttpPost("verify-email")]
@@ -222,13 +223,13 @@ public class AuthController : BaseController
         bool success = await _authService.VerifyEmailAsync(request.Token);
 
         if (!success)
-            return BadRequest(new { message = "Le lien de vérification est invalide ou expiré." });
+            return BadRequestCode(ErrorCodes.AuthInvalidVerificationLink);
 
         await _auditLog.LogAsync(
             AuditAction.EmailVerified,
             entityType: AuditEntityTypes.User);
 
-        return Ok(new { message = "Email vérifié avec succès. Vous pouvez maintenant vous connecter." });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.AuthEmailVerified));
     }
 
     [HttpPost("resend-verification")]
@@ -246,7 +247,7 @@ public class AuthController : BaseController
                 entityType: AuditEntityTypes.User);
         }
 
-        return Ok(new { message = "Si un compte non vérifié existe pour cet email, un nouveau lien d'activation a été envoyé." });
+        return Ok(ApiMessageResponse.Create(SuccessCodes.AuthVerificationResent));
     }
 
     [Authorize]
@@ -264,7 +265,7 @@ public class AuthController : BaseController
 
         if (user == null || user.Id == Guid.Empty)
         {
-            return NotFound(new { message = "Utilisateur introuvable" });
+            return NotFoundCode(ErrorCodes.UserNotFound);
         }
 
         return Ok(new UserProfile

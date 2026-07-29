@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +35,8 @@ public class NotificationsController : BaseController
             notifications.Select(n => new NotificationDto(
                 n.Id,
                 n.Type.ToString(),
-                n.Message,
+                n.MessageKey,
+                DeserializeParams(n.MessageParams),
                 n.TicketId,
                 n.IsRead,
                 n.CreatedAt
@@ -64,12 +66,20 @@ public class NotificationsController : BaseController
         await _notificationService.MarkAllReadAsync(userId.Value);
         return NoContent();
     }
+
+    private static IReadOnlyDictionary<string, string>? DeserializeParams(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return null;
+
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+    }
 }
 
 public record NotificationDto(
     Guid Id,
     string Type,
-    string Message,
+    string MessageKey,
+    IReadOnlyDictionary<string, string>? MessageParams,
     Guid? TicketId,
     bool IsRead,
     DateTime CreatedAt

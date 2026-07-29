@@ -12,7 +12,7 @@ import { AppModal } from "@/components/AppModal";
 import { RowActions } from "@/components/RowActions";
 import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/i18n/I18nContext";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import type { CreatedApiKey, ApiKey } from "@/features/settings/api/apiKeys";
 import {
   useApiKeys,
@@ -47,6 +47,7 @@ function fmtDate(iso: string | null, locale: string): string {
 
 export const ApiKeysTab: React.FC = () => {
   const t = useT();
+  const apiError = useApiError();
   const { culture } = useI18n();
   const { showToast } = useToast();
   const formId = useId();
@@ -95,7 +96,7 @@ export const ApiKeysTab: React.FC = () => {
         },
         onError: (err) =>
           showToast(
-            extractApiError(err, t("settings.api_keys.create_error")),
+            apiError(err, t("settings.api_keys.create_error")),
             "error",
           ),
       },
@@ -107,10 +108,7 @@ export const ApiKeysTab: React.FC = () => {
     revokeKeyMutation.mutate(revokeTarget.id, {
       onSuccess: () => setRevokeTarget(null),
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("settings.api_keys.revoke_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("settings.api_keys.revoke_error")), "error"),
     });
   };
 

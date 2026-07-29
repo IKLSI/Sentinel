@@ -16,7 +16,7 @@ import {
   useRemediationPreview,
   useExecuteRemediation,
 } from "@/features/techHealth/hooks/useRemediation";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { STATUS_SUCCESS, type Phase } from "./constants";
 import { PreviewContent } from "./PreviewContent";
 import { ResultContent } from "./ResultContent";
@@ -38,6 +38,7 @@ export const RemediateModal: React.FC<Props> = ({
   showToast,
 }) => {
   const t = useT();
+  const apiError = useApiError();
   const previewQuery = useRemediationPreview(projectId, open);
   const executeMutation = useExecuteRemediation();
   const preview: RemediationPreviewDto | null = previewQuery.data ?? null;
@@ -71,7 +72,7 @@ export const RemediateModal: React.FC<Props> = ({
         else showToast(data.error ?? t("remediation.failed"), "error");
       },
       onError: (e) =>
-        showToast(extractApiError(e, t("remediation.error_generic")), "error"),
+        showToast(apiError(e, t("remediation.error_generic")), "error"),
     });
   };
 

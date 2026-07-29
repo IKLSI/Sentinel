@@ -1,34 +1,40 @@
-type ProblemDetails = {
-  errors?: Record<string, string[]>;
-  message?: string;
-  title?: string;
-  detail?: string;
+export type ApiErrorTranslation = {
+  code: string;
+  params?: Record<string, string>;
+};
+
+type ValidationErrorItem = {
+  code?: string;
+  params?: Record<string, string>;
+};
+
+type ApiErrorBody = {
+  code?: string;
+  params?: Record<string, string>;
+  errors?: Record<string, ValidationErrorItem[]>;
 };
 
 type AxiosLikeError = {
   response?: {
-    data?: ProblemDetails | string;
+    data?: ApiErrorBody | string;
     status?: number;
   };
 };
 
-export function extractApiError(err: unknown, fallback: string): string {
-  const ax = err as AxiosLikeError;
-  const data = ax?.response?.data;
+export function extractApiErrorCode(err: unknown): ApiErrorTranslation | null {
+  const data = (err as AxiosLikeError)?.response?.data;
 
-  if (typeof data === "string" && data.trim().length > 0) return data;
+  if (!data || typeof data !== "object") return null;
 
-  if (data && typeof data === "object") {
-    if (data.errors) {
-      const first = Object.values(data.errors)
-        .flat()
-        .find((m) => typeof m === "string" && m.length > 0);
-      if (first) return first;
-    }
-    if (data.message) return data.message;
-    if (data.detail) return data.detail;
-    if (data.title) return data.title;
+  if (data.errors) {
+    const first = Object.values(data.errors)
+      .flat()
+      .find((item) => typeof item?.code === "string" && item.code.length > 0);
+    if (first?.code) return { code: first.code, params: first.params };
   }
 
-  return fallback;
+  if (typeof data.code === "string" && data.code.length > 0)
+    return { code: data.code, params: data.params };
+
+  return null;
 }

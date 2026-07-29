@@ -63,7 +63,8 @@ public class TicketService
                     dto.AssignedToId.Value,
                     organizationId,
                     NotificationType.TicketAssigned,
-                    $"Vous avez été assigné au ticket : {dto.Title}",
+                    NotificationCodes.TicketAssigned,
+                    new Dictionary<string, string> { ["title"] = dto.Title },
                     ticket.Id);
             }
             catch (Exception ex)
@@ -144,7 +145,8 @@ public class TicketService
                     dto.AssignedToId.Value,
                     ticket.OrganizationId,
                     NotificationType.TicketAssigned,
-                    $"Vous avez été assigné au ticket : {ticket.Title}",
+                    NotificationCodes.TicketAssigned,
+                    new Dictionary<string, string> { ["title"] = ticket.Title },
                     ticketId);
             }
             catch (Exception ex)
@@ -185,7 +187,13 @@ public class TicketService
                     ticket.AssignedToId.Value,
                     ticket.OrganizationId,
                     NotificationType.TicketStatusChanged,
-                    $"Statut du ticket « {ticket.Title} » : {oldStatusName} → {newStatus.Name}",
+                    NotificationCodes.TicketStatusChanged,
+                    new Dictionary<string, string>
+                    {
+                        ["title"] = ticket.Title,
+                        ["oldStatus"] = oldStatusName,
+                        ["newStatus"] = newStatus.Name
+                    },
                     ticketId);
             }
             catch (Exception ex)
@@ -214,7 +222,7 @@ public class TicketService
         Ticket? ticket = await _context.Tickets
             .FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket == null)
-            throw new InvalidOperationException("Ticket introuvable");
+            throw new ResourceNotFoundException(ErrorCodes.TicketNotFound);
 
         TicketComment comment = new TicketComment
         {
@@ -237,7 +245,8 @@ public class TicketService
                     ticket.AssignedToId.Value,
                     ticket.OrganizationId,
                     NotificationType.TicketCommentAdded,
-                    $"Nouveau commentaire sur le ticket : {ticket.Title}",
+                    NotificationCodes.TicketCommentAdded,
+                    new Dictionary<string, string> { ["title"] = ticket.Title },
                     ticketId);
             }
             catch (Exception ex)

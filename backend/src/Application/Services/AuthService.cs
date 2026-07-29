@@ -1,9 +1,11 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Domain.DTOs.Auth;
@@ -119,7 +121,7 @@ public class AuthService
 
         if (!user.IsEmailVerified)
         {
-            throw new EmailNotVerifiedException("Votre adresse email n'a pas encore été vérifiée. Consultez votre boîte de réception ou demandez un nouveau lien.");
+            throw new EmailNotVerifiedException();
         }
 
         string accessToken = _tokenService.GenerateAccessToken(user);
@@ -229,7 +231,7 @@ public class AuthService
         bool emailExists = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
 
         if (emailExists)
-            throw new InvalidOperationException("Un compte existe déjà avec cette adresse email.");
+            throw new BusinessRuleException(ErrorCodes.AuthEmailAlreadyUsed, statusCode: HttpStatusCode.Conflict);
 
         DateTime now = DateTime.UtcNow;
 

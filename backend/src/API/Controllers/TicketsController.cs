@@ -71,7 +71,7 @@ public class TicketsController : BaseController
         if (!string.IsNullOrWhiteSpace(search))
         {
             if (search.Length > 100)
-                return BadRequest(new { message = "Recherche limitée à 100 caractères" });
+                return BadRequestCode(ErrorCodes.TicketSearchTooLong, new Dictionary<string, string> { ["maxLength"] = "100" });
 
             string escaped = search
                 .Replace("\\", "\\\\")
@@ -157,7 +157,7 @@ public class TicketsController : BaseController
         TicketDto? ticket = await _ticketService.GetTicketWithDetailsAsync(id);
 
         if (ticket == null)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         bool exists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId.Value);
 
@@ -178,7 +178,7 @@ public class TicketsController : BaseController
         Ticket? ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == organizationId);
 
         if (ticket == null)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         await _ticketService.UpdateTicketAsync(id, dto, userId.Value);
         TicketDto? updatedDto = await _ticketService.GetTicketWithDetailsAsync(id);
@@ -205,7 +205,7 @@ public class TicketsController : BaseController
         bool deleted = await _ticketService.DeleteTicketAsync(id, organizationId.Value);
 
         if (!deleted)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         await _auditLog.LogAsync(
             AuditAction.TicketDeleted,
@@ -230,10 +230,10 @@ public class TicketsController : BaseController
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
 
         if (!ticketExists)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         if (string.IsNullOrWhiteSpace(dto.Content))
-            return BadRequest(new { message = "Le contenu du commentaire est requis" });
+            return BadRequestCode(ErrorCodes.TicketCommentContentRequired);
 
         TicketComment comment = await _ticketService.AddCommentAsync(id, dto.Content, userId.Value);
 
@@ -270,13 +270,13 @@ public class TicketsController : BaseController
             .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == id);
 
         if (comment == null)
-            return NotFound(new { message = "Commentaire introuvable" });
+            return NotFoundCode(ErrorCodes.TicketCommentNotFound);
 
         if (comment.AuthorId != userId.Value)
             return Forbid();
 
         if (string.IsNullOrWhiteSpace(dto.Content))
-            return BadRequest(new { message = "Le contenu du commentaire est requis" });
+            return BadRequestCode(ErrorCodes.TicketCommentContentRequired);
 
         comment.Content = dto.Content;
         comment.UpdatedAt = DateTime.UtcNow;
@@ -313,7 +313,7 @@ public class TicketsController : BaseController
             .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == id);
 
         if (comment == null)
-            return NotFound(new { message = "Commentaire introuvable" });
+            return NotFoundCode(ErrorCodes.TicketCommentNotFound);
 
         if (comment.AuthorId != userId.Value)
             return Forbid();
@@ -357,19 +357,19 @@ public class TicketsController : BaseController
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
 
         if (!ticketExists)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         if (file == null || file.Length == 0)
-            return BadRequest(new { message = "Fichier invalide" });
+            return BadRequestCode(ErrorCodes.TicketAttachmentInvalidFile);
 
         if (!AllowedAttachmentMimes.Contains(file.ContentType))
-            return BadRequest(new { message = "Type de fichier non autorisé" });
+            return BadRequestCode(ErrorCodes.TicketAttachmentTypeNotAllowed);
 
         string originalName = Path.GetFileName(file.FileName);
         string sanitized = string.Concat(originalName.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Replace(" ", "_");
 
         if (string.IsNullOrWhiteSpace(sanitized))
-            return BadRequest(new { message = "Nom de fichier invalide" });
+            return BadRequestCode(ErrorCodes.TicketAttachmentInvalidFileName);
 
         Guid attachmentId = Guid.NewGuid();
         string uploadDir = Path.Combine(GetAttachmentsRoot(), id.ToString());
@@ -434,10 +434,10 @@ public class TicketsController : BaseController
             .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == id);
 
         if (attachment == null || attachment.Ticket.OrganizationId != organizationId.Value)
-            return NotFound(new { message = "Pièce jointe introuvable" });
+            return NotFoundCode(ErrorCodes.TicketAttachmentNotFound);
 
         if (!System.IO.File.Exists(attachment.StoragePath))
-            return NotFound(new { message = "Fichier manquant" });
+            return NotFoundCode(ErrorCodes.TicketAttachmentFileMissing);
 
         FileStream stream = new FileStream(attachment.StoragePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
@@ -455,12 +455,12 @@ public class TicketsController : BaseController
         bool ticketExists = await _context.Tickets.AnyAsync(t => t.Id == id && t.OrganizationId == organizationId);
 
         if (!ticketExists)
-            return NotFound(new { message = "Ticket introuvable" });
+            return NotFoundCode(ErrorCodes.TicketNotFound);
 
         Ticket? updated = await _ticketService.ChangeStatusAsync(id, dto.StatusId, userId.Value);
 
         if (updated == null)
-            return BadRequest(new { message = "Statut invalide" });
+            return BadRequestCode(ErrorCodes.TicketInvalidStatus);
 
         await _auditLog.LogAsync(
             AuditAction.TicketStatusChanged,

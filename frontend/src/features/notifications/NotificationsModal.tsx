@@ -374,7 +374,7 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
                         minWidth: 0,
                       }}
                     >
-                      {notif.message}
+                      {t(notif.messageKey, notif.messageParams)}
                     </Box>
                     <Box
                       sx={{

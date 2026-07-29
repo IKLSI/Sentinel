@@ -12,7 +12,7 @@ import {
 } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
-import { extractApiError } from "../../../utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 interface RegisterModalProps {
   open: boolean;
@@ -25,6 +25,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const [organizationName, setOrganizationName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -66,10 +67,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       {
         onSuccess: () => setDone(true),
         onError: (err) =>
-          showToast(
-            extractApiError(err, t("auth.register.error_generic")),
-            "error",
-          ),
+          showToast(apiError(err, t("auth.register.error_generic")), "error"),
       },
     );
   };
@@ -78,10 +76,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     resendVerificationMutation.mutate(email, {
       onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("auth.register.error_generic")),
-          "error",
-        ),
+        showToast(apiError(err, t("auth.register.error_generic")), "error"),
     });
   };
 

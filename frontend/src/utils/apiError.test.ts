@@ -1,43 +1,56 @@
 import { describe, expect, it } from "vitest";
-import { extractApiError } from "./apiError";
+import { extractApiErrorCode } from "./apiError";
 
-describe("extractApiError", () => {
-  it("returns fallback when err undefined", () => {
-    expect(extractApiError(undefined, "fallback")).toBe("fallback");
+describe("extractApiErrorCode", () => {
+  it("returns null when err undefined", () => {
+    expect(extractApiErrorCode(undefined)).toBeNull();
   });
 
-  it("returns string body directly", () => {
+  it("returns null for a plain string body", () => {
     const err = { response: { data: "Erreur backend" } };
-    expect(extractApiError(err, "fallback")).toBe("Erreur backend");
+    expect(extractApiErrorCode(err)).toBeNull();
   });
 
-  it("returns first validation error message", () => {
+  it("returns the error code with its params", () => {
     const err = {
       response: {
         data: {
-          errors: { Email: ["Email invalide"], Password: ["Trop court"] },
+          code: "errors.quota.projects_exceeded",
+          params: { limit: "3" },
         },
       },
     };
-    expect(extractApiError(err, "fallback")).toBe("Email invalide");
+    expect(extractApiErrorCode(err)).toEqual({
+      code: "errors.quota.projects_exceeded",
+      params: { limit: "3" },
+    });
   });
 
-  it("prefers message over detail and title", () => {
+  it("returns the first validation error code", () => {
     const err = {
       response: {
-        data: { message: "msg", detail: "detail", title: "title" },
+        data: {
+          code: "errors.common.validation_failed",
+          errors: {
+            email: [{ code: "validation.account.email_invalid_format" }],
+            password: [
+              {
+                code: "validation.password.min_length",
+                params: { minLength: "12" },
+              },
+            ],
+          },
+        },
       },
     };
-    expect(extractApiError(err, "fallback")).toBe("msg");
+    expect(extractApiErrorCode(err)).toEqual({
+      code: "validation.account.email_invalid_format",
+      params: undefined,
+    });
   });
 
-  it("uses detail when message absent", () => {
-    const err = { response: { data: { detail: "détail" } } };
-    expect(extractApiError(err, "fallback")).toBe("détail");
-  });
-
-  it("returns fallback for empty object response", () => {
+  it("returns null for empty object response", () => {
     const err = { response: { data: {} } };
-    expect(extractApiError(err, "fallback")).toBe("fallback");
+    expect(extractApiErrorCode(err)).toBeNull();
   });
 });

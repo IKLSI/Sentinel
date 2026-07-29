@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/i18n/I18nContext";
 import { useUsers, useToggleUserActive } from "@/features/users/hooks/useUsers";
 import { MemberPagination } from "../MemberPagination";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { UserRole } from "@/types/enums";
 
 interface Props {
@@ -27,6 +27,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { t, culture } = useI18n();
+  const apiError = useApiError();
 
   const ROLE_LABELS: Record<string, string> = useMemo(
     () => ({
@@ -130,10 +131,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
       { userId: memberId, isActive: !currentlyActive },
       {
         onError: (err) =>
-          showToast(
-            extractApiError(err, t("settings.toast.toggle_error")),
-            "error",
-          ),
+          showToast(apiError(err, t("settings.toast.toggle_error")), "error"),
       },
     );
   };

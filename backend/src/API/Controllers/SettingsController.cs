@@ -58,7 +58,7 @@ public class SettingsController : BaseController
         if (orgId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Token))
-            return BadRequest(new { message = "Le token est requis" });
+            return BadRequestCode(ErrorCodes.SettingsTokenRequired);
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
 
@@ -67,7 +67,7 @@ public class SettingsController : BaseController
         (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "github");
 
         if (account == null)
-            return BadRequest(new { message = "Le token GitHub est invalide ou ne peut pas être vérifié auprès du fournisseur" });
+            return BadRequestCode(ErrorCodes.SettingsInvalidGithubToken);
 
         org.GithubToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
@@ -94,7 +94,7 @@ public class SettingsController : BaseController
         if (orgId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Token))
-            return BadRequest(new { message = "Le token est requis" });
+            return BadRequestCode(ErrorCodes.SettingsTokenRequired);
 
         Organization? org = await _context.Organizations.FindAsync(orgId.Value);
 
@@ -103,7 +103,7 @@ public class SettingsController : BaseController
         (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "gitlab");
 
         if (account == null)
-            return BadRequest(new { message = "Le token GitLab est invalide ou ne peut pas être vérifié auprès du fournisseur" });
+            return BadRequestCode(ErrorCodes.SettingsInvalidGitlabToken);
 
         org.GitlabToken = _tokenProtector.Protect(dto.Token);
         org.UpdatedAt = DateTime.UtcNow;
@@ -156,7 +156,7 @@ public class SettingsController : BaseController
         if (org == null) return NotFound();
 
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequest(new { message = "Le nom de l'organisation est requis" });
+            return BadRequestCode(ErrorCodes.SettingsOrganizationNameRequired);
 
         org.Name = dto.Name.Trim();
         org.SecurityAlertsEnabled = dto.SecurityAlertsEnabled;

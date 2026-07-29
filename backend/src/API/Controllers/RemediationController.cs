@@ -38,7 +38,7 @@ public class RemediationController : BaseController
         if (organizationId == null) return Unauthorized();
 
         if (!await ProjectBelongsAsync(id, organizationId.Value))
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         RemediationPreviewDto preview = await _remediationService.PreviewAsync(id);
         return Ok(preview);
@@ -53,7 +53,7 @@ public class RemediationController : BaseController
         if (organizationId == null) return Unauthorized();
 
         if (!await ProjectBelongsAsync(id, organizationId.Value))
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         await EnsureSubscriptionActiveAsync(organizationId.Value);
 
@@ -78,7 +78,7 @@ public class RemediationController : BaseController
         if (organizationId == null) return Unauthorized();
 
         if (!await ProjectBelongsAsync(id, organizationId.Value))
-            return NotFound(new { message = "Projet introuvable" });
+            return NotFoundCode(ErrorCodes.ProjectNotFound);
 
         List<RemediationHistoryDto> history = await _context.RemediationRequests
             .AsNoTracking()
@@ -111,7 +111,6 @@ public class RemediationController : BaseController
             .FirstOrDefaultAsync();
 
         if (status is not (SubscriptionStatus.Active or SubscriptionStatus.Trialing))
-            throw new QuotaExceededException(
-                "La remédiation automatique nécessite un abonnement actif. Passez à un plan payant pour l'activer.");
+            throw new QuotaExceededException(ErrorCodes.QuotaRemediationsExceeded);
     }
 }

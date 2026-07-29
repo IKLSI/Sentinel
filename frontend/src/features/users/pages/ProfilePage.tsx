@@ -12,7 +12,7 @@ import {
   useExportGdprData,
   useDeleteMyAccount,
 } from "../hooks/useUsers";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
@@ -86,6 +86,7 @@ export const ProfilePage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const { culture, setLanguage } = useI18n();
 
   const [pf, setPf] = useState({
@@ -119,10 +120,7 @@ export const ProfilePage: React.FC = () => {
         showToast(t("profile.toast.updated"), "success");
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("profile.toast.update_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("profile.toast.update_error")), "error"),
     });
   };
 
@@ -146,10 +144,7 @@ export const ProfilePage: React.FC = () => {
         URL.revokeObjectURL(url);
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("profile.gdpr.export_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("profile.gdpr.export_error")), "error"),
     });
   };
 
@@ -163,10 +158,7 @@ export const ProfilePage: React.FC = () => {
         window.location.href = "/login";
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("profile.gdpr.delete_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("profile.gdpr.delete_error")), "error"),
     });
   };
 

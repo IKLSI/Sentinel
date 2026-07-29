@@ -9,7 +9,7 @@ import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { useResendVerificationMutation } from "../hooks/useAuthMutations";
-import { extractApiError } from "../../../utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { RegisterModal } from "./RegisterModal";
@@ -20,6 +20,7 @@ export const LoginPage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const t = useT();
+  const apiError = useApiError();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,10 +58,7 @@ export const LoginPage: React.FC = () => {
         ?.status;
       if (status === 403) {
         setShowResend(true);
-        showToast(
-          extractApiError(err, t("auth.login.email_not_verified")),
-          "warning",
-        );
+        showToast(apiError(err, t("auth.login.email_not_verified")), "warning");
       } else {
         setHasError(true);
         showToast(t("auth.login.invalid_credentials"), "error");
@@ -78,10 +76,7 @@ export const LoginPage: React.FC = () => {
     resendVerificationMutation.mutate(email, {
       onSuccess: () => showToast(t("auth.login.resend_done"), "success"),
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("auth.login.invalid_credentials")),
-          "error",
-        ),
+        showToast(apiError(err, t("auth.login.invalid_credentials")), "error"),
     });
   };
 

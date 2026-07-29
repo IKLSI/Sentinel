@@ -39,13 +39,14 @@ import {
   EditTicketModal,
   type EditFormState,
 } from "./components/EditTicketModal";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { SortDirection } from "@/types/enums";
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
+  const apiError = useApiError();
   const navigate = routeApi.useNavigate();
   const { openCreate } = routeApi.useSearch();
   const { showToast } = useToast();
@@ -142,10 +143,7 @@ export const TicketsPage: React.FC = () => {
         }
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("tickets.list.create_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("tickets.list.create_error")), "error"),
     });
   };
 
@@ -203,7 +201,7 @@ export const TicketsPage: React.FC = () => {
       }
       setEditTarget(null);
     } catch (err) {
-      showToast(extractApiError(err, t("tickets.list.edit_error")), "error");
+      showToast(apiError(err, t("tickets.list.edit_error")), "error");
     }
   };
 
@@ -212,10 +210,7 @@ export const TicketsPage: React.FC = () => {
     deleteTicketMutation.mutate(deleteTarget.id, {
       onSuccess: () => setDeleteTarget(null),
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("tickets.list.delete_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("tickets.list.delete_error")), "error"),
     });
   };
 

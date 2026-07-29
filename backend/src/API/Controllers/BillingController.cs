@@ -74,7 +74,7 @@ public class BillingController : BaseController
         if (organizationId == null) return Unauthorized();
 
         if (!Enum.TryParse(request.PlanTier, true, out PlanTier tier) || tier == PlanTier.Free)
-            return BadRequest(new { message = "Plan invalide. Valeurs acceptées : Pro, Business" });
+            return BadRequestCode(ErrorCodes.BillingInvalidPlan);
 
         try
         {
@@ -90,14 +90,14 @@ public class BillingController : BaseController
 
             return Ok(new CheckoutSessionDto { Url = url });
         }
-        catch (InvalidOperationException ex)
+        catch (BusinessRuleException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequestCode(ex.Code, ex.Params);
         }
         catch (Stripe.StripeException ex)
         {
             _logger.LogError(ex, "Erreur Stripe lors de la création de la session de paiement");
-            return BadRequest(new { message = "Le service de paiement est momentanément indisponible." });
+            return BadRequestCode(ErrorCodes.BillingProviderUnavailable);
         }
     }
 
@@ -123,14 +123,14 @@ public class BillingController : BaseController
 
             return Ok(new CheckoutSessionDto { Url = url });
         }
-        catch (InvalidOperationException ex)
+        catch (BusinessRuleException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequestCode(ex.Code, ex.Params);
         }
         catch (Stripe.StripeException ex)
         {
             _logger.LogError(ex, "Erreur Stripe lors de l'ouverture du portail de facturation");
-            return BadRequest(new { message = "Le service de paiement est momentanément indisponible." });
+            return BadRequestCode(ErrorCodes.BillingProviderUnavailable);
         }
     }
 

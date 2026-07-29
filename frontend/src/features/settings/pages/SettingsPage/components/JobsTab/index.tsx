@@ -14,7 +14,7 @@ import {
   useTriggerTechHealthScan,
 } from "@/features/settings/hooks/useJobs";
 import { JobState } from "@/types/enums";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
   {
@@ -97,6 +97,7 @@ const CELL_SX = {
 export const JobsTab: React.FC = () => {
   const { showToast } = useToast();
   const { t, culture } = useI18n();
+  const apiError = useApiError();
 
   const { jobs, loading } = useRecurringJobs();
   const triggerScan = useTriggerTechHealthScan();
@@ -120,10 +121,7 @@ export const JobsTab: React.FC = () => {
     triggerScan.mutate(undefined, {
       onSuccess: () => showToast(t("settings.jobs.trigger_success"), "success"),
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("settings.jobs.trigger_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("settings.jobs.trigger_error")), "error"),
     });
   };
 

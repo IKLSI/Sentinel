@@ -2,15 +2,20 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.DTOs.Common;
 
 namespace Sentinel.API.Filters;
 
 public class ValidationFilter : IAsyncActionFilter
 {
+    private static readonly string[] TranslatablePlaceholders =
+        ["MaxLength", "MinLength", "ComparisonValue", "ExpectedPrecision", "ExpectedScale", "From", "To"];
+
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         IServiceProvider services = context.HttpContext.RequestServices;
-        Dictionary<string, List<string>>? errors = null;
+        Dictionary<string, List<ValidationErrorItem>>? errors = null;
 
         foreach (object? argument in context.ActionArguments.Values)
         {
@@ -34,33 +39,44 @@ public class ValidationFilter : IAsyncActionFilter
             {
                 string key = ToCamelCase(failure.PropertyName);
 
-                if (!errors.TryGetValue(key, out List<string>? list))
+                if (!errors.TryGetValue(key, out List<ValidationErrorItem>? list))
                 {
-                    list = new List<string>();
+                    list = new List<ValidationErrorItem>();
                     errors[key] = list;
                 }
 
-                list.Add(failure.ErrorMessage);
+                list.Add(new ValidationErrorItem
+                {
+                    Code = failure.ErrorMessage,
+                    Params = ExtractParams(failure)
+                });
             }
         }
 
         if (errors != null)
         {
-            ValidationProblemDetails problem = new ValidationProblemDetails(
-                errors.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray()))
+            context.Result = new BadRequestObjectResult(new ApiValidationErrorResponse
             {
+                Code = ErrorCodes.ValidationFailed,
                 Status = StatusCodes.Status400BadRequest,
-                Title = "Validation échouée",
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Instance = context.HttpContext.Request.Path
-            };
-
-            context.Result = new BadRequestObjectResult(problem);
+                Errors = errors.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray())
+            });
 
             return;
         }
 
         await next();
+    }
+
+    private static IReadOnlyDictionary<string, string>? ExtractParams(ValidationFailure failure)
+    {
+        if (failure.FormattedMessagePlaceholderValues == null) return null;
+
+        Dictionary<string, string> parameters = failure.FormattedMessagePlaceholderValues
+            .Where(kv => TranslatablePlaceholders.Contains(kv.Key) && kv.Value != null)
+            .ToDictionary(kv => ToCamelCase(kv.Key), kv => kv.Value!.ToString()!);
+
+        return parameters.Count == 0 ? null : parameters;
     }
 
     private static string ToCamelCase(string name)

@@ -30,7 +30,7 @@ import { CommentComposer } from "./components/CommentComposer";
 import { PropertiesCard } from "./components/PropertiesCard";
 import { HistoryCard } from "./components/HistoryCard";
 import { EditCommentModal } from "./components/EditCommentModal";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
 import { Theme } from "@/types/enums";
 
@@ -38,6 +38,7 @@ const routeApi = getRouteApi("/_authenticated/tickets/$id");
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
+  const apiError = useApiError();
   const { id } = routeApi.useParams();
   const { markReadByTicketId } = useNotifications();
   const { showToast } = useToast();
@@ -101,7 +102,7 @@ export const TicketDetailPage: React.FC = () => {
       },
       onError: (err) =>
         showToast(
-          extractApiError(err, t("tickets.detail.add_comment_error")),
+          apiError(err, t("tickets.detail.add_comment_error")),
           "error",
         ),
     });
@@ -117,10 +118,7 @@ export const TicketDetailPage: React.FC = () => {
           showToast(t("tickets.detail.comment_updated"), "success");
         },
         onError: (err) =>
-          showToast(
-            extractApiError(err, t("tickets.detail.update_error")),
-            "error",
-          ),
+          showToast(apiError(err, t("tickets.detail.update_error")), "error"),
       },
     );
   };
@@ -133,10 +131,7 @@ export const TicketDetailPage: React.FC = () => {
         showToast(t("tickets.detail.comment_deleted"), "success");
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("tickets.detail.delete_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("tickets.detail.delete_error")), "error"),
     });
   };
 

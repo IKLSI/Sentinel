@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
@@ -6,7 +7,8 @@ namespace Sentinel.Application.Services;
 
 public interface INotificationService
 {
-    Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string message, Guid? ticketId = null);
+    Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string messageKey,
+        IReadOnlyDictionary<string, string>? messageParams = null, Guid? ticketId = null);
     Task<List<Notification>> GetForUserAsync(Guid userId, int limit = 30);
     Task MarkReadAsync(Guid notificationId, Guid userId);
     Task MarkAllReadAsync(Guid userId);
@@ -23,21 +25,23 @@ public class NotificationService : INotificationService
         _pusher = pusher;
     }
 
-    public async Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string message, Guid? ticketId = null)
+    public async Task CreateAsync(Guid userId, Guid organizationId, NotificationType type, string messageKey,
+        IReadOnlyDictionary<string, string>? messageParams = null, Guid? ticketId = null)
     {
         Notification notification = new Notification
         {
             UserId = userId,
             OrganizationId = organizationId,
             Type = type,
-            Message = message,
+            MessageKey = messageKey,
+            MessageParams = messageParams == null ? null : JsonSerializer.Serialize(messageParams),
             TicketId = ticketId
         };
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
 
         if (_pusher is not null)
-            await _pusher.PushAsync(userId, type, message, ticketId, notification.Id, notification.CreatedAt);
+            await _pusher.PushAsync(userId, type, messageKey, messageParams, ticketId, notification.Id, notification.CreatedAt);
     }
 
     public async Task<List<Notification>> GetForUserAsync(Guid userId, int limit = 30)

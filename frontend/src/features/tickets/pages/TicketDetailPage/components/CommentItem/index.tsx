@@ -9,7 +9,7 @@ import { getDateFnsLocale } from "@/utils/dateFnsLocale";
 import { useI18n } from "@/i18n/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { useDownloadAttachment } from "@/features/tickets/hooks/useTicket";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 import type { Ticket } from "@/types";
 import { type DetailPalette, getInitials } from "../../helpers";
 
@@ -66,6 +66,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   onDelete,
 }) {
   const { t, culture } = useI18n();
+  const apiError = useApiError();
   const { showToast } = useToast();
   const { mainText, attachments } = parseComment(c.content);
   const downloadMutation = useDownloadAttachment();
@@ -76,10 +77,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
       {
         onError: (err) =>
           showToast(
-            extractApiError(
-              err,
-              t("tickets.detail.attachments_download_error"),
-            ),
+            apiError(err, t("tickets.detail.attachments_download_error")),
             "error",
           ),
       },

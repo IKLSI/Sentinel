@@ -1,6 +1,8 @@
+using Sentinel.Domain.Constants;
+
 namespace Sentinel.Application.Services;
 
-public class EmailNotVerifiedException : Exception
+public class EmailNotVerifiedException : TranslatableException
 {
-    public EmailNotVerifiedException(string message) : base(message) { }
+    public EmailNotVerifiedException() : base(ErrorCodes.AuthEmailNotVerified) { }
 }

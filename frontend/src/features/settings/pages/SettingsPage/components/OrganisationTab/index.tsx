@@ -21,11 +21,12 @@ import {
   inp,
 } from "../../helpers";
 import { IntegrationRow } from "../IntegrationRow";
-import { extractApiError } from "@/utils/apiError";
+import { useApiError } from "@/hooks/useApiError";
 
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
 
   const SEVERITIES = useMemo(
     () =>
@@ -78,7 +79,7 @@ export const OrganisationTab: React.FC = () => {
         onSuccess: () => showToast(t("settings.toast.org_updated"), "success"),
         onError: (err) =>
           showToast(
-            extractApiError(err, t("settings.toast.org_update_error")),
+            apiError(err, t("settings.toast.org_update_error")),
             "error",
           ),
       },
@@ -96,10 +97,7 @@ export const OrganisationTab: React.FC = () => {
         showToast(t("settings.toast.github_connected"), "success");
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("settings.toast.github_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("settings.toast.github_error")), "error"),
     });
   };
 
@@ -114,10 +112,7 @@ export const OrganisationTab: React.FC = () => {
         showToast(t("settings.toast.gitlab_connected"), "success");
       },
       onError: (err) =>
-        showToast(
-          extractApiError(err, t("settings.toast.gitlab_error")),
-          "error",
-        ),
+        showToast(apiError(err, t("settings.toast.gitlab_error")), "error"),
     });
   };
 

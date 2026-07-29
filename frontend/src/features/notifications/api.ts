@@ -3,7 +3,8 @@ import apiClient from "../../services/client";
 export interface NotificationItem {
   id: string;
   type: string;
-  message: string;
+  messageKey: string;
+  messageParams?: Record<string, string>;
   ticketId?: string;
   isRead: boolean;
   createdAt: string;
