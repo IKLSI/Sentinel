@@ -5,30 +5,33 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Services;
 
-public class TenantContext(IHttpContextAccessor httpContextAccessor) : ITenantContext
+public class TenantContext : ITenantContext
 {
-    public Guid? OrganizationId => ReadGuidClaim(ClaimNames.OrganizationId);
+    public Guid? OrganizationId { get; }
 
-    public Guid? UserId => ReadGuidClaim(ClaimNames.UserId);
+    public Guid? UserId { get; }
 
-    public string? Jti => ReadClaim(JwtRegisteredClaimNames.Jti);
+    public string? Jti { get; }
 
-    public DateTime? TokenExpiresAtUtc =>
-        long.TryParse(ReadClaim(JwtRegisteredClaimNames.Exp), out long expSeconds)
-            ? DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime
-            : null;
+    public DateTime? TokenExpiresAtUtc { get; }
 
     public bool IsSet => OrganizationId.HasValue;
 
-    private Guid? ReadGuidClaim(string claimType) =>
-        Guid.TryParse(ReadClaim(claimType), out Guid value) ? value : null;
-
-    private string? ReadClaim(string claimType)
+    public TenantContext(IHttpContextAccessor httpContextAccessor)
     {
         ClaimsPrincipal? user = httpContextAccessor.HttpContext?.User;
 
-        if (user?.Identity?.IsAuthenticated != true) return null;
+        if (user?.Identity?.IsAuthenticated != true) return;
 
-        return user.FindFirst(claimType)?.Value;
+        if (Guid.TryParse(user.FindFirst(ClaimNames.OrganizationId)?.Value, out Guid organizationId))
+            OrganizationId = organizationId;
+
+        if (Guid.TryParse(user.FindFirst(ClaimNames.UserId)?.Value, out Guid userId))
+            UserId = userId;
+
+        Jti = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+        if (long.TryParse(user.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
+            TokenExpiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
     }
 }

@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState, useRef, useEffect, useId } from "react";
+import { useEffect, useId, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -8,6 +10,8 @@ import { useForgotPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
+import { forgotPasswordSchema, type ForgotPasswordFormValues } from "../schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -21,28 +25,30 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const { showToast } = useToast();
   const t = useT();
   const apiError = useApiError();
-  const [email, setEmail] = useState("");
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    reset,
+    setFocus,
+    formState: { errors },
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
   const forgotPasswordMutation = useForgotPasswordMutation();
   const loading = forgotPasswordMutation.isPending;
-  const [done, setDone] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
   const emailId = useId();
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setEmail("");
-      setDone(false);
-      setTimeout(() => emailRef.current?.focus(), 150);
+      reset({ email: "" });
+      setTimeout(() => setFocus("email"), 150);
     }
-  }, [open]);
+  }, [open, reset, setFocus]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) {
-      showToast(t("auth.forgot_password.error_email_required"), "warning");
-      return;
-    }
-    forgotPasswordMutation.mutate(email, {
+  const onSubmit = handleFormSubmit((data) => {
+    forgotPasswordMutation.mutate(data.email, {
       onSuccess: () => setDone(true),
       onError: (err) =>
         showToast(
@@ -50,7 +56,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           "error",
         ),
     });
-  };
+  });
 
   return (
     <Dialog
@@ -181,7 +187,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </button>
           </Box>
         ) : (
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={onSubmit} noValidate>
             <Box
               className="lp-field"
               sx={{ animation: "none !important", opacity: "1 !important" }}
@@ -191,15 +197,17 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               </Box>
               <input
                 id={emailId}
-                ref={emailRef}
                 type="email"
-                className="lp-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className={`lp-input${errors.email ? " lp-input--error" : ""}`}
                 placeholder={t("auth.forgot_password.email_placeholder")}
                 autoComplete="email"
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <Box className="lp-field-error">
+                  {resolveFieldError(errors.email, t)}
+                </Box>
+              )}
             </Box>
 
             <button

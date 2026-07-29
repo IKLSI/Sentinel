@@ -1,5 +1,7 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -31,14 +33,17 @@ import {
   EMPTY_CREATE_TICKET_FORM,
   PRIORITY_ORDER,
 } from "./helpers";
+import {
+  createTicketSchema,
+  type CreateTicketFormValues,
+  editTicketSchema,
+  type EditTicketFormValues,
+} from "./schemas";
 import { TicketsToolbar } from "./components/TicketsToolbar";
 import { TicketsTable, type SortState } from "./components/TicketsTable";
 import { Pagination } from "./components/Pagination";
 import { CreateTicketModal } from "./components/CreateTicketModal";
-import {
-  EditTicketModal,
-  type EditFormState,
-} from "./components/EditTicketModal";
+import { EditTicketModal } from "./components/EditTicketModal";
 import { useApiError } from "@/hooks/useApiError";
 import { SortDirection } from "@/types/enums";
 
@@ -63,26 +68,39 @@ export const TicketsPage: React.FC = () => {
     reference: string;
   } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateTicketPayload>(
-    EMPTY_CREATE_TICKET_FORM,
-  );
+  const {
+    register: createRegister,
+    handleSubmit: handleCreateSubmit,
+    control: createControl,
+    reset: resetCreateForm,
+  } = useForm<CreateTicketFormValues>({
+    resolver: zodResolver(createTicketSchema),
+    defaultValues: { ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 },
+  });
   const [createAnother, setCreateAnother] = useState(false);
-  const [createEstMinutes, setCreateEstMinutes] = useState(0);
   const { data: projectsData } = useProjects();
   const modalProjects = projectsData ?? [];
   const { users: modalUsers } = useUsers();
   const { data: statusesData } = useTicketStatuses();
   const statuses: TicketStatusDef[] = statusesData ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
-  const [editForm, setEditForm] = useState<EditFormState>({
-    title: "",
-    description: "",
-    priority: "medium",
-    type: "bug",
-    status: "",
-    projectId: "",
-    assignedToId: "",
-    estimatedMinutes: 0,
+  const {
+    register: editRegister,
+    handleSubmit: handleEditSubmit,
+    control: editControl,
+    reset: resetEditForm,
+  } = useForm<EditTicketFormValues>({
+    resolver: zodResolver(editTicketSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "medium",
+      type: "bug",
+      status: "",
+      projectId: "",
+      assignedToId: "",
+      estimatedMinutes: 0,
+    },
   });
   const [sort, setSort] = useState<SortState | null>({
     col: "priority",
@@ -117,22 +135,25 @@ export const TicketsPage: React.FC = () => {
   };
 
   const openCreateModal = useCallback(() => {
-    setCreateForm(EMPTY_CREATE_TICKET_FORM);
-    setCreateEstMinutes(0);
+    resetCreateForm({ ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 });
     setShowCreateModal(true);
-  }, []);
+  }, [resetCreateForm]);
 
-  const handleCreate = () => {
-    if (!createForm.title.trim()) return;
-    const payload: CreateTicketPayload = { ...createForm };
-    if (!payload.projectId) delete payload.projectId;
-    if (!payload.assignedToId) delete payload.assignedToId;
-    if (createEstMinutes > 0) payload.estimatedHours = createEstMinutes / 60;
+  const handleCreate = handleCreateSubmit((data) => {
+    const payload: CreateTicketPayload = {
+      title: data.title,
+      description: data.description,
+      priority: data.priority,
+      type: data.type,
+    };
+    if (data.projectId) payload.projectId = data.projectId;
+    if (data.assignedToId) payload.assignedToId = data.assignedToId;
+    if (data.estimatedMinutes > 0)
+      payload.estimatedHours = data.estimatedMinutes / 60;
     createTicketMutation.mutate(payload as unknown as Partial<Ticket>, {
       onSuccess: (created) => {
         if (createAnother) {
-          setCreateForm(EMPTY_CREATE_TICKET_FORM);
-          setCreateEstMinutes(0);
+          resetCreateForm({ ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 });
           showToast(
             t("tickets.list.create_success", { reference: created.reference }),
             "success",
@@ -145,24 +166,27 @@ export const TicketsPage: React.FC = () => {
       onError: (err) =>
         showToast(apiError(err, t("tickets.list.create_error")), "error"),
     });
-  };
+  });
 
-  const openEditModal = useCallback((ticket: Ticket) => {
-    setEditForm({
-      title: ticket.title,
-      description: ticket.description ?? "",
-      priority: ticket.priority,
-      type: ticket.type,
-      status: ticket.statusId,
-      projectId: ticket.projectId ?? "",
-      assignedToId: ticket.assignee?.id ?? "",
-      estimatedMinutes:
-        ticket.estimatedHours != null
-          ? Math.round(ticket.estimatedHours * 60)
-          : 0,
-    });
-    setEditTarget(ticket);
-  }, []);
+  const openEditModal = useCallback(
+    (ticket: Ticket) => {
+      resetEditForm({
+        title: ticket.title,
+        description: ticket.description ?? "",
+        priority: ticket.priority,
+        type: ticket.type,
+        status: ticket.statusId,
+        projectId: ticket.projectId ?? "",
+        assignedToId: ticket.assignee?.id ?? "",
+        estimatedMinutes:
+          ticket.estimatedHours != null
+            ? Math.round(ticket.estimatedHours * 60)
+            : 0,
+      });
+      setEditTarget(ticket);
+    },
+    [resetEditForm],
+  );
 
   const toggleSort = useCallback((col: string) => {
     setSort((s) => {
@@ -176,34 +200,34 @@ export const TicketsPage: React.FC = () => {
     setDeleteTarget({ id, reference });
   }, []);
 
-  const handleEdit = async () => {
+  const handleEdit = handleEditSubmit(async (data) => {
     if (!editTarget) return;
     const payload: Record<string, unknown> = {
-      title: editForm.title,
-      description: editForm.description,
-      priority: editForm.priority,
-      type: editForm.type,
+      title: data.title,
+      description: data.description,
+      priority: data.priority,
+      type: data.type,
     };
-    if (editForm.projectId) payload.projectId = editForm.projectId;
-    if (editForm.assignedToId) payload.assignedToId = editForm.assignedToId;
-    if (editForm.estimatedMinutes > 0)
-      payload.estimatedHours = editForm.estimatedMinutes / 60;
+    if (data.projectId) payload.projectId = data.projectId;
+    if (data.assignedToId) payload.assignedToId = data.assignedToId;
+    if (data.estimatedMinutes > 0)
+      payload.estimatedHours = data.estimatedMinutes / 60;
     try {
       await updateTicketMutation.mutateAsync({
         id: editTarget.id,
         data: payload as Partial<Ticket>,
       });
-      if (editForm.status && editForm.status !== editTarget.statusId) {
+      if (data.status && data.status !== editTarget.statusId) {
         await changeStatusMutation.mutateAsync({
           ticketId: editTarget.id,
-          statusId: editForm.status,
+          statusId: data.status,
         });
       }
       setEditTarget(null);
     } catch (err) {
       showToast(apiError(err, t("tickets.list.edit_error")), "error");
     }
-  };
+  });
 
   const handleDelete = () => {
     if (!deleteTarget) return;
@@ -351,10 +375,8 @@ export const TicketsPage: React.FC = () => {
       <CreateTicketModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        form={createForm}
-        onFormChange={setCreateForm}
-        estMinutes={createEstMinutes}
-        onEstMinutesChange={setCreateEstMinutes}
+        register={createRegister}
+        control={createControl}
         projects={modalProjects}
         users={modalUsers}
         submitting={createSubmitting}
@@ -366,8 +388,8 @@ export const TicketsPage: React.FC = () => {
       <EditTicketModal
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
-        form={editForm}
-        onFormChange={setEditForm}
+        register={editRegister}
+        control={editControl}
         projects={modalProjects}
         statuses={statuses}
         users={modalUsers}

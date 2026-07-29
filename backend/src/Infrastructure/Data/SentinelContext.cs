@@ -138,6 +138,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<EmailVerificationToken>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
             entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
             entity.HasIndex(e => e.TokenHash).IsUnique();
@@ -201,6 +202,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<PasswordResetToken>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
             entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
             entity.HasIndex(e => e.TokenHash).IsUnique();

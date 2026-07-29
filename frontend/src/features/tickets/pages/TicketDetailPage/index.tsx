@@ -33,6 +33,7 @@ import { EditCommentModal } from "./components/EditCommentModal";
 import { useApiError } from "@/hooks/useApiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
 import { Theme } from "@/types/enums";
+import { commentContentSchema } from "./schemas";
 
 const routeApi = getRouteApi("/_authenticated/tickets/$id");
 
@@ -94,7 +95,7 @@ export const TicketDetailPage: React.FC = () => {
   }, [ticket, endpointMatch]);
 
   const handleAddComment = (content: string) => {
-    if (!ticket || !content.trim()) return;
+    if (!ticket || !commentContentSchema.safeParse(content).success) return;
     addCommentMutation.mutate(content, {
       onSuccess: () => {
         setComposerValue("");
@@ -109,7 +110,12 @@ export const TicketDetailPage: React.FC = () => {
   };
 
   const handleEditComment = () => {
-    if (!ticket || !editCommentTarget || !editCommentValue.trim()) return;
+    if (
+      !ticket ||
+      !editCommentTarget ||
+      !commentContentSchema.safeParse(editCommentValue).success
+    )
+      return;
     updateCommentMutation.mutate(
       { commentId: editCommentTarget.id, content: editCommentValue },
       {

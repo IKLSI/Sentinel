@@ -23,6 +23,10 @@ public class ErrorHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogDebug("Requête {Path} annulée par le client", context.Request.Path);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Une erreur inattendue s'est produite lors du traitement de {Path}", context.Request.Path);

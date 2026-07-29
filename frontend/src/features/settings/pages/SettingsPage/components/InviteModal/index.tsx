@@ -1,5 +1,7 @@
 import type React from "react";
-import { useId, useState } from "react";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import EmailOutlined from "@mui/icons-material/EmailOutlined";
@@ -11,6 +13,8 @@ import { useInviteUser } from "@/features/users/hooks/useUsers";
 import { UserRole } from "@/types/enums";
 import { inp } from "../../helpers";
 import { useApiError } from "@/hooks/useApiError";
+import { inviteUserSchema, type InviteUserFormValues } from "./schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 interface Props {
   open: boolean;
@@ -23,25 +27,25 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   const apiError = useApiError();
   const formId = useId();
 
-  const [inv, setInv] = useState<{ email: string; role: UserRole }>({
-    email: "",
-    role: UserRole.Developer,
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InviteUserFormValues>({
+    resolver: zodResolver(inviteUserSchema),
+    defaultValues: { email: "", role: UserRole.Developer },
   });
   const inviteMutation = useInviteUser();
   const submitting = inviteMutation.isPending;
 
   const handleClose = () => {
     onClose();
-    setInv({ email: "", role: UserRole.Developer as UserRole });
+    reset({ email: "", role: UserRole.Developer });
   };
 
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inv.email) {
-      showToast(t("settings.toast.required_fields"), "warning");
-      return;
-    }
-    inviteMutation.mutate(inv, {
+  const handleInvite = handleFormSubmit((data) => {
+    inviteMutation.mutate(data, {
       onSuccess: () => {
         showToast(t("settings.toast.invite_sent"), "success");
         handleClose();
@@ -49,7 +53,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
       onError: (err) =>
         showToast(apiError(err, t("settings.toast.invite_error")), "error"),
     });
-  };
+  });
 
   return (
     <AppModal
@@ -71,7 +75,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
             size="small"
             type="submit"
             form={formId}
-            disabled={submitting || !inv.email.trim()}
+            disabled={submitting}
             sx={{
               textTransform: "none",
               background:
@@ -96,6 +100,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
         component="form"
         id={formId}
         onSubmit={handleInvite}
+        noValidate
         sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
         <Box
@@ -175,12 +180,16 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
               component="input"
               type="email"
               sx={{ ...inp, py: "9px", px: "12px", fontSize: "13px" }}
-              value={inv.email}
               placeholder={t("settings.invite.email_placeholder")}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setInv((f) => ({ ...f, email: e.target.value }))
-              }
+              {...register("email")}
             />
+            {errors.email && (
+              <Box
+                sx={{ mt: "6px", fontSize: "11.5px", color: "var(--red)" }}
+              >
+                {resolveFieldError(errors.email, t)}
+              </Box>
+            )}
           </Box>
 
           <Box>
@@ -222,10 +231,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
                     boxShadow: "0 0 0 3px var(--accent-subtle)",
                   },
                 }}
-                value={inv.role}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setInv((f) => ({ ...f, role: e.target.value as UserRole }))
-                }
+                {...register("role")}
               >
                 <option value={UserRole.Admin}>
                   {t("settings.role.admin")}

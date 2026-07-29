@@ -1,5 +1,7 @@
 import type React from "react";
 import { useCallback, useId, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -20,6 +22,7 @@ import {
   useRevokeApiKey,
 } from "@/features/settings/hooks/useApiKeys";
 import { FieldLabel, inp } from "../../helpers";
+import { createApiKeySchema, type CreateApiKeyFormValues } from "./schemas";
 
 const BTN_SX = {
   textTransform: "none" as const,
@@ -59,8 +62,16 @@ export const ApiKeysTab: React.FC = () => {
   const revoking = revokeKeyMutation.isPending;
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    reset,
+    formState: { isValid },
+  } = useForm<CreateApiKeyFormValues>({
+    resolver: zodResolver(createApiKeySchema),
+    mode: "onChange",
+    defaultValues: { name: "", expiresAt: "" },
+  });
 
   const [secretKey, setSecretKey] = useState<CreatedApiKey | null>(null);
   const [copied, setCopied] = useState(false);
@@ -82,16 +93,13 @@ export const ApiKeysTab: React.FC = () => {
     });
   }, []);
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+  const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
-      { name: name.trim(), expiresAt: expiresAt || null },
+      { name: data.name.trim(), expiresAt: data.expiresAt || null },
       {
         onSuccess: (created) => {
           setCreateOpen(false);
-          setName("");
-          setExpiresAt("");
+          reset({ name: "", expiresAt: "" });
           setSecretKey(created);
         },
         onError: (err) =>
@@ -101,7 +109,7 @@ export const ApiKeysTab: React.FC = () => {
           ),
       },
     );
-  };
+  });
 
   const handleRevoke = () => {
     if (!revokeTarget) return;
@@ -454,8 +462,7 @@ export const ApiKeysTab: React.FC = () => {
         open={createOpen}
         onClose={() => {
           setCreateOpen(false);
-          setName("");
-          setExpiresAt("");
+          reset({ name: "", expiresAt: "" });
         }}
         title={t("settings.api_keys.modal_title")}
         maxWidth="xs"
@@ -467,8 +474,7 @@ export const ApiKeysTab: React.FC = () => {
               className="btn-cancel"
               onClick={() => {
                 setCreateOpen(false);
-                setName("");
-                setExpiresAt("");
+                reset({ name: "", expiresAt: "" });
               }}
             >
               {t("settings.api_keys.modal_cancel")}
@@ -478,7 +484,7 @@ export const ApiKeysTab: React.FC = () => {
               size="small"
               type="submit"
               form={formId}
-              disabled={creating || !name.trim()}
+              disabled={creating || !isValid}
               sx={BTN_SX}
             >
               {creating
@@ -492,6 +498,7 @@ export const ApiKeysTab: React.FC = () => {
           component="form"
           id={formId}
           onSubmit={handleCreate}
+          noValidate
           sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
         >
           <Box>
@@ -499,12 +506,9 @@ export const ApiKeysTab: React.FC = () => {
             <Box
               component="input"
               autoFocus
-              value={name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setName(e.target.value)
-              }
               placeholder={t("settings.api_keys.modal_name_placeholder")}
               sx={inp}
+              {...register("name")}
             />
           </Box>
           <Box>
@@ -514,12 +518,9 @@ export const ApiKeysTab: React.FC = () => {
             <Box
               component="input"
               type="date"
-              value={expiresAt}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setExpiresAt(e.target.value)
-              }
               min={new Date().toISOString().split("T")[0]}
               sx={{ ...inp, colorScheme: "dark" }}
+              {...register("expiresAt")}
             />
           </Box>
         </Box>

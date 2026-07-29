@@ -1,4 +1,6 @@
 import type React from "react";
+import type { Control, UseFormRegister } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -9,23 +11,13 @@ import { useT } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import type { TicketStatusDef, User } from "@/types";
 import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
-
-export interface EditFormState {
-  title: string;
-  description: string;
-  priority: string;
-  type: string;
-  status: string;
-  projectId: string;
-  assignedToId: string;
-  estimatedMinutes: number;
-}
+import type { EditTicketFormValues } from "../../schemas";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  form: EditFormState;
-  onFormChange: (updater: (f: EditFormState) => EditFormState) => void;
+  register: UseFormRegister<EditTicketFormValues>;
+  control: Control<EditTicketFormValues>;
   projects: ProjectDto[];
   statuses: TicketStatusDef[];
   users: User[];
@@ -55,8 +47,8 @@ const Label: React.FC<{ children: React.ReactNode; mb?: string }> = ({
 export const EditTicketModal: React.FC<Props> = ({
   open,
   onClose,
-  form,
-  onFormChange,
+  register,
+  control,
   projects,
   statuses,
   users,
@@ -98,7 +90,7 @@ export const EditTicketModal: React.FC<Props> = ({
               },
             }}
             onClick={onSubmit}
-            disabled={!form.title.trim() || saving}
+            disabled={saving}
           >
             {saving ? (
               <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
@@ -121,11 +113,8 @@ export const EditTicketModal: React.FC<Props> = ({
             component="input"
             autoFocus
             type="text"
-            value={form.title}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onFormChange((f) => ({ ...f, title: e.target.value }))
-            }
             sx={modalInputSx}
+            {...register("title")}
           />
         </Box>
         <Box
@@ -135,11 +124,8 @@ export const EditTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_priority")}</Label>
             <Box
               component="select"
-              value={form.priority}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, priority: e.target.value }))
-              }
               sx={modalSelectSx}
+              {...register("priority")}
             >
               <option value="critical">
                 {t("tickets.list.priority_critical")}
@@ -153,14 +139,7 @@ export const EditTicketModal: React.FC<Props> = ({
           </Box>
           <Box>
             <Label>{t("tickets.list.field_status")}</Label>
-            <Box
-              component="select"
-              value={form.status}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, status: e.target.value }))
-              }
-              sx={modalSelectSx}
-            >
+            <Box component="select" sx={modalSelectSx} {...register("status")}>
               {statuses.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -174,14 +153,7 @@ export const EditTicketModal: React.FC<Props> = ({
         >
           <Box>
             <Label>{t("tickets.list.field_type")}</Label>
-            <Box
-              component="select"
-              value={form.type}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, type: e.target.value }))
-              }
-              sx={modalSelectSx}
-            >
+            <Box component="select" sx={modalSelectSx} {...register("type")}>
               <option value="bug">{t("tickets.list.type_bug")}</option>
               <option value="feature">{t("tickets.list.type_feature")}</option>
               <option value="security">
@@ -202,11 +174,8 @@ export const EditTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_project")}</Label>
             <Box
               component="select"
-              value={form.projectId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, projectId: e.target.value }))
-              }
               sx={modalSelectSx}
+              {...register("projectId")}
             >
               <option value="">{t("tickets.list.unassigned")}</option>
               {projects.map((p) => (
@@ -224,11 +193,8 @@ export const EditTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_assignee")}</Label>
             <Box
               component="select"
-              value={form.assignedToId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({ ...f, assignedToId: e.target.value }))
-              }
               sx={modalSelectSx}
+              {...register("assignedToId")}
             >
               <option value="">{t("tickets.list.unassigned")}</option>
               {users.map((u) => (
@@ -285,12 +251,16 @@ export const EditTicketModal: React.FC<Props> = ({
                 </Box>
               </Tooltip>
             </Box>
-            <DurationPicker
-              value={form.estimatedMinutes}
-              onChange={(v) =>
-                onFormChange((f) => ({ ...f, estimatedMinutes: v }))
-              }
-              width="100%"
+            <Controller
+              name="estimatedMinutes"
+              control={control}
+              render={({ field }) => (
+                <DurationPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  width="100%"
+                />
+              )}
             />
           </Box>
         </Box>
@@ -299,11 +269,8 @@ export const EditTicketModal: React.FC<Props> = ({
           <Box
             component="textarea"
             rows={5}
-            value={form.description}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              onFormChange((f) => ({ ...f, description: e.target.value }))
-            }
             sx={modalTextareaSx}
+            {...register("description")}
           />
         </Box>
       </Box>

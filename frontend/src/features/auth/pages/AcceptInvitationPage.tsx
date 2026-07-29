@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
@@ -10,6 +12,11 @@ import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
+import {
+  acceptInvitationSchema,
+  type AcceptInvitationFormValues,
+} from "../schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/accept-invitation");
 
@@ -38,18 +45,20 @@ export const AcceptInvitationPage: React.FC = () => {
     },
   ];
 
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    password: "",
-    confirm: "",
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    setFocus,
+    formState: { errors },
+  } = useForm<AcceptInvitationFormValues>({
+    resolver: zodResolver(acceptInvitationSchema),
+    defaultValues: { firstName: "", lastName: "", password: "", confirm: "" },
   });
   const [showPassword, setShowPassword] = useState(false);
   const acceptInvitationMutation = useAcceptInvitation();
   const loading = acceptInvitationMutation.isPending;
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const firstNameRef = useRef<HTMLInputElement>(null);
   const firstNameId = useId();
   const lastNameId = useId();
   const passwordId = useId();
@@ -62,48 +71,16 @@ export const AcceptInvitationPage: React.FC = () => {
   }, [token, navigate]);
 
   useEffect(() => {
-    if (mounted) setTimeout(() => firstNameRef.current?.focus(), 700);
-  }, [mounted]);
+    if (mounted) setTimeout(() => setFocus("firstName"), 700);
+  }, [mounted, setFocus]);
 
-  const set =
-    (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((f) => ({ ...f, [field]: e.target.value }));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.firstName.trim()) {
-      showToast(
-        t("auth.accept_invitation.error_firstname_required"),
-        "warning",
-      );
-      return;
-    }
-    if (
-      form.password.length < 12 ||
-      !/[a-z]/.test(form.password) ||
-      !/[A-Z]/.test(form.password) ||
-      !/\d/.test(form.password) ||
-      !/[^A-Za-z0-9]/.test(form.password)
-    ) {
-      showToast(
-        t("auth.accept_invitation.error_password_min_length"),
-        "warning",
-      );
-      return;
-    }
-    if (form.password !== form.confirm) {
-      showToast(
-        t("auth.accept_invitation.error_passwords_mismatch"),
-        "warning",
-      );
-      return;
-    }
+  const onSubmit = handleFormSubmit((data) => {
     acceptInvitationMutation.mutate(
       {
         token,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        password: form.password,
+        firstName: data.firstName,
+        lastName: data.lastName ?? "",
+        password: data.password,
       },
       {
         onSuccess: () => {
@@ -117,9 +94,7 @@ export const AcceptInvitationPage: React.FC = () => {
           ),
       },
     );
-  };
-
-  const isValid = form.firstName.trim() && form.password && form.confirm;
+  });
 
   return (
     <Box className="aip-root">
@@ -208,7 +183,7 @@ export const AcceptInvitationPage: React.FC = () => {
                   </Box>
                 </Box>
 
-                <form onSubmit={handleSubmit} noValidate>
+                <form onSubmit={onSubmit} noValidate>
                   <Box className="lp-field aip-row">
                     <Box>
                       <Box
@@ -221,17 +196,19 @@ export const AcceptInvitationPage: React.FC = () => {
                       </Box>
                       <input
                         id={firstNameId}
-                        ref={firstNameRef}
                         type="text"
-                        className="lp-input"
-                        value={form.firstName}
-                        onChange={set("firstName")}
+                        className={`lp-input${errors.firstName ? " lp-input--error" : ""}`}
                         placeholder={t(
                           "auth.accept_invitation.firstname_placeholder",
                         )}
                         autoComplete="given-name"
-                        required
+                        {...register("firstName")}
                       />
+                      {errors.firstName && (
+                        <Box className="lp-field-error">
+                          {resolveFieldError(errors.firstName, t)}
+                        </Box>
+                      )}
                     </Box>
                     <Box>
                       <Box
@@ -245,12 +222,11 @@ export const AcceptInvitationPage: React.FC = () => {
                         id={lastNameId}
                         type="text"
                         className="lp-input"
-                        value={form.lastName}
-                        onChange={set("lastName")}
                         placeholder={t(
                           "auth.accept_invitation.lastname_placeholder",
                         )}
                         autoComplete="family-name"
+                        {...register("lastName")}
                       />
                     </Box>
                   </Box>
@@ -269,15 +245,13 @@ export const AcceptInvitationPage: React.FC = () => {
                         component="input"
                         id={passwordId}
                         type={showPassword ? "text" : "password"}
-                        className="lp-input"
-                        value={form.password}
-                        onChange={set("password")}
+                        className={`lp-input${errors.password ? " lp-input--error" : ""}`}
                         placeholder={t(
                           "auth.accept_invitation.password_placeholder",
                         )}
                         autoComplete="new-password"
                         sx={{ paddingRight: "44px" }}
-                        required
+                        {...register("password")}
                       />
                       <button
                         type="button"
@@ -297,6 +271,11 @@ export const AcceptInvitationPage: React.FC = () => {
                         )}
                       </button>
                     </Box>
+                    {errors.password && (
+                      <Box className="lp-field-error">
+                        {resolveFieldError(errors.password, t)}
+                      </Box>
+                    )}
                   </Box>
 
                   <Box className="lp-field">
@@ -313,22 +292,25 @@ export const AcceptInvitationPage: React.FC = () => {
                         component="input"
                         id={confirmId}
                         type={showPassword ? "text" : "password"}
-                        className="lp-input"
-                        value={form.confirm}
-                        onChange={set("confirm")}
+                        className={`lp-input${errors.confirm ? " lp-input--error" : ""}`}
                         placeholder={t(
                           "auth.accept_invitation.confirm_placeholder",
                         )}
                         autoComplete="new-password"
-                        required
+                        {...register("confirm")}
                       />
                     </Box>
+                    {errors.confirm && (
+                      <Box className="lp-field-error">
+                        {resolveFieldError(errors.confirm, t)}
+                      </Box>
+                    )}
                   </Box>
 
                   <button
                     type="submit"
                     className="lp-submit"
-                    disabled={loading || !isValid}
+                    disabled={loading}
                     style={{ marginTop: "24px" }}
                   >
                     {loading ? (

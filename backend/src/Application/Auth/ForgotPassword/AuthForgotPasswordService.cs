@@ -48,6 +48,7 @@ public class AuthForgotPasswordService(
 
         PasswordResetToken resetToken = new PasswordResetToken
         {
+            UserId = user.Id,
             Email = email,
             TokenHash = SecureToken.Hash(rawToken),
             ExpiresAt = DateTime.UtcNow.AddHours(TokenValidityHours)

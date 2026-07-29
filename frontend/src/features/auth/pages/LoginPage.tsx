@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../../../hooks/useToast";
@@ -13,6 +15,8 @@ import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { RegisterModal } from "./RegisterModal";
+import { loginSchema, type LoginFormValues } from "../schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -21,8 +25,18 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const t = useT();
   const apiError = useApiError();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    getValues,
+    setFocus,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+  const emailField = register("email");
+  const passwordField = register("password");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -30,7 +44,6 @@ export const LoginPage: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
   const emailId = useId();
   const passwordId = useId();
 
@@ -40,18 +53,13 @@ export const LoginPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (mounted) setTimeout(() => emailRef.current?.focus(), 700);
-  }, [mounted]);
+    if (mounted) setTimeout(() => setFocus("email"), 700);
+  }, [mounted, setFocus]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      showToast(t("auth.login.fill_all_fields"), "warning");
-      return;
-    }
+  const onSubmit = handleFormSubmit(async (data) => {
     setLoading(true);
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       navigate({ to: ROUTES.HOME });
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
@@ -66,9 +74,10 @@ export const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   const handleResend = () => {
+    const email = getValues("email");
     if (!email) {
       showToast(t("auth.login.email_required_for_resend"), "warning");
       return;
@@ -220,7 +229,7 @@ export const LoginPage: React.FC = () => {
             </Box>
 
             <form
-              onSubmit={handleSubmit}
+              onSubmit={onSubmit}
               noValidate
               style={{ marginTop: "30px" }}
             >
@@ -230,18 +239,21 @@ export const LoginPage: React.FC = () => {
                 </Box>
                 <input
                   id={emailId}
-                  ref={emailRef}
                   type="email"
-                  className={`lp-input${hasError ? " lp-input--error" : ""}`}
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setHasError(false);
-                  }}
+                  className={`lp-input${hasError || errors.email ? " lp-input--error" : ""}`}
                   placeholder={t("auth.login.email_placeholder")}
                   autoComplete="email"
-                  required
+                  {...emailField}
+                  onChange={(e) => {
+                    emailField.onChange(e);
+                    setHasError(false);
+                  }}
                 />
+                {errors.email && (
+                  <Box className="lp-field-error">
+                    {resolveFieldError(errors.email, t)}
+                  </Box>
+                )}
               </Box>
 
               <Box className="lp-field">
@@ -257,16 +269,15 @@ export const LoginPage: React.FC = () => {
                     component="input"
                     id={passwordId}
                     type={showPassword ? "text" : "password"}
-                    className={`lp-input${hasError ? " lp-input--error" : ""}`}
-                    value={password}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setPassword(e.target.value);
-                      setHasError(false);
-                    }}
+                    className={`lp-input${hasError || errors.password ? " lp-input--error" : ""}`}
                     placeholder="••••••••••"
                     autoComplete="current-password"
                     sx={{ paddingRight: "44px" }}
-                    required
+                    {...passwordField}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      passwordField.onChange(e);
+                      setHasError(false);
+                    }}
                   />
                   <button
                     type="button"
@@ -286,6 +297,11 @@ export const LoginPage: React.FC = () => {
                     )}
                   </button>
                 </Box>
+                {errors.password && (
+                  <Box className="lp-field-error">
+                    {resolveFieldError(errors.password, t)}
+                  </Box>
+                )}
               </Box>
 
               <button

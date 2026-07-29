@@ -62,6 +62,8 @@ public static class Program
         app.UseMiddleware<ETagMiddleware>();
         app.UseSerilogRequestLogging(options =>
         {
+            options.GetLevel = GetRequestLoggingLevel;
+
             options.EnrichDiagnosticContext = (diagCtx, httpCtx) =>
             {
                 if (httpCtx.Items.TryGetValue(CorrelationIdMiddleware.HeaderName, out object? cid)
@@ -121,5 +123,17 @@ public static class Program
         app.MapHub<NotificationHub>("/hubs/notifications");
 
         app.Run();
+    }
+
+    private static Serilog.Events.LogEventLevel GetRequestLoggingLevel(HttpContext httpContext, double elapsedMs, Exception? exception)
+    {
+        bool isClientCancellation = exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested;
+        if (isClientCancellation)
+        {
+            return Serilog.Events.LogEventLevel.Debug;
+        }
+
+        bool isServerError = exception is not null || httpContext.Response.StatusCode > 499;
+        return isServerError ? Serilog.Events.LogEventLevel.Error : Serilog.Events.LogEventLevel.Information;
     }
 }

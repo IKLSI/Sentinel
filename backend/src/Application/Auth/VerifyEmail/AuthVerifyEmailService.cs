@@ -37,7 +37,7 @@ public class AuthVerifyEmailService(
         if (verificationToken == null)
             return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
 
-        User? user = await userRepository.GetOrDefaultByEmailAsync(verificationToken.Email,
+        User? user = await userRepository.GetOrDefaultAsync(verificationToken.UserId,
             QueryTracking.Tracked, cancellationToken);
 
         if (user == null)

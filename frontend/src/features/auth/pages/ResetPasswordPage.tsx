@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
@@ -10,6 +12,8 @@ import { SentinelLogo } from "../../../layouts/SentinelLogo";
 import { useT } from "../../../i18n/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
+import { resetPasswordSchema, type ResetPasswordFormValues } from "../schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/reset-password");
 
@@ -20,14 +24,20 @@ export const ResetPasswordPage: React.FC = () => {
   const t = useT();
   const apiError = useApiError();
 
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    setFocus,
+    formState: { errors },
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: "", confirm: "" },
+  });
   const [showPassword, setShowPassword] = useState(false);
   const resetPasswordMutation = useResetPasswordMutation();
   const loading = resetPasswordMutation.isPending;
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const passwordRef = useRef<HTMLInputElement>(null);
   const glowId = useId();
   const passwordId = useId();
   const confirmId = useId();
@@ -39,27 +49,12 @@ export const ResetPasswordPage: React.FC = () => {
   }, [token, navigate]);
 
   useEffect(() => {
-    if (mounted) setTimeout(() => passwordRef.current?.focus(), 700);
-  }, [mounted]);
+    if (mounted) setTimeout(() => setFocus("password"), 700);
+  }, [mounted, setFocus]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      password.length < 12 ||
-      !/[a-z]/.test(password) ||
-      !/[A-Z]/.test(password) ||
-      !/\d/.test(password) ||
-      !/[^A-Za-z0-9]/.test(password)
-    ) {
-      showToast(t("auth.reset_password.error_password_min_length"), "warning");
-      return;
-    }
-    if (password !== confirm) {
-      showToast(t("auth.reset_password.error_passwords_mismatch"), "warning");
-      return;
-    }
+  const onSubmit = handleFormSubmit((data) => {
     resetPasswordMutation.mutate(
-      { token, password },
+      { token, password: data.password },
       {
         onSuccess: () => {
           setDone(true);
@@ -72,7 +67,7 @@ export const ResetPasswordPage: React.FC = () => {
           ),
       },
     );
-  };
+  });
 
   return (
     <Box className="lp-root">
@@ -278,7 +273,7 @@ export const ResetPasswordPage: React.FC = () => {
                   </Box>
                 </Box>
 
-                <form onSubmit={handleSubmit} noValidate>
+                <form onSubmit={onSubmit} noValidate>
                   <Box className="lp-field">
                     <Box
                       component="label"
@@ -291,19 +286,14 @@ export const ResetPasswordPage: React.FC = () => {
                       <Box
                         component="input"
                         id={passwordId}
-                        ref={passwordRef}
                         type={showPassword ? "text" : "password"}
-                        className="lp-input"
-                        value={password}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setPassword(e.target.value)
-                        }
+                        className={`lp-input${errors.password ? " lp-input--error" : ""}`}
                         placeholder={t(
                           "auth.reset_password.password_placeholder",
                         )}
                         autoComplete="new-password"
                         sx={{ paddingRight: "44px" }}
-                        required
+                        {...register("password")}
                       />
                       <button
                         type="button"
@@ -323,6 +313,11 @@ export const ResetPasswordPage: React.FC = () => {
                         )}
                       </button>
                     </Box>
+                    {errors.password && (
+                      <Box className="lp-field-error">
+                        {resolveFieldError(errors.password, t)}
+                      </Box>
+                    )}
                   </Box>
 
                   <Box className="lp-field">
@@ -338,24 +333,25 @@ export const ResetPasswordPage: React.FC = () => {
                         component="input"
                         id={confirmId}
                         type={showPassword ? "text" : "password"}
-                        className="lp-input"
-                        value={confirm}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setConfirm(e.target.value)
-                        }
+                        className={`lp-input${errors.confirm ? " lp-input--error" : ""}`}
                         placeholder={t(
                           "auth.reset_password.confirm_placeholder",
                         )}
                         autoComplete="new-password"
-                        required
+                        {...register("confirm")}
                       />
                     </Box>
+                    {errors.confirm && (
+                      <Box className="lp-field-error">
+                        {resolveFieldError(errors.confirm, t)}
+                      </Box>
+                    )}
                   </Box>
 
                   <button
                     type="submit"
                     className="lp-submit"
-                    disabled={loading || !password || !confirm}
+                    disabled={loading}
                   >
                     {loading ? (
                       <Box className="lp-submit-loader" />

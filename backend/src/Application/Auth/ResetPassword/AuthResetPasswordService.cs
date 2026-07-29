@@ -38,7 +38,7 @@ public class AuthResetPasswordService(
         if (resetToken == null)
             return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidResetLink);
 
-        User? user = await userRepository.GetOrDefaultActiveByEmailAsync(resetToken.Email,
+        User? user = await userRepository.GetOrDefaultActiveAsync(resetToken.UserId,
             QueryTracking.Tracked, cancellationToken);
 
         if (user == null)

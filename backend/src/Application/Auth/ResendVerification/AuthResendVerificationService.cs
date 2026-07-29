@@ -48,6 +48,7 @@ public class AuthResendVerificationService(
 
         EmailVerificationToken verificationToken = new EmailVerificationToken
         {
+            UserId = user.Id,
             Email = email,
             TokenHash = SecureToken.Hash(rawToken),
             ExpiresAt = DateTime.UtcNow.AddHours(VerificationValidityHours)

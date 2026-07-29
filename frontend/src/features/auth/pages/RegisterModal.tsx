@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState, useRef, useEffect, useId } from "react";
+import { useState, useEffect, useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -13,11 +15,21 @@ import {
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
+import { registerSchema, type RegisterFormValues } from "../schemas";
+import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
 }
+
+const EMPTY_FORM: RegisterFormValues = {
+  organizationName: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+};
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
   open,
@@ -26,17 +38,22 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const { showToast } = useToast();
   const t = useT();
   const apiError = useApiError();
-  const [organizationName, setOrganizationName] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    getValues,
+    reset,
+    setFocus,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: EMPTY_FORM,
+  });
   const [showPassword, setShowPassword] = useState(false);
   const registerMutation = useRegisterMutation();
   const resendVerificationMutation = useResendVerificationMutation();
   const loading = registerMutation.isPending;
   const [done, setDone] = useState(false);
-  const orgRef = useRef<HTMLInputElement>(null);
   const orgId = useId();
   const firstNameId = useId();
   const lastNameId = useId();
@@ -45,35 +62,23 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
   useEffect(() => {
     if (open) {
-      setOrganizationName("");
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
+      reset(EMPTY_FORM);
       setShowPassword(false);
       setDone(false);
-      setTimeout(() => orgRef.current?.focus(), 150);
+      setTimeout(() => setFocus("organizationName"), 150);
     }
-  }, [open]);
+  }, [open, reset, setFocus]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!organizationName || !firstName || !lastName || !email || !password) {
-      showToast(t("auth.register.fill_all_fields"), "warning");
-      return;
-    }
-    registerMutation.mutate(
-      { organizationName, firstName, lastName, email, password },
-      {
-        onSuccess: () => setDone(true),
-        onError: (err) =>
-          showToast(apiError(err, t("auth.register.error_generic")), "error"),
-      },
-    );
-  };
+  const onSubmit = handleFormSubmit((data) => {
+    registerMutation.mutate(data, {
+      onSuccess: () => setDone(true),
+      onError: (err) =>
+        showToast(apiError(err, t("auth.register.error_generic")), "error"),
+    });
+  });
 
   const handleResend = () => {
-    resendVerificationMutation.mutate(email, {
+    resendVerificationMutation.mutate(getValues("email"), {
       onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
       onError: (err) =>
         showToast(apiError(err, t("auth.register.error_generic")), "error"),
@@ -228,22 +233,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </Box>
           </Box>
         ) : (
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={onSubmit} noValidate>
             <Box className="lp-field" sx={fieldStyle}>
               <Box component="label" className="lp-label" htmlFor={orgId}>
                 {t("auth.register.organization_label")}
               </Box>
               <input
                 id={orgId}
-                ref={orgRef}
                 type="text"
-                className="lp-input"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
+                className={`lp-input${errors.organizationName ? " lp-input--error" : ""}`}
                 placeholder={t("auth.register.organization_placeholder")}
                 autoComplete="organization"
-                required
+                {...register("organizationName")}
               />
+              {errors.organizationName && (
+                <Box className="lp-field-error">
+                  {resolveFieldError(errors.organizationName, t)}
+                </Box>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", gap: "12px" }}>
@@ -258,13 +265,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 <input
                   id={firstNameId}
                   type="text"
-                  className="lp-input"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  className={`lp-input${errors.firstName ? " lp-input--error" : ""}`}
                   placeholder={t("auth.register.firstname_placeholder")}
                   autoComplete="given-name"
-                  required
+                  {...register("firstName")}
                 />
+                {errors.firstName && (
+                  <Box className="lp-field-error">
+                    {resolveFieldError(errors.firstName, t)}
+                  </Box>
+                )}
               </Box>
               <Box className="lp-field" sx={{ flex: 1, ...fieldStyle }}>
                 <Box
@@ -277,13 +287,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 <input
                   id={lastNameId}
                   type="text"
-                  className="lp-input"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  className={`lp-input${errors.lastName ? " lp-input--error" : ""}`}
                   placeholder={t("auth.register.lastname_placeholder")}
                   autoComplete="family-name"
-                  required
+                  {...register("lastName")}
                 />
+                {errors.lastName && (
+                  <Box className="lp-field-error">
+                    {resolveFieldError(errors.lastName, t)}
+                  </Box>
+                )}
               </Box>
             </Box>
 
@@ -294,13 +307,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               <input
                 id={emailId}
                 type="email"
-                className="lp-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className={`lp-input${errors.email ? " lp-input--error" : ""}`}
                 placeholder={t("auth.register.email_placeholder")}
                 autoComplete="email"
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <Box className="lp-field-error">
+                  {resolveFieldError(errors.email, t)}
+                </Box>
+              )}
             </Box>
 
             <Box className="lp-field" sx={fieldStyle}>
@@ -312,15 +328,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   component="input"
                   id={passwordId}
                   type={showPassword ? "text" : "password"}
-                  className="lp-input"
-                  value={password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
-                  }
+                  className={`lp-input${errors.password ? " lp-input--error" : ""}`}
                   placeholder={t("auth.register.password_placeholder")}
                   autoComplete="new-password"
                   sx={{ paddingRight: "44px" }}
-                  required
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -340,6 +352,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   )}
                 </button>
               </Box>
+              {errors.password && (
+                <Box className="lp-field-error">
+                  {resolveFieldError(errors.password, t)}
+                </Box>
+              )}
             </Box>
 
             <button

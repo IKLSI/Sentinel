@@ -70,6 +70,7 @@ public class AuthRegisterService(
 
         EmailVerificationToken verificationToken = new EmailVerificationToken
         {
+            UserId = admin.Id,
             Email = email,
             TokenHash = SecureToken.Hash(rawToken),
             ExpiresAt = now.AddHours(VerificationValidityHours)

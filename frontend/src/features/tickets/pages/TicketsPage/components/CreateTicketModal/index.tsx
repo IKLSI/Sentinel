@@ -1,4 +1,6 @@
 import type React from "react";
+import type { Control, UseFormRegister } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -8,22 +10,14 @@ import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
 import type { User } from "@/types";
-import {
-  type CreateTicketPayload,
-  modalInputSx,
-  modalSelectSx,
-  modalTextareaSx,
-} from "../../helpers";
+import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
+import type { CreateTicketFormValues } from "../../schemas";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  form: CreateTicketPayload;
-  onFormChange: (
-    updater: (f: CreateTicketPayload) => CreateTicketPayload,
-  ) => void;
-  estMinutes: number;
-  onEstMinutesChange: (v: number) => void;
+  register: UseFormRegister<CreateTicketFormValues>;
+  control: Control<CreateTicketFormValues>;
   projects: ProjectDto[];
   users: User[];
   submitting: boolean;
@@ -54,10 +48,8 @@ const Label: React.FC<{ children: React.ReactNode; mb?: string }> = ({
 export const CreateTicketModal: React.FC<Props> = ({
   open,
   onClose,
-  form,
-  onFormChange,
-  estMinutes,
-  onEstMinutesChange,
+  register,
+  control,
   projects,
   users,
   submitting,
@@ -130,7 +122,7 @@ export const CreateTicketModal: React.FC<Props> = ({
               },
             }}
             onClick={onSubmit}
-            disabled={!form.title.trim() || submitting}
+            disabled={submitting}
           >
             {submitting ? (
               <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
@@ -154,11 +146,8 @@ export const CreateTicketModal: React.FC<Props> = ({
             autoFocus
             type="text"
             placeholder={t("tickets.list.title_placeholder")}
-            value={form.title}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onFormChange((f) => ({ ...f, title: e.target.value }))
-            }
             sx={modalInputSx}
+            {...register("title")}
           />
         </Box>
         <Box
@@ -168,14 +157,8 @@ export const CreateTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_priority")}</Label>
             <Box
               component="select"
-              value={form.priority}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({
-                  ...f,
-                  priority: e.target.value as CreateTicketPayload["priority"],
-                }))
-              }
               sx={modalSelectSx}
+              {...register("priority")}
             >
               <option value="Critical">
                 {t("tickets.list.priority_critical")}
@@ -189,17 +172,7 @@ export const CreateTicketModal: React.FC<Props> = ({
           </Box>
           <Box>
             <Label>{t("tickets.list.field_type")}</Label>
-            <Box
-              component="select"
-              value={form.type}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({
-                  ...f,
-                  type: e.target.value as CreateTicketPayload["type"],
-                }))
-              }
-              sx={modalSelectSx}
-            >
+            <Box component="select" sx={modalSelectSx} {...register("type")}>
               <option value="Bug">{t("tickets.list.type_bug")}</option>
               <option value="Feature">{t("tickets.list.type_feature")}</option>
               <option value="Security">
@@ -224,14 +197,8 @@ export const CreateTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_project")}</Label>
             <Box
               component="select"
-              value={form.projectId ?? ""}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({
-                  ...f,
-                  projectId: e.target.value || undefined,
-                }))
-              }
               sx={modalSelectSx}
+              {...register("projectId")}
             >
               <option value="">{t("tickets.list.no_project")}</option>
               {projects.map((p) => (
@@ -245,14 +212,8 @@ export const CreateTicketModal: React.FC<Props> = ({
             <Label>{t("tickets.list.field_assignee")}</Label>
             <Box
               component="select"
-              value={form.assignedToId ?? ""}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                onFormChange((f) => ({
-                  ...f,
-                  assignedToId: e.target.value || undefined,
-                }))
-              }
               sx={modalSelectSx}
+              {...register("assignedToId")}
             >
               <option value="">{t("tickets.list.unassigned")}</option>
               {users.map((u) => (
@@ -310,10 +271,16 @@ export const CreateTicketModal: React.FC<Props> = ({
               </Box>
             </Tooltip>
           </Box>
-          <DurationPicker
-            value={estMinutes}
-            onChange={onEstMinutesChange}
-            width="100%"
+          <Controller
+            name="estimatedMinutes"
+            control={control}
+            render={({ field }) => (
+              <DurationPicker
+                value={field.value}
+                onChange={field.onChange}
+                width="100%"
+              />
+            )}
           />
         </Box>
         <Box>
@@ -322,11 +289,8 @@ export const CreateTicketModal: React.FC<Props> = ({
             component="textarea"
             rows={5}
             placeholder={t("tickets.list.description_placeholder")}
-            value={form.description}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              onFormChange((f) => ({ ...f, description: e.target.value }))
-            }
             sx={modalTextareaSx}
+            {...register("description")}
           />
         </Box>
       </Box>

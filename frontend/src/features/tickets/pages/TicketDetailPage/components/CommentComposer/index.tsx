@@ -18,6 +18,7 @@ import {
   type MarkdownEditorHandle,
 } from "@/components/MarkdownEditor";
 import { Theme } from "@/types/enums";
+import { commentContentSchema } from "../../schemas";
 
 interface Attachment {
   fileName: string;
@@ -99,7 +100,7 @@ export const CommentComposer: React.FC<Props> = ({
 
   const handleSubmit = () => {
     const content = buildFullContent();
-    if (!content.trim()) return;
+    if (!commentContentSchema.safeParse(content).success) return;
     onSubmit(content);
     setAttachments([]);
   };
