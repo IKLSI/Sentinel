@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
-using Sentinel.Application.Services;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth;
+using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Settings;
 

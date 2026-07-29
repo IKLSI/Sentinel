@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.Services;
+using Sentinel.Application.Tickets;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Tests.Services;
@@ -28,7 +28,7 @@ public class TicketServiceMapToDtoTests
             History = new List<TicketHistory>(),
         };
 
-        var dto = TicketService.MapToDto(ticket);
+        var dto = TicketMapper.ToDto(ticket);
 
         dto.Id.Should().Be(ticketId);
         dto.Title.Should().Be("Bug critique");
@@ -59,7 +59,7 @@ public class TicketServiceMapToDtoTests
             History = new List<TicketHistory>(),
         };
 
-        var dto = TicketService.MapToDto(ticket);
+        var dto = TicketMapper.ToDto(ticket);
 
         dto.Comments.Should().HaveCount(2);
         dto.Comments[0].Content.Should().Be("premier");
