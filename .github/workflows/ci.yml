@@ -90,7 +90,13 @@ jobs:
         run: dotnet build Sentinel.slnx --no-restore --configuration Release
 
       - name: Test + Coverage
-        run: dotnet test backend/tests/Sentinel.Tests/Sentinel.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "trx;LogFileName=test-results.trx"
+        run: >
+          dotnet run --project backend/tests/Sentinel.Tests/Sentinel.Tests.csproj
+          --no-build --configuration Release
+          --
+          --results-directory ./coverage
+          --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+          --report-trx --report-trx-filename test-results.trx
 
       - name: Upload backend coverage
         if: always()
