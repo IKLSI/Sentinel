@@ -62,13 +62,6 @@ public class CommitScopeFactory : ICommitScopeFactory
     public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken)
     {
-        if (!_context.Database.IsRelational())
-        {
-            await operation(cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
         IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
 
         await strategy.ExecuteAsync(async () =>

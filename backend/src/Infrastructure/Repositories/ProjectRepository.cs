@@ -18,10 +18,7 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
     public Task<Project?> GetOrDefaultWithHealthDetailsAsync(Guid projectId, QueryTracking tracking,
         CancellationToken cancellationToken)
     {
-        IQueryable<Project> query = Query(tracking);
-
-        if (tracking == QueryTracking.NoTracking)
-            query = query.AsSplitQuery();
+        IQueryable<Project> query = Query(tracking).AsSplitQuery();
 
         return WithHealthDetails(query).FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
     }
@@ -51,7 +48,7 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
 
     public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
-        await WithHealthDetails(Query(QueryTracking.NoTracking))
+        await WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
             .Where(p => p.OrganizationId == organizationId)
             .OrderBy(p => p.Name)
             .ToListAsync(cancellationToken);

@@ -32,7 +32,7 @@ public class AuthController : BaseController
         ToActionResult(await service.ExecuteAsync(request, cancellationToken));
 
     [HttpPost("refresh")]
-    [EnableRateLimiting(RateLimitPolicies.Login)]
+    [EnableRateLimiting(RateLimitPolicies.Refresh)]
     public async Task<ActionResult<LoginResponse>> Refresh(
         [FromServices] AuthRefreshService service,
         CancellationToken cancellationToken) =>

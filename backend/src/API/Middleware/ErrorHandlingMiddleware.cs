@@ -30,19 +30,19 @@ public class ErrorHandlingMiddleware
         }
     }
 
+    private static (HttpStatusCode StatusCode, string Code) Map(Exception exception) => exception switch
+    {
+        DbUpdateConcurrencyException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency),
+        UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ErrorCodes.Unauthorized),
+        BadHttpRequestException badRequest => ((HttpStatusCode)badRequest.StatusCode, ErrorCodes.InvalidRequest),
+        _ => (HttpStatusCode.InternalServerError, ErrorCodes.Unexpected)
+    };
+
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
 
-        (HttpStatusCode statusCode, string code) = exception switch
-        {
-            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ErrorCodes.Unauthorized),
-            KeyNotFoundException => (HttpStatusCode.NotFound, ErrorCodes.NotFound),
-            InvalidOperationException => (HttpStatusCode.BadRequest, ErrorCodes.InvalidOperation),
-            ArgumentException => (HttpStatusCode.BadRequest, ErrorCodes.InvalidRequest),
-            _ => (HttpStatusCode.InternalServerError, ErrorCodes.Unexpected)
-        };
+        (HttpStatusCode statusCode, string code) = Map(exception);
 
         context.Response.StatusCode = (int)statusCode;
 

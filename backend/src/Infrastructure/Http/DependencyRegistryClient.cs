@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
@@ -6,7 +7,7 @@ using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Infrastructure.Http;
 
-public class DependencyRegistryClient(IHttpClientFactory httpClientFactory) : IDependencyRegistryClient
+public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMemoryCache cache) : IDependencyRegistryClient
 {
     private const int MaxConcurrentRegistryRequests = 10;
 
@@ -30,17 +31,34 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory) : ID
             .Select(async dep =>
             {
                 await throttle.WaitAsync();
-                try { await FetchLatestVersionAsync(client, dep); }
+                try { await ResolveLatestVersionAsync(client, dep); }
                 finally { throttle.Release(); }
             });
         await Task.WhenAll(tasks);
     }
 
-    private static async Task FetchLatestVersionAsync(HttpClient client, Dependency dep)
+    private async Task ResolveLatestVersionAsync(HttpClient client, Dependency dep)
+    {
+        string cacheKey = CacheKeys.LatestVersion(dep.Ecosystem, dep.Name);
+
+        if (cache.TryGetValue(cacheKey, out string? cachedVersion))
+        {
+            dep.LatestVersion = cachedVersion;
+            return;
+        }
+
+        string? version = await FetchLatestVersionAsync(client, dep);
+
+        dep.LatestVersion = version;
+        cache.Set(cacheKey, version,
+            version == null ? CacheKeys.LatestVersionUnresolvedTtl : CacheKeys.LatestVersionTtl);
+    }
+
+    private static async Task<string?> FetchLatestVersionAsync(HttpClient client, Dependency dep)
     {
         try
         {
-            dep.LatestVersion = dep.Ecosystem switch
+            return dep.Ecosystem switch
             {
                 DependencyEcosystem.Npm => await FetchNpmLatestAsync(client, dep.Name),
                 DependencyEcosystem.NuGet => await FetchNuGetLatestAsync(client, dep.Name),
@@ -55,7 +73,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory) : ID
                 _ => null,
             };
         }
-        catch { }
+        catch { return null; }
     }
 
     private static async Task<string?> FetchNpmLatestAsync(HttpClient client, string package)
