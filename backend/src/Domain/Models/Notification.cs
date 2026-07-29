@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum NotificationType
@@ -7,7 +8,7 @@ public enum NotificationType
     TicketCommentAdded
 }
 
-public class Notification
+public class Notification : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }

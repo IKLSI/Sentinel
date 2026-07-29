@@ -2,10 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
+using Sentinel.Infrastructure.Repositories;
 using Sentinel.Domain.Constants;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
-using Sentinel.Application.Services;
 using Sentinel.API.Hubs;
 namespace Sentinel.API;
 
@@ -29,14 +29,15 @@ public static class Program
             .AddSettings(builder.Configuration, builder.Environment)
             .AddTenantContext()
             .AddDatabase(builder.Configuration)
+            .AddRepositories()
             .AddJwtAuthentication(builder.Configuration)
             .AddCorsPolicy(builder.Configuration)
             .AddHangfireServices(connectionString)
             .AddHttpRegistryClients()
             .AddApplicationServices()
+            .AddUseCases()
             .AddApiVersioningPolicy()
             .AddSwaggerWithJwt()
-            .AddRequestValidation()
             .AddControllersWithJsonOptions()
             .AddForwardedHeadersPolicy(builder.Configuration)
             .AddLoginRateLimiting()

@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum RemediationStatus
@@ -8,7 +9,7 @@ public enum RemediationStatus
     Failed
 }
 
-public class RemediationRequest
+public class RemediationRequest : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid ProjectId { get; set; }

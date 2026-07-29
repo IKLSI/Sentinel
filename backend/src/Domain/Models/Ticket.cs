@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum TicketPriority
@@ -18,7 +19,7 @@ public enum TicketType
     Maintenance
 }
 
-public class Ticket
+public class Ticket : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }

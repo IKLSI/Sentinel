@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using FluentAssertions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging.Abstractions;
-using Sentinel.Application.Services;
+using Sentinel.Application.Security;
 
 namespace Sentinel.Tests.Services;
 

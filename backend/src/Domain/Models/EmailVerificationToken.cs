@@ -1,6 +1,7 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
-public class EmailVerificationToken
+public class EmailVerificationToken : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Email { get; set; } = string.Empty;

@@ -1,0 +1,32 @@
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Common;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.DTOs.Users;
+using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
+
+namespace Sentinel.Application.Users.Grid;
+
+public class UserGridService(IUserRepository userRepository, ITenantContext tenant) : IService
+{
+    public async Task<Result<UserListDto>> ExecuteAsync(UserGridModel model, CancellationToken cancellationToken)
+    {
+        if (tenant.OrganizationId is not Guid organizationId)
+            return Result<UserListDto>.Unauthorized();
+
+        int page = model.NormalizedPage;
+        int pageSize = model.NormalizedPageSize;
+
+        PagedList<User> result = await userRepository.SearchInOrganizationAsync(organizationId, model.Search,
+            page, pageSize, cancellationToken);
+
+        return new UserListDto
+        {
+            Items = result.Items.Select(UserMapper.ToDto).ToList(),
+            Total = result.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+}

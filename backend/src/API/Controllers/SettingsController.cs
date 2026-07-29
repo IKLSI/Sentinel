@@ -1,13 +1,13 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Sentinel.API.Attributes;
-using Sentinel.Application.Services;
-using Sentinel.Domain.Constants;
+using Sentinel.Application.Settings.ConnectIntegration;
+using Sentinel.Application.Settings.GetIntegrations;
+using Sentinel.Application.Settings.GetOrganization;
+using Sentinel.Application.Settings.UpdateOrganization;
 using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
-using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.API.Controllers;
 
@@ -16,170 +16,39 @@ namespace Sentinel.API.Controllers;
 [Route("api/settings")]
 [Route("api/v{version:apiVersion}/settings")]
 [Authorize]
+[AuthorizeRoles(UserRole.Admin)]
 public class SettingsController : BaseController
 {
-    private readonly SentinelContext _context;
-    private readonly RepositoryHostClient _repositoryHostClient;
-    private readonly TokenProtector _tokenProtector;
-    private readonly IAuditLogService _auditLog;
-
-    public SettingsController(SentinelContext context, RepositoryHostClient repositoryHostClient, TokenProtector tokenProtector, IAuditLogService auditLog)
-    {
-        _context = context;
-        _repositoryHostClient = repositoryHostClient;
-        _tokenProtector = tokenProtector;
-        _auditLog = auditLog;
-    }
-
     [HttpGet("integrations")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> GetIntegrationSettings()
-    {
-        Guid? orgId = GetOrganizationId();
-
-        if (orgId == null) return Unauthorized();
-
-        Organization? org = await _context.Organizations.FindAsync(orgId.Value);
-        if (org == null) return NotFound();
-
-        return Ok(new IntegrationSettingsDto
-        {
-            HasGithubToken = !string.IsNullOrEmpty(org.GithubToken),
-            HasGitlabToken = !string.IsNullOrEmpty(org.GitlabToken),
-        });
-    }
+    public async Task<ActionResult<IntegrationSettingsDto>> GetIntegrationSettings(
+        [FromServices] IntegrationSettingsGetService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpPost("integrations/github")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> ConnectGithub([FromBody] ConnectIntegrationDto dto)
-    {
-        Guid? orgId = GetOrganizationId();
-
-        if (orgId == null) return Unauthorized();
-
-        if (string.IsNullOrWhiteSpace(dto.Token))
-            return BadRequestCode(ErrorCodes.SettingsTokenRequired);
-
-        Organization? org = await _context.Organizations.FindAsync(orgId.Value);
-
-        if (org == null) return NotFound();
-
-        (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "github");
-
-        if (account == null)
-            return BadRequestCode(ErrorCodes.SettingsInvalidGithubToken);
-
-        org.GithubToken = _tokenProtector.Protect(dto.Token);
-        org.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.GithubIntegrationSaved,
-            entityType: AuditEntityTypes.Organization,
-            organizationId: orgId.Value,
-            userId: GetCurrentUserId(),
-            entityId: orgId.Value,
-            jti: GetCurrentJti());
-
-        return NoContent();
-    }
+    public async Task<IActionResult> ConnectGithub(
+        [FromBody] ConnectIntegrationDto dto,
+        [FromServices] IntegrationConnectService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(dto, RepositoryType.GitHub, cancellationToken));
 
     [HttpPost("integrations/gitlab")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> ConnectGitlab([FromBody] ConnectIntegrationDto dto)
-    {
-        Guid? orgId = GetOrganizationId();
-
-        if (orgId == null) return Unauthorized();
-
-        if (string.IsNullOrWhiteSpace(dto.Token))
-            return BadRequestCode(ErrorCodes.SettingsTokenRequired);
-
-        Organization? org = await _context.Organizations.FindAsync(orgId.Value);
-
-        if (org == null) return NotFound();
-
-        (string Id, string Login)? account = await _repositoryHostClient.GetAuthenticatedAccountAsync(dto.Token, "gitlab");
-
-        if (account == null)
-            return BadRequestCode(ErrorCodes.SettingsInvalidGitlabToken);
-
-        org.GitlabToken = _tokenProtector.Protect(dto.Token);
-        org.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.GitlabIntegrationSaved,
-            entityType: AuditEntityTypes.Organization,
-            organizationId: orgId.Value,
-            userId: GetCurrentUserId(),
-            entityId: orgId.Value,
-            jti: GetCurrentJti());
-
-        return NoContent();
-    }
+    public async Task<IActionResult> ConnectGitlab(
+        [FromBody] ConnectIntegrationDto dto,
+        [FromServices] IntegrationConnectService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(dto, RepositoryType.GitLab, cancellationToken));
 
     [HttpGet("organization")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> GetOrganizationSettings()
-    {
-        Guid? orgId = GetOrganizationId();
-
-        if (orgId == null) return Unauthorized();
-
-        Organization? org = await _context.Organizations.FindAsync(orgId.Value);
-
-        if (org == null) return NotFound();
-
-        return Ok(new OrganizationSettingsDto
-        {
-            Name = org.Name,
-            Slug = org.Slug,
-            SecurityAlertsEnabled = org.SecurityAlertsEnabled,
-            AlertMinSeverity = org.AlertMinSeverity,
-            CreatedAt = org.CreatedAt,
-        });
-    }
+    public async Task<ActionResult<OrganizationSettingsDto>> GetOrganizationSettings(
+        [FromServices] OrganizationSettingsGetService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpPut("organization")]
-    [AuthorizeRoles(UserRole.Admin)]
-    public async Task<IActionResult> UpdateOrganizationSettings([FromBody] UpdateOrganizationSettingsDto dto)
-    {
-        Guid? orgId = GetOrganizationId();
-
-        if (orgId == null) return Unauthorized();
-
-        Organization? org = await _context.Organizations.FindAsync(orgId.Value);
-
-        if (org == null) return NotFound();
-
-        if (string.IsNullOrWhiteSpace(dto.Name))
-            return BadRequestCode(ErrorCodes.SettingsOrganizationNameRequired);
-
-        org.Name = dto.Name.Trim();
-        org.SecurityAlertsEnabled = dto.SecurityAlertsEnabled;
-        org.AlertMinSeverity = dto.AlertMinSeverity;
-        org.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        await _auditLog.LogAsync(
-            AuditAction.OrganizationUpdated,
-            entityType: AuditEntityTypes.Organization,
-            organizationId: orgId.Value,
-            userId: GetCurrentUserId(),
-            entityId: orgId.Value,
-            jti: GetCurrentJti());
-
-        return Ok(new OrganizationSettingsDto
-        {
-            Name = org.Name,
-            Slug = org.Slug,
-            SecurityAlertsEnabled = org.SecurityAlertsEnabled,
-            AlertMinSeverity = org.AlertMinSeverity,
-            CreatedAt = org.CreatedAt,
-        });
-    }
+    public async Task<ActionResult<OrganizationSettingsDto>> UpdateOrganizationSettings(
+        [FromBody] UpdateOrganizationSettingsDto dto,
+        [FromServices] OrganizationSettingsUpdateService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(dto, cancellationToken));
 }

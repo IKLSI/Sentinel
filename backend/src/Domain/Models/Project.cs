@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum RepositoryType
@@ -23,7 +24,7 @@ public enum ScanCoverage
     Covered
 }
 
-public class Project
+public class Project : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }

@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
 public enum ThemeType
@@ -19,7 +20,7 @@ public enum UserRole
     Developer
 }
 
-public class User
+public class User : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid OrganizationId { get; set; }

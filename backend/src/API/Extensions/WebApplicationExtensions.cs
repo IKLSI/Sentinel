@@ -1,5 +1,5 @@
 using Hangfire;
-using Sentinel.API.Jobs;
+using Sentinel.Application.Jobs;
 
 namespace Sentinel.API.Extensions;
 

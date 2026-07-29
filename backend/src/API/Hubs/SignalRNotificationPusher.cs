@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
-using Sentinel.Application.Services;
+using Sentinel.Application.Notifications;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.API.Hubs;

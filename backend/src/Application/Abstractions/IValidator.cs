@@ -1,0 +1,5 @@
+namespace Sentinel.Application.Abstractions;
+
+public interface IValidator
+{
+}

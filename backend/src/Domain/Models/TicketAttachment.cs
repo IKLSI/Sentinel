@@ -1,6 +1,7 @@
+using Sentinel.Domain.Abstractions.Persistence;
 namespace Sentinel.Domain.Models;
 
-public class TicketAttachment
+public class TicketAttachment : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TicketId { get; set; }
