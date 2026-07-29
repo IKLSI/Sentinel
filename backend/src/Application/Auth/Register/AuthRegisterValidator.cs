@@ -28,7 +28,7 @@ public class AuthRegisterValidator(IUserRepository userRepository) : IValidator
             return errors.ToResult();
 
         bool emailExists = await userRepository
-            .ExistsByEmailAsync(model.Email.ToLower().Trim(), cancellationToken);
+            .ExistsByEmailAsync(model.Email.ToLowerInvariant().Trim(), cancellationToken);
 
         if (emailExists)
             return Result.Conflict(ErrorCodes.AuthEmailAlreadyUsed);

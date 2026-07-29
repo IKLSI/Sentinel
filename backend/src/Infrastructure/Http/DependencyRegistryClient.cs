@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
@@ -50,8 +51,12 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         string? version = await FetchLatestVersionAsync(client, dep);
 
         dep.LatestVersion = version;
-        cache.Set(cacheKey, version,
-            version == null ? CacheKeys.LatestVersionUnresolvedTtl : CacheKeys.LatestVersionTtl);
+        cache.Set(cacheKey, version, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow =
+                version == null ? CacheKeys.LatestVersionUnresolvedTtl : CacheKeys.LatestVersionTtl,
+            Size = 1
+        });
     }
 
     private static async Task<string?> FetchLatestVersionAsync(HttpClient client, Dependency dep)
@@ -122,24 +127,27 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchGoLatestAsync(HttpClient client, string module)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{module}/@latest");
+        HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(module)}/@latest");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         string? version = doc.RootElement.TryGetProperty("Version", out JsonElement v) ? v.GetString() : null;
         return version?.TrimStart('v');
     }
 
+    private static readonly Regex PackagistPrereleaseTag =
+        new(@"-(dev|alpha|beta|rc)(\.|\d|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private static async Task<string?> FetchPackagistLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{package}.json");
+        HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{Uri.EscapeDataString(package)}.json");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("package", out JsonElement pkg)) return null;
         if (!pkg.TryGetProperty("versions", out JsonElement versions)) return null;
         List<string> stableVersions = versions.EnumerateObject()
             .Select(p => p.Name)
-            .Where(v => !v.Contains("dev") && !v.Contains("alpha") && !v.Contains("beta") && !v.Contains("RC"))
-            .OrderByDescending(v => v)
+            .Where(v => !PackagistPrereleaseTag.IsMatch(v))
+            .OrderByDescending(VersionText.Clean, VersionComparer.Instance)
             .ToList();
         return stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
     }

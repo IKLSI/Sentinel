@@ -23,7 +23,7 @@ public class TokenBlacklistService : ITokenBlacklistService
         if (string.IsNullOrEmpty(jti)) return;
         TimeSpan ttl = expiresAtUtc - DateTime.UtcNow;
         if (ttl <= TimeSpan.Zero) return;
-        _cache.Set(Prefix + jti, true, ttl);
+        _cache.Set(Prefix + jti, true, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
     }
 
     public bool IsRevoked(string jti)

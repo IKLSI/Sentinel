@@ -12,11 +12,11 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
     public Task<User?> GetOrDefaultByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken) =>
-        Query(tracking).FirstOrDefaultAsync(u => u.Email == email.ToLower(), cancellationToken);
+        Query(tracking).FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
 
     public Task<User?> GetOrDefaultActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken) =>
-        Query(tracking).FirstOrDefaultAsync(u => u.Email == email.ToLower() && u.IsActive, cancellationToken);
+        Query(tracking).FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant() && u.IsActive, cancellationToken);
 
     public Task<User?> GetOrDefaultActiveAsync(Guid userId, QueryTracking tracking,
         CancellationToken cancellationToken) =>
@@ -47,7 +47,7 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
     public async Task<IReadOnlyList<User>> ListActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken) =>
         await Query(tracking)
-            .Where(u => u.Email == email.ToLower() && u.IsActive)
+            .Where(u => u.Email == email.ToLowerInvariant() && u.IsActive)
             .ToListAsync(cancellationToken);
 
     public async Task<PagedList<User>> SearchInOrganizationAsync(Guid organizationId, string? search, int page,
@@ -93,12 +93,12 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .ToListAsync(cancellationToken);
 
     public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking).AnyAsync(u => u.Email == email.ToLower(), cancellationToken);
+        Query(QueryTracking.NoTracking).AnyAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
 
     public Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .AnyAsync(u => u.Email == email.ToLower() && u.OrganizationId == organizationId, cancellationToken);
+            .AnyAsync(u => u.Email == email.ToLowerInvariant() && u.OrganizationId == organizationId, cancellationToken);
 
     public Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
@@ -19,6 +20,7 @@ public class AuthResetPasswordService(
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
+    IMemoryCache cache,
     ILogger<AuthResetPasswordService> logger,
     AuthResetPasswordValidator validator) : IService
 {
@@ -55,6 +57,8 @@ public class AuthResetPasswordService(
 
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        cache.Remove(CacheKeys.AuthAccount(user.Id));
 
         logger.LogInformation("Mot de passe réinitialisé pour {Email}", user.Email);
 

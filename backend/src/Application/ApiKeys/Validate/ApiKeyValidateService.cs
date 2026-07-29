@@ -11,6 +11,8 @@ public class ApiKeyValidateService(
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope) : IService
 {
+    private static readonly TimeSpan LastUsedAtUpdateThreshold = TimeSpan.FromMinutes(1);
+
     public async Task<(ApiKey Key, User User)?> ExecuteAsync(string rawKey, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
@@ -25,8 +27,10 @@ public class ApiKeyValidateService(
 
         if (!user.IsActive) return null;
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        if (apiKey.LastUsedAt is null || DateTime.UtcNow - apiKey.LastUsedAt.Value > LastUsedAtUpdateThreshold)
         {
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             apiKey.LastUsedAt = DateTime.UtcNow;
             await commitScope.CommitAsync(cancellationToken);
         }

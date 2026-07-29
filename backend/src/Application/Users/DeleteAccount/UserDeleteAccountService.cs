@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -18,6 +19,7 @@ public class UserDeleteAccountService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IMemoryCache cache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(DeleteAccountDto model, CancellationToken cancellationToken)
@@ -50,6 +52,8 @@ public class UserDeleteAccountService(
             Anonymize(user);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        cache.Remove(CacheKeys.AuthAccount(user.Id));
 
         await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
 

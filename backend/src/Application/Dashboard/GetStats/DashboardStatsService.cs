@@ -38,7 +38,8 @@ public class DashboardStatsService(
         cache.Set(cacheKey, stats, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
-            Priority = CacheItemPriority.High
+            Priority = CacheItemPriority.High,
+            Size = 1
         });
 
         return stats;

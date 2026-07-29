@@ -206,7 +206,11 @@ public static class ServiceCollectionExtensions
                             }
 
                             account = (found.IsActive, found.TokenVersion);
-                            cache.Set(cacheKey, account, CacheKeys.AuthAccountTtl);
+                            cache.Set(cacheKey, account, new MemoryCacheEntryOptions
+                            {
+                                AbsoluteExpirationRelativeToNow = CacheKeys.AuthAccountTtl,
+                                Size = 1
+                            });
                         }
 
                         if (!account.IsActive || account.TokenVersion != tokenVersion)

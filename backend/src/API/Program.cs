@@ -41,7 +41,7 @@ public static class Program
             .AddControllersWithJsonOptions()
             .AddForwardedHeadersPolicy(builder.Configuration)
             .AddLoginRateLimiting()
-            .AddMemoryCache()
+            .AddMemoryCache(options => options.SizeLimit = 50_000)
             .AddResponseCompressionPolicy()
             .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
@@ -112,8 +112,8 @@ public static class Program
 
         app.UseStaticFiles();
         app.UseCors();
-        app.UseRateLimiter();
         app.UseAuthentication();
+        app.UseRateLimiter();
         app.UseMiddleware<ApiKeyMiddleware>();
         app.UseAuthorization();
         app.UseOutputCache();

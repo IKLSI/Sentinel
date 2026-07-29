@@ -32,7 +32,7 @@ public class UserInvitationRepository : CrudEntityWithIdRepository<UserInvitatio
 
     public Task<bool> ExistsPendingAsync(string email, Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .AnyAsync(i => i.Email == email.ToLower()
+            .AnyAsync(i => i.Email == email.ToLowerInvariant()
                 && i.OrganizationId == organizationId
                 && i.AcceptedAt == null
                 && i.ExpiresAt > DateTime.UtcNow, cancellationToken);

@@ -19,6 +19,6 @@ public class EmailVerificationTokenRepository
 
     public Task InvalidatePendingAsync(string email, CancellationToken cancellationToken) =>
         Query(QueryTracking.Tracked)
-            .Where(t => t.Email == email.ToLower() && !t.IsUsed)
+            .Where(t => t.Email == email.ToLowerInvariant() && !t.IsUsed)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true), cancellationToken);
 }

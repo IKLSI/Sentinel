@@ -20,7 +20,7 @@ public class UserInviteValidator(IUserRepository userRepository, IUserInvitation
         if (errors.HasErrors)
             return errors.ToResult();
 
-        string email = model.Email.ToLower();
+        string email = model.Email.ToLowerInvariant();
 
         bool userExists = await userRepository
             .ExistsByEmailInOrganizationAsync(email, organizationId, cancellationToken);

@@ -34,7 +34,7 @@ public class AuthResendVerificationService(
 
         using IDisposable elevation = systemScope.Enter();
 
-        string email = model.Email.ToLower().Trim();
+        string email = model.Email.ToLowerInvariant().Trim();
 
         User? user = await userRepository.GetOrDefaultByEmailAsync(email,
             QueryTracking.NoTracking, cancellationToken);

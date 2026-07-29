@@ -39,7 +39,7 @@ public class AuthRegisterService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        string email = model.Email.ToLower().Trim();
+        string email = model.Email.ToLowerInvariant().Trim();
         DateTime now = DateTime.UtcNow;
 
         Organization organization = new Organization

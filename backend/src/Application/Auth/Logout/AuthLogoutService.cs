@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -16,6 +17,7 @@ public class AuthLogoutService(
     ITokenBlacklistService blacklist,
     IAuditLogService auditLog,
     IRefreshTokenStore refreshTokenStore,
+    IMemoryCache cache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(CancellationToken cancellationToken)
@@ -38,6 +40,8 @@ public class AuthLogoutService(
             user.TokenVersion++;
 
             await commitScope.CommitAsync(cancellationToken);
+
+            cache.Remove(CacheKeys.AuthAccount(userId));
         }
 
         refreshTokenStore.Clear();

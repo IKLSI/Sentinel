@@ -50,7 +50,7 @@ public class UserInviteService(
         UserInvitation invitation = new UserInvitation
         {
             OrganizationId = organizationId,
-            Email = model.Email.ToLower(),
+            Email = model.Email.ToLowerInvariant(),
             Role = role,
             TokenHash = SecureToken.Hash(rawToken),
             InvitedById = currentUserId,

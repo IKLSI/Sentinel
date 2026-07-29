@@ -34,7 +34,7 @@ public class AuthForgotPasswordService(
 
         using IDisposable elevation = systemScope.Enter();
 
-        string email = model.Email.ToLower();
+        string email = model.Email.ToLowerInvariant();
 
         User? user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
             QueryTracking.NoTracking, cancellationToken);

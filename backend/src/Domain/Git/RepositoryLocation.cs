@@ -16,7 +16,9 @@ public readonly record struct RepositoryLocation(string Host, string Owner, stri
         location = new RepositoryLocation(
             uri.Host.ToLowerInvariant(),
             segments[0],
-            segments[1].Replace(".git", string.Empty, StringComparison.OrdinalIgnoreCase));
+            segments[1].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                ? segments[1][..^".git".Length]
+                : segments[1]);
 
         return true;
     }

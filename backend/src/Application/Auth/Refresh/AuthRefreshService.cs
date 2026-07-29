@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
@@ -23,6 +24,7 @@ public class AuthRefreshService : IService
     private readonly ISystemScope _systemScope;
     private readonly IAuditLogService _auditLog;
     private readonly IRefreshTokenStore _refreshTokenStore;
+    private readonly IMemoryCache _cache;
     private readonly ILogger<AuthRefreshService> _logger;
 
     public AuthRefreshService(
@@ -33,6 +35,7 @@ public class AuthRefreshService : IService
         ISystemScope systemScope,
         IAuditLogService auditLog,
         IRefreshTokenStore refreshTokenStore,
+        IMemoryCache cache,
         ILogger<AuthRefreshService> logger)
     {
         _userRepository = userRepository;
@@ -42,6 +45,7 @@ public class AuthRefreshService : IService
         _systemScope = systemScope;
         _auditLog = auditLog;
         _refreshTokenStore = refreshTokenStore;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -107,8 +111,11 @@ public class AuthRefreshService : IService
 
         replayUser.RefreshToken = null;
         replayUser.RefreshTokenExpiry = null;
+        replayUser.TokenVersion++;
 
         await commitScope.CommitAsync(cancellationToken);
+
+        _cache.Remove(CacheKeys.AuthAccount(replayUser.Id));
 
         _logger.LogWarning("Token replay détecté pour userId {UserId}", replayUser.Id);
     }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -15,6 +16,7 @@ public class UserUpdateService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IMemoryCache cache,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
 {
@@ -69,6 +71,9 @@ public class UserUpdateService(
         {
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        if (user.Role != originalRole || willDeactivate)
+            cache.Remove(CacheKeys.AuthAccount(userId));
 
         if (willDeactivate)
             await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);

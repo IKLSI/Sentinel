@@ -26,14 +26,14 @@ public class TicketGridService(
             return Result<PagedResult<TicketDto>>.From(validationResult);
 
         PagedList<Ticket> page = await ticketRepository.SearchAsync(organizationId, BuildFilter(model),
-            model.Page, model.PageSize, cancellationToken);
+            model.NormalizedPage, model.NormalizedPageSize, cancellationToken);
 
         return new PagedResult<TicketDto>
         {
             Items = page.Items.Select(TicketMapper.ToDto).ToList(),
             TotalCount = page.TotalCount,
-            Page = model.Page,
-            PageSize = model.PageSize
+            Page = model.NormalizedPage,
+            PageSize = model.NormalizedPageSize
         };
     }
 
