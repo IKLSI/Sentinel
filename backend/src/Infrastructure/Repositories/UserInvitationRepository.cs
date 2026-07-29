@@ -10,21 +10,28 @@ public class UserInvitationRepository : CrudEntityWithIdRepository<UserInvitatio
 {
     public UserInvitationRepository(SentinelContext context) : base(context) { }
 
+    public Task<UserInvitation?> GetOrDefaultWithOrganizationAndInviterAsync(Guid invitationId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Include(i => i.Organization)
+            .Include(i => i.InvitedBy)
+            .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
+
     public Task<UserInvitation?> GetOrDefaultPendingByTokenHashAsync(string tokenHash,
         CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .FirstOrDefaultAsync(i => i.TokenHash == tokenHash
                 && i.AcceptedAt == null
                 && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
     public Task<int> CountPendingAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.ReadOnly)
+        Query(QueryTracking.NoTracking)
             .CountAsync(i => i.OrganizationId == organizationId
                 && i.AcceptedAt == null
                 && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
     public Task<bool> ExistsPendingAsync(string email, Guid organizationId, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.ReadOnly)
+        Query(QueryTracking.NoTracking)
             .AnyAsync(i => i.Email == email.ToLower()
                 && i.OrganizationId == organizationId
                 && i.AcceptedAt == null

@@ -3,10 +3,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +16,7 @@ namespace Sentinel.Application.Auth.ResendVerification;
 public class AuthResendVerificationService(
     IUserRepository userRepository,
     IEmailVerificationTokenRepository tokenRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
@@ -41,7 +37,7 @@ public class AuthResendVerificationService(
         string email = model.Email.ToLower().Trim();
 
         User? user = await userRepository.GetOrDefaultByEmailAsync(email,
-            new SingleEntityQueryOptions<User> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (user == null || user.IsEmailVerified)
             return ApiMessageResponse.Create(SuccessCodes.AuthVerificationResent);
@@ -57,10 +53,10 @@ public class AuthResendVerificationService(
             ExpiresAt = DateTime.UtcNow.AddHours(VerificationValidityHours)
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await tokenRepository.AddAsync(verificationToken, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, rawToken));

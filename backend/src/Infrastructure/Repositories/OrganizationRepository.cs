@@ -11,11 +11,24 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
     public OrganizationRepository(SentinelContext context) : base(context) { }
 
     public Task<bool> ExistsBySlugAsync(string slug, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.ReadOnly).AnyAsync(o => o.Slug == slug, cancellationToken);
+        Query(QueryTracking.NoTracking).AnyAsync(o => o.Slug == slug, cancellationToken);
 
     public Task<Organization?> GetOrDefaultByStripeReferenceAsync(string subscriptionId, string? customerId,
         CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .FirstOrDefaultAsync(o => o.StripeSubscriptionId == subscriptionId
                 || (customerId != null && o.StripeCustomerId == customerId), cancellationToken);
+
+    public Task<PlanTier> GetPlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.PlanTier)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.SubscriptionStatus)
+            .FirstOrDefaultAsync(cancellationToken);
 }

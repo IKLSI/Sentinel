@@ -3,10 +3,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +16,7 @@ namespace Sentinel.Application.Auth.ForgotPassword;
 public class AuthForgotPasswordService(
     IUserRepository userRepository,
     IPasswordResetTokenRepository tokenRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
@@ -41,7 +37,7 @@ public class AuthForgotPasswordService(
         string email = model.Email.ToLower();
 
         User? user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
-            new SingleEntityQueryOptions<User> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (user == null)
             return ApiMessageResponse.Create(SuccessCodes.AuthPasswordResetRequested);
@@ -57,10 +53,10 @@ public class AuthForgotPasswordService(
             ExpiresAt = DateTime.UtcNow.AddHours(TokenValidityHours)
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await tokenRepository.AddAsync(resetToken, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         jobs.Enqueue<SendPasswordResetEmailJob>(j => j.ExecuteAsync(email, rawToken));

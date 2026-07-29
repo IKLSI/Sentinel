@@ -10,34 +10,41 @@ public class DependencyRepository : CrudEntityWithIdRepository<Dependency>, IDep
 {
     public DependencyRepository(SentinelContext context) : base(context) { }
 
-    public IQueryable<Dependency> GetByProject(Guid projectId, QueryableQueryOptions options) =>
-        GetAll(options).Where(d => d.ProjectId == projectId);
+    public async Task<IReadOnlyList<Dependency>> ListByProjectWithVulnerabilitiesAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(d => d.ProjectId == projectId)
+            .Include(d => d.Vulnerabilities)
+            .ToListAsync(cancellationToken);
 
     public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
-        GetByProject(projectId, QueryableQueryOptions.Tracked).ExecuteDeleteAsync(cancellationToken);
+        Query(QueryTracking.Tracked)
+            .Where(d => d.ProjectId == projectId)
+            .ExecuteDeleteAsync(cancellationToken);
 }
 
 public class VulnerabilityRepository : CrudEntityWithIdRepository<Vulnerability>, IVulnerabilityRepository
 {
     public VulnerabilityRepository(SentinelContext context) : base(context) { }
 
-    public IQueryable<Vulnerability> GetByProject(Guid projectId, QueryableQueryOptions options) =>
-        GetAll(options).Where(v => v.Dependency.ProjectId == projectId);
-
-    public IQueryable<Vulnerability> GetByOrganization(Guid organizationId, QueryableQueryOptions options) =>
-        GetAll(options).Where(v => v.Dependency.Project.OrganizationId == organizationId);
+    public Task<HashSet<string>> GetCveIdsByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(v => v.Dependency.ProjectId == projectId)
+            .Select(v => v.CveId)
+            .ToHashSetAsync(cancellationToken);
 
     public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
-        GetByProject(projectId, QueryableQueryOptions.Tracked).ExecuteDeleteAsync(cancellationToken);
+        Query(QueryTracking.Tracked)
+            .Where(v => v.Dependency.ProjectId == projectId)
+            .ExecuteDeleteAsync(cancellationToken);
 }
 
 public class RuntimeRepository : CrudEntityWithIdRepository<Runtime>, IRuntimeRepository
 {
     public RuntimeRepository(SentinelContext context) : base(context) { }
 
-    public IQueryable<Runtime> GetByProject(Guid projectId, QueryableQueryOptions options) =>
-        GetAll(options).Where(r => r.ProjectId == projectId);
-
     public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
-        GetByProject(projectId, QueryableQueryOptions.Tracked).ExecuteDeleteAsync(cancellationToken);
+        Query(QueryTracking.Tracked)
+            .Where(r => r.ProjectId == projectId)
+            .ExecuteDeleteAsync(cancellationToken);
 }

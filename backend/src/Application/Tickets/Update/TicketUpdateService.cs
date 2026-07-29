@@ -5,9 +5,6 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +17,7 @@ namespace Sentinel.Application.Tickets.Update;
 public class TicketUpdateService(
     ITicketRepository ticketRepository,
     ITicketHistoryRepository ticketHistoryRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     NotificationPublisher notificationPublisher,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
@@ -28,7 +25,6 @@ public class TicketUpdateService(
     ILogger<TicketUpdateService> logger,
     TicketUpdateValidator validator) : IService
 {
-
     public async Task<Result<TicketDto>> ExecuteAsync(Guid ticketId, UpdateTicketDto model,
         CancellationToken cancellationToken)
     {
@@ -41,19 +37,19 @@ public class TicketUpdateService(
             return Result<TicketDto>.Unauthorized();
 
         Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId,
-            new SingleEntityQueryOptions<Ticket>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (ticket == null || ticket.OrganizationId != organizationId)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);
 
         List<TicketHistory> changes = ApplyChanges(ticket, model, userId, out bool assigneeChanged);
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             if (changes.Count > 0)
                 await ticketHistoryRepository.AddRangeAsync(changes, cancellationToken);
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         dashboardCache.Invalidate(organizationId);
@@ -69,7 +65,7 @@ public class TicketUpdateService(
             entityId: ticketId,
             jti: tenant.Jti);
 
-        Ticket? updated = await ticketRepository.GetOrDefaultAsync(ticketId, TicketQueries.Details, cancellationToken);
+        Ticket? updated = await ticketRepository.GetOrDefaultWithDetailsAsync(ticketId, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }

@@ -53,13 +53,7 @@ public class BillingPlanListService(
     {
         using IDisposable elevation = systemScope.Enter();
 
-        return await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleProjectionQueryOptions<Organization, PlanTier>
-            {
-                AsNoTracking = true,
-                Expression = o => o.PlanTier
-            },
-            cancellationToken);
+        return await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
     }
 
     private async Task<Dictionary<PlanTier, (decimal Monthly, decimal Annual)>> GetPricesAsync()

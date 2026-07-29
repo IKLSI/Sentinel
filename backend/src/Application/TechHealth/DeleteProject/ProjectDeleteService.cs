@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -15,26 +11,25 @@ namespace Sentinel.Application.TechHealth.DeleteProject;
 
 public class ProjectDeleteService(
     IProjectRepository projectRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result.Unauthorized();
 
         Project? project = await projectRepository.GetOrDefaultInOrganizationAsync(projectId, organizationId,
-            new SingleEntityQueryOptions<Project>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (project == null)
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             projectRepository.Remove(project);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

@@ -2,10 +2,6 @@ using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -19,13 +15,12 @@ namespace Sentinel.Application.Auth.VerifyEmail;
 public class AuthVerifyEmailService(
     IUserRepository userRepository,
     IEmailVerificationTokenRepository tokenRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
     ILogger<AuthVerifyEmailService> logger,
     AuthVerifyEmailValidator validator) : IService
 {
-
     public async Task<Result<ApiMessageResponse>> ExecuteAsync(VerifyEmailRequest model,
         CancellationToken cancellationToken)
     {
@@ -43,17 +38,17 @@ public class AuthVerifyEmailService(
             return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
 
         User? user = await userRepository.GetOrDefaultByEmailAsync(verificationToken.Email,
-            new SingleEntityQueryOptions<User>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (user == null)
             return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             user.IsEmailVerified = true;
             verificationToken.IsUsed = true;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         logger.LogInformation("Email vérifié pour {Email}", user.Email);

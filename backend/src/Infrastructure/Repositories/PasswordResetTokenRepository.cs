@@ -13,12 +13,12 @@ public class PasswordResetTokenRepository
 
     public Task<PasswordResetToken?> GetOrDefaultValidByTokenHashAsync(string tokenHash,
         CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow,
                 cancellationToken);
 
     public Task InvalidatePendingAsync(string email, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .Where(t => t.Email == email.ToLower() && !t.IsUsed)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true), cancellationToken);
 }

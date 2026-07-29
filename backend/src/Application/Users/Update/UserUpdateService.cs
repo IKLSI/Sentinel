@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -17,12 +13,11 @@ namespace Sentinel.Application.Users.Update;
 public class UserUpdateService(
     IUserRepository userRepository,
     IApiKeyRepository apiKeyRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
 {
-
     public async Task<Result<UserDto>> ExecuteAsync(Guid userId, UpdateUserDto model,
         CancellationToken cancellationToken)
     {
@@ -35,7 +30,7 @@ public class UserUpdateService(
             return Result<UserDto>.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(userId, organizationId,
-            new SingleEntityQueryOptions<User>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (user == null)
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
@@ -70,9 +65,9 @@ public class UserUpdateService(
 
         if (user.Role != originalRole || willDeactivate) user.TokenVersion++;
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         if (willDeactivate)

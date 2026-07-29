@@ -5,25 +5,31 @@ namespace Sentinel.Domain.Repositories;
 
 public interface IUserRepository : ICrudEntityWithIdRepository<User>
 {
-    Task<User?> GetOrDefaultByEmailAsync(string email, SingleEntityQueryOptions<User> options,
+    Task<User?> GetOrDefaultByEmailAsync(string email, QueryTracking tracking, CancellationToken cancellationToken);
+
+    Task<User?> GetOrDefaultActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken);
 
-    Task<User?> GetOrDefaultActiveByEmailAsync(string email, SingleEntityQueryOptions<User> options,
-        CancellationToken cancellationToken);
+    Task<User?> GetOrDefaultActiveAsync(Guid userId, QueryTracking tracking, CancellationToken cancellationToken);
 
-    Task<User?> GetOrDefaultActiveAsync(Guid userId, SingleEntityQueryOptions<User> options,
-        CancellationToken cancellationToken);
+    Task<User?> GetOrDefaultActiveWithOrganizationAsync(Guid userId, CancellationToken cancellationToken);
 
-    Task<User?> GetOrDefaultInOrganizationAsync(Guid userId, Guid organizationId,
-        SingleEntityQueryOptions<User> options, CancellationToken cancellationToken);
+    Task<User?> GetOrDefaultInOrganizationAsync(Guid userId, Guid organizationId, QueryTracking tracking,
+        CancellationToken cancellationToken);
 
     Task<User?> GetOrDefaultByRefreshTokenHashAsync(string tokenHash, CancellationToken cancellationToken);
 
     Task<User?> GetOrDefaultByPreviousRefreshTokenHashAsync(string tokenHash, CancellationToken cancellationToken);
 
-    IQueryable<User> GetActiveByEmail(string email, QueryableQueryOptions options);
+    Task<IReadOnlyList<User>> ListActiveByEmailAsync(string email, QueryTracking tracking,
+        CancellationToken cancellationToken);
 
-    IQueryable<User> GetByOrganization(Guid organizationId, QueryableQueryOptions options);
+    Task<PagedList<User>> SearchInOrganizationAsync(Guid organizationId, string? search, int page, int pageSize,
+        CancellationToken cancellationToken);
+
+    Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<string>> ListAdminEmailsAsync(Guid organizationId, CancellationToken cancellationToken);
 
     Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
 

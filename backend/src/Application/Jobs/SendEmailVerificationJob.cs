@@ -1,11 +1,5 @@
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Jobs;

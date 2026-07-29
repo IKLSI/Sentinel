@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -12,19 +11,12 @@ namespace Sentinel.Application.Auth.GetCurrentUser;
 
 public class AuthGetCurrentUserService(IUserRepository userRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result<UserProfile>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.UserId is not Guid userId || userId == Guid.Empty)
             return Result<UserProfile>.Unauthorized();
 
-        User? user = await userRepository.GetOrDefaultActiveAsync(userId,
-            new SingleEntityQueryOptions<User>
-            {
-                AsNoTracking = true,
-                Include = query => query.Include(u => u.Organization)
-            },
-            cancellationToken);
+        User? user = await userRepository.GetOrDefaultActiveWithOrganizationAsync(userId, cancellationToken);
 
         if (user == null || user.Id == Guid.Empty)
             return Result<UserProfile>.NotFound(ErrorCodes.UserNotFound);

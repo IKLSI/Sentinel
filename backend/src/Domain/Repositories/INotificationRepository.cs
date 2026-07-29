@@ -5,10 +5,11 @@ namespace Sentinel.Domain.Repositories;
 
 public interface INotificationRepository : ICrudEntityWithIdRepository<Notification>
 {
-    IQueryable<Notification> GetByUser(Guid userId, QueryableQueryOptions options);
+    Task<IReadOnlyList<Notification>> ListRecentForUserAsync(Guid userId, int maxItems,
+        CancellationToken cancellationToken);
 
-    Task<Notification?> GetOrDefaultForUserAsync(Guid notificationId, Guid userId,
-        SingleEntityQueryOptions<Notification> options, CancellationToken cancellationToken);
+    Task<Notification?> GetOrDefaultForUserAsync(Guid notificationId, Guid userId, QueryTracking tracking,
+        CancellationToken cancellationToken);
 
     Task<int> MarkAllReadAsync(Guid userId, CancellationToken cancellationToken);
 

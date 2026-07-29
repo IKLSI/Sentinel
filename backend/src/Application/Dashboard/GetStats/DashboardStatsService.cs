@@ -1,10 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Dashboard;
 using Sentinel.Domain.Models;
@@ -13,9 +11,8 @@ using Sentinel.Domain.Repositories;
 namespace Sentinel.Application.Dashboard.GetStats;
 
 public class DashboardStatsService(
-    ITicketRepository ticketRepository,
+    IDashboardRepository dashboardRepository,
     ITicketStatusRepository ticketStatusRepository,
-    IVulnerabilityRepository vulnerabilityRepository,
     IMemoryCache cache,
     ITenantContext tenant) : IService
 {
@@ -51,47 +48,29 @@ public class DashboardStatsService(
     {
         DateTime now = DateTime.UtcNow;
         DateTime monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        DateTime lastMonthStart = monthStart.AddMonths(-1);
-        DateTime lastMonthEnd = monthStart.AddTicks(-1);
-        DateTime weekAgo = now.AddDays(-7);
+        DashboardPeriod period = new(
+            WeekAgo: now.AddDays(-7),
+            MonthStart: monthStart,
+            LastMonthStart: monthStart.AddMonths(-1),
+            LastMonthEnd: monthStart.AddTicks(-1));
 
-        List<TicketStatus> statuses = await ticketStatusRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .OrderBy(s => s.Order)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<TicketStatus> statuses =
+            await ticketStatusRepository.ListByOrganizationOrderedAsync(organizationId, cancellationToken);
 
         List<Guid> openStatusIds = statuses.Where(s => !s.IsClosed).Select(s => s.Id).ToList();
         List<Guid> closedStatusIds = statuses.Where(s => s.IsClosed).Select(s => s.Id).ToList();
 
-        IQueryable<Ticket> tickets = ticketRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Where(t => t.TicketStatusId != null);
+        IReadOnlyDictionary<Guid, int> statusCounts =
+            await dashboardRepository.GetTicketCountsByStatusAsync(organizationId, cancellationToken);
 
-        Dictionary<Guid, int> statusCounts = await tickets
-            .GroupBy(t => t.TicketStatusId!.Value)
-            .Select(g => new { StatusId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.StatusId, x => x.Count, cancellationToken);
+        DashboardCounters? counters = await dashboardRepository.GetCountersAsync(organizationId, openStatusIds,
+            closedStatusIds, period, cancellationToken);
 
-        var counters = await tickets
-            .GroupBy(_ => 1)
-            .Select(g => new
-            {
-                OpenDelta = g.Count(t => openStatusIds.Contains(t.TicketStatusId!.Value) && t.CreatedAt >= weekAgo),
-                ResolvedMonth = g.Count(t => closedStatusIds.Contains(t.TicketStatusId!.Value) && t.UpdatedAt >= monthStart),
-                ResolvedLast = g.Count(t => closedStatusIds.Contains(t.TicketStatusId!.Value) && t.UpdatedAt >= lastMonthStart && t.UpdatedAt <= lastMonthEnd),
-                Unassigned = g.Count(t => openStatusIds.Contains(t.TicketStatusId!.Value) && t.AssignedToId == null),
-            })
-            .SingleOrDefaultAsync(cancellationToken);
+        int criticalVulnerabilities =
+            await dashboardRepository.CountCriticalVulnerabilitiesAsync(organizationId, cancellationToken);
 
-        int criticalVulnerabilities = await vulnerabilityRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .CountAsync(v => v.Severity == VulnerabilitySeverity.Critical, cancellationToken);
-
-        Dictionary<TicketPriority, int> priorityCounts = await tickets
-            .Where(t => openStatusIds.Contains(t.TicketStatusId!.Value))
-            .GroupBy(t => t.Priority)
-            .Select(g => new { Priority = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Priority, x => x.Count, cancellationToken);
+        IReadOnlyDictionary<TicketPriority, int> priorityCounts = await dashboardRepository
+            .GetOpenTicketCountsByPriorityAsync(organizationId, openStatusIds, cancellationToken);
 
         int resolvedThisMonth = counters?.ResolvedMonth ?? 0;
 
@@ -106,35 +85,17 @@ public class DashboardStatsService(
             TicketsByStatusColor = statuses.ToDictionary(s => s.Name, s => s.Color),
             TicketsByPriority = AllPriorities.ToDictionary(p => p.ToString(), p => priorityCounts.GetValueOrDefault(p)),
             UnassignedOpenTickets = counters?.Unassigned ?? 0,
-            UrgentTickets = await BuildUrgentTicketsAsync(tickets, openStatusIds, cancellationToken),
+            UrgentTickets = await BuildUrgentTicketsAsync(organizationId, openStatusIds, cancellationToken),
             RecentActivity = await BuildRecentActivityAsync(organizationId, now, cancellationToken),
             VulnerabilitiesDetectedPerDay = await BuildDetectionSeriesAsync(organizationId, now, cancellationToken),
         };
     }
 
-    private static async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(IQueryable<Ticket> tickets,
-        List<Guid> openStatusIds, CancellationToken cancellationToken)
+    private async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(Guid organizationId,
+        IReadOnlyCollection<Guid> openStatusIds, CancellationToken cancellationToken)
     {
-        var raw = await tickets
-            .Where(t => openStatusIds.Contains(t.TicketStatusId!.Value))
-            .OrderByDescending(t =>
-                t.Priority == TicketPriority.Critical ? 4 :
-                t.Priority == TicketPriority.High ? 3 :
-                t.Priority == TicketPriority.Medium ? 2 : 1)
-            .ThenBy(t => t.CreatedAt)
-            .Take(UrgentTicketCount)
-            .Select(t => new
-            {
-                t.Id,
-                t.Title,
-                Priority = t.Priority.ToString().ToLower(),
-                Type = t.Type.ToString().ToLower(),
-                StatusName = t.TicketStatus != null ? t.TicketStatus.Name : string.Empty,
-                ProjectName = t.Project != null ? t.Project.Name : null,
-                AssignedToName = t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
-                CommentCount = t.Comments.Count
-            })
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<UrgentTicketRow> raw = await dashboardRepository.GetUrgentTicketsAsync(organizationId,
+            openStatusIds, UrgentTicketCount, cancellationToken);
 
         return raw.Select(t => new UrgentTicketDto
         {
@@ -155,12 +116,8 @@ public class DashboardStatsService(
     {
         DateTime windowStart = now.AddDays(-(DetectionWindowDays - 1)).Date;
 
-        Dictionary<DateTime, int> detections = await vulnerabilityRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Where(v => v.DetectedAt >= windowStart)
-            .GroupBy(v => v.DetectedAt.Date)
-            .Select(g => new { Date = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Date, x => x.Count, cancellationToken);
+        IReadOnlyDictionary<DateTime, int> detections = await dashboardRepository
+            .GetVulnerabilityDetectionCountsAsync(organizationId, windowStart, cancellationToken);
 
         return Enumerable
             .Range(0, DetectionWindowDays)
@@ -179,25 +136,10 @@ public class DashboardStatsService(
         DateTime since = now.AddDays(-7);
         List<ActivityItemDto> items = [];
 
-        IQueryable<Ticket> tickets = ticketRepository.GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly);
+        IReadOnlyList<ClosedTicketActivityRow> closedTickets = await dashboardRepository
+            .GetClosedTicketActivityAsync(organizationId, since, ActivityCount, cancellationToken);
 
-        var closedTickets = await tickets
-            .Where(t => t.TicketStatus != null && t.TicketStatus.IsClosed && t.UpdatedAt >= since)
-            .OrderByDescending(t => t.UpdatedAt)
-            .Take(ActivityCount)
-            .Select(t => new
-            {
-                t.Id,
-                t.UpdatedAt,
-                ProjectName = t.Project != null ? t.Project.Name : null,
-                AssigneeFirstName = t.AssignedTo != null ? t.AssignedTo.FirstName : null,
-                AssigneeLastName = t.AssignedTo != null ? t.AssignedTo.LastName : null,
-                CreatedByFirstName = t.CreatedBy != null ? t.CreatedBy.FirstName : null,
-                CreatedByLastName = t.CreatedBy != null ? t.CreatedBy.LastName : null,
-            })
-            .ToListAsync(cancellationToken);
-
-        foreach (var ticket in closedTickets)
+        foreach (ClosedTicketActivityRow ticket in closedTickets)
         {
             string reference = TicketReference.For(ticket.Id);
             string? userName = ticket.AssigneeFirstName is not null
@@ -223,21 +165,10 @@ public class DashboardStatsService(
             });
         }
 
-        var createdTickets = await tickets
-            .Where(t => t.CreatedAt >= since)
-            .OrderByDescending(t => t.CreatedAt)
-            .Take(ActivityCount)
-            .Select(t => new
-            {
-                t.Id,
-                t.CreatedAt,
-                ProjectName = t.Project != null ? t.Project.Name : null,
-                CreatedByFirstName = t.CreatedBy != null ? t.CreatedBy.FirstName : null,
-                CreatedByLastName = t.CreatedBy != null ? t.CreatedBy.LastName : null,
-            })
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<CreatedTicketActivityRow> createdTickets = await dashboardRepository
+            .GetCreatedTicketActivityAsync(organizationId, since, ActivityCount, cancellationToken);
 
-        foreach (var ticket in createdTickets)
+        foreach (CreatedTicketActivityRow ticket in createdTickets)
         {
             string reference = TicketReference.For(ticket.Id);
 
@@ -267,24 +198,14 @@ public class DashboardStatsService(
     private async Task<List<ActivityItemDto>> BuildVulnerabilityActivityAsync(Guid organizationId, DateTime since,
         CancellationToken cancellationToken)
     {
-        var recentVulnerabilities = await vulnerabilityRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Where(v => v.Severity == VulnerabilitySeverity.Critical && v.DetectedAt >= since)
-            .Select(v => new
-            {
-                v.DetectedAt,
-                v.CveId,
-                v.CvssScore,
-                ProjectName = v.Dependency.Project.Name,
-                ProjectId = v.Dependency.Project.Id,
-            })
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<VulnerabilityActivityRow> recentVulnerabilities = await dashboardRepository
+            .GetCriticalVulnerabilityActivityAsync(organizationId, since, cancellationToken);
 
         return recentVulnerabilities
             .GroupBy(v => v.ProjectId)
             .Select(group =>
             {
-                var worst = group.OrderByDescending(v => v.CvssScore).First();
+                VulnerabilityActivityRow worst = group.OrderByDescending(v => v.CvssScore).First();
                 int count = group.Count();
 
                 return new ActivityItemDto

@@ -1,10 +1,7 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -16,14 +13,13 @@ namespace Sentinel.Application.Settings.ConnectIntegration;
 
 public class IntegrationConnectService(
     IOrganizationRepository organizationRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IRepositoryHostClient repositoryHostClient,
     TokenProtector tokenProtector,
     IAuditLogService auditLog,
     ITenantContext tenant,
     IntegrationConnectValidator validator) : IService
 {
-
     public async Task<Result> ExecuteAsync(ConnectIntegrationDto model, RepositoryType platform,
         CancellationToken cancellationToken)
     {
@@ -39,7 +35,7 @@ public class IntegrationConnectService(
             return Result.Error(ErrorCodes.SettingsTokenRequired);
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (organization == null)
             return Result.NotFound();
@@ -50,7 +46,7 @@ public class IntegrationConnectService(
         if (account == null)
             return Result.Error(InvalidTokenCode(platform));
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             string protectedToken = tokenProtector.Protect(model.Token);
 
@@ -61,7 +57,7 @@ public class IntegrationConnectService(
 
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

@@ -1,6 +1,6 @@
-namespace Sentinel.Application.Common;
+namespace Sentinel.Infrastructure.Repositories;
 
-public static class SearchPattern
+internal static class SearchPattern
 {
     public static string Like(string search)
     {

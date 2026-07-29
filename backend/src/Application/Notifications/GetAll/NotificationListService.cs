@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -19,11 +18,8 @@ public class NotificationListService(INotificationRepository notificationReposit
         if (tenant.UserId is not Guid userId)
             return Result<NotificationsResponse>.Unauthorized();
 
-        List<Notification> notifications = await notificationRepository
-            .GetByUser(userId, QueryableQueryOptions.ReadOnly)
-            .OrderByDescending(n => n.CreatedAt)
-            .Take(MaxItems)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<Notification> notifications = await notificationRepository
+            .ListRecentForUserAsync(userId, MaxItems, cancellationToken);
 
         List<NotificationDto> items = notifications.Select(n => new NotificationDto(
             n.Id,

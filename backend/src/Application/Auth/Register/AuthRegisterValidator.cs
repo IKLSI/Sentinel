@@ -8,7 +8,6 @@ namespace Sentinel.Application.Auth.Register;
 
 public class AuthRegisterValidator(IUserRepository userRepository) : IValidator
 {
-
     public async Task<Result> ValidateAsync(RegisterRequest model, CancellationToken cancellationToken)
     {
         ValidationErrors errors = new ValidationErrors()

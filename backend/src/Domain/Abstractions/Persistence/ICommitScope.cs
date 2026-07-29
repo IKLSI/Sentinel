@@ -1,13 +1,13 @@
 namespace Sentinel.Domain.Abstractions.Persistence;
 
-public interface IUnitOfWork : IDisposable
+public interface ICommitScope : IDisposable
 {
     Task<int> CommitAsync(CancellationToken cancellationToken);
 }
 
-public interface IUnitOfWorkManager
+public interface ICommitScopeFactory
 {
-    IUnitOfWork NewUnitOfWork();
+    ICommitScope Begin();
 
     Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken);
 }

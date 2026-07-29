@@ -8,7 +8,6 @@ namespace Sentinel.Application.Locales.Get;
 
 public class LocaleGetService(IContentPathProvider contentPath, LocaleGetValidator validator) : IService
 {
-
     public async Task<Result<JsonElement>> ExecuteAsync(string culture, CancellationToken cancellationToken)
     {
         Result validationResult = await validator.ValidateAsync(culture, cancellationToken);

@@ -5,8 +5,9 @@ namespace Sentinel.Domain.Repositories;
 
 public interface ITicketCommentRepository : ICrudEntityWithIdRepository<TicketComment>
 {
-    Task<TicketComment?> GetOrDefaultInTicketAsync(Guid commentId, Guid ticketId,
-        SingleEntityQueryOptions<TicketComment> options, CancellationToken cancellationToken);
+    Task<TicketComment?> GetOrDefaultInTicketAsync(Guid commentId, Guid ticketId, QueryTracking tracking,
+        CancellationToken cancellationToken);
 
-    IQueryable<TicketComment> GetByTicket(Guid ticketId, QueryableQueryOptions options);
+    Task<TicketComment?> GetOrDefaultInTicketWithAuthorAsync(Guid commentId, Guid ticketId,
+        CancellationToken cancellationToken);
 }

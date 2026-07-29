@@ -10,11 +10,14 @@ public class TicketCommentRepository : CrudEntityWithIdRepository<TicketComment>
 {
     public TicketCommentRepository(SentinelContext context) : base(context) { }
 
-    public Task<TicketComment?> GetOrDefaultInTicketAsync(Guid commentId, Guid ticketId,
-        SingleEntityQueryOptions<TicketComment> options, CancellationToken cancellationToken) =>
-        options.ApplyIncludes(GetAll(options.ToQueryableQueryOptions()))
+    public Task<TicketComment?> GetOrDefaultInTicketAsync(Guid commentId, Guid ticketId, QueryTracking tracking,
+        CancellationToken cancellationToken) =>
+        Query(tracking)
             .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == ticketId, cancellationToken);
 
-    public IQueryable<TicketComment> GetByTicket(Guid ticketId, QueryableQueryOptions options) =>
-        GetAll(options).Where(c => c.TicketId == ticketId);
+    public Task<TicketComment?> GetOrDefaultInTicketWithAuthorAsync(Guid commentId, Guid ticketId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.Tracked)
+            .Include(c => c.Author)
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == ticketId, cancellationToken);
 }

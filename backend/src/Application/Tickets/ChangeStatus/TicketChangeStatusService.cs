@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -21,7 +17,7 @@ public class TicketChangeStatusService(
     ITicketRepository ticketRepository,
     ITicketStatusRepository ticketStatusRepository,
     ITicketHistoryRepository ticketHistoryRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     NotificationPublisher notificationPublisher,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
@@ -42,21 +38,20 @@ public class TicketChangeStatusService(
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
             return Result<TicketDto>.Unauthorized();
 
-        Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId,
-            new SingleEntityQueryOptions<Ticket> { Include = query => query.Include(t => t.TicketStatus) }, cancellationToken);
+        Ticket? ticket = await ticketRepository.GetOrDefaultWithStatusAsync(ticketId, cancellationToken);
 
         if (ticket == null || ticket.OrganizationId != organizationId)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);
 
         TicketStatus? newStatus = await ticketStatusRepository.GetOrDefaultAsync(model.StatusId,
-            new SingleEntityQueryOptions<TicketStatus>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (newStatus == null || newStatus.OrganizationId != ticket.OrganizationId)
             return Result<TicketDto>.Error(ErrorCodes.TicketInvalidStatus);
 
         string oldStatusName = ticket.TicketStatus?.Name ?? UnknownStatusName;
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             ticket.TicketStatusId = newStatus.Id;
             ticket.UpdatedAt = DateTime.UtcNow;
@@ -65,7 +60,7 @@ public class TicketChangeStatusService(
                 TicketQueries.CreateHistory(ticketId, userId, "Status", oldStatusName, newStatus.Name),
                 cancellationToken);
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         dashboardCache.Invalidate(organizationId);
@@ -80,7 +75,7 @@ public class TicketChangeStatusService(
             entityId: ticketId,
             jti: tenant.Jti);
 
-        Ticket? updated = await ticketRepository.GetOrDefaultAsync(ticketId, TicketQueries.Details, cancellationToken);
+        Ticket? updated = await ticketRepository.GetOrDefaultWithDetailsAsync(ticketId, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }

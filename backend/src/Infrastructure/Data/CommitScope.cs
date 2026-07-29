@@ -4,27 +4,33 @@ using Sentinel.Domain.Abstractions.Persistence;
 
 namespace Sentinel.Infrastructure.Data;
 
-public class UnitOfWork : IUnitOfWork
+public class CommitScope : ICommitScope
 {
     private readonly SentinelContext _context;
-    private readonly IDbContextTransaction? _transaction;
     private bool _committed;
     private bool _disposed;
 
-    internal UnitOfWork(SentinelContext context)
+    internal CommitScope(SentinelContext context)
     {
         _context = context;
-
-        if (context.Database.IsRelational() && context.Database.CurrentTransaction == null)
-            _transaction = context.Database.BeginTransaction();
     }
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken)
     {
-        int affectedRows = await _context.SaveChangesAsync(cancellationToken);
+        if (_committed)
+            throw new InvalidOperationException(
+                "Cette portée de validation a déjà été validée : ouvrez-en une nouvelle, ou utilisez ExecuteInTransactionAsync pour regrouper plusieurs enregistrements dans une même transaction");
 
-        if (_transaction != null)
-            await _transaction.CommitAsync(cancellationToken);
+        int affectedRows;
+
+        try
+        {
+            affectedRows = await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception is not DbUpdateConcurrencyException)
+        {
+            throw new PersistenceException("L'enregistrement en base a été rejeté", exception);
+        }
 
         _committed = true;
 
@@ -36,30 +42,22 @@ public class UnitOfWork : IUnitOfWork
         if (_disposed) return;
 
         _disposed = true;
-        GC.SuppressFinalize(this);
-
-        if (_transaction == null) return;
 
         if (!_committed)
-        {
-            _transaction.Rollback();
             _context.ChangeTracker.Clear();
-        }
-
-        _transaction.Dispose();
     }
 }
 
-public class UnitOfWorkManager : IUnitOfWorkManager
+public class CommitScopeFactory : ICommitScopeFactory
 {
     private readonly SentinelContext _context;
 
-    public UnitOfWorkManager(SentinelContext context)
+    public CommitScopeFactory(SentinelContext context)
     {
         _context = context;
     }
 
-    public IUnitOfWork NewUnitOfWork() => new UnitOfWork(_context);
+    public ICommitScope Begin() => new CommitScope(_context);
 
     public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken)
@@ -67,6 +65,7 @@ public class UnitOfWorkManager : IUnitOfWorkManager
         if (!_context.Database.IsRelational())
         {
             await operation(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
             return;
         }
 

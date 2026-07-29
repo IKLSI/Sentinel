@@ -9,7 +9,6 @@ namespace Sentinel.Application.Users.Invite;
 
 public class UserInviteValidator(IUserRepository userRepository, IUserInvitationRepository invitationRepository) : IValidator
 {
-
     public async Task<Result> ValidateAsync(CreateUserDto model, Guid organizationId,
         CancellationToken cancellationToken)
     {

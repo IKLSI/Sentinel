@@ -1,4 +1,3 @@
-using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
@@ -14,7 +13,7 @@ public sealed class TestScope : IDisposable
 
         Tenant = new FakeTenantContext { OrganizationId = OrganizationId, UserId = UserId };
         Context = TestDbContextFactory.CreateInMemory(Tenant);
-        UnitOfWorkManager = new UnitOfWorkManager(Context);
+        CommitScopeFactory = new CommitScopeFactory(Context);
 
         Tickets = new TicketRepository(Context);
         TicketStatuses = new TicketStatusRepository(Context);
@@ -29,7 +28,7 @@ public sealed class TestScope : IDisposable
 
     public SentinelContext Context { get; }
     public FakeTenantContext Tenant { get; }
-    public UnitOfWorkManager UnitOfWorkManager { get; }
+    public CommitScopeFactory CommitScopeFactory { get; }
 
     public TicketRepository Tickets { get; }
     public TicketStatusRepository TicketStatuses { get; }

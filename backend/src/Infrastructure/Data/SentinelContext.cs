@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;

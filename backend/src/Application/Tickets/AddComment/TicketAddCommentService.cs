@@ -3,9 +3,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -19,14 +16,13 @@ public class TicketAddCommentService(
     ITicketRepository ticketRepository,
     ITicketCommentRepository commentRepository,
     IUserRepository userRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     NotificationPublisher notificationPublisher,
     IAuditLogService auditLog,
     ITenantContext tenant,
     TicketAddCommentValidator validator,
     ILogger<TicketAddCommentService> logger) : IService
 {
-
     public async Task<Result<TicketCommentDto>> ExecuteAsync(Guid ticketId, CreateCommentDto model,
         CancellationToken cancellationToken)
     {
@@ -34,7 +30,7 @@ public class TicketAddCommentService(
             return Result<TicketCommentDto>.Unauthorized();
 
         Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId,
-            new SingleEntityQueryOptions<Ticket>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (ticket == null || ticket.OrganizationId != organizationId)
             return Result<TicketCommentDto>.NotFound(ErrorCodes.TicketNotFound);
@@ -53,12 +49,12 @@ public class TicketAddCommentService(
             UpdatedAt = DateTime.UtcNow
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await commentRepository.AddAsync(comment, cancellationToken);
             ticket.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await NotifyAssigneeAsync(ticket, userId, cancellationToken);
@@ -72,7 +68,7 @@ public class TicketAddCommentService(
             jti: tenant.Jti);
 
         User? author = await userRepository.GetOrDefaultAsync(userId,
-            new SingleEntityQueryOptions<User> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         return new TicketCommentDto
         {

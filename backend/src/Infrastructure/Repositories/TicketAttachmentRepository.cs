@@ -10,9 +10,10 @@ public class TicketAttachmentRepository : CrudEntityWithIdRepository<TicketAttac
 {
     public TicketAttachmentRepository(SentinelContext context) : base(context) { }
 
-    public Task<TicketAttachment?> GetOrDefaultInTicketAsync(Guid attachmentId, Guid ticketId,
-        SingleEntityQueryOptions<TicketAttachment> options, CancellationToken cancellationToken) =>
-        options.ApplyIncludes(GetAll(options.ToQueryableQueryOptions()))
+    public Task<TicketAttachment?> GetOrDefaultInTicketWithTicketAsync(Guid attachmentId, Guid ticketId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Include(a => a.Ticket)
             .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == ticketId, cancellationToken);
 }
 

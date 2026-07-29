@@ -8,10 +8,9 @@ namespace Sentinel.Application.Billing;
 
 public class StripeCustomerProvisioner(
     IUserRepository userRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IStripeClient stripeClient)
 {
-
     public async Task<string> EnsureCustomerAsync(Organization organization, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrEmpty(organization.StripeCustomerId))
@@ -32,10 +31,10 @@ public class StripeCustomerProvisioner(
 
         Customer customer = await new CustomerService(stripeClient).CreateAsync(options, cancellationToken: cancellationToken);
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             organization.StripeCustomerId = customer.Id;
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         return customer.Id;

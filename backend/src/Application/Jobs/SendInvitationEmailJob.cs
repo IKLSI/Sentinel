@@ -1,12 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
@@ -41,15 +34,8 @@ public class SendInvitationEmailJob
     {
         using IDisposable elevation = _systemScope.Enter();
 
-        UserInvitation? invitation = await _invitationRepository.GetOrDefaultAsync(invitationId,
-            new SingleEntityQueryOptions<UserInvitation>
-            {
-                AsNoTracking = true,
-                Include = query => query
-                    .Include(i => i.Organization)
-                    .Include(i => i.InvitedBy)
-            },
-            CancellationToken.None);
+        UserInvitation? invitation = await _invitationRepository
+            .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, CancellationToken.None);
 
         if (invitation == null)
         {

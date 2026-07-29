@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -10,14 +11,37 @@ public class TicketStatusRepository : CrudEntityWithIdRepository<TicketStatus>, 
 {
     public TicketStatusRepository(SentinelContext context) : base(context) { }
 
-    public IQueryable<TicketStatus> GetByOrganization(Guid organizationId, QueryableQueryOptions options) =>
-        GetAll(options).Where(s => s.OrganizationId == organizationId);
+    public async Task<IReadOnlyList<TicketStatusDto>> ListForOrganizationAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(s => s.OrganizationId == organizationId)
+            .OrderBy(s => s.Order)
+            .Select(s => new TicketStatusDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Color = s.Color,
+                Order = s.Order,
+                IsDefault = s.IsDefault,
+                IsClosed = s.IsClosed,
+                TicketCount = s.Tickets.Count(),
+            })
+            .ToListAsync(cancellationToken);
 
-    public Task<TicketStatus?> GetOrDefaultFirstByOrderAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        GetByOrganization(organizationId, QueryableQueryOptions.Tracked)
+    public async Task<IReadOnlyList<TicketStatus>> ListByOrganizationOrderedAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(s => s.OrganizationId == organizationId)
+            .OrderBy(s => s.Order)
+            .ToListAsync(cancellationToken);
+
+    public Task<TicketStatus?> GetOrDefaultFirstByOrderAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.Tracked)
+            .Where(s => s.OrganizationId == organizationId)
             .OrderBy(s => s.Order)
             .FirstOrDefaultAsync(cancellationToken);
 
     public Task<bool> ExistsForOrganizationAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.ReadOnly).AnyAsync(s => s.OrganizationId == organizationId, cancellationToken);
+        Query(QueryTracking.NoTracking).AnyAsync(s => s.OrganizationId == organizationId, cancellationToken);
 }

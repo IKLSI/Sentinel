@@ -1,17 +1,12 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Audit;
 using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 
 namespace Sentinel.Application.TechHealth.ExportExcel;
 
 public class TechHealthExportExcelService(ExportService exportService, ITenantContext tenant) : IService
 {
-
     public async Task<Result<FileDownload>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)

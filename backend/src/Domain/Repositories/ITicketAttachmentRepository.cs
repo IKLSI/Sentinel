@@ -5,6 +5,6 @@ namespace Sentinel.Domain.Repositories;
 
 public interface ITicketAttachmentRepository : ICrudEntityWithIdRepository<TicketAttachment>
 {
-    Task<TicketAttachment?> GetOrDefaultInTicketAsync(Guid attachmentId, Guid ticketId,
-        SingleEntityQueryOptions<TicketAttachment> options, CancellationToken cancellationToken);
+    Task<TicketAttachment?> GetOrDefaultInTicketWithTicketAsync(Guid attachmentId, Guid ticketId,
+        CancellationToken cancellationToken);
 }

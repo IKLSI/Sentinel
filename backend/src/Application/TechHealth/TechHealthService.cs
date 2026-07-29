@@ -1,8 +1,6 @@
-using Sentinel.Application.Exports;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
 using Hangfire;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,7 +38,7 @@ public class TechHealthService
     private readonly IVulnerabilityRepository _vulnerabilityRepository;
     private readonly IRuntimeRepository _runtimeRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly ICommitScopeFactory _commitScopeFactory;
     private readonly HttpClient _osvClient;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TechHealthService> _logger;
@@ -100,7 +98,7 @@ public class TechHealthService
         IVulnerabilityRepository vulnerabilityRepository,
         IRuntimeRepository runtimeRepository,
         IUserRepository userRepository,
-        IUnitOfWorkManager unitOfWorkManager,
+        ICommitScopeFactory commitScopeFactory,
         IHttpClientFactory httpClientFactory,
         ILogger<TechHealthService> logger,
         RepositoryScannerService repositoryScanner,
@@ -117,7 +115,7 @@ public class TechHealthService
         _vulnerabilityRepository = vulnerabilityRepository;
         _runtimeRepository = runtimeRepository;
         _userRepository = userRepository;
-        _unitOfWorkManager = unitOfWorkManager;
+        _commitScopeFactory = commitScopeFactory;
         _httpClientFactory = httpClientFactory;
         _osvClient = httpClientFactory.CreateClient(HttpClientNames.Osv);
         _logger = logger;
@@ -135,16 +133,14 @@ public class TechHealthService
         using IDisposable elevation = _systemScope.Enter();
 
         Project? project = await _projectRepository.GetOrDefaultAsync(projectId,
-            new SingleEntityQueryOptions<Project>(), CancellationToken.None);
+            QueryTracking.Tracked, CancellationToken.None);
 
         if (project == null) return;
 
         bool isFirstScan = project.LastScanAt == null;
 
-        HashSet<string> previousCveIds = await _vulnerabilityRepository
-            .GetByProject(projectId, QueryableQueryOptions.ReadOnly)
-            .Select(v => v.CveId)
-            .ToHashSetAsync();
+        HashSet<string> previousCveIds =
+            await _vulnerabilityRepository.GetCveIdsByProjectAsync(projectId, CancellationToken.None);
 
         string? scanError = null;
         int manifestsRead = 0;
@@ -155,7 +151,7 @@ public class TechHealthService
             scanRan = true;
             string? tokenOverride = null;
             Organization? org = await _organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-                new SingleEntityQueryOptions<Organization>(), CancellationToken.None);
+                QueryTracking.Tracked, CancellationToken.None);
 
             if (org != null)
             {
@@ -172,7 +168,7 @@ public class TechHealthService
 
             if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
             {
-                await _unitOfWorkManager.ExecuteInTransactionAsync(async token =>
+                await _commitScopeFactory.ExecuteInTransactionAsync(async token =>
                 {
                     await _vulnerabilityRepository.DeleteByProjectAsync(projectId, token);
                     await _dependencyRepository.DeleteByProjectAsync(projectId, token);
@@ -193,14 +189,8 @@ public class TechHealthService
 
         if (!project.Dependencies.Any() && !project.Runtimes.Any())
         {
-            project = (await _projectRepository.GetOrDefaultAsync(projectId,
-                new SingleEntityQueryOptions<Project>
-                {
-                    Include = query => query
-                        .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-                        .Include(p => p.Runtimes)
-                },
-                CancellationToken.None))!;
+            project = (await _projectRepository
+                .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.Tracked, CancellationToken.None))!;
         }
 
         using SemaphoreSlim throttle = new SemaphoreSlim(10);
@@ -244,7 +234,7 @@ public class TechHealthService
             dep.ScannedAt = DateTime.UtcNow;
 
         Organization? scanOrg = await _organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-            new SingleEntityQueryOptions<Organization>(), CancellationToken.None);
+            QueryTracking.Tracked, CancellationToken.None);
 
         if (scanOrg != null)
         {
@@ -252,9 +242,9 @@ public class TechHealthService
             scanOrg.MonthlyScanCount++;
         }
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
-            await unitOfWork.CommitAsync(CancellationToken.None);
+            await commitScope.CommitAsync(CancellationToken.None);
         }
 
         _cache.Remove(CacheKeys.Dashboard(project.OrganizationId));
@@ -267,7 +257,7 @@ public class TechHealthService
         try
         {
             Organization? org = await _organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-                new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, CancellationToken.None);
+                QueryTracking.NoTracking, CancellationToken.None);
 
             if (org == null || !org.SecurityAlertsEnabled) return;
 
@@ -283,11 +273,8 @@ public class TechHealthService
 
             if (newVulns.Count == 0) return;
 
-            List<string> adminEmails = await _userRepository
-                .GetByOrganization(project.OrganizationId, QueryableQueryOptions.ReadOnly)
-                .Where(u => u.Role == UserRole.Admin)
-                .Select(u => u.Email)
-                .ToListAsync();
+            IReadOnlyList<string> adminEmails =
+                await _userRepository.ListAdminEmailsAsync(project.OrganizationId, CancellationToken.None);
 
             if (adminEmails.Count == 0) return;
 
@@ -311,9 +298,9 @@ public class TechHealthService
 
     public async Task ScanAllProjectsDueAsync()
     {
-        List<Guid> daily = await GetProjectsDueAsync(ScanFrequency.Daily, 1);
-        List<Guid> weekly = await GetProjectsDueAsync(ScanFrequency.Weekly, 7);
-        List<Guid> monthly = await GetProjectsDueAsync(ScanFrequency.Monthly, 30);
+        IReadOnlyList<Guid> daily = await GetProjectsDueAsync(ScanFrequency.Daily, 1);
+        IReadOnlyList<Guid> weekly = await GetProjectsDueAsync(ScanFrequency.Weekly, 7);
+        IReadOnlyList<Guid> monthly = await GetProjectsDueAsync(ScanFrequency.Monthly, 30);
 
         using SemaphoreSlim throttle = new SemaphoreSlim(5);
         await Task.WhenAll(daily.Concat(weekly).Concat(monthly).Select(async projectId =>
@@ -330,15 +317,11 @@ public class TechHealthService
         }));
     }
 
-    private Task<List<Guid>> GetProjectsDueAsync(ScanFrequency frequency, int elapsedDays)
+    private Task<IReadOnlyList<Guid>> GetProjectsDueAsync(ScanFrequency frequency, int elapsedDays)
     {
         DateTime threshold = DateTime.UtcNow.AddDays(-elapsedDays);
 
-        return _projectRepository
-            .GetAll(QueryableQueryOptions.ReadOnly)
-            .Where(p => p.ScanFrequency == frequency && (p.LastScanAt == null || p.LastScanAt < threshold))
-            .Select(p => p.Id)
-            .ToListAsync();
+        return _projectRepository.ListIdsDueForScanAsync(frequency, threshold, CancellationToken.None);
     }
 
     private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status, List<Vulnerability> NewVulnerabilities);
@@ -750,16 +733,8 @@ public class TechHealthService
 
     public async Task<ProjectDto?> GetProjectWithDetailsAsync(Guid projectId)
     {
-        Project? project = await _projectRepository.GetOrDefaultAsync(projectId,
-            new SingleEntityQueryOptions<Project>
-            {
-                AsNoTracking = true,
-                AsSplitQuery = true,
-                Include = query => query
-                    .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-                    .Include(p => p.Runtimes)
-            },
-            CancellationToken.None);
+        Project? project = await _projectRepository
+            .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.NoTracking, CancellationToken.None);
 
         return project == null ? null : MapToDto(project);
     }

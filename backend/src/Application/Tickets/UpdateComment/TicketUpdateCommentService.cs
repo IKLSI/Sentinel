@@ -1,11 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Application.Tickets.AddComment;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -18,12 +13,11 @@ namespace Sentinel.Application.Tickets.UpdateComment;
 
 public class TicketUpdateCommentService(
     ITicketCommentRepository commentRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     TicketAddCommentValidator validator) : IService
 {
-
     public async Task<Result<TicketCommentDto>> ExecuteAsync(Guid ticketId, Guid commentId, CreateCommentDto model,
         CancellationToken cancellationToken)
     {
@@ -35,9 +29,8 @@ public class TicketUpdateCommentService(
         if (tenant.UserId is not Guid userId)
             return Result<TicketCommentDto>.Unauthorized();
 
-        TicketComment? comment = await commentRepository.GetOrDefaultInTicketAsync(commentId, ticketId,
-            new SingleEntityQueryOptions<TicketComment> { Include = query => query.Include(c => c.Author) },
-            cancellationToken);
+        TicketComment? comment = await commentRepository
+            .GetOrDefaultInTicketWithAuthorAsync(commentId, ticketId, cancellationToken);
 
         if (comment == null)
             return Result<TicketCommentDto>.NotFound(ErrorCodes.TicketCommentNotFound);
@@ -45,12 +38,12 @@ public class TicketUpdateCommentService(
         if (comment.AuthorId != userId)
             return Result<TicketCommentDto>.Forbidden();
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             comment.Content = model.Content;
             comment.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

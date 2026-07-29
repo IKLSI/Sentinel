@@ -1,9 +1,4 @@
-using Sentinel.Application.Audit;
 using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -17,10 +12,9 @@ public class QuotaGuard(
     IProjectRepository projectRepository,
     IUserRepository userRepository,
     IUserInvitationRepository invitationRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope)
 {
-
     public async Task<Result> EnsureCanAddProjectAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         PlanLimits limits = await GetLimitsAsync(organizationId, cancellationToken);
@@ -77,7 +71,7 @@ public class QuotaGuard(
         CancellationToken cancellationToken)
     {
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (organization == null)
             return Result<Organization>.NotFound(ErrorCodes.NotFound);
@@ -89,22 +83,16 @@ public class QuotaGuard(
     {
         if (!ScanPeriod.ResetIfElapsed(organization)) return;
 
-        using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+        using ICommitScope commitScope = commitScopeFactory.Begin();
 
-        await unitOfWork.CommitAsync(cancellationToken);
+        await commitScope.CommitAsync(cancellationToken);
     }
 
     private async Task<PlanLimits> GetLimitsAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
-        PlanTier tier = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleProjectionQueryOptions<Organization, PlanTier>
-            {
-                AsNoTracking = true,
-                Expression = o => o.PlanTier
-            },
-            cancellationToken);
+        PlanTier tier = await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
 
         return PlanLimits.For(tier);
     }

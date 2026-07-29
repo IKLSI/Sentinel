@@ -3,8 +3,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
-using Sentinel.Application.TechHealth.Scan;
 
 namespace Sentinel.Tests.Services;
 

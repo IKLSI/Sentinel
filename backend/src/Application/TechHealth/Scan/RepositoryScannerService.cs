@@ -1,8 +1,6 @@
-using Sentinel.Application.Common;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Versioning;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Models;
 

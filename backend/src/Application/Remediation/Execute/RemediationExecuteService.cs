@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -22,7 +18,6 @@ public class RemediationExecuteService(
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result<RemediationResultDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
@@ -56,13 +51,7 @@ public class RemediationExecuteService(
     private async Task<Result> EnsureSubscriptionActiveAsync(Guid organizationId,
         CancellationToken cancellationToken)
     {
-        SubscriptionStatus status = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleProjectionQueryOptions<Organization, SubscriptionStatus>
-            {
-                AsNoTracking = true,
-                Expression = o => o.SubscriptionStatus
-            },
-            cancellationToken);
+        SubscriptionStatus status = await organizationRepository.GetSubscriptionStatusOrDefaultAsync(organizationId, cancellationToken);
 
         if (status is not (SubscriptionStatus.Active or SubscriptionStatus.Trialing))
             return Result.PaymentRequired(ErrorCodes.QuotaRemediationsExceeded);

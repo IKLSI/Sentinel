@@ -11,11 +11,10 @@ namespace Sentinel.Application.Users.UpdatePreferences;
 
 public class UserUpdatePreferencesService(
     IUserRepository userRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ITenantContext tenant,
     UserUpdatePreferencesValidator validator) : IService
 {
-
     public async Task<Result> ExecuteAsync(UpdatePreferencesDto model, CancellationToken cancellationToken)
     {
         Result validationResult = await validator.ValidateAsync(model, cancellationToken);
@@ -27,7 +26,7 @@ public class UserUpdatePreferencesService(
             return Result.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
-            new SingleEntityQueryOptions<User>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (user == null)
             return Result.NotFound(ErrorCodes.UserNotFound);
@@ -38,9 +37,9 @@ public class UserUpdatePreferencesService(
         if (!string.IsNullOrEmpty(model.Language) && LanguageValues.All.Contains(model.Language))
             user.Language = model.Language;
 
-        using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+        using ICommitScope commitScope = commitScopeFactory.Begin();
 
-        await unitOfWork.CommitAsync(cancellationToken);
+        await commitScope.CommitAsync(cancellationToken);
 
         return Result.NoContent();
     }

@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,18 +16,17 @@ public class UserDeleteAccountService(
     IAuditLogRepository auditLogRepository,
     INotificationRepository notificationRepository,
     IApiKeyRepository apiKeyRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(DeleteAccountDto model, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid currentUserId)
             return Result.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
-            new SingleEntityQueryOptions<User>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (user == null)
             return Result.NotFound(ErrorCodes.UserNotFound);
@@ -50,10 +45,10 @@ public class UserDeleteAccountService(
         await auditLogRepository.DetachUserAsync(currentUserId, cancellationToken);
         await notificationRepository.DeleteByUserAsync(currentUserId, cancellationToken);
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             Anonymize(user);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);

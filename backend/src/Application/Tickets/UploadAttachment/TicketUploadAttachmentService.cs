@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -18,13 +14,12 @@ public class TicketUploadAttachmentService(
     ITicketRepository ticketRepository,
     ITicketAttachmentRepository attachmentRepository,
     IUserRepository userRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     IContentPathProvider contentPath,
     TicketUploadAttachmentValidator validator) : IService
 {
-
     public async Task<Result<TicketAttachmentDto>> ExecuteAsync(Guid ticketId, TicketAttachmentUploadModel? model,
         CancellationToken cancellationToken)
     {
@@ -57,14 +52,14 @@ public class TicketUploadAttachmentService(
             CreatedAt = DateTime.UtcNow
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await attachmentRepository.AddAsync(attachment, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         User? uploader = await userRepository.GetOrDefaultAsync(userId,
-            new SingleEntityQueryOptions<User> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.AttachmentUploaded,

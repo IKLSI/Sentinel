@@ -5,9 +5,18 @@ namespace Sentinel.Domain.Repositories;
 
 public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
 {
-    IQueryable<Ticket> GetByOrganization(Guid organizationId, QueryableQueryOptions options);
+    Task<Ticket?> GetOrDefaultWithDetailsAsync(Guid ticketId, CancellationToken cancellationToken);
 
-    IQueryable<Ticket> GetByProjects(IReadOnlyCollection<Guid> projectIds, QueryableQueryOptions options);
+    Task<Ticket?> GetOrDefaultWithStatusAsync(Guid ticketId, CancellationToken cancellationToken);
+
+    Task<PagedList<Ticket>> SearchAsync(Guid organizationId, TicketFilter filter, int page, int pageSize,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Ticket>> ListForExportAsync(Guid organizationId, TicketFilter filter,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
+        CancellationToken cancellationToken);
 
     Task<bool> ExistsInOrganizationAsync(Guid ticketId, Guid organizationId, CancellationToken cancellationToken);
 

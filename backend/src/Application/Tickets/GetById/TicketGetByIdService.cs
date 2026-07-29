@@ -10,13 +10,12 @@ namespace Sentinel.Application.Tickets.GetById;
 
 public class TicketGetByIdService(ITicketRepository ticketRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result<TicketDto>> ExecuteAsync(Guid ticketId, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<TicketDto>.Unauthorized();
 
-        Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId, TicketQueries.Details, cancellationToken);
+        Ticket? ticket = await ticketRepository.GetOrDefaultWithDetailsAsync(ticketId, cancellationToken);
 
         if (ticket == null)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);

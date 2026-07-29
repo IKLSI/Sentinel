@@ -10,21 +10,26 @@ public class NotificationRepository : CrudEntityWithIdRepository<Notification>, 
 {
     public NotificationRepository(SentinelContext context) : base(context) { }
 
-    public IQueryable<Notification> GetByUser(Guid userId, QueryableQueryOptions options) =>
-        GetAll(options).Where(n => n.UserId == userId);
+    public async Task<IReadOnlyList<Notification>> ListRecentForUserAsync(Guid userId, int maxItems,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(maxItems)
+            .ToListAsync(cancellationToken);
 
-    public Task<Notification?> GetOrDefaultForUserAsync(Guid notificationId, Guid userId,
-        SingleEntityQueryOptions<Notification> options, CancellationToken cancellationToken) =>
-        options.ApplyIncludes(GetAll(options.ToQueryableQueryOptions()))
+    public Task<Notification?> GetOrDefaultForUserAsync(Guid notificationId, Guid userId, QueryTracking tracking,
+        CancellationToken cancellationToken) =>
+        Query(tracking)
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId, cancellationToken);
 
     public Task<int> MarkAllReadAsync(Guid userId, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
 
     public Task<int> DeleteByUserAsync(Guid userId, CancellationToken cancellationToken) =>
-        GetAll(QueryableQueryOptions.Tracked)
+        Query(QueryTracking.Tracked)
             .Where(n => n.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
 }

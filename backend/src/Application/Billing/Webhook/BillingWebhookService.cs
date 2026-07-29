@@ -3,11 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -24,7 +19,7 @@ public class BillingWebhookService : IService
 {
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly ICommitScopeFactory _commitScopeFactory;
     private readonly StripePriceCatalog _priceCatalog;
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
@@ -34,7 +29,7 @@ public class BillingWebhookService : IService
     public BillingWebhookService(
         IOrganizationRepository organizationRepository,
         IUserRepository userRepository,
-        IUnitOfWorkManager unitOfWorkManager,
+        ICommitScopeFactory commitScopeFactory,
         StripePriceCatalog priceCatalog,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
@@ -43,7 +38,7 @@ public class BillingWebhookService : IService
     {
         _organizationRepository = organizationRepository;
         _userRepository = userRepository;
-        _unitOfWorkManager = unitOfWorkManager;
+        _commitScopeFactory = commitScopeFactory;
         _priceCatalog = priceCatalog;
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
@@ -98,11 +93,11 @@ public class BillingWebhookService : IService
         if (!Guid.TryParse(session.ClientReferenceId, out Guid organizationId)) return;
 
         Organization? organization = await _organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (organization == null) return;
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             organization.StripeCustomerId = session.CustomerId ?? organization.StripeCustomerId;
             organization.StripeSubscriptionId = session.SubscriptionId ?? organization.StripeSubscriptionId;
@@ -117,7 +112,7 @@ public class BillingWebhookService : IService
             organization.SubscriptionStatus = SubscriptionStatus.Active;
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         _logger.LogInformation("Abonnement activé pour l'organisation {OrganizationId} ({Plan})",
@@ -134,7 +129,7 @@ public class BillingWebhookService : IService
         PlanTier previousPlan = organization.PlanTier;
         PlanTier? tier = _priceCatalog.TierFor(subscription.Items?.Data?.FirstOrDefault()?.Price?.Id);
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             organization.StripeSubscriptionId = subscription.Id;
             organization.SubscriptionStatus = StripePriceCatalog.MapStatus(subscription.Status);
@@ -144,7 +139,7 @@ public class BillingWebhookService : IService
 
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         _logger.LogInformation("Abonnement mis à jour pour {OrganizationId} : {Status}",
@@ -162,14 +157,14 @@ public class BillingWebhookService : IService
 
         if (organization == null) return;
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             organization.SubscriptionStatus = SubscriptionStatus.Canceled;
             organization.PlanTier = PlanTier.Free;
             organization.StripeSubscriptionId = null;
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         _logger.LogInformation("Abonnement annulé pour {OrganizationId} — retour au plan gratuit", organization.Id);

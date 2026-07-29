@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -22,7 +18,7 @@ public class AuthLoginService : IService
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly ICommitScopeFactory _commitScopeFactory;
     private readonly TokenService _tokenService;
     private readonly JwtSettings _jwt;
     private readonly ISystemScope _systemScope;
@@ -34,7 +30,7 @@ public class AuthLoginService : IService
     public AuthLoginService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IUnitOfWorkManager unitOfWorkManager,
+        ICommitScopeFactory commitScopeFactory,
         TokenService tokenService,
         IOptions<JwtSettings> jwtOptions,
         ISystemScope systemScope,
@@ -45,7 +41,7 @@ public class AuthLoginService : IService
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
-        _unitOfWorkManager = unitOfWorkManager;
+        _commitScopeFactory = commitScopeFactory;
         _tokenService = tokenService;
         _jwt = jwtOptions.Value;
         _systemScope = systemScope;
@@ -64,9 +60,8 @@ public class AuthLoginService : IService
 
         using IDisposable elevation = _systemScope.Enter();
 
-        List<User> candidates = await _userRepository
-            .GetActiveByEmail(model.Email, QueryableQueryOptions.Tracked)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<User> candidates = await _userRepository
+            .ListActiveByEmailAsync(model.Email, QueryTracking.Tracked, cancellationToken);
 
         User? user = ResolveSingleMatch(candidates, model.Password);
 
@@ -79,13 +74,13 @@ public class AuthLoginService : IService
         string accessToken = _tokenService.GenerateAccessToken(user);
         string refreshToken = _tokenService.GenerateRefreshToken();
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             user.RefreshToken = _tokenService.HashRefreshToken(refreshToken);
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
             user.LastLoginAt = DateTime.UtcNow;
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         _refreshTokenStore.Write(refreshToken);
@@ -106,7 +101,7 @@ public class AuthLoginService : IService
         };
     }
 
-    private User? ResolveSingleMatch(List<User> candidates, string password)
+    private User? ResolveSingleMatch(IReadOnlyList<User> candidates, string password)
     {
         User? match = null;
 

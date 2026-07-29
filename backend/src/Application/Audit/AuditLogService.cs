@@ -22,7 +22,6 @@ public interface IAuditLogService
 
 public class AuditLogService(AuditLogQueue queue) : IAuditLogService
 {
-
     public Task LogAsync(
         AuditAction action,
         string entityType,
@@ -125,12 +124,12 @@ public class AuditLogBackgroundWriter(
             using IServiceScope scope = scopeFactory.CreateScope();
 
             IAuditLogRepository repository = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-            IUnitOfWorkManager unitOfWorkManager = scope.ServiceProvider.GetRequiredService<IUnitOfWorkManager>();
+            ICommitScopeFactory commitScopeFactory = scope.ServiceProvider.GetRequiredService<ICommitScopeFactory>();
 
-            using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+            using ICommitScope commitScope = commitScopeFactory.Begin();
 
             await repository.AddRangeAsync(logs, ct);
-            await unitOfWork.CommitAsync(ct);
+            await commitScope.CommitAsync(ct);
         }
         catch (Exception ex)
         {

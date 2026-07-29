@@ -1,7 +1,4 @@
 using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth.Scan;
-using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -29,21 +26,13 @@ public class ComplianceReportService(
 
     public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, CancellationToken cancellationToken)
     {
-        Project? project = await projectRepository.GetOrDefaultInOrganizationAsync(projectId, organizationId,
-            new SingleEntityQueryOptions<Project>
-            {
-                AsNoTracking = true,
-                AsSplitQuery = true,
-                Include = query => query
-                    .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-                    .Include(p => p.Runtimes)
-            },
-            cancellationToken);
+        Project? project = await projectRepository
+            .GetOrDefaultInOrganizationWithHealthDetailsAsync(projectId, organizationId, cancellationToken);
 
         if (project == null) return null;
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         ReportData data = BuildData(project, organization?.Name ?? "Organisation");
         byte[] pdf = Compose(data).GeneratePdf();

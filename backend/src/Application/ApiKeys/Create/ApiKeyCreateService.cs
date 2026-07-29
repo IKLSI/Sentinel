@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -16,12 +12,11 @@ namespace Sentinel.Application.ApiKeys.Create;
 
 public class ApiKeyCreateService(
     IApiKeyRepository apiKeyRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     ApiKeyCreateValidator validator) : IService
 {
-
     public async Task<Result<CreatedApiKeyDto>> ExecuteAsync(CreateApiKeyDto model, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
@@ -46,10 +41,10 @@ public class ApiKeyCreateService(
                 : null,
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await apiKeyRepository.AddAsync(apiKey, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

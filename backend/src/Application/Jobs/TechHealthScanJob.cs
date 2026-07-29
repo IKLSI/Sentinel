@@ -1,9 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 
@@ -14,7 +9,6 @@ public class TechHealthScanJob(
     ILogger<TechHealthScanJob> logger,
     ISystemScope systemScope)
 {
-
     public async Task ExecuteAsync()
     {
         using IDisposable elevation = systemScope.Enter();

@@ -13,7 +13,6 @@ public class RemediationPreviewService(
     RemediationEngine remediationEngine,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result<RemediationPreviewDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)

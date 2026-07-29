@@ -4,10 +4,6 @@ using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +16,7 @@ namespace Sentinel.Application.Users.Invite;
 
 public class UserInviteService(
     IUserInvitationRepository invitationRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
     QuotaGuard quotaGuard,
@@ -62,10 +58,10 @@ public class UserInviteService(
             CreatedAt = DateTime.UtcNow
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await invitationRepository.AddAsync(invitation, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, rawToken));

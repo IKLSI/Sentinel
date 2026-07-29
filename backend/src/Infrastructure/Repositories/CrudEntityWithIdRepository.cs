@@ -14,30 +14,15 @@ public abstract class CrudEntityWithIdRepository<TEntity> : ICrudEntityWithIdRep
 
     protected SentinelContext Context { get; }
 
-    public Task<TEntity?> GetOrDefaultAsync(Guid id, SingleEntityQueryOptions<TEntity> options,
-        CancellationToken cancellationToken) =>
-        options.ApplyIncludes(GetAll(options.ToQueryableQueryOptions()))
-            .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+    protected IQueryable<TEntity> Query(QueryTracking tracking) => tracking == QueryTracking.NoTracking
+        ? Context.Set<TEntity>().AsNoTracking()
+        : Context.Set<TEntity>();
 
-    public Task<TResult?> GetOrDefaultAsync<TResult>(Guid id, SingleProjectionQueryOptions<TEntity, TResult> options,
-        CancellationToken cancellationToken) =>
-        GetAll(options.ToQueryableQueryOptions())
-            .Where(entity => entity.Id == id)
-            .Select(options.Expression)
-            .FirstOrDefaultAsync(cancellationToken);
+    public Task<TEntity?> GetOrDefaultAsync(Guid id, QueryTracking tracking, CancellationToken cancellationToken) =>
+        Query(tracking).FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken) =>
-        Context.Set<TEntity>().AsNoTracking().AnyAsync(entity => entity.Id == id, cancellationToken);
-
-    public IQueryable<TEntity> GetAll(QueryableQueryOptions options)
-    {
-        IQueryable<TEntity> query = Context.Set<TEntity>();
-
-        if (options.AsNoTracking) query = query.AsNoTracking();
-        if (options.AsSplitQuery) query = query.AsSplitQuery();
-
-        return query;
-    }
+        Query(QueryTracking.NoTracking).AnyAsync(entity => entity.Id == id, cancellationToken);
 
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken) =>
         await Context.Set<TEntity>().AddAsync(entity, cancellationToken);

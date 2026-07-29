@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -15,18 +11,17 @@ namespace Sentinel.Application.Tickets.DeleteComment;
 
 public class TicketDeleteCommentService(
     ITicketCommentRepository commentRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(Guid ticketId, Guid commentId, CancellationToken cancellationToken)
     {
         if (tenant.UserId is not Guid userId)
             return Result.Unauthorized();
 
         TicketComment? comment = await commentRepository.GetOrDefaultInTicketAsync(commentId, ticketId,
-            new SingleEntityQueryOptions<TicketComment>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (comment == null)
             return Result.NotFound(ErrorCodes.TicketCommentNotFound);
@@ -34,10 +29,10 @@ public class TicketDeleteCommentService(
         if (comment.AuthorId != userId)
             return Result.Forbidden();
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             commentRepository.Remove(comment);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

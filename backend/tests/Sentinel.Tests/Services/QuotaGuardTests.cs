@@ -67,7 +67,7 @@ public class QuotaGuardTests
         scope.Projects,
         scope.Users,
         scope.Invitations,
-        scope.UnitOfWorkManager,
+        scope.CommitScopeFactory,
         new FakeSystemScope());
 
     private static Project NewProject(Guid organizationId, string name) => new()

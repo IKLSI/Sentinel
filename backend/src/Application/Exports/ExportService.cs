@@ -1,5 +1,4 @@
 using ClosedXML.Excel;
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
@@ -48,13 +47,7 @@ public class ExportService(
 
     private async Task<ExportLabels> GetLabelsAsync(Guid currentUserId, CancellationToken cancellationToken = default)
     {
-        string? lang = await userRepository.GetOrDefaultAsync(currentUserId,
-            new SingleProjectionQueryOptions<User, string?>
-            {
-                AsNoTracking = true,
-                Expression = u => u.Language
-            },
-            cancellationToken);
+        string? lang = await userRepository.GetLanguageOrDefaultAsync(currentUserId, cancellationToken);
 
         return ExportLabels.For(lang == LanguageValues.En);
     }
@@ -62,38 +55,22 @@ public class ExportService(
     public async Task<ExportResult> ExportTicketsExcelAsync(
         Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search, Guid currentUserId)
     {
-        IQueryable<Ticket> query = ticketRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Include(t => t.TicketStatus)
-            .Include(t => t.Project)
-            .Include(t => t.AssignedTo)
-            .Include(t => t.CreatedBy);
-
-        if (!string.IsNullOrEmpty(priority) && Enum.TryParse<TicketPriority>(priority, true, out TicketPriority parsedPriority))
-            query = query.Where(t => t.Priority == parsedPriority);
-
-        if (!string.IsNullOrEmpty(status) && Guid.TryParse(status, out Guid statusGuid))
-            query = query.Where(t => t.TicketStatusId == statusGuid);
-
-        if (assignedTo.HasValue)
-            query = query.Where(t => t.AssignedToId == assignedTo.Value);
-
-        if (!string.IsNullOrEmpty(type) && Enum.TryParse<TicketType>(type, true, out TicketType parsedType))
-            query = query.Where(t => t.Type == parsedType);
-
-        if (!string.IsNullOrWhiteSpace(search) && search.Length <= 100)
+        TicketFilter filter = new()
         {
-            string escaped = search
-                .Replace("\\", "\\\\")
-                .Replace("%", "\\%")
-                .Replace("_", "\\_");
-            string pattern = $"%{escaped}%";
-            query = query.Where(t =>
-                EF.Functions.ILike(t.Title, pattern) ||
-                EF.Functions.ILike(t.Description, pattern));
-        }
+            Priority = !string.IsNullOrEmpty(priority)
+                && Enum.TryParse(priority, true, out TicketPriority parsedPriority) ? parsedPriority : null,
+            TicketStatusId = !string.IsNullOrEmpty(status) && Guid.TryParse(status, out Guid statusGuid)
+                ? statusGuid
+                : null,
+            AssignedToId = assignedTo,
+            Type = !string.IsNullOrEmpty(type) && Enum.TryParse(type, true, out TicketType parsedType)
+                ? parsedType
+                : null,
+            Search = !string.IsNullOrWhiteSpace(search) && search.Length <= 100 ? search : null
+        };
 
-        List<Ticket> tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+        List<Ticket> tickets =
+            (await ticketRepository.ListForExportAsync(organizationId, filter, CancellationToken.None)).ToList();
 
         ExportLabels labels = await GetLabelsAsync(currentUserId);
 
@@ -103,12 +80,8 @@ public class ExportService(
 
     public async Task<ExportResult> ExportTechHealthExcelAsync(Guid organizationId, Guid currentUserId)
     {
-        List<Project> projects = await projectRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
-            .Include(p => p.Runtimes)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
+        List<Project> projects =
+            (await projectRepository.ListWithHealthDetailsByNameAsync(organizationId, CancellationToken.None)).ToList();
 
         ExportLabels labels = await GetLabelsAsync(currentUserId);
 

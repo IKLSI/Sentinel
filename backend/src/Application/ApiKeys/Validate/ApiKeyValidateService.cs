@@ -8,10 +8,9 @@ namespace Sentinel.Application.ApiKeys.Validate;
 
 public class ApiKeyValidateService(
     IApiKeyRepository apiKeyRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope) : IService
 {
-
     public async Task<(ApiKey Key, User User)?> ExecuteAsync(string rawKey, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
@@ -26,10 +25,10 @@ public class ApiKeyValidateService(
 
         if (!user.IsActive) return null;
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             apiKey.LastUsedAt = DateTime.UtcNow;
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         return (apiKey, user);

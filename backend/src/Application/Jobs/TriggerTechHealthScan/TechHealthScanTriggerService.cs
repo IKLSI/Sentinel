@@ -8,7 +8,6 @@ namespace Sentinel.Application.Jobs.TriggerTechHealthScan;
 
 public class TechHealthScanTriggerService(IBackgroundJobClient backgroundJobs) : IService
 {
-
     public Result<ApiMessageResponse> Execute()
     {
         backgroundJobs.Enqueue<TechHealthScanJob>(j => j.ExecuteAsync());

@@ -11,7 +11,7 @@ public static class RepositoryServiceCollectionExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IUnitOfWorkManager, UnitOfWorkManager>();
+        services.AddScoped<ICommitScopeFactory, CommitScopeFactory>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
         services.AddScoped<IUserRepository, UserRepository>();
@@ -32,6 +32,7 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<IDependencyRepository, DependencyRepository>();
         services.AddScoped<IVulnerabilityRepository, VulnerabilityRepository>();
         services.AddScoped<IRuntimeRepository, RuntimeRepository>();
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
 
         return services;
     }

@@ -1,12 +1,9 @@
 using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth.Scan;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CycloneDX.Json;
 using CycloneDX.Models;
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
@@ -52,14 +49,8 @@ public class SbomService(IProjectRepository projectRepository)
 
     public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, SbomFormat format, CancellationToken cancellationToken)
     {
-        Project? project = await projectRepository.GetOrDefaultInOrganizationAsync(projectId, organizationId,
-            new SingleEntityQueryOptions<Project>
-            {
-                AsNoTracking = true,
-                AsSplitQuery = true,
-                Include = query => query.Include(p => p.Dependencies)
-            },
-            cancellationToken);
+        Project? project = await projectRepository
+            .GetOrDefaultInOrganizationWithDependenciesAsync(projectId, organizationId, cancellationToken);
 
         if (project == null) return null;
 

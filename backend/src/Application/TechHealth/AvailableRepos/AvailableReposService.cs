@@ -1,11 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.DTOs.TechHealth;
@@ -21,22 +16,19 @@ public class AvailableReposService(
     TokenProtector tokenProtector,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result<AvailableReposResponse>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<AvailableReposResponse>.Unauthorized();
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (organization == null)
             return Result<AvailableReposResponse>.NotFound();
 
-        List<string?> existingUrls = await projectRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .Select(p => p.RepositoryUrl)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<string?> existingUrls = await projectRepository
+            .ListRepositoryUrlsAsync(organizationId, cancellationToken);
 
         List<AvailableRepoDto> repos = [];
         bool fetchFailed = false;

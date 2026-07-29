@@ -10,14 +10,13 @@ namespace Sentinel.Application.Settings.GetOrganization;
 
 public class OrganizationSettingsGetService(IOrganizationRepository organizationRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result<OrganizationSettingsDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<OrganizationSettingsDto>.Unauthorized();
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (organization == null)
             return Result<OrganizationSettingsDto>.NotFound();

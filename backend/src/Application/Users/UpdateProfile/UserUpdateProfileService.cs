@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -16,12 +12,11 @@ namespace Sentinel.Application.Users.UpdateProfile;
 
 public class UserUpdateProfileService(
     IUserRepository userRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     UserUpdateProfileValidator validator) : IService
 {
-
     public async Task<Result<UserDto>> ExecuteAsync(UpdateMyProfileDto model, CancellationToken cancellationToken)
     {
         Result validationResult = await validator.ValidateAsync(model, cancellationToken);
@@ -33,7 +28,7 @@ public class UserUpdateProfileService(
             return Result<UserDto>.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
-            new SingleEntityQueryOptions<User>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (user == null)
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
@@ -41,9 +36,9 @@ public class UserUpdateProfileService(
         if (!string.IsNullOrEmpty(model.FirstName)) user.FirstName = model.FirstName;
         if (!string.IsNullOrEmpty(model.LastName)) user.LastName = model.LastName;
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

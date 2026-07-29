@@ -11,8 +11,6 @@ public sealed partial class ValidationErrors
 
     public Result ToResult() => HasErrors ? Result.Invalid(_errors) : Result.Success();
 
-    public Result<T> ToResult<T>() => HasErrors ? Result<T>.Invalid(_errors) : Result<T>.Success(default!);
-
     public ValidationErrors Add(string identifier, string code,
         IReadOnlyDictionary<string, string>? parameters = null)
     {

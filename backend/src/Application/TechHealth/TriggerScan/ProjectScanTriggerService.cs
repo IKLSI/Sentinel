@@ -3,10 +3,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
@@ -21,7 +17,6 @@ public class ProjectScanTriggerService(
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)

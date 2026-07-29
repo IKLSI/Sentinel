@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -15,30 +14,19 @@ public class UserExportDataService(
     IAuditLogRepository auditLogRepository,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result<UserDataExportDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid currentUserId)
             return Result<UserDataExportDto>.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
-            new SingleEntityQueryOptions<User> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (user == null)
             return Result<UserDataExportDto>.NotFound(ErrorCodes.UserNotFound);
 
-        List<UserExportAuditLogDto> auditLogs = await auditLogRepository
-            .GetByUser(currentUserId, QueryableQueryOptions.ReadOnly)
-            .OrderByDescending(al => al.CreatedAt)
-            .Select(al => new UserExportAuditLogDto
-            {
-                Id = al.Id,
-                Action = al.Action.ToString(),
-                EntityType = al.EntityType,
-                EntityId = al.EntityId,
-                CreatedAt = al.CreatedAt
-            })
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<UserExportAuditLogDto> auditLogs = await auditLogRepository
+            .ListForUserExportAsync(currentUserId, cancellationToken);
 
         return new UserDataExportDto
         {

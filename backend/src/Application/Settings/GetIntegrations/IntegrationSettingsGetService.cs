@@ -10,14 +10,13 @@ namespace Sentinel.Application.Settings.GetIntegrations;
 
 public class IntegrationSettingsGetService(IOrganizationRepository organizationRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result<IntegrationSettingsDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<IntegrationSettingsDto>.Unauthorized();
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (organization == null)
             return Result<IntegrationSettingsDto>.NotFound();

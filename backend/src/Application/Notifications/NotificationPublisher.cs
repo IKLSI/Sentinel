@@ -1,10 +1,4 @@
 using System.Text.Json;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
@@ -13,10 +7,9 @@ namespace Sentinel.Application.Notifications;
 
 public class NotificationPublisher(
     INotificationRepository notificationRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     INotificationPusher? pusher = null)
 {
-
     public async Task PublishAsync(
         Guid userId,
         Guid organizationId,
@@ -36,10 +29,10 @@ public class NotificationPublisher(
             TicketId = ticketId
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await notificationRepository.AddAsync(notification, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         if (pusher is not null)

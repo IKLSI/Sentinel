@@ -6,12 +6,6 @@ using Sentinel.Infrastructure.Repositories;
 using Sentinel.Domain.Constants;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
-using Sentinel.Application.Audit;
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.API.Hubs;
 namespace Sentinel.API;
 

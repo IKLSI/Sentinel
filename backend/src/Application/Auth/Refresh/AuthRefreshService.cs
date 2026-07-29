@@ -3,10 +3,7 @@ using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +17,7 @@ namespace Sentinel.Application.Auth.Refresh;
 public class AuthRefreshService : IService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly ICommitScopeFactory _commitScopeFactory;
     private readonly TokenService _tokenService;
     private readonly JwtSettings _jwt;
     private readonly ISystemScope _systemScope;
@@ -30,7 +27,7 @@ public class AuthRefreshService : IService
 
     public AuthRefreshService(
         IUserRepository userRepository,
-        IUnitOfWorkManager unitOfWorkManager,
+        ICommitScopeFactory commitScopeFactory,
         TokenService tokenService,
         IOptions<JwtSettings> jwtOptions,
         ISystemScope systemScope,
@@ -39,7 +36,7 @@ public class AuthRefreshService : IService
         ILogger<AuthRefreshService> logger)
     {
         _userRepository = userRepository;
-        _unitOfWorkManager = unitOfWorkManager;
+        _commitScopeFactory = commitScopeFactory;
         _tokenService = tokenService;
         _jwt = jwtOptions.Value;
         _systemScope = systemScope;
@@ -72,13 +69,13 @@ public class AuthRefreshService : IService
         string newAccessToken = _tokenService.GenerateAccessToken(user);
         string newRefreshToken = _tokenService.GenerateRefreshToken();
 
-        using (IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             user.PreviousRefreshTokenHash = user.RefreshToken;
             user.RefreshToken = _tokenService.HashRefreshToken(newRefreshToken);
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         _refreshTokenStore.Write(newRefreshToken);
@@ -106,12 +103,12 @@ public class AuthRefreshService : IService
 
         if (replayUser == null) return;
 
-        using IUnitOfWork unitOfWork = _unitOfWorkManager.NewUnitOfWork();
+        using ICommitScope commitScope = _commitScopeFactory.Begin();
 
         replayUser.RefreshToken = null;
         replayUser.RefreshTokenExpiry = null;
 
-        await unitOfWork.CommitAsync(cancellationToken);
+        await commitScope.CommitAsync(cancellationToken);
 
         _logger.LogWarning("Token replay détecté pour userId {UserId}", replayUser.Id);
     }

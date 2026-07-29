@@ -14,7 +14,6 @@ public class BillingStatusService(
     ISystemScope systemScope,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result<BillingStatusDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)

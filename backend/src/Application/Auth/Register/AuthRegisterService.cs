@@ -4,10 +4,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -24,7 +20,7 @@ public class AuthRegisterService(
     IPasswordHasher passwordHasher,
     ITicketStatusRepository ticketStatusRepository,
     IEmailVerificationTokenRepository verificationTokenRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
@@ -79,14 +75,14 @@ public class AuthRegisterService(
             ExpiresAt = now.AddHours(VerificationValidityHours)
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await organizationRepository.AddAsync(organization, cancellationToken);
             await userRepository.AddAsync(admin, cancellationToken);
             await ticketStatusRepository.AddRangeAsync(RegistrationTicketStatuses.For(organization.Id), cancellationToken);
             await verificationTokenRepository.AddAsync(verificationToken, cancellationToken);
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         logger.LogInformation("Nouvelle organisation enregistrée {Slug} par {Email}", organization.Slug, email);

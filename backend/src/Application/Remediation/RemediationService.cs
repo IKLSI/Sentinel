@@ -1,12 +1,8 @@
-using Sentinel.Application.Common;
-using Sentinel.Application.Exports;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Remediation;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Models;
@@ -39,7 +35,7 @@ public class RemediationService(
     IProjectRepository projectRepository,
     IOrganizationRepository organizationRepository,
     IDependencyRepository dependencyRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IRepositoryHostClient hostClient,
     ManifestPatcherService patcher,
     TokenProtector tokenProtector,
@@ -135,9 +131,9 @@ public class RemediationService(
 
         request.CompletedAt = DateTime.UtcNow;
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            await unitOfWork.CommitAsync(CancellationToken.None);
+            await commitScope.CommitAsync(CancellationToken.None);
         }
 
         return new RemediationResultDto
@@ -156,25 +152,21 @@ public class RemediationService(
     {
         try
         {
-            using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+            using ICommitScope commitScope = commitScopeFactory.Begin();
 
             await remediationRepository.AddAsync(request, CancellationToken.None);
-            await unitOfWork.CommitAsync(CancellationToken.None);
+            await commitScope.CommitAsync(CancellationToken.None);
 
             return true;
         }
-        catch (DbUpdateException)
+        catch (PersistenceException)
         {
             return false;
         }
     }
 
     private Task<RemediationRequest?> FindActiveRequestAsync(Guid projectId)
-        => remediationRepository
-            .GetByProject(projectId, QueryableQueryOptions.ReadOnly)
-            .Where(r => r.Status == RemediationStatus.PullRequestOpen || r.Status == RemediationStatus.Pending)
-            .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefaultAsync();
+        => remediationRepository.GetOrDefaultActiveByProjectAsync(projectId, CancellationToken.None);
 
     private static RemediationResultDto AlreadyActive(RemediationRequest request)
         => new RemediationResultDto
@@ -192,7 +184,7 @@ public class RemediationService(
     private async Task<RemediationPlan> BuildPlanAsync(Guid projectId)
     {
         Project? project = await projectRepository.GetOrDefaultAsync(projectId,
-            new SingleEntityQueryOptions<Project> { AsNoTracking = true }, CancellationToken.None);
+            QueryTracking.NoTracking, CancellationToken.None);
 
         if (project == null)
             return Empty("Projet introuvable.");
@@ -201,7 +193,7 @@ public class RemediationService(
             return Empty("Aucun dépôt associé à ce projet.");
 
         Organization? org = await organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, CancellationToken.None);
+            QueryTracking.NoTracking, CancellationToken.None);
 
         string? token = tokenProtector.Unprotect(
             project.RepositoryType == RepositoryType.GitLab ? org?.GitlabToken : org?.GithubToken);
@@ -258,10 +250,8 @@ public class RemediationService(
 
     private async Task<List<RemediationTarget>> BuildTargetsAsync(Guid projectId)
     {
-        List<Dependency> deps = await dependencyRepository
-            .GetByProject(projectId, QueryableQueryOptions.ReadOnly)
-            .Include(d => d.Vulnerabilities)
-            .ToListAsync();
+        IReadOnlyList<Dependency> deps =
+            await dependencyRepository.ListByProjectWithVulnerabilitiesAsync(projectId, CancellationToken.None);
 
         List<RemediationTarget> targets = new();
 

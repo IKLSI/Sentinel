@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -19,12 +15,11 @@ public class UserAcceptInvitationService(
     IUserInvitationRepository invitationRepository,
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
     UserAcceptInvitationValidator validator) : IService
 {
-
     public async Task<Result<ApiMessageResponse>> ExecuteAsync(AcceptInvitationDto model,
         CancellationToken cancellationToken)
     {
@@ -60,12 +55,12 @@ public class UserAcceptInvitationService(
             CreatedAt = DateTime.UtcNow
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             invitation.AcceptedAt = DateTime.UtcNow;
 
             await userRepository.AddAsync(user, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

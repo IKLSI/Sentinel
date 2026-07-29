@@ -1,16 +1,18 @@
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Domain.Repositories;
 
 public interface IApiKeyRepository : ICrudEntityWithIdRepository<ApiKey>
 {
-    IQueryable<ApiKey> GetByOrganization(Guid organizationId, QueryableQueryOptions options);
+    Task<IReadOnlyList<ApiKeyDto>> ListForOrganizationAsync(Guid organizationId, CancellationToken cancellationToken);
 
-    IQueryable<ApiKey> GetActiveByPrefix(string prefix, QueryableQueryOptions options);
+    Task<ApiKey?> GetOrDefaultActiveInOrganizationAsync(Guid apiKeyId, Guid organizationId,
+        CancellationToken cancellationToken);
 
-    Task<ApiKey?> GetOrDefaultInOrganizationAsync(Guid apiKeyId, Guid organizationId,
-        SingleEntityQueryOptions<ApiKey> options, CancellationToken cancellationToken);
+    Task<ApiKey?> GetOrDefaultInOrganizationAsync(Guid apiKeyId, Guid organizationId, QueryTracking tracking,
+        CancellationToken cancellationToken);
 
     Task<ApiKey?> GetOrDefaultActiveByHashAcrossTenantsAsync(string keyHash, CancellationToken cancellationToken);
 

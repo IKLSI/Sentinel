@@ -7,7 +7,6 @@ namespace Sentinel.Application.Notifications.MarkAllRead;
 
 public class NotificationMarkAllReadService(INotificationRepository notificationRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.UserId is not Guid userId)

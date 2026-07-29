@@ -2,10 +2,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -17,14 +13,13 @@ namespace Sentinel.Application.TechHealth.CreateProject;
 
 public class ProjectCreateService(
     IProjectRepository projectRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     TechHealthService techHealthService,
     QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     ITenantContext tenant,
     ProjectCreateValidator validator) : IService
 {
-
     public async Task<Result<ProjectDto>> ExecuteAsync(CreateProjectDto model, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
@@ -55,10 +50,10 @@ public class ProjectCreateService(
             ScanFrequency = scanFrequency
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await projectRepository.AddAsync(project, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

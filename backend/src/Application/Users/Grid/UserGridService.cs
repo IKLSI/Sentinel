@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -11,7 +10,6 @@ namespace Sentinel.Application.Users.Grid;
 
 public class UserGridService(IUserRepository userRepository, ITenantContext tenant) : IService
 {
-
     public async Task<Result<UserListDto>> ExecuteAsync(UserGridModel model, CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
@@ -20,31 +18,13 @@ public class UserGridService(IUserRepository userRepository, ITenantContext tena
         int page = model.NormalizedPage;
         int pageSize = model.NormalizedPageSize;
 
-        IQueryable<User> query = userRepository.GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly);
-
-        if (!string.IsNullOrWhiteSpace(model.Search))
-        {
-            string pattern = SearchPattern.Like(model.Search);
-
-            query = query.Where(u =>
-                EF.Functions.ILike(u.FirstName, pattern) ||
-                EF.Functions.ILike(u.LastName, pattern) ||
-                EF.Functions.ILike(u.Email, pattern));
-        }
-
-        int total = await query.CountAsync(cancellationToken);
-
-        List<User> users = await query
-            .OrderBy(u => u.LastName)
-            .ThenBy(u => u.FirstName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+        PagedList<User> result = await userRepository.SearchInOrganizationAsync(organizationId, model.Search,
+            page, pageSize, cancellationToken);
 
         return new UserListDto
         {
-            Items = users.Select(UserMapper.ToDto).ToList(),
-            Total = total,
+            Items = result.Items.Select(UserMapper.ToDto).ToList(),
+            Total = result.TotalCount,
             Page = page,
             PageSize = pageSize
         };

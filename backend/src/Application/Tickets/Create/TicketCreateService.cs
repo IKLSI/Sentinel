@@ -5,9 +5,6 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,7 +17,7 @@ namespace Sentinel.Application.Tickets.Create;
 public class TicketCreateService(
     ITicketRepository ticketRepository,
     ITicketStatusRepository ticketStatusRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     NotificationPublisher notificationPublisher,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
@@ -28,7 +25,6 @@ public class TicketCreateService(
     ILogger<TicketCreateService> logger,
     TicketCreateValidator validator) : IService
 {
-
     public async Task<Result<TicketDto>> ExecuteAsync(CreateTicketDto model, CancellationToken cancellationToken)
     {
         Result validationResult = await validator.ValidateAsync(model, cancellationToken);
@@ -59,10 +55,10 @@ public class TicketCreateService(
             UpdatedAt = DateTime.UtcNow
         };
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             await ticketRepository.AddAsync(ticket, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         dashboardCache.Invalidate(organizationId);
@@ -77,7 +73,7 @@ public class TicketCreateService(
             entityId: ticket.Id,
             jti: tenant.Jti);
 
-        Ticket? created = await ticketRepository.GetOrDefaultAsync(ticket.Id, TicketQueries.Details, cancellationToken);
+        Ticket? created = await ticketRepository.GetOrDefaultWithDetailsAsync(ticket.Id, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(created!));
     }

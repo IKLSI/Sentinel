@@ -3,10 +3,6 @@ using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -82,7 +78,7 @@ public class BillingPortalService : IService
         using IDisposable elevation = _systemScope.Enter();
 
         Organization? organization = await _organizationRepository.GetOrDefaultAsync(organizationId,
-            new SingleEntityQueryOptions<Organization> { AsNoTracking = true }, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (organization == null)
             return Result<string>.NotFound(ErrorCodes.NotFound);

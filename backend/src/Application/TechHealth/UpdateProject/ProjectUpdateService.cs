@@ -1,10 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Exports;
-using Sentinel.Application.Notifications;
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -16,12 +12,11 @@ namespace Sentinel.Application.TechHealth.UpdateProject;
 
 public class ProjectUpdateService(
     IProjectRepository projectRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
     ProjectUpdateValidator validator) : IService
 {
-
     public async Task<Result<ProjectScanFrequencyDto>> ExecuteAsync(Guid projectId, UpdateProjectDto model,
         CancellationToken cancellationToken)
     {
@@ -34,7 +29,7 @@ public class ProjectUpdateService(
             return Result<ProjectScanFrequencyDto>.Unauthorized();
 
         Project? project = await projectRepository.GetOrDefaultInOrganizationAsync(projectId, organizationId,
-            new SingleEntityQueryOptions<Project>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (project == null)
             return Result<ProjectScanFrequencyDto>.NotFound(ErrorCodes.ProjectNotFound);
@@ -46,10 +41,10 @@ public class ProjectUpdateService(
                 new Dictionary<string, string> { ["values"] = string.Join(", ", Enum.GetNames<ScanFrequency>()) });
         }
 
-        using (IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork())
+        using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             project.ScanFrequency = scanFrequency;
-            await unitOfWork.CommitAsync(cancellationToken);
+            await commitScope.CommitAsync(cancellationToken);
         }
 
         await auditLog.LogAsync(

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -11,7 +10,7 @@ namespace Sentinel.Application.TicketStatuses.GetAll;
 
 public class TicketStatusListService(
     ITicketStatusRepository ticketStatusRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ITenantContext tenant) : IService
 {
     private static readonly (string Name, string Color, bool IsClosed, int Order, bool IsDefault)[] DefaultStatuses =
@@ -30,20 +29,7 @@ public class TicketStatusListService(
 
         await EnsureDefaultStatusesAsync(organizationId, cancellationToken);
 
-        return await ticketStatusRepository
-            .GetByOrganization(organizationId, QueryableQueryOptions.ReadOnly)
-            .OrderBy(s => s.Order)
-            .Select(s => new TicketStatusDto
-            {
-                Id = s.Id,
-                Name = s.Name,
-                Color = s.Color,
-                Order = s.Order,
-                IsDefault = s.IsDefault,
-                IsClosed = s.IsClosed,
-                TicketCount = s.Tickets.Count(),
-            })
-            .ToListAsync(cancellationToken);
+        return (await ticketStatusRepository.ListForOrganizationAsync(organizationId, cancellationToken)).ToList();
     }
 
     private async Task EnsureDefaultStatusesAsync(Guid organizationId, CancellationToken cancellationToken)
@@ -62,9 +48,9 @@ public class TicketStatusListService(
             IsClosed = d.IsClosed,
         }).ToList();
 
-        using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+        using ICommitScope commitScope = commitScopeFactory.Begin();
 
         await ticketStatusRepository.AddRangeAsync(seed, cancellationToken);
-        await unitOfWork.CommitAsync(cancellationToken);
+        await commitScope.CommitAsync(cancellationToken);
     }
 }

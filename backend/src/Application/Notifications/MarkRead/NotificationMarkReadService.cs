@@ -9,26 +9,25 @@ namespace Sentinel.Application.Notifications.MarkRead;
 
 public class NotificationMarkReadService(
     INotificationRepository notificationRepository,
-    IUnitOfWorkManager unitOfWorkManager,
+    ICommitScopeFactory commitScopeFactory,
     ITenantContext tenant) : IService
 {
-
     public async Task<Result> ExecuteAsync(Guid notificationId, CancellationToken cancellationToken)
     {
         if (tenant.UserId is not Guid userId)
             return Result.Unauthorized();
 
         Notification? notification = await notificationRepository.GetOrDefaultForUserAsync(notificationId, userId,
-            new SingleEntityQueryOptions<Notification>(), cancellationToken);
+            QueryTracking.Tracked, cancellationToken);
 
         if (notification == null)
             return Result.NoContent();
 
-        using IUnitOfWork unitOfWork = unitOfWorkManager.NewUnitOfWork();
+        using ICommitScope commitScope = commitScopeFactory.Begin();
 
         notification.IsRead = true;
 
-        await unitOfWork.CommitAsync(cancellationToken);
+        await commitScope.CommitAsync(cancellationToken);
 
         return Result.NoContent();
     }
