@@ -184,9 +184,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
               {...register("email")}
             />
             {errors.email && (
-              <Box
-                sx={{ mt: "6px", fontSize: "11.5px", color: "var(--red)" }}
-              >
+              <Box sx={{ mt: "6px", fontSize: "11.5px", color: "var(--red)" }}>
                 {resolveFieldError(errors.email, t)}
               </Box>
             )}

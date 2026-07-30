@@ -9,14 +9,11 @@ public class TenantCommandInterceptor : DbCommandInterceptor
     private const string SystemSentinel = "system";
     private readonly ITenantContext _tenant;
     private readonly ISystemScope _systemScope;
-    private readonly TenantSessionState _sessionState;
 
-    public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope,
-        TenantSessionState sessionState)
+    public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope)
     {
         _tenant = tenant;
         _systemScope = systemScope;
-        _sessionState = sessionState;
     }
 
     public override InterceptionResult<DbDataReader> ReaderExecuting(
@@ -101,14 +98,10 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (_sessionState.IsApplied(value)) return;
-
         using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             setCommand.ExecuteNonQuery();
         }
-
-        _sessionState.MarkApplied(value);
     }
 
     private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
@@ -117,13 +110,9 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (_sessionState.IsApplied(value)) return;
-
         await using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             await setCommand.ExecuteNonQueryAsync(cancellationToken);
         }
-
-        _sessionState.MarkApplied(value);
     }
 }

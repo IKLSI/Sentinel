@@ -18,9 +18,7 @@ public static partial class ServiceCollectionExtensions
         string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
             ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
 
-        services.AddScoped<TenantSessionState>();
         services.AddScoped<TenantCommandInterceptor>();
-        services.AddScoped<TenantConnectionInterceptor>();
 
         NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
         {
@@ -34,9 +32,7 @@ public static partial class ServiceCollectionExtensions
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
                 npgsqlOptions.CommandTimeout(30);
             });
-            options.AddInterceptors(
-                sp.GetRequiredService<TenantCommandInterceptor>(),
-                sp.GetRequiredService<TenantConnectionInterceptor>());
+            options.AddInterceptors(sp.GetRequiredService<TenantCommandInterceptor>());
         });
 
         return services;

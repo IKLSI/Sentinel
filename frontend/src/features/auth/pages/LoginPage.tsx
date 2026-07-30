@@ -228,11 +228,7 @@ export const LoginPage: React.FC = () => {
               </Box>
             </Box>
 
-            <form
-              onSubmit={onSubmit}
-              noValidate
-              style={{ marginTop: "30px" }}
-            >
+            <form onSubmit={onSubmit} noValidate style={{ marginTop: "30px" }}>
               <Box className="lp-field">
                 <Box component="label" className="lp-label" htmlFor={emailId}>
                   {t("auth.login.email_label")}

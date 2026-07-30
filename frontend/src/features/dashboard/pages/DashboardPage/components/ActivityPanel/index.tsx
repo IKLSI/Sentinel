@@ -113,7 +113,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column" }}>
-            {activity.map((a, idx) => {
+            {activity.map((a) => {
               const accentColor = DOT_COLORS[a.color] ?? "var(--accent)";
               const target = a.ticketId
                 ? ({
@@ -217,7 +217,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
 
               return (
                 <Box
-                  key={`${a.timestamp}-${a.text}-${idx}`}
+                  key={`${a.timestamp}-${a.text}-${a.ticketId ?? ""}-${a.projectId ?? ""}`}
                   onClick={target ? () => navigate(target) : undefined}
                   sx={{
                     display: "flex",

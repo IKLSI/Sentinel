@@ -39,7 +39,7 @@ public sealed class PostgresFixture : IAsyncLifetime
                 ConnectionString = _container.GetConnectionString();
             }
 
-            await using SentinelContext context = new SentinelContext(BuildOptions(null, null));
+            await using SentinelContext context = new SentinelContext(BuildOptions(null));
 
             await context.Database.MigrateAsync();
         }
@@ -71,25 +71,18 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public SentinelContext CreateContext(ITenantContext tenant, ISystemScope systemScope)
     {
-        TenantSessionState sessionState = new TenantSessionState();
-
         return new SentinelContext(
-            BuildOptions(new TenantCommandInterceptor(tenant, systemScope, sessionState),
-                new TenantConnectionInterceptor(sessionState)),
+            BuildOptions(new TenantCommandInterceptor(tenant, systemScope)),
             tenant);
     }
 
-    private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? commandInterceptor,
-        TenantConnectionInterceptor? connectionInterceptor)
+    private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? commandInterceptor)
     {
         DbContextOptionsBuilder<SentinelContext> builder = new DbContextOptionsBuilder<SentinelContext>()
             .UseNpgsql(ConnectionString, npgsql => npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(1), null));
 
         if (commandInterceptor != null)
             builder.AddInterceptors(commandInterceptor);
-
-        if (connectionInterceptor != null)
-            builder.AddInterceptors(connectionInterceptor);
 
         return builder.Options;
     }

@@ -2,10 +2,7 @@ import { z } from "zod";
 import { passwordComplexitySchema } from "@/lib/validation/password";
 
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, { message: "auth.login.fill_all_fields" }),
+  email: z.string().trim().min(1, { message: "auth.login.fill_all_fields" }),
   password: z.string().min(1, { message: "auth.login.fill_all_fields" }),
 });
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -15,8 +12,14 @@ export const registerSchema = z.object({
     .string()
     .trim()
     .min(1, { message: "auth.register.fill_all_fields" }),
-  firstName: z.string().trim().min(1, { message: "auth.register.fill_all_fields" }),
-  lastName: z.string().trim().min(1, { message: "auth.register.fill_all_fields" }),
+  firstName: z
+    .string()
+    .trim()
+    .min(1, { message: "auth.register.fill_all_fields" }),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, { message: "auth.register.fill_all_fields" }),
   email: z.string().trim().min(1, { message: "auth.register.fill_all_fields" }),
   password: z.string().min(1, { message: "auth.register.fill_all_fields" }),
 });

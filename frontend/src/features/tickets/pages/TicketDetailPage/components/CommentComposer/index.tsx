@@ -83,7 +83,10 @@ export const CommentComposer: React.FC<Props> = ({
         ]);
       },
       onError: (err) =>
-        showToast(apiError(err, t("tickets.detail.attachments_upload_error")), "error"),
+        showToast(
+          apiError(err, t("tickets.detail.attachments_upload_error")),
+          "error",
+        ),
     });
   };
 

@@ -10,7 +10,10 @@ import { useForgotPasswordMutation } from "../hooks/useAuthMutations";
 import { useToast } from "../../../hooks/useToast";
 import { useT } from "../../../i18n/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
-import { forgotPasswordSchema, type ForgotPasswordFormValues } from "../schemas";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordFormValues,
+} from "../schemas";
 import { resolveFieldError } from "@/lib/validation/resolveFieldError";
 
 interface ForgotPasswordModalProps {

@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 28" preserveAspectRatio="xMidYMid meet">
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 28" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="sentinel-logo-title">
+  <title id="sentinel-logo-title">Sentinel</title>
   <defs>
     <linearGradient id="sentinel-shield" x1="0" y1="0" x2="24" y2="28" gradientUnits="userSpaceOnUse">
       <stop offset="0"    stop-color="#09090b"/>
