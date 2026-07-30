@@ -21,6 +21,7 @@ using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
 using Sentinel.Infrastructure.Http;
+using Sentinel.Infrastructure.Localization;
 
 namespace Sentinel.API.Extensions;
 
@@ -32,6 +33,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddSingleton<ISystemScope, SystemScope>();
         services.AddSingleton<IContentPathProvider, ContentPathProvider>();
+        services.AddSingleton<ILocalizer, JsonLocalizer>();
         services.AddScoped<IRefreshTokenStore, RefreshTokenCookie>();
 
         return services;

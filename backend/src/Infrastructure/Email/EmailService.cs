@@ -1,5 +1,6 @@
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
@@ -12,25 +13,29 @@ using Sentinel.Domain.Settings;
 namespace Sentinel.Infrastructure.Email;
 
 
-public class EmailService : IEmailService
+public partial class EmailService : IEmailService
 {
     private readonly EmailSettings _email;
+    private readonly ILocalizer _localizer;
     private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IOptions<EmailSettings> emailOptions, ILogger<EmailService> logger)
+    public EmailService(IOptions<EmailSettings> emailOptions, ILocalizer localizer, ILogger<EmailService> logger)
     {
         _email = emailOptions.Value;
+        _localizer = localizer;
         _logger = logger;
     }
 
-    public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl)
+    public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl, string culture)
     {
         string acceptUrl  = $"{frontendBaseUrl}/accept-invitation?token={rawToken}";
-        string roleLabel = invitation.Role == UserRole.Admin ? "Administrateur" : "Développeur";
+        string roleLabel = invitation.Role == UserRole.Admin
+            ? Text(culture, "emails.role.admin")
+            : Text(culture, "emails.role.developer");
         string roleColor = invitation.Role == UserRole.Admin ? "#dc2626" : "#4f46e5";
         string roleBg    = invitation.Role == UserRole.Admin ? "#fef2f2" : "#eef2ff";
 
-        string html = RenderTemplate("invitation.html", new Dictionary<string, string>
+        string html = RenderTemplate("invitation.html", culture, new Dictionary<string, string>
         {
             ["{{EMAIL}}"]        = invitation.Email,
             ["{{INVITED_BY}}"]   = invitedByName,
@@ -47,36 +52,30 @@ public class EmailService : IEmailService
             _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(invitation.Email, invitation.Email));
-        message.Subject = $"Invitation à rejoindre {organizationName} sur Sentinel";
+        message.Subject = Text(culture, "emails.invitation.subject",
+            new Dictionary<string, string> { ["organization"] = organizationName });
         message.Body = new BodyBuilder
         {
             HtmlBody = html,
-            TextBody = BuildTextFallback(invitedByName, organizationName, roleLabel, acceptUrl)
+            TextBody = Text(culture, "emails.invitation.text_body", new Dictionary<string, string>
+            {
+                ["organization"] = organizationName,
+                ["invitedBy"] = invitedByName,
+                ["role"] = roleLabel,
+                ["url"] = acceptUrl
+            })
         }.ToMessageBody();
 
-        using SmtpClient client = new SmtpClient();
-
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
-
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await SendAsync(message);
 
         _logger.LogInformation("Invitation email sent to {Email}", invitation.Email);
     }
 
-    public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl)
+    public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture)
     {
         string loginUrl = $"{frontendBaseUrl}/login";
 
-        string html = RenderTemplate("invitation-existing-account.html", new Dictionary<string, string>
+        string html = RenderTemplate("invitation-existing-account.html", culture, new Dictionary<string, string>
         {
             ["{{EMAIL}}"]     = email,
             ["{{LOGIN_URL}}"] = loginUrl
@@ -88,47 +87,27 @@ public class EmailService : IEmailService
             _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
-        message.Subject = "Invitation Sentinel — un compte existe déjà pour cette adresse";
+        message.Subject = Text(culture, "emails.existing_account.subject");
         message.Body = new BodyBuilder
         {
             HtmlBody = html,
-            TextBody = $"""
-                Vous avez déjà un compte Sentinel
-
-                Une invitation à rejoindre une organisation Sentinel a été émise pour {email}.
-                Une adresse email ne peut être rattachée qu'à une seule organisation :
-                l'invitation n'a donc pas été créée.
-
-                Connexion : {loginUrl}
-
-                Pour rejoindre une autre organisation, supprimez d'abord votre compte actuel,
-                ou utilisez une autre adresse email.
-                """
+            TextBody = Text(culture, "emails.existing_account.text_body", new Dictionary<string, string>
+            {
+                ["email"] = email,
+                ["url"] = loginUrl
+            })
         }.ToMessageBody();
 
-        using SmtpClient client = new SmtpClient();
-
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
-
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await SendAsync(message);
 
         _logger.LogInformation("Existing account notification sent to {Email}", email);
     }
 
-    public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl)
+    public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture)
     {
         string resetUrl = $"{frontendBaseUrl}/reset-password?token={resetToken}";
 
-        string html = RenderTemplate("password-reset.html", new Dictionary<string, string>
+        string html = RenderTemplate("password-reset.html", culture, new Dictionary<string, string>
         {
             ["{{EMAIL}}"]     = email,
             ["{{RESET_URL}}"] = resetUrl
@@ -140,46 +119,24 @@ public class EmailService : IEmailService
             _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
-        message.Subject = "Réinitialisation de votre mot de passe Sentinel";
+        message.Subject = Text(culture, "emails.password_reset.subject");
         message.Body = new BodyBuilder
         {
             HtmlBody = html,
-            TextBody = $"""
-                Réinitialisation de votre mot de passe Sentinel
-
-                Vous avez demandé la réinitialisation de votre mot de passe.
-
-                Lien de réinitialisation : {resetUrl}
-
-                Ce lien expire dans 1 heure.
-
-                Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
-                """
+            TextBody = Text(culture, "emails.password_reset.text_body",
+                new Dictionary<string, string> { ["url"] = resetUrl })
         }.ToMessageBody();
 
-        using SmtpClient client = new SmtpClient();
-
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
-
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await SendAsync(message);
 
         _logger.LogInformation("Password reset email sent to {Email}", email);
     }
 
-    public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl)
+    public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture)
     {
         string verifyUrl = $"{frontendBaseUrl}/verify-email?token={verificationToken}";
 
-        string html = RenderTemplate("email-verification.html", new Dictionary<string, string>
+        string html = RenderTemplate("email-verification.html", culture, new Dictionary<string, string>
         {
             ["{{EMAIL}}"]      = email,
             ["{{VERIFY_URL}}"] = verifyUrl
@@ -191,50 +148,137 @@ public class EmailService : IEmailService
             _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
-        message.Subject = "Confirmez votre adresse email Sentinel";
+        message.Subject = Text(culture, "emails.verification.subject");
         message.Body = new BodyBuilder
         {
             HtmlBody = html,
-            TextBody = $"""
-                Bienvenue sur Sentinel
-
-                Confirmez votre adresse email pour activer votre compte.
-
-                Lien d'activation : {verifyUrl}
-
-                Ce lien expire dans 48 heures.
-
-                Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.
-                """
+            TextBody = Text(culture, "emails.verification.text_body",
+                new Dictionary<string, string> { ["url"] = verifyUrl })
         }.ToMessageBody();
 
-        using SmtpClient client = new SmtpClient();
-
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
-
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await SendAsync(message);
 
         _logger.LogInformation("Verification email sent to {Email}", email);
     }
 
-    public async Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
+    public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
     {
-        string scanLabel = isFirstScan ? "Premier scan — vulnérabilités détectées" : "Nouvelles vulnérabilités détectées";
         int critical = newVulns.Count(v => v.Severity == "Critical");
         int high = newVulns.Count(v => v.Severity == "High");
         int medium = newVulns.Count(v => v.Severity == "Medium");
         int low = newVulns.Count(v => v.Severity == "Low");
 
-        string vulnRows = string.Join("\n", newVulns.Take(15).Select(v =>
+        foreach (EmailRecipient recipient in recipients)
+        {
+            string culture = recipient.Culture;
+
+            string scanLabel = isFirstScan
+                ? Text(culture, "emails.vuln_alert.scan_first")
+                : Text(culture, "emails.vuln_alert.scan_new");
+
+            string vulnRows = BuildVulnerabilityRows(newVulns, culture);
+
+            string html = RenderTemplate("vuln-alert.html", culture,
+                new Dictionary<string, string>
+                {
+                    ["{{PROJECT_NAME}}"]   = projectName,
+                    ["{{ORGANIZATION}}"]   = organizationName,
+                    ["{{SCAN_LABEL}}"]     = scanLabel,
+                    ["{{NEW_COUNT}}"]      = newVulns.Count.ToString(),
+                    ["{{COUNT_CRITICAL}}"] = critical.ToString(),
+                    ["{{COUNT_HIGH}}"]     = high.ToString(),
+                    ["{{COUNT_MEDIUM}}"]   = medium.ToString(),
+                    ["{{COUNT_LOW}}"]      = low.ToString(),
+                    ["{{PROJECT_URL}}"]    = projectUrl
+                },
+                new Dictionary<string, string>
+                {
+                    ["{{VULN_ROWS}}"] = vulnRows
+                });
+
+            string subject = Text(culture,
+                isFirstScan ? "emails.vuln_alert.subject_first" : "emails.vuln_alert.subject_new",
+                new Dictionary<string, string>
+                {
+                    ["organization"] = organizationName,
+                    ["project"] = projectName,
+                    ["count"] = newVulns.Count.ToString()
+                });
+
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(
+                _email.FromName,
+                _email.FromAddress
+            ));
+            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
+            message.Subject = subject;
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            await SendAsync(message);
+
+            _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", recipient.Email, projectName);
+        }
+    }
+
+    public async Task SendSubscriptionCanceledAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName, string billingUrl)
+    {
+        foreach (EmailRecipient recipient in recipients)
+        {
+            string html = RenderTemplate("subscription-canceled.html", recipient.Culture, new Dictionary<string, string>
+            {
+                ["{{ORGANIZATION}}"] = organizationName,
+                ["{{BILLING_URL}}"]  = billingUrl
+            });
+
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
+            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
+            message.Subject = Text(recipient.Culture, "emails.subscription_canceled.subject",
+                new Dictionary<string, string> { ["organization"] = organizationName });
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            await SendAsync(message);
+
+            _logger.LogInformation("Subscription cancellation notification sent to {Email}", recipient.Email);
+        }
+    }
+
+    public async Task SendSubscriptionUpdatedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName, string oldPlan, string newPlan, string statusKey, string statusValue, string billingUrl)
+    {
+        foreach (EmailRecipient recipient in recipients)
+        {
+            string statusMessage = Text(recipient.Culture, statusKey,
+                new Dictionary<string, string> { ["status"] = statusValue });
+
+            string html = RenderTemplate("subscription-updated.html", recipient.Culture, new Dictionary<string, string>
+            {
+                ["{{ORGANIZATION}}"]   = organizationName,
+                ["{{OLD_PLAN}}"]       = oldPlan,
+                ["{{NEW_PLAN}}"]       = newPlan,
+                ["{{STATUS_MESSAGE}}"] = statusMessage,
+                ["{{BILLING_URL}}"]    = billingUrl
+            });
+
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
+            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
+            message.Subject = Text(recipient.Culture, "emails.subscription_updated.subject", new Dictionary<string, string>
+            {
+                ["organization"] = organizationName,
+                ["oldPlan"] = oldPlan,
+                ["newPlan"] = newPlan
+            });
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            await SendAsync(message);
+
+            _logger.LogInformation("Subscription change notification sent to {Email} ({OldPlan} → {NewPlan})", recipient.Email, oldPlan, newPlan);
+        }
+    }
+
+    private string BuildVulnerabilityRows(IReadOnlyList<VulnerabilityAlertEntry> newVulns, string culture)
+    {
+        string rows = string.Join("\n", newVulns.Take(15).Select(v =>
         {
             (string color, string bg, string border) = v.Severity switch
             {
@@ -243,128 +287,51 @@ public class EmailService : IEmailService
                 "Medium"   => ("#ca8a04", "#fefce8", "#fae9b0"),
                 _          => ("#475569", "#f1f5f9", "#dde3ec")
             };
-            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix : <span style=\"color:#059669;font-weight:700;\">{WebUtility.HtmlEncode(v.FixedVersion)}</span>";
-            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{WebUtility.HtmlEncode(v.Severity)}</span><span style="color:#0f172a;font-weight:700;">{WebUtility.HtmlEncode(v.PackageName)}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{WebUtility.HtmlEncode(v.CveId)}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
+            string severityLabel = v.Severity switch
+            {
+                "Critical" => Text(culture, "emails.severity.critical"),
+                "High"     => Text(culture, "emails.severity.high"),
+                "Medium"   => Text(culture, "emails.severity.medium"),
+                "Low"      => Text(culture, "emails.severity.low"),
+                _          => v.Severity
+            };
+            string fixLabel = Text(culture, "emails.vuln_alert.fix");
+            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; {WebUtility.HtmlEncode(fixLabel)} : <span style=\"color:#059669;font-weight:700;\">{WebUtility.HtmlEncode(v.FixedVersion)}</span>";
+            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span><span style="color:#0f172a;font-weight:700;">{WebUtility.HtmlEncode(v.PackageName)}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{WebUtility.HtmlEncode(v.CveId)}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
         }));
 
         if (newVulns.Count > 15)
-            vulnRows += $"""<p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">... et {newVulns.Count - 15} autre(s)</p>""";
-
-        string html = RenderTemplate("vuln-alert.html",
-            new Dictionary<string, string>
-            {
-                ["{{PROJECT_NAME}}"]   = projectName,
-                ["{{ORGANIZATION}}"]   = organizationName,
-                ["{{SCAN_LABEL}}"]     = scanLabel,
-                ["{{NEW_COUNT}}"]      = newVulns.Count.ToString(),
-                ["{{COUNT_CRITICAL}}"] = critical.ToString(),
-                ["{{COUNT_HIGH}}"]     = high.ToString(),
-                ["{{COUNT_MEDIUM}}"]   = medium.ToString(),
-                ["{{COUNT_LOW}}"]      = low.ToString(),
-                ["{{PROJECT_URL}}"]    = projectUrl
-            },
-            new Dictionary<string, string>
-            {
-                ["{{VULN_ROWS}}"] = vulnRows
-            });
-
-        string subject = isFirstScan
-            ? $"[{organizationName}] {projectName} — {newVulns.Count} vulnérabilité(s) détectée(s)"
-            : $"[{organizationName}] {projectName} — {newVulns.Count} nouvelle(s) vulnérabilité(s)";
-
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        foreach (string adminEmail in adminEmails)
         {
-            MimeMessage message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                _email.FromName,
-                _email.FromAddress
-            ));
-            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
-            message.Subject = subject;
-            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
-
-            using SmtpClient client = new SmtpClient();
-            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-            if (!string.IsNullOrEmpty(username))
-                await client.AuthenticateAsync(username, password);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
-
-            _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", adminEmail, projectName);
+            string more = Text(culture, "emails.vuln_alert.more",
+                new Dictionary<string, string> { ["count"] = (newVulns.Count - 15).ToString() });
+            rows += $"""<p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">{WebUtility.HtmlEncode(more)}</p>""";
         }
+
+        return rows;
     }
 
-    public async Task SendSubscriptionCanceledAsync(IEnumerable<string> adminEmails, string organizationName, string billingUrl)
+    private async Task SendAsync(MimeMessage message)
     {
-        string html = RenderTemplate("subscription-canceled.html", new Dictionary<string, string>
-        {
-            ["{{ORGANIZATION}}"] = organizationName,
-            ["{{BILLING_URL}}"]  = billingUrl
-        });
-
         string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
 
-        foreach (string adminEmail in adminEmails)
-        {
-            MimeMessage message = new MimeMessage();
-            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
-            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
-            message.Subject = $"[{organizationName}] Abonnement annulé — retour au plan gratuit";
-            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+        using SmtpClient client = new SmtpClient();
 
-            using SmtpClient client = new SmtpClient();
-            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-            if (!string.IsNullOrEmpty(username))
-                await client.AuthenticateAsync(username, password);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
 
-            _logger.LogInformation("Subscription cancellation notification sent to {Email}", adminEmail);
-        }
+        if (!string.IsNullOrEmpty(username))
+            await client.AuthenticateAsync(username, password);
+
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
     }
 
-    public async Task SendSubscriptionUpdatedAsync(IEnumerable<string> adminEmails, string organizationName, string oldPlan, string newPlan, string statusMessage, string billingUrl)
-    {
-        string html = RenderTemplate("subscription-updated.html", new Dictionary<string, string>
-        {
-            ["{{ORGANIZATION}}"]   = organizationName,
-            ["{{OLD_PLAN}}"]       = oldPlan,
-            ["{{NEW_PLAN}}"]       = newPlan,
-            ["{{STATUS_MESSAGE}}"] = statusMessage,
-            ["{{BILLING_URL}}"]    = billingUrl
-        });
+    private string Text(string culture, string key) => _localizer.Get(culture, key);
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
-
-        foreach (string adminEmail in adminEmails)
-        {
-            MimeMessage message = new MimeMessage();
-            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
-            message.To.Add(new MailboxAddress(adminEmail, adminEmail));
-            message.Subject = $"[{organizationName}] Abonnement mis à jour — {oldPlan} → {newPlan}";
-            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
-
-            using SmtpClient client = new SmtpClient();
-            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-            if (!string.IsNullOrEmpty(username))
-                await client.AuthenticateAsync(username, password);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
-
-            _logger.LogInformation("Subscription change notification sent to {Email} ({OldPlan} → {NewPlan})", adminEmail, oldPlan, newPlan);
-        }
-    }
+    private string Text(string culture, string key, IReadOnlyDictionary<string, string> parameters) =>
+        _localizer.Get(culture, key, parameters);
 
     private static string LoadTemplate(string fileName)
     {
@@ -377,12 +344,15 @@ public class EmailService : IEmailService
         return reader.ReadToEnd();
     }
 
-    private static string RenderTemplate(
+    private string RenderTemplate(
         string fileName,
+        string culture,
         IReadOnlyDictionary<string, string> values,
         IReadOnlyDictionary<string, string>? preRenderedHtml = null)
     {
         string template = LoadTemplate(fileName);
+
+        template = TranslationToken().Replace(template, match => Text(culture, match.Groups[1].Value));
 
         foreach ((string placeholder, string value) in values)
             template = template.Replace(placeholder, WebUtility.HtmlEncode(value));
@@ -396,14 +366,6 @@ public class EmailService : IEmailService
         return template;
     }
 
-    private static string BuildTextFallback(string invitedByName, string organizationName, string roleLabel, string acceptUrl) => $"""
-        Invitation à rejoindre {organizationName} sur Sentinel
-
-        {invitedByName} vous a ajouté à l'espace de travail {organizationName}.
-        Rôle : {roleLabel}
-
-        Accepter l'invitation : {acceptUrl}
-
-        Ce lien expire dans 48 heures.
-        """;
+    [GeneratedRegex(@"\{\{T:([A-Za-z0-9_.]+)\}\}")]
+    private static partial Regex TranslationToken();
 }

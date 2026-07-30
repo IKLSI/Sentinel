@@ -53,17 +53,22 @@ public class UserInviteService(
         string email = model.Email.ToLowerInvariant();
 
         bool accountExistsElsewhere;
+        string? existingAccountLanguage;
 
         using (systemScope.Enter())
         {
             accountExistsElsewhere = await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken);
+            existingAccountLanguage = accountExistsElsewhere
+                ? await userRepository.GetLanguageByEmailOrDefaultAsync(email, cancellationToken)
+                : null;
         }
 
         if (accountExistsElsewhere)
         {
             string frontendBaseUrl = frontendOptions.Value.BaseUrl;
+            string culture = existingAccountLanguage ?? LanguageValues.Fr;
 
-            jobs.Enqueue<IEmailService>(s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl));
+            jobs.Enqueue<IEmailService>(s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
 
             return Result<ApiMessageResponse>.Accepted(
                 ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));

@@ -48,7 +48,8 @@ public class SendInvitationEmailJob
             rawToken,
             invitation.Organization.Name,
             invitation.InvitedBy.FullName,
-            _frontend.BaseUrl
+            _frontend.BaseUrl,
+            invitation.InvitedBy.Language
         );
     }
 }

@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
@@ -10,7 +11,8 @@ public sealed record ExportResult(byte[] Content, string FileName);
 public partial class ExportService(
     ITicketRepository ticketRepository,
     IProjectRepository projectRepository,
-    IUserRepository userRepository)
+    IUserRepository userRepository,
+    ILocalizer localizer)
 {
     private const string BaseFont = "Segoe UI";
     private const string HoursFormat = "0.00 \"h\"";
@@ -24,7 +26,7 @@ public partial class ExportService(
     {
         string? lang = await userRepository.GetLanguageOrDefaultAsync(currentUserId, cancellationToken);
 
-        return ExportLabels.For(lang == LanguageValues.En);
+        return ExportLabels.For(localizer, lang ?? LanguageValues.Fr);
     }
 
     public async Task<ExportResult> ExportTicketsExcelAsync(
@@ -61,11 +63,10 @@ public partial class ExportService(
         ExportLabels labels = await GetLabelsAsync(currentUserId);
 
         byte[] bytes = WriteTechHealthExcel(projects, labels);
-        string slug = labels.IsEn ? "tech-health" : "sante-technique";
-        return new ExportResult(bytes, $"{slug}-{DateTime.Now:yyyy-MM-dd}.xlsx");
+        return new ExportResult(bytes, $"{labels.TechHealthSlug}-{DateTime.Now:yyyy-MM-dd}.xlsx");
     }
 
-    private static byte[] WriteTicketsExcel(List<Ticket> tickets, ExportLabels L)
+    private byte[] WriteTicketsExcel(List<Ticket> tickets, ExportLabels L)
     {
         string[] headers = L.TicketHeaders;
 
@@ -92,9 +93,9 @@ public partial class ExportService(
             ApplyStatusCell(ws.Cell(row, 3), statusName, stFg);
 
             (_, XLColor prFg) = TicketPriorityColor(t.Priority.ToString());
-            ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L.IsEn), prFg);
+            ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
 
-            ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L.IsEn);
+            ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L);
             ws.Cell(row, 6).Value = t.AssignedTo?.FullName ?? string.Empty;
             ws.Cell(row, 7).Value = t.Project?.Name ?? string.Empty;
             ws.Cell(row, 8).Value = t.CreatedBy?.FullName ?? string.Empty;
@@ -125,7 +126,7 @@ public partial class ExportService(
         return SaveWorkbook(workbook);
     }
 
-    private static byte[] WriteTechHealthExcel(List<Project> projects, ExportLabels L)
+    private byte[] WriteTechHealthExcel(List<Project> projects, ExportLabels L)
     {
         using XLWorkbook workbook = new();
         ApplyDocumentProperties(workbook, L.SubjectTechHealth);

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
@@ -84,12 +85,19 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => u.Language)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<string>> ListAdminEmailsAsync(Guid organizationId,
+    public Task<string?> GetLanguageByEmailOrDefaultAsync(string email, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .IgnoreQueryFilters()
+            .Where(u => u.Email == email.ToLowerInvariant())
+            .Select(u => u.Language)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmailRecipient>> ListAdminRecipientsAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
             .Where(u => u.OrganizationId == organizationId)
             .Where(u => u.Role == UserRole.Admin)
-            .Select(u => u.Email)
+            .Select(u => new EmailRecipient(u.Email, u.Language))
             .ToListAsync(cancellationToken);
 
     public Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId,
@@ -106,8 +114,10 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
         Query(QueryTracking.NoTracking)
             .CountAsync(u => u.OrganizationId == organizationId && u.IsActive, cancellationToken);
 
-    public Task<List<string>> GetActiveAdminEmailsAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        ActiveAdmins(organizationId).Select(u => u.Email).ToListAsync(cancellationToken);
+    public Task<List<EmailRecipient>> GetActiveAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        ActiveAdmins(organizationId)
+            .Select(u => new EmailRecipient(u.Email, u.Language))
+            .ToListAsync(cancellationToken);
 
     public Task<string?> GetOldestActiveAdminEmailAsync(Guid organizationId, CancellationToken cancellationToken) =>
         ActiveAdmins(organizationId)

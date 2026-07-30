@@ -56,12 +56,12 @@ public class SettingsValidationTests
     }
 
     [Fact]
-    public void Production_WithEmptyConfiguration_ReportsMissingSecretsInFrench()
+    public void Production_WithEmptyConfiguration_ReportsMissingSecrets()
     {
         IReadOnlyList<string> failures = ValidationFailures(Environments.Production, []);
 
-        failures.Should().Contain(failure => failure.Contains("Email:Host est requis dans la configuration"));
-        failures.Should().Contain(failure => failure.Contains("Stripe:SecretKey est requis dans la configuration"));
+        failures.Should().Contain(failure => failure.Contains("Email:Host is required in the configuration"));
+        failures.Should().Contain(failure => failure.Contains("Stripe:SecretKey is required in the configuration"));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class SettingsValidationTests
         values["Support:Email"] = "pas-une-adresse";
 
         ValidationFailures(Environments.Production, values)
-            .Should().Contain(failure => failure.Contains("Support:Email doit être une adresse email valide"));
+            .Should().Contain(failure => failure.Contains("Support:Email must be a valid email address"));
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class SettingsValidationTests
         values["Frontend:BaseUrl"] = "http://localhost:3000";
 
         ValidationFailures(Environments.Production, values)
-            .Should().Contain(failure => failure.Contains("Frontend:BaseUrl doit être renseigné hors développement"));
+            .Should().Contain(failure => failure.Contains("Frontend:BaseUrl is required outside development"));
     }
 
     [Fact]

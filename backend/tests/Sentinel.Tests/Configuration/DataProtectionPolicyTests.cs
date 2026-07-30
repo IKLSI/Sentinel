@@ -52,7 +52,7 @@ public class DataProtectionPolicyTests
     {
         ConfigureWith(null).Should()
             .Throw<InvalidOperationException>()
-            .WithMessage("*trousseau de clés est écrit en clair dans la base*");
+            .WithMessage("*key ring is stored in clear text in the database*");
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class DataProtectionPolicyTests
     {
         ConfigureWith("ceci n'est pas du base64 !!").Should()
             .Throw<InvalidOperationException>()
-            .WithMessage("*encodé en base64*");
+            .WithMessage("*base64-encoded PKCS#12 certificate*");
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class DataProtectionPolicyTests
 
         ConfigureWith(notAPfx).Should()
             .Throw<InvalidOperationException>()
-            .WithMessage("*PKCS#12 valide*");
+            .WithMessage("*is not a valid PKCS#12 certificate*");
     }
 
     [Fact]
@@ -84,6 +84,6 @@ public class DataProtectionPolicyTests
     {
         ConfigureWith(PfxWithoutPrivateKey()).Should()
             .Throw<InvalidOperationException>()
-            .WithMessage("*clé privée*");
+            .WithMessage("*certificate private key*");
     }
 }

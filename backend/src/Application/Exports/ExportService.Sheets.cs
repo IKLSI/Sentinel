@@ -6,7 +6,7 @@ using Sentinel.Domain.Repositories;
 namespace Sentinel.Application.Exports;
 public partial class ExportService
 {
-    private static void WriteRecapSheet(XLWorkbook wb, List<Project> projects, ExportLabels L)
+    private void WriteRecapSheet(XLWorkbook wb, List<Project> projects, ExportLabels L)
     {
         string[] headers = L.RecapHeaders;
         IXLWorksheet ws = wb.Worksheets.Add(L.SheetRecap);
@@ -107,7 +107,7 @@ public partial class ExportService
         FinalizeSheet(ws, headers.Length, HeaderRow, HeaderRow, lastDataRow, HeaderRow);
     }
 
-    private static void WriteProjectSheet(XLWorkbook wb, Project project, string sheetName, ExportLabels L)
+    private void WriteProjectSheet(XLWorkbook wb, Project project, string sheetName, ExportLabels L)
     {
         IXLWorksheet ws = wb.Worksheets.Add(sheetName);
 
@@ -189,10 +189,10 @@ public partial class ExportService
             }
 
             ws.Cell(currentRow, 4).Value = d.Ecosystem.ToString();
-            ws.Cell(currentRow, 5).Value = TranslateDependencyType(d.Type.ToString(), L.IsEn);
+            ws.Cell(currentRow, 5).Value = TranslateDependencyType(d.Type.ToString(), L);
 
             (_, XLColor dsFg) = DepStatusColor(d.Status.ToString());
-            ApplyStatusCell(ws.Cell(currentRow, 6), TranslateDependencyStatus(d.Status.ToString(), L.IsEn), dsFg);
+            ApplyStatusCell(ws.Cell(currentRow, 6), TranslateDependencyStatus(d.Status.ToString(), L), dsFg);
 
             int vulnCount = d.Vulnerabilities.Count;
             IXLCell vulnCountCell = ws.Cell(currentRow, 7);
@@ -259,7 +259,7 @@ public partial class ExportService
                 cvssCell.Style.Font.FontColor = sevFg;
                 cvssCell.Style.Font.Bold = true;
 
-                ApplyStatusCell(ws.Cell(currentRow, 3), TranslateSeverity(v.Severity.ToString(), L.IsEn), sevFg);
+                ApplyStatusCell(ws.Cell(currentRow, 3), TranslateSeverity(v.Severity.ToString(), L), sevFg);
 
                 ws.Cell(currentRow, 4).Value = dep.Name;
 

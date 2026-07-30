@@ -1,13 +1,12 @@
-using ClosedXML.Excel;
-using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
-using Sentinel.Domain.Repositories;
+using Sentinel.Domain.Abstractions;
 
 namespace Sentinel.Application.Exports;
 internal sealed class ExportLabels
 {
-    public required bool IsEn { get; init; }
+    public required string Culture { get; init; }
     public required string DateFormat { get; init; }
+    public required string StampDateFormat { get; init; }
+    public required string TechHealthSlug { get; init; }
 
     public required string[] TicketHeaders { get; init; }
     public required string[] RecapHeaders { get; init; }
@@ -44,69 +43,90 @@ internal sealed class ExportLabels
     public required string RuntimeSoonEol { get; init; }
     public required string RuntimeEol { get; init; }
 
-    public static ExportLabels For(bool en) => en
-        ? new ExportLabels
+    public static ExportLabels For(ILocalizer localizer, string culture)
+    {
+        string Text(string key) => localizer.Get(culture, key);
+
+        return new ExportLabels
         {
-            IsEn = true,
-            DateFormat = "mm/dd/yyyy",
-            TicketHeaders = ["Reference", "Title", "Status", "Priority", "Type", "Assignee", "Project", "Created by", "Created on", "Updated on", "Est. hours"],
-            RecapHeaders = ["Project", "Grade", "Score /100", "Dependencies", "To update", "Vulnerable", "Critical", "Obsolete runtimes", "Last scan"],
-            RuntimeHeaders = ["Runtime", "Version", "Support ends", "Status"],
-            DepHeaders = ["Name", "Current version", "Latest version", "Ecosystem", "Type", "Status", "Vulnerabilities"],
-            VulnHeaders = ["CVE", "CVSS score", "Severity", "Dependency", "Fix", "Description"],
-            TitleTickets = "Sentinel — Tickets",
-            TitleTechHealth = "Sentinel — TechHealth",
-            SheetTickets = "Tickets",
-            SheetRecap = "Summary",
-            SubjectTickets = "Tickets Export",
-            SubjectTechHealth = "TechHealth Export",
-            SectionRuntimes = "RUNTIMES",
-            SectionDependencies = "DEPENDENCIES",
-            SectionVulnerabilities = "VULNERABILITIES",
-            GeneratedOn = "Generated on",
-            AtWord = "at",
-            TotalWord = "TOTAL",
-            UnitTickets = "tickets",
-            UnitProjects = "projects",
-            NoRuntimes = "No runtime detected",
-            NoDependencies = "No dependency detected",
-            NoVulnerabilities = "No vulnerability detected",
-            StatusUnknown = "Unknown",
-            GradeNotAvailable = "N/A",
-            RuntimeActive = "Active",
-            RuntimeSoonEol = "Soon obsolete",
-            RuntimeEol = "Obsolete",
-        }
-        : new ExportLabels
-        {
-            IsEn = false,
-            DateFormat = "dd/mm/yyyy",
-            TicketHeaders = ["Référence", "Titre", "Statut", "Priorité", "Type", "Assigné à", "Projet", "Créé par", "Créé le", "Mis à jour le", "H. estimées"],
-            RecapHeaders = ["Projet", "Grade", "Score /100", "Dépendances", "À mettre à jour", "Vulnérables", "Critiques", "Runtimes obsolètes", "Dernier scan"],
-            RuntimeHeaders = ["Runtime", "Version", "Fin de support", "Statut"],
-            DepHeaders = ["Nom", "Version actuelle", "Dernière version", "Écosystème", "Type", "Statut", "Vulnérabilités"],
-            VulnHeaders = ["CVE", "Score CVSS", "Sévérité", "Dépendance", "Correctif", "Description"],
-            TitleTickets = "Sentinel — Tickets",
-            TitleTechHealth = "Sentinel — TechHealth",
-            SheetTickets = "Tickets",
-            SheetRecap = "Récapitulatif",
-            SubjectTickets = "Export Tickets",
-            SubjectTechHealth = "Export TechHealth",
-            SectionRuntimes = "RUNTIMES",
-            SectionDependencies = "DÉPENDANCES",
-            SectionVulnerabilities = "VULNÉRABILITÉS",
-            GeneratedOn = "Généré le",
-            AtWord = "à",
-            TotalWord = "TOTAL",
-            UnitTickets = "ticket(s)",
-            UnitProjects = "projet(s)",
-            NoRuntimes = "Aucun runtime détecté",
-            NoDependencies = "Aucune dépendance détectée",
-            NoVulnerabilities = "Aucune vulnérabilité détectée",
-            StatusUnknown = "Inconnu",
-            GradeNotAvailable = "N/A",
-            RuntimeActive = "Actif",
-            RuntimeSoonEol = "Bientôt obsolète",
-            RuntimeEol = "Obsolète",
+            Culture = culture,
+            DateFormat = Text("exports.date_format"),
+            StampDateFormat = Text("exports.stamp_date_format"),
+            TechHealthSlug = Text("exports.tech_health.slug"),
+            TicketHeaders =
+            [
+                Text("exports.header.ticket.reference"),
+                Text("exports.header.ticket.title"),
+                Text("exports.header.ticket.status"),
+                Text("exports.header.ticket.priority"),
+                Text("exports.header.ticket.type"),
+                Text("exports.header.ticket.assignee"),
+                Text("exports.header.ticket.project"),
+                Text("exports.header.ticket.created_by"),
+                Text("exports.header.ticket.created_on"),
+                Text("exports.header.ticket.updated_on"),
+                Text("exports.header.ticket.estimated_hours")
+            ],
+            RecapHeaders =
+            [
+                Text("exports.header.recap.project"),
+                Text("exports.header.recap.grade"),
+                Text("exports.header.recap.score"),
+                Text("exports.header.recap.dependencies"),
+                Text("exports.header.recap.to_update"),
+                Text("exports.header.recap.vulnerable"),
+                Text("exports.header.recap.critical"),
+                Text("exports.header.recap.obsolete_runtimes"),
+                Text("exports.header.recap.last_scan")
+            ],
+            RuntimeHeaders =
+            [
+                Text("exports.header.runtime.runtime"),
+                Text("exports.header.runtime.version"),
+                Text("exports.header.runtime.support_ends"),
+                Text("exports.header.runtime.status")
+            ],
+            DepHeaders =
+            [
+                Text("exports.header.dependency.name"),
+                Text("exports.header.dependency.current_version"),
+                Text("exports.header.dependency.latest_version"),
+                Text("exports.header.dependency.ecosystem"),
+                Text("exports.header.dependency.type"),
+                Text("exports.header.dependency.status"),
+                Text("exports.header.dependency.vulnerabilities")
+            ],
+            VulnHeaders =
+            [
+                Text("exports.header.vulnerability.cve"),
+                Text("exports.header.vulnerability.cvss"),
+                Text("exports.header.vulnerability.severity"),
+                Text("exports.header.vulnerability.dependency"),
+                Text("exports.header.vulnerability.fix"),
+                Text("exports.header.vulnerability.description")
+            ],
+            TitleTickets = Text("exports.tickets.title"),
+            TitleTechHealth = Text("exports.tech_health.title"),
+            SheetTickets = Text("exports.tickets.sheet"),
+            SheetRecap = Text("exports.recap.sheet"),
+            SubjectTickets = Text("exports.tickets.subject"),
+            SubjectTechHealth = Text("exports.tech_health.subject"),
+            SectionRuntimes = Text("exports.section.runtimes"),
+            SectionDependencies = Text("exports.section.dependencies"),
+            SectionVulnerabilities = Text("exports.section.vulnerabilities"),
+            GeneratedOn = Text("exports.generated_on"),
+            AtWord = Text("exports.at"),
+            TotalWord = Text("exports.total"),
+            UnitTickets = Text("exports.unit.tickets"),
+            UnitProjects = Text("exports.unit.projects"),
+            NoRuntimes = Text("exports.empty.runtimes"),
+            NoDependencies = Text("exports.empty.dependencies"),
+            NoVulnerabilities = Text("exports.empty.vulnerabilities"),
+            StatusUnknown = Text("exports.status_unknown"),
+            GradeNotAvailable = Text("exports.grade_not_available"),
+            RuntimeActive = Text("exports.runtime.active"),
+            RuntimeSoonEol = Text("exports.runtime.soon_eol"),
+            RuntimeEol = Text("exports.runtime.eol")
         };
+    }
 }

@@ -1,51 +1,48 @@
-using ClosedXML.Excel;
-using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
-using Sentinel.Domain.Repositories;
-
 namespace Sentinel.Application.Exports;
 public partial class ExportService
 {
-    private static string TranslateTicketPriority(string priority, bool en) => priority switch
+    private string Text(ExportLabels labels, string key) => localizer.Get(labels.Culture, key);
+
+    private string TranslateTicketPriority(string priority, ExportLabels labels) => priority switch
     {
-        "Low" => en ? "Low" : "Faible",
-        "Medium" => en ? "Medium" : "Moyen",
-        "High" => en ? "High" : "Élevé",
-        "Critical" => en ? "Critical" : "Critique",
+        "Low" => Text(labels, "exports.ticket_priority.low"),
+        "Medium" => Text(labels, "exports.ticket_priority.medium"),
+        "High" => Text(labels, "exports.ticket_priority.high"),
+        "Critical" => Text(labels, "exports.ticket_priority.critical"),
         _ => priority,
     };
 
-    private static string TranslateTicketType(string type, bool en) => type switch
+    private string TranslateTicketType(string type, ExportLabels labels) => type switch
     {
-        "Feature" => en ? "Feature" : "Fonctionnalité",
-        "Security" => en ? "Security" : "Sécurité",
-        "Bug" => en ? "Bug" : "Bug",
+        "Feature" => Text(labels, "exports.ticket_type.feature"),
+        "Security" => Text(labels, "exports.ticket_type.security"),
+        "Bug" => Text(labels, "exports.ticket_type.bug"),
         _ => type,
     };
 
-    private static string TranslateDependencyStatus(string status, bool en) => status switch
+    private string TranslateDependencyStatus(string status, ExportLabels labels) => status switch
     {
-        "UpToDate" => en ? "Up to date" : "À jour",
-        "MinorUpdate" => en ? "Minor update" : "Mise à jour mineure",
-        "MajorUpdate" => en ? "Major update" : "Mise à jour majeure",
-        "EOL" => en ? "Obsolete" : "Obsolète",
-        "Vulnerable" => en ? "Vulnerable" : "Vulnérable",
+        "UpToDate" => Text(labels, "exports.dependency_status.up_to_date"),
+        "MinorUpdate" => Text(labels, "exports.dependency_status.minor_update"),
+        "MajorUpdate" => Text(labels, "exports.dependency_status.major_update"),
+        "EOL" => Text(labels, "exports.dependency_status.eol"),
+        "Vulnerable" => Text(labels, "exports.dependency_status.vulnerable"),
         _ => status,
     };
 
-    private static string TranslateSeverity(string severity, bool en) => severity switch
+    private string TranslateSeverity(string severity, ExportLabels labels) => severity switch
     {
-        "Critical" => en ? "Critical" : "Critique",
-        "High" => en ? "High" : "Élevé",
-        "Medium" => en ? "Medium" : "Moyen",
-        "Low" => en ? "Low" : "Faible",
+        "Critical" => Text(labels, "exports.severity.critical"),
+        "High" => Text(labels, "exports.severity.high"),
+        "Medium" => Text(labels, "exports.severity.medium"),
+        "Low" => Text(labels, "exports.severity.low"),
         _ => severity,
     };
 
-    private static string TranslateDependencyType(string type, bool en) => type switch
+    private string TranslateDependencyType(string type, ExportLabels labels) => type switch
     {
-        "Prod" => en ? "Production" : "Production",
-        "Dev" => en ? "Development" : "Développement",
+        "Prod" => Text(labels, "exports.dependency_type.prod"),
+        "Dev" => Text(labels, "exports.dependency_type.dev"),
         _ => type,
     };
 

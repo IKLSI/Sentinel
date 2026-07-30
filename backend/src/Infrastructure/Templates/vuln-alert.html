@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="{{T:emails.common.html_lang}}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light only" />
-  <title>Alerte vulnérabilités — Sentinel</title>
+  <title>{{T:emails.vuln_alert.title}}</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
@@ -24,7 +24,7 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f0f2f8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{NEW_COUNT}} vulnérabilité(s) détectée(s) sur le projet {{PROJECT_NAME}}.&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{T:emails.vuln_alert.preheader}}&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
     <tr>
@@ -75,9 +75,9 @@
                     </table>
 
                     <!-- Main heading -->
-                    <p class="sp-h1" style="margin:0 0 8px;font-size:23px;font-weight:700;color:#0e1220;letter-spacing:-0.5px;line-height:1.3;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{NEW_COUNT}} nouvelle(s) vulnérabilité(s) détectée(s)</p>
+                    <p class="sp-h1" style="margin:0 0 8px;font-size:23px;font-weight:700;color:#0e1220;letter-spacing:-0.5px;line-height:1.3;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.vuln_alert.heading}}</p>
                     <p style="margin:0 0 28px;font-size:14px;color:#4d5e82;">
-                      Projet <span style="color:#0e1220;font-weight:600;">{{PROJECT_NAME}}</span> &middot; {{ORGANIZATION}}
+                      {{T:emails.common.project}} <span style="color:#0e1220;font-weight:600;">{{PROJECT_NAME}}</span> &middot; {{ORGANIZATION}}
                     </p>
 
                     <!-- Stats row -->
@@ -86,25 +86,25 @@
                         <td width="25%" align="center" style="padding:0 4px;">
                           <div style="background-color:#fef2f2;border:1px solid #f6c9c9;border-radius:10px;padding:15px 8px;">
                             <p style="margin:0;font-size:22px;font-weight:800;color:#dc2626;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_CRITICAL}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Critique</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">{{T:emails.severity.critical}}</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
                           <div style="background-color:#fff7ed;border:1px solid #fcd7ae;border-radius:10px;padding:15px 8px;">
                             <p style="margin:0;font-size:22px;font-weight:800;color:#ea580c;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_HIGH}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Élevée</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">{{T:emails.severity.high}}</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
                           <div style="background-color:#fefce8;border:1px solid #f7e8a8;border-radius:10px;padding:15px 8px;">
                             <p style="margin:0;font-size:22px;font-weight:800;color:#ca8a04;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_MEDIUM}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#a16207;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Moyenne</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#a16207;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">{{T:emails.severity.medium}}</p>
                           </div>
                         </td>
                         <td width="25%" align="center" style="padding:0 4px;">
                           <div style="background-color:#f5f7fc;border:1px solid #d8e0ee;border-radius:10px;padding:15px 8px;">
                             <p style="margin:0;font-size:22px;font-weight:800;color:#4d5e82;font-family:'Space Grotesk','Inter',Arial,sans-serif;">{{COUNT_LOW}}</p>
-                            <p style="margin:4px 0 0;font-size:10px;color:#5c6f90;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">Faible</p>
+                            <p style="margin:4px 0 0;font-size:10px;color:#5c6f90;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;">{{T:emails.severity.low}}</p>
                           </div>
                         </td>
                       </tr>
@@ -114,7 +114,7 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:8px;">
                       <tr>
                         <td style="padding:16px 20px;">
-                          <p style="margin:0 0 12px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">Vulnérabilités détectées</p>
+                          <p style="margin:0 0 12px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">{{T:emails.vuln_alert.section_title}}</p>
                           {{VULN_ROWS}}
                         </td>
                       </tr>
@@ -128,18 +128,18 @@
                           <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{PROJECT_URL}}" stroke="f" fillcolor="#4f46e5" arcsize="22%" style="height:50px;width:196px;v-text-anchor:middle;">
                             <v:fill type="gradient" color="#6366f1" color2="#4f46e5" angle="135" />
                             <w:anchorlock/>
-                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Voir le projet &#8594;</center>
+                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">{{T:emails.vuln_alert.cta}} &#8594;</center>
                           </v:roundrect>
                           <![endif]-->
                           <!--[if !mso]><!-->
-                          <a href="{{PROJECT_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">Voir le projet &rarr;</a>
+                          <a href="{{PROJECT_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">{{T:emails.vuln_alert.cta}} &rarr;</a>
                           <!--<![endif]-->
                         </td>
                       </tr>
                     </table>
 
                     <p style="margin:0;font-size:11px;color:#8898bb;line-height:1.6;">
-                      Lien direct : <a href="{{PROJECT_URL}}" style="color:#4f46e5;text-decoration:underline;">{{PROJECT_URL}}</a>
+                      {{T:emails.common.direct_link}} <a href="{{PROJECT_URL}}" style="color:#4f46e5;text-decoration:underline;">{{PROJECT_URL}}</a>
                     </p>
 
                   </td>
@@ -154,7 +154,7 @@
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="border-top:1px solid #dde3f2;padding-top:20px;text-align:center;">
-                    <p style="margin:0;font-size:10px;color:#a3aecb;">Email automatique &mdash; merci de ne pas y répondre.</p>
+                    <p style="margin:0;font-size:10px;color:#a3aecb;">{{T:emails.common.footer}}</p>
                   </td>
                 </tr>
               </table>

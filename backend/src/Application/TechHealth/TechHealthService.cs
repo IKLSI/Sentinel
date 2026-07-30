@@ -268,10 +268,10 @@ public partial class TechHealthService
 
             if (newVulns.Count == 0) return;
 
-            IReadOnlyList<string> adminEmails =
-                await _userRepository.ListAdminEmailsAsync(project.OrganizationId, CancellationToken.None);
+            IReadOnlyList<EmailRecipient> adminRecipients =
+                await _userRepository.ListAdminRecipientsAsync(project.OrganizationId, CancellationToken.None);
 
-            if (adminEmails.Count == 0) return;
+            if (adminRecipients.Count == 0) return;
 
             string organizationName = org.Name;
             string frontendBase = _frontend.BaseUrl;
@@ -283,7 +283,7 @@ public partial class TechHealthService
                 .ToList();
 
             string projectName = project.Name;
-            _backgroundJobs.Enqueue<IEmailService>(s => s.SendVulnerabilityAlertAsync(adminEmails, projectName, organizationName, projectUrl, isFirstScan, entries));
+            _backgroundJobs.Enqueue<IEmailService>(s => s.SendVulnerabilityAlertAsync(adminRecipients, projectName, organizationName, projectUrl, isFirstScan, entries));
         }
         catch (Exception ex)
         {

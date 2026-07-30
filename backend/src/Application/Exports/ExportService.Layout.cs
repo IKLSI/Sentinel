@@ -8,9 +8,7 @@ public partial class ExportService
 {
     private static string BuildMeta(ExportLabels L, string count, string? extra)
     {
-        string stamp = L.IsEn
-            ? $"{L.GeneratedOn} {DateTime.Now:MM/dd/yyyy} {L.AtWord} {DateTime.Now:HH:mm}"
-            : $"{L.GeneratedOn} {DateTime.Now:dd/MM/yyyy} {L.AtWord} {DateTime.Now:HH:mm}";
+        string stamp = $"{L.GeneratedOn} {DateTime.Now.ToString(L.StampDateFormat)} {L.AtWord} {DateTime.Now:HH:mm}";
         string baseMeta = $"{stamp} · {count}";
         return string.IsNullOrEmpty(extra) ? baseMeta : $"{baseMeta} · {extra}";
     }

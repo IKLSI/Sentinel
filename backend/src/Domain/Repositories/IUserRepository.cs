@@ -1,3 +1,4 @@
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
 
@@ -29,7 +30,9 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<string>> ListAdminEmailsAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<string?> GetLanguageByEmailOrDefaultAsync(string email, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<EmailRecipient>> ListAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken);
 
     Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId, CancellationToken cancellationToken);
 
@@ -40,7 +43,7 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken);
 
-    Task<List<string>> GetActiveAdminEmailsAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<List<EmailRecipient>> GetActiveAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken);
 
     Task<string?> GetOldestActiveAdminEmailAsync(Guid organizationId, CancellationToken cancellationToken);
 }

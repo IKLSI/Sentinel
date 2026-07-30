@@ -268,40 +268,41 @@ public class BillingWebhookService : IService
 
         _logger.LogInformation("Subscription cancelled for {OrganizationId} — reverted to the free plan", organization.Id);
 
-        List<string> adminEmails = await _userRepository
-            .GetActiveAdminEmailsAsync(organization.Id, cancellationToken);
+        List<EmailRecipient> adminRecipients = await _userRepository
+            .GetActiveAdminRecipientsAsync(organization.Id, cancellationToken);
 
-        if (adminEmails.Count == 0) return;
+        if (adminRecipients.Count == 0) return;
 
         string organizationName = organization.Name;
         string billingUrl = BillingUrl;
 
         _backgroundJobs.Enqueue<IEmailService>(s =>
-            s.SendSubscriptionCanceledAsync(adminEmails, organizationName, billingUrl));
+            s.SendSubscriptionCanceledAsync(adminRecipients, organizationName, billingUrl));
     }
 
     private async Task NotifyPlanChangedAsync(Organization organization, PlanTier previousPlan, PlanTier newPlan,
         CancellationToken cancellationToken)
     {
-        List<string> adminEmails = await _userRepository
-            .GetActiveAdminEmailsAsync(organization.Id, cancellationToken);
+        List<EmailRecipient> adminRecipients = await _userRepository
+            .GetActiveAdminRecipientsAsync(organization.Id, cancellationToken);
 
-        if (adminEmails.Count == 0) return;
+        if (adminRecipients.Count == 0) return;
 
         string organizationName = organization.Name;
         string oldPlanName = previousPlan.ToString();
         string newPlanName = newPlan.ToString();
         string billingUrl = BillingUrl;
-        string statusMessage = organization.SubscriptionStatus switch
+        string statusKey = organization.SubscriptionStatus switch
         {
-            SubscriptionStatus.Active => "Abonnement actif.",
-            SubscriptionStatus.Trialing => "Période d'essai en cours.",
-            SubscriptionStatus.PastDue => "Paiement en retard — veuillez régulariser votre situation.",
-            _ => $"Statut : {organization.SubscriptionStatus}"
+            SubscriptionStatus.Active => "emails.subscription_updated.status_active",
+            SubscriptionStatus.Trialing => "emails.subscription_updated.status_trialing",
+            SubscriptionStatus.PastDue => "emails.subscription_updated.status_past_due",
+            _ => "emails.subscription_updated.status_other"
         };
+        string statusValue = organization.SubscriptionStatus.ToString();
 
         _backgroundJobs.Enqueue<IEmailService>(s => s.SendSubscriptionUpdatedAsync(
-            adminEmails, organizationName, oldPlanName, newPlanName, statusMessage, billingUrl));
+            adminRecipients, organizationName, oldPlanName, newPlanName, statusKey, statusValue, billingUrl));
     }
 
     private string BillingUrl => $"{_frontend.BaseUrl}/settings";
