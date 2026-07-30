@@ -5,7 +5,6 @@ import { Sidebar } from "./Sidebar";
 import { SidebarProvider } from "./SidebarContext";
 import { useSidebar } from "./SidebarContext";
 import { PageTransition } from "./PageTransition";
-import { CommandPalette } from "@/components/CommandPalette";
 
 const SIDEBAR_GAP = 12;
 
@@ -49,7 +48,6 @@ export const AppLayout: React.FC = () => {
         <Sidebar />
         <AppContent />
       </Box>
-      <CommandPalette />
     </SidebarProvider>
   );
 };

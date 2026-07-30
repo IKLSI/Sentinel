@@ -9,7 +9,6 @@ using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Notifications;
-using Sentinel.Application.Remediation;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth;
 using Sentinel.Application.TechHealth.ComplianceReport;
@@ -84,10 +83,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<DashboardCache>();
         services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
-        services.AddScoped<ManifestPatcherService>();
         services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
         services.AddScoped<RepositoryScannerService>();
-        services.AddScoped<RemediationService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();

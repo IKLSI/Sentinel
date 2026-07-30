@@ -41,7 +41,6 @@ public static class ErrorCodes
     public const string QuotaProjectsExceeded = "errors.quota.projects_exceeded";
     public const string QuotaMembersExceeded = "errors.quota.members_exceeded";
     public const string QuotaScansExceeded = "errors.quota.scans_exceeded";
-    public const string QuotaRemediationsExceeded = "errors.quota.remediations_exceeded";
 
     public const string ProjectNotFound = "errors.projects.not_found";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";
@@ -72,21 +71,4 @@ public static class ErrorCodes
     public const string ScanInvalidRepositoryUrl = "errors.scan.invalid_repository_url";
     public const string ScanNoAccessibleFiles = "errors.scan.no_accessible_files";
     public const string ScanFailed = "errors.scan.failed";
-
-    public const string RemediationProjectNotFound = "errors.remediation.project_not_found";
-    public const string RemediationNoRepository = "errors.remediation.no_repository";
-    public const string RemediationTokenMissing = "errors.remediation.token_missing";
-    public const string RemediationNoFixableVulnerability = "errors.remediation.no_fixable_vulnerability";
-    public const string RemediationInvalidRepositoryUrl = "errors.remediation.invalid_repository_url";
-    public const string RemediationManifestsNotPatchable = "errors.remediation.manifests_not_patchable";
-    public const string RemediationAlreadyRunning = "errors.remediation.already_running";
-    public const string RemediationPullRequestAlreadyOpen = "errors.remediation.pull_request_already_open";
-    public const string RemediationInternalError = "errors.remediation.internal_error";
-    public const string RemediationNoChanges = "errors.remediation.no_changes";
-    public const string RemediationUnsupportedPlatform = "errors.remediation.unsupported_platform";
-    public const string RemediationHostInvalidToken = "errors.remediation.host_invalid_token";
-    public const string RemediationHostInsufficientScope = "errors.remediation.host_insufficient_scope";
-    public const string RemediationHostRepositoryNotFound = "errors.remediation.host_repository_not_found";
-    public const string RemediationHostRequestRejected = "errors.remediation.host_request_rejected";
-    public const string RemediationHostWriteFailed = "errors.remediation.host_write_failed";
 }

@@ -12,7 +12,6 @@ import { useProject } from "@/features/techHealth/hooks/useProject";
 import type { TabDef } from "./helpers";
 import { ProjectDetailSkeleton } from "./components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "./components/ProjectHeaderCard";
-import { RemediateButton } from "./components/RemediateButton";
 import { ExportActions } from "./components/ExportActions";
 import { TabBar } from "./components/TabBar";
 import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
@@ -117,12 +116,7 @@ export const ProjectDetailPage: React.FC = () => {
         project={project}
         eolRuntimes={eolRuntimes}
         action={
-          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {project.totalVulnerabilities > 0 && (
-              <RemediateButton projectId={project.id} />
-            )}
-            <ExportActions projectId={project.id} projectName={project.name} />
-          </Box>
+          <ExportActions projectId={project.id} projectName={project.name} />
         }
       />
 

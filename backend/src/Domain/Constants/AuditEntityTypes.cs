@@ -9,5 +9,4 @@ public static class AuditEntityTypes
     public const string TicketAttachment = "TicketAttachment";
     public const string Project = "Project";
     public const string ApiKey = "ApiKey";
-    public const string Remediation = "Remediation";
 }

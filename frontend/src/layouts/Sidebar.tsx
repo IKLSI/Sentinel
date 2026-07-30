@@ -14,12 +14,10 @@ import PersonOutlined from "@mui/icons-material/PersonOutlined";
 import NotificationsNone from "@mui/icons-material/NotificationsNone";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { useSidebar } from "./SidebarContext";
 import { SentinelLogo } from "./SentinelLogo";
 import { useT } from "../i18n/I18nContext";
-import { PALETTE_OPEN_EVENT } from "../components/CommandPalette";
 import { useNotifications } from "../features/notifications/useNotifications";
 import { UserRole } from "../types/enums";
 import { NotificationsModal } from "../features/notifications/NotificationsModal";
@@ -397,76 +395,6 @@ export const Sidebar: React.FC = () => {
             gap: "4px",
           }}
         >
-          {collapsed ? (
-            <Tooltip title={t("palette.placeholder")} placement="right" arrow>
-              <Box
-                component="button"
-                onClick={() =>
-                  window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))
-                }
-                sx={{
-                  all: "unset",
-                  height: "34px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "var(--r)",
-                  cursor: "pointer",
-                  mb: "4px",
-                  transition: "background 0.12s",
-                  "&:hover": { background: "var(--s3)" },
-                }}
-              >
-                <SearchOutlined sx={{ fontSize: 16, color: "var(--muted)" }} />
-              </Box>
-            </Tooltip>
-          ) : (
-            <Box
-              component="button"
-              onClick={() =>
-                window.dispatchEvent(new Event(PALETTE_OPEN_EVENT))
-              }
-              sx={{
-                all: "unset",
-                height: "30px",
-                width: "100%",
-                boxSizing: "border-box",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                px: "10px",
-                mb: "12px",
-                borderRadius: "var(--r)",
-                cursor: "pointer",
-                border: "1px solid var(--border)",
-                background: "var(--s2)",
-                transition: "background 0.12s, border-color 0.12s",
-                "&:hover": {
-                  background: "var(--s3)",
-                  borderColor: "var(--border-hover, var(--muted2))",
-                },
-              }}
-            >
-              <SearchOutlined
-                sx={{ fontSize: 14, color: "var(--muted)", flexShrink: 0 }}
-              />
-              <Box
-                component="span"
-                sx={{
-                  fontSize: "11px",
-                  color: "var(--muted)",
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {t("sidebar.search")}
-              </Box>
-            </Box>
-          )}
           {collapsed
             ? filteredSections.map((section) => {
                 const sectionActive = isSectionActive(

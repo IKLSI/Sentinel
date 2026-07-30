@@ -9,8 +9,6 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.Infrastructure.Http;
 
-internal readonly record struct HostApiResponse(JsonElement? Json, int Status, string? Error);
-
 public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
 {
     private const long MaxFileBytes = 5 * 1024 * 1024;
@@ -172,32 +170,4 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
         }
         catch { return null; }
     }
-
-    public async Task<HostWriteResult> CreatePullRequestAsync(
-        string host, string owner, string repo, string token,
-        string branch, string title, string body,
-        IReadOnlyList<(string Path, string Content)> files)
-    {
-        if (string.IsNullOrEmpty(token))
-            return new HostWriteResult(false, null, ErrorCodes.RemediationTokenMissing);
-
-        if (files.Count == 0)
-            return new HostWriteResult(false, null, ErrorCodes.RemediationNoChanges);
-
-        try
-        {
-            if (host.Contains("github"))
-                return await CreateGitHubPullRequestAsync(owner, repo, token, branch, title, body, files);
-            if (host.Contains("gitlab"))
-                return await CreateGitLabMergeRequestAsync(owner, repo, token, branch, title, body, files);
-
-            return new HostWriteResult(false, null, ErrorCodes.RemediationUnsupportedPlatform);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to open pull request {Owner}/{Repo}", owner, repo);
-            return new HostWriteResult(false, null, ErrorCodes.RemediationHostWriteFailed);
-        }
-    }
-
 }

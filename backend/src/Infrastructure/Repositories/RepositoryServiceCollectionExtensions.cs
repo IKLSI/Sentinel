@@ -28,7 +28,6 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-        services.AddScoped<IRemediationRequestRepository, RemediationRequestRepository>();
         services.AddScoped<IDependencyRepository, DependencyRepository>();
         services.AddScoped<IVulnerabilityRepository, VulnerabilityRepository>();
         services.AddScoped<IRuntimeRepository, RuntimeRepository>();
