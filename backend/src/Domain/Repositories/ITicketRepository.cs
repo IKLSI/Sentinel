@@ -7,7 +7,7 @@ public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
 {
     Task<Ticket?> GetOrDefaultWithDetailsAsync(Guid ticketId, CancellationToken cancellationToken);
 
-    Task<Ticket?> GetOrDefaultWithStatusAsync(Guid ticketId, CancellationToken cancellationToken);
+    Task<Ticket?> GetOrDefaultTrackedAsync(Guid ticketId, CancellationToken cancellationToken);
 
     Task<PagedList<Ticket>> SearchAsync(Guid organizationId, TicketFilter filter, int page, int pageSize,
         CancellationToken cancellationToken);

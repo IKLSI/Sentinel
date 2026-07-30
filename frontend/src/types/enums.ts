@@ -25,6 +25,15 @@ export const TicketPriority = {
 export type TicketPriority =
   (typeof TicketPriority)[keyof typeof TicketPriority];
 
+export const TicketStatus = {
+  New: "new",
+  InProgress: "inprogress",
+  Testing: "testing",
+  Resolved: "resolved",
+  Closed: "closed",
+} as const;
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
+
 export const TicketType = {
   Bug: "bug",
   Feature: "feature",

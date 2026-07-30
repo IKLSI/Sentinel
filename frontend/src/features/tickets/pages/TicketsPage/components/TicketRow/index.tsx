@@ -7,6 +7,7 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/RowActions";
 import { useT } from "@/i18n/I18nContext";
 import type { Ticket } from "@/types";
+import { statusColor, statusLabel } from "@/features/tickets/constants";
 import {
   priorityColor,
   priorityLabelKeys,
@@ -158,12 +159,12 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
                 width: "7px",
                 height: "7px",
                 borderRadius: "50%",
-                background: ticket.statusColor,
+                background: statusColor(ticket.status),
                 flexShrink: 0,
-                boxShadow: `0 0 5px ${ticket.statusColor}`,
+                boxShadow: `0 0 5px ${statusColor(ticket.status)}`,
               }}
             />
-            {ticket.statusName}
+            {statusLabel(t, ticket.status)}
           </Box>
         </Box>
       </Box>

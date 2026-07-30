@@ -21,7 +21,6 @@ import {
   buildMarkdownSx,
   buildPalette,
   buildPriorityConfig,
-  buildStatusConfig,
 } from "./helpers";
 import { TicketHeader } from "./components/TicketHeader";
 import { SectionDivider } from "./components/SectionDivider";
@@ -47,7 +46,6 @@ export const TicketDetailPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
-  const statusConfig = useMemo(() => buildStatusConfig(isDark), [isDark]);
   const priorityConfig = useMemo(() => buildPriorityConfig(isDark), [isDark]);
   const markdownSx = useMemo(() => buildMarkdownSx(palette), [palette]);
   const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
@@ -301,7 +299,6 @@ export const TicketDetailPage: React.FC = () => {
             ticket={ticket}
             palette={palette}
             isDark={isDark}
-            statusConfig={statusConfig}
             priorityConfig={priorityConfig}
           />
         </Box>

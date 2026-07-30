@@ -36,7 +36,6 @@ internal sealed class ExportLabels
     public required string NoRuntimes { get; init; }
     public required string NoDependencies { get; init; }
     public required string NoVulnerabilities { get; init; }
-    public required string StatusUnknown { get; init; }
     public required string GradeNotAvailable { get; init; }
 
     public required string RuntimeActive { get; init; }
@@ -122,7 +121,6 @@ internal sealed class ExportLabels
             NoRuntimes = Text("exports.empty.runtimes"),
             NoDependencies = Text("exports.empty.dependencies"),
             NoVulnerabilities = Text("exports.empty.vulnerabilities"),
-            StatusUnknown = Text("exports.status_unknown"),
             GradeNotAvailable = Text("exports.grade_not_available"),
             RuntimeActive = Text("exports.runtime.active"),
             RuntimeSoonEol = Text("exports.runtime.soon_eol"),

@@ -30,10 +30,10 @@ public partial class ExportService
     private static readonly XLColor YellowFg = XLColor.FromHtml("#B45309");
     private static readonly XLColor RedBg = XLColor.FromHtml("#FEE2E2");
     private static readonly XLColor RedFg = XLColor.FromHtml("#B91C1C");
-    private static (XLColor bg, XLColor fg) TicketStatusColor(string statusName) => statusName switch
+    private static (XLColor bg, XLColor fg) TicketStatusColor(TicketStatus status) => status switch
     {
-        "Résolu" or "Fermé" => (GreenBg, GreenFg),
-        "En cours" or "Tests" => (OrangeBg, OrangeFg),
+        TicketStatus.Resolved or TicketStatus.Closed => (GreenBg, GreenFg),
+        TicketStatus.InProgress or TicketStatus.Testing => (OrangeBg, OrangeFg),
         _ => (GrayBg, GrayFg),
     };
 

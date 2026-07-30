@@ -42,7 +42,6 @@ export interface StatsData {
   resolvedThisMonthDelta: number;
   criticalVulnerabilities: number;
   ticketsByStatus: Record<string, number>;
-  ticketsByStatusColor: Record<string, string>;
   ticketsByPriority: Record<string, number>;
   unassignedOpenTickets: number;
   urgentTickets: UrgentTicket[];
@@ -57,7 +56,6 @@ export const EMPTY_STATS: StatsData = {
   resolvedThisMonthDelta: 0,
   criticalVulnerabilities: 0,
   ticketsByStatus: {},
-  ticketsByStatusColor: {},
   ticketsByPriority: {},
   unassignedOpenTickets: 0,
   urgentTickets: [],

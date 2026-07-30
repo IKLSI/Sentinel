@@ -11,10 +11,27 @@ import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutl
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import { useNavigate } from "@tanstack/react-router";
 import { useT } from "@/i18n/I18nContext";
+import { statusLabel } from "@/features/tickets/constants";
 import { useNotifications } from "./useNotifications";
 import type { NotificationItem } from "./api";
 
 type Filter = "all" | "unread" | "read";
+
+const STATUS_PARAM_KEYS = ["oldStatus", "newStatus"];
+
+const translateStatusParams = (
+  t: (key: string) => string,
+  params?: Record<string, string>,
+): Record<string, string> | undefined => {
+  if (!params) return params;
+
+  const translated = { ...params };
+  for (const key of STATUS_PARAM_KEYS) {
+    if (translated[key]) translated[key] = statusLabel(t, translated[key]);
+  }
+
+  return translated;
+};
 
 const FILTERS: { key: Filter; labelKey: string }[] = [
   { key: "all", labelKey: "notifications.filter.all" },
@@ -374,7 +391,10 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
                         minWidth: 0,
                       }}
                     >
-                      {t(notif.messageKey, notif.messageParams)}
+                      {t(
+                        notif.messageKey,
+                        translateStatusParams(t, notif.messageParams),
+                      )}
                     </Box>
                     <Box
                       sx={{

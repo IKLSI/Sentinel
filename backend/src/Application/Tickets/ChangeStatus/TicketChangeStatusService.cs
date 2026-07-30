@@ -15,7 +15,6 @@ namespace Sentinel.Application.Tickets.ChangeStatus;
 
 public class TicketChangeStatusService(
     ITicketRepository ticketRepository,
-    ITicketStatusRepository ticketStatusRepository,
     ITicketHistoryRepository ticketHistoryRepository,
     ICommitScopeFactory commitScopeFactory,
     NotificationPublisher notificationPublisher,
@@ -25,8 +24,6 @@ public class TicketChangeStatusService(
     ILogger<TicketChangeStatusService> logger,
     TicketChangeStatusValidator validator) : IService
 {
-    private const string UnknownStatusName = "Inconnu";
-
     public async Task<Result<TicketDto>> ExecuteAsync(Guid ticketId, ChangeStatusDto model,
         CancellationToken cancellationToken)
     {
@@ -38,26 +35,24 @@ public class TicketChangeStatusService(
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
             return Result<TicketDto>.Unauthorized();
 
-        Ticket? ticket = await ticketRepository.GetOrDefaultWithStatusAsync(ticketId, cancellationToken);
+        if (!Enum.TryParse(model.Status, true, out TicketStatus newStatus))
+            return Result<TicketDto>.Error(ErrorCodes.TicketInvalidStatus);
+
+        Ticket? ticket = await ticketRepository.GetOrDefaultTrackedAsync(ticketId, cancellationToken);
 
         if (ticket == null || ticket.OrganizationId != organizationId)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);
 
-        TicketStatus? newStatus = await ticketStatusRepository.GetOrDefaultAsync(model.StatusId,
-            QueryTracking.Tracked, cancellationToken);
-
-        if (newStatus == null || newStatus.OrganizationId != ticket.OrganizationId)
-            return Result<TicketDto>.Error(ErrorCodes.TicketInvalidStatus);
-
-        string oldStatusName = ticket.TicketStatus?.Name ?? UnknownStatusName;
+        string oldStatusCode = ticket.Status.ToString().ToLower();
+        string newStatusCode = newStatus.ToString().ToLower();
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            ticket.TicketStatusId = newStatus.Id;
+            ticket.Status = newStatus;
             ticket.UpdatedAt = DateTime.UtcNow;
 
             await ticketHistoryRepository.AddAsync(
-                TicketQueries.CreateHistory(ticketId, userId, "Status", oldStatusName, newStatus.Name),
+                TicketQueries.CreateHistory(ticketId, userId, "Status", oldStatusCode, newStatusCode),
                 cancellationToken);
 
             await commitScope.CommitAsync(cancellationToken);
@@ -65,7 +60,7 @@ public class TicketChangeStatusService(
 
         dashboardCache.Invalidate(organizationId);
 
-        await NotifyAssigneeAsync(ticket, userId, oldStatusName, newStatus.Name, cancellationToken);
+        await NotifyAssigneeAsync(ticket, userId, oldStatusCode, newStatusCode, cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.TicketStatusChanged,
@@ -80,7 +75,7 @@ public class TicketChangeStatusService(
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }
 
-    private async Task NotifyAssigneeAsync(Ticket ticket, Guid authorId, string oldStatusName, string newStatusName,
+    private async Task NotifyAssigneeAsync(Ticket ticket, Guid authorId, string oldStatusCode, string newStatusCode,
         CancellationToken cancellationToken)
     {
         if (ticket.AssignedToId is not Guid assigneeId || assigneeId == authorId) return;
@@ -95,8 +90,8 @@ public class TicketChangeStatusService(
                 new Dictionary<string, string>
                 {
                     ["title"] = ticket.Title,
-                    ["oldStatus"] = oldStatusName,
-                    ["newStatus"] = newStatusName
+                    ["oldStatus"] = oldStatusCode,
+                    ["newStatus"] = newStatusCode
                 },
                 ticket.Id,
                 cancellationToken);

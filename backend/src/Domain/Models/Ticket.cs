@@ -19,6 +19,27 @@ public enum TicketType
     Maintenance
 }
 
+public enum TicketStatus
+{
+    New,
+    InProgress,
+    Testing,
+    Resolved,
+    Closed
+}
+
+public static class TicketStatusRules
+{
+    public static bool IsClosed(this TicketStatus status) =>
+        status is TicketStatus.Resolved or TicketStatus.Closed;
+
+    public static IReadOnlyList<TicketStatus> Open { get; } =
+        [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing];
+
+    public static IReadOnlyList<TicketStatus> Closed { get; } =
+        [TicketStatus.Resolved, TicketStatus.Closed];
+}
+
 public class Ticket : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -28,14 +49,13 @@ public class Ticket : IEntityWithId
     public string Description { get; set; } = string.Empty;
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;
     public TicketType Type { get; set; } = TicketType.Bug;
-    public Guid? TicketStatusId { get; set; }
+    public TicketStatus Status { get; set; } = TicketStatus.New;
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public Guid CreatedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string Tags { get; set; } = "[]";
-    public TicketStatus? TicketStatus { get; set; }
     public Organization Organization { get; set; } = null!;
     public Project? Project { get; set; }
     public User? AssignedTo { get; set; }

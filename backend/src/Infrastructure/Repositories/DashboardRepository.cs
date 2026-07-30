@@ -14,54 +14,44 @@ public class DashboardRepository : IDashboardRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyDictionary<Guid, int>> GetTicketCountsByStatusAsync(Guid organizationId,
+    private static readonly TicketStatus[] OpenStatuses = TicketStatusRules.Open.ToArray();
+    private static readonly TicketStatus[] ClosedStatuses = TicketStatusRules.Closed.ToArray();
+
+    public async Task<IReadOnlyDictionary<TicketStatus, int>> GetTicketCountsByStatusAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
-        await StatusedTickets(organizationId)
-            .GroupBy(t => t.TicketStatusId!.Value)
-            .Select(g => new { StatusId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.StatusId, x => x.Count, cancellationToken);
+        await Tickets(organizationId)
+            .GroupBy(t => t.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
 
-    public async Task<DashboardCounters?> GetCountersAsync(Guid organizationId,
-        IReadOnlyCollection<Guid> openStatusIds, IReadOnlyCollection<Guid> closedStatusIds, DashboardPeriod period,
-        CancellationToken cancellationToken)
-    {
-        List<Guid> openIds = openStatusIds.ToList();
-        List<Guid> closedIds = closedStatusIds.ToList();
-
-        return await StatusedTickets(organizationId)
+    public async Task<DashboardCounters?> GetCountersAsync(Guid organizationId, DashboardPeriod period,
+        CancellationToken cancellationToken) =>
+        await Tickets(organizationId)
             .GroupBy(_ => 1)
             .Select(g => new DashboardCounters(
-                g.Count(t => openIds.Contains(t.TicketStatusId!.Value) && t.CreatedAt >= period.WeekAgo),
-                g.Count(t => closedIds.Contains(t.TicketStatusId!.Value) && t.UpdatedAt >= period.MonthStart),
-                g.Count(t => closedIds.Contains(t.TicketStatusId!.Value)
+                g.Count(t => OpenStatuses.Contains(t.Status) && t.CreatedAt >= period.WeekAgo),
+                g.Count(t => ClosedStatuses.Contains(t.Status) && t.UpdatedAt >= period.MonthStart),
+                g.Count(t => ClosedStatuses.Contains(t.Status)
                     && t.UpdatedAt >= period.LastMonthStart && t.UpdatedAt <= period.LastMonthEnd),
-                g.Count(t => openIds.Contains(t.TicketStatusId!.Value) && t.AssignedToId == null)))
+                g.Count(t => OpenStatuses.Contains(t.Status) && t.AssignedToId == null)))
             .SingleOrDefaultAsync(cancellationToken);
-    }
 
     public Task<int> CountCriticalVulnerabilitiesAsync(Guid organizationId, CancellationToken cancellationToken) =>
         Vulnerabilities(organizationId)
             .CountAsync(v => v.Severity == VulnerabilitySeverity.Critical, cancellationToken);
 
     public async Task<IReadOnlyDictionary<TicketPriority, int>> GetOpenTicketCountsByPriorityAsync(
-        Guid organizationId, IReadOnlyCollection<Guid> openStatusIds, CancellationToken cancellationToken)
-    {
-        List<Guid> openIds = openStatusIds.ToList();
-
-        return await StatusedTickets(organizationId)
-            .Where(t => openIds.Contains(t.TicketStatusId!.Value))
+        Guid organizationId, CancellationToken cancellationToken) =>
+        await Tickets(organizationId)
+            .Where(t => OpenStatuses.Contains(t.Status))
             .GroupBy(t => t.Priority)
             .Select(g => new { Priority = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Priority, x => x.Count, cancellationToken);
-    }
 
-    public async Task<IReadOnlyList<UrgentTicketRow>> GetUrgentTicketsAsync(Guid organizationId,
-        IReadOnlyCollection<Guid> openStatusIds, int take, CancellationToken cancellationToken)
-    {
-        List<Guid> openIds = openStatusIds.ToList();
-
-        return await StatusedTickets(organizationId)
-            .Where(t => openIds.Contains(t.TicketStatusId!.Value))
+    public async Task<IReadOnlyList<UrgentTicketRow>> GetUrgentTicketsAsync(Guid organizationId, int take,
+        CancellationToken cancellationToken) =>
+        await Tickets(organizationId)
+            .Where(t => OpenStatuses.Contains(t.Status))
             .OrderByDescending(t =>
                 t.Priority == TicketPriority.Critical ? 4 :
                 t.Priority == TicketPriority.High ? 3 :
@@ -73,17 +63,16 @@ public class DashboardRepository : IDashboardRepository
                 t.Title,
                 t.Priority.ToString().ToLower(),
                 t.Type.ToString().ToLower(),
-                t.TicketStatus != null ? t.TicketStatus.Name : string.Empty,
+                t.Status.ToString().ToLower(),
                 t.Project != null ? t.Project.Name : null,
                 t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
                 t.Comments.Count))
             .ToListAsync(cancellationToken);
-    }
 
     public async Task<IReadOnlyList<ClosedTicketActivityRow>> GetClosedTicketActivityAsync(Guid organizationId,
         DateTime since, int take, CancellationToken cancellationToken) =>
         await Tickets(organizationId)
-            .Where(t => t.TicketStatus != null && t.TicketStatus.IsClosed && t.UpdatedAt >= since)
+            .Where(t => ClosedStatuses.Contains(t.Status) && t.UpdatedAt >= since)
             .OrderByDescending(t => t.UpdatedAt)
             .Take(take)
             .Select(t => new ClosedTicketActivityRow(
@@ -132,9 +121,6 @@ public class DashboardRepository : IDashboardRepository
 
     private IQueryable<Ticket> Tickets(Guid organizationId) =>
         _context.Tickets.AsNoTracking().Where(t => t.OrganizationId == organizationId);
-
-    private IQueryable<Ticket> StatusedTickets(Guid organizationId) =>
-        Tickets(organizationId).Where(t => t.TicketStatusId != null);
 
     private IQueryable<Vulnerability> Vulnerabilities(Guid organizationId) =>
         _context.Vulnerabilities.AsNoTracking()

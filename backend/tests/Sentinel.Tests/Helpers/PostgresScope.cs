@@ -18,7 +18,6 @@ public sealed class PostgresScope : IAsyncDisposable
 
         Tickets = new TicketRepository(Context);
         TicketComments = new TicketCommentRepository(Context);
-        TicketStatuses = new TicketStatusRepository(Context);
         Projects = new ProjectRepository(Context);
         Users = new UserRepository(Context);
         Organizations = new OrganizationRepository(Context);
@@ -34,7 +33,6 @@ public sealed class PostgresScope : IAsyncDisposable
 
     public TicketRepository Tickets { get; }
     public TicketCommentRepository TicketComments { get; }
-    public TicketStatusRepository TicketStatuses { get; }
     public ProjectRepository Projects { get; }
     public UserRepository Users { get; }
     public OrganizationRepository Organizations { get; }

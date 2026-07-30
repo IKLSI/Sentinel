@@ -18,7 +18,6 @@ public class AuthRegisterService(
     IOrganizationRepository organizationRepository,
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    ITicketStatusRepository ticketStatusRepository,
     IEmailVerificationTokenRepository verificationTokenRepository,
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
@@ -80,7 +79,6 @@ public class AuthRegisterService(
         {
             await organizationRepository.AddAsync(organization, cancellationToken);
             await userRepository.AddAsync(admin, cancellationToken);
-            await ticketStatusRepository.AddRangeAsync(RegistrationTicketStatuses.For(organization.Id), cancellationToken);
             await verificationTokenRepository.AddAsync(verificationToken, cancellationToken);
 
             await commitScope.CommitAsync(cancellationToken);

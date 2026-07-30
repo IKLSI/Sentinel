@@ -16,7 +16,6 @@ public sealed class TestScope : IDisposable
         CommitScopeFactory = new CommitScopeFactory(Context);
 
         Tickets = new TicketRepository(Context);
-        TicketStatuses = new TicketStatusRepository(Context);
         Projects = new ProjectRepository(Context);
         Users = new UserRepository(Context);
         Organizations = new OrganizationRepository(Context);
@@ -31,7 +30,6 @@ public sealed class TestScope : IDisposable
     public CommitScopeFactory CommitScopeFactory { get; }
 
     public TicketRepository Tickets { get; }
-    public TicketStatusRepository TicketStatuses { get; }
     public ProjectRepository Projects { get; }
     public UserRepository Users { get; }
     public OrganizationRepository Organizations { get; }

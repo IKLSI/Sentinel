@@ -12,6 +12,16 @@ public partial class ExportService
         _ => priority,
     };
 
+    private string TranslateTicketStatus(string status, ExportLabels labels) => status switch
+    {
+        "New" => Text(labels, "exports.ticket_status.new"),
+        "InProgress" => Text(labels, "exports.ticket_status.in_progress"),
+        "Testing" => Text(labels, "exports.ticket_status.testing"),
+        "Resolved" => Text(labels, "exports.ticket_status.resolved"),
+        "Closed" => Text(labels, "exports.ticket_status.closed"),
+        _ => status,
+    };
+
     private string TranslateTicketType(string type, ExportLabels labels) => type switch
     {
         "Feature" => Text(labels, "exports.ticket_type.feature"),

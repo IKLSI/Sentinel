@@ -55,14 +55,6 @@ public class DataSeeder
 
         await _context.Users.AddAsync(admin);
 
-        var statusNew = new TicketStatus { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Nouveau", Color = "var(--accent)", Order = 0, IsDefault = true, IsClosed = false };
-        var statusInProgress = new TicketStatus { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "En cours", Color = "var(--orange)", Order = 1, IsDefault = false, IsClosed = false };
-        var statusTesting = new TicketStatus { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "En test", Color = "var(--cyan)", Order = 2, IsDefault = false, IsClosed = false };
-        var statusResolved = new TicketStatus { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Résolu", Color = "var(--green)", Order = 3, IsDefault = false, IsClosed = true };
-        var statusClosed = new TicketStatus { Id = Guid.NewGuid(), OrganizationId = org.Id, Name = "Fermé", Color = "var(--muted2)", Order = 4, IsDefault = false, IsClosed = true };
-
-        await _context.TicketStatuses.AddRangeAsync(statusNew, statusInProgress, statusTesting, statusResolved, statusClosed);
-
         await _context.SaveChangesAsync();
     }
 }

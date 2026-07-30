@@ -9,9 +9,7 @@ public class TicketDto
     public string Description { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public string StatusId { get; set; } = string.Empty;
-    public string StatusName { get; set; } = string.Empty;
-    public string StatusColor { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
     public bool StatusIsClosed { get; set; }
     public Guid? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
@@ -53,5 +51,5 @@ public class CreateCommentDto
 
 public class ChangeStatusDto
 {
-    public Guid StatusId { get; set; }
+    public string Status { get; set; } = string.Empty;
 }

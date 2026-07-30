@@ -7,7 +7,7 @@ import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/i18n/I18nContext";
-import type { TicketStatusDef } from "@/types";
+import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import { selectSx } from "../../helpers";
 
 interface FiltersState {
@@ -24,7 +24,6 @@ interface Props {
   onCreate: () => void;
   onExport: () => void;
   exporting: boolean;
-  statuses: TicketStatusDef[];
 }
 
 export const TicketsToolbar: React.FC<Props> = ({
@@ -35,7 +34,6 @@ export const TicketsToolbar: React.FC<Props> = ({
   onCreate,
   onExport,
   exporting,
-  statuses,
 }) => {
   const t = useT();
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -215,7 +213,13 @@ export const TicketsToolbar: React.FC<Props> = ({
                   value: filters.status,
                   options: [
                     ["", t("tickets.list.filter_all_masculine")],
-                    ...statuses.map((s) => [s.id, s.name] as [string, string]),
+                    ...TICKET_STATUSES.map(
+                      (status) =>
+                        [status, t(statusLabelKeys[status])] as [
+                          string,
+                          string,
+                        ],
+                    ),
                   ],
                 },
                 {

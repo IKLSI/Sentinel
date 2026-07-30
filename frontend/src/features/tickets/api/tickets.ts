@@ -33,9 +33,7 @@ interface TicketDto {
   description: string;
   priority: string;
   type: string;
-  statusId: string;
-  statusName: string;
-  statusColor: string;
+  status: string;
   statusIsClosed: boolean;
   assignedToId?: string;
   assignedToName?: string;
@@ -90,9 +88,7 @@ function mapTicketDto(dto: TicketDto): Ticket {
       : undefined,
     priority: dto.priority as Ticket["priority"],
     type: dto.type as Ticket["type"],
-    statusId: dto.statusId,
-    statusName: dto.statusName,
-    statusColor: dto.statusColor,
+    status: dto.status as Ticket["status"],
     statusIsClosed: dto.statusIsClosed,
     estimatedHours: dto.estimatedHours,
     comments: dto.comments.map((c) => ({

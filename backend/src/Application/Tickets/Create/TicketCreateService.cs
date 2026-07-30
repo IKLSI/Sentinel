@@ -16,7 +16,6 @@ namespace Sentinel.Application.Tickets.Create;
 
 public class TicketCreateService(
     ITicketRepository ticketRepository,
-    ITicketStatusRepository ticketStatusRepository,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
@@ -46,9 +45,6 @@ public class TicketCreateService(
                 QueryTracking.NoTracking, cancellationToken) is null)
             return Result<TicketDto>.NotFound(ErrorCodes.UserNotFound);
 
-        TicketStatus? defaultStatus = await ticketStatusRepository
-            .GetOrDefaultFirstByOrderAsync(organizationId, cancellationToken);
-
         Ticket ticket = new Ticket
         {
             OrganizationId = organizationId,
@@ -57,7 +53,7 @@ public class TicketCreateService(
             Description = model.Description,
             Priority = model.Priority,
             Type = model.Type,
-            TicketStatusId = defaultStatus?.Id,
+            Status = TicketStatus.New,
             AssignedToId = model.AssignedToId,
             EstimatedHours = model.EstimatedHours,
             CreatedById = userId,

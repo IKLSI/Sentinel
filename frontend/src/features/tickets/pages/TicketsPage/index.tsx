@@ -15,10 +15,8 @@ import {
   useDeleteTicket,
   useExportTicketsExcel,
 } from "@/features/tickets/hooks/useTickets";
-import {
-  useTicketStatuses,
-  useChangeTicketStatus,
-} from "@/features/tickets/hooks/useTicketStatuses";
+import { useChangeTicketStatus } from "@/features/tickets/hooks/useTicketStatuses";
+import { TICKET_STATUSES } from "@/features/tickets/constants";
 import { useProjects } from "@/features/techHealth/hooks/useProjects";
 import { useUsers } from "@/features/users/hooks/useUsers";
 import type {
@@ -26,7 +24,6 @@ import type {
   TicketFilters,
   TicketPriority,
   TicketType,
-  TicketStatusDef,
 } from "@/types";
 import {
   type CreateTicketPayload,
@@ -81,8 +78,6 @@ export const TicketsPage: React.FC = () => {
   const { data: projectsData } = useProjects();
   const modalProjects = projectsData ?? [];
   const { users: modalUsers } = useUsers();
-  const { data: statusesData } = useTicketStatuses();
-  const statuses: TicketStatusDef[] = statusesData ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const {
     register: editRegister,
@@ -175,7 +170,7 @@ export const TicketsPage: React.FC = () => {
         description: ticket.description ?? "",
         priority: ticket.priority,
         type: ticket.type,
-        status: ticket.statusId,
+        status: ticket.status,
         projectId: ticket.projectId ?? "",
         assignedToId: ticket.assignee?.id ?? "",
         estimatedMinutes:
@@ -217,10 +212,10 @@ export const TicketsPage: React.FC = () => {
         id: editTarget.id,
         data: payload as Partial<Ticket>,
       });
-      if (data.status && data.status !== editTarget.statusId) {
+      if (data.status && data.status !== editTarget.status) {
         await changeStatusMutation.mutateAsync({
           ticketId: editTarget.id,
-          statusId: data.status,
+          status: data.status,
         });
       }
       setEditTarget(null);
@@ -281,7 +276,11 @@ export const TicketsPage: React.FC = () => {
               (PRIORITY_ORDER[b.priority] ?? 9))
           );
         case "status":
-          return mul * a.statusName.localeCompare(b.statusName);
+          return (
+            mul *
+            (TICKET_STATUSES.indexOf(a.status) -
+              TICKET_STATUSES.indexOf(b.status))
+          );
         case "assignee":
           return (
             mul *
@@ -325,7 +324,6 @@ export const TicketsPage: React.FC = () => {
           onCreate={openCreateModal}
           onExport={handleExport}
           exporting={exporting}
-          statuses={statuses}
         />
 
         {loading && !tickets ? (
@@ -391,7 +389,6 @@ export const TicketsPage: React.FC = () => {
         register={editRegister}
         control={editControl}
         projects={modalProjects}
-        statuses={statuses}
         users={modalUsers}
         saving={editSaving}
         onSubmit={handleEdit}

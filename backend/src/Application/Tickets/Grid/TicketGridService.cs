@@ -43,8 +43,9 @@ public class TicketGridService(
             && Enum.TryParse(model.Priority, true, out TicketPriority priority)
             ? priority
             : null,
-        TicketStatusId = !string.IsNullOrEmpty(model.Status) && Guid.TryParse(model.Status, out Guid statusId)
-            ? statusId
+        Status = !string.IsNullOrEmpty(model.Status)
+            && Enum.TryParse(model.Status, true, out TicketStatus status)
+            ? status
             : null,
         AssignedToId = model.AssignedTo,
         Type = !string.IsNullOrEmpty(model.Type) && Enum.TryParse(model.Type, true, out TicketType type)

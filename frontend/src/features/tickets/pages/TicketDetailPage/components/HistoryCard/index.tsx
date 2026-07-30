@@ -6,7 +6,6 @@ import type { Ticket } from "@/types";
 import {
   type DetailPalette,
   type buildPriorityConfig,
-  type buildStatusConfig,
   getRelativeShort,
   historyPresentation,
 } from "../../helpers";
@@ -15,7 +14,6 @@ interface Props {
   ticket: Ticket;
   palette: DetailPalette;
   isDark: boolean;
-  statusConfig: ReturnType<typeof buildStatusConfig>;
   priorityConfig: ReturnType<typeof buildPriorityConfig>;
 }
 
@@ -23,7 +21,6 @@ export const HistoryCard: React.FC<Props> = ({
   ticket,
   palette,
   isDark,
-  statusConfig,
   priorityConfig,
 }) => {
   const { t, culture } = useI18n();
@@ -80,7 +77,6 @@ export const HistoryCard: React.FC<Props> = ({
               h,
               t,
               isDark,
-              statusConfig,
               priorityConfig,
               ticket,
             );

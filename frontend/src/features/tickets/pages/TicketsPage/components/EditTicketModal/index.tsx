@@ -9,7 +9,8 @@ import { AppModal } from "@/components/AppModal";
 import { DurationPicker } from "@/components/DurationPicker";
 import { useT } from "@/i18n/I18nContext";
 import type { ProjectDto } from "@/features/techHealth/api/projects";
-import type { TicketStatusDef, User } from "@/types";
+import type { User } from "@/types";
+import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
 import type { EditTicketFormValues } from "../../schemas";
 
@@ -19,7 +20,6 @@ interface Props {
   register: UseFormRegister<EditTicketFormValues>;
   control: Control<EditTicketFormValues>;
   projects: ProjectDto[];
-  statuses: TicketStatusDef[];
   users: User[];
   saving: boolean;
   onSubmit: () => void;
@@ -50,7 +50,6 @@ export const EditTicketModal: React.FC<Props> = ({
   register,
   control,
   projects,
-  statuses,
   users,
   saving,
   onSubmit,
@@ -140,9 +139,9 @@ export const EditTicketModal: React.FC<Props> = ({
           <Box>
             <Label>{t("tickets.list.field_status")}</Label>
             <Box component="select" sx={modalSelectSx} {...register("status")}>
-              {statuses.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
+              {TICKET_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {t(statusLabelKeys[status])}
                 </option>
               ))}
             </Box>

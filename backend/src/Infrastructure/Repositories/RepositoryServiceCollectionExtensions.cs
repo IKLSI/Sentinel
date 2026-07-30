@@ -21,7 +21,6 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<IUserInvitationRepository, UserInvitationRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketCommentRepository, TicketCommentRepository>();
-        services.AddScoped<ITicketStatusRepository, TicketStatusRepository>();
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
         services.AddScoped<ITicketHistoryRepository, TicketHistoryRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();

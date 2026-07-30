@@ -8,6 +8,7 @@ import {
   typeLabelKeys,
 } from "../../helpers";
 import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
+import { statusColor, statusLabel } from "@/features/tickets/constants";
 import { priorityColor } from "../../../TicketsPage/helpers";
 
 interface Props {
@@ -30,8 +31,8 @@ export const PropertiesCard: React.FC<Props> = ({
       label: t("tickets.detail.field_status"),
       value: (
         <StatusPriorityBadge
-          dotColor={ticket.statusColor}
-          label={ticket.statusName}
+          dotColor={statusColor(ticket.status)}
+          label={statusLabel(t, ticket.status)}
         />
       ),
     },

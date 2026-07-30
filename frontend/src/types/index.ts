@@ -1,9 +1,15 @@
-export type { UserRole, TicketPriority, TicketType } from "./enums";
+export type {
+  UserRole,
+  TicketPriority,
+  TicketStatus,
+  TicketType,
+} from "./enums";
 import type {
   Theme,
   Language,
   UserRole,
   TicketPriority,
+  TicketStatus,
   TicketType,
 } from "./enums";
 
@@ -25,16 +31,6 @@ export interface User {
 export interface LoginResponse {
   accessToken: string;
   user: User;
-}
-
-export interface TicketStatusDef {
-  id: string;
-  name: string;
-  color: string;
-  order: number;
-  isDefault: boolean;
-  isClosed: boolean;
-  ticketCount: number;
 }
 
 export interface TicketComment {
@@ -69,9 +65,7 @@ export interface Ticket {
   assignee?: User;
   priority: TicketPriority;
   type: TicketType;
-  statusId: string;
-  statusName: string;
-  statusColor: string;
+  status: TicketStatus;
   statusIsClosed: boolean;
   estimatedHours?: number;
   comments: TicketComment[];

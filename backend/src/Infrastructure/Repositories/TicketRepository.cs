@@ -13,7 +13,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
     public Task<Ticket?> GetOrDefaultWithDetailsAsync(Guid ticketId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .AsSplitQuery()
-            .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
@@ -21,9 +20,8 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .Include(t => t.History).ThenInclude(h => h.User)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-    public Task<Ticket?> GetOrDefaultWithStatusAsync(Guid ticketId, CancellationToken cancellationToken) =>
+    public Task<Ticket?> GetOrDefaultTrackedAsync(Guid ticketId, CancellationToken cancellationToken) =>
         Query(QueryTracking.Tracked)
-            .Include(t => t.TicketStatus)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
     public async Task<PagedList<Ticket>> SearchAsync(Guid organizationId, TicketFilter filter, int page,
@@ -96,7 +94,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
     private IQueryable<Ticket> GridQuery(Guid organizationId) =>
         Query(QueryTracking.NoTracking)
             .Where(t => t.OrganizationId == organizationId)
-            .Include(t => t.TicketStatus)
             .Include(t => t.Project)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy);
@@ -106,8 +103,8 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         if (filter.Priority is TicketPriority priority)
             query = query.Where(t => t.Priority == priority);
 
-        if (filter.TicketStatusId is Guid statusId)
-            query = query.Where(t => t.TicketStatusId == statusId);
+        if (filter.Status is TicketStatus status)
+            query = query.Where(t => t.Status == status);
 
         if (filter.AssignedToId is Guid assignedToId)
             query = query.Where(t => t.AssignedToId == assignedToId);

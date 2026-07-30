@@ -28,7 +28,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
-    public DbSet<TicketStatus> TicketStatuses => Set<TicketStatus>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -46,7 +45,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureUserInvitation(modelBuilder);
         ConfigurePasswordResetToken(modelBuilder);
         ConfigureEmailVerificationToken(modelBuilder);
-        ConfigureTicketStatus(modelBuilder);
         ConfigureTicket(modelBuilder);
         ConfigureTicketComment(modelBuilder);
         ConfigureTicketHistory(modelBuilder);
@@ -73,9 +71,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<UserInvitation>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
-
-        modelBuilder.Entity<TicketStatus>()
             .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
 
         modelBuilder.Entity<Ticket>()
@@ -209,22 +204,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         });
     }
 
-    private static void ConfigureTicketStatus(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<TicketStatus>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.Color).HasMaxLength(100);
-            entity.HasIndex(e => e.OrganizationId);
-
-            entity.HasOne(e => e.Organization)
-                .WithMany()
-                .HasForeignKey(e => e.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
     private static void ConfigureTicket(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ticket>(entity =>
@@ -234,19 +213,20 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Priority).HasConversion<string>();
             entity.Property(e => e.Type).HasConversion<string>();
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
             entity.Property(e => e.Tags).HasColumnType("jsonb");
 
             entity.HasIndex(e => e.OrganizationId);
-            entity.HasIndex(e => e.TicketStatusId);
+            entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.AssignedToId);
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.Priority);
             entity.HasIndex(e => e.ProjectId);
-            entity.HasIndex(e => new { e.OrganizationId, e.TicketStatusId });
+            entity.HasIndex(e => new { e.OrganizationId, e.Status });
             entity.HasIndex(e => new { e.OrganizationId, e.UpdatedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
-            entity.HasIndex(e => new { e.OrganizationId, e.Priority, e.TicketStatusId });
+            entity.HasIndex(e => new { e.OrganizationId, e.Priority, e.Status });
 
             entity.HasOne(e => e.Organization)
                 .WithMany()
@@ -268,12 +248,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.TicketStatus)
-                .WithMany(s => s.Tickets)
-                .HasForeignKey(e => e.TicketStatusId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

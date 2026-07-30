@@ -48,4 +48,5 @@ public static class ValidationCodes
     public const string TicketCommentRequired = "validation.ticket.comment_required";
     public const string TicketCommentMaxLength = "validation.ticket.comment_max_length";
     public const string TicketStatusRequired = "validation.ticket.status_required";
+    public const string TicketStatusInvalid = "validation.ticket.status_invalid";
 }

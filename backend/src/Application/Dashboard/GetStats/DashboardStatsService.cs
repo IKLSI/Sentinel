@@ -12,12 +12,14 @@ namespace Sentinel.Application.Dashboard.GetStats;
 
 public class DashboardStatsService(
     IDashboardRepository dashboardRepository,
-    ITicketStatusRepository ticketStatusRepository,
     IMemoryCache cache,
     ITenantContext tenant) : IService
 {
     private static readonly TicketPriority[] AllPriorities =
         [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
+
+    private static readonly TicketStatus[] AllStatuses =
+        [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed];
 
     private const int UrgentTicketCount = 8;
     private const int ActivityCount = 8;
@@ -55,48 +57,42 @@ public class DashboardStatsService(
             LastMonthStart: monthStart.AddMonths(-1),
             LastMonthEnd: monthStart.AddTicks(-1));
 
-        IReadOnlyList<TicketStatus> statuses =
-            await ticketStatusRepository.ListByOrganizationOrderedAsync(organizationId, cancellationToken);
-
-        List<Guid> openStatusIds = statuses.Where(s => !s.IsClosed).Select(s => s.Id).ToList();
-        List<Guid> closedStatusIds = statuses.Where(s => s.IsClosed).Select(s => s.Id).ToList();
-
-        IReadOnlyDictionary<Guid, int> statusCounts =
+        IReadOnlyDictionary<TicketStatus, int> statusCounts =
             await dashboardRepository.GetTicketCountsByStatusAsync(organizationId, cancellationToken);
 
-        DashboardCounters? counters = await dashboardRepository.GetCountersAsync(organizationId, openStatusIds,
-            closedStatusIds, period, cancellationToken);
+        DashboardCounters? counters = await dashboardRepository.GetCountersAsync(organizationId, period,
+            cancellationToken);
 
         int criticalVulnerabilities =
             await dashboardRepository.CountCriticalVulnerabilitiesAsync(organizationId, cancellationToken);
 
         IReadOnlyDictionary<TicketPriority, int> priorityCounts = await dashboardRepository
-            .GetOpenTicketCountsByPriorityAsync(organizationId, openStatusIds, cancellationToken);
+            .GetOpenTicketCountsByPriorityAsync(organizationId, cancellationToken);
 
         int resolvedThisMonth = counters?.ResolvedMonth ?? 0;
 
         return new DashboardStatsDto
         {
-            OpenTickets = openStatusIds.Sum(id => statusCounts.GetValueOrDefault(id)),
+            OpenTickets = TicketStatusRules.Open.Sum(status => statusCounts.GetValueOrDefault(status)),
             OpenTicketsDelta = counters?.OpenDelta ?? 0,
             ResolvedThisMonth = resolvedThisMonth,
             ResolvedThisMonthDelta = resolvedThisMonth - (counters?.ResolvedLast ?? 0),
             CriticalVulnerabilities = criticalVulnerabilities,
-            TicketsByStatus = statuses.ToDictionary(s => s.Name, s => statusCounts.GetValueOrDefault(s.Id)),
-            TicketsByStatusColor = statuses.ToDictionary(s => s.Name, s => s.Color),
+            TicketsByStatus = AllStatuses.ToDictionary(s => s.ToString().ToLower(),
+                s => statusCounts.GetValueOrDefault(s)),
             TicketsByPriority = AllPriorities.ToDictionary(p => p.ToString(), p => priorityCounts.GetValueOrDefault(p)),
             UnassignedOpenTickets = counters?.Unassigned ?? 0,
-            UrgentTickets = await BuildUrgentTicketsAsync(organizationId, openStatusIds, cancellationToken),
+            UrgentTickets = await BuildUrgentTicketsAsync(organizationId, cancellationToken),
             RecentActivity = await BuildRecentActivityAsync(organizationId, now, cancellationToken),
             VulnerabilitiesDetectedPerDay = await BuildDetectionSeriesAsync(organizationId, now, cancellationToken),
         };
     }
 
     private async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(Guid organizationId,
-        IReadOnlyCollection<Guid> openStatusIds, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<UrgentTicketRow> raw = await dashboardRepository.GetUrgentTicketsAsync(organizationId,
-            openStatusIds, UrgentTicketCount, cancellationToken);
+            UrgentTicketCount, cancellationToken);
 
         return raw.Select(t => new UrgentTicketDto
         {
@@ -105,7 +101,7 @@ public class DashboardStatsService(
             Title = t.Title,
             Priority = t.Priority,
             Type = t.Type,
-            Status = t.StatusName,
+            Status = t.Status,
             ProjectName = t.ProjectName,
             AssignedToName = t.AssignedToName,
             CommentCount = t.CommentCount,

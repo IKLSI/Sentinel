@@ -13,7 +13,7 @@ public sealed record UrgentTicketRow(
     string Title,
     string Priority,
     string Type,
-    string StatusName,
+    string Status,
     string? ProjectName,
     string? AssignedToName,
     int CommentCount);

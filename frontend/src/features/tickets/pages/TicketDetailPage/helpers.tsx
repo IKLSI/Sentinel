@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import type { Locale } from "date-fns/locale";
 import type { Ticket, TicketHistory } from "@/types";
+import { statusLabel } from "@/features/tickets/constants";
 
 export interface DetailPalette {
   panelBg: string;
@@ -141,10 +142,6 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   mdStrong: "var(--text)",
 });
 
-export const buildStatusConfig = (
-  _isDark: boolean,
-): Record<string, { labelKey: string; color: string; dot: string }> => ({});
-
 export const buildPriorityConfig = (
   _isDark: boolean,
 ): Record<string, { labelKey: string; color: string; dot: string }> => ({
@@ -256,27 +253,9 @@ export function getRelativeShort(date: string, t: TFn, locale: Locale) {
   return format(new Date(date), "dd MMM", { locale });
 }
 
-function normalizeStatusKey(value?: string) {
-  if (!value) return "";
-  const compact = value.trim().toLowerCase().replace(/[\s-]/g, "_");
-  if (compact === "inprogress") return "in_progress";
-  return compact;
-}
-
 function normalizePriorityKey(value?: string) {
   if (!value) return "";
   return value.trim().toLowerCase().replace(/[\s-]/g, "_");
-}
-
-function mapStatusLabel(
-  value: string | undefined,
-  t: TFn,
-  statusConfig: ReturnType<typeof buildStatusConfig>,
-) {
-  if (!value) return "—";
-  const key = normalizeStatusKey(value);
-  const labelKey = statusConfig[key]?.labelKey;
-  return labelKey ? t(labelKey) : value;
 }
 
 function mapPriorityLabel(
@@ -294,7 +273,6 @@ export function historyPresentation(
   entry: TicketHistory,
   t: TFn,
   isDark: boolean,
-  statusConfig: ReturnType<typeof buildStatusConfig>,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,
   ticket?: Ticket,
 ) {
@@ -332,8 +310,8 @@ export function historyPresentation(
     return {
       tone: tones.status,
       message: t("tickets.detail.history_status_change", {
-        from: mapStatusLabel(entry.oldValue, t, statusConfig),
-        to: mapStatusLabel(entry.newValue, t, statusConfig),
+        from: statusLabel(t, entry.oldValue),
+        to: statusLabel(t, entry.newValue),
       }),
     };
   }

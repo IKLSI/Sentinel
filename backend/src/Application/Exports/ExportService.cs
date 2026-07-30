@@ -36,8 +36,9 @@ public partial class ExportService(
         {
             Priority = !string.IsNullOrEmpty(priority)
                 && Enum.TryParse(priority, true, out TicketPriority parsedPriority) ? parsedPriority : null,
-            TicketStatusId = !string.IsNullOrEmpty(status) && Guid.TryParse(status, out Guid statusGuid)
-                ? statusGuid
+            Status = !string.IsNullOrEmpty(status)
+                && Enum.TryParse(status, true, out TicketStatus parsedStatus)
+                ? parsedStatus
                 : null,
             AssignedToId = assignedTo,
             Type = !string.IsNullOrEmpty(type) && Enum.TryParse(type, true, out TicketType parsedType)
@@ -88,9 +89,8 @@ public partial class ExportService(
             ws.Cell(row, 1).Value = $"TKT-{t.Id.ToString().Replace("-", "")[..6].ToUpper()}";
             ws.Cell(row, 2).Value = t.Title;
 
-            string statusName = t.TicketStatus?.Name ?? L.StatusUnknown;
-            (_, XLColor stFg) = TicketStatusColor(t.TicketStatus?.Name ?? string.Empty);
-            ApplyStatusCell(ws.Cell(row, 3), statusName, stFg);
+            (_, XLColor stFg) = TicketStatusColor(t.Status);
+            ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status.ToString(), L), stFg);
 
             (_, XLColor prFg) = TicketPriorityColor(t.Priority.ToString());
             ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
