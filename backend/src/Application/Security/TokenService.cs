@@ -59,7 +59,4 @@ public class TokenService
         byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
         return Convert.ToHexString(bytes).ToLower();
     }
-
-    public DateTime GetAccessTokenExpiry() =>
-        DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpirationMinutes);
 }

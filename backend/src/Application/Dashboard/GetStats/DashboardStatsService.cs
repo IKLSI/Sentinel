@@ -15,12 +15,6 @@ public class DashboardStatsService(
     IMemoryCache cache,
     ITenantContext tenant) : IService
 {
-    private static readonly TicketPriority[] AllPriorities =
-        [TicketPriority.Critical, TicketPriority.High, TicketPriority.Medium, TicketPriority.Low];
-
-    private static readonly TicketStatus[] AllStatuses =
-        [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing, TicketStatus.Resolved, TicketStatus.Closed];
-
     private const int UrgentTicketCount = 8;
     private const int ActivityCount = 8;
     private const int DetectionWindowDays = 7;
@@ -50,38 +44,9 @@ public class DashboardStatsService(
     private async Task<DashboardStatsDto> BuildStatsAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         DateTime now = DateTime.UtcNow;
-        DateTime monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        DashboardPeriod period = new(
-            WeekAgo: now.AddDays(-7),
-            MonthStart: monthStart,
-            LastMonthStart: monthStart.AddMonths(-1),
-            LastMonthEnd: monthStart.AddTicks(-1));
-
-        IReadOnlyDictionary<TicketStatus, int> statusCounts =
-            await dashboardRepository.GetTicketCountsByStatusAsync(organizationId, cancellationToken);
-
-        DashboardCounters? counters = await dashboardRepository.GetCountersAsync(organizationId, period,
-            cancellationToken);
-
-        int criticalVulnerabilities =
-            await dashboardRepository.CountCriticalVulnerabilitiesAsync(organizationId, cancellationToken);
-
-        IReadOnlyDictionary<TicketPriority, int> priorityCounts = await dashboardRepository
-            .GetOpenTicketCountsByPriorityAsync(organizationId, cancellationToken);
-
-        int resolvedThisMonth = counters?.ResolvedMonth ?? 0;
 
         return new DashboardStatsDto
         {
-            OpenTickets = TicketStatusRules.Open.Sum(status => statusCounts.GetValueOrDefault(status)),
-            OpenTicketsDelta = counters?.OpenDelta ?? 0,
-            ResolvedThisMonth = resolvedThisMonth,
-            ResolvedThisMonthDelta = resolvedThisMonth - (counters?.ResolvedLast ?? 0),
-            CriticalVulnerabilities = criticalVulnerabilities,
-            TicketsByStatus = AllStatuses.ToDictionary(s => s.ToString().ToLower(),
-                s => statusCounts.GetValueOrDefault(s)),
-            TicketsByPriority = AllPriorities.ToDictionary(p => p.ToString(), p => priorityCounts.GetValueOrDefault(p)),
-            UnassignedOpenTickets = counters?.Unassigned ?? 0,
             UrgentTickets = await BuildUrgentTicketsAsync(organizationId, cancellationToken),
             RecentActivity = await BuildRecentActivityAsync(organizationId, now, cancellationToken),
             VulnerabilitiesDetectedPerDay = await BuildDetectionSeriesAsync(organizationId, now, cancellationToken),
@@ -101,7 +66,6 @@ public class DashboardStatsService(
             Title = t.Title,
             Priority = t.Priority,
             Type = t.Type,
-            Status = t.Status,
             ProjectName = t.ProjectName,
             AssignedToName = t.AssignedToName,
             CommentCount = t.CommentCount,

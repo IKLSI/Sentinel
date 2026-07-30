@@ -19,7 +19,6 @@ function createPartialUser(name: string, id: string, createdAt: string): User {
     firstName: firstName ?? name,
     lastName: rest.join(" "),
     role: UserRole.Developer,
-    organizationId: "",
     isActive: true,
     createdAt,
   };

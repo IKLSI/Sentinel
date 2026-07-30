@@ -24,7 +24,6 @@ export interface UrgentTicket {
   title: string;
   priority: string;
   type: string;
-  status: string;
   projectName?: string;
   assignedToName?: string;
   commentCount: number;
@@ -36,28 +35,12 @@ export interface VulnerabilityDetectionDataPoint {
 }
 
 export interface StatsData {
-  openTickets: number;
-  openTicketsDelta: number;
-  resolvedThisMonth: number;
-  resolvedThisMonthDelta: number;
-  criticalVulnerabilities: number;
-  ticketsByStatus: Record<string, number>;
-  ticketsByPriority: Record<string, number>;
-  unassignedOpenTickets: number;
   urgentTickets: UrgentTicket[];
   recentActivity: ActivityItem[];
   vulnerabilitiesDetectedPerDay: VulnerabilityDetectionDataPoint[];
 }
 
 export const EMPTY_STATS: StatsData = {
-  openTickets: 0,
-  openTicketsDelta: 0,
-  resolvedThisMonth: 0,
-  resolvedThisMonthDelta: 0,
-  criticalVulnerabilities: 0,
-  ticketsByStatus: {},
-  ticketsByPriority: {},
-  unassignedOpenTickets: 0,
   urgentTickets: [],
   recentActivity: [],
   vulnerabilitiesDetectedPerDay: [],

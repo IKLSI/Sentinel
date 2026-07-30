@@ -17,8 +17,8 @@ public class RevokedTokenRepository : CrudEntityWithIdRepository<RevokedToken>, 
     public Task RevokeAsync(string jti, DateTime expiresAt, CancellationToken cancellationToken) =>
         Context.Database.ExecuteSqlAsync(
             $"""
-             INSERT INTO "RevokedTokens" ("Id", "Jti", "ExpiresAt", "RevokedAt")
-             VALUES ({Guid.NewGuid()}, {jti}, {expiresAt}, {DateTime.UtcNow})
+             INSERT INTO "RevokedTokens" ("Id", "Jti", "ExpiresAt")
+             VALUES ({Guid.NewGuid()}, {jti}, {expiresAt})
              ON CONFLICT ("Jti") DO NOTHING
              """,
             cancellationToken);

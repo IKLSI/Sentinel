@@ -10,5 +10,4 @@ public class UrgentTicketDto
     public string? ProjectName { get; set; }
     public string? AssignedToName { get; set; }
     public int CommentCount { get; set; }
-    public string Status { get; set; } = string.Empty;
 }

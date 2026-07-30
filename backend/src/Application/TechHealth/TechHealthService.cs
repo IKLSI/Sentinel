@@ -234,9 +234,6 @@ public partial class TechHealthService
         project.LastScanAt = DateTime.UtcNow;
         project.LastScanError = scanError;
 
-        foreach (Dependency dep in project.Dependencies)
-            dep.ScannedAt = DateTime.UtcNow;
-
         using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             await commitScope.CommitAsync(CancellationToken.None);

@@ -7,5 +7,4 @@ public class RevokedToken : IEntityWithId
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Jti { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
-    public DateTime RevokedAt { get; set; } = DateTime.UtcNow;
 }

@@ -2,7 +2,6 @@ import apiClient from "../../../services/client";
 
 export interface OrganizationSettings {
   name: string;
-  slug: string;
   securityAlertsEnabled: boolean;
   alertMinSeverity: string;
 }

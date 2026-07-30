@@ -75,13 +75,4 @@ public class TokenServiceTests
         token.Should().NotBeNullOrEmpty();
         token.Split('.').Should().HaveCount(3); // JWT = header.payload.signature
     }
-
-    [Fact]
-    public void GetAccessTokenExpiry_ReturnsFutureDate()
-    {
-        var svc = BuildService();
-        DateTime expiry = svc.GetAccessTokenExpiry();
-        expiry.Should().BeAfter(DateTime.UtcNow);
-        expiry.Should().BeCloseTo(DateTime.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
-    }
 }

@@ -11,13 +11,13 @@ public class ProcessedStripeEventRepository
 {
     public ProcessedStripeEventRepository(SentinelContext context) : base(context) { }
 
-    public async Task<bool> TryClaimAsync(string stripeEventId, string eventType, DateTime staleClaimThreshold,
+    public async Task<bool> TryClaimAsync(string stripeEventId, DateTime staleClaimThreshold,
         CancellationToken cancellationToken)
     {
         int claimed = await Context.Database.ExecuteSqlAsync(
             $"""
-             INSERT INTO "ProcessedStripeEvents" ("Id", "StripeEventId", "EventType", "ProcessedAt", "CompletedAt")
-             VALUES ({Guid.NewGuid()}, {stripeEventId}, {eventType}, {DateTime.UtcNow}, NULL)
+             INSERT INTO "ProcessedStripeEvents" ("Id", "StripeEventId", "ProcessedAt", "CompletedAt")
+             VALUES ({Guid.NewGuid()}, {stripeEventId}, {DateTime.UtcNow}, NULL)
              ON CONFLICT ("StripeEventId") DO UPDATE
              SET "ProcessedAt" = EXCLUDED."ProcessedAt"
              WHERE "ProcessedStripeEvents"."CompletedAt" IS NULL

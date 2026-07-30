@@ -167,9 +167,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("ScannedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -288,9 +285,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("CurrentPeriodEnd")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("GithubToken")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -405,11 +399,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<DateTime>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -499,9 +488,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
-
-                    b.Property<DateTime>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

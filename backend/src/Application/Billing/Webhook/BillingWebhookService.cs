@@ -75,7 +75,7 @@ public class BillingWebhookService : IService
         using IDisposable elevation = _systemScope.Enter();
 
         bool claimed = await _processedStripeEventRepository
-            .TryClaimAsync(stripeEvent.Id, stripeEvent.Type, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
+            .TryClaimAsync(stripeEvent.Id, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
 
         if (!claimed)
         {

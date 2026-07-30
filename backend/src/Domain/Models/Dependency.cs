@@ -42,7 +42,6 @@ public class Dependency : IEntityWithId
     public DependencyType Type { get; set; } = DependencyType.Prod;
     public DependencyEcosystem Ecosystem { get; set; } = DependencyEcosystem.Npm;
     public DependencyStatus Status { get; set; } = DependencyStatus.UpToDate;
-    public DateTime ScannedAt { get; set; } = DateTime.UtcNow;
 
     public Project Project { get; set; } = null!;
     public ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();

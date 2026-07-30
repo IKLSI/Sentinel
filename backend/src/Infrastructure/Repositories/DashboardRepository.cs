@@ -17,37 +17,6 @@ public class DashboardRepository : IDashboardRepository
     private static readonly TicketStatus[] OpenStatuses = TicketStatusRules.Open.ToArray();
     private static readonly TicketStatus[] ClosedStatuses = TicketStatusRules.Closed.ToArray();
 
-    public async Task<IReadOnlyDictionary<TicketStatus, int>> GetTicketCountsByStatusAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await Tickets(organizationId)
-            .GroupBy(t => t.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
-
-    public async Task<DashboardCounters?> GetCountersAsync(Guid organizationId, DashboardPeriod period,
-        CancellationToken cancellationToken) =>
-        await Tickets(organizationId)
-            .GroupBy(_ => 1)
-            .Select(g => new DashboardCounters(
-                g.Count(t => OpenStatuses.Contains(t.Status) && t.CreatedAt >= period.WeekAgo),
-                g.Count(t => ClosedStatuses.Contains(t.Status) && t.UpdatedAt >= period.MonthStart),
-                g.Count(t => ClosedStatuses.Contains(t.Status)
-                    && t.UpdatedAt >= period.LastMonthStart && t.UpdatedAt <= period.LastMonthEnd),
-                g.Count(t => OpenStatuses.Contains(t.Status) && t.AssignedToId == null)))
-            .SingleOrDefaultAsync(cancellationToken);
-
-    public Task<int> CountCriticalVulnerabilitiesAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        Vulnerabilities(organizationId)
-            .CountAsync(v => v.Severity == VulnerabilitySeverity.Critical, cancellationToken);
-
-    public async Task<IReadOnlyDictionary<TicketPriority, int>> GetOpenTicketCountsByPriorityAsync(
-        Guid organizationId, CancellationToken cancellationToken) =>
-        await Tickets(organizationId)
-            .Where(t => OpenStatuses.Contains(t.Status))
-            .GroupBy(t => t.Priority)
-            .Select(g => new { Priority = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Priority, x => x.Count, cancellationToken);
-
     public async Task<IReadOnlyList<UrgentTicketRow>> GetUrgentTicketsAsync(Guid organizationId, int take,
         CancellationToken cancellationToken) =>
         await Tickets(organizationId)
@@ -63,7 +32,6 @@ public class DashboardRepository : IDashboardRepository
                 t.Title,
                 t.Priority.ToString().ToLower(),
                 t.Type.ToString().ToLower(),
-                t.Status.ToString().ToLower(),
                 t.Project != null ? t.Project.Name : null,
                 t.AssignedTo != null ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}" : null,
                 t.Comments.Count))

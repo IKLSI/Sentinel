@@ -94,8 +94,6 @@ public class AuthRefreshService : IService
         return new LoginResponse
         {
             AccessToken = newAccessToken,
-            RefreshToken = string.Empty,
-            ExpiresAt = _tokenService.GetAccessTokenExpiry(),
             User = UserProfileMapper.ToProfile(user)
         };
     }
