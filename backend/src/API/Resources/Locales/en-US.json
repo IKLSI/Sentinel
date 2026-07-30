@@ -213,6 +213,7 @@
   "errors.projects.not_found": "Project not found",
   "errors.projects.invalid_repository_url": "Invalid repository URL. Allowed hosts: github.com, gitlab.com",
   "errors.projects.invalid_scan_frequency": "Invalid frequency ({values})",
+  "errors.projects.scan_frequency_above_plan": "Your plan does not allow a scan frequency higher than {maxFrequency}. Upgrade your plan to scan more often.",
   "errors.settings.token_required": "The token is required",
   "errors.settings.invalid_github_token": "The GitHub token is invalid or could not be verified with the provider",
   "errors.settings.invalid_gitlab_token": "The GitLab token is invalid or could not be verified with the provider",

@@ -21,6 +21,8 @@ public class BillingStatusService(
 
         using IDisposable elevation = systemScope.Enter();
 
+        await quotaGuard.ResetScanPeriodIfElapsedAsync(organizationId, cancellationToken);
+
         Result<Organization> organizationResult = await quotaGuard
             .LoadOrganizationAsync(organizationId, cancellationToken);
 
@@ -28,8 +30,6 @@ public class BillingStatusService(
             return Result<BillingStatusDto>.From(organizationResult);
 
         Organization organization = organizationResult.Value!;
-
-        await quotaGuard.ResetScanPeriodIfElapsedAsync(organization, cancellationToken);
 
         PlanLimits limits = PlanLimits.For(organization.PlanTier);
 

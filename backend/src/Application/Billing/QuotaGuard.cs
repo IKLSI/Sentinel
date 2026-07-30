@@ -12,7 +12,6 @@ public class QuotaGuard(
     IProjectRepository projectRepository,
     IUserRepository userRepository,
     IUserInvitationRepository invitationRepository,
-    ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope)
 {
     public async Task<Result> EnsureCanAddProjectAsync(Guid organizationId, CancellationToken cancellationToken)
@@ -41,17 +40,24 @@ public class QuotaGuard(
             new Dictionary<string, string> { ["limit"] = limits.MaxMembers.ToString() });
     }
 
+    public async Task<Result> EnsureScanFrequencyAllowedAsync(Guid organizationId, ScanFrequency frequency,
+        CancellationToken cancellationToken)
+    {
+        PlanLimits limits = await GetLimitsAsync(organizationId, cancellationToken);
+
+        if (limits.AllowsFrequency(frequency))
+            return Result.Success();
+
+        return Result.PaymentRequired(ErrorCodes.ProjectScanFrequencyAbovePlan,
+            new Dictionary<string, string> { ["maxFrequency"] = limits.MaxScanFrequency.ToString() });
+    }
+
     public async Task<Result> TryConsumeScanAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
-        Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            QueryTracking.NoTracking, cancellationToken);
-
-        if (organization == null)
-            return Result.NotFound(ErrorCodes.NotFound);
-
-        PlanLimits limits = PlanLimits.For(organization.PlanTier);
+        PlanLimits limits = PlanLimits.For(
+            await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken));
 
         bool consumed = await organizationRepository.TryConsumeScanQuotaAsync(organizationId,
             limits.MaxScansPerMonth, cancellationToken);
@@ -59,12 +65,22 @@ public class QuotaGuard(
         if (consumed)
             return Result.Success();
 
+        DateTime periodStart = await organizationRepository
+            .GetScanPeriodStartOrDefaultAsync(organizationId, cancellationToken);
+
         return Result.PaymentRequired(ErrorCodes.QuotaScansExceeded,
             new Dictionary<string, string>
             {
                 ["limit"] = limits.MaxScansPerMonth.ToString(),
-                ["resetAt"] = organization.ScanCountPeriodStart.AddMonths(1).ToString("O")
+                ["resetAt"] = periodStart.AddMonths(1).ToString("O")
             });
+    }
+
+    public async Task RefundScanAsync(Guid organizationId, CancellationToken cancellationToken)
+    {
+        using IDisposable elevation = systemScope.Enter();
+
+        await organizationRepository.RefundScanQuotaAsync(organizationId, cancellationToken);
     }
 
     public async Task<Result<Organization>> LoadOrganizationAsync(Guid organizationId,
@@ -79,13 +95,11 @@ public class QuotaGuard(
         return organization;
     }
 
-    public async Task ResetScanPeriodIfElapsedAsync(Organization organization, CancellationToken cancellationToken)
+    public async Task ResetScanPeriodIfElapsedAsync(Guid organizationId, CancellationToken cancellationToken)
     {
-        if (!ScanPeriod.ResetIfElapsed(organization)) return;
+        using IDisposable elevation = systemScope.Enter();
 
-        using ICommitScope commitScope = commitScopeFactory.Begin();
-
-        await commitScope.CommitAsync(cancellationToken);
+        await organizationRepository.ResetScanPeriodIfElapsedAsync(organizationId, cancellationToken);
     }
 
     private async Task<PlanLimits> GetLimitsAsync(Guid organizationId, CancellationToken cancellationToken)

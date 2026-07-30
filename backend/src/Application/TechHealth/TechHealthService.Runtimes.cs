@@ -65,7 +65,7 @@ public partial class TechHealthService
         try
         {
             HttpClient eolClient = _httpClientFactory.CreateClient(HttpClientNames.EolDate);
-            HttpResponseMessage response = await eolClient.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
+            using HttpResponseMessage response = await eolClient.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
             if (!response.IsSuccessStatusCode) return null;
 
             using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

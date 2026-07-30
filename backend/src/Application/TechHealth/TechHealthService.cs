@@ -111,16 +111,29 @@ public partial class TechHealthService
         await RunScanAsync(project);
     }
 
-    public async Task ScanProjectWithReservedQuotaAsync(Guid projectId)
+    [AutomaticRetry(Attempts = 0)]
+    public async Task ScanProjectWithReservedQuotaAsync(Guid projectId, Guid organizationId)
     {
         using IDisposable elevation = _systemScope.Enter();
 
-        Project? project = await _projectRepository.GetOrDefaultAsync(projectId,
-            QueryTracking.Tracked, CancellationToken.None);
+        try
+        {
+            Project? project = await _projectRepository.GetOrDefaultAsync(projectId,
+                QueryTracking.Tracked, CancellationToken.None);
 
-        if (project == null) return;
+            if (project == null)
+            {
+                await _quotaGuard.RefundScanAsync(organizationId, CancellationToken.None);
+                return;
+            }
 
-        await RunScanAsync(project);
+            await RunScanAsync(project);
+        }
+        catch
+        {
+            await _quotaGuard.RefundScanAsync(organizationId, CancellationToken.None);
+            throw;
+        }
     }
 
     private async Task RunScanAsync(Project project)

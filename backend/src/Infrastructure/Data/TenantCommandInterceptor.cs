@@ -9,14 +9,14 @@ public class TenantCommandInterceptor : DbCommandInterceptor
     private const string SystemSentinel = "system";
     private readonly ITenantContext _tenant;
     private readonly ISystemScope _systemScope;
+    private readonly TenantSessionState _sessionState;
 
-    private DbTransaction? _appliedTransaction;
-    private string? _appliedValue;
-
-    public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope)
+    public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope,
+        TenantSessionState sessionState)
     {
         _tenant = tenant;
         _systemScope = systemScope;
+        _sessionState = sessionState;
     }
 
     public override InterceptionResult<DbDataReader> ReaderExecuting(
@@ -81,17 +81,6 @@ public class TenantCommandInterceptor : DbCommandInterceptor
             ? SystemSentinel
             : _tenant.OrganizationId?.ToString() ?? string.Empty;
 
-    private bool IsAlreadyAppliedInTransaction(DbCommand command, string value) =>
-        command.Transaction is not null
-        && ReferenceEquals(command.Transaction, _appliedTransaction)
-        && _appliedValue == value;
-
-    private void RememberApplied(DbCommand command, string value)
-    {
-        _appliedTransaction = command.Transaction;
-        _appliedValue = value;
-    }
-
     private static DbCommand BuildSetTenantCommand(DbCommand command, string value)
     {
         DbCommand setCommand = command.Connection!.CreateCommand();
@@ -112,14 +101,14 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (IsAlreadyAppliedInTransaction(command, value)) return;
+        if (_sessionState.IsApplied(value)) return;
 
         using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             setCommand.ExecuteNonQuery();
         }
 
-        RememberApplied(command, value);
+        _sessionState.MarkApplied(value);
     }
 
     private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
@@ -128,13 +117,13 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (IsAlreadyAppliedInTransaction(command, value)) return;
+        if (_sessionState.IsApplied(value)) return;
 
         await using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             await setCommand.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        RememberApplied(command, value);
+        _sessionState.MarkApplied(value);
     }
 }

@@ -61,4 +61,36 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
 
         return updated > 0;
     }
+
+    public Task RefundScanQuotaAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        Context.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE "Organizations"
+             SET "MonthlyScanCount" = greatest("MonthlyScanCount" - 1, 0)
+             WHERE "Id" = {organizationId}
+             """,
+            cancellationToken);
+
+    public Task ResetScanPeriodIfElapsedAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        Context.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE "Organizations"
+             SET "MonthlyScanCount" = 0,
+                 "ScanCountPeriodStart" = now()
+             WHERE "Id" = {organizationId}
+               AND "ScanCountPeriodStart" + interval '1 month' <= now()
+             """,
+            cancellationToken);
+
+    public Task<DateTime> GetScanPeriodStartOrDefaultAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.ScanCountPeriodStart)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task LockForUpdateAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        Context.Database.ExecuteSqlAsync(
+            $"""SELECT 1 FROM "Organizations" WHERE "Id" = {organizationId} FOR UPDATE""",
+            cancellationToken);
 }

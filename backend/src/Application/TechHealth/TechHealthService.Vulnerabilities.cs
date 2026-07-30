@@ -68,7 +68,7 @@ public partial class TechHealthService
 
             try
             {
-                HttpResponseMessage response =
+                using HttpResponseMessage response =
                     await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/querybatch", batchBody);
                 if (!response.IsSuccessStatusCode) continue;
 
@@ -185,7 +185,7 @@ public partial class TechHealthService
             await throttle.WaitAsync();
             try
             {
-                HttpResponseMessage response = await _osvClient.GetAsync($"https://api.osv.dev/v1/vulns/{id}");
+                using HttpResponseMessage response = await _osvClient.GetAsync($"https://api.osv.dev/v1/vulns/{id}");
                 if (!response.IsSuccessStatusCode) return (id, (JsonDocument?)null);
 
                 return (id, (JsonDocument?)JsonDocument.Parse(await response.Content.ReadAsStringAsync()));

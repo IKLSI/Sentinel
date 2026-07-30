@@ -92,9 +92,6 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => u.Email)
             .ToListAsync(cancellationToken);
 
-    public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking).AnyAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
-
     public Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
@@ -118,10 +115,11 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => u.Email)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public Task<int> CountActiveAdminsAsync(Guid organizationId, CancellationToken cancellationToken) =>
+    public Task<int> CountActiveAdminsExcludingAsync(Guid organizationId, Guid excludedUserId,
+        CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .CountAsync(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive,
-                cancellationToken);
+            .CountAsync(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive
+                && u.Id != excludedUserId, cancellationToken);
 
     private IQueryable<User> ActiveAdmins(Guid organizationId) =>
         Query(QueryTracking.NoTracking)

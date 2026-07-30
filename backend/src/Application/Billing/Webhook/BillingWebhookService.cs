@@ -17,7 +17,10 @@ namespace Sentinel.Application.Billing.Webhook;
 
 public class BillingWebhookService : IService
 {
+    private static readonly TimeSpan StaleClaimDelay = TimeSpan.FromMinutes(15);
+
     private readonly IOrganizationRepository _organizationRepository;
+    private readonly IProjectRepository _projectRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProcessedStripeEventRepository _processedStripeEventRepository;
     private readonly ICommitScopeFactory _commitScopeFactory;
@@ -29,6 +32,7 @@ public class BillingWebhookService : IService
 
     public BillingWebhookService(
         IOrganizationRepository organizationRepository,
+        IProjectRepository projectRepository,
         IUserRepository userRepository,
         IProcessedStripeEventRepository processedStripeEventRepository,
         ICommitScopeFactory commitScopeFactory,
@@ -39,6 +43,7 @@ public class BillingWebhookService : IService
         ILogger<BillingWebhookService> logger)
     {
         _organizationRepository = organizationRepository;
+        _projectRepository = projectRepository;
         _userRepository = userRepository;
         _processedStripeEventRepository = processedStripeEventRepository;
         _commitScopeFactory = commitScopeFactory;
@@ -70,11 +75,12 @@ public class BillingWebhookService : IService
         using IDisposable elevation = _systemScope.Enter();
 
         bool claimed = await _processedStripeEventRepository
-            .TryClaimAsync(stripeEvent.Id, stripeEvent.Type, cancellationToken);
+            .TryClaimAsync(stripeEvent.Id, stripeEvent.Type, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
 
         if (!claimed)
         {
-            _logger.LogInformation("Événement Stripe {EventId} déjà traité, ignoré", stripeEvent.Id);
+            _logger.LogInformation("Événement Stripe {EventId} déjà traité ou en cours de traitement, ignoré",
+                stripeEvent.Id);
             return Result.Success();
         }
 
@@ -103,15 +109,50 @@ public class BillingWebhookService : IService
         }
         catch
         {
-            await _processedStripeEventRepository.ReleaseAsync(stripeEvent.Id, CancellationToken.None);
+            await TryReleaseClaimAsync(stripeEvent.Id);
             throw;
         }
+
+        await _processedStripeEventRepository.MarkCompletedAsync(stripeEvent.Id, CancellationToken.None);
 
         return Result.Success();
     }
 
+    private async Task TryReleaseClaimAsync(string stripeEventId)
+    {
+        try
+        {
+            await _processedStripeEventRepository.ReleaseAsync(stripeEventId, CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception,
+                "Impossible de libérer la réservation de l'événement Stripe {EventId} : il sera rejouable après {Delay}",
+                stripeEventId, StaleClaimDelay);
+        }
+    }
+
     private static bool IsOutdatedEvent(Organization organization, DateTime eventCreatedAt) =>
         organization.LastBillingEventAt is DateTime lastEventAt && eventCreatedAt < lastEventAt;
+
+    private async Task ClampProjectFrequenciesAsync(Guid organizationId, PlanTier tier,
+        CancellationToken cancellationToken)
+    {
+        PlanLimits limits = PlanLimits.For(tier);
+        IReadOnlyCollection<ScanFrequency> tooFrequent = limits.FrequenciesAbovePlan();
+
+        if (tooFrequent.Count == 0) return;
+
+        int clamped = await _projectRepository.ClampScanFrequencyAsync(organizationId, tooFrequent,
+            limits.MaxScanFrequency, cancellationToken);
+
+        if (clamped > 0)
+        {
+            _logger.LogInformation(
+                "{Count} projet(s) de {OrganizationId} ramenés à la fréquence {Frequency} imposée par le plan {Plan}",
+                clamped, organizationId, limits.MaxScanFrequency, tier);
+        }
+    }
 
     private async Task ApplyCheckoutCompletedAsync(Session session, DateTime eventCreatedAt,
         CancellationToken cancellationToken)
@@ -149,6 +190,8 @@ public class BillingWebhookService : IService
             await commitScope.CommitAsync(cancellationToken);
         }
 
+        await ClampProjectFrequenciesAsync(organizationId, organization.PlanTier, cancellationToken);
+
         _logger.LogInformation("Abonnement activé pour l'organisation {OrganizationId} ({Plan})",
             organizationId, organization.PlanTier);
     }
@@ -185,6 +228,8 @@ public class BillingWebhookService : IService
             await commitScope.CommitAsync(cancellationToken);
         }
 
+        await ClampProjectFrequenciesAsync(organization.Id, organization.PlanTier, cancellationToken);
+
         _logger.LogInformation("Abonnement mis à jour pour {OrganizationId} : {Status}",
             organization.Id, organization.SubscriptionStatus);
 
@@ -218,6 +263,8 @@ public class BillingWebhookService : IService
 
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await ClampProjectFrequenciesAsync(organization.Id, PlanTier.Free, cancellationToken);
 
         _logger.LogInformation("Abonnement annulé pour {OrganizationId} — retour au plan gratuit", organization.Id);
 

@@ -511,6 +511,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.EventType).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.StripeEventId).IsUnique();
             entity.HasIndex(e => e.ProcessedAt);
+            entity.HasIndex(e => e.CompletedAt).HasFilter("\"CompletedAt\" IS NULL");
         });
     }
 

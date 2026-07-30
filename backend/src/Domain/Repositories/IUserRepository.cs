@@ -31,13 +31,12 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<IReadOnlyList<string>> ListAdminEmailsAsync(Guid organizationId, CancellationToken cancellationToken);
 
-    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
-
     Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId, CancellationToken cancellationToken);
 
     Task<bool> ExistsByEmailAcrossTenantsAsync(string email, CancellationToken cancellationToken);
 
-    Task<int> CountActiveAdminsAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<int> CountActiveAdminsExcludingAsync(Guid organizationId, Guid excludedUserId,
+        CancellationToken cancellationToken);
 
     Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken);
 

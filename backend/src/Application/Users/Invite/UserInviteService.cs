@@ -1,4 +1,5 @@
 using Hangfire;
+using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
@@ -11,15 +12,19 @@ using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Users.Invite;
 
 public class UserInviteService(
     IUserInvitationRepository invitationRepository,
+    IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
     QuotaGuard quotaGuard,
+    ISystemScope systemScope,
+    IOptions<FrontendSettings> frontendOptions,
     ITenantContext tenant,
     UserInviteValidator validator) : IService
 {
@@ -45,12 +50,31 @@ public class UserInviteService(
         if (!roleResult.IsSuccess)
             return Result<ApiMessageResponse>.From(roleResult);
 
+        string email = model.Email.ToLowerInvariant();
+
+        bool accountExistsElsewhere;
+
+        using (systemScope.Enter())
+        {
+            accountExistsElsewhere = await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken);
+        }
+
+        if (accountExistsElsewhere)
+        {
+            string frontendBaseUrl = frontendOptions.Value.BaseUrl;
+
+            jobs.Enqueue<IEmailService>(s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl));
+
+            return Result<ApiMessageResponse>.Accepted(
+                ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
+        }
+
         string rawToken = SecureToken.Generate();
 
         UserInvitation invitation = new UserInvitation
         {
             OrganizationId = organizationId,
-            Email = model.Email.ToLowerInvariant(),
+            Email = email,
             Role = role,
             TokenHash = SecureToken.Hash(rawToken),
             InvitedById = currentUserId,

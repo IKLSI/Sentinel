@@ -72,6 +72,58 @@ public class EmailService : IEmailService
         _logger.LogInformation("Email d'invitation envoyé à {Email}", invitation.Email);
     }
 
+    public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl)
+    {
+        string loginUrl = $"{frontendBaseUrl}/login";
+
+        string html = RenderTemplate("invitation-existing-account.html", new Dictionary<string, string>
+        {
+            ["{{EMAIL}}"]     = email,
+            ["{{LOGIN_URL}}"] = loginUrl
+        });
+
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(
+            _email.FromName,
+            _email.FromAddress
+        ));
+        message.To.Add(new MailboxAddress(email, email));
+        message.Subject = "Invitation Sentinel — un compte existe déjà pour cette adresse";
+        message.Body = new BodyBuilder
+        {
+            HtmlBody = html,
+            TextBody = $"""
+                Vous avez déjà un compte Sentinel
+
+                Une invitation à rejoindre une organisation Sentinel a été émise pour {email}.
+                Une adresse email ne peut être rattachée qu'à une seule organisation :
+                l'invitation n'a donc pas été créée.
+
+                Connexion : {loginUrl}
+
+                Pour rejoindre une autre organisation, supprimez d'abord votre compte actuel,
+                ou utilisez une autre adresse email.
+                """
+        }.ToMessageBody();
+
+        using SmtpClient client = new SmtpClient();
+
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        int    port     = _email.Port;
+        string username = _email.Username;
+        string password = _email.Password;
+
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+
+        if (!string.IsNullOrEmpty(username))
+            await client.AuthenticateAsync(username, password);
+
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
+
+        _logger.LogInformation("Notification de compte existant envoyée à {Email}", email);
+    }
+
     public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl)
     {
         string resetUrl = $"{frontendBaseUrl}/reset-password?token={resetToken}";

@@ -23,7 +23,8 @@ public class ETagMiddleware
         }
 
         Stream originalBody = context.Response.Body;
-        await using EtagCaptureStream capture = new EtagCaptureStream(originalBody, MaxBufferedBytes);
+        await using EtagCaptureStream capture = new EtagCaptureStream(originalBody, MaxBufferedBytes,
+            () => IsCacheable(context));
         context.Response.Body = capture;
 
         try
@@ -32,9 +33,7 @@ public class ETagMiddleware
 
             if (capture.CapturedBody is not { } payload
                 || payload.Length == 0
-                || context.Response.StatusCode != StatusCodes.Status200OK
-                || context.Response.Headers.ContainsKey("ETag")
-                || !IsJson(context.Response.ContentType))
+                || !IsCacheable(context))
             {
                 await capture.FlushBufferedAsync(context.RequestAborted);
                 return;
@@ -63,6 +62,11 @@ public class ETagMiddleware
         }
     }
 
+    private static bool IsCacheable(HttpContext context) =>
+        context.Response.StatusCode == StatusCodes.Status200OK
+        && !context.Response.Headers.ContainsKey("ETag")
+        && IsJson(context.Response.ContentType);
+
     private static bool IsJson(string? contentType) =>
         contentType is not null && contentType.StartsWith(JsonContentType, StringComparison.OrdinalIgnoreCase);
 
@@ -70,16 +74,28 @@ public class ETagMiddleware
     {
         private readonly Stream _target;
         private readonly int _maxBufferedBytes;
-        private MemoryStream? _buffer = new MemoryStream();
+        private readonly Func<bool> _shouldCapture;
+        private MemoryStream? _buffer;
+        private bool _decided;
 
-        public EtagCaptureStream(Stream target, int maxBufferedBytes)
+        public EtagCaptureStream(Stream target, int maxBufferedBytes, Func<bool> shouldCapture)
         {
             _target = target;
             _maxBufferedBytes = maxBufferedBytes;
+            _shouldCapture = shouldCapture;
         }
 
         public ReadOnlyMemory<byte>? CapturedBody =>
             _buffer is null ? null : _buffer.GetBuffer().AsMemory(0, (int)_buffer.Length);
+
+        private void DecideOnFirstWrite()
+        {
+            if (_decided) return;
+
+            _decided = true;
+
+            if (_shouldCapture()) _buffer = new MemoryStream();
+        }
 
         public override bool CanRead => false;
         public override bool CanSeek => false;
@@ -102,6 +118,8 @@ public class ETagMiddleware
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> source,
             CancellationToken cancellationToken = default)
         {
+            DecideOnFirstWrite();
+
             if (_buffer is not null)
             {
                 if (_buffer.Length + source.Length <= _maxBufferedBytes)
@@ -126,11 +144,17 @@ public class ETagMiddleware
 
         public override void Flush()
         {
+            DecideOnFirstWrite();
+
             if (_buffer is null) _target.Flush();
         }
 
-        public override Task FlushAsync(CancellationToken cancellationToken) =>
-            _buffer is null ? _target.FlushAsync(cancellationToken) : Task.CompletedTask;
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            DecideOnFirstWrite();
+
+            return _buffer is null ? _target.FlushAsync(cancellationToken) : Task.CompletedTask;
+        }
 
         public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 

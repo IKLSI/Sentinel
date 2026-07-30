@@ -67,14 +67,14 @@ namespace Sentinel.Infrastructure.Migrations
 
             migrationBuilder.Sql(@"
 DO $$
-DECLARE emails_dupliques text;
+DECLARE nombre_doublons integer;
 BEGIN
-    SELECT string_agg(""Email"", ', ')
-    INTO emails_dupliques
+    SELECT count(*)
+    INTO nombre_doublons
     FROM (SELECT ""Email"" FROM ""Users"" GROUP BY ""Email"" HAVING count(*) > 1) AS doublons;
 
-    IF emails_dupliques IS NOT NULL THEN
-        RAISE EXCEPTION 'Migration interrompue : ces adresses email sont présentes dans plusieurs organisations et doivent être corrigées avant d''activer l''unicité globale : %', emails_dupliques;
+    IF nombre_doublons > 0 THEN
+        RAISE EXCEPTION 'Migration interrompue : % adresse(s) email sont présentes dans plusieurs organisations et doivent être corrigées avant d''activer l''unicité globale. Pour les lister depuis un accès base autorisé : SELECT ""Email"", count(*) FROM ""Users"" GROUP BY ""Email"" HAVING count(*) > 1;', nombre_doublons;
     END IF;
 END $$;
 ");

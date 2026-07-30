@@ -1,4 +1,5 @@
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
@@ -13,6 +14,7 @@ namespace Sentinel.Application.TechHealth.UpdateProject;
 public class ProjectUpdateService(
     IProjectRepository projectRepository,
     ICommitScopeFactory commitScopeFactory,
+    QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     ITenantContext tenant,
     ProjectUpdateValidator validator) : IService
@@ -40,6 +42,12 @@ public class ProjectUpdateService(
                 ErrorCodes.ProjectInvalidScanFrequency,
                 new Dictionary<string, string> { ["values"] = string.Join(", ", Enum.GetNames<ScanFrequency>()) });
         }
+
+        Result frequencyResult = await quotaGuard
+            .EnsureScanFrequencyAllowedAsync(organizationId, scanFrequency, cancellationToken);
+
+        if (!frequencyResult.IsSuccess)
+            return Result<ProjectScanFrequencyDto>.From(frequencyResult);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {

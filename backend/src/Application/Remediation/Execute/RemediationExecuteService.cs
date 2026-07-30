@@ -1,8 +1,8 @@
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Remediation;
 using Sentinel.Domain.Models;
@@ -13,7 +13,7 @@ namespace Sentinel.Application.Remediation.Execute;
 
 public class RemediationExecuteService(
     IProjectRepository projectRepository,
-    IOrganizationRepository organizationRepository,
+    SubscriptionGuard subscriptionGuard,
     RemediationEngine remediationEngine,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
@@ -29,7 +29,8 @@ public class RemediationExecuteService(
         if (!belongs)
             return Result<RemediationResultDto>.NotFound(ErrorCodes.ProjectNotFound);
 
-        Result subscriptionResult = await EnsureSubscriptionActiveAsync(organizationId, cancellationToken);
+        Result subscriptionResult = await subscriptionGuard
+            .EnsureEntitledAsync(organizationId, ErrorCodes.QuotaRemediationsExceeded, cancellationToken);
 
         if (!subscriptionResult.IsSuccess)
             return Result<RemediationResultDto>.From(subscriptionResult);
@@ -46,16 +47,5 @@ public class RemediationExecuteService(
             jti: tenant.Jti);
 
         return result;
-    }
-
-    private async Task<Result> EnsureSubscriptionActiveAsync(Guid organizationId,
-        CancellationToken cancellationToken)
-    {
-        SubscriptionStatus status = await organizationRepository.GetSubscriptionStatusOrDefaultAsync(organizationId, cancellationToken);
-
-        if (status is not (SubscriptionStatus.Active or SubscriptionStatus.Trialing))
-            return Result.PaymentRequired(ErrorCodes.QuotaRemediationsExceeded);
-
-        return Result.Success();
     }
 }

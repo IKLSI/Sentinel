@@ -8,6 +8,8 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0);
 
+internal record ParsedManifest(bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
+
 public class RepositoryScannerService(
     IRepositoryHostClient hostClient,
     ManifestParserService parser,
@@ -36,10 +38,6 @@ public class RepositoryScannerService(
                     "Aucun fichier accessible dans le dépôt (dépôt privé sans token valide, token expiré, ou limite de requêtes atteinte).");
             }
 
-            List<Dependency> manifestDeps = new();
-            List<Dependency> lockDeps = new();
-            List<Runtime> allRuntimes = new();
-
             List<(string Name, string Url)> discoveredManifests = files
                 .Where(f => ManifestParserService.IsManifest(f.Name))
                 .ToList();
@@ -56,10 +54,8 @@ public class RepositoryScannerService(
             }
 
             using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
-            Lock parseGate = new Lock();
-            int manifestsRead = 0;
 
-            await Task.WhenAll(manifestFiles.Select(async file =>
+            ParsedManifest?[] parsedManifests = await Task.WhenAll(manifestFiles.Select(async file =>
             {
                 string? content;
 
@@ -67,26 +63,32 @@ public class RepositoryScannerService(
                 try { content = await hostClient.FetchTextAsync(host, file.Url, tokenOverride); }
                 finally { throttle.Release(); }
 
-                if (content == null) return;
+                if (content == null) return null;
 
                 (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
-                bool isLockFile = ManifestParserService.IsLockFile(file.Name);
 
-                lock (parseGate)
-                {
-                    manifestsRead++;
-
-                    if (isLockFile)
-                    {
-                        lockDeps.AddRange(deps);
-                    }
-                    else
-                    {
-                        manifestDeps.AddRange(deps);
-                        allRuntimes.AddRange(rts);
-                    }
-                }
+                return new ParsedManifest(ManifestParserService.IsLockFile(file.Name), deps, rts);
             }));
+
+            List<Dependency> manifestDeps = new();
+            List<Dependency> lockDeps = new();
+            List<Runtime> allRuntimes = new();
+            int manifestsRead = 0;
+
+            foreach (ParsedManifest parsed in parsedManifests.OfType<ParsedManifest>())
+            {
+                manifestsRead++;
+
+                if (parsed.IsLockFile)
+                {
+                    lockDeps.AddRange(parsed.Dependencies);
+                }
+                else
+                {
+                    manifestDeps.AddRange(parsed.Dependencies);
+                    allRuntimes.AddRange(parsed.Runtimes);
+                }
+            }
 
             HashSet<string> lockNames = lockDeps
                 .Select(d => d.Name.ToLowerInvariant())

@@ -31,4 +31,7 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<bool> ExistsInOrganizationAsync(Guid projectId, Guid organizationId, CancellationToken cancellationToken);
 
     Task<int> CountByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken);
+
+    Task<int> ClampScanFrequencyAsync(Guid organizationId, IReadOnlyCollection<ScanFrequency> tooFrequent,
+        ScanFrequency maxFrequency, CancellationToken cancellationToken);
 }

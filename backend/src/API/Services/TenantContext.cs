@@ -8,8 +8,9 @@ namespace Sentinel.API.Services;
 public class TenantContext : ITenantContext
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly Lock _resolutionGate = new Lock();
 
-    private bool _resolved;
+    private volatile bool _resolved;
     private Guid? _organizationId;
     private Guid? _userId;
     private string? _jti;
@@ -62,21 +63,26 @@ public class TenantContext : ITenantContext
     {
         if (_resolved) return;
 
-        ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+        lock (_resolutionGate)
+        {
+            if (_resolved) return;
 
-        if (user?.Identity?.IsAuthenticated is not true) return;
+            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
 
-        if (Guid.TryParse(user.FindFirst(ClaimNames.OrganizationId)?.Value, out Guid organizationId))
-            _organizationId = organizationId;
+            if (user?.Identity?.IsAuthenticated is not true) return;
 
-        if (Guid.TryParse(user.FindFirst(ClaimNames.UserId)?.Value, out Guid userId))
-            _userId = userId;
+            if (Guid.TryParse(user.FindFirst(ClaimNames.OrganizationId)?.Value, out Guid organizationId))
+                _organizationId = organizationId;
 
-        _jti = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+            if (Guid.TryParse(user.FindFirst(ClaimNames.UserId)?.Value, out Guid userId))
+                _userId = userId;
 
-        if (long.TryParse(user.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
-            _tokenExpiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
+            _jti = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
 
-        _resolved = true;
+            if (long.TryParse(user.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
+                _tokenExpiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
+
+            _resolved = true;
+        }
     }
 }

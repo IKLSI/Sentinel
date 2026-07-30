@@ -39,7 +39,7 @@ public sealed class PostgresFixture : IAsyncLifetime
                 ConnectionString = _container.GetConnectionString();
             }
 
-            await using SentinelContext context = new SentinelContext(BuildOptions(null));
+            await using SentinelContext context = new SentinelContext(BuildOptions(null, null));
 
             await context.Database.MigrateAsync();
         }
@@ -69,16 +69,27 @@ public sealed class PostgresFixture : IAsyncLifetime
             + $"{ExternalDatabaseVariable} avec la chaîne de connexion d'une base jetable. Détail : {_unavailableReason}");
     }
 
-    public SentinelContext CreateContext(ITenantContext tenant, ISystemScope systemScope) =>
-        new(BuildOptions(new TenantCommandInterceptor(tenant, systemScope)), tenant);
+    public SentinelContext CreateContext(ITenantContext tenant, ISystemScope systemScope)
+    {
+        TenantSessionState sessionState = new TenantSessionState();
 
-    private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? interceptor)
+        return new SentinelContext(
+            BuildOptions(new TenantCommandInterceptor(tenant, systemScope, sessionState),
+                new TenantConnectionInterceptor(sessionState)),
+            tenant);
+    }
+
+    private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? commandInterceptor,
+        TenantConnectionInterceptor? connectionInterceptor)
     {
         DbContextOptionsBuilder<SentinelContext> builder = new DbContextOptionsBuilder<SentinelContext>()
             .UseNpgsql(ConnectionString, npgsql => npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(1), null));
 
-        if (interceptor != null)
-            builder.AddInterceptors(interceptor);
+        if (commandInterceptor != null)
+            builder.AddInterceptors(commandInterceptor);
+
+        if (connectionInterceptor != null)
+            builder.AddInterceptors(connectionInterceptor);
 
         return builder.Options;
     }

@@ -17,7 +17,7 @@ public partial class RepositoryHostClient
         for (int attempt = 1; ; attempt++)
         {
             using HttpRequestMessage request = requestFactory();
-            HttpResponseMessage response = await client.SendAsync(request);
+            using HttpResponseMessage response = await client.SendAsync(request);
             int status = (int)response.StatusCode;
 
             if (IsRateLimited(response) && attempt <= MaxRateLimitRetries)

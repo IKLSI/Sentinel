@@ -76,7 +76,7 @@ public partial class RepositoryHostClient
                     $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/tree?recursive=true&per_page=100&page={page}");
                 if (!string.IsNullOrEmpty(token))
                     request.Headers.Add("PRIVATE-TOKEN", token);
-                HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request);
                 if (!response.IsSuccessStatusCode) break;
                 items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
             }

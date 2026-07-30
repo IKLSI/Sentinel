@@ -13,6 +13,7 @@ namespace Sentinel.Application.Users.DeleteAccount;
 
 public class UserDeleteAccountService(
     IUserRepository userRepository,
+    IOrganizationRepository organizationRepository,
     IPasswordHasher passwordHasher,
     IAuditLogRepository auditLogRepository,
     INotificationRepository notificationRepository,
@@ -36,13 +37,7 @@ public class UserDeleteAccountService(
         if (!passwordHasher.Verify(model.Password, user.PasswordHash))
             return Result.Error(ErrorCodes.UserWrongPassword);
 
-        if (user.Role == UserRole.Admin)
-        {
-            int activeAdmins = await userRepository.CountActiveAdminsAsync(organizationId, cancellationToken);
-
-            if (activeAdmins <= 1)
-                return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
-        }
+        bool lastAdminBlocked = false;
 
         await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
@@ -51,12 +46,29 @@ public class UserDeleteAccountService(
 
             if (tracked == null) return;
 
+            if (tracked.Role == UserRole.Admin && tracked.IsActive)
+            {
+                await organizationRepository.LockForUpdateAsync(organizationId, token);
+
+                int remainingAdmins = await userRepository
+                    .CountActiveAdminsExcludingAsync(organizationId, currentUserId, token);
+
+                if (remainingAdmins == 0)
+                {
+                    lastAdminBlocked = true;
+                    return;
+                }
+            }
+
             await auditLogRepository.DetachUserAsync(currentUserId, token);
             await notificationRepository.DeleteByUserAsync(currentUserId, token);
             await apiKeyRepository.RevokeAllForUserAsync(currentUserId, token);
 
             Anonymize(tracked);
         }, cancellationToken);
+
+        if (lastAdminBlocked)
+            return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
 
         cache.Remove(CacheKeys.AuthAccount(currentUserId));
 

@@ -33,7 +33,8 @@ public class ProjectScanTriggerService(
         if (!quotaResult.IsSuccess)
             return quotaResult;
 
-        backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectWithReservedQuotaAsync(projectId));
+        backgroundJobs.Enqueue<TechHealthService>(s =>
+            s.ScanProjectWithReservedQuotaAsync(projectId, organizationId));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

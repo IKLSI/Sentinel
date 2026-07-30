@@ -54,7 +54,7 @@ public class AuditLogQueue
     {
         _channel = Channel.CreateBounded<AuditLog>(new BoundedChannelOptions(10_000)
         {
-            FullMode = BoundedChannelFullMode.DropWrite,
+            FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,
             SingleWriter = false
         });
@@ -104,7 +104,9 @@ public class AuditLogBackgroundWriter(
                         }
                     }
                 }
-                catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested) { }
+                catch (OperationCanceledException) { }
+
+                if (stoppingToken.IsCancellationRequested) break;
 
                 if (buffer.Count > 0)
                 {
@@ -114,10 +116,13 @@ public class AuditLogBackgroundWriter(
 
                 ReportDroppedEntries();
             }
-            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
                 logger.LogWarning(ex, "AuditLog writer loop exception");
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+
+                try { await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken); }
+                catch (OperationCanceledException) { }
             }
         }
 

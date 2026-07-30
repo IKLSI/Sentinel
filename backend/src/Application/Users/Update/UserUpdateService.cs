@@ -13,6 +13,7 @@ namespace Sentinel.Application.Users.Update;
 
 public class UserUpdateService(
     IUserRepository userRepository,
+    IOrganizationRepository organizationRepository,
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
@@ -49,19 +50,11 @@ public class UserUpdateService(
         }
 
         bool willDeactivate = model.IsActive.HasValue && !model.IsActive.Value;
-        bool willDemote = newRole.HasValue && newRole.Value != UserRole.Admin && originalRole == UserRole.Admin;
-
-        if (userId == currentUserId && (willDeactivate || willDemote))
-        {
-            int activeAdmins = await userRepository.CountActiveAdminsAsync(organizationId, cancellationToken);
-
-            if (activeAdmins <= 1)
-                return Result<UserDto>.Error(ErrorCodes.UserLastAdminRequired);
-        }
 
         bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willDeactivate;
 
         User? updatedUser = null;
+        bool lastAdminBlocked = false;
 
         await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
@@ -69,6 +62,24 @@ public class UserUpdateService(
                 QueryTracking.Tracked, token);
 
             if (tracked == null) return;
+
+            bool wasActiveAdmin = tracked.Role == UserRole.Admin && tracked.IsActive;
+            bool staysActiveAdmin = (newRole ?? tracked.Role) == UserRole.Admin
+                && (model.IsActive ?? tracked.IsActive);
+
+            if (wasActiveAdmin && !staysActiveAdmin)
+            {
+                await organizationRepository.LockForUpdateAsync(organizationId, token);
+
+                int remainingAdmins = await userRepository
+                    .CountActiveAdminsExcludingAsync(organizationId, userId, token);
+
+                if (remainingAdmins == 0)
+                {
+                    lastAdminBlocked = true;
+                    return;
+                }
+            }
 
             if (!string.IsNullOrEmpty(model.FirstName)) tracked.FirstName = model.FirstName;
             if (!string.IsNullOrEmpty(model.LastName)) tracked.LastName = model.LastName;
@@ -81,6 +92,9 @@ public class UserUpdateService(
 
             updatedUser = tracked;
         }, cancellationToken);
+
+        if (lastAdminBlocked)
+            return Result<UserDto>.Error(ErrorCodes.UserLastAdminRequired);
 
         if (updatedUser == null)
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);

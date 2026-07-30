@@ -10,8 +10,7 @@ namespace Sentinel.Application.Users.Invite;
 
 public class UserInviteValidator(
     IUserRepository userRepository,
-    IUserInvitationRepository invitationRepository,
-    ISystemScope systemScope) : IValidator
+    IUserInvitationRepository invitationRepository) : IValidator
 {
     public async Task<Result> ValidateAsync(CreateUserDto model, Guid organizationId,
         CancellationToken cancellationToken)
@@ -26,14 +25,10 @@ public class UserInviteValidator(
 
         string email = model.Email.ToLowerInvariant();
 
-        bool userExists;
+        bool memberExists = await userRepository
+            .ExistsByEmailInOrganizationAsync(email, organizationId, cancellationToken);
 
-        using (systemScope.Enter())
-        {
-            userExists = await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken);
-        }
-
-        if (userExists)
+        if (memberExists)
             return Result.Conflict(ErrorCodes.UserEmailAlreadyExists);
 
         bool pendingInvitation = await invitationRepository

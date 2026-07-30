@@ -41,6 +41,12 @@ public class ProjectCreateService(
         if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
             scanFrequency = ScanFrequency.Weekly;
 
+        Result frequencyResult = await quotaGuard
+            .EnsureScanFrequencyAllowedAsync(organizationId, scanFrequency, cancellationToken);
+
+        if (!frequencyResult.IsSuccess)
+            return Result<ProjectDto>.From(frequencyResult);
+
         Project project = new Project
         {
             OrganizationId = organizationId,

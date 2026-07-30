@@ -11,26 +11,36 @@ public class ProcessedStripeEventRepository
 {
     public ProcessedStripeEventRepository(SentinelContext context) : base(context) { }
 
-    public async Task<bool> TryClaimAsync(string stripeEventId, string eventType, CancellationToken cancellationToken)
+    public async Task<bool> TryClaimAsync(string stripeEventId, string eventType, DateTime staleClaimThreshold,
+        CancellationToken cancellationToken)
     {
-        int inserted = await Context.Database.ExecuteSqlAsync(
+        int claimed = await Context.Database.ExecuteSqlAsync(
             $"""
-             INSERT INTO "ProcessedStripeEvents" ("Id", "StripeEventId", "EventType", "ProcessedAt")
-             VALUES ({Guid.NewGuid()}, {stripeEventId}, {eventType}, {DateTime.UtcNow})
-             ON CONFLICT ("StripeEventId") DO NOTHING
+             INSERT INTO "ProcessedStripeEvents" ("Id", "StripeEventId", "EventType", "ProcessedAt", "CompletedAt")
+             VALUES ({Guid.NewGuid()}, {stripeEventId}, {eventType}, {DateTime.UtcNow}, NULL)
+             ON CONFLICT ("StripeEventId") DO UPDATE
+             SET "ProcessedAt" = EXCLUDED."ProcessedAt"
+             WHERE "ProcessedStripeEvents"."CompletedAt" IS NULL
+               AND "ProcessedStripeEvents"."ProcessedAt" < {staleClaimThreshold}
              """,
             cancellationToken);
 
-        return inserted > 0;
+        return claimed > 0;
     }
+
+    public Task MarkCompletedAsync(string stripeEventId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(processed => processed.StripeEventId == stripeEventId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.CompletedAt, DateTime.UtcNow),
+                cancellationToken);
 
     public Task ReleaseAsync(string stripeEventId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .Where(processed => processed.StripeEventId == stripeEventId)
+            .Where(processed => processed.StripeEventId == stripeEventId && processed.CompletedAt == null)
             .ExecuteDeleteAsync(cancellationToken);
 
     public Task<int> DeleteProcessedBeforeAsync(DateTime threshold, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .Where(processed => processed.ProcessedAt < threshold)
+            .Where(processed => processed.CompletedAt != null && processed.ProcessedAt < threshold)
             .ExecuteDeleteAsync(cancellationToken);
 }

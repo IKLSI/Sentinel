@@ -52,6 +52,66 @@ public class ETagMiddlewareTests
         body.Length.Should().Be(0);
     }
 
+    [Fact]
+    public async Task InvokeAsync_QuandLaReponseNEstPasDuJson_TransmetChaqueEcritureSansTamponner()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = HttpMethods.Get;
+
+        ObservableStream body = new ObservableStream();
+        context.Response.Body = body;
+
+        int bytesEcritsAvantLaFin = -1;
+
+        ETagMiddleware middleware = new ETagMiddleware(async httpContext =>
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status200OK;
+            httpContext.Response.ContentType = "text/event-stream";
+
+            await httpContext.Response.Body.WriteAsync(Encoding.UTF8.GetBytes("data: 1\n\n"));
+            await httpContext.Response.Body.FlushAsync();
+
+            bytesEcritsAvantLaFin = (int)body.Length;
+        });
+
+        await middleware.InvokeAsync(context);
+
+        bytesEcritsAvantLaFin.Should().Be(9);
+        body.FlushCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_QuandLaReponseEstDejaEtaguee_NeRemplacePasLETag()
+    {
+        DefaultHttpContext context = new DefaultHttpContext();
+        context.Request.Method = HttpMethods.Get;
+        context.Response.Body = new MemoryStream();
+
+        ETagMiddleware middleware = new ETagMiddleware(async httpContext =>
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status200OK;
+            httpContext.Response.ContentType = JsonContentType;
+            httpContext.Response.Headers.ETag = "\"existant\"";
+
+            await httpContext.Response.Body.WriteAsync(Encoding.UTF8.GetBytes("""{"valeur":1}"""));
+        });
+
+        await middleware.InvokeAsync(context);
+
+        context.Response.Headers.ETag.ToString().Should().Be("\"existant\"");
+    }
+
+    private sealed class ObservableStream : MemoryStream
+    {
+        public int FlushCount { get; private set; }
+
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            FlushCount++;
+            return base.FlushAsync(cancellationToken);
+        }
+    }
+
     private static async Task<(HttpContext Context, MemoryStream Body)> ExecuteAsync(
         string contentType, string content, string? ifNoneMatch = null)
     {

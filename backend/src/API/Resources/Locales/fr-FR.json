@@ -213,6 +213,7 @@
   "errors.projects.not_found": "Projet introuvable",
   "errors.projects.invalid_repository_url": "URL de dépôt invalide. Hôtes autorisés : github.com, gitlab.com",
   "errors.projects.invalid_scan_frequency": "Fréquence invalide ({values})",
+  "errors.projects.scan_frequency_above_plan": "Votre plan n'autorise pas une fréquence de scan supérieure à {maxFrequency}. Passez à un plan supérieur pour scanner plus souvent.",
   "errors.settings.token_required": "Le token est requis",
   "errors.settings.invalid_github_token": "Le token GitHub est invalide ou ne peut pas être vérifié auprès du fournisseur",
   "errors.settings.invalid_gitlab_token": "Le token GitLab est invalide ou ne peut pas être vérifié auprès du fournisseur",

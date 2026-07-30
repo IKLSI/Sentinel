@@ -46,6 +46,7 @@ public static class ErrorCodes
     public const string ProjectNotFound = "errors.projects.not_found";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";
     public const string ProjectInvalidScanFrequency = "errors.projects.invalid_scan_frequency";
+    public const string ProjectScanFrequencyAbovePlan = "errors.projects.scan_frequency_above_plan";
 
     public const string SettingsTokenRequired = "errors.settings.token_required";
     public const string SettingsInvalidGithubToken = "errors.settings.invalid_github_token";

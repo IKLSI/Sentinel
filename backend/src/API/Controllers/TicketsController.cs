@@ -29,6 +29,8 @@ namespace Sentinel.API.Controllers;
 [Authorize]
 public class TicketsController : BaseController
 {
+    private const int AttachmentRequestSizeLimitBytes = 12 * 1024 * 1024;
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<TicketDto>>> GetTickets(
         [FromQuery] TicketGridModel query,
@@ -111,7 +113,8 @@ public class TicketsController : BaseController
         ToActionResult(await service.ExecuteAsync(id, commentId, cancellationToken));
 
     [HttpPost("{id:guid}/attachments")]
-    [RequestSizeLimit(10_485_760)]
+    [RequestSizeLimit(AttachmentRequestSizeLimitBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = AttachmentRequestSizeLimitBytes)]
     public async Task<ActionResult<TicketAttachmentDto>> UploadAttachment(
         Guid id,
         IFormFile? file,

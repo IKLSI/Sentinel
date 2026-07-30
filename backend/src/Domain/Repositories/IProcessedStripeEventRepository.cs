@@ -5,7 +5,10 @@ namespace Sentinel.Domain.Repositories;
 
 public interface IProcessedStripeEventRepository : ICrudEntityWithIdRepository<ProcessedStripeEvent>
 {
-    Task<bool> TryClaimAsync(string stripeEventId, string eventType, CancellationToken cancellationToken);
+    Task<bool> TryClaimAsync(string stripeEventId, string eventType, DateTime staleClaimThreshold,
+        CancellationToken cancellationToken);
+
+    Task MarkCompletedAsync(string stripeEventId, CancellationToken cancellationToken);
 
     Task ReleaseAsync(string stripeEventId, CancellationToken cancellationToken);
 

@@ -75,6 +75,13 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
     public Task<int> CountByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking).CountAsync(p => p.OrganizationId == organizationId, cancellationToken);
 
+    public Task<int> ClampScanFrequencyAsync(Guid organizationId, IReadOnlyCollection<ScanFrequency> tooFrequent,
+        ScanFrequency maxFrequency, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId && tooFrequent.Contains(p.ScanFrequency))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.ScanFrequency, maxFrequency),
+                cancellationToken);
+
     private static IQueryable<Project> WithHealthDetails(IQueryable<Project> query) => query
         .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
         .Include(p => p.Runtimes);

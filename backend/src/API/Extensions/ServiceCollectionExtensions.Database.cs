@@ -18,7 +18,9 @@ public static partial class ServiceCollectionExtensions
         string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
             ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
 
+        services.AddScoped<TenantSessionState>();
         services.AddScoped<TenantCommandInterceptor>();
+        services.AddScoped<TenantConnectionInterceptor>();
 
         NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
         {
@@ -32,7 +34,9 @@ public static partial class ServiceCollectionExtensions
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
                 npgsqlOptions.CommandTimeout(30);
             });
-            options.AddInterceptors(sp.GetRequiredService<TenantCommandInterceptor>());
+            options.AddInterceptors(
+                sp.GetRequiredService<TenantCommandInterceptor>(),
+                sp.GetRequiredService<TenantConnectionInterceptor>());
         });
 
         return services;

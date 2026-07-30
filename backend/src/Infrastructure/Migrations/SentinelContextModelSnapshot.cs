@@ -402,6 +402,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -416,6 +419,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompletedAt")
+                        .HasFilter("\"CompletedAt\" IS NULL");
 
                     b.HasIndex("ProcessedAt");
 

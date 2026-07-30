@@ -40,7 +40,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             try
             {
-                HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request);
                 if (!response.IsSuccessStatusCode) return null;
                 JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
                 string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
@@ -61,7 +61,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             request.Headers.Add("PRIVATE-TOKEN", token);
             try
             {
-                HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request);
                 if (!response.IsSuccessStatusCode) return null;
                 JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
                 string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";

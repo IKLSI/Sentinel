@@ -14,6 +14,8 @@ public interface IEmailService
     Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName,
         string invitedByName, string frontendBaseUrl);
 
+    Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl);
+
     Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl);
 
     Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl);

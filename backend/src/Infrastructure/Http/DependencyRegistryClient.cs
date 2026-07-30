@@ -83,7 +83,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchNpmLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest");
+        using HttpResponseMessage response = await client.GetAsync($"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return doc.RootElement.TryGetProperty("version", out JsonElement v) ? v.GetString() : null;
@@ -91,7 +91,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchNuGetLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync(
+        using HttpResponseMessage response = await client.GetAsync(
             $"https://azuresearch-usnc.nuget.org/query?q=packageid:{Uri.EscapeDataString(package)}&prerelease=false&take=1");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -103,7 +103,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchPyPILatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://pypi.org/pypi/{Uri.EscapeDataString(package)}/json");
+        using HttpResponseMessage response = await client.GetAsync($"https://pypi.org/pypi/{Uri.EscapeDataString(package)}/json");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return doc.RootElement.TryGetProperty("info", out JsonElement info) && info.TryGetProperty("version", out JsonElement v)
@@ -114,7 +114,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
     {
         string[] parts = package.Split(':');
         if (parts.Length < 2) return null;
-        HttpResponseMessage response = await client.GetAsync(
+        using HttpResponseMessage response = await client.GetAsync(
             $"https://search.maven.org/solrsearch/select?q=g:{Uri.EscapeDataString(parts[0])}+AND+a:{Uri.EscapeDataString(parts[1])}&rows=1&wt=json");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -127,7 +127,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchGoLatestAsync(HttpClient client, string module)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(module)}/@latest");
+        using HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(module)}/@latest");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         string? version = doc.RootElement.TryGetProperty("Version", out JsonElement v) ? v.GetString() : null;
@@ -139,7 +139,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchPackagistLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{Uri.EscapeDataString(package)}.json");
+        using HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{Uri.EscapeDataString(package)}.json");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("package", out JsonElement pkg)) return null;
@@ -154,7 +154,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchRubyGemsLatestAsync(HttpClient client, string gem)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://rubygems.org/api/v1/gems/{Uri.EscapeDataString(gem)}.json");
+        using HttpResponseMessage response = await client.GetAsync($"https://rubygems.org/api/v1/gems/{Uri.EscapeDataString(gem)}.json");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return doc.RootElement.TryGetProperty("version", out JsonElement v) ? v.GetString() : null;
@@ -162,7 +162,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchCratesLatestAsync(HttpClient client, string crate)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}");
+        using HttpResponseMessage response = await client.GetAsync($"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return null;
@@ -171,7 +171,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchHexLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}");
+        using HttpResponseMessage response = await client.GetAsync($"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return doc.RootElement.TryGetProperty("latest_stable_version", out JsonElement v) ? v.GetString() : null;
@@ -179,7 +179,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
 
     private static async Task<string?> FetchPubLatestAsync(HttpClient client, string package)
     {
-        HttpResponseMessage response = await client.GetAsync($"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}");
+        using HttpResponseMessage response = await client.GetAsync($"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}");
         if (!response.IsSuccessStatusCode) return null;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return doc.RootElement.TryGetProperty("latest", out JsonElement latest) && latest.TryGetProperty("version", out JsonElement v)
