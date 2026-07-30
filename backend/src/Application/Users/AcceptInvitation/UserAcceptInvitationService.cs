@@ -37,7 +37,7 @@ public class UserAcceptInvitationService(
             return Result<ApiMessageResponse>.Error(ErrorCodes.UserInvitationInvalid);
 
         bool emailExists = await userRepository
-            .ExistsByEmailInOrganizationAsync(invitation.Email, invitation.OrganizationId, cancellationToken);
+            .ExistsByEmailAcrossTenantsAsync(invitation.Email, cancellationToken);
 
         if (emailExists)
             return Result<ApiMessageResponse>.Conflict(ErrorCodes.AuthEmailAlreadyUsed);

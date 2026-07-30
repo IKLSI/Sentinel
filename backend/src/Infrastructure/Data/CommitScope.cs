@@ -66,6 +66,8 @@ public class CommitScopeFactory : ICommitScopeFactory
 
         await strategy.ExecuteAsync(async () =>
         {
+            _context.ChangeTracker.Clear();
+
             await using IDbContextTransaction transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 

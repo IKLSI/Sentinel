@@ -62,6 +62,7 @@ public static class ErrorCodes
     public const string TicketAttachmentInvalidFile = "errors.tickets.attachment_invalid_file";
     public const string TicketAttachmentTypeNotAllowed = "errors.tickets.attachment_type_not_allowed";
     public const string TicketAttachmentInvalidFileName = "errors.tickets.attachment_invalid_file_name";
+    public const string TicketAttachmentTooLarge = "errors.tickets.attachment_too_large";
 
     public const string LocaleInvalidCulture = "errors.locales.invalid_culture";
     public const string LocaleInvalidPath = "errors.locales.invalid_path";

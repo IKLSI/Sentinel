@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Sentinel.Application.Billing;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -43,6 +44,7 @@ public partial class TechHealthService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
+    private readonly QuotaGuard _quotaGuard;
     private readonly TokenProtector _tokenProtector;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IBackgroundJobClient _backgroundJobs;
@@ -61,6 +63,7 @@ public partial class TechHealthService
         IHttpClientFactory httpClientFactory,
         ILogger<TechHealthService> logger,
         RepositoryScannerService repositoryScanner,
+        QuotaGuard quotaGuard,
         TokenProtector tokenProtector,
         IServiceScopeFactory scopeFactory,
         IBackgroundJobClient backgroundJobs,
@@ -79,6 +82,7 @@ public partial class TechHealthService
         _osvClient = httpClientFactory.CreateClient(HttpClientNames.Osv);
         _logger = logger;
         _repositoryScanner = repositoryScanner;
+        _quotaGuard = quotaGuard;
         _tokenProtector = tokenProtector;
         _scopeFactory = scopeFactory;
         _backgroundJobs = backgroundJobs;
@@ -95,6 +99,33 @@ public partial class TechHealthService
             QueryTracking.Tracked, CancellationToken.None);
 
         if (project == null) return;
+
+        Result quotaResult = await _quotaGuard.TryConsumeScanAsync(project.OrganizationId, CancellationToken.None);
+
+        if (!quotaResult.IsSuccess)
+        {
+            _logger.LogWarning("Scan du projet {ProjectId} ignoré : quota mensuel de scans atteint", projectId);
+            return;
+        }
+
+        await RunScanAsync(project);
+    }
+
+    public async Task ScanProjectWithReservedQuotaAsync(Guid projectId)
+    {
+        using IDisposable elevation = _systemScope.Enter();
+
+        Project? project = await _projectRepository.GetOrDefaultAsync(projectId,
+            QueryTracking.Tracked, CancellationToken.None);
+
+        if (project == null) return;
+
+        await RunScanAsync(project);
+    }
+
+    private async Task RunScanAsync(Project project)
+    {
+        Guid projectId = project.Id;
 
         bool isFirstScan = project.LastScanAt == null;
 
@@ -146,11 +177,12 @@ public partial class TechHealthService
             }
         }
 
-        if (!project.Dependencies.Any() && !project.Runtimes.Any())
-        {
-            project = (await _projectRepository
-                .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.Tracked, CancellationToken.None))!;
-        }
+        Project? reloadedProject = await _projectRepository
+            .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.Tracked, CancellationToken.None);
+
+        if (reloadedProject == null) return;
+
+        project = reloadedProject;
 
         using SemaphoreSlim throttle = new SemaphoreSlim(10);
 
@@ -191,15 +223,6 @@ public partial class TechHealthService
 
         foreach (Dependency dep in project.Dependencies)
             dep.ScannedAt = DateTime.UtcNow;
-
-        Organization? scanOrg = await _organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-            QueryTracking.Tracked, CancellationToken.None);
-
-        if (scanOrg != null)
-        {
-            ScanPeriod.ResetIfElapsed(scanOrg);
-            scanOrg.MonthlyScanCount++;
-        }
 
         using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {

@@ -48,18 +48,26 @@ public class AuditLogService(AuditLogQueue queue) : IAuditLogService
 public class AuditLogQueue
 {
     private readonly Channel<AuditLog> _channel;
+    private long _droppedCount;
 
     public AuditLogQueue()
     {
         _channel = Channel.CreateBounded<AuditLog>(new BoundedChannelOptions(10_000)
         {
-            FullMode = BoundedChannelFullMode.DropOldest,
+            FullMode = BoundedChannelFullMode.DropWrite,
             SingleReader = true,
             SingleWriter = false
         });
     }
 
-    public void Enqueue(AuditLog log) => _channel.Writer.TryWrite(log);
+    public void Enqueue(AuditLog log)
+    {
+        if (_channel.Writer.TryWrite(log)) return;
+
+        Interlocked.Increment(ref _droppedCount);
+    }
+
+    public long ReadAndResetDroppedCount() => Interlocked.Exchange(ref _droppedCount, 0);
 
     public ChannelReader<AuditLog> Reader => _channel.Reader;
 }
@@ -71,7 +79,9 @@ public class AuditLogBackgroundWriter(
     ILogger<AuditLogBackgroundWriter> logger) : BackgroundService
 {
     private const int BatchSize = 100;
+    private const int MaxFlushAttempts = 3;
     private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan FlushRetryDelay = TimeSpan.FromSeconds(2);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -101,6 +111,8 @@ public class AuditLogBackgroundWriter(
                     await FlushAsync(buffer, stoppingToken);
                     buffer.Clear();
                 }
+
+                ReportDroppedEntries();
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
@@ -109,31 +121,67 @@ public class AuditLogBackgroundWriter(
             }
         }
 
-        if (buffer.Count > 0)
+        while (auditLogQueue.Reader.TryRead(out AuditLog? pending))
         {
-            try { await FlushAsync(buffer, CancellationToken.None); }
-            catch (Exception ex) { logger.LogWarning(ex, "Échec flush final AuditLog"); }
+            buffer.Add(pending);
+
+            if (buffer.Count < BatchSize) continue;
+
+            await FlushAsync(buffer, CancellationToken.None);
+            buffer.Clear();
         }
+
+        if (buffer.Count > 0)
+            await FlushAsync(buffer, CancellationToken.None);
+
+        ReportDroppedEntries();
+    }
+
+    private void ReportDroppedEntries()
+    {
+        long dropped = auditLogQueue.ReadAndResetDroppedCount();
+
+        if (dropped > 0)
+            logger.LogError("File d'audit saturée : {Count} entrée(s) rejetée(s) sans être enregistrée(s)", dropped);
     }
 
     private async Task FlushAsync(List<AuditLog> logs, CancellationToken ct)
     {
-        try
+        for (int attempt = 1; attempt <= MaxFlushAttempts; attempt++)
         {
-            using IDisposable elevation = systemScope.Enter();
-            using IServiceScope scope = scopeFactory.CreateScope();
+            try
+            {
+                using IDisposable elevation = systemScope.Enter();
+                using IServiceScope scope = scopeFactory.CreateScope();
 
-            IAuditLogRepository repository = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-            ICommitScopeFactory commitScopeFactory = scope.ServiceProvider.GetRequiredService<ICommitScopeFactory>();
+                IAuditLogRepository repository = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
+                ICommitScopeFactory commitScopeFactory = scope.ServiceProvider.GetRequiredService<ICommitScopeFactory>();
 
-            using ICommitScope commitScope = commitScopeFactory.Begin();
+                using ICommitScope commitScope = commitScopeFactory.Begin();
 
-            await repository.AddRangeAsync(logs, ct);
-            await commitScope.CommitAsync(ct);
+                await repository.AddRangeAsync(logs, ct);
+                await commitScope.CommitAsync(ct);
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Échec insertion batch AuditLog ({Count} entrées), tentative {Attempt}/{MaxAttempts}",
+                    logs.Count, attempt, MaxFlushAttempts);
+
+                if (attempt == MaxFlushAttempts) break;
+
+                try { await Task.Delay(FlushRetryDelay * attempt, ct); }
+                catch (OperationCanceledException) { break; }
+            }
         }
-        catch (Exception ex)
+
+        foreach (AuditLog log in logs)
         {
-            logger.LogWarning(ex, "Échec insertion batch AuditLog ({Count} entrées)", logs.Count);
+            logger.LogError(
+                "Entrée d'audit perdue : action={Action} type={EntityType} organisation={OrganizationId} utilisateur={UserId} entité={EntityId} jti={Jti} date={CreatedAt:O}",
+                log.Action, log.EntityType, log.OrganizationId, log.UserId, log.EntityId, log.Jti, log.CreatedAt);
         }
     }
 }

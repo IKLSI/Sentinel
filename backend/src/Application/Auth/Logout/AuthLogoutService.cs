@@ -26,7 +26,7 @@ public class AuthLogoutService(
             return Result.Unauthorized();
 
         if (!string.IsNullOrEmpty(tenant.Jti) && tenant.TokenExpiresAtUtc is DateTime expiresAtUtc)
-            blacklist.Revoke(tenant.Jti, expiresAtUtc);
+            await blacklist.RevokeAsync(tenant.Jti, expiresAtUtc, cancellationToken);
 
         User? user = await userRepository.GetOrDefaultAsync(userId,
             QueryTracking.Tracked, cancellationToken);

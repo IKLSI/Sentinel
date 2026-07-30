@@ -35,6 +35,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId, CancellationToken cancellationToken);
 
+    Task<bool> ExistsByEmailAcrossTenantsAsync(string email, CancellationToken cancellationToken);
+
     Task<int> CountActiveAdminsAsync(Guid organizationId, CancellationToken cancellationToken);
 
     Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken);

@@ -21,12 +21,17 @@ public class TicketUploadAttachmentValidator : IValidator
         ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = IsZipSignature
     };
 
+    private const long MaxAttachmentBytes = 10 * 1024 * 1024;
+
     private static readonly string[] AllowedMimeTypes = MagicByteChecks.Keys.Append("text/plain").ToArray();
 
     public async Task<Result> ValidateAsync(TicketAttachmentUploadModel? model, CancellationToken cancellationToken)
     {
         if (model == null || model.Size == 0)
             return Result.Error(ErrorCodes.TicketAttachmentInvalidFile);
+
+        if (model.Size > MaxAttachmentBytes)
+            return Result.Error(ErrorCodes.TicketAttachmentTooLarge);
 
         if (!AllowedMimeTypes.Contains(model.ContentType))
             return Result.Error(ErrorCodes.TicketAttachmentTypeNotAllowed);

@@ -16,6 +16,7 @@ public class Organization : IEntityWithId
     public string? StripeCustomerId { get; set; }
     public string? StripeSubscriptionId { get; set; }
     public DateTime? CurrentPeriodEnd { get; set; }
+    public DateTime? LastBillingEventAt { get; set; }
     public int MonthlyScanCount { get; set; }
     public DateTime ScanCountPeriodStart { get; set; } = DateTime.UtcNow;
 

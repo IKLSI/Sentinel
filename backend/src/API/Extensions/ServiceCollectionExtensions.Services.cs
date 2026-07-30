@@ -95,9 +95,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<StripePriceCatalog>();
         services.AddScoped<StripeCustomerProvisioner>();
 
-        services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
 
         services.AddTransient<TechHealthScanJob>();
+        services.AddTransient<PurgeExpiredRevokedTokensJob>();
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Buffers;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -12,6 +13,8 @@ internal readonly record struct HostApiResponse(JsonElement? Json, int Status, s
 
 public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
 {
+    private const long MaxFileBytes = 5 * 1024 * 1024;
+
     private static readonly HashSet<string> SkippedDirs = new(StringComparer.OrdinalIgnoreCase)
     {
         "node_modules", ".git", "vendor", "bin", "obj", ".next", "dist", "build", "__pycache__",
@@ -94,13 +97,54 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, url, tokenOverride);
             try
             {
-                HttpResponseMessage response = await client.SendAsync(request);
-                return response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
+                using HttpResponseMessage response =
+                    await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                return await ReadBoundedTextAsync(response, url);
             }
             catch { return null; }
         }
 
         return await FetchTextAsync(client, url, host.Contains("gitlab") ? tokenOverride : null);
+    }
+
+    private async Task<string?> ReadBoundedTextAsync(HttpResponseMessage response, string url)
+    {
+        if (!response.IsSuccessStatusCode) return null;
+
+        if (response.Content.Headers.ContentLength is long declaredLength && declaredLength > MaxFileBytes)
+        {
+            logger.LogWarning("Fichier {Url} ignoré : {Size} octets dépassent la limite de {Limit}",
+                url, declaredLength, MaxFileBytes);
+            return null;
+        }
+
+        await using Stream stream = await response.Content.ReadAsStreamAsync();
+        using MemoryStream buffer = new MemoryStream();
+
+        byte[] chunk = ArrayPool<byte>.Shared.Rent(81920);
+
+        try
+        {
+            int read;
+
+            while ((read = await stream.ReadAsync(chunk)) > 0)
+            {
+                if (buffer.Length + read > MaxFileBytes)
+                {
+                    logger.LogWarning("Fichier {Url} ignoré : dépasse la limite de {Limit} octets", url, MaxFileBytes);
+                    return null;
+                }
+
+                buffer.Write(chunk, 0, read);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(chunk);
+        }
+
+        return Encoding.UTF8.GetString(buffer.GetBuffer(), 0, (int)buffer.Length);
     }
 
     private static bool IsInSkippedDirectory(string filePath)
@@ -113,15 +157,18 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
         return false;
     }
 
-    private static async Task<string?> FetchTextAsync(HttpClient client, string url, string? gitlabToken = null)
+    private async Task<string?> FetchTextAsync(HttpClient client, string url, string? gitlabToken = null)
     {
         try
         {
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(gitlabToken))
                 request.Headers.Add("PRIVATE-TOKEN", gitlabToken);
-            HttpResponseMessage response = await client.SendAsync(request);
-            return response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : null;
+
+            using HttpResponseMessage response =
+                await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            return await ReadBoundedTextAsync(response, url);
         }
         catch { return null; }
     }

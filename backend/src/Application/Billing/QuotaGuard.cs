@@ -41,22 +41,22 @@ public class QuotaGuard(
             new Dictionary<string, string> { ["limit"] = limits.MaxMembers.ToString() });
     }
 
-    public async Task<Result> EnsureCanScanAsync(Guid organizationId, CancellationToken cancellationToken)
+    public async Task<Result> TryConsumeScanAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
-        Result<Organization> organizationResult = await LoadOrganizationAsync(organizationId, cancellationToken);
+        Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
+            QueryTracking.NoTracking, cancellationToken);
 
-        if (!organizationResult.IsSuccess)
-            return organizationResult;
-
-        Organization organization = organizationResult.Value!;
-
-        await ResetScanPeriodIfElapsedAsync(organization, cancellationToken);
+        if (organization == null)
+            return Result.NotFound(ErrorCodes.NotFound);
 
         PlanLimits limits = PlanLimits.For(organization.PlanTier);
 
-        if (PlanLimits.IsWithin(organization.MonthlyScanCount, limits.MaxScansPerMonth))
+        bool consumed = await organizationRepository.TryConsumeScanQuotaAsync(organizationId,
+            limits.MaxScansPerMonth, cancellationToken);
+
+        if (consumed)
             return Result.Success();
 
         return Result.PaymentRequired(ErrorCodes.QuotaScansExceeded,

@@ -16,12 +16,15 @@ public class ApiKeyMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, ApiKeyValidateService apiKeyValidateService)
+    public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.User.Identity?.IsAuthenticated == true
+        if (context.User.Identity?.IsAuthenticated is not true
             && context.Request.Headers.TryGetValue(ApiKeyHeader, out Microsoft.Extensions.Primitives.StringValues rawKey)
             && !string.IsNullOrWhiteSpace(rawKey))
         {
+            ApiKeyValidateService apiKeyValidateService =
+                context.RequestServices.GetRequiredService<ApiKeyValidateService>();
+
             var result = await apiKeyValidateService.ExecuteAsync(rawKey.ToString(), context.RequestAborted);
             if (result.HasValue)
             {

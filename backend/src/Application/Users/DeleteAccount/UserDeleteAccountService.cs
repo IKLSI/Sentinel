@@ -44,18 +44,21 @@ public class UserDeleteAccountService(
                 return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
         }
 
-        await auditLogRepository.DetachUserAsync(currentUserId, cancellationToken);
-        await notificationRepository.DeleteByUserAsync(currentUserId, cancellationToken);
-
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            Anonymize(user);
-            await commitScope.CommitAsync(cancellationToken);
-        }
+            User? tracked = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
+                QueryTracking.Tracked, token);
 
-        cache.Remove(CacheKeys.AuthAccount(user.Id));
+            if (tracked == null) return;
 
-        await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
+            await auditLogRepository.DetachUserAsync(currentUserId, token);
+            await notificationRepository.DeleteByUserAsync(currentUserId, token);
+            await apiKeyRepository.RevokeAllForUserAsync(currentUserId, token);
+
+            Anonymize(tracked);
+        }, cancellationToken);
+
+        cache.Remove(CacheKeys.AuthAccount(currentUserId));
 
         await auditLog.LogAsync(
             AuditAction.AccountDeleted,

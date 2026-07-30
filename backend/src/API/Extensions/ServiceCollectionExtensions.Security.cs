@@ -73,7 +73,8 @@ public static partial class ServiceCollectionExtensions
         ITokenBlacklistService? blacklist = sp.GetService<ITokenBlacklistService>();
         string? jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
 
-        if (blacklist != null && !string.IsNullOrEmpty(jti) && blacklist.IsRevoked(jti))
+        if (blacklist != null && !string.IsNullOrEmpty(jti)
+            && await blacklist.IsRevokedAsync(jti, context.HttpContext.RequestAborted))
         {
             context.Fail("Token révoqué");
             return;

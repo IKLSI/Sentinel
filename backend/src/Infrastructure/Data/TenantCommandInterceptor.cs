@@ -10,6 +10,9 @@ public class TenantCommandInterceptor : DbCommandInterceptor
     private readonly ITenantContext _tenant;
     private readonly ISystemScope _systemScope;
 
+    private DbTransaction? _appliedTransaction;
+    private string? _appliedValue;
+
     public TenantCommandInterceptor(ITenantContext tenant, ISystemScope systemScope)
     {
         _tenant = tenant;
@@ -78,29 +81,60 @@ public class TenantCommandInterceptor : DbCommandInterceptor
             ? SystemSentinel
             : _tenant.OrganizationId?.ToString() ?? string.Empty;
 
+    private bool IsAlreadyAppliedInTransaction(DbCommand command, string value) =>
+        command.Transaction is not null
+        && ReferenceEquals(command.Transaction, _appliedTransaction)
+        && _appliedValue == value;
+
+    private void RememberApplied(DbCommand command, string value)
+    {
+        _appliedTransaction = command.Transaction;
+        _appliedValue = value;
+    }
+
+    private static DbCommand BuildSetTenantCommand(DbCommand command, string value)
+    {
+        DbCommand setCommand = command.Connection!.CreateCommand();
+        setCommand.Transaction = command.Transaction;
+        setCommand.CommandText = "SELECT set_config('app.current_org', @org, false)";
+
+        DbParameter parameter = setCommand.CreateParameter();
+        parameter.ParameterName = "@org";
+        parameter.Value = value;
+        setCommand.Parameters.Add(parameter);
+
+        return setCommand;
+    }
+
     private void SetTenantConfig(DbCommand command)
     {
         if (command.Connection == null) return;
-        using DbCommand setCmd = command.Connection.CreateCommand();
-        setCmd.Transaction = command.Transaction;
-        setCmd.CommandText = "SELECT set_config('app.current_org', @org, false)";
-        DbParameter parameter = setCmd.CreateParameter();
-        parameter.ParameterName = "@org";
-        parameter.Value = ResolveOrgValue();
-        setCmd.Parameters.Add(parameter);
-        setCmd.ExecuteNonQuery();
+
+        string value = ResolveOrgValue();
+
+        if (IsAlreadyAppliedInTransaction(command, value)) return;
+
+        using (DbCommand setCommand = BuildSetTenantCommand(command, value))
+        {
+            setCommand.ExecuteNonQuery();
+        }
+
+        RememberApplied(command, value);
     }
 
     private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
     {
         if (command.Connection == null) return;
-        await using DbCommand setCmd = command.Connection.CreateCommand();
-        setCmd.Transaction = command.Transaction;
-        setCmd.CommandText = "SELECT set_config('app.current_org', @org, false)";
-        DbParameter parameter = setCmd.CreateParameter();
-        parameter.ParameterName = "@org";
-        parameter.Value = ResolveOrgValue();
-        setCmd.Parameters.Add(parameter);
-        await setCmd.ExecuteNonQueryAsync(cancellationToken);
+
+        string value = ResolveOrgValue();
+
+        if (IsAlreadyAppliedInTransaction(command, value)) return;
+
+        await using (DbCommand setCommand = BuildSetTenantCommand(command, value))
+        {
+            await setCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        RememberApplied(command, value);
     }
 }

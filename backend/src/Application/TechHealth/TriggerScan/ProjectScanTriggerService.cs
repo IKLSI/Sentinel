@@ -28,12 +28,12 @@ public class ProjectScanTriggerService(
         if (!belongs)
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
-        Result quotaResult = await quotaGuard.EnsureCanScanAsync(organizationId, cancellationToken);
+        Result quotaResult = await quotaGuard.TryConsumeScanAsync(organizationId, cancellationToken);
 
         if (!quotaResult.IsSuccess)
             return quotaResult;
 
-        backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectAsync(projectId));
+        backgroundJobs.Enqueue<TechHealthService>(s => s.ScanProjectWithReservedQuotaAsync(projectId));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

@@ -1,5 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
@@ -7,7 +8,10 @@ using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.Invite;
 
-public class UserInviteValidator(IUserRepository userRepository, IUserInvitationRepository invitationRepository) : IValidator
+public class UserInviteValidator(
+    IUserRepository userRepository,
+    IUserInvitationRepository invitationRepository,
+    ISystemScope systemScope) : IValidator
 {
     public async Task<Result> ValidateAsync(CreateUserDto model, Guid organizationId,
         CancellationToken cancellationToken)
@@ -22,8 +26,12 @@ public class UserInviteValidator(IUserRepository userRepository, IUserInvitation
 
         string email = model.Email.ToLowerInvariant();
 
-        bool userExists = await userRepository
-            .ExistsByEmailInOrganizationAsync(email, organizationId, cancellationToken);
+        bool userExists;
+
+        using (systemScope.Enter())
+        {
+            userExists = await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken);
+        }
 
         if (userExists)
             return Result.Conflict(ErrorCodes.UserEmailAlreadyExists);

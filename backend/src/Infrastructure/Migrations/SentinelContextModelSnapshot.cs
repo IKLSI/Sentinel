@@ -299,6 +299,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime?>("LastBillingEventAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("MonthlyScanCount")
                         .HasColumnType("integer");
 
@@ -391,6 +394,35 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("PasswordResetTokens");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.ProcessedStripeEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StripeEventId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAt");
+
+                    b.HasIndex("StripeEventId")
+                        .IsUnique();
+
+                    b.ToTable("ProcessedStripeEvents");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
@@ -506,6 +538,33 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("ProjectId", "Status");
 
                     b.ToTable("RemediationRequests");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Models.RevokedToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Jti")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("Jti")
+                        .IsUnique();
+
+                    b.ToTable("RevokedTokens");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
@@ -631,6 +690,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<byte[]>("Content")
+                        .HasColumnType("bytea");
+
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -648,7 +710,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("StoragePath")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -841,7 +902,8 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("OrganizationId");
 

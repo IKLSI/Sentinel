@@ -3,6 +3,7 @@ using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Remediation;
+using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 using RemediationEngine = Sentinel.Application.Remediation.RemediationService;
 
@@ -10,6 +11,7 @@ namespace Sentinel.Application.Remediation.Preview;
 
 public class RemediationPreviewService(
     IProjectRepository projectRepository,
+    IOrganizationRepository organizationRepository,
     RemediationEngine remediationEngine,
     ITenantContext tenant) : IService
 {
@@ -23,6 +25,12 @@ public class RemediationPreviewService(
 
         if (!belongs)
             return Result<RemediationPreviewDto>.NotFound(ErrorCodes.ProjectNotFound);
+
+        SubscriptionStatus status = await organizationRepository
+            .GetSubscriptionStatusOrDefaultAsync(organizationId, cancellationToken);
+
+        if (status is not (SubscriptionStatus.Active or SubscriptionStatus.Trialing))
+            return Result<RemediationPreviewDto>.PaymentRequired(ErrorCodes.QuotaRemediationsExceeded);
 
         return await remediationEngine.PreviewAsync(projectId);
     }

@@ -4,6 +4,9 @@ namespace Sentinel.API.Middleware;
 
 public class ETagMiddleware
 {
+    private const int MaxBufferedBytes = 256 * 1024;
+    private const string JsonContentType = "application/json";
+
     private readonly RequestDelegate _next;
 
     public ETagMiddleware(RequestDelegate next)
@@ -20,25 +23,24 @@ public class ETagMiddleware
         }
 
         Stream originalBody = context.Response.Body;
-        using MemoryStream buffer = new();
-        context.Response.Body = buffer;
+        await using EtagCaptureStream capture = new EtagCaptureStream(originalBody, MaxBufferedBytes);
+        context.Response.Body = capture;
 
         try
         {
             await _next(context);
 
-            if (context.Response.StatusCode != StatusCodes.Status200OK
-                || buffer.Length == 0
-                || context.Response.Headers.ContainsKey("ETag"))
+            if (capture.CapturedBody is not { } payload
+                || payload.Length == 0
+                || context.Response.StatusCode != StatusCodes.Status200OK
+                || context.Response.Headers.ContainsKey("ETag")
+                || !IsJson(context.Response.ContentType))
             {
-                buffer.Seek(0, SeekOrigin.Begin);
-                await buffer.CopyToAsync(originalBody);
-
+                await capture.FlushBufferedAsync(context.RequestAborted);
                 return;
             }
 
-            buffer.Seek(0, SeekOrigin.Begin);
-            byte[] hash = SHA256.HashData(buffer.ToArray());
+            byte[] hash = SHA256.HashData(payload.Span);
             string etag = $"\"{Convert.ToHexString(hash)[..32]}\"";
 
             context.Response.Headers.ETag = etag;
@@ -53,12 +55,98 @@ public class ETagMiddleware
                 return;
             }
 
-            buffer.Seek(0, SeekOrigin.Begin);
-            await buffer.CopyToAsync(originalBody);
+            await originalBody.WriteAsync(payload, context.RequestAborted);
         }
         finally
         {
             context.Response.Body = originalBody;
+        }
+    }
+
+    private static bool IsJson(string? contentType) =>
+        contentType is not null && contentType.StartsWith(JsonContentType, StringComparison.OrdinalIgnoreCase);
+
+    private sealed class EtagCaptureStream : Stream
+    {
+        private readonly Stream _target;
+        private readonly int _maxBufferedBytes;
+        private MemoryStream? _buffer = new MemoryStream();
+
+        public EtagCaptureStream(Stream target, int maxBufferedBytes)
+        {
+            _target = target;
+            _maxBufferedBytes = maxBufferedBytes;
+        }
+
+        public ReadOnlyMemory<byte>? CapturedBody =>
+            _buffer is null ? null : _buffer.GetBuffer().AsMemory(0, (int)_buffer.Length);
+
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public async Task FlushBufferedAsync(CancellationToken cancellationToken)
+        {
+            if (_buffer is null || _buffer.Length == 0) return;
+
+            await _target.WriteAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), cancellationToken);
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> source,
+            CancellationToken cancellationToken = default)
+        {
+            if (_buffer is not null)
+            {
+                if (_buffer.Length + source.Length <= _maxBufferedBytes)
+                {
+                    _buffer.Write(source.Span);
+                    return;
+                }
+
+                await _target.WriteAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), cancellationToken);
+                _buffer.Dispose();
+                _buffer = null;
+            }
+
+            await _target.WriteAsync(source, cancellationToken);
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+
+        public override void Flush()
+        {
+            if (_buffer is null) _target.Flush();
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken) =>
+            _buffer is null ? _target.FlushAsync(cancellationToken) : Task.CompletedTask;
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _buffer?.Dispose();
+                _buffer = null;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

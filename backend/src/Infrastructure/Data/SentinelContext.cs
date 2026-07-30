@@ -35,6 +35,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<RemediationRequest> RemediationRequests => Set<RemediationRequest>();
+    public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
+    public DbSet<ProcessedStripeEvent> ProcessedStripeEvents => Set<ProcessedStripeEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +60,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureNotification(modelBuilder);
         ConfigureApiKey(modelBuilder);
         ConfigureRemediationRequest(modelBuilder);
+        ConfigureRevokedToken(modelBuilder);
+        ConfigureProcessedStripeEvent(modelBuilder);
 
         ApplyTenantQueryFilters(modelBuilder);
     }
@@ -162,7 +166,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             ).HasMaxLength(10);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.OrganizationId, e.Email }).IsUnique();
-            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.RefreshToken).HasFilter("\"RefreshToken\" IS NOT NULL");
             entity.HasIndex(e => e.PreviousRefreshTokenHash).HasFilter("\"PreviousRefreshTokenHash\" IS NOT NULL");
 
@@ -419,7 +423,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.StoragePath).HasMaxLength(500);
+            entity.Property(e => e.Content).HasColumnType("bytea");
             entity.Property(e => e.ContentType).HasMaxLength(150).IsRequired();
             entity.HasIndex(e => e.TicketId);
             entity.HasIndex(e => e.CreatedAt);
@@ -483,6 +488,29 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureRevokedToken(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RevokedToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Jti).HasMaxLength(64).IsRequired();
+            entity.HasIndex(e => e.Jti).IsUnique();
+            entity.HasIndex(e => e.ExpiresAt);
+        });
+    }
+
+    private static void ConfigureProcessedStripeEvent(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProcessedStripeEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StripeEventId).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.EventType).HasMaxLength(100).IsRequired();
+            entity.HasIndex(e => e.StripeEventId).IsUnique();
+            entity.HasIndex(e => e.ProcessedAt);
         });
     }
 

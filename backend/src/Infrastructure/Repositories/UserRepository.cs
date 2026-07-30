@@ -100,6 +100,11 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
         Query(QueryTracking.NoTracking)
             .AnyAsync(u => u.Email == email.ToLowerInvariant() && u.OrganizationId == organizationId, cancellationToken);
 
+    public Task<bool> ExistsByEmailAcrossTenantsAsync(string email, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .IgnoreQueryFilters()
+            .AnyAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
+
     public Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .CountAsync(u => u.OrganizationId == organizationId && u.IsActive, cancellationToken);

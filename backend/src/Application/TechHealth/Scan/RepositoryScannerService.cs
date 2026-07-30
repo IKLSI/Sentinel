@@ -15,6 +15,7 @@ public class RepositoryScannerService(
     ILogger<RepositoryScannerService> logger)
 {
     private const int MaxConcurrentDownloads = 10;
+    private const int MaxManifestFiles = 200;
 
     public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null)
     {
@@ -39,36 +40,53 @@ public class RepositoryScannerService(
             List<Dependency> lockDeps = new();
             List<Runtime> allRuntimes = new();
 
-            List<(string Name, string Url)> manifestFiles = files
+            List<(string Name, string Url)> discoveredManifests = files
                 .Where(f => ManifestParserService.IsManifest(f.Name))
                 .ToList();
 
-            using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
-            string?[] contents = await Task.WhenAll(manifestFiles.Select(async file =>
+            List<(string Name, string Url)> manifestFiles = discoveredManifests
+                .Take(MaxManifestFiles)
+                .ToList();
+
+            if (discoveredManifests.Count > MaxManifestFiles)
             {
-                await throttle.WaitAsync();
-                try { return await hostClient.FetchTextAsync(host, file.Url, tokenOverride); }
-                finally { throttle.Release(); }
-            }));
-
-            for (int i = 0; i < manifestFiles.Count; i++)
-            {
-                string? content = contents[i];
-                if (content == null) continue;
-
-                string fileName = manifestFiles[i].Name;
-                (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, fileName, content);
-
-                if (ManifestParserService.IsLockFile(fileName))
-                {
-                    lockDeps.AddRange(deps);
-                }
-                else
-                {
-                    manifestDeps.AddRange(deps);
-                    allRuntimes.AddRange(rts);
-                }
+                logger.LogWarning(
+                    "Dépôt {RepoUrl} : {Total} manifestes détectés, seuls les {Max} premiers sont analysés",
+                    repoUrl, discoveredManifests.Count, MaxManifestFiles);
             }
+
+            using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
+            Lock parseGate = new Lock();
+            int manifestsRead = 0;
+
+            await Task.WhenAll(manifestFiles.Select(async file =>
+            {
+                string? content;
+
+                await throttle.WaitAsync();
+                try { content = await hostClient.FetchTextAsync(host, file.Url, tokenOverride); }
+                finally { throttle.Release(); }
+
+                if (content == null) return;
+
+                (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
+                bool isLockFile = ManifestParserService.IsLockFile(file.Name);
+
+                lock (parseGate)
+                {
+                    manifestsRead++;
+
+                    if (isLockFile)
+                    {
+                        lockDeps.AddRange(deps);
+                    }
+                    else
+                    {
+                        manifestDeps.AddRange(deps);
+                        allRuntimes.AddRange(rts);
+                    }
+                }
+            }));
 
             HashSet<string> lockNames = lockDeps
                 .Select(d => d.Name.ToLowerInvariant())
@@ -90,7 +108,7 @@ public class RepositoryScannerService(
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, contents.Count(c => c != null));
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead);
         }
         catch (Exception ex)
         {

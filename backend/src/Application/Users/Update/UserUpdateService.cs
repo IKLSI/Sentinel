@@ -32,20 +32,24 @@ public class UserUpdateService(
             return Result<UserDto>.Unauthorized();
 
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(userId, organizationId,
-            QueryTracking.Tracked, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (user == null)
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
 
-        if (!string.IsNullOrEmpty(model.FirstName)) user.FirstName = model.FirstName;
-        if (!string.IsNullOrEmpty(model.LastName)) user.LastName = model.LastName;
-
         UserRole originalRole = user.Role;
+        UserRole? newRole = null;
+
+        if (!string.IsNullOrEmpty(model.Role))
+        {
+            if (!Enum.TryParse(model.Role, true, out UserRole parsedRole))
+                return Result<UserDto>.Error(ErrorCodes.UserInvalidRole);
+
+            newRole = parsedRole;
+        }
+
         bool willDeactivate = model.IsActive.HasValue && !model.IsActive.Value;
-        bool willDemote = !string.IsNullOrEmpty(model.Role)
-            && Enum.TryParse(model.Role, true, out UserRole parsedRole)
-            && parsedRole != UserRole.Admin
-            && user.Role == UserRole.Admin;
+        bool willDemote = newRole.HasValue && newRole.Value != UserRole.Admin && originalRole == UserRole.Admin;
 
         if (userId == currentUserId && (willDeactivate || willDemote))
         {
@@ -55,28 +59,34 @@ public class UserUpdateService(
                 return Result<UserDto>.Error(ErrorCodes.UserLastAdminRequired);
         }
 
-        if (model.IsActive.HasValue) user.IsActive = model.IsActive.Value;
+        bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willDeactivate;
 
-        if (!string.IsNullOrEmpty(model.Role))
+        User? updatedUser = null;
+
+        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            if (!Enum.TryParse(model.Role, true, out UserRole role))
-                return Result<UserDto>.Error(ErrorCodes.UserInvalidRole);
+            User? tracked = await userRepository.GetOrDefaultInOrganizationAsync(userId, organizationId,
+                QueryTracking.Tracked, token);
 
-            user.Role = role;
-        }
+            if (tracked == null) return;
 
-        if (user.Role != originalRole || willDeactivate) user.TokenVersion++;
+            if (!string.IsNullOrEmpty(model.FirstName)) tracked.FirstName = model.FirstName;
+            if (!string.IsNullOrEmpty(model.LastName)) tracked.LastName = model.LastName;
+            if (model.IsActive.HasValue) tracked.IsActive = model.IsActive.Value;
+            if (newRole.HasValue) tracked.Role = newRole.Value;
+            if (invalidatesSessions) tracked.TokenVersion++;
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
-        {
-            await commitScope.CommitAsync(cancellationToken);
-        }
+            if (willDeactivate)
+                await apiKeyRepository.RevokeAllForUserAsync(userId, token);
 
-        if (user.Role != originalRole || willDeactivate)
+            updatedUser = tracked;
+        }, cancellationToken);
+
+        if (updatedUser == null)
+            return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
+
+        if (invalidatesSessions)
             cache.Remove(CacheKeys.AuthAccount(userId));
-
-        if (willDeactivate)
-            await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.UserUpdated,
@@ -86,6 +96,6 @@ public class UserUpdateService(
             entityId: userId,
             jti: tenant.Jti);
 
-        return UserMapper.ToDto(user);
+        return UserMapper.ToDto(updatedUser);
     }
 }

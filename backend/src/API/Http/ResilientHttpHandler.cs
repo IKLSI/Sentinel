@@ -20,27 +20,40 @@ public sealed class ResilientHttpHandler : DelegatingHandler
 
         for (int attempt = 0; ; attempt++)
         {
-            using HttpRequestMessage attemptRequest = Clone(request, body);
-            using CancellationTokenSource attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            HttpRequestMessage attemptRequest = Clone(request, body);
+            CancellationTokenSource attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             attemptCts.CancelAfter(AttemptTimeout);
+
+            bool responseOwnsAttempt = false;
 
             try
             {
                 HttpResponseMessage response = await base.SendAsync(attemptRequest, attemptCts.Token);
 
-                if (!ShouldRetry(response.StatusCode) || attempt >= MaxRetries)
-                    return response;
+                TimeSpan? delay = null;
 
-                TimeSpan delay = RetryAfter(response) ?? Backoff(attempt);
+                if (ShouldRetry(response.StatusCode) && attempt < MaxRetries)
+                {
+                    TimeSpan candidate = RetryAfter(response) ?? Backoff(attempt);
 
-                if (delay > MaxRetryDelay)
+                    if (candidate <= MaxRetryDelay)
+                        delay = candidate;
+                }
+
+                if (delay is null)
+                {
+                    attemptCts.CancelAfter(Timeout.InfiniteTimeSpan);
+                    response.Content = new AttemptScopedContent(response.Content, attemptRequest, attemptCts);
+                    responseOwnsAttempt = true;
+
                     return response;
+                }
 
                 _logger.LogWarning("HTTP {Status} sur {Url} — nouvelle tentative {Attempt}/{Max} dans {Delay}",
-                    (int)response.StatusCode, attemptRequest.RequestUri, attempt + 1, MaxRetries, delay);
+                    (int)response.StatusCode, attemptRequest.RequestUri, attempt + 1, MaxRetries, delay.Value);
 
                 response.Dispose();
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(delay.Value, cancellationToken);
             }
             catch (Exception ex) when (
                 attempt < MaxRetries
@@ -52,6 +65,14 @@ public sealed class ResilientHttpHandler : DelegatingHandler
                     attemptRequest.RequestUri, attempt + 1, MaxRetries, delay);
 
                 await Task.Delay(delay, cancellationToken);
+            }
+            finally
+            {
+                if (!responseOwnsAttempt)
+                {
+                    attemptRequest.Dispose();
+                    attemptCts.Dispose();
+                }
             }
         }
     }
@@ -103,5 +124,50 @@ public sealed class ResilientHttpHandler : DelegatingHandler
         }
 
         return clone;
+    }
+
+    private sealed class AttemptScopedContent : HttpContent
+    {
+        private readonly HttpContent _inner;
+        private readonly IDisposable[] _attemptResources;
+
+        public AttemptScopedContent(HttpContent inner, params IDisposable[] attemptResources)
+        {
+            _inner = inner;
+            _attemptResources = attemptResources;
+
+            foreach (KeyValuePair<string, IEnumerable<string>> header in inner.Headers)
+                Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            _inner.CopyToAsync(stream);
+
+        protected override Task<Stream> CreateContentReadStreamAsync() => _inner.ReadAsStreamAsync();
+
+        protected override bool TryComputeLength(out long length)
+        {
+            if (_inner.Headers.ContentLength is long contentLength)
+            {
+                length = contentLength;
+                return true;
+            }
+
+            length = 0;
+            return false;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _inner.Dispose();
+
+                foreach (IDisposable resource in _attemptResources)
+                    resource.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

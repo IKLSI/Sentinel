@@ -17,7 +17,6 @@ public class TicketUploadAttachmentService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
-    IContentPathProvider contentPath,
     TicketUploadAttachmentValidator validator) : IService
 {
     public async Task<Result<TicketAttachmentDto>> ExecuteAsync(Guid ticketId, TicketAttachmentUploadModel? model,
@@ -38,7 +37,7 @@ public class TicketUploadAttachmentService(
             return Result<TicketAttachmentDto>.From(validationResult);
 
         Guid attachmentId = Guid.NewGuid();
-        string storagePath = await StoreFileAsync(ticketId, attachmentId, model, cancellationToken);
+        byte[] content = await ReadContentAsync(model, cancellationToken);
 
         TicketAttachment attachment = new TicketAttachment
         {
@@ -46,9 +45,9 @@ public class TicketUploadAttachmentService(
             TicketId = ticketId,
             UploadedById = userId,
             FileName = Path.GetFileName(model.FileName),
-            StoragePath = storagePath,
+            Content = content,
             ContentType = model.ContentType,
-            Size = model.Size,
+            Size = content.LongLength,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -82,20 +81,15 @@ public class TicketUploadAttachmentService(
         };
     }
 
-    private async Task<string> StoreFileAsync(Guid ticketId, Guid attachmentId, TicketAttachmentUploadModel model,
+    private static async Task<byte[]> ReadContentAsync(TicketAttachmentUploadModel model,
         CancellationToken cancellationToken)
     {
-        string uploadDirectory = Path.Combine(AttachmentsRoot, ticketId.ToString());
+        if (model.Content.CanSeek)
+            model.Content.Seek(0, SeekOrigin.Begin);
 
-        Directory.CreateDirectory(uploadDirectory);
+        using MemoryStream buffer = new MemoryStream();
+        await model.Content.CopyToAsync(buffer, cancellationToken);
 
-        string storagePath = Path.Combine(uploadDirectory, $"{attachmentId:N}_{model.SanitizedFileName}");
-
-        await using FileStream stream = new FileStream(storagePath, FileMode.Create);
-        await model.Content.CopyToAsync(stream, cancellationToken);
-
-        return storagePath;
+        return buffer.ToArray();
     }
-
-    private string AttachmentsRoot => Path.Combine(contentPath.ContentRootPath, "App_Data", "attachments");
 }

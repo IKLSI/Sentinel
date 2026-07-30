@@ -21,6 +21,7 @@ public class RemediationController : BaseController
 {
     [HttpGet("projects/{id:guid}/preview")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    [EnableRateLimiting(RateLimitPolicies.Scan)]
     public async Task<ActionResult<RemediationPreviewDto>> Preview(
         Guid id,
         [FromServices] RemediationPreviewService service,

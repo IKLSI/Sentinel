@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -29,14 +30,16 @@ public class EmailService : IEmailService
         string roleColor = invitation.Role == UserRole.Admin ? "#dc2626" : "#4f46e5";
         string roleBg    = invitation.Role == UserRole.Admin ? "#fef2f2" : "#eef2ff";
 
-        string html = LoadTemplate("invitation.html")
-            .Replace("{{EMAIL}}",        invitation.Email)
-            .Replace("{{INVITED_BY}}",   invitedByName)
-            .Replace("{{ORGANIZATION}}", organizationName)
-            .Replace("{{ROLE_LABEL}}",   roleLabel)
-            .Replace("{{ROLE_COLOR}}",   roleColor)
-            .Replace("{{ROLE_BG}}",      roleBg)
-            .Replace("{{ACCEPT_URL}}",   acceptUrl);
+        string html = RenderTemplate("invitation.html", new Dictionary<string, string>
+        {
+            ["{{EMAIL}}"]        = invitation.Email,
+            ["{{INVITED_BY}}"]   = invitedByName,
+            ["{{ORGANIZATION}}"] = organizationName,
+            ["{{ROLE_LABEL}}"]   = roleLabel,
+            ["{{ROLE_COLOR}}"]   = roleColor,
+            ["{{ROLE_BG}}"]      = roleBg,
+            ["{{ACCEPT_URL}}"]   = acceptUrl
+        });
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
@@ -73,9 +76,11 @@ public class EmailService : IEmailService
     {
         string resetUrl = $"{frontendBaseUrl}/reset-password?token={resetToken}";
 
-        string html = LoadTemplate("password-reset.html")
-            .Replace("{{EMAIL}}", email)
-            .Replace("{{RESET_URL}}", resetUrl);
+        string html = RenderTemplate("password-reset.html", new Dictionary<string, string>
+        {
+            ["{{EMAIL}}"]     = email,
+            ["{{RESET_URL}}"] = resetUrl
+        });
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
@@ -122,9 +127,11 @@ public class EmailService : IEmailService
     {
         string verifyUrl = $"{frontendBaseUrl}/verify-email?token={verificationToken}";
 
-        string html = LoadTemplate("email-verification.html")
-            .Replace("{{EMAIL}}", email)
-            .Replace("{{VERIFY_URL}}", verifyUrl);
+        string html = RenderTemplate("email-verification.html", new Dictionary<string, string>
+        {
+            ["{{EMAIL}}"]      = email,
+            ["{{VERIFY_URL}}"] = verifyUrl
+        });
 
         MimeMessage message = new MimeMessage();
         message.From.Add(new MailboxAddress(
@@ -184,24 +191,30 @@ public class EmailService : IEmailService
                 "Medium"   => ("#ca8a04", "#fefce8", "#fae9b0"),
                 _          => ("#475569", "#f1f5f9", "#dde3ec")
             };
-            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix : <span style=\"color:#059669;font-weight:700;\">{v.FixedVersion}</span>";
-            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{v.Severity}</span><span style="color:#0f172a;font-weight:700;">{v.PackageName}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{v.CveId}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
+            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; fix : <span style=\"color:#059669;font-weight:700;\">{WebUtility.HtmlEncode(v.FixedVersion)}</span>";
+            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{WebUtility.HtmlEncode(v.Severity)}</span><span style="color:#0f172a;font-weight:700;">{WebUtility.HtmlEncode(v.PackageName)}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{WebUtility.HtmlEncode(v.CveId)}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
         }));
 
         if (newVulns.Count > 15)
             vulnRows += $"""<p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">... et {newVulns.Count - 15} autre(s)</p>""";
 
-        string html = LoadTemplate("vuln-alert.html")
-            .Replace("{{PROJECT_NAME}}", projectName)
-            .Replace("{{ORGANIZATION}}", organizationName)
-            .Replace("{{SCAN_LABEL}}", scanLabel)
-            .Replace("{{NEW_COUNT}}", newVulns.Count.ToString())
-            .Replace("{{COUNT_CRITICAL}}", critical.ToString())
-            .Replace("{{COUNT_HIGH}}", high.ToString())
-            .Replace("{{COUNT_MEDIUM}}", medium.ToString())
-            .Replace("{{COUNT_LOW}}", low.ToString())
-            .Replace("{{VULN_ROWS}}", vulnRows)
-            .Replace("{{PROJECT_URL}}", projectUrl);
+        string html = RenderTemplate("vuln-alert.html",
+            new Dictionary<string, string>
+            {
+                ["{{PROJECT_NAME}}"]   = projectName,
+                ["{{ORGANIZATION}}"]   = organizationName,
+                ["{{SCAN_LABEL}}"]     = scanLabel,
+                ["{{NEW_COUNT}}"]      = newVulns.Count.ToString(),
+                ["{{COUNT_CRITICAL}}"] = critical.ToString(),
+                ["{{COUNT_HIGH}}"]     = high.ToString(),
+                ["{{COUNT_MEDIUM}}"]   = medium.ToString(),
+                ["{{COUNT_LOW}}"]      = low.ToString(),
+                ["{{PROJECT_URL}}"]    = projectUrl
+            },
+            new Dictionary<string, string>
+            {
+                ["{{VULN_ROWS}}"] = vulnRows
+            });
 
         string subject = isFirstScan
             ? $"[{organizationName}] {projectName} — {newVulns.Count} vulnérabilité(s) détectée(s)"
@@ -236,9 +249,11 @@ public class EmailService : IEmailService
 
     public async Task SendSubscriptionCanceledAsync(IEnumerable<string> adminEmails, string organizationName, string billingUrl)
     {
-        string html = LoadTemplate("subscription-canceled.html")
-            .Replace("{{ORGANIZATION}}", organizationName)
-            .Replace("{{BILLING_URL}}", billingUrl);
+        string html = RenderTemplate("subscription-canceled.html", new Dictionary<string, string>
+        {
+            ["{{ORGANIZATION}}"] = organizationName,
+            ["{{BILLING_URL}}"]  = billingUrl
+        });
 
         string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
         int    port     = _email.Port;
@@ -266,12 +281,14 @@ public class EmailService : IEmailService
 
     public async Task SendSubscriptionUpdatedAsync(IEnumerable<string> adminEmails, string organizationName, string oldPlan, string newPlan, string statusMessage, string billingUrl)
     {
-        string html = LoadTemplate("subscription-updated.html")
-            .Replace("{{ORGANIZATION}}", organizationName)
-            .Replace("{{OLD_PLAN}}", oldPlan)
-            .Replace("{{NEW_PLAN}}", newPlan)
-            .Replace("{{STATUS_MESSAGE}}", statusMessage)
-            .Replace("{{BILLING_URL}}", billingUrl);
+        string html = RenderTemplate("subscription-updated.html", new Dictionary<string, string>
+        {
+            ["{{ORGANIZATION}}"]   = organizationName,
+            ["{{OLD_PLAN}}"]       = oldPlan,
+            ["{{NEW_PLAN}}"]       = newPlan,
+            ["{{STATUS_MESSAGE}}"] = statusMessage,
+            ["{{BILLING_URL}}"]    = billingUrl
+        });
 
         string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
         int    port     = _email.Port;
@@ -306,6 +323,25 @@ public class EmailService : IEmailService
         using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
         using StreamReader reader = new StreamReader(stream);
         return reader.ReadToEnd();
+    }
+
+    private static string RenderTemplate(
+        string fileName,
+        IReadOnlyDictionary<string, string> values,
+        IReadOnlyDictionary<string, string>? preRenderedHtml = null)
+    {
+        string template = LoadTemplate(fileName);
+
+        foreach ((string placeholder, string value) in values)
+            template = template.Replace(placeholder, WebUtility.HtmlEncode(value));
+
+        if (preRenderedHtml is not null)
+        {
+            foreach ((string placeholder, string html) in preRenderedHtml)
+                template = template.Replace(placeholder, html);
+        }
+
+        return template;
     }
 
     private static string BuildTextFallback(string invitedByName, string organizationName, string roleLabel, string acceptUrl) => $"""

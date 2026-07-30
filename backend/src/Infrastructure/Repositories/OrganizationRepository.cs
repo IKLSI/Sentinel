@@ -31,4 +31,34 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
             .Where(o => o.Id == organizationId)
             .Select(o => o.SubscriptionStatus)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<bool> TryConsumeScanQuotaAsync(Guid organizationId, int maxScansPerMonth,
+        CancellationToken cancellationToken)
+    {
+        int unlimited = PlanLimits.Unlimited;
+
+        int updated = await Context.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE "Organizations"
+             SET "MonthlyScanCount" = CASE
+                     WHEN "ScanCountPeriodStart" + interval '1 month' <= now() THEN 1
+                     ELSE "MonthlyScanCount" + 1
+                 END,
+                 "ScanCountPeriodStart" = CASE
+                     WHEN "ScanCountPeriodStart" + interval '1 month' <= now() THEN now()
+                     ELSE "ScanCountPeriodStart"
+                 END
+             WHERE "Id" = {organizationId}
+               AND (
+                   {maxScansPerMonth} = {unlimited}
+                   OR CASE
+                          WHEN "ScanCountPeriodStart" + interval '1 month' <= now() THEN 0
+                          ELSE "MonthlyScanCount"
+                      END < {maxScansPerMonth}
+               )
+             """,
+            cancellationToken);
+
+        return updated > 0;
+    }
 }

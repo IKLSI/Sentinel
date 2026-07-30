@@ -14,4 +14,7 @@ public interface IOrganizationRepository : ICrudEntityWithIdRepository<Organizat
 
     Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
         CancellationToken cancellationToken);
+
+    Task<bool> TryConsumeScanQuotaAsync(Guid organizationId, int maxScansPerMonth,
+        CancellationToken cancellationToken);
 }
