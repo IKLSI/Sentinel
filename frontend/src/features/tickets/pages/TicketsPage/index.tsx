@@ -15,7 +15,6 @@ import {
   useDeleteTicket,
   useExportTicketsExcel,
 } from "@/features/tickets/hooks/useTickets";
-import { useChangeTicketStatus } from "@/features/tickets/hooks/useTicketStatuses";
 import { TICKET_STATUSES } from "@/features/tickets/constants";
 import { useProjects } from "@/features/techHealth/hooks/useProjects";
 import { useUsers } from "@/features/users/hooks/useUsers";
@@ -106,7 +105,6 @@ export const TicketsPage: React.FC = () => {
 
   const createTicketMutation = useCreateTicket();
   const updateTicketMutation = useUpdateTicket();
-  const changeStatusMutation = useChangeTicketStatus();
   const deleteTicketMutation = useDeleteTicket();
   const exportTicketsMutation = useExportTicketsExcel();
 
@@ -207,17 +205,13 @@ export const TicketsPage: React.FC = () => {
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
     if (data.estimatedMinutes > 0)
       payload.estimatedHours = data.estimatedMinutes / 60;
+    if (data.status && data.status !== editTarget.status)
+      payload.status = data.status;
     try {
       await updateTicketMutation.mutateAsync({
         id: editTarget.id,
         data: payload as Partial<Ticket>,
       });
-      if (data.status && data.status !== editTarget.status) {
-        await changeStatusMutation.mutateAsync({
-          ticketId: editTarget.id,
-          status: data.status,
-        });
-      }
       setEditTarget(null);
     } catch (err) {
       showToast(apiError(err, t("tickets.list.edit_error")), "error");

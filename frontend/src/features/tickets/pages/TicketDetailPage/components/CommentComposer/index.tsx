@@ -10,6 +10,8 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useT } from "@/i18n/I18nContext";
 import { useTheme } from "@/store/ThemeContext";
+import { useToast } from "@/hooks/useToast";
+import { useApiError } from "@/hooks/useApiError";
 import type { DetailPalette } from "../../helpers";
 import { useUploadAttachment } from "@/features/tickets/hooks/useTicket";
 import { API_BASE_URL } from "@/constants/api";
@@ -52,6 +54,8 @@ export const CommentComposer: React.FC<Props> = ({
   const t = useT();
   const { theme } = useTheme();
   const isDark = theme === Theme.Dark;
+  const { showToast } = useToast();
+  const apiError = useApiError();
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +82,8 @@ export const CommentComposer: React.FC<Props> = ({
           },
         ]);
       },
+      onError: (err) =>
+        showToast(apiError(err, t("tickets.detail.attachments_upload_error")), "error"),
     });
   };
 

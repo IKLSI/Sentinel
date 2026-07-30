@@ -52,7 +52,20 @@ public class TicketUpdateService(
                 QueryTracking.NoTracking, cancellationToken) is null)
             return Result<TicketDto>.NotFound(ErrorCodes.UserNotFound);
 
-        List<TicketHistory> changes = ApplyChanges(ticket, model, userId, out bool assigneeChanged);
+        TicketStatus? newStatus = null;
+
+        if (model.Status != null)
+        {
+            if (!Enum.TryParse(model.Status, true, out TicketStatus parsedStatus))
+                return Result<TicketDto>.Error(ErrorCodes.TicketInvalidStatus);
+
+            newStatus = parsedStatus;
+        }
+
+        string oldStatusCode = ticket.Status.ToString().ToLower();
+        string newStatusCode = (newStatus ?? ticket.Status).ToString().ToLower();
+
+        List<TicketHistory> changes = ApplyChanges(ticket, model, newStatus, userId, out bool assigneeChanged);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
@@ -67,8 +80,13 @@ public class TicketUpdateService(
         if (assigneeChanged)
             await NotifyAssigneeAsync(ticket, model.AssignedToId, userId, cancellationToken);
 
+        bool statusChanged = newStatus.HasValue && oldStatusCode != newStatusCode;
+
+        if (statusChanged)
+            await NotifyStatusChangeAsync(ticket, userId, oldStatusCode, newStatusCode, cancellationToken);
+
         await auditLog.LogAsync(
-            AuditAction.TicketUpdated,
+            statusChanged ? AuditAction.TicketStatusChanged : AuditAction.TicketUpdated,
             entityType: AuditEntityTypes.Ticket,
             organizationId: organizationId,
             userId: userId,
@@ -80,8 +98,8 @@ public class TicketUpdateService(
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }
 
-    private static List<TicketHistory> ApplyChanges(Ticket ticket, UpdateTicketDto model, Guid userId,
-        out bool assigneeChanged)
+    private static List<TicketHistory> ApplyChanges(Ticket ticket, UpdateTicketDto model, TicketStatus? newStatus,
+        Guid userId, out bool assigneeChanged)
     {
         List<TicketHistory> changes = [];
 
@@ -124,6 +142,13 @@ public class TicketUpdateService(
             ticket.EstimatedHours = model.EstimatedHours;
         }
 
+        if (newStatus.HasValue && newStatus.Value != ticket.Status)
+        {
+            changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "Status",
+                ticket.Status.ToString().ToLower(), newStatus.Value.ToString().ToLower()));
+            ticket.Status = newStatus.Value;
+        }
+
         ticket.UpdatedAt = DateTime.UtcNow;
 
         return changes;
@@ -148,6 +173,34 @@ public class TicketUpdateService(
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to create assignment notification for ticket {TicketId}", ticket.Id);
+        }
+    }
+
+    private async Task NotifyStatusChangeAsync(Ticket ticket, Guid authorId, string oldStatusCode,
+        string newStatusCode, CancellationToken cancellationToken)
+    {
+        if (ticket.AssignedToId is not Guid assigneeId || assigneeId == authorId) return;
+
+        try
+        {
+            await notificationPublisher.PublishAsync(
+                assigneeId,
+                ticket.OrganizationId,
+                NotificationType.TicketStatusChanged,
+                NotificationCodes.TicketStatusChanged,
+                new Dictionary<string, string>
+                {
+                    ["title"] = ticket.Title,
+                    ["oldStatus"] = oldStatusCode,
+                    ["newStatus"] = newStatusCode
+                },
+                ticket.Id,
+                cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Failed to create status change notification for ticket {TicketId}", ticket.Id);
         }
     }
 }

@@ -5,7 +5,6 @@ using Sentinel.API.Attributes;
 using Sentinel.API.Extensions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets.AddComment;
-using Sentinel.Application.Tickets.ChangeStatus;
 using Sentinel.Application.Tickets.Create;
 using Sentinel.Application.Tickets.Delete;
 using Sentinel.Application.Tickets.DeleteComment;
@@ -129,12 +128,4 @@ public class TicketsController : BaseController
         [FromServices] TicketDownloadAttachmentService service,
         CancellationToken cancellationToken) =>
         ToFileResult(await service.ExecuteAsync(id, attachmentId, cancellationToken));
-
-    [HttpPatch("{id:guid}/status")]
-    public async Task<ActionResult<TicketDto>> ChangeStatus(
-        Guid id,
-        [FromBody] ChangeStatusDto dto,
-        [FromServices] TicketChangeStatusService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
 }

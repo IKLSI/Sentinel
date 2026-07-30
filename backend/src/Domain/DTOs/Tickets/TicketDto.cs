@@ -44,8 +44,3 @@ public class CreateCommentDto
 {
     public string Content { get; set; } = string.Empty;
 }
-
-public class ChangeStatusDto
-{
-    public string Status { get; set; } = string.Empty;
-}

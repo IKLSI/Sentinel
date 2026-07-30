@@ -11,4 +11,5 @@ public class UpdateTicketDto
     public Guid? ProjectId { get; set; }
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
+    public string? Status { get; set; }
 }
