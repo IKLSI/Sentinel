@@ -32,12 +32,6 @@ public class TicketUpdateValidator : IValidator
         errors.InRange(nameof(model.EstimatedHours), (decimal?)model.EstimatedHours, 0, 10000,
             ValidationCodes.TicketEstimatedHoursMin, ValidationCodes.TicketEstimatedHoursMax);
 
-        if (model.Tags != null)
-        {
-            errors.MaxCount(nameof(model.Tags), model.Tags, 20, ValidationCodes.TicketTagsMaxCount);
-            TicketTagRules.Apply(errors, nameof(model.Tags), model.Tags);
-        }
-
         return Task.FromResult(errors.ToResult());
     }
 }

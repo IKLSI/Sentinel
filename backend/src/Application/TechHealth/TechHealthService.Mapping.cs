@@ -51,7 +51,6 @@ public partial class TechHealthService
                 Type = d.Type.ToString(),
                 Ecosystem = d.Ecosystem.ToString(),
                 Status = d.Status.ToString(),
-                ScannedAt = d.ScannedAt,
                 Vulnerabilities = d.Vulnerabilities.Select(v => new VulnerabilityDto
                 {
                     Id = v.Id,
@@ -59,9 +58,7 @@ public partial class TechHealthService
                     CvssScore = v.CvssScore,
                     Description = v.Description,
                     Severity = v.Severity.ToString(),
-                    FixedVersion = v.FixedVersion,
-                    AdvisoryUrl = v.AdvisoryUrl,
-                    DetectedAt = v.DetectedAt
+                    FixedVersion = v.FixedVersion
                 }).ToList()
             }).ToList() ?? new List<DependencyDto>(),
             Runtimes = project.Runtimes?.Select(r => new RuntimeDto

@@ -583,10 +583,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string>("Tags")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -653,9 +649,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("StoragePath")
                         .HasMaxLength(500)
@@ -886,9 +879,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AdvisoryUrl")
-                        .HasColumnType("text");
 
                     b.Property<string>("CveId")
                         .IsRequired()

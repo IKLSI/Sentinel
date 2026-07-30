@@ -30,7 +30,6 @@ public class DependencyDto
     public string Type { get; set; } = string.Empty;
     public string Ecosystem { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
-    public DateTime ScannedAt { get; set; }
     public List<VulnerabilityDto> Vulnerabilities { get; set; } = new();
 }
 
@@ -42,8 +41,6 @@ public class VulnerabilityDto
     public string Description { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;
     public string? FixedVersion { get; set; }
-    public string? AdvisoryUrl { get; set; }
-    public DateTime DetectedAt { get; set; }
 }
 
 public class RuntimeDto

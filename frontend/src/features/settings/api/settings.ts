@@ -5,7 +5,6 @@ export interface OrganizationSettings {
   slug: string;
   securityAlertsEnabled: boolean;
   alertMinSeverity: string;
-  createdAt: string;
 }
 
 export const getOrganizationSettings = async (

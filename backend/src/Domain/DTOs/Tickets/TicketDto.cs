@@ -10,15 +10,12 @@ public class TicketDto
     public string Priority { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
-    public bool StatusIsClosed { get; set; }
     public Guid? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
     public decimal? EstimatedHours { get; set; }
-    public Guid CreatedById { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public List<string> Tags { get; set; } = new();
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();
 }
@@ -30,7 +27,6 @@ public class TicketCommentDto
     public string AuthorName { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 }
 
 public class TicketHistoryDto

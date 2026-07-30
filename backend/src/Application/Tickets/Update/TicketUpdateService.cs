@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
@@ -124,9 +123,6 @@ public class TicketUpdateService(
                 ticket.EstimatedHours?.ToString(), model.EstimatedHours.Value.ToString()));
             ticket.EstimatedHours = model.EstimatedHours;
         }
-
-        if (model.Tags != null)
-            ticket.Tags = JsonSerializer.Serialize(model.Tags);
 
         ticket.UpdatedAt = DateTime.UtcNow;
 

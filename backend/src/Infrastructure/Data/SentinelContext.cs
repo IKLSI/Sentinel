@@ -215,7 +215,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
-            entity.Property(e => e.Tags).HasColumnType("jsonb");
 
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => e.Status);

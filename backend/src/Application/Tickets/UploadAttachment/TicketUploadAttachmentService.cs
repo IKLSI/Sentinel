@@ -13,7 +13,6 @@ namespace Sentinel.Application.Tickets.UploadAttachment;
 public class TicketUploadAttachmentService(
     ITicketRepository ticketRepository,
     ITicketAttachmentRepository attachmentRepository,
-    IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
@@ -47,7 +46,6 @@ public class TicketUploadAttachmentService(
             FileName = Path.GetFileName(model.FileName),
             Content = content,
             ContentType = model.ContentType,
-            Size = content.LongLength,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -56,9 +54,6 @@ public class TicketUploadAttachmentService(
             await attachmentRepository.AddAsync(attachment, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
-
-        User? uploader = await userRepository.GetOrDefaultAsync(userId,
-            QueryTracking.NoTracking, cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.AttachmentUploaded,
@@ -74,9 +69,6 @@ public class TicketUploadAttachmentService(
             TicketId = attachment.TicketId,
             FileName = attachment.FileName,
             ContentType = attachment.ContentType,
-            Size = attachment.Size,
-            UploadedById = attachment.UploadedById,
-            UploadedByName = uploader != null ? $"{uploader.FirstName} {uploader.LastName}" : string.Empty,
             CreatedAt = attachment.CreatedAt
         };
     }

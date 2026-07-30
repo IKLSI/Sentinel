@@ -15,15 +15,12 @@ public static class TicketMapper
         Priority = ticket.Priority.ToString().ToLower(),
         Type = ticket.Type.ToString().ToLower(),
         Status = ticket.Status.ToString().ToLower(),
-        StatusIsClosed = ticket.Status.IsClosed(),
         AssignedToId = ticket.AssignedToId,
         AssignedToName = ticket.AssignedTo?.FullName,
         EstimatedHours = ticket.EstimatedHours,
-        CreatedById = ticket.CreatedById,
         CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
         UpdatedAt = ticket.UpdatedAt,
-        Tags = ticket.GetTags().ToList(),
         Comments = ticket.Comments?.Select(ToDto).OrderBy(c => c.CreatedAt).ToList() ?? [],
         History = ticket.History?.Select(ToDto).OrderByDescending(h => h.CreatedAt).ToList() ?? []
     };
@@ -34,8 +31,7 @@ public static class TicketMapper
         AuthorId = comment.AuthorId,
         AuthorName = comment.Author?.FullName ?? string.Empty,
         Content = comment.Content,
-        CreatedAt = comment.CreatedAt,
-        UpdatedAt = comment.UpdatedAt
+        CreatedAt = comment.CreatedAt
     };
 
     public static TicketHistoryDto ToDto(TicketHistory history) => new()

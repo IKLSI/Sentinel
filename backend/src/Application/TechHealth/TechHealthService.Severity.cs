@@ -124,28 +124,4 @@ public partial class TechHealthService
         return null;
     }
 
-    private static string? ExtractAdvisoryUrl(JsonElement vuln, string id)
-    {
-        if (vuln.TryGetProperty("references", out JsonElement refs))
-        {
-            foreach (JsonElement r in refs.EnumerateArray())
-            {
-                if (r.TryGetProperty("type", out JsonElement t) && t.GetString() == "ADVISORY" &&
-                    r.TryGetProperty("url", out JsonElement urlProp))
-                    return urlProp.GetString();
-            }
-
-            foreach (JsonElement r in refs.EnumerateArray())
-            {
-                if (r.TryGetProperty("url", out JsonElement urlProp))
-                    return urlProp.GetString();
-            }
-        }
-
-        if (id.StartsWith("GHSA-", StringComparison.OrdinalIgnoreCase))
-            return $"https://github.com/advisories/{id}";
-
-        return null;
-    }
-
 }

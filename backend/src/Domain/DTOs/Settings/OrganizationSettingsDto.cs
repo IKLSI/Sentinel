@@ -8,7 +8,6 @@ public class OrganizationSettingsDto
     public string Slug { get; set; } = string.Empty;
     public bool SecurityAlertsEnabled { get; set; }
     public VulnerabilitySeverity AlertMinSeverity { get; set; }
-    public DateTime CreatedAt { get; set; }
 }
 
 public class UpdateOrganizationSettingsDto

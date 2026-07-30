@@ -81,7 +81,6 @@ public sealed class PostgresScope : IAsyncDisposable
         Priority = TicketPriority.Medium,
         Type = TicketType.Bug,
         CreatedById = createdById ?? UserId,
-        Tags = "[]",
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };

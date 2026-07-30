@@ -142,7 +142,6 @@ public partial class TechHealthService
                     JsonElement vuln = detailDoc.RootElement;
                     (decimal cvss, VulnerabilitySeverity severity) = ExtractSeverity(vuln);
                     string? fixedVersion = ExtractFixedVersion(vuln, dep.Name);
-                    string? advisoryUrl = ExtractAdvisoryUrl(vuln, id);
                     string summary = vuln.TryGetProperty("summary", out JsonElement sumProp)
                         ? sumProp.GetString() ?? string.Empty
                         : string.Empty;
@@ -155,7 +154,6 @@ public partial class TechHealthService
                         Description = summary,
                         PackageName = dep.Name,
                         FixedVersion = fixedVersion,
-                        AdvisoryUrl = advisoryUrl,
                         Severity = severity,
                         DetectedAt = DateTime.UtcNow
                     });

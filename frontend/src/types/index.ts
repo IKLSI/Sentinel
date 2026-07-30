@@ -40,7 +40,6 @@ export interface TicketComment {
   author: User;
   content: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface TicketHistory {
@@ -66,7 +65,6 @@ export interface Ticket {
   priority: TicketPriority;
   type: TicketType;
   status: TicketStatus;
-  statusIsClosed: boolean;
   estimatedHours?: number;
   comments: TicketComment[];
   history: TicketHistory[];

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
@@ -57,7 +56,6 @@ public class TicketCreateService(
             AssignedToId = model.AssignedToId,
             EstimatedHours = model.EstimatedHours,
             CreatedById = userId,
-            Tags = JsonSerializer.Serialize(model.Tags),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

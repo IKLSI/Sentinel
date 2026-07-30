@@ -39,10 +39,6 @@ public class BillingStatusService(
         return new BillingStatusDto
         {
             PlanTier = organization.PlanTier.ToString(),
-            SubscriptionStatus = organization.SubscriptionStatus.ToString(),
-            CurrentPeriodEnd = organization.CurrentPeriodEnd,
-            HasActiveSubscription = organization.SubscriptionStatus
-                is SubscriptionStatus.Active or SubscriptionStatus.Trialing,
             Projects = new PlanQuotaDto { Used = projects, Limit = limits.MaxProjects },
             Members = new PlanQuotaDto { Used = members, Limit = limits.MaxMembers },
             Scans = new PlanQuotaDto { Used = organization.MonthlyScanCount, Limit = limits.MaxScansPerMonth }

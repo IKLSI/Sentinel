@@ -30,9 +30,6 @@ public enum TicketStatus
 
 public static class TicketStatusRules
 {
-    public static bool IsClosed(this TicketStatus status) =>
-        status is TicketStatus.Resolved or TicketStatus.Closed;
-
     public static IReadOnlyList<TicketStatus> Open { get; } =
         [TicketStatus.New, TicketStatus.InProgress, TicketStatus.Testing];
 
@@ -55,7 +52,6 @@ public class Ticket : IEntityWithId
     public Guid CreatedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public string Tags { get; set; } = "[]";
     public Organization Organization { get; set; } = null!;
     public Project? Project { get; set; }
     public User? AssignedTo { get; set; }
@@ -63,16 +59,4 @@ public class Ticket : IEntityWithId
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     public ICollection<TicketHistory> History { get; set; } = new List<TicketHistory>();
     public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
-
-    public string[] GetTags()
-    {
-        try
-        {
-            return System.Text.Json.JsonSerializer.Deserialize<string[]>(Tags) ?? [];
-        }
-        catch
-        {
-            return [];
-        }
-    }
 }

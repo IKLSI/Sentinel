@@ -77,7 +77,6 @@ public class TicketGetByIdServiceTests
         Priority = TicketPriority.Medium,
         Type = TicketType.Bug,
         CreatedById = createdById,
-        Tags = "[]",
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };

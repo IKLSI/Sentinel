@@ -38,8 +38,6 @@ export interface VulnerabilityDto {
   description: string;
   severity: VulnerabilitySeverity;
   fixedVersion?: string;
-  advisoryUrl?: string;
-  detectedAt: string;
 }
 
 export interface DependencyDto {
@@ -50,7 +48,6 @@ export interface DependencyDto {
   type: DependencyType;
   ecosystem: string;
   status: DependencyStatus;
-  scannedAt: string;
   vulnerabilities: VulnerabilityDto[];
 }
 

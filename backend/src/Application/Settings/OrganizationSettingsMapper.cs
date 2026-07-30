@@ -11,6 +11,5 @@ public static class OrganizationSettingsMapper
         Slug = organization.Slug,
         SecurityAlertsEnabled = organization.SecurityAlertsEnabled,
         AlertMinSeverity = organization.AlertMinSeverity,
-        CreatedAt = organization.CreatedAt,
     };
 }

@@ -34,22 +34,18 @@ interface TicketDto {
   priority: string;
   type: string;
   status: string;
-  statusIsClosed: boolean;
   assignedToId?: string;
   assignedToName?: string;
   estimatedHours?: number;
-  createdById: string;
   createdByName: string;
   createdAt: string;
   updatedAt: string;
-  tags: string[];
   comments: {
     id: string;
     authorId: string;
     authorName: string;
     content: string;
     createdAt: string;
-    updatedAt: string;
   }[];
   history: {
     id: string;
@@ -89,7 +85,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
     priority: dto.priority as Ticket["priority"],
     type: dto.type as Ticket["type"],
     status: dto.status as Ticket["status"],
-    statusIsClosed: dto.statusIsClosed,
     estimatedHours: dto.estimatedHours,
     comments: dto.comments.map((c) => ({
       id: c.id,
@@ -98,7 +93,6 @@ function mapTicketDto(dto: TicketDto): Ticket {
       author: createPartialUser(c.authorName, c.authorId, c.createdAt),
       content: c.content,
       createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
     })),
     history: dto.history.map((h) => ({
       id: h.id,
@@ -170,7 +164,6 @@ export const addComment = async (
     authorName: string;
     content: string;
     createdAt: string;
-    updatedAt: string;
   }>(`/api/tickets/${ticketId}/comments`, { content });
   const c = response.data;
   return {
@@ -180,7 +173,6 @@ export const addComment = async (
     author: createPartialUser(c.authorName, c.authorId, c.createdAt),
     content: c.content,
     createdAt: c.createdAt,
-    updatedAt: c.updatedAt,
   };
 };
 
@@ -195,7 +187,6 @@ export const updateComment = async (
     authorName: string;
     content: string;
     createdAt: string;
-    updatedAt: string;
   }>(`/api/tickets/${ticketId}/comments/${commentId}`, { content });
   const c = response.data;
   return {
@@ -205,7 +196,6 @@ export const updateComment = async (
     author: createPartialUser(c.authorName, c.authorId, c.createdAt),
     content: c.content,
     createdAt: c.createdAt,
-    updatedAt: c.updatedAt,
   };
 };
 
@@ -221,9 +211,6 @@ export interface TicketAttachment {
   ticketId: string;
   fileName: string;
   contentType: string;
-  size: number;
-  uploadedById: string;
-  uploadedByName: string;
   createdAt: string;
 }
 

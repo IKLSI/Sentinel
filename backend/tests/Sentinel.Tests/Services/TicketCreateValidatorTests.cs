@@ -44,23 +44,11 @@ public class TicketCreateValidatorTests
         result.ValidationErrors.Should().Contain(error => error.Code == ValidationCodes.TicketEstimatedHoursMax);
     }
 
-    [Fact]
-    public async Task ValidateAsync_WhenTooManyTags_ReturnsInvalid()
-    {
-        CreateTicketDto model = NewModel();
-        model.Tags = Enumerable.Range(0, 21).Select(index => $"tag{index}").ToList();
-
-        Result result = await _sut.ValidateAsync(model, CancellationToken.None);
-
-        result.ValidationErrors.Should().Contain(error => error.Code == ValidationCodes.TicketTagsMaxCount);
-    }
-
     private static CreateTicketDto NewModel() => new()
     {
         Title = "Ticket valide",
         Description = "Description",
         Priority = TicketPriority.Medium,
-        Type = TicketType.Bug,
-        Tags = []
+        Type = TicketType.Bug
     };
 }

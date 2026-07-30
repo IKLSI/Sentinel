@@ -23,7 +23,6 @@ public class TicketServiceMapToDtoTests
             CreatedById = Guid.NewGuid(),
             CreatedAt = now,
             UpdatedAt = now,
-            Tags = "[]",
             Comments = new List<TicketComment>(),
             History = new List<TicketHistory>(),
         };
@@ -50,7 +49,6 @@ public class TicketServiceMapToDtoTests
             Id = Guid.NewGuid(),
             Title = "T",
             CreatedById = authorId,
-            Tags = "[]",
             Comments = new List<TicketComment>
             {
                 new() { Id = Guid.NewGuid(), AuthorId = authorId, Content = "deuxième", CreatedAt = now.AddMinutes(2) },

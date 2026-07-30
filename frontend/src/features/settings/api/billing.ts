@@ -7,9 +7,6 @@ interface PlanQuota {
 
 export interface BillingStatus {
   planTier: string;
-  subscriptionStatus: string;
-  currentPeriodEnd: string | null;
-  hasActiveSubscription: boolean;
   projects: PlanQuota;
   members: PlanQuota;
   scans: PlanQuota;

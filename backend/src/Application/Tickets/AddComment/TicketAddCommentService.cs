@@ -76,8 +76,7 @@ public class TicketAddCommentService(
             AuthorId = comment.AuthorId,
             AuthorName = author?.FullName ?? string.Empty,
             Content = comment.Content,
-            CreatedAt = comment.CreatedAt,
-            UpdatedAt = comment.UpdatedAt
+            CreatedAt = comment.CreatedAt
         };
     }
 

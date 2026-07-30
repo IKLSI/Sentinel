@@ -11,5 +11,4 @@ public class CreateTicketDto
     public TicketType Type { get; set; } = TicketType.Bug;
     public Guid? AssignedToId { get; set; }
     public decimal? EstimatedHours { get; set; }
-    public List<string> Tags { get; set; } = new();
 }
