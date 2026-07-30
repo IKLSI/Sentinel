@@ -61,6 +61,7 @@ public class BillingPlanListService(
         return await cache.GetOrCreateAsync(PriceCacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = PriceCacheDuration;
+            entry.Size = 1;
 
             PriceService priceService = new PriceService(stripeClient);
             Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = [];
