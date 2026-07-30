@@ -2,6 +2,7 @@ using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.DTOs.Remediation;
 using Sentinel.Domain.Git;
@@ -59,7 +60,7 @@ public partial class RemediationService(
                 : new RemediationResultDto
                 {
                     Status = RemediationStatus.Failed.ToString(),
-                    Error = "Une remédiation est déjà en cours pour ce projet. Réessayez dans un instant."
+                    Error = ErrorCodes.RemediationAlreadyRunning
                 };
         }
 
@@ -104,8 +105,8 @@ public partial class RemediationService(
         catch (Exception ex)
         {
             request.Status = RemediationStatus.Failed;
-            request.Error = "Erreur interne lors de la génération de la remédiation.";
-            logger.LogError(ex, "Échec de la remédiation pour le projet {ProjectId}", projectId);
+            request.Error = ErrorCodes.RemediationInternalError;
+            logger.LogError(ex, "Remediation failed for project {ProjectId}", projectId);
         }
 
         request.CompletedAt = DateTime.UtcNow;
@@ -156,8 +157,8 @@ public partial class RemediationService(
             DependenciesPatched = request.DependenciesPatched,
             HasBreakingChanges = request.HasBreakingChanges,
             Error = request.Status == RemediationStatus.PullRequestOpen
-                ? "Une pull request de remédiation est déjà ouverte pour ce projet. Fusionnez-la ou fermez-la avant d'en générer une nouvelle."
-                : "Une remédiation est déjà en cours pour ce projet. Réessayez dans un instant."
+                ? ErrorCodes.RemediationPullRequestAlreadyOpen
+                : ErrorCodes.RemediationAlreadyRunning
         };
 
 }

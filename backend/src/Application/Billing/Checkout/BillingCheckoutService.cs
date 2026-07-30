@@ -84,7 +84,7 @@ public class BillingCheckoutService : IService
         }
         catch (StripeException exception)
         {
-            _logger.LogError(exception, "Erreur Stripe lors de la création de la session de paiement");
+            _logger.LogError(exception, "Stripe error while creating the checkout session");
             return Result<CheckoutSessionDto>.Error(ErrorCodes.BillingProviderUnavailable);
         }
     }

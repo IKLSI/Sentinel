@@ -98,7 +98,7 @@ public class TicketAddCommentService(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Échec création notification de commentaire pour ticket {TicketId}", ticket.Id);
+            logger.LogError(exception, "Failed to create comment notification for ticket {TicketId}", ticket.Id);
         }
     }
 }

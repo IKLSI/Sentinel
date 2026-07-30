@@ -59,7 +59,7 @@ export const ResultContent: React.FC<Props> = ({ result, t }) => {
             textAlign: "center",
           }}
         >
-          {result.error}
+          {t(result.error)}
         </Box>
       )}
 

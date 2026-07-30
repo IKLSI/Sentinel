@@ -13,16 +13,16 @@ public class TechHealthScanJob(
     {
         using IDisposable elevation = systemScope.Enter();
 
-        logger.LogInformation("Scan de santé technologique démarré");
+        logger.LogInformation("Tech health scan started");
 
         try
         {
             await techHealthService.ScanAllProjectsDueAsync();
-            logger.LogInformation("Scan de santé technologique terminé");
+            logger.LogInformation("Tech health scan completed");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erreur lors du scan de santé technologique");
+            logger.LogError(ex, "Tech health scan failed");
         }
     }
 }

@@ -104,7 +104,7 @@ public partial class TechHealthService
 
         if (!quotaResult.IsSuccess)
         {
-            _logger.LogWarning("Scan du projet {ProjectId} ignoré : quota mensuel de scans atteint", projectId);
+            _logger.LogWarning("Project {ProjectId} scan skipped: monthly scan quota reached", projectId);
             return;
         }
 
@@ -182,11 +182,11 @@ public partial class TechHealthService
             }
             else if (scanError != null)
             {
-                _logger.LogWarning("Scan de {Url} échoué : {Error} — données existantes conservées", project.RepositoryUrl, scanError);
+                _logger.LogWarning("Scan of {Url} failed: {Error} — existing data kept", project.RepositoryUrl, scanError);
             }
             else
             {
-                _logger.LogWarning("Scan de {Url} : aucune donnée retournée, données existantes conservées", project.RepositoryUrl);
+                _logger.LogWarning("Scan of {Url}: no data returned, existing data kept", project.RepositoryUrl);
             }
         }
 
@@ -287,7 +287,7 @@ public partial class TechHealthService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Impossible d'envoyer l'alerte vulnérabilités pour le projet {ProjectId}", project.Id);
+            _logger.LogWarning(ex, "Unable to send the vulnerability alert for project {ProjectId}", project.Id);
         }
     }
 
@@ -307,7 +307,7 @@ public partial class TechHealthService
                 TechHealthService scoped = scope.ServiceProvider.GetRequiredService<TechHealthService>();
                 await scoped.ScanProjectAsync(projectId);
             }
-            catch (Exception ex) { _logger.LogError(ex, "Erreur scan projet {ProjectId}", projectId); }
+            catch (Exception ex) { _logger.LogError(ex, "Project {ProjectId} scan failed", projectId); }
             finally { throttle.Release(); }
         }));
     }

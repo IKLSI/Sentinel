@@ -90,7 +90,7 @@ public partial class TechHealthService
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "EOL check non disponible pour {Runtime} {Version}", runtime.Name, runtime.Version);
+            _logger.LogDebug(ex, "EOL check unavailable for {Runtime} {Version}", runtime.Name, runtime.Version);
             return null;
         }
     }

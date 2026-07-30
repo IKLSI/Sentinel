@@ -60,7 +60,7 @@ public class AuthResetPasswordService(
 
         cache.Remove(CacheKeys.AuthAccount(user.Id));
 
-        logger.LogInformation("Mot de passe réinitialisé pour {Email}", user.Email);
+        logger.LogInformation("Password reset for {Email}", user.Email);
 
         await auditLog.LogAsync(AuditAction.PasswordReset, entityType: AuditEntityTypes.User);
 

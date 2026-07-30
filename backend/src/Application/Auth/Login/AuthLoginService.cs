@@ -112,7 +112,7 @@ public class AuthLoginService : IService
             if (match != null)
             {
                 _logger.LogWarning(
-                    "Plusieurs comptes correspondent au login {Email} — connexion refusée par ambiguïté",
+                    "Several accounts match login {Email} — sign-in refused as ambiguous",
                     candidate.Email);
                 return null;
             }

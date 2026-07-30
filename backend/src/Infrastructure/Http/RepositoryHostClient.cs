@@ -50,7 +50,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec récupération identité GitHub");
+                logger.LogWarning(ex, "Failed to fetch GitHub identity");
                 return null;
             }
         }
@@ -71,7 +71,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec récupération identité GitLab");
+                logger.LogWarning(ex, "Failed to fetch GitLab identity");
                 return null;
             }
         }
@@ -114,7 +114,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
 
         if (response.Content.Headers.ContentLength is long declaredLength && declaredLength > MaxFileBytes)
         {
-            logger.LogWarning("Fichier {Url} ignoré : {Size} octets dépassent la limite de {Limit}",
+            logger.LogWarning("File {Url} skipped: {Size} bytes exceed the {Limit} bytes limit",
                 url, declaredLength, MaxFileBytes);
             return null;
         }
@@ -132,7 +132,7 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             {
                 if (buffer.Length + read > MaxFileBytes)
                 {
-                    logger.LogWarning("Fichier {Url} ignoré : dépasse la limite de {Limit} octets", url, MaxFileBytes);
+                    logger.LogWarning("File {Url} skipped: exceeds the {Limit} bytes limit", url, MaxFileBytes);
                     return null;
                 }
 
@@ -179,10 +179,10 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
         IReadOnlyList<(string Path, string Content)> files)
     {
         if (string.IsNullOrEmpty(token))
-            return new HostWriteResult(false, null, "Token d'accès manquant pour l'organisation.");
+            return new HostWriteResult(false, null, ErrorCodes.RemediationTokenMissing);
 
         if (files.Count == 0)
-            return new HostWriteResult(false, null, "Aucune modification à appliquer.");
+            return new HostWriteResult(false, null, ErrorCodes.RemediationNoChanges);
 
         try
         {
@@ -191,12 +191,12 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
             if (host.Contains("gitlab"))
                 return await CreateGitLabMergeRequestAsync(owner, repo, token, branch, title, body, files);
 
-            return new HostWriteResult(false, null, "Plateforme non prise en charge.");
+            return new HostWriteResult(false, null, ErrorCodes.RemediationUnsupportedPlatform);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Échec ouverture de la pull request {Owner}/{Repo}", owner, repo);
-            return new HostWriteResult(false, null, "Échec de l'ouverture de la pull request. Vérifiez les droits du token.");
+            logger.LogWarning(ex, "Failed to open pull request {Owner}/{Repo}", owner, repo);
+            return new HostWriteResult(false, null, ErrorCodes.RemediationHostWriteFailed);
         }
     }
 

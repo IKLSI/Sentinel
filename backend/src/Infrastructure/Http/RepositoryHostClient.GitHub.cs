@@ -26,13 +26,13 @@ public partial class RepositoryHostClient
             try { response = await client.SendAsync(request); }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec récupération des dépôts GitHub");
+                logger.LogWarning(ex, "Failed to fetch GitHub repositories");
                 return (false, null, result);
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("Échec récupération des dépôts GitHub : statut {Status}", response.StatusCode);
+                logger.LogWarning("Failed to fetch GitHub repositories: status {Status}", response.StatusCode);
                 return (false, (int)response.StatusCode, result);
             }
 
@@ -40,7 +40,7 @@ public partial class RepositoryHostClient
             try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec lecture des dépôts GitHub");
+                logger.LogWarning(ex, "Failed to read GitHub repositories");
                 return (false, null, result);
             }
 
@@ -81,14 +81,14 @@ public partial class RepositoryHostClient
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("GitHub API {Owner}/{Repo} : {StatusCode}", owner, repo, (int)response.StatusCode);
+                logger.LogWarning("GitHub API {Owner}/{Repo}: {StatusCode}", owner, repo, (int)response.StatusCode);
                 return result;
             }
             treeResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Erreur lors du listing GitHub {Owner}/{Repo}", owner, repo);
+            logger.LogWarning(ex, "GitHub file listing failed for {Owner}/{Repo}", owner, repo);
             return result;
         }
 
@@ -118,7 +118,7 @@ public partial class RepositoryHostClient
 
         HostApiResponse repoInfo = await SendGitHubAsync(client, HttpMethod.Get, apiBase, token, null);
         if (repoInfo.Json is not { } info || !info.TryGetProperty("default_branch", out JsonElement defBranchProp))
-            return new HostWriteResult(false, null, $"Dépôt inaccessible (GitHub {repoInfo.Status}) : {WriteHint(repoInfo.Status)}");
+            return WriteFailure("GitHub", "repository lookup", repoInfo);
 
         string defaultBranch = defBranchProp.GetString() ?? "main";
 
@@ -126,7 +126,7 @@ public partial class RepositoryHostClient
         if (baseRef.Json is not { } refObj
             || !refObj.TryGetProperty("object", out JsonElement objProp)
             || !objProp.TryGetProperty("sha", out JsonElement shaProp))
-            return new HostWriteResult(false, null, $"Impossible de résoudre la branche de base (GitHub {baseRef.Status}).");
+            return WriteFailure("GitHub", "base branch resolution", baseRef);
 
         string baseSha = shaProp.GetString() ?? "";
 
@@ -134,7 +134,7 @@ public partial class RepositoryHostClient
         if (baseCommit.Json is not { } commitObj
             || !commitObj.TryGetProperty("tree", out JsonElement treeObj)
             || !treeObj.TryGetProperty("sha", out JsonElement baseTreeShaProp))
-            return new HostWriteResult(false, null, $"Impossible de résoudre l'arbre de base (GitHub {baseCommit.Status}).");
+            return WriteFailure("GitHub", "base tree resolution", baseCommit);
 
         string baseTreeSha = baseTreeShaProp.GetString() ?? "";
 
@@ -148,7 +148,7 @@ public partial class RepositoryHostClient
             });
 
             if (blob.Json is not { } blobObj || !blobObj.TryGetProperty("sha", out JsonElement blobShaProp))
-                return new HostWriteResult(false, null, $"Échec de l'envoi du fichier {path} (GitHub {blob.Status}) : {WriteHint(blob.Status)}");
+                return WriteFailure("GitHub", $"blob upload of {path}", blob);
 
             treeEntries.Add(new { path, mode = "100644", type = "blob", sha = blobShaProp.GetString() });
         }
@@ -156,7 +156,7 @@ public partial class RepositoryHostClient
         HostApiResponse newTree = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/trees", token,
             new { base_tree = baseTreeSha, tree = treeEntries });
         if (newTree.Json is not { } newTreeObj || !newTreeObj.TryGetProperty("sha", out JsonElement newTreeShaProp))
-            return new HostWriteResult(false, null, $"Impossible de créer l'arbre de remédiation (GitHub {newTree.Status}) : {WriteHint(newTree.Status)}");
+            return WriteFailure("GitHub", "tree creation", newTree);
 
         HostApiResponse newCommit = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/commits", token, new
         {
@@ -165,12 +165,12 @@ public partial class RepositoryHostClient
             parents = new[] { baseSha }
         });
         if (newCommit.Json is not { } newCommitObj || !newCommitObj.TryGetProperty("sha", out JsonElement newCommitShaProp))
-            return new HostWriteResult(false, null, $"Impossible de créer le commit de remédiation (GitHub {newCommit.Status}) : {WriteHint(newCommit.Status)}");
+            return WriteFailure("GitHub", "commit creation", newCommit);
 
         HostApiResponse created = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/git/refs", token,
             new { @ref = $"refs/heads/{branch}", sha = newCommitShaProp.GetString() });
         if (created.Json == null)
-            return new HostWriteResult(false, null, $"Impossible de créer la branche de remédiation (GitHub {created.Status}) : {WriteHint(created.Status)}");
+            return WriteFailure("GitHub", "branch creation", created);
 
         HostApiResponse pr = await SendGitHubAsync(client, HttpMethod.Post, $"{apiBase}/pulls", token, new
         {
@@ -183,7 +183,7 @@ public partial class RepositoryHostClient
         if (pr.Json is { } prObj && prObj.TryGetProperty("html_url", out JsonElement urlProp))
             return new HostWriteResult(true, urlProp.GetString(), null);
 
-        return new HostWriteResult(false, null, $"La pull request n'a pas pu être ouverte (GitHub {pr.Status}) : {pr.Error ?? WriteHint(pr.Status)}");
+        return WriteFailure("GitHub", "pull request creation", pr);
     }
 
     private async Task<HostApiResponse> SendGitHubAsync(HttpClient client, HttpMethod method, string url, string token, object? payload)

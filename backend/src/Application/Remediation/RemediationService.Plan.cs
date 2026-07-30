@@ -2,6 +2,7 @@ using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.DTOs.Remediation;
 using Sentinel.Domain.Git;
@@ -17,10 +18,10 @@ public partial class RemediationService
             QueryTracking.NoTracking, CancellationToken.None);
 
         if (project == null)
-            return Empty("Projet introuvable.");
+            return Empty(ErrorCodes.RemediationProjectNotFound);
 
         if (string.IsNullOrWhiteSpace(project.RepositoryUrl))
-            return Empty("Aucun dépôt associé à ce projet.");
+            return Empty(ErrorCodes.RemediationNoRepository);
 
         Organization? org = await organizationRepository.GetOrDefaultAsync(project.OrganizationId,
             QueryTracking.NoTracking, CancellationToken.None);
@@ -29,14 +30,14 @@ public partial class RemediationService
             project.RepositoryType == RepositoryType.GitLab ? org?.GitlabToken : org?.GithubToken);
 
         if (string.IsNullOrEmpty(token))
-            return Empty("Aucun token d'accès configuré pour la plateforme du dépôt.");
+            return Empty(ErrorCodes.RemediationTokenMissing);
 
         List<RemediationTarget> targets = await BuildTargetsAsync(projectId);
         if (targets.Count == 0)
-            return Empty("Aucune vulnérabilité corrigeable détectée.");
+            return Empty(ErrorCodes.RemediationNoFixableVulnerability);
 
         if (!RepositoryLocation.TryParse(project.RepositoryUrl, out RepositoryLocation location))
-            return Empty("URL du dépôt invalide.");
+            return Empty(ErrorCodes.RemediationInvalidRepositoryUrl);
 
         (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
 
@@ -50,7 +51,7 @@ public partial class RemediationService
 
         if (fileChanges.Count == 0)
             return new RemediationPlan(
-                "Impossible d'appliquer les correctifs : manifestes introuvables ou format de déclaration non pris en charge.",
+                ErrorCodes.RemediationManifestsNotPatchable,
                 targets, fileChanges, new List<StaleLockfile>(), host, owner, repo, token);
 
         List<StaleLockfile> staleLockfiles = DetectStaleLockfiles(host, files, patchedEcosystems);
@@ -147,7 +148,7 @@ public partial class RemediationService
 
             if (!ManifestPatcherService.IsStructurallyValid(name, content, current))
             {
-                logger.LogWarning("Manifeste patché invalide, correctif ignoré : {File}", name);
+                logger.LogWarning("Patched manifest is invalid, fix skipped: {File}", name);
                 continue;
             }
 

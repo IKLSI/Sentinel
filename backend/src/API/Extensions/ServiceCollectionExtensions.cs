@@ -22,14 +22,14 @@ public static partial class ServiceCollectionExtensions
 
         services.AddOptions<SupportSettings>()
             .Validate(settings => string.IsNullOrWhiteSpace(settings.Email) || new EmailAddressAttribute().IsValid(settings.Email),
-                "Support:Email doit être une adresse email valide lorsqu'elle est renseignée")
+                "Support:Email must be a valid email address when provided")
             .ValidateOnStart();
 
         if (validateDeploymentSettings)
         {
             services.AddOptions<FrontendSettings>()
                 .Validate(settings => !IsLoopbackUrl(settings.BaseUrl),
-                    "Frontend:BaseUrl doit être renseigné hors développement : l'URL de repli localhost casserait les liens des emails");
+                    "Frontend:BaseUrl is required outside development: the localhost fallback URL would break email links");
         }
 
         return services;

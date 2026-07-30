@@ -51,7 +51,7 @@ public class AuthVerifyEmailService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        logger.LogInformation("Email vérifié pour {Email}", user.Email);
+        logger.LogInformation("Email verified for {Email}", user.Email);
 
         await auditLog.LogAsync(AuditAction.EmailVerified, entityType: AuditEntityTypes.User);
 

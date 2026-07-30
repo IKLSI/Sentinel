@@ -69,7 +69,11 @@ export const RemediateModal: React.FC<Props> = ({
       onSuccess: (data) => {
         if (data.status === STATUS_SUCCESS)
           showToast(t("remediation.success"), "success");
-        else showToast(data.error ?? t("remediation.failed"), "error");
+        else
+          showToast(
+            data.error ? t(data.error) : t("remediation.failed"),
+            "error",
+          );
       },
       onError: (e) =>
         showToast(apiError(e, t("remediation.error_generic")), "error"),
@@ -128,7 +132,7 @@ export const RemediateModal: React.FC<Props> = ({
 
         {phase === "preview" && preview && !preview.canRemediate && (
           <Box sx={{ fontSize: "13px", color: "var(--muted)", py: "12px" }}>
-            {preview.reason ?? t("remediation.none")}
+            {preview.reason ? t(preview.reason) : t("remediation.none")}
           </Box>
         )}
 

@@ -26,13 +26,13 @@ public partial class RepositoryHostClient
             try { response = await client.SendAsync(request); }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec récupération des dépôts GitLab");
+                logger.LogWarning(ex, "Failed to fetch GitLab repositories");
                 return (false, null, result);
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("Échec récupération des dépôts GitLab : statut {Status}", response.StatusCode);
+                logger.LogWarning("Failed to fetch GitLab repositories: status {Status}", response.StatusCode);
                 return (false, (int)response.StatusCode, result);
             }
 
@@ -40,7 +40,7 @@ public partial class RepositoryHostClient
             try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Échec lecture des dépôts GitLab");
+                logger.LogWarning(ex, "Failed to read GitLab repositories");
                 return (false, null, result);
             }
 
@@ -114,7 +114,7 @@ public partial class RepositoryHostClient
 
         HostApiResponse projectInfo = await SendGitLabAsync(client, HttpMethod.Get, apiBase, token, null);
         if (projectInfo.Json is not { } info || !info.TryGetProperty("default_branch", out JsonElement defBranchProp))
-            return new HostWriteResult(false, null, $"Dépôt inaccessible (GitLab {projectInfo.Status}) : {WriteHint(projectInfo.Status)}");
+            return WriteFailure("GitLab", "project lookup", projectInfo);
 
         string defaultBranch = defBranchProp.GetString() ?? "main";
 
@@ -131,7 +131,7 @@ public partial class RepositoryHostClient
         });
 
         if (commit.Json == null)
-            return new HostWriteResult(false, null, $"Impossible de créer le commit de remédiation (GitLab {commit.Status}) : {commit.Error ?? WriteHint(commit.Status)}");
+            return WriteFailure("GitLab", "commit creation", commit);
 
         HostApiResponse mr = await SendGitLabAsync(client, HttpMethod.Post, $"{apiBase}/merge_requests", token, new
         {
@@ -144,7 +144,7 @@ public partial class RepositoryHostClient
         if (mr.Json is { } mrObj && mrObj.TryGetProperty("web_url", out JsonElement urlProp))
             return new HostWriteResult(true, urlProp.GetString(), null);
 
-        return new HostWriteResult(false, null, $"La merge request n'a pas pu être ouverte (GitLab {mr.Status}) : {mr.Error ?? WriteHint(mr.Status)}");
+        return WriteFailure("GitLab", "merge request creation", mr);
     }
 
     private const int MaxRateLimitRetries = 3;

@@ -24,10 +24,10 @@ public static partial class ServiceCollectionExtensions
         JwtSettings jwt = ReadSettings<JwtSettings>(configuration, ConfigurationKeys.Sections.Jwt);
 
         if (string.IsNullOrWhiteSpace(jwt.Secret))
-            throw new InvalidOperationException("La clé JWT est manquante dans la configuration");
+            throw new InvalidOperationException("The JWT key is missing from the configuration");
 
         if (Encoding.UTF8.GetByteCount(jwt.Secret) < 32)
-            throw new InvalidOperationException("La clé JWT doit contenir au moins 256 bits (32 octets UTF-8)");
+            throw new InvalidOperationException("The JWT key must be at least 256 bits (32 UTF-8 bytes)");
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -76,7 +76,7 @@ public static partial class ServiceCollectionExtensions
         if (blacklist != null && !string.IsNullOrEmpty(jti)
             && await blacklist.IsRevokedAsync(jti, context.HttpContext.RequestAborted))
         {
-            context.Fail("Token révoqué");
+            context.Fail("Revoked token");
             return;
         }
 
@@ -85,7 +85,7 @@ public static partial class ServiceCollectionExtensions
 
         if (!Guid.TryParse(userIdClaim, out Guid userId) || !int.TryParse(versionClaim, out int tokenVersion))
         {
-            context.Fail("Token invalide");
+            context.Fail("Invalid token");
             return;
         }
 
@@ -106,7 +106,7 @@ public static partial class ServiceCollectionExtensions
 
             if (found == null)
             {
-                context.Fail("Session expirée");
+                context.Fail("Expired session");
                 return;
             }
 
@@ -120,7 +120,7 @@ public static partial class ServiceCollectionExtensions
 
         if (!account.IsActive || account.TokenVersion != tokenVersion)
         {
-            context.Fail("Session expirée");
+            context.Fail("Expired session");
         }
     }
 

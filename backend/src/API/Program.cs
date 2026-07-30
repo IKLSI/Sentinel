@@ -23,7 +23,7 @@ public static class Program
             .Enrich.FromLogContext());
 
         string connectionString = builder.Configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
-            ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
+            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
 
         builder.Services
             .AddSettings(builder.Configuration, builder.Environment)

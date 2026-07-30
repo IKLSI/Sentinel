@@ -104,7 +104,7 @@ public class TicketChangeStatusService(
         catch (Exception exception)
         {
             logger.LogError(exception,
-                "Échec création notification de changement de statut pour ticket {TicketId}", ticket.Id);
+                "Failed to create status change notification for ticket {TicketId}", ticket.Id);
         }
     }
 }

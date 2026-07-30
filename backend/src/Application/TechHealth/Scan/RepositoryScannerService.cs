@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Versioning;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Models;
 
@@ -26,7 +27,7 @@ public class RepositoryScannerService(
             if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
             {
                 return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
-                    "URL du dépôt invalide.");
+                    ErrorCodes.ScanInvalidRepositoryUrl);
             }
 
             (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
@@ -35,7 +36,7 @@ public class RepositoryScannerService(
             if (files.Count == 0)
             {
                 return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
-                    "Aucun fichier accessible dans le dépôt (dépôt privé sans token valide, token expiré, ou limite de requêtes atteinte).");
+                    ErrorCodes.ScanNoAccessibleFiles);
             }
 
             List<(string Name, string Url)> discoveredManifests = files
@@ -49,7 +50,7 @@ public class RepositoryScannerService(
             if (discoveredManifests.Count > MaxManifestFiles)
             {
                 logger.LogWarning(
-                    "Dépôt {RepoUrl} : {Total} manifestes détectés, seuls les {Max} premiers sont analysés",
+                    "Repository {RepoUrl}: {Total} manifests detected, only the first {Max} are analyzed",
                     repoUrl, discoveredManifests.Count, MaxManifestFiles);
             }
 
@@ -114,9 +115,9 @@ public class RepositoryScannerService(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Erreur lors du scan du dépôt {RepoUrl}", repoUrl);
+            logger.LogWarning(ex, "Repository {RepoUrl} scan failed", repoUrl);
             return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
-                "Échec du scan du dépôt. Vérifiez l'URL, l'accès et le token de l'organisation.");
+                ErrorCodes.ScanFailed);
         }
     }
 

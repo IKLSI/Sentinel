@@ -147,7 +147,7 @@ public class AuditLogBackgroundWriter(
         long dropped = auditLogQueue.ReadAndResetDroppedCount();
 
         if (dropped > 0)
-            logger.LogError("File d'audit saturée : {Count} entrée(s) rejetée(s) sans être enregistrée(s)", dropped);
+            logger.LogError("Audit queue saturated: {Count} entry(ies) dropped without being persisted", dropped);
     }
 
     private async Task FlushAsync(List<AuditLog> logs, CancellationToken ct)
@@ -172,7 +172,7 @@ public class AuditLogBackgroundWriter(
             catch (Exception ex)
             {
                 logger.LogWarning(ex,
-                    "Échec insertion batch AuditLog ({Count} entrées), tentative {Attempt}/{MaxAttempts}",
+                    "AuditLog batch insert failed ({Count} entries), attempt {Attempt}/{MaxAttempts}",
                     logs.Count, attempt, MaxFlushAttempts);
 
                 if (attempt == MaxFlushAttempts) break;
@@ -185,7 +185,7 @@ public class AuditLogBackgroundWriter(
         foreach (AuditLog log in logs)
         {
             logger.LogError(
-                "Entrée d'audit perdue : action={Action} type={EntityType} organisation={OrganizationId} utilisateur={UserId} entité={EntityId} jti={Jti} date={CreatedAt:O}",
+                "Audit entry lost: action={Action} type={EntityType} organization={OrganizationId} user={UserId} entity={EntityId} jti={Jti} date={CreatedAt:O}",
                 log.Action, log.EntityType, log.OrganizationId, log.UserId, log.EntityId, log.Jti, log.CreatedAt);
         }
     }

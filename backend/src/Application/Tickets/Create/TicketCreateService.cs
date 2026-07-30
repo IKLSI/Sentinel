@@ -107,7 +107,7 @@ public class TicketCreateService(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Échec création notification d'assignation pour ticket {TicketId}", ticket.Id);
+            logger.LogError(exception, "Failed to create assignment notification for ticket {TicketId}", ticket.Id);
         }
     }
 }

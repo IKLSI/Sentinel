@@ -86,7 +86,7 @@ public class AuthRegisterService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        logger.LogInformation("Nouvelle organisation enregistrée {Slug} par {Email}", organization.Slug, email);
+        logger.LogInformation("New organization registered {Slug} by {Email}", organization.Slug, email);
 
         jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, rawToken));
 

@@ -6,8 +6,8 @@ import apiClient from "@/services/client";
 apiClient.defaults.adapter = (config) =>
   Promise.reject(
     new Error(
-      `Appel HTTP non mocké : ${config.method?.toUpperCase()} ${config.url}. ` +
-        "Mockez @/services/client dans le test concerné.",
+      `Unmocked HTTP call: ${config.method?.toUpperCase()} ${config.url}. ` +
+        "Mock @/services/client in the related test.",
     ),
   );
 

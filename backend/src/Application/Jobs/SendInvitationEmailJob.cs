@@ -39,7 +39,7 @@ public class SendInvitationEmailJob
 
         if (invitation == null)
         {
-            _logger.LogWarning("Invitation {InvitationId} introuvable", invitationId);
+            _logger.LogWarning("Invitation {InvitationId} not found", invitationId);
             return;
         }
 

@@ -25,11 +25,11 @@ public class ErrorHandlingMiddleware
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
-            _logger.LogDebug("Requête {Path} annulée par le client", context.Request.Path);
+            _logger.LogDebug("Request {Path} aborted by the client", context.Request.Path);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Une erreur inattendue s'est produite lors du traitement de {Path}", context.Request.Path);
+            _logger.LogError(ex, "Unexpected error while handling {Path}", context.Request.Path);
             await HandleExceptionAsync(context, ex);
         }
     }

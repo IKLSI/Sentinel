@@ -13,7 +13,7 @@ import { queryClient } from "./lib/queryClient";
 import "./styles/global.css";
 
 const rootElement = document.getElementById("root");
-if (!rootElement) throw new Error("Élément racine introuvable");
+if (!rootElement) throw new Error("Root element not found");
 
 const InnerApp: React.FC = () => {
   const { isAuthenticated, loading, user } = useAuth();

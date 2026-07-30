@@ -24,12 +24,12 @@ public class PurgeExpiredRevokedTokensJob(
                 DateTime.UtcNow - ProcessedStripeEventRetention, CancellationToken.None);
 
             logger.LogInformation(
-                "Purge terminée : {TokenCount} token(s) révoqué(s) expiré(s), {EventCount} événement(s) Stripe archivé(s)",
+                "Purge completed: {TokenCount} expired revoked token(s), {EventCount} archived Stripe event(s)",
                 deletedTokens, deletedEvents);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erreur lors de la purge des enregistrements expirés");
+            logger.LogError(ex, "Failed to purge expired records");
         }
     }
 }

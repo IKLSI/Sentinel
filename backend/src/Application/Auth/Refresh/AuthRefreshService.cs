@@ -117,6 +117,6 @@ public class AuthRefreshService : IService
 
         _cache.Remove(CacheKeys.AuthAccount(replayUser.Id));
 
-        _logger.LogWarning("Token replay détecté pour userId {UserId}", replayUser.Id);
+        _logger.LogWarning("Token replay detected for userId {UserId}", replayUser.Id);
     }
 }

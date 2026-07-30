@@ -96,7 +96,7 @@ public partial class TechHealthService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Erreur OSV querybatch (lot {Start})", start);
+                _logger.LogWarning(ex, "OSV querybatch failed (batch {Start})", start);
             }
         }
 
@@ -192,7 +192,7 @@ public partial class TechHealthService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Erreur détail OSV pour {VulnId}", id);
+                _logger.LogWarning(ex, "OSV detail lookup failed for {VulnId}", id);
                 return (id, (JsonDocument?)null);
             }
             finally { throttle.Release(); }

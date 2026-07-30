@@ -57,7 +57,7 @@ public class BillingWebhookService : IService
     public async Task<Result> ExecuteAsync(BillingWebhookModel model, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(_priceCatalog.WebhookSecret))
-            throw new InvalidOperationException("Stripe:WebhookSecret manquant");
+            throw new InvalidOperationException("Stripe:WebhookSecret is missing");
 
         Event stripeEvent;
 
@@ -68,7 +68,7 @@ public class BillingWebhookService : IService
         }
         catch (StripeException exception)
         {
-            _logger.LogWarning(exception, "Webhook Stripe invalide");
+            _logger.LogWarning(exception, "Invalid Stripe webhook");
             return Result.Error();
         }
 
@@ -79,7 +79,7 @@ public class BillingWebhookService : IService
 
         if (!claimed)
         {
-            _logger.LogInformation("Événement Stripe {EventId} déjà traité ou en cours de traitement, ignoré",
+            _logger.LogInformation("Stripe event {EventId} already processed or in flight, skipped",
                 stripeEvent.Id);
             return Result.Success();
         }
@@ -127,7 +127,7 @@ public class BillingWebhookService : IService
         catch (Exception exception)
         {
             _logger.LogError(exception,
-                "Impossible de libérer la réservation de l'événement Stripe {EventId} : il sera rejouable après {Delay}",
+                "Unable to release the Stripe event {EventId} claim: it will be replayable after {Delay}",
                 stripeEventId, StaleClaimDelay);
         }
     }
@@ -149,7 +149,7 @@ public class BillingWebhookService : IService
         if (clamped > 0)
         {
             _logger.LogInformation(
-                "{Count} projet(s) de {OrganizationId} ramenés à la fréquence {Frequency} imposée par le plan {Plan}",
+                "{Count} project(s) of {OrganizationId} clamped to the {Frequency} frequency enforced by plan {Plan}",
                 clamped, organizationId, limits.MaxScanFrequency, tier);
         }
     }
@@ -167,7 +167,7 @@ public class BillingWebhookService : IService
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Événement Stripe antérieur à l'état courant de {OrganizationId}, ignoré", organization.Id);
+                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 
@@ -192,7 +192,7 @@ public class BillingWebhookService : IService
 
         await ClampProjectFrequenciesAsync(organizationId, organization.PlanTier, cancellationToken);
 
-        _logger.LogInformation("Abonnement activé pour l'organisation {OrganizationId} ({Plan})",
+        _logger.LogInformation("Subscription activated for organization {OrganizationId} ({Plan})",
             organizationId, organization.PlanTier);
     }
 
@@ -207,7 +207,7 @@ public class BillingWebhookService : IService
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Événement Stripe antérieur à l'état courant de {OrganizationId}, ignoré", organization.Id);
+                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 
@@ -230,7 +230,7 @@ public class BillingWebhookService : IService
 
         await ClampProjectFrequenciesAsync(organization.Id, organization.PlanTier, cancellationToken);
 
-        _logger.LogInformation("Abonnement mis à jour pour {OrganizationId} : {Status}",
+        _logger.LogInformation("Subscription updated for {OrganizationId}: {Status}",
             organization.Id, organization.SubscriptionStatus);
 
         if (!tier.HasValue || tier.Value == previousPlan) return;
@@ -249,7 +249,7 @@ public class BillingWebhookService : IService
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Événement Stripe antérieur à l'état courant de {OrganizationId}, ignoré", organization.Id);
+                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 
@@ -266,7 +266,7 @@ public class BillingWebhookService : IService
 
         await ClampProjectFrequenciesAsync(organization.Id, PlanTier.Free, cancellationToken);
 
-        _logger.LogInformation("Abonnement annulé pour {OrganizationId} — retour au plan gratuit", organization.Id);
+        _logger.LogInformation("Subscription cancelled for {OrganizationId} — reverted to the free plan", organization.Id);
 
         List<string> adminEmails = await _userRepository
             .GetActiveAdminEmailsAsync(organization.Id, cancellationToken);

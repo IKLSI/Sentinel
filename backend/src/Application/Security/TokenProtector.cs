@@ -34,7 +34,7 @@ public class TokenProtector
         }
         catch (CryptographicException ex)
         {
-            _logger.LogWarning(ex, "Échec du déchiffrement d'un token protégé");
+            _logger.LogWarning(ex, "Failed to decrypt a protected token");
             return null;
         }
     }

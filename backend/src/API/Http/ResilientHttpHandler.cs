@@ -49,7 +49,7 @@ public sealed class ResilientHttpHandler : DelegatingHandler
                     return response;
                 }
 
-                _logger.LogWarning("HTTP {Status} sur {Url} — nouvelle tentative {Attempt}/{Max} dans {Delay}",
+                _logger.LogWarning("HTTP {Status} on {Url} — retry {Attempt}/{Max} in {Delay}",
                     (int)response.StatusCode, attemptRequest.RequestUri, attempt + 1, MaxRetries, delay.Value);
 
                 response.Dispose();
@@ -61,7 +61,7 @@ public sealed class ResilientHttpHandler : DelegatingHandler
                 && (ex is HttpRequestException || ex is OperationCanceledException))
             {
                 TimeSpan delay = Backoff(attempt);
-                _logger.LogWarning(ex, "Échec réseau sur {Url} — nouvelle tentative {Attempt}/{Max} dans {Delay}",
+                _logger.LogWarning(ex, "Network failure on {Url} — retry {Attempt}/{Max} in {Delay}",
                     attemptRequest.RequestUri, attempt + 1, MaxRetries, delay);
 
                 await Task.Delay(delay, cancellationToken);

@@ -88,7 +88,7 @@ public class BillingPlanListService(
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Impossible de récupérer le prix Stripe {Label} pour {Tier}", label, tier);
+            logger.LogWarning(exception, "Unable to fetch Stripe price {Label} for {Tier}", label, tier);
             return 0m;
         }
     }

@@ -23,7 +23,7 @@ public partial class RepositoryHostClient
             if (IsRateLimited(response) && attempt <= MaxRateLimitRetries)
             {
                 TimeSpan delay = GetRetryDelay(response, attempt);
-                logger.LogWarning("{Platform} rate-limit ({Status}) sur {Method} {Url}, nouvelle tentative {Attempt}/{Max} dans {Delay}s",
+                logger.LogWarning("{Platform} rate-limit ({Status}) on {Method} {Url}, retry {Attempt}/{Max} in {Delay}s",
                     platform, status, method, url, attempt, MaxRateLimitRetries, delay.TotalSeconds);
                 await Task.Delay(delay);
                 continue;
@@ -33,7 +33,7 @@ public partial class RepositoryHostClient
 
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("{Platform} API {Method} {Url} : {Status} {Body}", platform, method, url, status, content);
+                logger.LogWarning("{Platform} API {Method} {Url}: {Status} {Body}", platform, method, url, status, content);
                 return new HostApiResponse(null, status, ExtractApiMessage(content));
             }
 
@@ -86,12 +86,20 @@ public partial class RepositoryHostClient
         return null;
     }
 
-    private static string WriteHint(int status) => status switch
+    private static string WriteErrorCode(int status) => status switch
     {
-        401 => "token invalide ou expiré.",
-        403 => "droits insuffisants : le token doit autoriser l'écriture (scope « repo » pour un PAT classique, ou « Contents » + « Pull requests » en lecture/écriture pour un token fine-grained).",
-        404 => "dépôt introuvable ou token sans accès en écriture à ce dépôt.",
-        422 => "requête refusée (branche déjà existante ou paramètre invalide).",
-        _ => "vérifiez les droits d'écriture du token."
+        401 => ErrorCodes.RemediationHostInvalidToken,
+        403 => ErrorCodes.RemediationHostInsufficientScope,
+        404 => ErrorCodes.RemediationHostRepositoryNotFound,
+        422 => ErrorCodes.RemediationHostRequestRejected,
+        _ => ErrorCodes.RemediationHostWriteFailed
     };
+
+    private HostWriteResult WriteFailure(string platform, string step, HostApiResponse response)
+    {
+        logger.LogWarning("{Platform} remediation failed at {Step}: {Status} {Error}",
+            platform, step, response.Status, response.Error);
+
+        return new HostWriteResult(false, null, WriteErrorCode(response.Status));
+    }
 }

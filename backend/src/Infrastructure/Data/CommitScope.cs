@@ -19,7 +19,7 @@ public class CommitScope : ICommitScope
     {
         if (_committed)
             throw new InvalidOperationException(
-                "Cette portée de validation a déjà été validée : ouvrez-en une nouvelle, ou utilisez ExecuteInTransactionAsync pour regrouper plusieurs enregistrements dans une même transaction");
+                "This commit scope has already been committed: open a new one, or use ExecuteInTransactionAsync to group several saves in a single transaction");
 
         int affectedRows;
 
@@ -29,7 +29,7 @@ public class CommitScope : ICommitScope
         }
         catch (DbUpdateException exception) when (exception is not DbUpdateConcurrencyException)
         {
-            throw new PersistenceException("L'enregistrement en base a été rejeté", exception);
+            throw new PersistenceException("The database save was rejected", exception);
         }
 
         _committed = true;

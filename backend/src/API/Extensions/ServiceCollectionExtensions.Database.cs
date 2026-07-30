@@ -16,7 +16,7 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
-            ?? throw new InvalidOperationException("La chaîne de connexion DefaultConnection est manquante");
+            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
 
         services.AddScoped<TenantSessionState>();
         services.AddScoped<TenantCommandInterceptor>();
@@ -71,7 +71,7 @@ public static partial class ServiceCollectionExtensions
 
         if (string.IsNullOrWhiteSpace(settings.CertBase64))
             throw new InvalidOperationException(
-                "DataProtection:CertBase64 est requis : sans certificat, le trousseau de clés est écrit en clair dans la base, à côté des données qu'il chiffre");
+                "DataProtection:CertBase64 is required: without a certificate, the key ring is stored in clear text in the database, next to the data it encrypts");
 
         services.AddDataProtection()
             .SetApplicationName("Sentinel")
@@ -92,7 +92,7 @@ public static partial class ServiceCollectionExtensions
         catch (FormatException exception)
         {
             throw new InvalidOperationException(
-                "DataProtection:CertBase64 doit contenir un certificat PKCS#12 encodé en base64", exception);
+                "DataProtection:CertBase64 must contain a base64-encoded PKCS#12 certificate", exception);
         }
 
         X509Certificate2 certificate;
@@ -104,12 +104,12 @@ public static partial class ServiceCollectionExtensions
         catch (CryptographicException exception)
         {
             throw new InvalidOperationException(
-                "DataProtection:CertBase64 n'est pas un certificat PKCS#12 valide", exception);
+                "DataProtection:CertBase64 is not a valid PKCS#12 certificate", exception);
         }
 
         if (!certificate.HasPrivateKey)
             throw new InvalidOperationException(
-                "DataProtection:CertBase64 doit contenir la clé privée du certificat, sinon le trousseau ne peut pas être déchiffré au redémarrage");
+                "DataProtection:CertBase64 must contain the certificate private key, otherwise the key ring cannot be decrypted on restart");
 
         return certificate;
     }

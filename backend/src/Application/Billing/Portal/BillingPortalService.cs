@@ -67,7 +67,7 @@ public class BillingPortalService : IService
         }
         catch (StripeException exception)
         {
-            _logger.LogError(exception, "Erreur Stripe lors de l'ouverture du portail de facturation");
+            _logger.LogError(exception, "Stripe error while opening the billing portal");
             return Result<CheckoutSessionDto>.Error(ErrorCodes.BillingProviderUnavailable);
         }
     }

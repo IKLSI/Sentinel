@@ -56,7 +56,7 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -69,7 +69,7 @@ public class EmailService : IEmailService
         await client.SendAsync(message);
         await client.DisconnectAsync(true);
 
-        _logger.LogInformation("Email d'invitation envoyé à {Email}", invitation.Email);
+        _logger.LogInformation("Invitation email sent to {Email}", invitation.Email);
     }
 
     public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl)
@@ -108,7 +108,7 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -121,7 +121,7 @@ public class EmailService : IEmailService
         await client.SendAsync(message);
         await client.DisconnectAsync(true);
 
-        _logger.LogInformation("Notification de compte existant envoyée à {Email}", email);
+        _logger.LogInformation("Existing account notification sent to {Email}", email);
     }
 
     public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl)
@@ -159,7 +159,7 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -172,7 +172,7 @@ public class EmailService : IEmailService
         await client.SendAsync(message);
         await client.DisconnectAsync(true);
 
-        _logger.LogInformation("Email de réinitialisation de mot de passe envoyé à {Email}", email);
+        _logger.LogInformation("Password reset email sent to {Email}", email);
     }
 
     public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl)
@@ -210,7 +210,7 @@ public class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -223,7 +223,7 @@ public class EmailService : IEmailService
         await client.SendAsync(message);
         await client.DisconnectAsync(true);
 
-        _logger.LogInformation("Email de vérification envoyé à {Email}", email);
+        _logger.LogInformation("Verification email sent to {Email}", email);
     }
 
     public async Task SendVulnerabilityAlertAsync(IEnumerable<string> adminEmails, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
@@ -272,7 +272,7 @@ public class EmailService : IEmailService
             ? $"[{organizationName}] {projectName} — {newVulns.Count} vulnérabilité(s) détectée(s)"
             : $"[{organizationName}] {projectName} — {newVulns.Count} nouvelle(s) vulnérabilité(s)";
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -295,7 +295,7 @@ public class EmailService : IEmailService
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Alerte vulnérabilités envoyée à {Email} pour projet {Project}", adminEmail, projectName);
+            _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", adminEmail, projectName);
         }
     }
 
@@ -307,7 +307,7 @@ public class EmailService : IEmailService
             ["{{BILLING_URL}}"]  = billingUrl
         });
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -327,7 +327,7 @@ public class EmailService : IEmailService
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Notification annulation abonnement envoyée à {Email}", adminEmail);
+            _logger.LogInformation("Subscription cancellation notification sent to {Email}", adminEmail);
         }
     }
 
@@ -342,7 +342,7 @@ public class EmailService : IEmailService
             ["{{BILLING_URL}}"]    = billingUrl
         });
 
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host manquant") : _email.Host;
+        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
         string username = _email.Username;
         string password = _email.Password;
@@ -362,7 +362,7 @@ public class EmailService : IEmailService
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Notification changement abonnement envoyée à {Email} ({OldPlan} → {NewPlan})", adminEmail, oldPlan, newPlan);
+            _logger.LogInformation("Subscription change notification sent to {Email} ({OldPlan} → {NewPlan})", adminEmail, oldPlan, newPlan);
         }
     }
 

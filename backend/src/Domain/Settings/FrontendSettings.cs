@@ -6,6 +6,6 @@ public class FrontendSettings
 {
     public const string DefaultBaseUrl = "http://localhost:3000";
 
-    [Url(ErrorMessage = "Frontend:BaseUrl doit être une URL absolue valide")]
+    [Url(ErrorMessage = "Frontend:BaseUrl must be a valid absolute URL")]
     public string BaseUrl { get; set; } = DefaultBaseUrl;
 }
