@@ -1,9 +1,4 @@
-export type {
-  UserRole,
-  TicketPriority,
-  TicketStatus,
-  TicketType,
-} from "./enums";
+export type { UserRole, TicketPriority, TicketType } from "./enums";
 import type {
   Theme,
   Language,

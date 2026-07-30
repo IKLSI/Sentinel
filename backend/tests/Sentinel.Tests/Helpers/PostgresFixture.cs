@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Testcontainers.PostgreSql;
@@ -9,6 +10,8 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private const string Image = "postgres:17-alpine";
     private const string ExternalDatabaseVariable = "SENTINEL_TEST_POSTGRES";
+    private const string AppRole = "sentinel_app";
+    private const string AppRolePassword = "sentinel_app";
 
     private PostgreSqlContainer? _container;
     private string? _unavailableReason;
@@ -27,8 +30,7 @@ public sealed class PostgresFixture : IAsyncLifetime
             }
             else
             {
-                _container = new PostgreSqlBuilder()
-                    .WithImage(Image)
+                _container = new PostgreSqlBuilder(Image)
                     .WithDatabase("sentinel_tests")
                     .WithUsername("sentinel")
                     .WithPassword("sentinel")
@@ -42,11 +44,44 @@ public sealed class PostgresFixture : IAsyncLifetime
             await using SentinelContext context = new SentinelContext(BuildOptions(null));
 
             await context.Database.MigrateAsync();
+
+            ConnectionString = await CreateRestrictedAppConnectionStringAsync();
         }
         catch (Exception exception)
         {
             _unavailableReason = exception.Message;
         }
+    }
+
+    private async Task<string> CreateRestrictedAppConnectionStringAsync()
+    {
+        await using NpgsqlConnection adminConnection = new NpgsqlConnection(ConnectionString);
+        await adminConnection.OpenAsync();
+
+        await using (NpgsqlCommand command = adminConnection.CreateCommand())
+        {
+            command.CommandText = $@"
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{AppRole}') THEN
+        CREATE ROLE {AppRole} LOGIN PASSWORD '{AppRolePassword}' NOSUPERUSER NOBYPASSRLS;
+    END IF;
+END
+$$;
+GRANT USAGE ON SCHEMA public TO {AppRole};
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {AppRole};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {AppRole};";
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder(ConnectionString)
+        {
+            Username = AppRole,
+            Password = AppRolePassword
+        };
+
+        return builder.ToString();
     }
 
     public async ValueTask DisposeAsync()

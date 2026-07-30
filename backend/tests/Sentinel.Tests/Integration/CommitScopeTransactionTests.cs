@@ -34,7 +34,7 @@ public class CommitScopeTransactionTests
 
         scope.Context.ChangeTracker.Clear();
 
-        int count = await scope.Context.Tickets.CountAsync();
+        int count = await scope.Context.Tickets.CountAsync(TestContext.Current.CancellationToken);
 
         count.Should().Be(2);
     }
@@ -61,7 +61,7 @@ public class CommitScopeTransactionTests
 
         scope.Context.ChangeTracker.Clear();
 
-        bool exists = await scope.Context.Tickets.AnyAsync(t => t.Id == ticket.Id);
+        bool exists = await scope.Context.Tickets.AnyAsync(t => t.Id == ticket.Id, TestContext.Current.CancellationToken);
 
         exists.Should().BeFalse("la transaction doit être annulée intégralement");
     }

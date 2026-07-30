@@ -16,7 +16,7 @@ export const statusLabelKeys: Record<TicketStatus, string> = {
   [TicketStatus.Closed]: "tickets.status.closed",
 };
 
-export const statusColors: Record<TicketStatus, string> = {
+const statusColors: Record<TicketStatus, string> = {
   [TicketStatus.New]: "var(--accent)",
   [TicketStatus.InProgress]: "var(--orange)",
   [TicketStatus.Testing]: "var(--cyan)",

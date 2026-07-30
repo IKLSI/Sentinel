@@ -95,8 +95,8 @@ public class TicketRepositoryTests
 
         scope.Context.ChangeTracker.Clear();
 
-        (await scope.Context.Tickets.AnyAsync(t => t.Id == ticket.Id)).Should().BeFalse();
-        (await scope.Context.TicketComments.AnyAsync(c => c.TicketId == ticket.Id)).Should().BeFalse();
+        (await scope.Context.Tickets.AnyAsync(t => t.Id == ticket.Id, TestContext.Current.CancellationToken)).Should().BeFalse();
+        (await scope.Context.TicketComments.AnyAsync(c => c.TicketId == ticket.Id, TestContext.Current.CancellationToken)).Should().BeFalse();
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class TicketRepositoryTests
 
         int visible = await scope.Context.Tickets
             .IgnoreQueryFilters()
-            .CountAsync(t => t.Id == foreignTicket.Id);
+            .CountAsync(t => t.Id == foreignTicket.Id, TestContext.Current.CancellationToken);
 
         visible.Should().Be(0, "la sécurité au niveau ligne doit filtrer même sans le filtre EF Core");
     }
