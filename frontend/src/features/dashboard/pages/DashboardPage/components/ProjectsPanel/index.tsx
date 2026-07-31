@@ -43,7 +43,10 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
   const belowText =
     belowCount === 0
       ? t("dashboard.park.below_none")
-      : t("dashboard.park.below_other", { count: belowCount, total: scoredCount });
+      : t("dashboard.park.below_other", {
+          count: belowCount,
+          total: scoredCount,
+        });
 
   const gaugeColor = gradeMeta(scoreToGrade(averageScore)).color;
 
