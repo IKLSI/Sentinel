@@ -39,12 +39,13 @@ public static class TicketStatusRules
 
 public class Ticket : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OrganizationId { get; set; }
     public Guid? ProjectId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;
+    public int PriorityRank { get; private set; }
     public TicketType Type { get; set; } = TicketType.Bug;
     public TicketStatus Status { get; set; } = TicketStatus.New;
     public Guid? AssignedToId { get; set; }

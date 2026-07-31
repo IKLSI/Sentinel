@@ -25,7 +25,7 @@ public partial class ExportService(
     private const int HeaderRow = 3;
     private const int FirstDataRow = 4;
 
-    private async Task<ExportLabels> GetLabelsAsync(Guid currentUserId, CancellationToken cancellationToken = default)
+    private async Task<ExportLabels> GetLabelsAsync(Guid currentUserId, CancellationToken cancellationToken)
     {
         string? lang = await userRepository.GetLanguageOrDefaultAsync(currentUserId, cancellationToken);
 
@@ -33,7 +33,8 @@ public partial class ExportService(
     }
 
     public async Task<ExportResult> ExportTicketsExcelAsync(
-        Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search, Guid currentUserId)
+        Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search,
+        Guid currentUserId, CancellationToken cancellationToken)
     {
         TicketFilter filter = new()
         {
@@ -50,33 +51,41 @@ public partial class ExportService(
             Search = !string.IsNullOrWhiteSpace(search) && search.Length <= 100 ? search : null
         };
 
-        List<Ticket> tickets =
-            (await ticketRepository.ListForExportAsync(organizationId, filter, CancellationToken.None)).ToList();
+        List<TicketGridRow> tickets = (await ticketRepository.ListForExportAsync(
+            organizationId, filter, ExportLimits.MaxTicketRows + 1, cancellationToken)).ToList();
 
-        if (tickets.Count == ExportLimits.MaxTicketRows)
+        bool truncated = tickets.Count > ExportLimits.MaxTicketRows;
+
+        if (truncated)
         {
+            tickets.RemoveRange(ExportLimits.MaxTicketRows, tickets.Count - ExportLimits.MaxTicketRows);
+
             logger.LogWarning("Ticket export for {OrganizationId} truncated at {MaxRows} rows",
                 organizationId, ExportLimits.MaxTicketRows);
         }
 
-        ExportLabels labels = await GetLabelsAsync(currentUserId);
+        ExportLabels labels = await GetLabelsAsync(currentUserId, cancellationToken);
 
-        byte[] bytes = WriteTicketsExcel(tickets, labels);
+        byte[] bytes = WriteTicketsExcel(tickets, labels, truncated);
         return new ExportResult(bytes, $"tickets-{DateTime.UtcNow:yyyy-MM-dd}.xlsx");
     }
 
-    public async Task<ExportResult> ExportTechHealthExcelAsync(Guid organizationId, Guid currentUserId)
+    public async Task<ExportResult> ExportTechHealthExcelAsync(Guid organizationId, Guid currentUserId,
+        CancellationToken cancellationToken)
     {
         List<Project> projects =
-            (await projectRepository.ListWithHealthDetailsByNameAsync(organizationId, CancellationToken.None)).ToList();
+            (await projectRepository.ListWithHealthDetailsByNameAsync(organizationId, cancellationToken)).ToList();
 
-        ExportLabels labels = await GetLabelsAsync(currentUserId);
+        ExportLabels labels = await GetLabelsAsync(currentUserId, cancellationToken);
 
         byte[] bytes = WriteTechHealthExcel(projects, labels);
         return new ExportResult(bytes, $"{labels.TechHealthSlug}-{DateTime.Now:yyyy-MM-dd}.xlsx");
     }
 
-    private byte[] WriteTicketsExcel(List<Ticket> tickets, ExportLabels L)
+    private static string ComposeName(string? firstName, string? lastName) =>
+        firstName == null && lastName == null ? string.Empty : $"{firstName} {lastName}".Trim();
+
+    private byte[] WriteTicketsExcel(List<TicketGridRow> tickets, ExportLabels L, bool truncated)
     {
         string[] headers = L.TicketHeaders;
 
@@ -85,12 +94,13 @@ public partial class ExportService(
         IXLWorksheet ws = workbook.Worksheets.Add(L.SheetTickets);
 
         ApplyTitle(ws, L.TitleTickets, headers.Length);
-        ApplyMetaRow(ws, headers.Length, BuildMeta(L, $"{tickets.Count} {L.UnitTickets}", null));
+        ApplyMetaRow(ws, headers.Length, BuildMeta(L, $"{tickets.Count} {L.UnitTickets}",
+            truncated ? $"{L.ExportTruncated} {ExportLimits.MaxTicketRows}" : null));
         ApplyHeadersAtRow(ws, headers, HeaderRow);
 
         for (int i = 0; i < tickets.Count; i++)
         {
-            Ticket t = tickets[i];
+            TicketGridRow t = tickets[i];
             int row = i + FirstDataRow;
 
             SetRowBackground(ws, row, headers.Length, i % 2 == 1 ? AltRowColor : XLColor.White);
@@ -105,9 +115,9 @@ public partial class ExportService(
             ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
 
             ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L);
-            ws.Cell(row, 6).Value = t.AssignedTo?.FullName ?? string.Empty;
-            ws.Cell(row, 7).Value = t.Project?.Name ?? string.Empty;
-            ws.Cell(row, 8).Value = t.CreatedBy?.FullName ?? string.Empty;
+            ws.Cell(row, 6).Value = ComposeName(t.AssignedToFirstName, t.AssignedToLastName);
+            ws.Cell(row, 7).Value = t.ProjectName ?? string.Empty;
+            ws.Cell(row, 8).Value = ComposeName(t.CreatedByFirstName, t.CreatedByLastName);
 
             SetDateCell(ws.Cell(row, 9), t.CreatedAt, L.DateFormat);
             SetDateCell(ws.Cell(row, 10), t.UpdatedAt, L.DateFormat);

@@ -4,7 +4,7 @@ namespace Sentinel.Domain.Models;
 
 public class RevokedToken : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Jti { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
 }

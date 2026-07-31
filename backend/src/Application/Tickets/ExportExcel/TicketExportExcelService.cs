@@ -13,7 +13,8 @@ public class TicketExportExcelService(ExportService exportService, ITenantContex
             return Result<FileDownload>.Unauthorized();
 
         ExportResult export = await exportService.ExportTicketsExcelAsync(
-            organizationId, model.Status, model.Priority, model.AssignedTo, model.Type, model.Search, userId);
+            organizationId, model.Status, model.Priority, model.AssignedTo, model.Type, model.Search, userId,
+            cancellationToken);
 
         return FileDownload.FromBytes(export.Content, ContentTypes.Excel, export.FileName);
     }

@@ -3,7 +3,7 @@ namespace Sentinel.Domain.Models;
 
 public class Organization : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public bool SecurityAlertsEnabled { get; set; } = true;

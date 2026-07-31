@@ -31,6 +31,7 @@ internal sealed class ExportLabels
     public required string AtWord { get; init; }
     public required string TotalWord { get; init; }
     public required string UnitTickets { get; init; }
+    public required string ExportTruncated { get; init; }
     public required string UnitProjects { get; init; }
 
     public required string NoRuntimes { get; init; }
@@ -117,6 +118,7 @@ internal sealed class ExportLabels
             AtWord = Text("exports.at"),
             TotalWord = Text("exports.total"),
             UnitTickets = Text("exports.unit.tickets"),
+            ExportTruncated = Text("exports.truncated"),
             UnitProjects = Text("exports.unit.projects"),
             NoRuntimes = Text("exports.empty.runtimes"),
             NoDependencies = Text("exports.empty.dependencies"),

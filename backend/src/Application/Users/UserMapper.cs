@@ -1,5 +1,6 @@
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users;
 
@@ -17,5 +18,19 @@ public static class UserMapper
         LastLoginAt = user.LastLoginAt,
         Theme = user.Theme.ToString().ToLowerInvariant(),
         Language = user.Language,
+    };
+
+    public static UserDto ToDto(UserGridRow row) => new()
+    {
+        Id = row.Id,
+        Email = row.Email,
+        FirstName = row.FirstName,
+        LastName = row.LastName,
+        Role = row.Role.ToString(),
+        IsActive = row.IsActive,
+        CreatedAt = row.CreatedAt,
+        LastLoginAt = row.LastLoginAt,
+        Theme = row.Theme.ToString().ToLowerInvariant(),
+        Language = row.Language,
     };
 }

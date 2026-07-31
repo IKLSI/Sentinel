@@ -10,12 +10,7 @@ public interface IOrganizationRepository : ICrudEntityWithIdRepository<Organizat
     Task<Organization?> GetOrDefaultByStripeReferenceAsync(string subscriptionId, string? customerId,
         CancellationToken cancellationToken);
 
-    Task<PlanTier> GetPlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
-
     Task<PlanTier> GetEffectivePlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
-        CancellationToken cancellationToken);
 
     Task<bool> TryConsumeScanQuotaAsync(Guid organizationId, int maxScansPerMonth,
         CancellationToken cancellationToken);

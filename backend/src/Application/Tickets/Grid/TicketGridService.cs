@@ -25,7 +25,7 @@ public class TicketGridService(
         if (!validationResult.IsSuccess)
             return Result<PagedResult<TicketDto>>.From(validationResult);
 
-        PagedList<Ticket> page = await ticketRepository.SearchAsync(organizationId, BuildFilter(model),
+        PagedList<TicketGridRow> page = await ticketRepository.SearchAsync(organizationId, BuildFilter(model),
             model.NormalizedPage, model.NormalizedPageSize, cancellationToken);
 
         return new PagedResult<TicketDto>

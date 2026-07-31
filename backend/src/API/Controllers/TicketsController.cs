@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Attributes;
 using Sentinel.API.Extensions;
 using Sentinel.Application.Common;
@@ -15,6 +16,7 @@ using Sentinel.Application.Tickets.Grid;
 using Sentinel.Application.Tickets.Update;
 using Sentinel.Application.Tickets.UpdateComment;
 using Sentinel.Application.Tickets.UploadAttachment;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
@@ -38,6 +40,7 @@ public class TicketsController : BaseController
         ToActionResult(await service.ExecuteAsync(query, cancellationToken));
 
     [HttpGet("export/excel")]
+    [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportExcel(
         [FromQuery] TicketExportExcelModel query,
         [FromServices] TicketExportExcelService service,

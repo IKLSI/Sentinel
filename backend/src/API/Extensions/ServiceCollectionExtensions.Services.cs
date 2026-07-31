@@ -21,6 +21,7 @@ using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
 using Sentinel.Infrastructure.Http;
 using Sentinel.Infrastructure.Localization;
+using Sentinel.Infrastructure.Storage;
 
 namespace Sentinel.API.Extensions;
 
@@ -96,6 +97,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<StripeCustomerProvisioner>();
 
         services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
+        services.AddSingleton<IAttachmentStorage, DatabaseAttachmentStorage>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<PurgeExpiredRevokedTokensJob>();

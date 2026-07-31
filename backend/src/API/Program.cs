@@ -125,6 +125,7 @@ public static class Program
         app.UseAuthentication();
         app.UseRateLimiter();
         app.UseMiddleware<ApiKeyMiddleware>();
+        app.UseMiddleware<DatabaseConnectionScopeMiddleware>();
         app.UseAuthorization();
         app.ConfigureHangfire();
 

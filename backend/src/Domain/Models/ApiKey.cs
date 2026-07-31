@@ -3,7 +3,7 @@ namespace Sentinel.Domain.Models;
 
 public class ApiKey : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OrganizationId { get; set; }
     public Guid CreatedById { get; set; }
     public string Name { get; set; } = string.Empty;

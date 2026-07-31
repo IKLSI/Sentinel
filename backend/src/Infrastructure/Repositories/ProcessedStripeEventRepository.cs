@@ -17,7 +17,7 @@ public class ProcessedStripeEventRepository
         int claimed = await Context.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO "ProcessedStripeEvents" ("Id", "StripeEventId", "ProcessedAt", "CompletedAt")
-             VALUES ({Guid.NewGuid()}, {stripeEventId}, {DateTime.UtcNow}, NULL)
+             VALUES ({Guid.CreateVersion7()}, {stripeEventId}, {DateTime.UtcNow}, NULL)
              ON CONFLICT ("StripeEventId") DO UPDATE
              SET "ProcessedAt" = EXCLUDED."ProcessedAt"
              WHERE "ProcessedStripeEvents"."CompletedAt" IS NULL

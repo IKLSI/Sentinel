@@ -10,10 +10,11 @@ namespace Sentinel.Infrastructure.Http;
 
 public partial class RepositoryHostClient
 {
-    private async Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListGitHubUserRepositoriesAsync(string token)
+    private async Task<RepositoryListing> ListGitHubUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+        bool truncated = false;
 
         for (int page = 1; page <= RepositoryPageLimit; page++)
         {
@@ -30,20 +31,20 @@ public partial class RepositoryHostClient
                 catch (Exception ex)
                 {
                     logger.LogWarning(ex, "Failed to fetch GitHub repositories");
-                    return (false, null, result);
+                    return new RepositoryListing(false, null, result, false);
                 }
 
                 if (!response.IsSuccessStatusCode)
                 {
                     logger.LogWarning("Failed to fetch GitHub repositories: status {Status}", response.StatusCode);
-                    return (false, (int)response.StatusCode, result);
+                    return new RepositoryListing(false, (int)response.StatusCode, result, false);
                 }
 
                 try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
                 catch (Exception ex)
                 {
                     logger.LogWarning(ex, "Failed to read GitHub repositories");
-                    return (false, null, result);
+                    return new RepositoryListing(false, null, result, false);
                 }
             }
             finally
@@ -65,11 +66,12 @@ public partial class RepositoryHostClient
 
             if (page == RepositoryPageLimit)
             {
+                truncated = true;
                 logger.LogWarning("GitHub repository listing truncated after {PageLimit} pages", RepositoryPageLimit);
             }
         }
 
-        return (true, null, result);
+        return new RepositoryListing(true, null, result, truncated);
     }
 
     private static HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)

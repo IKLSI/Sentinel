@@ -32,6 +32,7 @@ public class AvailableReposService(
 
         List<AvailableRepoDto> repos = [];
         bool fetchFailed = false;
+        bool listingTruncated = false;
         int? fetchFailedStatusCode = null;
 
         (string? Token, RepositoryType Platform)[] integrations =
@@ -52,16 +53,18 @@ public class AvailableReposService(
                 continue;
             }
 
-            (bool success, int? statusCode, List<(string Name, string Url)> platformRepos) =
+            RepositoryListing listing =
                 await repositoryHostClient.ListUserRepositoriesAsync(token, platform.ToString().ToLower());
 
-            if (!success)
+            if (!listing.Success)
             {
                 fetchFailed = true;
-                fetchFailedStatusCode ??= statusCode;
+                fetchFailedStatusCode ??= listing.StatusCode;
             }
 
-            foreach ((string name, string url) in platformRepos)
+            listingTruncated |= listing.Truncated;
+
+            foreach ((string name, string url) in listing.Repos)
             {
                 if (!existingUrls.Contains(url))
                     repos.Add(new AvailableRepoDto { Name = name, Url = url, Platform = platform.ToString() });
@@ -73,7 +76,8 @@ public class AvailableReposService(
             Repos = repos,
             HasToken = !string.IsNullOrEmpty(organization.GithubToken) || !string.IsNullOrEmpty(organization.GitlabToken),
             FetchFailed = fetchFailed,
-            FetchFailedStatusCode = fetchFailedStatusCode
+            FetchFailedStatusCode = fetchFailedStatusCode,
+            Truncated = listingTruncated
         };
     }
 }

@@ -9,4 +9,5 @@ public static class RateLimitPolicies
     public const string Invitation = "invitation";
     public const string Scan = "scan";
     public const string Webhook = "webhook";
+    public const string Export = "export";
 }

@@ -16,6 +16,7 @@ public class TicketUploadAttachmentService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     ITenantContext tenant,
+    IAttachmentStorage storage,
     TicketUploadAttachmentValidator validator) : IService
 {
     public async Task<Result<TicketAttachmentDto>> ExecuteAsync(Guid ticketId, TicketAttachmentUploadModel? model,
@@ -35,8 +36,8 @@ public class TicketUploadAttachmentService(
         if (!validationResult.IsSuccess || model == null)
             return Result<TicketAttachmentDto>.From(validationResult);
 
-        Guid attachmentId = Guid.NewGuid();
-        byte[] content = await ReadContentAsync(model, cancellationToken);
+        Guid attachmentId = Guid.CreateVersion7();
+        AttachmentLocation location = await storage.SaveAsync(attachmentId, model.Content, cancellationToken);
 
         TicketAttachment attachment = new TicketAttachment
         {
@@ -44,7 +45,8 @@ public class TicketUploadAttachmentService(
             TicketId = ticketId,
             UploadedById = userId,
             FileName = Path.GetFileName(model.FileName),
-            Content = content,
+            Content = location.InlineContent,
+            StoragePath = location.StorageKey,
             ContentType = model.ContentType,
             CreatedAt = DateTime.UtcNow
         };
@@ -73,15 +75,4 @@ public class TicketUploadAttachmentService(
         };
     }
 
-    private static async Task<byte[]> ReadContentAsync(TicketAttachmentUploadModel model,
-        CancellationToken cancellationToken)
-    {
-        if (model.Content.CanSeek)
-            model.Content.Seek(0, SeekOrigin.Begin);
-
-        using MemoryStream buffer = new MemoryStream();
-        await model.Content.CopyToAsync(buffer, cancellationToken);
-
-        return buffer.ToArray();
-    }
 }

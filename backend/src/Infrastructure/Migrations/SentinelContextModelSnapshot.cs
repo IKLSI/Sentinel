@@ -561,6 +561,11 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("PriorityRank")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("integer")
+                        .HasComputedColumnSql("CASE \"Priority\" WHEN 'Critical' THEN 4 WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END", true);
+
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -610,6 +615,8 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("OrganizationId", "UpdatedAt");
 
                     b.HasIndex("OrganizationId", "Priority", "Status");
+
+                    b.HasIndex("OrganizationId", "Status", "PriorityRank", "CreatedAt");
 
                     b.ToTable("Tickets");
                 });

@@ -19,12 +19,6 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
             .FirstOrDefaultAsync(o => o.StripeSubscriptionId == subscriptionId
                 || (customerId != null && o.StripeCustomerId == customerId), cancellationToken);
 
-    public Task<PlanTier> GetPlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .Where(o => o.Id == organizationId)
-            .Select(o => o.PlanTier)
-            .FirstOrDefaultAsync(cancellationToken);
-
     public async Task<PlanTier> GetEffectivePlanTierOrDefaultAsync(Guid organizationId,
         CancellationToken cancellationToken)
     {
@@ -37,13 +31,6 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
             ? PlanTier.Free
             : PlanLimits.Effective(subscription.PlanTier, subscription.SubscriptionStatus);
     }
-
-    public Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .Where(o => o.Id == organizationId)
-            .Select(o => o.SubscriptionStatus)
-            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<bool> TryConsumeScanQuotaAsync(Guid organizationId, int maxScansPerMonth,
         CancellationToken cancellationToken)

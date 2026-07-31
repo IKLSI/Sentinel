@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -51,7 +52,7 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Where(u => u.Email == email.ToLowerInvariant() && u.IsActive)
             .ToListAsync(cancellationToken);
 
-    public async Task<PagedList<User>> SearchInOrganizationAsync(Guid organizationId, string? search, int page,
+    public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search, int page,
         int pageSize, CancellationToken cancellationToken)
     {
         IQueryable<User> query = Query(QueryTracking.NoTracking)
@@ -69,15 +70,28 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
         int total = await query.CountAsync(cancellationToken);
 
-        List<User> users = await query
+        List<UserGridRow> users = await query
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(ToGridRow)
             .ToListAsync(cancellationToken);
 
-        return new PagedList<User>(users, total);
+        return new PagedList<UserGridRow>(users, total);
     }
+
+    private static readonly Expression<Func<User, UserGridRow>> ToGridRow = u => new UserGridRow(
+        u.Id,
+        u.Email,
+        u.FirstName,
+        u.LastName,
+        u.Role,
+        u.IsActive,
+        u.CreatedAt,
+        u.LastLoginAt,
+        u.Theme,
+        u.Language);
 
     public Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)

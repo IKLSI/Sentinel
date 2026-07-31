@@ -37,7 +37,8 @@ public partial class TechHealthService
         [DependencyEcosystem.Swift] = "SwiftURL",
     };
 
-    private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status, List<Vulnerability> NewVulnerabilities);
+    private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status,
+        List<Vulnerability> NewVulnerabilities, List<Vulnerability> ResolvedVulnerabilities);
 
     private const int OsvBatchSize = 500;
 
@@ -128,15 +129,23 @@ public partial class TechHealthService
 
                 if (ids.Count == 0)
                 {
-                    if (dep.Status == DependencyStatus.Vulnerable)
+                    List<Vulnerability> allResolved = dep.Vulnerabilities.ToList();
+
+                    if (dep.Status == DependencyStatus.Vulnerable || allResolved.Count > 0)
                     {
                         scanResults.Add(new VulnerabilityScanResult(dep,
                             DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion),
-                            new List<Vulnerability>()));
+                            new List<Vulnerability>(),
+                            allResolved));
                     }
 
                     continue;
                 }
+
+                HashSet<string> reportedCves = ids.ToHashSet();
+                List<Vulnerability> resolvedVulns = dep.Vulnerabilities
+                    .Where(v => !reportedCves.Contains(v.CveId))
+                    .ToList();
 
                 HashSet<string> existingCves = dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
                 List<Vulnerability> newVulns = new();
@@ -166,8 +175,9 @@ public partial class TechHealthService
                     });
                 }
 
-                if (newVulns.Count > 0)
-                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.Vulnerable, newVulns));
+                if (newVulns.Count > 0 || resolvedVulns.Count > 0)
+                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.Vulnerable, newVulns,
+                        resolvedVulns));
             }
 
             return scanResults;

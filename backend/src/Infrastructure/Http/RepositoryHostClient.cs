@@ -21,13 +21,13 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
         "target", ".gradle", ".cargo",
     };
 
-    public async Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListUserRepositoriesAsync(string token, string platform)
+    public async Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform)
     {
         if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
             return await ListGitHubUserRepositoriesAsync(token);
         if (platform.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
             return await ListGitLabUserRepositoriesAsync(token);
-        return (true, null, []);
+        return new RepositoryListing(true, null, [], false);
     }
 
     public async Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform)

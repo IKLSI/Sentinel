@@ -29,7 +29,7 @@ public class BillingPlanListService(
             return Result<List<PlanOptionDto>>.Unauthorized();
 
         PlanTier currentTier = await organizationRepository
-            .GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
+            .GetEffectivePlanTierOrDefaultAsync(organizationId, cancellationToken);
 
         Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = await GetPricesAsync();
 

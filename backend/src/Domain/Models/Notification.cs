@@ -10,7 +10,7 @@ public enum NotificationType
 
 public class Notification : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid UserId { get; set; }
     public Guid OrganizationId { get; set; }
     public NotificationType Type { get; set; }

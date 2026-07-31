@@ -418,6 +418,7 @@
   "exports.tickets.subject": "Tickets Export",
   "exports.tickets.title": "Sentinel — Tickets",
   "exports.total": "TOTAL",
+  "exports.truncated": "Export truncated to the first rows:",
   "exports.unit.projects": "projects",
   "exports.unit.tickets": "tickets",
   "notifications.empty": "No notifications",

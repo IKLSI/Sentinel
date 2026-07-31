@@ -4,7 +4,7 @@ namespace Sentinel.API.Middleware;
 
 public class ETagMiddleware
 {
-    private const int MaxBufferedBytes = 256 * 1024;
+    private const int MaxBufferedBytes = 84 * 1024;
     private const string JsonContentType = "application/json";
 
     private readonly RequestDelegate _next;

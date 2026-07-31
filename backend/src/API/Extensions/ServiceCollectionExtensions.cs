@@ -19,6 +19,7 @@ public static partial class ServiceCollectionExtensions
         services.BindSettings<CorsSettings>(configuration, ConfigurationKeys.Sections.Cors, false);
         services.BindSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection, false);
         services.BindSettings<CookieSettings>(configuration, ConfigurationKeys.Sections.Cookie, false);
+        services.BindSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database, true);
 
         services.AddOptions<SupportSettings>()
             .Validate(settings => string.IsNullOrWhiteSpace(settings.Email) || new EmailAddressAttribute().IsValid(settings.Email),

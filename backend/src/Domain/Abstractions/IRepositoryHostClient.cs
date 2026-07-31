@@ -1,9 +1,14 @@
 namespace Sentinel.Domain.Abstractions;
 
+public sealed record RepositoryListing(
+    bool Success,
+    int? StatusCode,
+    List<(string Name, string Url)> Repos,
+    bool Truncated);
+
 public interface IRepositoryHostClient
 {
-    Task<(bool Success, int? StatusCode, List<(string Name, string Url)> Repos)> ListUserRepositoriesAsync(
-        string token, string platform);
+    Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform);
 
     Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform);
 

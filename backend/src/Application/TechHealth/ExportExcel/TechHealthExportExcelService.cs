@@ -12,7 +12,8 @@ public class TechHealthExportExcelService(ExportService exportService, ITenantCo
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
             return Result<FileDownload>.Unauthorized();
 
-        ExportResult export = await exportService.ExportTechHealthExcelAsync(organizationId, userId);
+        ExportResult export = await exportService.ExportTechHealthExcelAsync(organizationId, userId,
+            cancellationToken);
 
         return FileDownload.FromBytes(export.Content, ContentTypes.Excel, export.FileName);
     }

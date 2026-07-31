@@ -22,9 +22,11 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<TenantCommandInterceptor>();
         services.AddScoped<TenantConnectionInterceptor>();
 
+        DatabaseSettings database = ReadSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database);
+
         NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
         {
-            MaxPoolSize = 50
+            MaxPoolSize = database.MaxPoolSize
         };
 
         EnsureSessionScopedConnection(dbBuilder);
@@ -33,8 +35,8 @@ public static partial class ServiceCollectionExtensions
         {
             options.UseNpgsql(dbBuilder.ToString(), npgsqlOptions =>
             {
-                npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
-                npgsqlOptions.CommandTimeout(30);
+                npgsqlOptions.EnableRetryOnFailure(database.RetryCount, TimeSpan.FromSeconds(5), null);
+                npgsqlOptions.CommandTimeout(database.CommandTimeoutSeconds);
             });
             options.AddInterceptors(
                 sp.GetRequiredService<TenantCommandInterceptor>(),

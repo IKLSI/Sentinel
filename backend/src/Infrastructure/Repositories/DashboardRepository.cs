@@ -21,10 +21,7 @@ public class DashboardRepository : IDashboardRepository
         CancellationToken cancellationToken) =>
         await Tickets(organizationId)
             .Where(t => OpenStatuses.Contains(t.Status))
-            .OrderByDescending(t =>
-                t.Priority == TicketPriority.Critical ? 4 :
-                t.Priority == TicketPriority.High ? 3 :
-                t.Priority == TicketPriority.Medium ? 2 : 1)
+            .OrderByDescending(t => t.PriorityRank)
             .ThenBy(t => t.CreatedAt)
             .Take(take)
             .Select(t => new UrgentTicketRow(

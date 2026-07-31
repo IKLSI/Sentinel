@@ -36,6 +36,7 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/export/excel")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportExcel(
         [FromServices] TechHealthExportExcelService service,
         CancellationToken cancellationToken) =>
@@ -52,6 +53,7 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}/compliance-report")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportComplianceReport(
         Guid id,
         [FromServices] ProjectComplianceReportService service,

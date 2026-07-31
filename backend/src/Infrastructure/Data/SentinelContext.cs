@@ -217,6 +217,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         });
     }
 
+    private const string TicketPriorityRankSql =
+        """CASE "Priority" WHEN 'Critical' THEN 4 WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END""";
+
     private static void ConfigureTicket(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ticket>(entity =>
@@ -225,6 +228,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Priority).HasConversion<string>();
+            entity.Property(e => e.PriorityRank)
+                .HasComputedColumnSql(TicketPriorityRankSql, stored: true);
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
@@ -239,6 +244,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => new { e.OrganizationId, e.UpdatedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.Priority, e.Status });
+            entity.HasIndex(e => new { e.OrganizationId, e.Status, e.PriorityRank, e.CreatedAt });
 
             entity.HasOne(e => e.Organization)
                 .WithMany()

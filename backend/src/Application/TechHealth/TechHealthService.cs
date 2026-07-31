@@ -215,6 +215,13 @@ public partial class TechHealthService
         foreach (VulnerabilityScanResult result in vulnResults)
         {
             if (result.Status is { } status) result.Dependency.Status = status;
+
+            foreach (Vulnerability resolved in result.ResolvedVulnerabilities)
+            {
+                result.Dependency.Vulnerabilities.Remove(resolved);
+                _vulnerabilityRepository.Remove(resolved);
+            }
+
             foreach (Vulnerability vuln in result.NewVulnerabilities)
             {
                 result.Dependency.Vulnerabilities.Add(vuln);

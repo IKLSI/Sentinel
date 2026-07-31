@@ -8,7 +8,10 @@ using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.DownloadAttachment;
 
-public class TicketDownloadAttachmentService(ITicketAttachmentRepository attachmentRepository, ITenantContext tenant) : IService
+public class TicketDownloadAttachmentService(
+    ITicketAttachmentRepository attachmentRepository,
+    IAttachmentStorage storage,
+    ITenantContext tenant) : IService
 {
     public async Task<Result<FileDownload>> ExecuteAsync(Guid ticketId, Guid attachmentId,
         CancellationToken cancellationToken)
@@ -22,9 +25,11 @@ public class TicketDownloadAttachmentService(ITicketAttachmentRepository attachm
         if (attachment == null || attachment.Ticket.OrganizationId != organizationId)
             return Result<FileDownload>.NotFound(ErrorCodes.TicketAttachmentNotFound);
 
-        if (attachment.Content is not { Length: > 0 } storedContent)
+        Stream? content = await storage.OpenReadAsync(attachment, cancellationToken);
+
+        if (content == null)
             return Result<FileDownload>.NotFound(ErrorCodes.TicketAttachmentFileMissing);
 
-        return FileDownload.FromBytes(storedContent, attachment.ContentType, attachment.FileName);
+        return new FileDownload(content, attachment.ContentType, attachment.FileName);
     }
 }

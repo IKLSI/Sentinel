@@ -3,7 +3,7 @@ namespace Sentinel.Domain.Models;
 
 public class UserInvitation : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OrganizationId { get; set; }
     public string Email { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Developer;

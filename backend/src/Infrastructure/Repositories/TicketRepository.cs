@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -25,10 +26,10 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         Query(QueryTracking.Tracked)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-    public async Task<PagedList<Ticket>> SearchAsync(Guid organizationId, TicketFilter filter, int page,
+    public async Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter, int page,
         int pageSize, CancellationToken cancellationToken)
     {
-        IQueryable<Ticket> query = ApplyFilter(GridQuery(organizationId), filter);
+        IQueryable<Ticket> query = ApplyFilter(FilteredQuery(organizationId), filter);
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
@@ -43,32 +44,54 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
         int totalCount = await query.CountAsync(cancellationToken);
 
-        List<Ticket> items = await query
+        List<TicketGridRow> items = await query
             .OrderByDescending(t => t.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(ToGridRow)
             .ToListAsync(cancellationToken);
 
-        return new PagedList<Ticket>(items, totalCount);
+        return new PagedList<TicketGridRow>(items, totalCount);
     }
 
-    public async Task<IReadOnlyList<Ticket>> ListForExportAsync(Guid organizationId, TicketFilter filter,
-        CancellationToken cancellationToken)
+    private static readonly Expression<Func<Ticket, TicketGridRow>> ToGridRow = t => new TicketGridRow(
+        t.Id,
+        t.ProjectId,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Description,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedToId,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.EstimatedHours,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.UpdatedAt);
+
+    public async Task<IReadOnlyList<TicketGridRow>> ListForExportAsync(Guid organizationId, TicketFilter filter,
+        int maxRows, CancellationToken cancellationToken)
     {
-        IQueryable<Ticket> query = ApplyFilter(GridQuery(organizationId), filter);
+        IQueryable<Ticket> query = ApplyFilter(FilteredQuery(organizationId), filter);
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             string pattern = SearchPattern.Like(filter.Search);
+            IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
 
             query = query.Where(t =>
                 EF.Functions.ILike(t.Title, pattern) ||
-                EF.Functions.ILike(t.Description, pattern));
+                EF.Functions.ILike(t.Description, pattern) ||
+                comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
         }
 
         return await query
             .OrderByDescending(t => t.CreatedAt)
-            .Take(ExportLimits.MaxTicketRows)
+            .Take(maxRows)
+            .Select(ToGridRow)
             .ToListAsync(cancellationToken);
     }
 
@@ -95,12 +118,9 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .Where(t => t.Id == ticketId && t.OrganizationId == organizationId)
             .ExecuteDeleteAsync(cancellationToken);
 
-    private IQueryable<Ticket> GridQuery(Guid organizationId) =>
+    private IQueryable<Ticket> FilteredQuery(Guid organizationId) =>
         Query(QueryTracking.NoTracking)
-            .Where(t => t.OrganizationId == organizationId)
-            .Include(t => t.Project)
-            .Include(t => t.AssignedTo)
-            .Include(t => t.CreatedBy);
+            .Where(t => t.OrganizationId == organizationId);
 
     private static IQueryable<Ticket> ApplyFilter(IQueryable<Ticket> query, TicketFilter filter)
     {

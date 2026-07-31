@@ -19,13 +19,14 @@ public class LocaleGetService(
         if (!validationResult.IsSuccess)
             return Result<JsonElement>.From(validationResult);
 
-        string cacheKey = CacheKeys.Locale(culture);
+        string normalizedCulture = NormalizeCulture(culture);
+        string cacheKey = CacheKeys.Locale(normalizedCulture);
 
         if (cache.TryGetValue(cacheKey, out JsonElement cached))
             return Result<JsonElement>.Success(cached);
 
         string baseDirectory = Path.GetFullPath(Path.Combine(contentPath.ContentRootPath, "Resources", "Locales"));
-        string fullPath = Path.GetFullPath(Path.Combine(baseDirectory, $"{culture}.json"));
+        string fullPath = Path.GetFullPath(Path.Combine(baseDirectory, $"{normalizedCulture}.json"));
 
         if (!fullPath.StartsWith(baseDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal))
             return Result<JsonElement>.Error(ErrorCodes.LocaleInvalidPath);
@@ -49,5 +50,14 @@ public class LocaleGetService(
         });
 
         return Result<JsonElement>.Success(catalog);
+    }
+
+    private static string NormalizeCulture(string culture)
+    {
+        string[] parts = culture.Split('-');
+
+        return parts.Length == 2
+            ? $"{parts[0].ToLowerInvariant()}-{parts[1].ToUpperInvariant()}"
+            : parts[0].ToLowerInvariant();
     }
 }

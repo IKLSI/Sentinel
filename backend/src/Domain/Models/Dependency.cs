@@ -34,7 +34,7 @@ public enum DependencyStatus
 
 public class Dependency : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string CurrentVersion { get; set; } = string.Empty;

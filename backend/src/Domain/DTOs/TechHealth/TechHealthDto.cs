@@ -78,4 +78,5 @@ public class AvailableReposResponse
     public bool HasToken { get; set; }
     public bool FetchFailed { get; set; }
     public int? FetchFailedStatusCode { get; set; }
+    public bool Truncated { get; set; }
 }

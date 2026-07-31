@@ -26,7 +26,7 @@ public class TicketRepositoryTests
         await scope.SeedAsync(scope.NewOrganization(), scope.NewUser());
         await scope.SeedAsync(scope.NewTicket("Fuite mémoire sur le Scanner"));
 
-        PagedList<Ticket> page = await scope.Tickets.SearchAsync(
+        PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
             scope.OrganizationId, new TicketFilter { Search = "SCANNER" }, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(1);
@@ -49,7 +49,7 @@ public class TicketRepositoryTests
             Content = "La régression vient du parseur de manifeste"
         });
 
-        PagedList<Ticket> page = await scope.Tickets.SearchAsync(
+        PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
             scope.OrganizationId, new TicketFilter { Search = "parseur" }, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(1);
@@ -65,7 +65,7 @@ public class TicketRepositoryTests
         await scope.SeedAsync(scope.NewOrganization(), scope.NewUser());
         await scope.SeedAsync(scope.NewTicket("Un titre quelconque"));
 
-        PagedList<Ticket> page = await scope.Tickets.SearchAsync(
+        PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
             scope.OrganizationId, new TicketFilter { Search = "%" }, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(0);

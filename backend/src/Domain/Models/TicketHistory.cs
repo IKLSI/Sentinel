@@ -3,7 +3,7 @@ namespace Sentinel.Domain.Models;
 
 public class TicketHistory : IEntityWithId
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid TicketId { get; set; }
     public Guid UserId { get; set; }
     public string Field { get; set; } = string.Empty;
