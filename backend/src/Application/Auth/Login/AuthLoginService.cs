@@ -58,24 +58,28 @@ public class AuthLoginService : IService
         if (!validationResult.IsSuccess)
             return Result<LoginResponse>.From(validationResult);
 
-        using IDisposable elevation = _systemScope.Enter();
+        User? user;
+        string accessToken;
+        string refreshToken;
 
-        IReadOnlyList<User> candidates = await _userRepository
-            .ListActiveByEmailAsync(model.Email, QueryTracking.Tracked, cancellationToken);
-
-        User? user = ResolveSingleMatch(candidates, model.Password);
-
-        if (user == null)
-            return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidCredentials);
-
-        if (!user.IsEmailVerified)
-            return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);
-
-        string accessToken = _tokenService.GenerateAccessToken(user);
-        string refreshToken = _tokenService.GenerateRefreshToken();
-
-        using (ICommitScope commitScope = _commitScopeFactory.Begin())
+        using (_systemScope.Enter())
         {
+            IReadOnlyList<User> candidates = await _userRepository
+                .ListActiveByEmailAsync(model.Email, QueryTracking.Tracked, cancellationToken);
+
+            user = ResolveSingleMatch(candidates, model.Password);
+
+            if (user == null)
+                return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidCredentials);
+
+            if (!user.IsEmailVerified)
+                return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);
+
+            accessToken = _tokenService.GenerateAccessToken(user);
+            refreshToken = _tokenService.GenerateRefreshToken();
+
+            using ICommitScope commitScope = _commitScopeFactory.Begin();
+
             user.RefreshToken = _tokenService.HashRefreshToken(refreshToken);
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
             user.LastLoginAt = DateTime.UtcNow;

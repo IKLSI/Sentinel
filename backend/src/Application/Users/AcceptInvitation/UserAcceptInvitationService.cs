@@ -28,35 +28,40 @@ public class UserAcceptInvitationService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        using IDisposable elevation = systemScope.Enter();
+        Guid organizationId;
+        User user;
 
-        UserInvitation? invitation = await invitationRepository
-            .GetOrDefaultPendingByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
-
-        if (invitation == null)
-            return Result<ApiMessageResponse>.Error(ErrorCodes.UserInvitationInvalid);
-
-        bool emailExists = await userRepository
-            .ExistsByEmailAcrossTenantsAsync(invitation.Email, cancellationToken);
-
-        if (emailExists)
-            return Result<ApiMessageResponse>.Conflict(ErrorCodes.AuthEmailAlreadyUsed);
-
-        User user = new User
+        using (systemScope.Enter())
         {
-            OrganizationId = invitation.OrganizationId,
-            Email = invitation.Email,
-            PasswordHash = passwordHasher.Hash(model.Password),
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            Role = invitation.Role,
-            IsActive = true,
-            IsEmailVerified = true,
-            CreatedAt = DateTime.UtcNow
-        };
+            UserInvitation? invitation = await invitationRepository
+                .GetOrDefaultPendingByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
-        {
+            if (invitation == null)
+                return Result<ApiMessageResponse>.Error(ErrorCodes.UserInvitationInvalid);
+
+            bool emailExists = await userRepository
+                .ExistsByEmailAcrossTenantsAsync(invitation.Email, cancellationToken);
+
+            if (emailExists)
+                return Result<ApiMessageResponse>.Conflict(ErrorCodes.AuthEmailAlreadyUsed);
+
+            organizationId = invitation.OrganizationId;
+
+            user = new User
+            {
+                OrganizationId = invitation.OrganizationId,
+                Email = invitation.Email,
+                PasswordHash = passwordHasher.Hash(model.Password),
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Role = invitation.Role,
+                IsActive = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             invitation.AcceptedAt = DateTime.UtcNow;
 
             await userRepository.AddAsync(user, cancellationToken);
@@ -66,7 +71,7 @@ public class UserAcceptInvitationService(
         await auditLog.LogAsync(
             AuditAction.InvitationAccepted,
             entityType: AuditEntityTypes.User,
-            organizationId: invitation.OrganizationId,
+            organizationId: organizationId,
             entityId: user.Id);
 
         return Result<ApiMessageResponse>.Success(ApiMessageResponse.Create(SuccessCodes.UserAccountCreated));

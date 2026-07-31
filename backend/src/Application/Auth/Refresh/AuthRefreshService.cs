@@ -56,25 +56,29 @@ public class AuthRefreshService : IService
         if (string.IsNullOrEmpty(refreshToken))
             return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidRefreshToken);
 
-        using IDisposable elevation = _systemScope.Enter();
-
         string tokenHash = _tokenService.HashRefreshToken(refreshToken);
 
-        User? user = await _userRepository.GetOrDefaultByRefreshTokenHashAsync(tokenHash, cancellationToken);
+        User? user;
+        string newAccessToken;
+        string newRefreshToken;
 
-        if (user == null)
+        using (_systemScope.Enter())
         {
-            await RevokeOnReplayAsync(tokenHash, cancellationToken);
-            _refreshTokenStore.Clear();
+            user = await _userRepository.GetOrDefaultByRefreshTokenHashAsync(tokenHash, cancellationToken);
 
-            return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidRefreshToken);
-        }
+            if (user == null)
+            {
+                await RevokeOnReplayAsync(tokenHash, cancellationToken);
+                _refreshTokenStore.Clear();
 
-        string newAccessToken = _tokenService.GenerateAccessToken(user);
-        string newRefreshToken = _tokenService.GenerateRefreshToken();
+                return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidRefreshToken);
+            }
 
-        using (ICommitScope commitScope = _commitScopeFactory.Begin())
-        {
+            newAccessToken = _tokenService.GenerateAccessToken(user);
+            newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            using ICommitScope commitScope = _commitScopeFactory.Begin();
+
             user.PreviousRefreshTokenHash = user.RefreshToken;
             user.RefreshToken = _tokenService.HashRefreshToken(newRefreshToken);
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));

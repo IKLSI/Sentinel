@@ -20,7 +20,6 @@ public class BillingPortalService : IService
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IStripeClient _stripeClient;
     private readonly FrontendSettings _frontend;
-    private readonly ISystemScope _systemScope;
     private readonly IAuditLogService _auditLog;
     private readonly ITenantContext _tenant;
     private readonly ILogger<BillingPortalService> _logger;
@@ -29,7 +28,6 @@ public class BillingPortalService : IService
         IOrganizationRepository organizationRepository,
         IStripeClient stripeClient,
         IOptions<FrontendSettings> frontendOptions,
-        ISystemScope systemScope,
         IAuditLogService auditLog,
         ITenantContext tenant,
         ILogger<BillingPortalService> logger)
@@ -37,7 +35,6 @@ public class BillingPortalService : IService
         _organizationRepository = organizationRepository;
         _stripeClient = stripeClient;
         _frontend = frontendOptions.Value;
-        _systemScope = systemScope;
         _auditLog = auditLog;
         _tenant = tenant;
         _logger = logger;
@@ -75,8 +72,6 @@ public class BillingPortalService : IService
     private async Task<Result<string>> CreatePortalSessionAsync(Guid organizationId,
         CancellationToken cancellationToken)
     {
-        using IDisposable elevation = _systemScope.Enter();
-
         Organization? organization = await _organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.NoTracking, cancellationToken);
 

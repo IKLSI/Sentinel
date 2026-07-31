@@ -17,7 +17,6 @@ public class BillingPlanListService(
     StripePriceCatalog priceCatalog,
     IStripeClient stripeClient,
     IMemoryCache cache,
-    ISystemScope systemScope,
     ITenantContext tenant,
     ILogger<BillingPlanListService> logger) : IService
 {
@@ -29,7 +28,9 @@ public class BillingPlanListService(
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<List<PlanOptionDto>>.Unauthorized();
 
-        PlanTier currentTier = await GetCurrentTierAsync(organizationId, cancellationToken);
+        PlanTier currentTier = await organizationRepository
+            .GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
+
         Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = await GetPricesAsync();
 
         return PlanLimits.ByTier.Select(entry =>
@@ -47,13 +48,6 @@ public class BillingPlanListService(
                 IsCurrent = entry.Key == currentTier
             };
         }).ToList();
-    }
-
-    private async Task<PlanTier> GetCurrentTierAsync(Guid organizationId, CancellationToken cancellationToken)
-    {
-        using IDisposable elevation = systemScope.Enter();
-
-        return await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
     }
 
     private async Task<Dictionary<PlanTier, (decimal Monthly, decimal Annual)>> GetPricesAsync()

@@ -85,5 +85,29 @@ public sealed class PostgresScope : IAsyncDisposable
         UpdatedAt = DateTime.UtcNow
     };
 
+    public Project NewProject(Guid? id = null, Guid? organizationId = null) => new()
+    {
+        Id = id ?? Guid.NewGuid(),
+        OrganizationId = organizationId ?? OrganizationId,
+        Name = "Projet de test"
+    };
+
+    public Dependency NewDependency(Guid projectId) => new()
+    {
+        Id = Guid.NewGuid(),
+        ProjectId = projectId,
+        Name = "paquet-test",
+        CurrentVersion = "1.0.0"
+    };
+
+    public Vulnerability NewVulnerability(Guid dependencyId) => new()
+    {
+        Id = Guid.NewGuid(),
+        DependencyId = dependencyId,
+        CveId = "CVE-2026-0001",
+        Description = "Faille de test",
+        PackageName = "paquet-test"
+    };
+
     public async ValueTask DisposeAsync() => await Context.DisposeAsync();
 }

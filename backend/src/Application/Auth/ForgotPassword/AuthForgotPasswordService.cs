@@ -32,30 +32,29 @@ public class AuthForgotPasswordService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        using IDisposable elevation = systemScope.Enter();
-
         string email = model.Email.ToLowerInvariant();
-
-        User? user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
-            QueryTracking.NoTracking, cancellationToken);
-
-        if (user == null)
-            return ApiMessageResponse.Create(SuccessCodes.AuthPasswordResetRequested);
-
-        await tokenRepository.InvalidatePendingAsync(email, cancellationToken);
-
         string rawToken = SecureToken.Generate();
 
-        PasswordResetToken resetToken = new PasswordResetToken
+        using (systemScope.Enter())
         {
-            UserId = user.Id,
-            Email = email,
-            TokenHash = SecureToken.Hash(rawToken),
-            ExpiresAt = DateTime.UtcNow.AddHours(TokenValidityHours)
-        };
+            User? user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
+                QueryTracking.NoTracking, cancellationToken);
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
-        {
+            if (user == null)
+                return ApiMessageResponse.Create(SuccessCodes.AuthPasswordResetRequested);
+
+            await tokenRepository.InvalidatePendingAsync(email, cancellationToken);
+
+            PasswordResetToken resetToken = new PasswordResetToken
+            {
+                UserId = user.Id,
+                Email = email,
+                TokenHash = SecureToken.Hash(rawToken),
+                ExpiresAt = DateTime.UtcNow.AddHours(TokenValidityHours)
+            };
+
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             await tokenRepository.AddAsync(resetToken, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }

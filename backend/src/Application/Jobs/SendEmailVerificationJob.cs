@@ -27,10 +27,14 @@ public class SendEmailVerificationJob
 
     public async Task ExecuteAsync(string email, string rawToken)
     {
-        using IDisposable elevation = _systemScope.Enter();
+        string? language;
 
-        string culture = await _userRepository.GetLanguageByEmailOrDefaultAsync(email, CancellationToken.None)
-            ?? LanguageValues.Fr;
+        using (_systemScope.Enter())
+        {
+            language = await _userRepository.GetLanguageByEmailOrDefaultAsync(email, CancellationToken.None);
+        }
+
+        string culture = language ?? LanguageValues.Fr;
 
         await _emailService.SendEmailVerificationAsync(email, rawToken, _frontend.BaseUrl, culture);
     }

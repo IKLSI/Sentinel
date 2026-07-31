@@ -11,15 +11,12 @@ public class BillingStatusService(
     QuotaGuard quotaGuard,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
-    ISystemScope systemScope,
     ITenantContext tenant) : IService
 {
     public async Task<Result<BillingStatusDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<BillingStatusDto>.Unauthorized();
-
-        using IDisposable elevation = systemScope.Enter();
 
         await quotaGuard.ResetScanPeriodIfElapsedAsync(organizationId, cancellationToken);
 

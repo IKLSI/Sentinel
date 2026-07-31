@@ -29,22 +29,24 @@ public class AuthVerifyEmailService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        using IDisposable elevation = systemScope.Enter();
+        User? user;
 
-        EmailVerificationToken? verificationToken = await tokenRepository
-            .GetOrDefaultValidByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
-
-        if (verificationToken == null)
-            return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
-
-        User? user = await userRepository.GetOrDefaultAsync(verificationToken.UserId,
-            QueryTracking.Tracked, cancellationToken);
-
-        if (user == null)
-            return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
-
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        using (systemScope.Enter())
         {
+            EmailVerificationToken? verificationToken = await tokenRepository
+                .GetOrDefaultValidByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
+
+            if (verificationToken == null)
+                return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
+
+            user = await userRepository.GetOrDefaultAsync(verificationToken.UserId,
+                QueryTracking.Tracked, cancellationToken);
+
+            if (user == null)
+                return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidVerificationLink);
+
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             user.IsEmailVerified = true;
             verificationToken.IsUsed = true;
 

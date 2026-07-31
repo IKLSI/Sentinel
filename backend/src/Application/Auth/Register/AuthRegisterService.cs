@@ -31,52 +31,53 @@ public class AuthRegisterService(
     public async Task<Result<ApiMessageResponse>> ExecuteAsync(RegisterRequest model,
         CancellationToken cancellationToken)
     {
-        using IDisposable elevation = systemScope.Enter();
-
-        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
-
-        if (!validationResult.IsSuccess)
-            return Result<ApiMessageResponse>.From(validationResult);
-
         string email = model.Email.ToLowerInvariant().Trim();
         DateTime now = DateTime.UtcNow;
-
-        Organization organization = new Organization
-        {
-            Name = model.OrganizationName.Trim(),
-            Slug = await OrganizationSlug.GenerateUniqueAsync(model.OrganizationName, organizationRepository, cancellationToken),
-            PlanTier = PlanTier.Free,
-            SubscriptionStatus = SubscriptionStatus.None,
-            ScanCountPeriodStart = now,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        User admin = new User
-        {
-            OrganizationId = organization.Id,
-            Email = email,
-            PasswordHash = passwordHasher.Hash(model.Password),
-            FirstName = model.FirstName.Trim(),
-            LastName = model.LastName.Trim(),
-            Role = UserRole.Admin,
-            IsActive = true,
-            IsEmailVerified = false,
-            CreatedAt = now
-        };
-
         string rawToken = SecureToken.Generate();
 
-        EmailVerificationToken verificationToken = new EmailVerificationToken
-        {
-            UserId = admin.Id,
-            Email = email,
-            TokenHash = SecureToken.Hash(rawToken),
-            ExpiresAt = now.AddHours(VerificationValidityHours)
-        };
+        Organization organization;
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        using (systemScope.Enter())
         {
+            Result validationResult = await validator.ValidateAsync(model, cancellationToken);
+
+            if (!validationResult.IsSuccess)
+                return Result<ApiMessageResponse>.From(validationResult);
+
+            organization = new Organization
+            {
+                Name = model.OrganizationName.Trim(),
+                Slug = await OrganizationSlug.GenerateUniqueAsync(model.OrganizationName, organizationRepository, cancellationToken),
+                PlanTier = PlanTier.Free,
+                SubscriptionStatus = SubscriptionStatus.None,
+                ScanCountPeriodStart = now,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            User admin = new User
+            {
+                OrganizationId = organization.Id,
+                Email = email,
+                PasswordHash = passwordHasher.Hash(model.Password),
+                FirstName = model.FirstName.Trim(),
+                LastName = model.LastName.Trim(),
+                Role = UserRole.Admin,
+                IsActive = true,
+                IsEmailVerified = false,
+                CreatedAt = now
+            };
+
+            EmailVerificationToken verificationToken = new EmailVerificationToken
+            {
+                UserId = admin.Id,
+                Email = email,
+                TokenHash = SecureToken.Hash(rawToken),
+                ExpiresAt = now.AddHours(VerificationValidityHours)
+            };
+
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             await organizationRepository.AddAsync(organization, cancellationToken);
             await userRepository.AddAsync(admin, cancellationToken);
             await verificationTokenRepository.AddAsync(verificationToken, cancellationToken);

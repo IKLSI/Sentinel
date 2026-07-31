@@ -105,12 +105,7 @@ public static partial class ServiceCollectionExtensions
             SentinelContext db = sp.GetRequiredService<SentinelContext>();
             ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
 
-            using IDisposable elevation = systemScope.Enter();
-
-            var found = await db.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.IsActive, u.TokenVersion })
-                .FirstOrDefaultAsync();
+            (bool IsActive, int TokenVersion)? found = await ReadAccountStateAsync(db, systemScope, userId);
 
             if (found == null)
             {
@@ -118,7 +113,7 @@ public static partial class ServiceCollectionExtensions
                 return;
             }
 
-            account = (found.IsActive, found.TokenVersion);
+            account = found.Value;
             cache.Set(cacheKey, account, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = CacheKeys.AuthAccountTtl,
@@ -130,6 +125,19 @@ public static partial class ServiceCollectionExtensions
         {
             context.Fail("Expired session");
         }
+    }
+
+    private static async Task<(bool IsActive, int TokenVersion)?> ReadAccountStateAsync(
+        SentinelContext db, ISystemScope systemScope, Guid userId)
+    {
+        using IDisposable elevation = systemScope.Enter();
+
+        var found = await db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.IsActive, u.TokenVersion })
+            .FirstOrDefaultAsync();
+
+        return found == null ? null : (found.IsActive, found.TokenVersion);
     }
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)

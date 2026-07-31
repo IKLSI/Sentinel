@@ -32,22 +32,24 @@ public class AuthResetPasswordService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        using IDisposable elevation = systemScope.Enter();
+        User? user;
 
-        PasswordResetToken? resetToken = await tokenRepository
-            .GetOrDefaultValidByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
-
-        if (resetToken == null)
-            return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidResetLink);
-
-        User? user = await userRepository.GetOrDefaultActiveAsync(resetToken.UserId,
-            QueryTracking.Tracked, cancellationToken);
-
-        if (user == null)
-            return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidResetLink);
-
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        using (systemScope.Enter())
         {
+            PasswordResetToken? resetToken = await tokenRepository
+                .GetOrDefaultValidByTokenHashAsync(SecureToken.Hash(model.Token), cancellationToken);
+
+            if (resetToken == null)
+                return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidResetLink);
+
+            user = await userRepository.GetOrDefaultActiveAsync(resetToken.UserId,
+                QueryTracking.Tracked, cancellationToken);
+
+            if (user == null)
+                return Result<ApiMessageResponse>.Error(ErrorCodes.AuthInvalidResetLink);
+
+            using ICommitScope commitScope = commitScopeFactory.Begin();
+
             user.PasswordHash = passwordHasher.Hash(model.Password);
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;

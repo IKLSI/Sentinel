@@ -23,7 +23,6 @@ public class BillingCheckoutService : IService
     private readonly StripePriceCatalog _priceCatalog;
     private readonly IStripeClient _stripeClient;
     private readonly FrontendSettings _frontend;
-    private readonly ISystemScope _systemScope;
     private readonly IAuditLogService _auditLog;
     private readonly ITenantContext _tenant;
     private readonly BillingCheckoutValidator _validator;
@@ -35,7 +34,6 @@ public class BillingCheckoutService : IService
         StripePriceCatalog priceCatalog,
         IStripeClient stripeClient,
         IOptions<FrontendSettings> frontendOptions,
-        ISystemScope systemScope,
         IAuditLogService auditLog,
         ITenantContext tenant,
         BillingCheckoutValidator validator,
@@ -46,7 +44,6 @@ public class BillingCheckoutService : IService
         _priceCatalog = priceCatalog;
         _stripeClient = stripeClient;
         _frontend = frontendOptions.Value;
-        _systemScope = systemScope;
         _auditLog = auditLog;
         _tenant = tenant;
         _validator = validator;
@@ -96,8 +93,6 @@ public class BillingCheckoutService : IService
 
         if (!priceResult.IsSuccess)
             return priceResult;
-
-        using IDisposable elevation = _systemScope.Enter();
 
         Organization? organization = await _organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.Tracked, cancellationToken);

@@ -32,10 +32,13 @@ public class SendInvitationEmailJob
 
     public async Task ExecuteAsync(Guid invitationId, string rawToken)
     {
-        using IDisposable elevation = _systemScope.Enter();
+        UserInvitation? invitation;
 
-        UserInvitation? invitation = await _invitationRepository
-            .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, CancellationToken.None);
+        using (_systemScope.Enter())
+        {
+            invitation = await _invitationRepository
+                .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, CancellationToken.None);
+        }
 
         if (invitation == null)
         {
