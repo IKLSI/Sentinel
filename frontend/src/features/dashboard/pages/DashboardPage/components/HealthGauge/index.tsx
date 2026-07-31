@@ -6,7 +6,7 @@ import {
   GAUGE_RADIUS,
   GAUGE_SIZE,
   GAUGE_STROKE,
-} from "./constants";
+} from "@/features/dashboard/pages/DashboardPage/components/HealthGauge/constants";
 
 interface Props {
   score: number;

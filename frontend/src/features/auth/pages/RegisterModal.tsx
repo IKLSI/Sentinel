@@ -11,12 +11,15 @@ import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import {
   useRegisterMutation,
   useResendVerificationMutation,
-} from "../hooks/useAuthMutations";
-import { useToast } from "../../../hooks/useToast";
-import { useT } from "../../../i18n/I18nContext";
+} from "@/domains/auth/mutations";
+import { useToast } from "@/hooks/useToast";
+import { useT } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
-import { registerSchema, type RegisterFormValues } from "../schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from "@/features/auth/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface RegisterModalProps {
   open: boolean;
@@ -70,19 +73,25 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   }, [open, reset, setFocus]);
 
   const onSubmit = handleFormSubmit((data) => {
-    registerMutation.mutate(data, {
-      onSuccess: () => setDone(true),
-      onError: (err) =>
-        showToast(apiError(err, t("auth.register.error_generic")), "error"),
-    });
+    registerMutation.mutate(
+      { data },
+      {
+        onSuccess: () => setDone(true),
+        onError: (err) =>
+          showToast(apiError(err, t("auth.register.error_generic")), "error"),
+      },
+    );
   });
 
   const handleResend = () => {
-    resendVerificationMutation.mutate(getValues("email"), {
-      onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
-      onError: (err) =>
-        showToast(apiError(err, t("auth.register.error_generic")), "error"),
-    });
+    resendVerificationMutation.mutate(
+      { data: { email: getValues("email") } },
+      {
+        onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
+        onError: (err) =>
+          showToast(apiError(err, t("auth.register.error_generic")), "error"),
+      },
+    );
   };
 
   const fieldStyle = { animation: "none !important", opacity: "1 !important" };

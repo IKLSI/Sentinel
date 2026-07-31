@@ -4,10 +4,10 @@ import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
-import { isCovered } from "@/utils/coverage";
+import type { Project } from "@/domains/projects/types";
+import { isCovered } from "@/formatters/coverage";
 import {
   type DashPalette,
   HEALTH_CRITICAL_THRESHOLD,
@@ -15,12 +15,12 @@ import {
   buildScrollSx,
   gradeMeta,
   scoreToGrade,
-} from "../../helpers";
-import { HealthGauge } from "../HealthGauge";
-import { ProjectRankRow } from "../ProjectRankRow";
+} from "@/features/dashboard/pages/DashboardPage/helpers";
+import { HealthGauge } from "@/features/dashboard/pages/DashboardPage/components/HealthGauge";
+import { ProjectRankRow } from "@/features/dashboard/pages/DashboardPage/components/ProjectRankRow";
 
 interface Props {
-  projects: ProjectDto[];
+  projects: Project[];
   palette: DashPalette;
 }
 

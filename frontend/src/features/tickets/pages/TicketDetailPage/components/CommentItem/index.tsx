@@ -5,13 +5,14 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import { format } from "date-fns";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { useI18n } from "@/i18n/I18nContext";
+import { getDateFnsLocale } from "@/configs/locales";
+import { useI18n } from "@/contexts/I18nContext";
 import { useToast } from "@/hooks/useToast";
-import { useDownloadAttachment } from "@/features/tickets/hooks/useTicket";
+import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
 import { useApiError } from "@/hooks/useApiError";
-import type { Ticket } from "@/types";
-import { type DetailPalette, getInitials } from "../../helpers";
+import type { Ticket } from "@/domains/tickets/types";
+import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { initialsFromName } from "@/formatters/initials";
 
 type Comment = Ticket["comments"][number];
 
@@ -69,7 +70,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   const apiError = useApiError();
   const { showToast } = useToast();
   const { mainText, attachments } = parseComment(c.content);
-  const downloadMutation = useDownloadAttachment();
+  const downloadMutation = useDownloadAttachmentMutation();
 
   const handleDownload = (a: Attachment) => {
     downloadMutation.mutate(
@@ -118,7 +119,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           flexShrink: 0,
         }}
       >
-        {getInitials(c.author.firstName, c.author.lastName)}
+        {initialsFromName(c.authorName)}
       </Box>
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -132,7 +133,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               fontWeight: 700,
             }}
           >
-            {c.author.firstName} {c.author.lastName}
+            {c.authorName}
           </Box>
 
           <Box sx={{ color: palette.chevron, fontSize: "11px" }}>·</Box>

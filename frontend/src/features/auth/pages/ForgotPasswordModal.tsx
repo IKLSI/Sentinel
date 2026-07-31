@@ -6,15 +6,15 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
-import { useForgotPasswordMutation } from "../hooks/useAuthMutations";
-import { useToast } from "../../../hooks/useToast";
-import { useT } from "../../../i18n/I18nContext";
+import { useForgotPasswordMutation } from "@/domains/auth/mutations";
+import { useToast } from "@/hooks/useToast";
+import { useT } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
-} from "../schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+} from "@/features/auth/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -51,14 +51,17 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   }, [open, reset, setFocus]);
 
   const onSubmit = handleFormSubmit((data) => {
-    forgotPasswordMutation.mutate(data.email, {
-      onSuccess: () => setDone(true),
-      onError: (err) =>
-        showToast(
-          apiError(err, t("auth.forgot_password.error_generic")),
-          "error",
-        ),
-    });
+    forgotPasswordMutation.mutate(
+      { data: { email: data.email } },
+      {
+        onSuccess: () => setDone(true),
+        onError: (err) =>
+          showToast(
+            apiError(err, t("auth.forgot_password.error_generic")),
+            "error",
+          ),
+      },
+    );
   });
 
   return (

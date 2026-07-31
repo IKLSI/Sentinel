@@ -4,14 +4,15 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { evaluateAdminGuard } from "@/features/auth/routeGuards";
+import type { UserRole } from "@/enums";
 
 const RouteComponent = () => {
   const { user } = useAuth();
   const result = evaluateAdminGuard({
     loading: false,
-    role: user?.role ?? null,
+    role: (user?.role as UserRole) ?? null,
   });
   if (result.status === "redirect") return <Navigate to={result.to} replace />;
   return <Outlet />;

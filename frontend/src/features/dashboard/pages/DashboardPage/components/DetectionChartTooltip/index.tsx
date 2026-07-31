@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 
 interface Props {
   active?: boolean;

@@ -11,15 +11,12 @@ import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
 import PictureAsPdfOutlined from "@mui/icons-material/PictureAsPdfOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
+import { SBOM_FORMAT, type SbomFormat } from "@/domains/projects/constants";
 import {
-  SBOM_FORMAT,
-  type SbomFormat,
-} from "@/features/techHealth/api/projects";
-import {
-  useDownloadSbom,
-  useDownloadComplianceReport,
-} from "@/features/techHealth/hooks/useProject";
+  useDownloadComplianceReportMutation,
+  useDownloadSbomMutation,
+} from "@/domains/projects/downloads";
 
 interface Props {
   projectId: string;
@@ -30,8 +27,8 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
   const t = useT();
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const downloadSbomMutation = useDownloadSbom();
-  const downloadReportMutation = useDownloadComplianceReport();
+  const downloadSbomMutation = useDownloadSbomMutation();
+  const downloadReportMutation = useDownloadComplianceReportMutation();
   const busy =
     downloadSbomMutation.isPending || downloadReportMutation.isPending;
 

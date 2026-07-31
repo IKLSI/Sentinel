@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { OrganisationTab } from "../SettingsPage/components/OrganisationTab";
+import { OrganisationTab } from "@/features/settings/pages/SettingsPage/components/OrganisationTab";
 
 export const OrganisationPage: React.FC = () => (
   <Box

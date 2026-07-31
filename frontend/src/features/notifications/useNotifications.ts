@@ -1,71 +1,59 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryClient } from "@/configs/queryClient";
+import { NOTIFICATIONS_QUERY_KEY } from "@/domains/notifications/constants";
 import {
-  fetchNotifications,
-  markAllNotificationsRead,
-  markNotificationRead,
-  type NotificationItem,
-  type NotificationsResponse,
-} from "./api";
-import { useNotificationHub } from "./useNotificationHub";
-
-const NOTIFICATIONS_QUERY_KEY = ["notifications"] as const;
+  useMarkAllNotificationsReadMutation,
+  useMarkNotificationReadMutation,
+} from "@/domains/notifications/mutations";
+import { useNotificationsQuery } from "@/domains/notifications/queries";
+import type {
+  NotificationItem,
+  NotificationsResponse,
+} from "@/domains/notifications/types";
+import { useNotificationHub } from "@/features/notifications/useNotificationHub";
 
 export function useNotifications() {
-  const queryClient = useQueryClient();
-
-  const { data } = useQuery({
-    queryKey: NOTIFICATIONS_QUERY_KEY,
-    queryFn: fetchNotifications,
-  });
+  const { data } = useNotificationsQuery();
 
   useNotificationHub((incoming) => {
     queryClient.setQueryData<NotificationsResponse>(
       NOTIFICATIONS_QUERY_KEY,
-      (prev) => {
-        const items = prev?.items ?? [];
-        return {
-          items: [incoming, ...items],
-          unreadCount: (prev?.unreadCount ?? 0) + 1,
-        };
-      },
+      (previous) => ({
+        items: [incoming, ...(previous?.items ?? [])],
+        unreadCount: (previous?.unreadCount ?? 0) + 1,
+      }),
     );
   });
 
   const items: NotificationItem[] = useMemo(() => data?.items ?? [], [data]);
   const unreadCount = data?.unreadCount ?? 0;
 
-  const markRead = useMutation({
-    mutationFn: markNotificationRead,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
-  });
-
-  const markAllRead = useMutation({
-    mutationFn: markAllNotificationsRead,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY }),
-  });
+  const markRead = useMarkNotificationReadMutation();
+  const markAllRead = useMarkAllNotificationsReadMutation();
 
   const itemsRef = useRef(items);
   useEffect(() => {
     itemsRef.current = items;
   });
 
+  const runMarkRead = markRead.mutate;
   const markReadByTicketId = useCallback(
     (ticketId: string) => {
-      const notif = itemsRef.current.find(
-        (n) => !n.isRead && n.ticketId === ticketId,
+      const notification = itemsRef.current.find(
+        (item) => !item.isRead && item.ticketId === ticketId,
       );
-      if (notif) markRead.mutate(notif.id);
+      if (notification) runMarkRead({ id: notification.id });
     },
-    [markRead.mutate],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+    [runMarkRead],
+  );
+
+  const runMarkAllRead = markAllRead.mutate;
+  const markAllAsRead = useCallback(() => runMarkAllRead({}), [runMarkAllRead]);
 
   return {
     items,
     unreadCount,
     markReadByTicketId,
-    markAllRead: markAllRead.mutate,
+    markAllRead: markAllAsRead,
   };
 }

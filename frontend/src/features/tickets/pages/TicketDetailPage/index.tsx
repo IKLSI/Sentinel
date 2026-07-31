@@ -5,34 +5,34 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
-import { DeleteModal } from "@/components/DeleteModal";
+import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { useToast } from "@/hooks/useToast";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useT } from "@/i18n/I18nContext";
-import { useTheme } from "@/store/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/contexts/I18nContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
-  useTicket,
-  useAddComment,
-  useUpdateComment,
-  useDeleteComment,
-} from "@/features/tickets/hooks/useTicket";
+  useAddCommentMutation,
+  useDeleteCommentMutation,
+  useUpdateCommentMutation,
+} from "@/domains/tickets/mutations";
+import { useTicketQuery } from "@/domains/tickets/queries";
 import {
   buildFieldSx,
   buildMarkdownSx,
   buildPalette,
   buildPriorityConfig,
-} from "./helpers";
-import { TicketHeader } from "./components/TicketHeader";
-import { SectionDivider } from "./components/SectionDivider";
-import { CommentThread } from "./components/CommentThread";
-import { CommentComposer } from "./components/CommentComposer";
-import { PropertiesCard } from "./components/PropertiesCard";
-import { HistoryCard } from "./components/HistoryCard";
-import { EditCommentModal } from "./components/EditCommentModal";
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { TicketHeader } from "@/features/tickets/pages/TicketDetailPage/components/TicketHeader";
+import { SectionDivider } from "@/features/tickets/pages/TicketDetailPage/components/SectionDivider";
+import { CommentThread } from "@/features/tickets/pages/TicketDetailPage/components/CommentThread";
+import { CommentComposer } from "@/features/tickets/pages/TicketDetailPage/components/CommentComposer";
+import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/components/PropertiesCard";
+import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
+import { EditCommentModal } from "@/features/tickets/pages/TicketDetailPage/components/EditCommentModal";
 import { useApiError } from "@/hooks/useApiError";
 import { useNotifications } from "@/features/notifications/useNotifications";
-import { Theme } from "@/types/enums";
-import { commentContentSchema } from "./schemas";
+import { Theme } from "@/enums";
+import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
 const routeApi = getRouteApi("/_authenticated/tickets/$id");
 
@@ -50,10 +50,13 @@ export const TicketDetailPage: React.FC = () => {
   const markdownSx = useMemo(() => buildMarkdownSx(palette), [palette]);
   const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
 
-  const { ticket, loading, notFound } = useTicket(id);
-  const addCommentMutation = useAddComment(id ?? "");
-  const updateCommentMutation = useUpdateComment(id ?? "");
-  const deleteCommentMutation = useDeleteComment(id ?? "");
+  const ticketQuery = useTicketQuery(id);
+  const ticket = ticketQuery.data ?? null;
+  const loading = ticketQuery.isLoading;
+  const notFound = ticketQuery.isError;
+  const addCommentMutation = useAddCommentMutation(id ?? "");
+  const updateCommentMutation = useUpdateCommentMutation(id ?? "");
+  const deleteCommentMutation = useDeleteCommentMutation(id ?? "");
 
   const [composerValue, setComposerValue] = useState("");
   const submitting = addCommentMutation.isPending;
@@ -85,26 +88,30 @@ export const TicketDetailPage: React.FC = () => {
   }, [ticket]);
 
   const titleBeforeEndpoint = useMemo(() => {
-    if (!ticket || !endpointMatch) return ticket?.title ?? "";
-    if (ticket.title.includes(endpointMatch)) {
-      return ticket.title.replace(endpointMatch, "").trim();
+    const title = ticket?.title ?? "";
+    if (!endpointMatch) return title;
+    if (title.includes(endpointMatch)) {
+      return title.replace(endpointMatch, "").trim();
     }
-    return ticket.title;
+    return title;
   }, [ticket, endpointMatch]);
 
   const handleAddComment = (content: string) => {
     if (!ticket || !commentContentSchema.safeParse(content).success) return;
-    addCommentMutation.mutate(content, {
-      onSuccess: () => {
-        setComposerValue("");
-        showToast(t("tickets.detail.reply_sent"), "success");
+    addCommentMutation.mutate(
+      { id: ticket.id, data: { content } },
+      {
+        onSuccess: () => {
+          setComposerValue("");
+          showToast(t("tickets.detail.reply_sent"), "success");
+        },
+        onError: (err) =>
+          showToast(
+            apiError(err, t("tickets.detail.add_comment_error")),
+            "error",
+          ),
       },
-      onError: (err) =>
-        showToast(
-          apiError(err, t("tickets.detail.add_comment_error")),
-          "error",
-        ),
-    });
+    );
   };
 
   const handleEditComment = () => {
@@ -115,7 +122,11 @@ export const TicketDetailPage: React.FC = () => {
     )
       return;
     updateCommentMutation.mutate(
-      { commentId: editCommentTarget.id, content: editCommentValue },
+      {
+        id: ticket.id,
+        commentId: editCommentTarget.id,
+        data: { content: editCommentValue },
+      },
       {
         onSuccess: () => {
           setEditCommentTarget(null);
@@ -129,14 +140,17 @@ export const TicketDetailPage: React.FC = () => {
 
   const handleDeleteComment = () => {
     if (!ticket || !deleteCommentTarget) return;
-    deleteCommentMutation.mutate(deleteCommentTarget, {
-      onSuccess: () => {
-        setDeleteCommentTarget(null);
-        showToast(t("tickets.detail.comment_deleted"), "success");
+    deleteCommentMutation.mutate(
+      { id: ticket.id, commentId: deleteCommentTarget },
+      {
+        onSuccess: () => {
+          setDeleteCommentTarget(null);
+          showToast(t("tickets.detail.comment_deleted"), "success");
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("tickets.detail.delete_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("tickets.detail.delete_error")), "error"),
-    });
+    );
   };
 
   if (loading) {
@@ -255,7 +269,7 @@ export const TicketDetailPage: React.FC = () => {
             />
 
             <CommentThread
-              comments={ticket.comments}
+              comments={ticket.comments ?? []}
               currentUserId={user?.id}
               palette={palette}
               onEdit={(idValue, content) => {

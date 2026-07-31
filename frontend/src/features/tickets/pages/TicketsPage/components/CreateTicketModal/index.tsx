@@ -5,20 +5,24 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
-import { AppModal } from "@/components/AppModal";
-import { DurationPicker } from "@/components/DurationPicker";
-import { useT } from "@/i18n/I18nContext";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
-import type { User } from "@/types";
-import { modalInputSx, modalSelectSx, modalTextareaSx } from "../../helpers";
-import type { CreateTicketFormValues } from "../../schemas";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { DurationPicker } from "@/components/ui/forms/DurationPicker";
+import { useT } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
+import type { User } from "@/domains/users/types";
+import {
+  modalInputSx,
+  modalSelectSx,
+  modalTextareaSx,
+} from "@/features/tickets/pages/TicketsPage/helpers";
+import type { CreateTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<CreateTicketFormValues>;
   control: Control<CreateTicketFormValues>;
-  projects: ProjectDto[];
+  projects: Project[];
   users: User[];
   submitting: boolean;
   onSubmit: () => void;

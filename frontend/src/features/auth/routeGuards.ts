@@ -1,4 +1,4 @@
-import { UserRole } from "@/types/enums";
+import { UserRole } from "@/enums";
 import type { RouterContext } from "@/routerContext";
 
 type AuthState = RouterContext["auth"];

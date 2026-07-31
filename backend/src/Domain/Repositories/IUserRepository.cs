@@ -25,8 +25,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
     Task<IReadOnlyList<User>> ListActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken);
 
-    Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search, int page, int pageSize,
-        CancellationToken cancellationToken);
+    Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search, UserRole? role,
+        int page, int pageSize, CancellationToken cancellationToken);
 
     Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
 

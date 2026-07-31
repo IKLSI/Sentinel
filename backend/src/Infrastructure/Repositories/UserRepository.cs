@@ -52,11 +52,14 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Where(u => u.Email == email.ToLowerInvariant() && u.IsActive)
             .ToListAsync(cancellationToken);
 
-    public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search, int page,
-        int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search,
+        UserRole? role, int page, int pageSize, CancellationToken cancellationToken)
     {
         IQueryable<User> query = Query(QueryTracking.NoTracking)
             .Where(u => u.OrganizationId == organizationId);
+
+        if (role is UserRole roleFilter)
+            query = query.Where(u => u.Role == roleFilter);
 
         if (!string.IsNullOrWhiteSpace(search))
         {

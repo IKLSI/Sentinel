@@ -6,8 +6,8 @@ import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
-import { useI18n } from "@/i18n/I18nContext";
-import type { ProjectDetailDto } from "@/features/techHealth/api/projects";
+import { useI18n } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
 import {
   GRADE_VISUAL,
   UNTRACKED_SECTION,
@@ -17,10 +17,10 @@ import {
   GRADE_NOT_AVAILABLE,
   coverageReasonKey,
   isCovered,
-} from "@/utils/coverage";
+} from "@/formatters/coverage";
 
 interface Props {
-  project: ProjectDetailDto;
+  project: Project;
   eolRuntimes: number;
   action?: React.ReactNode;
 }

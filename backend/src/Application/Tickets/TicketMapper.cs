@@ -9,6 +9,7 @@ public static class TicketMapper
     public static TicketDto ToDto(Ticket ticket) => new()
     {
         Id = ticket.Id,
+        Reference = TicketReference.For(ticket.Id),
         ProjectId = ticket.ProjectId,
         ProjectName = ticket.Project?.Name,
         Title = ticket.Title,
@@ -29,6 +30,7 @@ public static class TicketMapper
     public static TicketDto ToDto(TicketGridRow row) => new()
     {
         Id = row.Id,
+        Reference = TicketReference.For(row.Id),
         ProjectId = row.ProjectId,
         ProjectName = row.ProjectName,
         Title = row.Title,

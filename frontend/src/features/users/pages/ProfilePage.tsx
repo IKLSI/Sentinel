@@ -1,27 +1,32 @@
 import type React from "react";
 import { useState } from "react";
-import { version } from "../../../../package.json";
+import { version } from "@/../package.json";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import { useAuth } from "../../auth/hooks/useAuth";
-import { useTheme } from "../../../store/ThemeContext";
-import { useToast } from "../../../hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/hooks/useToast";
 import {
-  useUpdateMyProfile,
-  useUpdatePreferences,
-  useExportGdprData,
-  useDeleteMyAccount,
-} from "../hooks/useUsers";
+  useDeleteMyAccountMutation,
+  useExportMyDataMutation,
+  useUpdateMyProfileMutation,
+  useUpdatePreferencesMutation,
+} from "@/domains/users/mutations";
+import { toIsoDate } from "@/formatters/fileName";
+import { MIME_TYPES } from "@/helpers/download";
 import { useApiError } from "@/hooks/useApiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
-import { AppModal } from "@/components/AppModal";
-import { useT, useI18n } from "../../../i18n/I18nContext";
-import { Theme, Language, UserRole } from "../../../types/enums";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { useT, useI18n } from "@/contexts/I18nContext";
+import { Theme, Language, UserRole } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
 import { ROUTES } from "@/constants/routes";
+
+const JSON_INDENT = 2;
+const GDPR_EXPORT_FILE_PREFIX = "sentinel-export";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
@@ -96,10 +101,10 @@ export const ProfilePage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
 
-  const updateProfile = useUpdateMyProfile();
-  const updatePrefs = useUpdatePreferences();
-  const exportGdpr = useExportGdprData();
-  const deleteAccount = useDeleteMyAccount();
+  const updateProfile = useUpdateMyProfileMutation();
+  const updatePrefs = useUpdatePreferencesMutation();
+  const exportGdpr = useExportMyDataMutation();
+  const deleteAccount = useDeleteMyAccountMutation();
 
   const savingPf = updateProfile.isPending;
   const exportingGdpr = exportGdpr.isPending;
@@ -114,59 +119,73 @@ export const ProfilePage: React.FC = () => {
       showToast(t("profile.toast.name_required"), "warning");
       return;
     }
-    updateProfile.mutate(pf, {
-      onSuccess: (updated) => {
-        setUser({ ...user, ...updated });
-        showToast(t("profile.toast.updated"), "success");
+    updateProfile.mutate(
+      { data: pf },
+      {
+        onSuccess: (updated) => {
+          if (user)
+            setUser({
+              ...user,
+              firstName: updated.firstName,
+              lastName: updated.lastName,
+            });
+          showToast(t("profile.toast.updated"), "success");
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("profile.toast.update_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("profile.toast.update_error")), "error"),
-    });
+    );
   };
 
   const handleThemeToggle = (mode: Theme) => {
     if (theme === mode) return;
     toggleTheme();
-    updatePrefs.mutate({ theme: mode });
+    updatePrefs.mutate({ data: { theme: mode } });
   };
 
   const handleExportGdpr = () => {
-    exportGdpr.mutate(undefined, {
-      onSuccess: (data) => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-          type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `sentinel-export-${new Date().toISOString().split("T")[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+    exportGdpr.mutate(
+      {},
+      {
+        onSuccess: (data) => {
+          const blob = new Blob([JSON.stringify(data, null, JSON_INDENT)], {
+            type: MIME_TYPES.JSON,
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${GDPR_EXPORT_FILE_PREFIX}-${toIsoDate()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("profile.gdpr.export_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("profile.gdpr.export_error")), "error"),
-    });
+    );
   };
 
   const handleDeleteAccount = () => {
     if (!deletePassword.trim()) return;
-    deleteAccount.mutate(deletePassword, {
-      onSuccess: () => {
-        Object.values(STORAGE_KEYS).forEach((k) => {
-          localStorage.removeItem(k);
-        });
-        window.location.href = "/login";
+    deleteAccount.mutate(
+      { data: { password: deletePassword } },
+      {
+        onSuccess: () => {
+          Object.values(STORAGE_KEYS).forEach((k) => {
+            localStorage.removeItem(k);
+          });
+          window.location.href = ROUTES.LOGIN;
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("profile.gdpr.delete_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("profile.gdpr.delete_error")), "error"),
-    });
+    );
   };
 
   const handleLanguageChange = (lang: Language) => {
     if (culture === lang || !user) return;
     setLanguage(lang);
     setUser({ ...user, language: lang });
-    updatePrefs.mutate({ language: lang });
+    updatePrefs.mutate({ data: { language: lang } });
   };
 
   return (
@@ -283,8 +302,8 @@ export const ProfilePage: React.FC = () => {
               type="text"
               sx={inpRo}
               value={
-                user?.role && ROLE_LABEL_KEYS[user.role]
-                  ? t(ROLE_LABEL_KEYS[user.role])
+                user?.role && ROLE_LABEL_KEYS[user.role as UserRole]
+                  ? t(ROLE_LABEL_KEYS[user.role as UserRole])
                   : (user?.role ?? "")
               }
               readOnly

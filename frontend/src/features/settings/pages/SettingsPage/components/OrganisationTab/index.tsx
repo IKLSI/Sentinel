@@ -5,22 +5,26 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
+import { EMPTY_INTEGRATION_SETTINGS } from "@/domains/settings/constants";
+import type { VulnerabilitySeverity } from "@/enums";
 import {
-  useOrganizationSettings,
-  useUpdateOrganizationSettings,
-  useIntegrationSettings,
-  useConnectGithub,
-  useConnectGitlab,
-} from "@/features/settings/hooks/useSettings";
+  useConnectGithubMutation,
+  useConnectGitlabMutation,
+  useUpdateOrganizationSettingsMutation,
+} from "@/domains/settings/mutations";
+import {
+  useIntegrationSettingsQuery,
+  useOrganizationSettingsQuery,
+} from "@/domains/settings/queries";
 import {
   CARD_SX,
   CardHeader,
   FieldLabel,
   SEVERITY_VALUES,
   inp,
-} from "../../helpers";
-import { IntegrationRow } from "../IntegrationRow";
+} from "@/features/settings/pages/SettingsPage/helpers";
+import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
 import { useApiError } from "@/hooks/useApiError";
 
 export const OrganisationTab: React.FC = () => {
@@ -37,13 +41,16 @@ export const OrganisationTab: React.FC = () => {
     [t],
   );
 
-  const { org, loading: loadingOrg } = useOrganizationSettings();
-  const updateOrg = useUpdateOrganizationSettings();
+  const organizationQuery = useOrganizationSettingsQuery();
+  const org = organizationQuery.data ?? null;
+  const loadingOrg = organizationQuery.isLoading;
+  const updateOrg = useUpdateOrganizationSettingsMutation();
   const savingOrg = updateOrg.isPending;
 
-  const { integrations } = useIntegrationSettings();
-  const connectGithubMutation = useConnectGithub();
-  const connectGitlabMutation = useConnectGitlab();
+  const integrationsQuery = useIntegrationSettingsQuery();
+  const integrations = integrationsQuery.data ?? EMPTY_INTEGRATION_SETTINGS;
+  const connectGithubMutation = useConnectGithubMutation();
+  const connectGitlabMutation = useConnectGitlabMutation();
   const connectingGithub = connectGithubMutation.isPending;
   const connectingGitlab = connectGitlabMutation.isPending;
 
@@ -71,9 +78,11 @@ export const OrganisationTab: React.FC = () => {
     }
     updateOrg.mutate(
       {
-        name: orgForm.name,
-        securityAlertsEnabled: orgForm.securityAlertsEnabled,
-        alertMinSeverity: orgForm.alertMinSeverity,
+        data: {
+          name: orgForm.name,
+          securityAlertsEnabled: orgForm.securityAlertsEnabled,
+          alertMinSeverity: orgForm.alertMinSeverity as VulnerabilitySeverity,
+        },
       },
       {
         onSuccess: () => showToast(t("settings.toast.org_updated"), "success"),
@@ -91,14 +100,17 @@ export const OrganisationTab: React.FC = () => {
       showToast(t("settings.toast.token_required"), "warning");
       return;
     }
-    connectGithubMutation.mutate(githubToken.trim(), {
-      onSuccess: () => {
-        setGithubToken("");
-        showToast(t("settings.toast.github_connected"), "success");
+    connectGithubMutation.mutate(
+      { data: { token: githubToken.trim() } },
+      {
+        onSuccess: () => {
+          setGithubToken("");
+          showToast(t("settings.toast.github_connected"), "success");
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("settings.toast.github_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("settings.toast.github_error")), "error"),
-    });
+    );
   };
 
   const handleConnectGitlab = () => {
@@ -106,14 +118,17 @@ export const OrganisationTab: React.FC = () => {
       showToast(t("settings.toast.token_required"), "warning");
       return;
     }
-    connectGitlabMutation.mutate(gitlabToken.trim(), {
-      onSuccess: () => {
-        setGitlabToken("");
-        showToast(t("settings.toast.gitlab_connected"), "success");
+    connectGitlabMutation.mutate(
+      { data: { token: gitlabToken.trim() } },
+      {
+        onSuccess: () => {
+          setGitlabToken("");
+          showToast(t("settings.toast.gitlab_connected"), "success");
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("settings.toast.gitlab_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("settings.toast.gitlab_error")), "error"),
-    });
+    );
   };
 
   const orgUnchanged = org

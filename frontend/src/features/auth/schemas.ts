@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordComplexitySchema } from "@/lib/validation/password";
+import { passwordComplexitySchema } from "@/helpers/validation/password";
 
 export const loginSchema = z.object({
   email: z.string().trim().min(1, { message: "auth.login.fill_all_fields" }),

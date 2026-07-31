@@ -7,11 +7,10 @@ import Dialog from "@mui/material/Dialog";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
-import { useT } from "@/i18n/I18nContext";
-import {
-  useAvailableRepos,
-  useCreateProject,
-} from "@/features/techHealth/hooks/useProjects";
+import { useT } from "@/contexts/I18nContext";
+import { useCreateProjectMutation } from "@/domains/projects/mutations";
+import { useAvailableReposQuery } from "@/domains/projects/queries";
+import { ScanFrequency } from "@/enums";
 import { useApiError } from "@/hooks/useApiError";
 
 interface Props {
@@ -30,15 +29,15 @@ export const SyncProjectModal: React.FC<Props> = ({
 }) => {
   const t = useT();
   const apiError = useApiError();
-  const {
-    repos,
-    hasToken,
-    fetchFailed,
-    fetchFailedStatusCode,
-    loading,
-    error,
-  } = useAvailableRepos(open);
-  const createProjectMutation = useCreateProject();
+  const availableReposQuery = useAvailableReposQuery(open);
+  const repos = availableReposQuery.data?.repos ?? [];
+  const hasToken = availableReposQuery.data?.hasToken ?? true;
+  const fetchFailed = availableReposQuery.data?.fetchFailed ?? false;
+  const fetchFailedStatusCode =
+    availableReposQuery.data?.fetchFailedStatusCode ?? null;
+  const loading = availableReposQuery.isLoading;
+  const error = availableReposQuery.isError;
+  const createProjectMutation = useCreateProjectMutation();
   const importing = createProjectMutation.isPending;
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -80,9 +79,12 @@ export const SyncProjectModal: React.FC<Props> = ({
       await Promise.all(
         toImport.map((r) =>
           createProjectMutation.mutateAsync({
-            name: r.name,
-            repositoryUrl: r.url,
-            repositoryType: r.platform,
+            data: {
+              name: r.name,
+              repositoryUrl: r.url,
+              repositoryType: r.platform,
+              scanFrequency: ScanFrequency.Weekly,
+            },
           }),
         ),
       );

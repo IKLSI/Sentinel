@@ -6,14 +6,12 @@ import Tooltip from "@mui/material/Tooltip";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
-import { RowActions } from "@/components/RowActions";
+import { RowActions } from "@/components/ui/common/RowActions";
 import { useToast } from "@/hooks/useToast";
-import { type useT, useI18n } from "@/i18n/I18nContext";
-import {
-  useRecurringJobs,
-  useTriggerTechHealthScan,
-} from "@/features/settings/hooks/useJobs";
-import { JobState } from "@/types/enums";
+import { type useT, useI18n } from "@/contexts/I18nContext";
+import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
+import { useRecurringJobsQuery } from "@/domains/jobs/queries";
+import { JobState } from "@/enums";
 import { useApiError } from "@/hooks/useApiError";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
@@ -99,8 +97,10 @@ export const JobsTab: React.FC = () => {
   const { t, culture } = useI18n();
   const apiError = useApiError();
 
-  const { jobs, loading } = useRecurringJobs();
-  const triggerScan = useTriggerTechHealthScan();
+  const jobsQuery = useRecurringJobsQuery();
+  const jobs = jobsQuery.data ?? [];
+  const loading = jobsQuery.isLoading;
+  const triggerScan = useTriggerTechHealthScanMutation();
   const triggering = triggerScan.isPending;
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
     {
@@ -118,11 +118,15 @@ export const JobsTab: React.FC = () => {
   }, []);
 
   const handleTrigger = () => {
-    triggerScan.mutate(undefined, {
-      onSuccess: () => showToast(t("settings.jobs.trigger_success"), "success"),
-      onError: (err) =>
-        showToast(apiError(err, t("settings.jobs.trigger_error")), "error"),
-    });
+    triggerScan.mutate(
+      {},
+      {
+        onSuccess: () =>
+          showToast(t("settings.jobs.trigger_success"), "success"),
+        onError: (err) =>
+          showToast(apiError(err, t("settings.jobs.trigger_error")), "error"),
+      },
+    );
   };
 
   const jobName = useCallback(

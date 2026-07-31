@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "generate:api": "node scripts/generate-api.mjs",
     "lint": "biome lint src",
     "lint:dead": "knip --reporter compact",
     "format": "biome format --write src",
@@ -54,6 +55,7 @@
     "@vitest/ui": "^4.1.10",
     "jsdom": "^30.0.1",
     "knip": "^6.29.0",
+    "openapi-typescript": "^6.7.6",
     "typescript": "^7.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"

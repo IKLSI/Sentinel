@@ -3,6 +3,7 @@ namespace Sentinel.Domain.DTOs.Tickets;
 public class TicketDto
 {
     public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
     public Guid? ProjectId { get; set; }
     public string? ProjectName { get; set; }
     public string Title { get; set; } = string.Empty;

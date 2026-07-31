@@ -7,14 +7,14 @@ import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { fr, enUS, type Locale } from "date-fns/locale";
 import { useNavigate } from "@tanstack/react-router";
-import { useI18n } from "@/i18n/I18nContext";
-import { Language } from "@/types/enums";
+import { useI18n } from "@/contexts/I18nContext";
+import { Language } from "@/enums";
+import type { ActivityItem } from "@/domains/dashboard/types";
 import {
-  type ActivityItem,
   type DashPalette,
   buildPanelSx,
   buildScrollSx,
-} from "../../helpers";
+} from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
   activity: ActivityItem[];
@@ -213,7 +213,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
               };
 
               const detail = renderDetail();
-              const Icon = activityIcon(a.type);
+              const Icon = activityIcon(a.type ?? undefined);
 
               return (
                 <Box

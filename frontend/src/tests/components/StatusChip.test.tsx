@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { StatusChip } from "@/components/StatusChip";
-import { render, screen } from "../test-utils";
+import { StatusChip } from "@/components/ui/common/StatusChip";
+import { render, screen } from "@/tests/test-utils";
 
 describe("StatusChip", () => {
   it("affiche le libellé passé en enfant", async () => {

@@ -4,29 +4,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
-  useDashboard,
-  dashboardQueryKey,
-} from "@/features/dashboard/hooks/useDashboard";
-import {
-  useProjects,
-  projectsQueryKey,
-} from "@/features/techHealth/hooks/useProjects";
+  DASHBOARD_QUERY_KEY,
+  DASHBOARD_REFRESH_EVENT,
+} from "@/domains/dashboard/constants";
+import { useDashboard } from "@/domains/dashboard/queries";
+import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
+import { useProjectsQuery } from "@/domains/projects/queries";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
-import { useTheme } from "@/store/ThemeContext";
-import { Theme } from "@/types/enums";
-import { isCovered } from "@/utils/coverage";
+import { useT } from "@/contexts/I18nContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Theme } from "@/enums";
+import { isCovered } from "@/formatters/coverage";
 import {
-  EMPTY_STATS,
+  DASHBOARD_PANEL_ITEM_LIMIT,
   GRADE_ORDER,
   PRIORITY_ORDER,
-  type StatsData,
   buildPalette,
-} from "./helpers";
-import { UrgentTicketsPanel } from "./components/UrgentTicketsPanel";
-import { ActivityPanel } from "./components/ActivityPanel";
-import { VulnerabilityDiscoveryPanel } from "./components/VulnerabilityDiscoveryPanel";
-import { ProjectsPanel } from "./components/ProjectsPanel";
+} from "@/features/dashboard/pages/DashboardPage/helpers";
+import { UrgentTicketsPanel } from "@/features/dashboard/pages/DashboardPage/components/UrgentTicketsPanel";
+import { ActivityPanel } from "@/features/dashboard/pages/DashboardPage/components/ActivityPanel";
+import { VulnerabilityDiscoveryPanel } from "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel";
+import { ProjectsPanel } from "@/features/dashboard/pages/DashboardPage/components/ProjectsPanel";
 
 export const DashboardPage: React.FC = () => {
   const { showToast } = useToast();
@@ -37,9 +35,9 @@ export const DashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const dashboardQuery = useDashboard();
-  const projectsQuery = useProjects();
+  const projectsQuery = useProjectsQuery();
 
-  const stats: StatsData = (dashboardQuery.data as StatsData) ?? EMPTY_STATS;
+  const stats = dashboardQuery.data;
   const projects = useMemo(
     () =>
       [...(projectsQuery.data ?? [])].sort((a, b) => {
@@ -71,25 +69,28 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const handler = () => {
-      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
-      queryClient.invalidateQueries({ queryKey: projectsQueryKey });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     };
-    window.addEventListener("dashboard:refresh", handler);
-    return () => window.removeEventListener("dashboard:refresh", handler);
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, handler);
+    return () => window.removeEventListener(DASHBOARD_REFRESH_EVENT, handler);
   }, [queryClient]);
 
   const urgent = useMemo(
     () =>
-      [...stats.urgentTickets]
+      [...(stats?.urgentTickets ?? [])]
         .sort(
           (a, b) =>
-            (PRIORITY_ORDER[b.priority] ?? 0) -
-            (PRIORITY_ORDER[a.priority] ?? 0),
+            (PRIORITY_ORDER[b.priority ?? ""] ?? 0) -
+            (PRIORITY_ORDER[a.priority ?? ""] ?? 0),
         )
-        .slice(0, 8),
-    [stats.urgentTickets],
+        .slice(0, DASHBOARD_PANEL_ITEM_LIMIT),
+    [stats?.urgentTickets],
   );
-  const activity = stats.recentActivity.slice(0, 8);
+  const activity = (stats?.recentActivity ?? []).slice(
+    0,
+    DASHBOARD_PANEL_ITEM_LIMIT,
+  );
 
   if (loading) {
     return (
@@ -129,7 +130,7 @@ export const DashboardPage: React.FC = () => {
         <ActivityPanel activity={activity} palette={palette} />
 
         <VulnerabilityDiscoveryPanel
-          data={stats.vulnerabilitiesDetectedPerDay}
+          data={stats?.vulnerabilitiesDetectedPerDay ?? []}
           palette={palette}
         />
       </Box>

@@ -1,8 +1,8 @@
 import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { evaluateAuthGuard } from "@/features/auth/routeGuards";
-import { FullScreenLoader } from "@/components/FullScreenLoader";
-import { AppLayout } from "@/layouts/AppLayout";
+import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const RouteComponent = () => {
   const { isAuthenticated, loading } = useAuth();

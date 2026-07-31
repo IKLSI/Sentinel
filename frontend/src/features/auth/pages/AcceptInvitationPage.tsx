@@ -6,17 +6,17 @@ import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { useAcceptInvitation } from "../../users/hooks/useUsers";
-import { useToast } from "../../../hooks/useToast";
-import { SentinelLogo } from "../../../layouts/SentinelLogo";
-import { useT } from "../../../i18n/I18nContext";
+import { useAcceptInvitationMutation } from "@/domains/users/mutations";
+import { useToast } from "@/hooks/useToast";
+import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { useT } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
 import {
   acceptInvitationSchema,
   type AcceptInvitationFormValues,
-} from "../schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+} from "@/features/auth/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/accept-invitation");
 
@@ -55,7 +55,7 @@ export const AcceptInvitationPage: React.FC = () => {
     defaultValues: { firstName: "", lastName: "", password: "", confirm: "" },
   });
   const [showPassword, setShowPassword] = useState(false);
-  const acceptInvitationMutation = useAcceptInvitation();
+  const acceptInvitationMutation = useAcceptInvitationMutation();
   const loading = acceptInvitationMutation.isPending;
   const [done, setDone] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -77,10 +77,12 @@ export const AcceptInvitationPage: React.FC = () => {
   const onSubmit = handleFormSubmit((data) => {
     acceptInvitationMutation.mutate(
       {
-        token,
-        firstName: data.firstName,
-        lastName: data.lastName ?? "",
-        password: data.password,
+        data: {
+          token,
+          firstName: data.firstName,
+          lastName: data.lastName ?? "",
+          password: data.password,
+        },
       },
       {
         onSuccess: () => {

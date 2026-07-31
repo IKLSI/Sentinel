@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UserRole } from "@/types/enums";
+import { UserRole } from "@/enums";
 import {
   evaluateAdminGuard,
   evaluateAuthGuard,

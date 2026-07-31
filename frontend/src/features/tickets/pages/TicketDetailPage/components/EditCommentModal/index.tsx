@@ -7,14 +7,14 @@ import FormatBoldRounded from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRounded from "@mui/icons-material/FormatItalicRounded";
 import CodeRounded from "@mui/icons-material/CodeRounded";
 import LinkOutlined from "@mui/icons-material/LinkOutlined";
-import { AppModal } from "@/components/AppModal";
-import { useT } from "@/i18n/I18nContext";
-import { useTheme } from "@/store/ThemeContext";
-import { Theme } from "@/types/enums";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { useT } from "@/contexts/I18nContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Theme } from "@/enums";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
-} from "@/components/MarkdownEditor";
+} from "@/components/ui/forms/MarkdownEditor";
 
 interface Props {
   open: boolean;

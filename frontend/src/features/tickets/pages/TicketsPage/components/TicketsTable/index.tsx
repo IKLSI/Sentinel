@@ -1,10 +1,10 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import { useT } from "@/i18n/I18nContext";
-import type { Ticket } from "@/types";
-import { TicketRow } from "../TicketRow";
-import type { SortDirection } from "@/types/enums";
+import { useT } from "@/contexts/I18nContext";
+import type { Ticket } from "@/domains/tickets/types";
+import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketRow";
+import type { SortDirection } from "@/enums";
 
 export interface SortState {
   col: string;

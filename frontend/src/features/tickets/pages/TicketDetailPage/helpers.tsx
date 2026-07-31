@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import type { Locale } from "date-fns/locale";
-import type { Ticket, TicketHistory } from "@/types";
+import type { Ticket, TicketHistory } from "@/domains/tickets/types";
 import { statusLabel } from "@/features/tickets/constants";
 
 export interface DetailPalette {
@@ -235,10 +235,6 @@ export const buildFieldSx = (p: DetailPalette) =>
     },
   }) as const;
 
-export function getInitials(firstName: string, lastName: string) {
-  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
-}
-
 type TFn = (k: string, v?: Record<string, string | number>) => string;
 
 export function getRelativeShort(date: string, t: TFn, locale: Locale) {
@@ -259,7 +255,7 @@ function normalizePriorityKey(value?: string) {
 }
 
 function mapPriorityLabel(
-  value: string | undefined,
+  value: string | undefined | null,
   t: TFn,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,
 ) {
@@ -321,8 +317,8 @@ export function historyPresentation(
       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     let nameLabel = raw || t("tickets.detail.unassigned");
     if (raw && uuidLike.test(raw)) {
-      if (ticket?.assignee && ticket.assignee.id === raw) {
-        nameLabel = `${ticket.assignee.firstName} ${ticket.assignee.lastName}`;
+      if (ticket?.assignedToId === raw && ticket.assignedToName) {
+        nameLabel = ticket.assignedToName;
       } else {
         nameLabel = `${raw.slice(0, 8)}…`;
       }

@@ -6,15 +6,18 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import EmailOutlined from "@mui/icons-material/EmailOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
-import { AppModal } from "@/components/AppModal";
+import { AppModal } from "@/components/ui/common/AppModal";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
-import { useInviteUser } from "@/features/users/hooks/useUsers";
-import { UserRole } from "@/types/enums";
-import { inp } from "../../helpers";
+import { useT } from "@/contexts/I18nContext";
+import { useInviteUserMutation } from "@/domains/users/mutations";
+import { UserRole } from "@/enums";
+import { inp } from "@/features/settings/pages/SettingsPage/helpers";
 import { useApiError } from "@/hooks/useApiError";
-import { inviteUserSchema, type InviteUserFormValues } from "./schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+import {
+  inviteUserSchema,
+  type InviteUserFormValues,
+} from "@/features/settings/pages/SettingsPage/components/InviteModal/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface Props {
   open: boolean;
@@ -36,7 +39,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
     resolver: zodResolver(inviteUserSchema),
     defaultValues: { email: "", role: UserRole.Developer },
   });
-  const inviteMutation = useInviteUser();
+  const inviteMutation = useInviteUserMutation();
   const submitting = inviteMutation.isPending;
 
   const handleClose = () => {
@@ -45,14 +48,17 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleInvite = handleFormSubmit((data) => {
-    inviteMutation.mutate(data, {
-      onSuccess: () => {
-        showToast(t("settings.toast.invite_sent"), "success");
-        handleClose();
+    inviteMutation.mutate(
+      { data },
+      {
+        onSuccess: () => {
+          showToast(t("settings.toast.invite_sent"), "success");
+          handleClose();
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("settings.toast.invite_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("settings.toast.invite_error")), "error"),
-    });
+    );
   });
 
   return (

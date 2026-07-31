@@ -6,14 +6,17 @@ import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { useResetPasswordMutation } from "../hooks/useAuthMutations";
-import { useToast } from "../../../hooks/useToast";
-import { SentinelLogo } from "../../../layouts/SentinelLogo";
-import { useT } from "../../../i18n/I18nContext";
+import { useResetPasswordMutation } from "@/domains/auth/mutations";
+import { useToast } from "@/hooks/useToast";
+import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { useT } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
-import { resetPasswordSchema, type ResetPasswordFormValues } from "../schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+import {
+  resetPasswordSchema,
+  type ResetPasswordFormValues,
+} from "@/features/auth/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/reset-password");
 
@@ -54,7 +57,7 @@ export const ResetPasswordPage: React.FC = () => {
 
   const onSubmit = handleFormSubmit((data) => {
     resetPasswordMutation.mutate(
-      { token, password: data.password },
+      { data: { token, password: data.password } },
       {
         onSuccess: () => {
           setDone(true);

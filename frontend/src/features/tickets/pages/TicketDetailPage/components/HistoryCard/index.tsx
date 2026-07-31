@@ -1,14 +1,14 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { useI18n } from "@/i18n/I18nContext";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import type { Ticket } from "@/types";
+import { useI18n } from "@/contexts/I18nContext";
+import { getDateFnsLocale } from "@/configs/locales";
+import type { Ticket } from "@/domains/tickets/types";
 import {
   type DetailPalette,
   type buildPriorityConfig,
   getRelativeShort,
   historyPresentation,
-} from "../../helpers";
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
   ticket: Ticket;
@@ -126,7 +126,7 @@ export const HistoryCard: React.FC<Props> = ({
                       t,
                       getDateFnsLocale(culture),
                     )}{" "}
-                    · {h.author.firstName} {h.author.lastName}
+                    · {h.userName}
                   </Box>
                 </Box>
               </Box>

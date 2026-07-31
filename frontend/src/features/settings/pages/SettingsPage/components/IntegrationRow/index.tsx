@@ -3,8 +3,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
-import { useT } from "@/i18n/I18nContext";
-import { inp } from "../../helpers";
+import { useT } from "@/contexts/I18nContext";
+import { inp } from "@/features/settings/pages/SettingsPage/helpers";
 
 interface Props {
   iconBackground: string;

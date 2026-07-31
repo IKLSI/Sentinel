@@ -2,26 +2,26 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
-import { useT } from "@/i18n/I18nContext";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { useT } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
 import {
   GRADE_VISUAL,
   type SectionKey,
   UNTRACKED_SECTION,
   HeadCell,
   type ProjectSortState,
-} from "../../helpers";
-import { ProjectRow } from "../ProjectRow";
+} from "@/features/projects/pages/ProjectsPage/helpers";
+import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
 
 interface Props {
   grade: SectionKey;
-  items: ProjectDto[];
+  items: Project[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
   sort: ProjectSortState | null;
   onToggleSort: (col: string) => void;
   scanningId: string | null;
-  onDelete: (project: ProjectDto) => void;
+  onDelete: (project: Project) => void;
   onScan: (id: string) => void;
 }
 

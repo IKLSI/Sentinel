@@ -3,11 +3,16 @@ import { memo, useRef } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useT } from "@/i18n/I18nContext";
-import type { VulnerabilityDto } from "@/features/techHealth/api/projects";
-import { SEV_CONFIG, TD, TH } from "../../helpers";
+import { useT } from "@/contexts/I18nContext";
+import type { Vulnerability } from "@/domains/projects/types";
+import type { VulnerabilitySeverity } from "@/enums";
+import {
+  SEV_CONFIG,
+  TD,
+  TH,
+} from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
-type VulnWithDep = VulnerabilityDto & { dependencyName: string };
+type VulnWithDep = Vulnerability & { dependencyName: string };
 
 const ESTIMATED_ROW_HEIGHT = 44;
 const OVERSCAN = 10;
@@ -23,7 +28,8 @@ interface RowProps {
 }
 
 const VulnRow = memo<RowProps>(({ vuln, index, measureRef }) => {
-  const cfg = SEV_CONFIG[vuln.severity] ?? SEV_CONFIG.Low;
+  const cfg =
+    SEV_CONFIG[vuln.severity as VulnerabilitySeverity] ?? SEV_CONFIG.Low;
   return (
     <Box component="tr" ref={measureRef} data-index={index} sx={rowSx}>
       <TD>

@@ -17,6 +17,9 @@ public static partial class ServiceCollectionExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
         {
+            options.SupportNonNullableReferenceTypes();
+            options.NonNullableReferenceTypesAsRequired();
+
             options.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "Sentinel API",

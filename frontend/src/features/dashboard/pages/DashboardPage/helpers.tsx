@@ -2,48 +2,7 @@ import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
 import BoltOutlined from "@mui/icons-material/BoltOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 
-export interface ActivityItem {
-  color: string;
-  timestamp: string;
-  detail?: string;
-  ticketId?: string;
-  projectId?: string;
-  count?: number;
-  type?: string;
-  reference?: string;
-  projectName?: string;
-  vulnCveId?: string;
-  vulnOtherCount?: number;
-  vulnCvssScore?: number;
-}
-
-export interface UrgentTicket {
-  id: string;
-  reference: string;
-  title: string;
-  priority: string;
-  type: string;
-  projectName?: string;
-  assignedToName?: string;
-  commentCount: number;
-}
-
-export interface VulnerabilityDetectionDataPoint {
-  date: string;
-  count: number;
-}
-
-export interface StatsData {
-  urgentTickets: UrgentTicket[];
-  recentActivity: ActivityItem[];
-  vulnerabilitiesDetectedPerDay: VulnerabilityDetectionDataPoint[];
-}
-
-export const EMPTY_STATS: StatsData = {
-  urgentTickets: [],
-  recentActivity: [],
-  vulnerabilitiesDetectedPerDay: [],
-};
+export const DASHBOARD_PANEL_ITEM_LIMIT = 8;
 
 export interface DashPalette {
   panelBg: string;

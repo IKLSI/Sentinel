@@ -4,13 +4,16 @@ import Box from "@mui/material/Box";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
-import { useT } from "@/i18n/I18nContext";
-import { AuthContext } from "@/features/auth/context/AuthContext";
-import { UserRole } from "@/types/enums";
-import { type Tab, SettingsTab } from "./helpers";
-import { JobsTab } from "./components/JobsTab";
-import { BillingTab } from "./components/BillingTab";
-import { ApiKeysTab } from "./components/ApiKeysTab";
+import { useT } from "@/contexts/I18nContext";
+import { AuthContext } from "@/contexts/AuthContext";
+import { UserRole } from "@/enums";
+import {
+  type Tab,
+  SettingsTab,
+} from "@/features/settings/pages/SettingsPage/helpers";
+import { JobsTab } from "@/features/settings/pages/SettingsPage/components/JobsTab";
+import { BillingTab } from "@/features/settings/pages/SettingsPage/components/BillingTab";
+import { ApiKeysTab } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab";
 
 export const SettingsPage: React.FC = () => {
   const t = useT();

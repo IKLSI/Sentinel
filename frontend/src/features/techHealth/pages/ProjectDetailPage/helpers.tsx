@@ -1,11 +1,11 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import type { RuntimeDto } from "@/features/techHealth/api/projects";
+import type { Runtime } from "@/domains/projects/types";
 import {
   type DependencyStatus,
   type VulnerabilitySeverity,
   RuntimeEolStatus,
-} from "@/types/enums";
+} from "@/enums";
 
 export interface TabDef {
   icon: React.ReactNode;
@@ -92,7 +92,7 @@ export const EOL_COLOR: Record<
   },
 };
 
-export function getRuntimeUrgency(r: RuntimeDto): RuntimeEolStatus {
+export function getRuntimeUrgency(r: Runtime): RuntimeEolStatus {
   if (!r.eolDate) return r.isEol ? RuntimeEolStatus.Eol : RuntimeEolStatus.Ok;
   const days = Math.round(
     (new Date(r.eolDate).getTime() - Date.now()) / 86400000,
@@ -104,7 +104,7 @@ export function getRuntimeUrgency(r: RuntimeDto): RuntimeEolStatus {
 }
 
 export function getDaysLabel(
-  r: RuntimeDto,
+  r: Runtime,
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): string {
   if (!r.eolDate) return r.isEol ? t("tech_health.runtime.expired") : "—";

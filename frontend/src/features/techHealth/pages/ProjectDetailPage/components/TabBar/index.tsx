@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import type { TabDef } from "../../helpers";
+import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
 interface Props {
   tabs: TabDef[];

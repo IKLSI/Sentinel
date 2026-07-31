@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { HealthGrade } from "@/types/enums";
+import { HealthGrade } from "@/enums";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
 import ReportOutlined from "@mui/icons-material/ReportOutlined";
 import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
@@ -9,8 +9,8 @@ import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
 import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import RemoveCircleOutlineOutlined from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
-import { isCovered } from "@/utils/coverage";
+import type { Project } from "@/domains/projects/types";
+import { isCovered } from "@/formatters/coverage";
 
 export const UNTRACKED_SECTION = "NONE" as const;
 
@@ -45,8 +45,7 @@ export const GRADE_VISUAL: Record<
   },
 };
 
-export const isUntracked = (project: ProjectDto): boolean =>
-  !isCovered(project);
+export const isUntracked = (project: Project): boolean => !isCovered(project);
 
 export const getGrade = (grade: string | null | undefined): HealthGrade => {
   if (

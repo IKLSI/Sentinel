@@ -1,4 +1,4 @@
-import { TicketStatus } from "@/types/enums";
+import { TicketStatus } from "@/enums";
 
 export const TICKET_STATUSES: TicketStatus[] = [
   TicketStatus.New,
@@ -26,11 +26,11 @@ const statusColors: Record<TicketStatus, string> = {
 
 export const statusLabel = (
   t: (key: string) => string,
-  status?: string,
+  status?: string | null,
 ): string => {
   const labelKey = statusLabelKeys[status as TicketStatus];
   return labelKey ? t(labelKey) : (status ?? "—");
 };
 
-export const statusColor = (status?: string): string =>
+export const statusColor = (status?: string | null): string =>
   statusColors[status as TicketStatus] ?? "var(--muted2)";

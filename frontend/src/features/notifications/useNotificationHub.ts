@@ -6,10 +6,11 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 import { STORAGE_KEYS } from "@/constants/storage";
-import type { NotificationItem } from "./api";
-
-const HUB_URL = "/hubs/notifications";
-const NOTIFICATION_EVENT = "ReceiveNotification";
+import {
+  NOTIFICATIONS_HUB_URL,
+  NOTIFICATION_HUB_EVENT,
+} from "@/domains/notifications/constants";
+import type { NotificationItem } from "@/domains/notifications/types";
 
 let sharedConnection: HubConnection | null = null;
 let subscriberCount = 0;
@@ -19,7 +20,7 @@ function ensureConnection() {
   if (sharedConnection) return;
 
   const connection = new HubConnectionBuilder()
-    .withUrl(HUB_URL, {
+    .withUrl(NOTIFICATIONS_HUB_URL, {
       accessTokenFactory: () =>
         localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? "",
     })
@@ -27,7 +28,7 @@ function ensureConnection() {
     .configureLogging(LogLevel.Warning)
     .build();
 
-  connection.on(NOTIFICATION_EVENT, (n: NotificationItem) => {
+  connection.on(NOTIFICATION_HUB_EVENT, (n: NotificationItem) => {
     for (const listener of listeners) listener(n);
   });
 

@@ -6,18 +6,18 @@ import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
+import type { UrgentTicket } from "@/domains/dashboard/types";
 import {
   type DashPalette,
-  type UrgentTicket,
   avatars,
   buildPanelSx,
   buildScrollSx,
   initials,
   ticketIcon,
   ticketPriority,
-} from "../../helpers";
+} from "@/features/dashboard/pages/DashboardPage/helpers";
 import { typeLabelKeys } from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {

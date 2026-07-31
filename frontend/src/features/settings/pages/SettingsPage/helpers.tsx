@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { SettingsTab } from "@/types/enums";
+import { SettingsTab } from "@/enums";
 
 export type Tab = SettingsTab;
 export { SettingsTab };

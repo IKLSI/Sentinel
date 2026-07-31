@@ -3,20 +3,20 @@ import { useState, useEffect, useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth } from "../hooks/useAuth";
-import { useToast } from "../../../hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import Box from "@mui/material/Box";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
-import { SentinelLogo } from "../../../layouts/SentinelLogo";
-import { useT } from "../../../i18n/I18nContext";
-import { useResendVerificationMutation } from "../hooks/useAuthMutations";
+import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { useT } from "@/contexts/I18nContext";
+import { useResendVerificationMutation } from "@/domains/auth/mutations";
 import { useApiError } from "@/hooks/useApiError";
 import { ROUTES } from "@/constants/routes";
-import { ForgotPasswordModal } from "./ForgotPasswordModal";
-import { RegisterModal } from "./RegisterModal";
-import { loginSchema, type LoginFormValues } from "../schemas";
-import { resolveFieldError } from "@/lib/validation/resolveFieldError";
+import { ForgotPasswordModal } from "@/features/auth/pages/ForgotPasswordModal";
+import { RegisterModal } from "@/features/auth/pages/RegisterModal";
+import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -82,11 +82,17 @@ export const LoginPage: React.FC = () => {
       showToast(t("auth.login.email_required_for_resend"), "warning");
       return;
     }
-    resendVerificationMutation.mutate(email, {
-      onSuccess: () => showToast(t("auth.login.resend_done"), "success"),
-      onError: (err) =>
-        showToast(apiError(err, t("auth.login.invalid_credentials")), "error"),
-    });
+    resendVerificationMutation.mutate(
+      { data: { email } },
+      {
+        onSuccess: () => showToast(t("auth.login.resend_done"), "success"),
+        onError: (err) =>
+          showToast(
+            apiError(err, t("auth.login.invalid_credentials")),
+            "error",
+          ),
+      },
+    );
   };
 
   return (

@@ -6,17 +6,17 @@ import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
-import { useProject } from "@/features/techHealth/hooks/useProject";
-import type { TabDef } from "./helpers";
-import { ProjectDetailSkeleton } from "./components/ProjectDetailSkeleton";
-import { ProjectHeaderCard } from "./components/ProjectHeaderCard";
-import { ExportActions } from "./components/ExportActions";
-import { TabBar } from "./components/TabBar";
-import { VulnerabilitiesTab } from "./components/VulnerabilitiesTab";
-import { DependenciesTab } from "./components/DependenciesTab";
-import { RuntimesTab } from "./components/RuntimesTab";
+import { useProjectQuery } from "@/domains/projects/queries";
+import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
+import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
+import { ExportActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ExportActions";
+import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
+import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
+import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
+import { RuntimesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/RuntimesTab";
 
 const routeApi = getRouteApi("/_authenticated/projects/$id");
 
@@ -30,7 +30,10 @@ export const ProjectDetailPage: React.FC = () => {
   const [depSearch, setDepSearch] = useState("");
   const [, startTransition] = useTransition();
 
-  const { project, loading, error } = useProject(id);
+  const projectQuery = useProjectQuery(id);
+  const project = projectQuery.data ?? null;
+  const loading = projectQuery.isLoading;
+  const error = projectQuery.isError;
 
   useEffect(() => {
     if (!error) return;

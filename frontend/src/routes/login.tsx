@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { evaluateGuestGuard } from "@/features/auth/routeGuards";
-import { FullScreenLoader } from "@/components/FullScreenLoader";
+import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 
 const RouteComponent = () => {

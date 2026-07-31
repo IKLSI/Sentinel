@@ -3,22 +3,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useProjects,
-  projectsQueryKey,
-  useDeleteProject,
-  useScanProject,
-  useExportProjectsExcel,
-} from "@/features/techHealth/hooks/useProjects";
+  PROJECTS_QUERY_KEY,
+  projectQueryKey,
+} from "@/domains/projects/constants";
+import { DASHBOARD_REFRESH_EVENT } from "@/domains/dashboard/constants";
+import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
+import { fetchProject } from "@/domains/projects/fetchers";
+import {
+  useDeleteProjectMutation,
+  useScanProjectMutation,
+} from "@/domains/projects/mutations";
+import { useProjectsQuery } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import { DeleteModal } from "@/components/DeleteModal";
+import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
-import {
-  getProject,
-  type ProjectDto,
-} from "@/features/techHealth/api/projects";
+import { useT } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
 import {
   SECTION_ORDER,
   type SectionKey,
@@ -26,10 +28,10 @@ import {
   getGrade,
   isUntracked,
   type ProjectSortState,
-} from "./helpers";
-import { ProjectsToolbar } from "./components/ProjectsToolbar";
-import { ProjectsSection } from "./components/ProjectsSection";
-import { SyncProjectModal } from "./components/SyncProjectModal";
+} from "@/features/projects/pages/ProjectsPage/helpers";
+import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
+import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
+import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
 import { useApiError } from "@/hooks/useApiError";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
@@ -40,14 +42,14 @@ export const ProjectsPage: React.FC = () => {
   const apiError = useApiError();
   const queryClient = useQueryClient();
   const { openImport } = routeApi.useSearch();
-  const { data: projects = [], isLoading: loading } = useProjects();
-  const deleteProjectMutation = useDeleteProject();
-  const scanProjectMutation = useScanProject();
-  const exportProjectsMutation = useExportProjectsExcel();
+  const { data: projects = [], isLoading: loading } = useProjectsQuery();
+  const deleteProjectMutation = useDeleteProjectMutation();
+  const scanProjectMutation = useScanProjectMutation();
+  const exportProjectsMutation = useExportProjectsExcelMutation();
   const deleting = deleteProjectMutation.isPending;
   const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<ProjectDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
   const [collapsedSections, setCollapsedSections] = useState<
@@ -84,10 +86,10 @@ export const ProjectsPage: React.FC = () => {
 
   useEffect(() => {
     const handler = () => {
-      queryClient.invalidateQueries({ queryKey: projectsQueryKey });
+      queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     };
-    window.addEventListener("dashboard:refresh", handler);
-    return () => window.removeEventListener("dashboard:refresh", handler);
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, handler);
+    return () => window.removeEventListener(DASHBOARD_REFRESH_EVENT, handler);
   }, [queryClient]);
 
   const handleExport = () => {
@@ -98,14 +100,17 @@ export const ProjectsPage: React.FC = () => {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    deleteProjectMutation.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        setDeleteTarget(null);
-        showToast(t("projects.toast.delete_success"), "success");
+    deleteProjectMutation.mutate(
+      { id: deleteTarget.id },
+      {
+        onSuccess: () => {
+          setDeleteTarget(null);
+          showToast(t("projects.toast.delete_success"), "success");
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("projects.toast.delete_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("projects.toast.delete_error")), "error"),
-    });
+    );
   };
 
   const handleScan = useCallback(
@@ -113,7 +118,7 @@ export const ProjectsPage: React.FC = () => {
       if (scanningId) return;
       setScanningId(id);
       const previousLastScanAt = queryClient
-        .getQueryData<ProjectDto[]>(projectsQueryKey)
+        .getQueryData<Project[]>(PROJECTS_QUERY_KEY)
         ?.find((p) => p.id === id)?.lastScanAt;
       const deadline = Date.now() + 10 * 60 * 1000;
 
@@ -125,11 +130,11 @@ export const ProjectsPage: React.FC = () => {
         }
         try {
           const updated = await queryClient.fetchQuery({
-            queryKey: ["project", id],
-            queryFn: ({ signal }) => getProject(id, signal),
+            queryKey: projectQueryKey(id),
+            queryFn: ({ signal }) => fetchProject(id, signal),
           });
           if (updated.lastScanAt !== previousLastScanAt) {
-            queryClient.setQueryData<ProjectDto[]>(projectsQueryKey, (prev) =>
+            queryClient.setQueryData<Project[]>(PROJECTS_QUERY_KEY, (prev) =>
               (prev ?? []).map((p) =>
                 p.id === id
                   ? {
@@ -147,7 +152,7 @@ export const ProjectsPage: React.FC = () => {
             );
             setScanningId(null);
             showToast(t("projects.toast.scan_done"), "success");
-            window.dispatchEvent(new Event("dashboard:refresh"));
+            window.dispatchEvent(new Event(DASHBOARD_REFRESH_EVENT));
           } else {
             scanPollRef.current = setTimeout(poll, 3000);
           }
@@ -156,19 +161,22 @@ export const ProjectsPage: React.FC = () => {
         }
       };
 
-      scanProjectMutation.mutate(id, {
-        onSuccess: () => {
-          showToast(t("projects.toast.scan_started"), "info");
-          scanPollRef.current = setTimeout(poll, 2000);
+      scanProjectMutation.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            showToast(t("projects.toast.scan_started"), "info");
+            scanPollRef.current = setTimeout(poll, 2000);
+          },
+          onError: (err) => {
+            showToast(
+              apiError(err, t("projects.toast.scan_start_error")),
+              "error",
+            );
+            setScanningId(null);
+          },
         },
-        onError: (err) => {
-          showToast(
-            apiError(err, t("projects.toast.scan_start_error")),
-            "error",
-          );
-          setScanningId(null);
-        },
-      });
+      );
     },
     [scanningId, queryClient, showToast, t, scanProjectMutation, apiError],
   );
@@ -182,7 +190,7 @@ export const ProjectsPage: React.FC = () => {
   );
 
   const grouped = useMemo(() => {
-    const map: Record<SectionKey, ProjectDto[]> = {
+    const map: Record<SectionKey, Project[]> = {
       F: [],
       E: [],
       D: [],
@@ -197,7 +205,7 @@ export const ProjectsPage: React.FC = () => {
         : getGrade(project.healthGrade);
       map[section].push(project);
     });
-    const sortGroup = (arr: ProjectDto[]) =>
+    const sortGroup = (arr: Project[]) =>
       arr.sort((a, b) => {
         if (!sort) return 0;
         const mul = sort.dir === "asc" ? 1 : -1;

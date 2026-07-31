@@ -5,43 +5,46 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { DeleteModal } from "@/components/DeleteModal";
+import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
+import { useProjectsQuery } from "@/domains/projects/queries";
+import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
 import {
-  useTickets,
-  useCreateTicket,
-  useUpdateTicket,
-  useDeleteTicket,
-  useExportTicketsExcel,
-} from "@/features/tickets/hooks/useTickets";
-import { TICKET_STATUSES } from "@/features/tickets/constants";
-import { useProjects } from "@/features/techHealth/hooks/useProjects";
-import { useUsers } from "@/features/users/hooks/useUsers";
+  useCreateTicketMutation,
+  useDeleteTicketMutation,
+  useUpdateTicketMutation,
+} from "@/domains/tickets/mutations";
+import { useTicketsQuery } from "@/domains/tickets/queries";
 import type {
+  CreateTicket,
   Ticket,
   TicketFilters,
-  TicketPriority,
-  TicketType,
-} from "@/types";
+  UpdateTicket,
+} from "@/domains/tickets/types";
+import { useUsersQuery } from "@/domains/users/queries";
+import { TICKET_STATUSES } from "@/features/tickets/constants";
+import type { TicketPriority, TicketStatus, TicketType } from "@/enums";
 import {
-  type CreateTicketPayload,
   EMPTY_CREATE_TICKET_FORM,
   PRIORITY_ORDER,
-} from "./helpers";
+} from "@/features/tickets/pages/TicketsPage/helpers";
 import {
   createTicketSchema,
   type CreateTicketFormValues,
   editTicketSchema,
   type EditTicketFormValues,
-} from "./schemas";
-import { TicketsToolbar } from "./components/TicketsToolbar";
-import { TicketsTable, type SortState } from "./components/TicketsTable";
-import { Pagination } from "./components/Pagination";
-import { CreateTicketModal } from "./components/CreateTicketModal";
-import { EditTicketModal } from "./components/EditTicketModal";
+} from "@/features/tickets/pages/TicketsPage/schemas";
+import { TicketsToolbar } from "@/features/tickets/pages/TicketsPage/components/TicketsToolbar";
+import {
+  TicketsTable,
+  type SortState,
+} from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
+import { Pagination } from "@/features/tickets/pages/TicketsPage/components/Pagination";
+import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
+import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
 import { useApiError } from "@/hooks/useApiError";
-import { SortDirection } from "@/types/enums";
+import { SortDirection } from "@/enums";
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -74,9 +77,10 @@ export const TicketsPage: React.FC = () => {
     defaultValues: { ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 },
   });
   const [createAnother, setCreateAnother] = useState(false);
-  const { data: projectsData } = useProjects();
+  const { data: projectsData } = useProjectsQuery();
   const modalProjects = projectsData ?? [];
-  const { users: modalUsers } = useUsers();
+  const usersQuery = useUsersQuery();
+  const modalUsers = usersQuery.data?.items ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const {
     register: editRegister,
@@ -103,10 +107,10 @@ export const TicketsPage: React.FC = () => {
 
   const pageSize = 20;
 
-  const createTicketMutation = useCreateTicket();
-  const updateTicketMutation = useUpdateTicket();
-  const deleteTicketMutation = useDeleteTicket();
-  const exportTicketsMutation = useExportTicketsExcel();
+  const createTicketMutation = useCreateTicketMutation();
+  const updateTicketMutation = useUpdateTicketMutation();
+  const deleteTicketMutation = useDeleteTicketMutation();
+  const exportTicketsMutation = useExportTicketsExcelMutation();
 
   const createSubmitting = createTicketMutation.isPending;
   const editSaving = updateTicketMutation.isPending;
@@ -116,9 +120,9 @@ export const TicketsPage: React.FC = () => {
   const handleExport = () => {
     exportTicketsMutation.mutate(
       {
-        priority: filters.priority || undefined,
+        priority: (filters.priority as TicketPriority) || undefined,
         status: filters.status || undefined,
-        type: filters.type || undefined,
+        type: (filters.type as TicketType) || undefined,
         search: debouncedSearch || undefined,
       },
       {
@@ -133,7 +137,7 @@ export const TicketsPage: React.FC = () => {
   }, [resetCreateForm]);
 
   const handleCreate = handleCreateSubmit((data) => {
-    const payload: CreateTicketPayload = {
+    const payload: CreateTicket = {
       title: data.title,
       description: data.description,
       priority: data.priority,
@@ -143,34 +147,42 @@ export const TicketsPage: React.FC = () => {
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
     if (data.estimatedMinutes > 0)
       payload.estimatedHours = data.estimatedMinutes / 60;
-    createTicketMutation.mutate(payload as unknown as Partial<Ticket>, {
-      onSuccess: (created) => {
-        if (createAnother) {
-          resetCreateForm({ ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 });
-          showToast(
-            t("tickets.list.create_success", { reference: created.reference }),
-            "success",
-          );
-        } else {
-          setShowCreateModal(false);
-          navigate({ to: "/tickets/$id", params: { id: created.id } });
-        }
+    createTicketMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: (created) => {
+          if (createAnother) {
+            resetCreateForm({
+              ...EMPTY_CREATE_TICKET_FORM,
+              estimatedMinutes: 0,
+            });
+            showToast(
+              t("tickets.list.create_success", {
+                reference: created.reference,
+              }),
+              "success",
+            );
+          } else {
+            setShowCreateModal(false);
+            navigate({ to: "/tickets/$id", params: { id: created.id } });
+          }
+        },
+        onError: (err) =>
+          showToast(apiError(err, t("tickets.list.create_error")), "error"),
       },
-      onError: (err) =>
-        showToast(apiError(err, t("tickets.list.create_error")), "error"),
-    });
+    );
   });
 
   const openEditModal = useCallback(
     (ticket: Ticket) => {
       resetEditForm({
         title: ticket.title,
-        description: ticket.description ?? "",
+        description: ticket.description,
         priority: ticket.priority,
         type: ticket.type,
         status: ticket.status,
         projectId: ticket.projectId ?? "",
-        assignedToId: ticket.assignee?.id ?? "",
+        assignedToId: ticket.assignedToId ?? "",
         estimatedMinutes:
           ticket.estimatedHours != null
             ? Math.round(ticket.estimatedHours * 60)
@@ -195,11 +207,11 @@ export const TicketsPage: React.FC = () => {
 
   const handleEdit = handleEditSubmit(async (data) => {
     if (!editTarget) return;
-    const payload: Record<string, unknown> = {
+    const payload: UpdateTicket = {
       title: data.title,
       description: data.description,
-      priority: data.priority,
-      type: data.type,
+      priority: data.priority as UpdateTicket["priority"],
+      type: data.type as UpdateTicket["type"],
     };
     if (data.projectId) payload.projectId = data.projectId;
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
@@ -210,7 +222,7 @@ export const TicketsPage: React.FC = () => {
     try {
       await updateTicketMutation.mutateAsync({
         id: editTarget.id,
-        data: payload as Partial<Ticket>,
+        data: payload,
       });
       setEditTarget(null);
     } catch (err) {
@@ -220,11 +232,14 @@ export const TicketsPage: React.FC = () => {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    deleteTicketMutation.mutate(deleteTarget.id, {
-      onSuccess: () => setDeleteTarget(null),
-      onError: (err) =>
-        showToast(apiError(err, t("tickets.list.delete_error")), "error"),
-    });
+    deleteTicketMutation.mutate(
+      { id: deleteTarget.id },
+      {
+        onSuccess: () => setDeleteTarget(null),
+        onError: (err) =>
+          showToast(apiError(err, t("tickets.list.delete_error")), "error"),
+      },
+    );
   };
 
   useEffect(() => {
@@ -246,7 +261,10 @@ export const TicketsPage: React.FC = () => {
     ...(filters.type ? { type: filters.type as TicketType } : {}),
   };
 
-  const { tickets, loading, error } = useTickets(ticketsFilters);
+  const ticketsQuery = useTicketsQuery(ticketsFilters);
+  const tickets = ticketsQuery.data ?? null;
+  const loading = ticketsQuery.isLoading;
+  const error = ticketsQuery.error;
 
   useEffect(() => {
     if (error) showToast(t("tickets.list.load_error"), "error");
@@ -262,25 +280,22 @@ export const TicketsPage: React.FC = () => {
       const mul = sort.dir === SortDirection.Asc ? 1 : -1;
       switch (sort.col) {
         case "title":
-          return mul * a.title.localeCompare(b.title);
+          return mul * (a.title ?? "").localeCompare(b.title ?? "");
         case "priority":
           return (
             mul *
-            ((PRIORITY_ORDER[a.priority] ?? 9) -
-              (PRIORITY_ORDER[b.priority] ?? 9))
+            ((PRIORITY_ORDER[a.priority as TicketPriority] ?? 9) -
+              (PRIORITY_ORDER[b.priority as TicketPriority] ?? 9))
           );
         case "status":
           return (
             mul *
-            (TICKET_STATUSES.indexOf(a.status) -
-              TICKET_STATUSES.indexOf(b.status))
+            (TICKET_STATUSES.indexOf(a.status as TicketStatus) -
+              TICKET_STATUSES.indexOf(b.status as TicketStatus))
           );
         case "assignee":
           return (
-            mul *
-            `${a.assignee?.firstName ?? ""}${a.assignee?.lastName ?? ""}`.localeCompare(
-              `${b.assignee?.firstName ?? ""}${b.assignee?.lastName ?? ""}`,
-            )
+            mul * (a.assignedToName ?? "").localeCompare(b.assignedToName ?? "")
           );
         default:
           return 0;
@@ -357,7 +372,7 @@ export const TicketsPage: React.FC = () => {
             <Pagination
               page={page}
               totalPages={tickets?.totalPages ?? 1}
-              total={tickets?.total ?? 0}
+              total={tickets?.totalCount ?? 0}
               onChange={setPage}
             />
           </Box>

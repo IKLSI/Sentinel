@@ -13,6 +13,7 @@ public static class UserProfileMapper
         LastName = user.LastName,
         Role = user.Role.ToString(),
         OrganizationId = user.OrganizationId,
-        Theme = user.Theme.ToString().ToLowerInvariant()
+        Theme = user.Theme.ToString().ToLowerInvariant(),
+        Language = user.Language
     };
 }

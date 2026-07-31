@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserRole } from "@/types/enums";
+import { UserRole } from "@/enums";
 
 export const inviteUserSchema = z.object({
   email: z

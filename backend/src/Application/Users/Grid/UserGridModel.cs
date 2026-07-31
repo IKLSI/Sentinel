@@ -1,3 +1,5 @@
+using Sentinel.Domain.Models;
+
 namespace Sentinel.Application.Users.Grid;
 
 public class UserGridModel
@@ -8,6 +10,7 @@ public class UserGridModel
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;
     public string? Search { get; set; }
+    public UserRole? Role { get; set; }
 
     public int NormalizedPage => Page < 1 ? 1 : Page;
 

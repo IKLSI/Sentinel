@@ -2,11 +2,11 @@ import type { ReactElement, ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderOptions } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AuthProvider } from "@/features/auth/context/AuthContext";
-import { ToastProvider } from "@/hooks/ToastProvider";
-import { I18nProvider } from "@/i18n/I18nContext";
-import { ThemeProvider } from "@/store/ThemeContext";
-import { Language } from "@/types/enums";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastProvider";
+import { I18nProvider } from "@/contexts/I18nContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { Language } from "@/enums";
 
 function createTestQueryClient(): QueryClient {
   return new QueryClient({

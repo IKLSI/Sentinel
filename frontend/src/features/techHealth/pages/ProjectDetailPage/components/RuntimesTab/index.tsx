@@ -1,8 +1,8 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
-import { useT } from "@/i18n/I18nContext";
-import type { RuntimeDto } from "@/features/techHealth/api/projects";
+import { useT } from "@/contexts/I18nContext";
+import type { Runtime } from "@/domains/projects/types";
 import {
   EOL_COLOR,
   TD,
@@ -10,9 +10,9 @@ import {
   TR,
   getDaysLabel,
   getRuntimeUrgency,
-} from "../../helpers";
+} from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
-const RuntimeRow: React.FC<{ runtime: RuntimeDto }> = ({ runtime: r }) => {
+const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
   const t = useT();
   const urgency = getRuntimeUrgency(r);
   const uc = EOL_COLOR[urgency];
@@ -50,7 +50,7 @@ const RuntimeRow: React.FC<{ runtime: RuntimeDto }> = ({ runtime: r }) => {
 };
 
 interface Props {
-  runtimes: RuntimeDto[];
+  runtimes: Runtime[];
 }
 
 export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {

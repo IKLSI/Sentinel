@@ -4,17 +4,17 @@ import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
-import { RowActions } from "@/components/RowActions";
-import { useT } from "@/i18n/I18nContext";
-import type { Ticket } from "@/types";
+import { RowActions } from "@/components/ui/common/RowActions";
+import { useT } from "@/contexts/I18nContext";
+import type { Ticket } from "@/domains/tickets/types";
 import { statusColor, statusLabel } from "@/features/tickets/constants";
 import {
-  priorityColor,
-  priorityLabelKeys,
-  typeBadgeStyle,
-  typeIcons,
-  typeTooltipKeys,
-} from "../../helpers";
+  priorityColorOf,
+  priorityLabelKeyOf,
+  typeBadgeStyleOf,
+  typeIconOf,
+  typeTooltipKeyOf,
+} from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface Props {
   ticket: Ticket;
@@ -50,7 +50,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
           sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "4px" }}
         >
           <Tooltip
-            title={t(typeTooltipKeys[ticket.type])}
+            title={t(typeTooltipKeyOf(ticket.type))}
             arrow
             placement="top"
           >
@@ -59,11 +59,11 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: typeBadgeStyle[ticket.type].color,
+                color: typeBadgeStyleOf(ticket.type).color,
                 flexShrink: 0,
               }}
             >
-              {typeIcons[ticket.type]}
+              {typeIconOf(ticket.type)}
             </Box>
           </Tooltip>
           <Box
@@ -121,12 +121,12 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
               width: "7px",
               height: "7px",
               borderRadius: "50%",
-              background: priorityColor[ticket.priority],
+              background: priorityColorOf(ticket.priority),
               flexShrink: 0,
-              boxShadow: `0 0 5px ${priorityColor[ticket.priority]}`,
+              boxShadow: `0 0 5px ${priorityColorOf(ticket.priority)}`,
             }}
           />
-          {t(priorityLabelKeys[ticket.priority])}
+          {t(priorityLabelKeyOf(ticket.priority))}
         </Box>
       </Box>
 
@@ -177,7 +177,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
           verticalAlign: "middle",
         }}
       >
-        {ticket.assignee ? (
+        {ticket.assignedToName ? (
           <Box
             sx={{
               fontSize: "12px",
@@ -187,7 +187,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
               textOverflow: "ellipsis",
             }}
           >
-            {ticket.assignee.firstName} {ticket.assignee.lastName}
+            {ticket.assignedToName}
           </Box>
         ) : (
           <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>—</Box>

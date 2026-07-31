@@ -1,7 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import LinkRounded from "@mui/icons-material/LinkRounded";
-import type { DetailPalette } from "../../helpers";
+import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
   palette: DetailPalette;

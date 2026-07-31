@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { useI18n } from "@/i18n/I18nContext";
-import { extractApiErrorCode } from "@/utils/apiError";
+import { useI18n } from "@/contexts/I18nContext";
+import { extractApiErrorCode } from "@/helpers/apiError";
 
 export const useApiError = () => {
   const { t } = useI18n();

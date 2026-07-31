@@ -6,9 +6,9 @@ import AddOutlined from "@mui/icons-material/AddOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
-import { selectSx } from "../../helpers";
+import { selectSx } from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface FiltersState {
   priority: string;

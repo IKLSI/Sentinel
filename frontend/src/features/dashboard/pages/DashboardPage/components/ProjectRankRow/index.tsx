@@ -5,18 +5,21 @@ import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { useI18n } from "@/i18n/I18nContext";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
+import { getDateFnsLocale } from "@/configs/locales";
+import { useI18n } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
 import {
   GRADE_NOT_AVAILABLE,
   coverageReasonKey,
   isCovered,
-} from "@/utils/coverage";
-import { type DashPalette, gradeMeta } from "../../helpers";
+} from "@/formatters/coverage";
+import {
+  type DashPalette,
+  gradeMeta,
+} from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
-  project: ProjectDto;
+  project: Project;
   palette: DashPalette;
 }
 

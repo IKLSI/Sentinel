@@ -1,15 +1,15 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { useT } from "@/i18n/I18nContext";
-import type { Ticket } from "@/types";
+import { useT } from "@/contexts/I18nContext";
+import type { Ticket } from "@/domains/tickets/types";
 import {
   type DetailPalette,
   type buildPriorityConfig,
   typeLabelKeys,
-} from "../../helpers";
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
 import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
 import { statusColor, statusLabel } from "@/features/tickets/constants";
-import { priorityColor } from "../../../TicketsPage/helpers";
+import { priorityColorOf } from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface Props {
   ticket: Ticket;
@@ -41,7 +41,7 @@ export const PropertiesCard: React.FC<Props> = ({
       label: t("tickets.detail.field_priority"),
       value: (
         <StatusPriorityBadge
-          dotColor={priorityColor[ticket.priority]}
+          dotColor={priorityColorOf(ticket.priority)}
           label={t(priority.labelKey)}
         />
       ),
@@ -66,11 +66,11 @@ export const PropertiesCard: React.FC<Props> = ({
     {
       key: "assignee",
       label: t("tickets.detail.field_assignee"),
-      value: ticket.assignee ? (
+      value: ticket.assignedToName ? (
         <Box
           sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
         >
-          {ticket.assignee.firstName} {ticket.assignee.lastName}
+          {ticket.assignedToName}
         </Box>
       ) : (
         <Box sx={{ color: palette.muted, fontWeight: 400, fontSize: "12px" }}>

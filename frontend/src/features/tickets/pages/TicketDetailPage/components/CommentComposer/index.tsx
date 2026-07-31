@@ -8,19 +8,21 @@ import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
-import { useT } from "@/i18n/I18nContext";
-import { useTheme } from "@/store/ThemeContext";
+import { useT } from "@/contexts/I18nContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/useToast";
 import { useApiError } from "@/hooks/useApiError";
-import type { DetailPalette } from "../../helpers";
-import { useUploadAttachment } from "@/features/tickets/hooks/useTicket";
-import { API_BASE_URL } from "@/constants/api";
+import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { useUploadAttachmentMutation } from "@/domains/tickets/mutations";
+import { ROUTES_API } from "@/configs/api-routes.gen";
+import { API_BASE_URL } from "@/configs/env";
+import { buildUrl } from "@/helpers/url";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
-} from "@/components/MarkdownEditor";
-import { Theme } from "@/types/enums";
-import { commentContentSchema } from "../../schemas";
+} from "@/components/ui/forms/MarkdownEditor";
+import { Theme } from "@/enums";
+import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
 interface Attachment {
   fileName: string;
@@ -40,6 +42,8 @@ interface Props {
 }
 
 const BASE_URL = API_BASE_URL;
+const ATTACHMENT_FORM_FIELD = "file";
+const IMAGE_MIME_PREFIX = "image/";
 
 export const CommentComposer: React.FC<Props> = ({
   ticketId,
@@ -61,7 +65,7 @@ export const CommentComposer: React.FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const uploadMutation = useUploadAttachment(ticketId);
+  const uploadMutation = useUploadAttachmentMutation();
   const uploading = uploadMutation.isPending;
 
   const hasContent = value.trim().length > 0 || attachments.length > 0;
@@ -70,24 +74,32 @@ export const CommentComposer: React.FC<Props> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    uploadMutation.mutate(file, {
-      onSuccess: (created) => {
-        const path = `/api/tickets/${ticketId}/attachments/${created.id}`;
-        setAttachments((prev) => [
-          ...prev,
-          {
-            fileName: created.fileName,
-            url: `${BASE_URL}${path}`,
-            isImage: file.type.startsWith("image/"),
-          },
-        ]);
+    const formData = new FormData();
+    formData.append(ATTACHMENT_FORM_FIELD, file);
+    uploadMutation.mutate(
+      { id: ticketId, data: formData },
+      {
+        onSuccess: (created) => {
+          const path = buildUrl(
+            ROUTES_API.api.tickets[":id"].attachments[":attachmentId"].__path,
+            { id: ticketId, attachmentId: created.id },
+          );
+          setAttachments((prev) => [
+            ...prev,
+            {
+              fileName: created.fileName ?? file.name,
+              url: `${BASE_URL}${path}`,
+              isImage: file.type.startsWith(IMAGE_MIME_PREFIX),
+            },
+          ]);
+        },
+        onError: (err) =>
+          showToast(
+            apiError(err, t("tickets.detail.attachments_upload_error")),
+            "error",
+          ),
       },
-      onError: (err) =>
-        showToast(
-          apiError(err, t("tickets.detail.attachments_upload_error")),
-          "error",
-        ),
-    });
+    );
   };
 
   const removeAttachment = (index: number) => {

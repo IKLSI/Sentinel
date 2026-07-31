@@ -10,19 +10,25 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
-import { AppModal } from "@/components/AppModal";
-import { RowActions } from "@/components/RowActions";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { RowActions } from "@/components/ui/common/RowActions";
 import { useToast } from "@/hooks/useToast";
-import { useT, useI18n } from "@/i18n/I18nContext";
+import { useT, useI18n } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
-import type { CreatedApiKey, ApiKey } from "@/features/settings/api/apiKeys";
 import {
-  useApiKeys,
-  useCreateApiKey,
-  useRevokeApiKey,
-} from "@/features/settings/hooks/useApiKeys";
-import { FieldLabel, inp } from "../../helpers";
-import { createApiKeySchema, type CreateApiKeyFormValues } from "./schemas";
+  useCreateApiKeyMutation,
+  useRevokeApiKeyMutation,
+} from "@/domains/apiKeys/mutations";
+import { useApiKeysQuery } from "@/domains/apiKeys/queries";
+import type { ApiKey, CreatedApiKey } from "@/domains/apiKeys/types";
+import {
+  FieldLabel,
+  inp,
+} from "@/features/settings/pages/SettingsPage/helpers";
+import {
+  createApiKeySchema,
+  type CreateApiKeyFormValues,
+} from "@/features/settings/pages/SettingsPage/components/ApiKeysTab/schemas";
 
 const BTN_SX = {
   textTransform: "none" as const,
@@ -55,9 +61,11 @@ export const ApiKeysTab: React.FC = () => {
   const { showToast } = useToast();
   const formId = useId();
 
-  const { keys, loading } = useApiKeys();
-  const createKeyMutation = useCreateApiKey();
-  const revokeKeyMutation = useRevokeApiKey();
+  const apiKeysQuery = useApiKeysQuery();
+  const keys = apiKeysQuery.data ?? [];
+  const loading = apiKeysQuery.isLoading;
+  const createKeyMutation = useCreateApiKeyMutation();
+  const revokeKeyMutation = useRevokeApiKeyMutation();
   const creating = createKeyMutation.isPending;
   const revoking = revokeKeyMutation.isPending;
 
@@ -95,7 +103,7 @@ export const ApiKeysTab: React.FC = () => {
 
   const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
-      { name: data.name.trim(), expiresAt: data.expiresAt || null },
+      { data: { name: data.name.trim(), expiresAt: data.expiresAt || null } },
       {
         onSuccess: (created) => {
           setCreateOpen(false);
@@ -113,11 +121,17 @@ export const ApiKeysTab: React.FC = () => {
 
   const handleRevoke = () => {
     if (!revokeTarget) return;
-    revokeKeyMutation.mutate(revokeTarget.id, {
-      onSuccess: () => setRevokeTarget(null),
-      onError: (err) =>
-        showToast(apiError(err, t("settings.api_keys.revoke_error")), "error"),
-    });
+    revokeKeyMutation.mutate(
+      { id: revokeTarget.id },
+      {
+        onSuccess: () => setRevokeTarget(null),
+        onError: (err) =>
+          showToast(
+            apiError(err, t("settings.api_keys.revoke_error")),
+            "error",
+          ),
+      },
+    );
   };
 
   const sortedKeys = useMemo(() => {

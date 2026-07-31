@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useVerifyEmailMutation } from "../hooks/useAuthMutations";
-import { SentinelLogo } from "../../../layouts/SentinelLogo";
-import { useT } from "../../../i18n/I18nContext";
+import { useVerifyEmailMutation } from "@/domains/auth/mutations";
+import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 
 type Status = "loading" | "success" | "error";
@@ -25,10 +25,13 @@ export const VerifyEmailPage: React.FC = () => {
       setStatus("error");
       return;
     }
-    verify(token, {
-      onSuccess: () => setStatus("success"),
-      onError: () => setStatus("error"),
-    });
+    verify(
+      { data: { token } },
+      {
+        onSuccess: () => setStatus("success"),
+        onError: () => setStatus("error"),
+      },
+    );
   }, [token, verify]);
 
   return (

@@ -1,10 +1,10 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
-import { useT } from "@/i18n/I18nContext";
-import type { Ticket } from "@/types";
-import type { DetailPalette } from "../../helpers";
-import { CommentItem } from "../CommentItem";
+import { useT } from "@/contexts/I18nContext";
+import type { Ticket } from "@/domains/tickets/types";
+import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { CommentItem } from "@/features/tickets/pages/TicketDetailPage/components/CommentItem";
 
 interface Props {
   comments: Ticket["comments"];

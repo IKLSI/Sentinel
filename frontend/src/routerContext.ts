@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/enums";
+import type { UserRole } from "@/enums";
 
 export interface RouterContext {
   auth: {

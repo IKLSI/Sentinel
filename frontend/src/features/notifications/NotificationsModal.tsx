@@ -10,10 +10,10 @@ import SyncOutlined from "@mui/icons-material/SyncOutlined";
 import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import { useNavigate } from "@tanstack/react-router";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { statusLabel } from "@/features/tickets/constants";
-import { useNotifications } from "./useNotifications";
-import type { NotificationItem } from "./api";
+import { useNotifications } from "@/features/notifications/useNotifications";
+import type { NotificationItem } from "@/domains/notifications/types";
 
 type Filter = "all" | "unread" | "read";
 
@@ -193,7 +193,7 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
             >
               <Box
                 component="button"
-                onClick={() => markAllRead(undefined)}
+                onClick={() => markAllRead()}
                 sx={{
                   all: "unset",
                   cursor: "pointer",
@@ -393,7 +393,10 @@ export const NotificationsModal: React.FC<Props> = ({ open, onClose }) => {
                     >
                       {t(
                         notif.messageKey,
-                        translateStatusParams(t, notif.messageParams),
+                        translateStatusParams(
+                          t,
+                          notif.messageParams ?? undefined,
+                        ),
                       )}
                     </Box>
                     <Box

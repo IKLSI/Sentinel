@@ -1,8 +1,7 @@
 import type React from "react";
-import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
-import { useT } from "../i18n/I18nContext";
-import apiClient from "../services/client";
+import { useT } from "@/contexts/I18nContext";
+import { useAppConfigQuery } from "@/domains/settings/queries";
 import { ROUTES } from "@/constants/routes";
 
 interface Section {
@@ -13,14 +12,7 @@ interface Section {
 
 export const PrivacyPage: React.FC = () => {
   const t = useT();
-  const [supportEmail, setSupportEmail] = useState("");
-
-  useEffect(() => {
-    apiClient
-      .get<{ supportEmail: string }>("/api/config")
-      .then((res) => setSupportEmail(res.data.supportEmail ?? ""))
-      .catch(() => {});
-  }, []);
+  const supportEmail = useAppConfigQuery().data?.supportEmail ?? "";
 
   const sections: Section[] = [
     {

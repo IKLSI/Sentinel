@@ -1,3 +1,5 @@
+using Sentinel.Domain.Models;
+
 namespace Sentinel.Domain.DTOs.Auth;
 
 public class LoginResponse
@@ -15,4 +17,5 @@ public class UserProfile
     public string Role { get; set; } = string.Empty;
     public Guid OrganizationId { get; set; }
     public string Theme { get; set; } = "light";
+    public string Language { get; set; } = LanguageValues.Fr;
 }

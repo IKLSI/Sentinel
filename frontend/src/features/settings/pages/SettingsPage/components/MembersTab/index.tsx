@@ -9,15 +9,23 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { formatDistanceToNow } from "date-fns";
-import { getDateFnsLocale } from "@/utils/dateFnsLocale";
-import { RowActions } from "@/components/RowActions";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { getDateFnsLocale } from "@/configs/locales";
+import { RowActions } from "@/components/ui/common/RowActions";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import { useI18n } from "@/i18n/I18nContext";
-import { useUsers, useToggleUserActive } from "@/features/users/hooks/useUsers";
-import { MemberPagination } from "../MemberPagination";
+import { useI18n } from "@/contexts/I18nContext";
+import { useUpdateUserMutation } from "@/domains/users/mutations";
+import { useUsersQuery } from "@/domains/users/queries";
+import { MemberPagination } from "@/features/settings/pages/SettingsPage/components/MemberPagination";
 import { useApiError } from "@/hooks/useApiError";
-import { UserRole } from "@/types/enums";
+import { UserRole } from "@/enums";
+
+const ALL_ROLES_FILTER = "all";
+const DEFAULT_PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
+const TABLE_HEADER_HEIGHT = 52;
+const TABLE_FOOTER_HEIGHT = 41;
+const TABLE_ROW_HEIGHT = 52;
 
 interface Props {
   onInviteClick: () => void;
@@ -37,12 +45,13 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     [t],
   );
 
-  const { users: members, loading: loadingMembers } = useUsers();
-  const toggleActive = useToggleUserActive();
+  const toggleActive = useUpdateUserMutation();
   const [memberSearch, setMemberSearch] = useState("");
-  const [memberRoleFilter, setMemberRoleFilter] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [memberRoleFilter, setMemberRoleFilter] =
+    useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
     {
       col: "member",
@@ -63,7 +72,15 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     const el = tableWrapRef.current;
     if (!el) return;
     const measure = () =>
-      setPageSize(Math.max(1, Math.floor((el.clientHeight - 52 - 41) / 52)));
+      setPageSize(
+        Math.max(
+          1,
+          Math.floor(
+            (el.clientHeight - TABLE_HEADER_HEIGHT - TABLE_FOOTER_HEIGHT) /
+              TABLE_ROW_HEIGHT,
+          ),
+        ),
+      );
     measure();
     const obs = new ResizeObserver(measure);
     obs.observe(el);
@@ -71,21 +88,28 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   }, []);
 
   useEffect(() => {
-    setPage(1);
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(memberSearch);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [memberSearch]);
 
-  const filteredMembers = useMemo(() => {
+  const usersQuery = useUsersQuery({
+    page,
+    pageSize,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(memberRoleFilter === ALL_ROLES_FILTER
+      ? {}
+      : { role: memberRoleFilter as UserRole }),
+  });
+  const members = usersQuery.data?.items ?? [];
+  const totalMembers = usersQuery.data?.total ?? 0;
+  const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1);
+  const loadingMembers = usersQuery.isLoading;
+
+  const sortedMembers = useMemo(() => {
     let list = members;
-    if (memberSearch.trim()) {
-      const q = memberSearch.toLowerCase();
-      list = list.filter(
-        (m) =>
-          `${m.firstName} ${m.lastName}`.toLowerCase().includes(q) ||
-          m.email.toLowerCase().includes(q),
-      );
-    }
-    if (memberRoleFilter !== "all")
-      list = list.filter((m) => m.role === memberRoleFilter);
     if (sort) {
       const mul = sort.dir === "asc" ? 1 : -1;
       list = list.slice().sort((a, b) => {
@@ -118,17 +142,11 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
       });
     }
     return list;
-  }, [members, memberSearch, memberRoleFilter, sort, ROLE_LABELS]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
-  const paginatedMembers = filteredMembers.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+  }, [members, sort, ROLE_LABELS]);
 
   const handleToggleActive = (memberId: string, currentlyActive: boolean) => {
     toggleActive.mutate(
-      { userId: memberId, isActive: !currentlyActive },
+      { id: memberId, data: { isActive: !currentlyActive } },
       {
         onError: (err) =>
           showToast(apiError(err, t("settings.toast.toggle_error")), "error"),
@@ -205,11 +223,14 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             cursor: "pointer",
           }}
           value={memberRoleFilter}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-            setMemberRoleFilter(e.target.value)
-          }
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+            setMemberRoleFilter(e.target.value);
+            setPage(1);
+          }}
         >
-          <option value="all">{t("settings.members.filter_all_roles")}</option>
+          <option value={ALL_ROLES_FILTER}>
+            {t("settings.members.filter_all_roles")}
+          </option>
           <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
           <option value={UserRole.Developer}>
             {t("settings.role.developer")}
@@ -264,7 +285,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           >
             <CircularProgress size={20} />
           </Box>
-        ) : filteredMembers.length === 0 ? (
+        ) : sortedMembers.length === 0 ? (
           <Box
             className="empty-state"
             sx={{ flex: 1, justifyContent: "center" }}
@@ -373,7 +394,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                   </Box>
                 </Box>
                 <Box component="tbody">
-                  {paginatedMembers.map((m) => (
+                  {sortedMembers.map((m) => (
                     <Box
                       component="tr"
                       key={m.id}
@@ -457,7 +478,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                       >
                         {m.id !== user?.id &&
                           (toggleActive.isPending &&
-                          toggleActive.variables?.userId === m.id ? (
+                          toggleActive.variables?.id === m.id ? (
                             <CircularProgress size={13} />
                           ) : (
                             <RowActions
@@ -489,7 +510,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             <MemberPagination
               page={page}
               totalPages={totalPages}
-              total={filteredMembers.length}
+              total={totalMembers}
               onChange={setPage}
             />
           </>

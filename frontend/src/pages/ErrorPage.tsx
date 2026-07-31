@@ -1,8 +1,7 @@
 import type React from "react";
-import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useT } from "../i18n/I18nContext";
-import apiClient from "../services/client";
+import { useT } from "@/contexts/I18nContext";
+import { useAppConfigQuery } from "@/domains/settings/queries";
 import { ROUTES } from "@/constants/routes";
 
 interface ErrorPageProps {
@@ -18,14 +17,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
 }) => {
   const navigate = useNavigate();
   const t = useT();
-  const [supportEmail, setSupportEmail] = useState("");
-
-  useEffect(() => {
-    apiClient
-      .get<{ supportEmail: string }>("/api/config")
-      .then((res) => setSupportEmail(res.data.supportEmail ?? ""))
-      .catch(() => {});
-  }, []);
+  const supportEmail = useAppConfigQuery().data?.supportEmail ?? "";
 
   const is404 = status === 404;
   const defaultMessage = t(is404 ? "error.404.title" : "error.500.title");

@@ -5,15 +5,22 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import StarOutlined from "@mui/icons-material/StarOutlined";
-import { useT } from "@/i18n/I18nContext";
+import { useT } from "@/contexts/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { useApiError } from "@/hooks/useApiError";
 import {
-  useBillingStatus,
-  useBillingPlans,
-  useStartCheckout,
-} from "@/features/settings/hooks/useBilling";
-import { CARD_SX, CardHeader } from "../../helpers";
+  BILLING_INTERVAL,
+  type BillingInterval,
+} from "@/domains/billing/constants";
+import { useStartCheckoutMutation } from "@/domains/billing/mutations";
+import {
+  useBillingPlansQuery,
+  useBillingStatusQuery,
+} from "@/domains/billing/queries";
+import {
+  CARD_SX,
+  CardHeader,
+} from "@/features/settings/pages/SettingsPage/helpers";
 
 const UNLIMITED = -1;
 const WARN_THRESHOLD = 0.8;
@@ -33,12 +40,16 @@ export const BillingTab: React.FC = () => {
   const t = useT();
   const apiError = useApiError();
   const { showToast } = useToast();
-  const { status, loading: loadingStatus } = useBillingStatus();
-  const { plans: rawPlans, loading: loadingPlans } = useBillingPlans();
-  const startCheckoutMutation = useStartCheckout();
-  const loading = loadingStatus || loadingPlans;
+  const billingStatusQuery = useBillingStatusQuery();
+  const billingPlansQuery = useBillingPlansQuery();
+  const startCheckoutMutation = useStartCheckoutMutation();
+  const status = billingStatusQuery.data ?? null;
+  const rawPlans = billingPlansQuery.data ?? [];
+  const loading = billingStatusQuery.isLoading || billingPlansQuery.isLoading;
   const actionLoading = startCheckoutMutation.isPending;
-  const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
+  const [interval, setInterval] = useState<BillingInterval>(
+    BILLING_INTERVAL.Monthly,
+  );
 
   const plans = [...rawPlans].sort(
     (a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier),
@@ -56,10 +67,10 @@ export const BillingTab: React.FC = () => {
 
   const handleCheckout = (tier: string) => {
     startCheckoutMutation.mutate(
-      { tier, interval },
+      { data: { planTier: tier, billingInterval: interval } },
       {
-        onSuccess: (url) => {
-          window.location.href = url;
+        onSuccess: (session) => {
+          if (session.url) window.location.href = session.url;
         },
         onError: (err) =>
           showToast(
@@ -234,7 +245,7 @@ export const BillingTab: React.FC = () => {
                 p: "3px",
               }}
             >
-              {(["monthly", "annual"] as const).map((iv) => (
+              {Object.values(BILLING_INTERVAL).map((iv) => (
                 <Box
                   key={iv}
                   component="button"
@@ -257,18 +268,20 @@ export const BillingTab: React.FC = () => {
                     "&:hover": interval === iv ? {} : { color: "var(--text)" },
                   }}
                 >
-                  {iv === "monthly"
+                  {iv === BILLING_INTERVAL.Monthly
                     ? t("settings.billing.interval_monthly")
                     : t("settings.billing.interval_annual")}
-                  {iv === "annual" && (
+                  {iv === BILLING_INTERVAL.Annual && (
                     <Box
                       sx={{
                         fontSize: "10px",
                         fontWeight: 700,
                         color:
-                          interval === "annual" ? "var(--s1)" : "var(--green)",
+                          interval === BILLING_INTERVAL.Annual
+                            ? "var(--s1)"
+                            : "var(--green)",
                         background:
-                          interval === "annual"
+                          interval === BILLING_INTERVAL.Annual
                             ? "color-mix(in srgb, var(--s1) 22%, transparent)"
                             : "var(--green-subtle)",
                         px: "5px",
@@ -383,7 +396,8 @@ export const BillingTab: React.FC = () => {
                       >
                         {t("settings.billing.plan_free")}
                       </Box>
-                    ) : interval === "annual" && plan.priceAnnual > 0 ? (
+                    ) : interval === BILLING_INTERVAL.Annual &&
+                      plan.priceAnnual > 0 ? (
                       <Box>
                         <Box
                           sx={{

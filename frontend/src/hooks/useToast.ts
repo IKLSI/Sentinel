@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from "react";
-import { ToastSeverity } from "../types/enums";
+import { ToastSeverity } from "@/enums";
 
 type Severity = ToastSeverity;
 

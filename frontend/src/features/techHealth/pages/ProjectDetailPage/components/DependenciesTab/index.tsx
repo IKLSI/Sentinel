@@ -4,10 +4,15 @@ import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { StatusChip } from "@/components/StatusChip";
-import { useT } from "@/i18n/I18nContext";
-import type { DependencyDto } from "@/features/techHealth/api/projects";
-import { DEP_STATUS, TD, TH } from "../../helpers";
+import { StatusChip } from "@/components/ui/common/StatusChip";
+import { useT } from "@/contexts/I18nContext";
+import type { Dependency } from "@/domains/projects/types";
+import type { DependencyStatus } from "@/enums";
+import {
+  DEP_STATUS,
+  TD,
+  TH,
+} from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
 const ESTIMATED_ROW_HEIGHT = 45;
 const OVERSCAN = 10;
@@ -52,7 +57,7 @@ const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
 const spacerCellSx = { height: 0, padding: 0, border: 0 } as const;
 
 interface RowProps {
-  d: DependencyDto;
+  d: Dependency;
   typeProd: string;
   typeDev: string;
   index: number;
@@ -61,7 +66,7 @@ interface RowProps {
 
 const DependencyRow = memo<RowProps>(
   ({ d, typeProd, typeDev, index, measureRef }) => {
-    const s = DEP_STATUS[d.status] ?? {
+    const s = DEP_STATUS[d.status as DependencyStatus] ?? {
       labelKey: "",
       variant: "gray" as const,
     };
@@ -122,8 +127,8 @@ const DependencyRow = memo<RowProps>(
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
-  dependencies: DependencyDto[];
-  filteredDeps: DependencyDto[];
+  dependencies: Dependency[];
+  filteredDeps: Dependency[];
   search: string;
   onSearchChange: (v: string) => void;
 }

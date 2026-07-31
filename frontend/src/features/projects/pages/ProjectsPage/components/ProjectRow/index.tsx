@@ -5,17 +5,17 @@ import { useNavigate } from "@tanstack/react-router";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
-import { RowActions } from "@/components/RowActions";
-import { AppModal } from "@/components/AppModal";
-import { useT } from "@/i18n/I18nContext";
-import type { ProjectDto } from "@/features/techHealth/api/projects";
-import { useUpdateProjectFrequency } from "@/features/techHealth/hooks/useProjects";
-import { ScanFrequency } from "@/types/enums";
+import { RowActions } from "@/components/ui/common/RowActions";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { useT } from "@/contexts/I18nContext";
+import type { Project } from "@/domains/projects/types";
+import { useUpdateProjectFrequencyMutation } from "@/domains/projects/mutations";
+import { ScanFrequency } from "@/enums";
 import { modalSelectSx } from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface Props {
-  project: ProjectDto;
-  onDelete: (project: ProjectDto) => void;
+  project: Project;
+  onDelete: (project: Project) => void;
   onScan: (id: string) => void;
   isScanning: boolean;
 }
@@ -27,9 +27,9 @@ export const ProjectRow: React.FC<Props> = React.memo(
     const ticketCount = 0;
     const [modalOpen, setModalOpen] = useState(false);
     const [selected, setSelected] = useState<ScanFrequency>(
-      project.scanFrequency,
+      project.scanFrequency as ScanFrequency,
     );
-    const updateFrequencyMutation = useUpdateProjectFrequency();
+    const updateFrequencyMutation = useUpdateProjectFrequencyMutation();
     const saving = updateFrequencyMutation.isPending;
 
     const freqLabel = (f: string) => {
@@ -41,7 +41,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
 
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
-      setSelected(project.scanFrequency);
+      setSelected(project.scanFrequency as ScanFrequency);
       setModalOpen(true);
     };
 
@@ -51,7 +51,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         return;
       }
       updateFrequencyMutation.mutate(
-        { id: project.id, scanFrequency: selected },
+        { id: project.id, data: { scanFrequency: selected } },
         { onSuccess: () => setModalOpen(false) },
       );
     };
