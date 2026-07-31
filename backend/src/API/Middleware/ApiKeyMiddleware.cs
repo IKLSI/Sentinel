@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Sentinel.Application.ApiKeys.Validate;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 
@@ -8,18 +9,21 @@ namespace Sentinel.API.Middleware;
 
 public class ApiKeyMiddleware
 {
-    private const string ApiKeyHeader = "X-Api-Key";
-    private readonly RequestDelegate _next;
+    private const string HeaderName = "X-Api-Key";
 
-    public ApiKeyMiddleware(RequestDelegate next)
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ApiKeyMiddleware> _logger;
+
+    public ApiKeyMiddleware(RequestDelegate next, ILogger<ApiKeyMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
         if (context.User.Identity?.IsAuthenticated is not true
-            && context.Request.Headers.TryGetValue(ApiKeyHeader, out Microsoft.Extensions.Primitives.StringValues rawKey)
+            && context.Request.Headers.TryGetValue(HeaderName, out Microsoft.Extensions.Primitives.StringValues rawKey)
             && !string.IsNullOrWhiteSpace(rawKey))
         {
             ApiKeyValidateService apiKeyValidateService =
@@ -41,6 +45,13 @@ public class ApiKeyMiddleware
                 ];
                 ClaimsIdentity identity = new ClaimsIdentity(claims, "ApiKey");
                 context.User = new ClaimsPrincipal(identity);
+
+                context.RequestServices.GetRequiredService<ITenantContext>().Reset();
+            }
+            else
+            {
+                _logger.LogWarning("API key rejected from {RemoteIp} on {Path}",
+                    context.Connection.RemoteIpAddress, context.Request.Path);
             }
         }
 

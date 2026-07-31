@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
@@ -15,22 +14,19 @@ public class SendEmailVerificationJob
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
     private readonly QueuedTokenProtector _tokenProtector;
-    private readonly ILogger<SendEmailVerificationJob> _logger;
 
     public SendEmailVerificationJob(
         IEmailService emailService,
         IUserRepository userRepository,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
-        QueuedTokenProtector tokenProtector,
-        ILogger<SendEmailVerificationJob> logger)
+        QueuedTokenProtector tokenProtector)
     {
         _emailService = emailService;
         _userRepository = userRepository;
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
         _tokenProtector = tokenProtector;
-        _logger = logger;
     }
 
     public async Task ExecuteAsync(string email, string protectedToken)
@@ -38,10 +34,7 @@ public class SendEmailVerificationJob
         string? rawToken = _tokenProtector.Unprotect(protectedToken);
 
         if (string.IsNullOrEmpty(rawToken))
-        {
-            _logger.LogWarning("Email verification token could not be decrypted, email not sent");
-            return;
-        }
+            throw new UndecryptableQueuedTokenException(nameof(SendEmailVerificationJob));
 
         string? language;
 

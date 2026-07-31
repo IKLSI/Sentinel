@@ -39,10 +39,7 @@ public class SendInvitationEmailJob
         string? rawToken = _tokenProtector.Unprotect(protectedToken);
 
         if (string.IsNullOrEmpty(rawToken))
-        {
-            _logger.LogWarning("Invitation token for {InvitationId} could not be decrypted, email not sent", invitationId);
-            return;
-        }
+            throw new UndecryptableQueuedTokenException(nameof(SendInvitationEmailJob));
 
         UserInvitation? invitation;
 

@@ -7,4 +7,6 @@ public interface ITenantContext
     string? Jti { get; }
     DateTime? TokenExpiresAtUtc { get; }
     bool IsSet { get; }
+
+    void Reset();
 }

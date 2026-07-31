@@ -190,8 +190,7 @@ public class BillingWebhookService : IService
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await ClampProjectFrequenciesAsync(organizationId,
-            PlanLimits.Effective(organization.PlanTier, organization.SubscriptionStatus), cancellationToken);
+        await ClampProjectFrequenciesAsync(organizationId, organization.PlanTier, cancellationToken);
 
         _logger.LogInformation("Subscription activated for organization {OrganizationId} ({Plan})",
             organizationId, organization.PlanTier);
@@ -214,6 +213,7 @@ public class BillingWebhookService : IService
 
         PlanTier previousPlan = organization.PlanTier;
         PlanTier? tier = _priceCatalog.TierFor(subscription.Items?.Data?.FirstOrDefault()?.Price?.Id);
+        bool planApplied;
 
         using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
@@ -221,23 +221,26 @@ public class BillingWebhookService : IService
             organization.StripeSubscriptionId = subscription.Id;
             organization.SubscriptionStatus = StripePriceCatalog.MapStatus(subscription.Status);
 
-            if (tier.HasValue && organization.SubscriptionStatus is SubscriptionStatus.Active or SubscriptionStatus.Trialing)
-                organization.PlanTier = tier.Value;
+            planApplied = tier.HasValue
+                && tier.Value != previousPlan
+                && PlanLimits.IsEntitled(organization.SubscriptionStatus);
+
+            if (planApplied)
+                organization.PlanTier = tier!.Value;
 
             organization.UpdatedAt = DateTime.UtcNow;
 
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await ClampProjectFrequenciesAsync(organization.Id,
-            PlanLimits.Effective(organization.PlanTier, organization.SubscriptionStatus), cancellationToken);
+        await ClampProjectFrequenciesAsync(organization.Id, organization.PlanTier, cancellationToken);
 
         _logger.LogInformation("Subscription updated for {OrganizationId}: {Status}",
             organization.Id, organization.SubscriptionStatus);
 
-        if (!tier.HasValue || tier.Value == previousPlan) return;
+        if (!planApplied) return;
 
-        await NotifyPlanChangedAsync(organization, previousPlan, tier.Value, cancellationToken);
+        await NotifyPlanChangedAsync(organization, previousPlan, organization.PlanTier, cancellationToken);
     }
 
     private async Task ApplySubscriptionCanceledAsync(Subscription subscription, DateTime eventCreatedAt,

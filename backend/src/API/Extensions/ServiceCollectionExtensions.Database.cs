@@ -27,6 +27,8 @@ public static partial class ServiceCollectionExtensions
             MaxPoolSize = 50
         };
 
+        EnsureSessionScopedConnection(dbBuilder);
+
         services.AddDbContext<SentinelContext>((sp, options) =>
         {
             options.UseNpgsql(dbBuilder.ToString(), npgsqlOptions =>
@@ -40,6 +42,19 @@ public static partial class ServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    private const int TransactionPoolingPort = 6543;
+
+    private static void EnsureSessionScopedConnection(NpgsqlConnectionStringBuilder builder)
+    {
+        if (builder.Port != TransactionPoolingPort) return;
+
+        throw new InvalidOperationException(
+            $"La chaîne de connexion pointe le port {TransactionPoolingPort}, réservé au pooling en mode transaction. " +
+            "L'isolation multi-tenant repose sur set_config('app.current_org', …) appliqué à la session : " +
+            "en mode transaction, la connexion physique change entre deux transactions sans que l'application en soit avertie, " +
+            "et une requête peut s'exécuter sous l'organisation d'un autre client. Utiliser le port 5432 (mode session)");
     }
 
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, string connectionString)

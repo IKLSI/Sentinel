@@ -18,6 +18,7 @@ public class ProjectOrderingTranslationTests
         public string? Jti => null;
         public DateTime? TokenExpiresAtUtc => null;
         public bool IsSet => false;
+        public void Reset() { }
     }
 
     private static SentinelContext CreateNpgsqlContext()

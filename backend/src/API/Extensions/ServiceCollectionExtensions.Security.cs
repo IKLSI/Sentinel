@@ -196,9 +196,16 @@ public static partial class ServiceCollectionExtensions
         return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
     }
 
-    public static IServiceCollection AddForwardedHeadersPolicy(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddForwardedHeadersPolicy(this IServiceCollection services,
+        IConfiguration configuration, IHostEnvironment environment)
     {
         ForwardedHeadersSettings settings = ReadSettings<ForwardedHeadersSettings>(configuration, ConfigurationKeys.Sections.ForwardedHeaders);
+
+        if (!environment.IsDevelopment() && settings.KnownProxies.Count == 0 && settings.KnownNetworks.Count == 0)
+            throw new InvalidOperationException(
+                "ForwardedHeaders:KnownProxies ou ForwardedHeaders:KnownNetworks doit être renseigné hors développement : " +
+                "sans reverse proxy déclaré, X-Forwarded-For est ignoré et toutes les requêtes partagent l'adresse IP du proxy, " +
+                "ce qui rend le rate limiting global au lieu d'être par client");
 
         services.Configure<ForwardedHeadersOptions>(options =>
         {

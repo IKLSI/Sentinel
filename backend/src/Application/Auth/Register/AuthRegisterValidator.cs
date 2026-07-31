@@ -2,13 +2,12 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Auth;
-using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Auth.Register;
 
-public class AuthRegisterValidator(IUserRepository userRepository) : IValidator
+public class AuthRegisterValidator : IValidator
 {
-    public async Task<Result> ValidateAsync(RegisterRequest model, CancellationToken cancellationToken)
+    public Task<Result> ValidateAsync(RegisterRequest model, CancellationToken cancellationToken)
     {
         ValidationErrors errors = new ValidationErrors()
             .EmailAddress(nameof(model.Email), model.Email, ValidationCodes.EmailRequired)
@@ -24,15 +23,6 @@ public class AuthRegisterValidator(IUserRepository userRepository) : IValidator
             .MaxLength(nameof(model.OrganizationName), model.OrganizationName, 200,
                 ValidationCodes.OrganizationNameMaxLength);
 
-        if (errors.HasErrors)
-            return errors.ToResult();
-
-        bool emailExists = await userRepository
-            .ExistsByEmailAcrossTenantsAsync(model.Email.ToLowerInvariant().Trim(), cancellationToken);
-
-        if (emailExists)
-            return Result.Conflict(ErrorCodes.AuthEmailAlreadyUsed);
-
-        return Result.Success();
+        return Task.FromResult(errors.ToResult());
     }
 }

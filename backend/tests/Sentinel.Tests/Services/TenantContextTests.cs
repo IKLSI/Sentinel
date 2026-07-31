@@ -10,7 +10,23 @@ namespace Sentinel.Tests.Services;
 public class TenantContextTests
 {
     [Fact]
-    public void OrganizationId_QuandLePrincipalEstPoseApresLaConstruction_UtiliseLeNouveauPrincipal()
+    public void OrganizationId_QuandLePrincipalEstPoseApresLaConstruction_ResteNullSansReset()
+    {
+        DefaultHttpContext httpContext = new DefaultHttpContext();
+        IHttpContextAccessor accessor = new HttpContextAccessor { HttpContext = httpContext };
+
+        TenantContext sut = new TenantContext(accessor);
+
+        sut.OrganizationId.Should().BeNull();
+
+        httpContext.User = BuildPrincipal(Guid.NewGuid(), Guid.NewGuid(), "cle-api");
+
+        sut.OrganizationId.Should().BeNull();
+        sut.IsSet.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Reset_QuandLePrincipalEstPoseParLaCleApi_ReprendLeNouveauPrincipal()
     {
         DefaultHttpContext httpContext = new DefaultHttpContext();
         IHttpContextAccessor accessor = new HttpContextAccessor { HttpContext = httpContext };
@@ -22,6 +38,7 @@ public class TenantContextTests
         Guid organizationId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
         httpContext.User = BuildPrincipal(organizationId, userId, "cle-api");
+        sut.Reset();
 
         sut.ShouldSatisfyTenant(organizationId, userId, "cle-api");
     }

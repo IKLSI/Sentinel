@@ -59,6 +59,18 @@ public class TenantContext : ITenantContext
 
     public bool IsSet => OrganizationId.HasValue;
 
+    public void Reset()
+    {
+        lock (_resolutionGate)
+        {
+            _organizationId = null;
+            _userId = null;
+            _jti = null;
+            _tokenExpiresAtUtc = null;
+            _resolved = false;
+        }
+    }
+
     private void ResolveIfAuthenticated()
     {
         if (_resolved) return;
@@ -69,7 +81,11 @@ public class TenantContext : ITenantContext
 
             ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
 
-            if (user?.Identity?.IsAuthenticated is not true) return;
+            if (user?.Identity?.IsAuthenticated is not true)
+            {
+                _resolved = true;
+                return;
+            }
 
             if (Guid.TryParse(user.FindFirst(ClaimNames.OrganizationId)?.Value, out Guid organizationId))
                 _organizationId = organizationId;

@@ -105,6 +105,12 @@ public class AuthLoginService : IService
 
     private User? ResolveSingleMatch(IReadOnlyList<User> candidates, string password)
     {
+        if (candidates.Count == 0)
+        {
+            _passwordHasher.VerifyAgainstDecoy(password);
+            return null;
+        }
+
         User? match = null;
 
         foreach (User candidate in candidates)

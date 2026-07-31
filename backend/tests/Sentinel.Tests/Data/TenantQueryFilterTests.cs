@@ -29,6 +29,27 @@ public class TenantQueryFilterTests
     }
 
     [Fact]
+    public async Task Query_WhenTenantContextIsMissing_ReturnsNothing()
+    {
+        string databaseName = Guid.NewGuid().ToString();
+        Guid organizationId = Guid.NewGuid();
+        SystemScope systemScope = new SystemScope();
+
+        using (SentinelContext seedContext = TestDbContextFactory.CreateInMemory(
+            new FakeTenantContext { OrganizationId = organizationId }, systemScope, databaseName))
+        using (systemScope.Enter())
+        {
+            seedContext.AddRange(NewOrganization(organizationId), NewUser(organizationId));
+            await seedContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using SentinelContext contextWithoutTenant = TestDbContextFactory.CreateInMemory(databaseName);
+
+        (await contextWithoutTenant.Users.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
+        (await contextWithoutTenant.Organizations.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
+    }
+
+    [Fact]
     public async Task PasswordResetTokens_OfAnotherOrganization_AreNotReadable()
     {
         string databaseName = Guid.NewGuid().ToString();

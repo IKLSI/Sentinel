@@ -9,6 +9,8 @@ public class FakeTenantContext : ITenantContext
     public string? Jti { get; set; }
     public DateTime? TokenExpiresAtUtc { get; set; }
     public bool IsSet => OrganizationId.HasValue;
+
+    public void Reset() { }
 }
 
 public class FakeSystemScope : ISystemScope

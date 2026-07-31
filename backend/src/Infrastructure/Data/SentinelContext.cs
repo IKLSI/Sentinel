@@ -19,7 +19,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         _systemScope = systemScope;
     }
 
-    private bool BypassTenantFilter => _tenant == null || _systemScope?.IsActive == true;
+    private bool BypassTenantFilter => _systemScope?.IsActive == true;
 
     private Guid CurrentOrganizationId => _tenant?.OrganizationId ?? Guid.Empty;
 
@@ -114,10 +114,10 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<PasswordResetToken>()
-            .HasQueryFilter(e => BypassTenantFilter || Users.Any(u => u.Id == e.UserId));
+            .HasQueryFilter(e => BypassTenantFilter || Users.Select(u => u.Id).Contains(e.UserId));
 
         modelBuilder.Entity<EmailVerificationToken>()
-            .HasQueryFilter(e => BypassTenantFilter || Users.Any(u => u.Id == e.UserId));
+            .HasQueryFilter(e => BypassTenantFilter || Users.Select(u => u.Id).Contains(e.UserId));
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)

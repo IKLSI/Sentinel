@@ -40,7 +40,7 @@ public static class Program
             .AddApiVersioningPolicy()
             .AddSwaggerWithJwt()
             .AddControllersWithJsonOptions()
-            .AddForwardedHeadersPolicy(builder.Configuration)
+            .AddForwardedHeadersPolicy(builder.Configuration, builder.Environment)
             .AddLoginRateLimiting()
             .AddMemoryCache(options => options.SizeLimit = 50_000)
             .AddResponseCompressionPolicy()
@@ -95,6 +95,11 @@ public static class Program
             using (systemScope.Enter())
             {
                 await context.Database.MigrateAsync();
+
+                if (!app.Environment.IsDevelopment())
+                {
+                    await DatabaseRoleGuard.EnsureRowLevelSecurityAppliesAsync(context);
+                }
             }
 
             if (app.Environment.IsDevelopment())

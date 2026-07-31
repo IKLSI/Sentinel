@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
@@ -12,6 +13,7 @@ using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.Settings;
 
 namespace Sentinel.Application.Auth.Register;
 
@@ -26,6 +28,7 @@ public class AuthRegisterService(
     IAuditLogService auditLog,
     QueuedTokenProtector tokenProtector,
     AuthRegisterValidator validator,
+    IOptions<FrontendSettings> frontendOptions,
     ILogger<AuthRegisterService> logger) : IService
 {
     private const int VerificationValidityHours = 48;
@@ -33,18 +36,22 @@ public class AuthRegisterService(
     public async Task<Result<ApiMessageResponse>> ExecuteAsync(RegisterRequest model,
         CancellationToken cancellationToken)
     {
+        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
+
+        if (!validationResult.IsSuccess)
+            return Result<ApiMessageResponse>.From(validationResult);
+
         string email = model.Email.ToLowerInvariant().Trim();
         DateTime now = DateTime.UtcNow;
         string rawToken = SecureToken.Generate();
+        string passwordHash = passwordHasher.Hash(model.Password);
 
         Organization organization;
 
         using (systemScope.Enter())
         {
-            Result validationResult = await validator.ValidateAsync(model, cancellationToken);
-
-            if (!validationResult.IsSuccess)
-                return Result<ApiMessageResponse>.From(validationResult);
+            if (await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken))
+                return await NotifyExistingAccountAsync(email, cancellationToken);
 
             organization = new Organization
             {
@@ -61,7 +68,7 @@ public class AuthRegisterService(
             {
                 OrganizationId = organization.Id,
                 Email = email,
-                PasswordHash = passwordHasher.Hash(model.Password),
+                PasswordHash = passwordHash,
                 FirstName = model.FirstName.Trim(),
                 LastName = model.LastName.Trim(),
                 Role = UserRole.Admin,
@@ -94,6 +101,18 @@ public class AuthRegisterService(
         jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, protectedToken));
 
         await auditLog.LogAsync(AuditAction.OrganizationRegistered, entityType: AuditEntityTypes.Organization);
+
+        return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
+    }
+
+    private async Task<Result<ApiMessageResponse>> NotifyExistingAccountAsync(string email,
+        CancellationToken cancellationToken)
+    {
+        string? language = await userRepository.GetLanguageByEmailOrDefaultAsync(email, cancellationToken);
+        string frontendBaseUrl = frontendOptions.Value.BaseUrl;
+        string culture = language ?? LanguageValues.Fr;
+
+        jobs.Enqueue<IEmailService>(s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
 
         return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }

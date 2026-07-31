@@ -22,14 +22,9 @@ public class TicketDownloadAttachmentService(ITicketAttachmentRepository attachm
         if (attachment == null || attachment.Ticket.OrganizationId != organizationId)
             return Result<FileDownload>.NotFound(ErrorCodes.TicketAttachmentNotFound);
 
-        if (attachment.Content is { Length: > 0 } storedContent)
-            return FileDownload.FromBytes(storedContent, attachment.ContentType, attachment.FileName);
-
-        if (string.IsNullOrEmpty(attachment.StoragePath) || !File.Exists(attachment.StoragePath))
+        if (attachment.Content is not { Length: > 0 } storedContent)
             return Result<FileDownload>.NotFound(ErrorCodes.TicketAttachmentFileMissing);
 
-        FileStream stream = new FileStream(attachment.StoragePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-        return new FileDownload(stream, attachment.ContentType, attachment.FileName);
+        return FileDownload.FromBytes(storedContent, attachment.ContentType, attachment.FileName);
     }
 }
