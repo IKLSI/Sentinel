@@ -68,6 +68,7 @@ export const ProjectsPage: React.FC = () => {
     dir: "desc",
   });
   const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAutoExpandedUntracked = useRef(false);
 
   const toggleSort = useCallback((col: string) => {
     setSort((s) => {
@@ -243,6 +244,20 @@ export const ProjectsPage: React.FC = () => {
     () => SECTION_ORDER.filter((grade) => grouped[grade].length > 0),
     [grouped],
   );
+
+  useEffect(() => {
+    if (loading || hasAutoExpandedUntracked.current) return;
+    hasAutoExpandedUntracked.current = true;
+    const onlyUntracked =
+      filtered.length > 0 &&
+      grouped[UNTRACKED_SECTION].length === filtered.length;
+    if (onlyUntracked) {
+      setCollapsedSections((prev) => ({
+        ...prev,
+        [UNTRACKED_SECTION]: false,
+      }));
+    }
+  }, [loading, filtered, grouped]);
 
   return (
     <>

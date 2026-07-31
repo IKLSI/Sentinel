@@ -7,7 +7,6 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import type { Project } from "@/domains/projects/types";
-import { isCovered } from "@/formatters/coverage";
 import {
   type DashPalette,
   HEALTH_CRITICAL_THRESHOLD,
@@ -28,7 +27,7 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
   const t = useT();
   const navigate = useNavigate();
 
-  const { averageScore, belowCount, uncoveredCount } = useMemo(() => {
+  const { averageScore, belowCount, scoredCount } = useMemo(() => {
     const scores = projects
       .filter((p) => p.healthScore !== null)
       .map((p) => Math.max(0, Math.min(100, p.healthScore ?? 0)));
@@ -38,21 +37,13 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
     const belowCount = scores.filter(
       (s) => s < HEALTH_CRITICAL_THRESHOLD,
     ).length;
-    const uncoveredCount = projects.filter((p) => !isCovered(p)).length;
-    return { averageScore, belowCount, uncoveredCount };
+    return { averageScore, belowCount, scoredCount: scores.length };
   }, [projects]);
 
   const belowText =
     belowCount === 0
       ? t("dashboard.park.below_none")
-      : belowCount === 1
-        ? t("dashboard.park.below_one")
-        : t("dashboard.park.below_other", { count: belowCount });
-
-  const uncoveredText =
-    uncoveredCount > 0
-      ? t("dashboard.park.uncovered", { count: uncoveredCount })
-      : null;
+      : t("dashboard.park.below_other", { count: belowCount, total: scoredCount });
 
   const gaugeColor = gradeMeta(scoreToGrade(averageScore)).color;
 
@@ -93,13 +84,6 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
           <Box sx={{ mt: "3px", fontSize: "10.5px", color: palette.textMuted }}>
             {belowText}
           </Box>
-          {uncoveredText && (
-            <Box
-              sx={{ mt: "2px", fontSize: "10.5px", color: palette.textMuted2 }}
-            >
-              {uncoveredText}
-            </Box>
-          )}
         </Box>
         <Box
           component="button"

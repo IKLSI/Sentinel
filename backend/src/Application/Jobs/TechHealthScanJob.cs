@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
@@ -9,7 +10,7 @@ public class TechHealthScanJob(
     ILogger<TechHealthScanJob> logger,
     ISystemScope systemScope)
 {
-    public async Task ExecuteAsync()
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
@@ -17,7 +18,7 @@ public class TechHealthScanJob(
 
         try
         {
-            await techHealthService.ScanAllProjectsDueAsync();
+            await techHealthService.ScanAllProjectsDueAsync(cancellationToken.ShutdownToken);
             logger.LogInformation("Tech health scan completed");
         }
         catch (Exception ex)

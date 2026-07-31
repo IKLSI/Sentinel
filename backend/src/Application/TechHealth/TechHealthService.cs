@@ -295,16 +295,16 @@ public partial class TechHealthService
         }
     }
 
-    public async Task ScanAllProjectsDueAsync()
+    public async Task ScanAllProjectsDueAsync(CancellationToken cancellationToken)
     {
-        IReadOnlyList<Guid> daily = await GetProjectsDueAsync(ScanFrequency.Daily, 1);
-        IReadOnlyList<Guid> weekly = await GetProjectsDueAsync(ScanFrequency.Weekly, 7);
-        IReadOnlyList<Guid> monthly = await GetProjectsDueAsync(ScanFrequency.Monthly, 30);
+        IReadOnlyList<Guid> daily = await GetProjectsDueAsync(ScanFrequency.Daily, 1, cancellationToken);
+        IReadOnlyList<Guid> weekly = await GetProjectsDueAsync(ScanFrequency.Weekly, 7, cancellationToken);
+        IReadOnlyList<Guid> monthly = await GetProjectsDueAsync(ScanFrequency.Monthly, 30, cancellationToken);
 
         using SemaphoreSlim throttle = new SemaphoreSlim(5);
         await Task.WhenAll(daily.Concat(weekly).Concat(monthly).Select(async projectId =>
         {
-            await throttle.WaitAsync();
+            await throttle.WaitAsync(cancellationToken);
             try
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
@@ -316,11 +316,11 @@ public partial class TechHealthService
         }));
     }
 
-    private Task<IReadOnlyList<Guid>> GetProjectsDueAsync(ScanFrequency frequency, int elapsedDays)
+    private Task<IReadOnlyList<Guid>> GetProjectsDueAsync(ScanFrequency frequency, int elapsedDays, CancellationToken cancellationToken)
     {
         DateTime threshold = DateTime.UtcNow.AddDays(-elapsedDays);
 
-        return _projectRepository.ListIdsDueForScanAsync(frequency, threshold, CancellationToken.None);
+        return _projectRepository.ListIdsDueForScanAsync(frequency, threshold, cancellationToken);
     }
 
     public async Task<ProjectDto?> GetProjectWithDetailsAsync(Guid projectId)

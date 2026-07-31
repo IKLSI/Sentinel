@@ -10,7 +10,7 @@ public class TechHealthScanTriggerService(IBackgroundJobClient backgroundJobs) :
 {
     public Result<ApiMessageResponse> Execute()
     {
-        backgroundJobs.Enqueue<TechHealthScanJob>(j => j.ExecuteAsync());
+        backgroundJobs.Enqueue<TechHealthScanJob>(j => j.ExecuteAsync(JobCancellationToken.Null));
 
         return ApiMessageResponse.Create(SuccessCodes.JobTriggered);
     }

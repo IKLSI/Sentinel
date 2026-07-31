@@ -11,6 +11,7 @@ overrides:
   '@codemirror/state': ^6.7.1
   '@codemirror/view': ^6.43.7
   '@codemirror/language': ^6.12.4
+  undici: '>=6.27.0'
 
 importers:
 
@@ -488,10 +489,6 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
-
-  '@fastify/busboy@2.1.1':
-    resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
-    engines: {node: '>=14'}
 
   '@hookform/resolvers@5.5.7':
     resolution: {integrity: sha512-CyPCYV8/KlXfEXLWj8HHHhVsR/IZ6Ckm3b/a4fWtO/lRnRK1huqncb8LlAWrmpPRsse5glF5aVuDRMHEr3UGag==}
@@ -2434,10 +2431,6 @@ packages:
     resolution: {integrity: sha512-60m9IVGbavD6jholbxt0jVBXZkEB/HsMZq7Tyaghseve2/Sf0zQRAIfWsD34sde+DKP2tBxJS2wP88ZM0D1FhA==}
     engines: {node: '>=14'}
 
-  undici@5.29.0:
-    resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
-    engines: {node: '>=14.0'}
-
   undici@8.9.0:
     resolution: {integrity: sha512-aWZpUj7XoGonMClx4gdDRfgBjqeA+F473aDmROQQbM9n6PRfK/u1q/a0X4wMTgcHfT8H6fpbt98PFuDUwFg2YA==}
     engines: {node: '>=22.19.0'}
@@ -3158,8 +3151,6 @@ snapshots:
   '@emotion/weak-memoize@0.4.0': {}
 
   '@exodus/bytes@1.15.1': {}
-
-  '@fastify/busboy@2.1.1': {}
 
   '@hookform/resolvers@5.5.7(@standard-schema/spec@1.1.0)(react-hook-form@7.83.0(react@19.2.8))(zod@4.4.3)':
     dependencies:
@@ -4500,7 +4491,7 @@ snapshots:
       fast-glob: 3.3.3
       js-yaml: 4.3.0
       supports-color: 9.4.0
-      undici: 5.29.0
+      undici: 8.9.0
       yargs-parser: 21.1.1
 
   oxc-parser@0.140.0:
@@ -4848,10 +4839,6 @@ snapshots:
       '@typescript/typescript-win32-x64': 7.0.2
 
   unbash@4.0.4: {}
-
-  undici@5.29.0:
-    dependencies:
-      '@fastify/busboy': 2.1.1
 
   undici@8.9.0: {}
 
