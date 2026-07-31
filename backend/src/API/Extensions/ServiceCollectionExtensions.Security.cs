@@ -233,7 +233,8 @@ public static partial class ServiceCollectionExtensions
                 .AddFixedWindowPolicy(RateLimitPolicies.PasswordReset, 3, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Invitation, 10, TimeSpan.FromMinutes(15))
                 .AddFixedWindowPolicy(RateLimitPolicies.Register, 5, TimeSpan.FromMinutes(60))
-                .AddFixedWindowPolicy(RateLimitPolicies.Scan, 10, TimeSpan.FromMinutes(1), ResolveUserOrClientKey);
+                .AddFixedWindowPolicy(RateLimitPolicies.Scan, 10, TimeSpan.FromMinutes(1), ResolveUserOrClientKey)
+                .AddFixedWindowPolicy(RateLimitPolicies.Webhook, 300, TimeSpan.FromMinutes(1));
 
             options.OnRejected = async (context, cancellationToken) =>
             {

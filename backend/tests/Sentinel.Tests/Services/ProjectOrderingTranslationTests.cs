@@ -25,7 +25,7 @@ public class ProjectOrderingTranslationTests
         DbContextOptions<SentinelContext> options = new DbContextOptionsBuilder<SentinelContext>()
             .UseNpgsql(UnusedConnectionString)
             .Options;
-        return new SentinelContext(options, new UnsetTenantContext());
+        return new SentinelContext(options, new UnsetTenantContext(), new SystemScope());
     }
 
     [Fact]

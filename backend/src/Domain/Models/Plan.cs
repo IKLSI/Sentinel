@@ -33,6 +33,12 @@ public record PlanLimits(int MaxProjects, int MaxMembers, int MaxScansPerMonth, 
 
     public static PlanLimits For(PlanTier tier) => ByTier[tier];
 
+    public static bool IsEntitled(SubscriptionStatus status) =>
+        status is SubscriptionStatus.Active or SubscriptionStatus.Trialing;
+
+    public static PlanTier Effective(PlanTier tier, SubscriptionStatus status) =>
+        tier == PlanTier.Free || IsEntitled(status) ? tier : PlanTier.Free;
+
     public static bool IsWithin(int current, int max) => max == Unlimited || current < max;
 
     public bool AllowsFrequency(ScanFrequency frequency) =>

@@ -25,6 +25,11 @@ public static partial class ServiceCollectionExtensions
                 "Support:Email must be a valid email address when provided")
             .ValidateOnStart();
 
+        services.AddOptions<CookieSettings>()
+            .Validate(settings => Enum.TryParse<SameSiteMode>(settings.SameSite, ignoreCase: true, out _),
+                "Cookie:SameSite must be 'None', 'Lax', 'Strict' or 'Unspecified'")
+            .ValidateOnStart();
+
         if (validateDeploymentSettings)
         {
             services.AddOptions<FrontendSettings>()

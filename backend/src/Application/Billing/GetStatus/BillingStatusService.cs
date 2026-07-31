@@ -28,7 +28,8 @@ public class BillingStatusService(
 
         Organization organization = organizationResult.Value!;
 
-        PlanLimits limits = PlanLimits.For(organization.PlanTier);
+        PlanTier effectiveTier = PlanLimits.Effective(organization.PlanTier, organization.SubscriptionStatus);
+        PlanLimits limits = PlanLimits.For(effectiveTier);
 
         int projects = await projectRepository.CountByOrganizationAsync(organizationId, cancellationToken);
         int members = await userRepository.CountActiveAsync(organizationId, cancellationToken);
@@ -36,6 +37,8 @@ public class BillingStatusService(
         return new BillingStatusDto
         {
             PlanTier = organization.PlanTier.ToString(),
+            EffectivePlanTier = effectiveTier.ToString(),
+            SubscriptionStatus = organization.SubscriptionStatus.ToString(),
             Projects = new PlanQuotaDto { Used = projects, Limit = limits.MaxProjects },
             Members = new PlanQuotaDto { Used = members, Limit = limits.MaxMembers },
             Scans = new PlanQuotaDto { Used = organization.MonthlyScanCount, Limit = limits.MaxScansPerMonth }

@@ -89,9 +89,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<QuotaGuard>();
-        services.AddScoped<SubscriptionGuard>();
         services.AddScoped<DataSeeder>();
         services.AddScoped<TokenProtector>();
+        services.AddScoped<QueuedTokenProtector>();
         services.AddScoped<StripePriceCatalog>();
         services.AddScoped<StripeCustomerProvisioner>();
 

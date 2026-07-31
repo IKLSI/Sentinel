@@ -4,7 +4,6 @@ import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 
 export interface ActivityItem {
   color: string;
-  text: string;
   timestamp: string;
   detail?: string;
   ticketId?: string;

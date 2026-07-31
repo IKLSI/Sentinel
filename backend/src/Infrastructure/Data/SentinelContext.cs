@@ -8,13 +8,20 @@ namespace Sentinel.Infrastructure.Data;
 public class SentinelContext : DbContext, IDataProtectionKeyContext
 {
     private readonly ITenantContext? _tenant;
+    private readonly ISystemScope? _systemScope;
 
     public SentinelContext(DbContextOptions<SentinelContext> options) : base(options) { }
 
-    public SentinelContext(DbContextOptions<SentinelContext> options, ITenantContext tenant) : base(options)
+    public SentinelContext(DbContextOptions<SentinelContext> options, ITenantContext tenant, ISystemScope systemScope)
+        : base(options)
     {
         _tenant = tenant;
+        _systemScope = systemScope;
     }
+
+    private bool BypassTenantFilter => _tenant == null || _systemScope?.IsActive == true;
+
+    private Guid CurrentOrganizationId => _tenant?.OrganizationId ?? Guid.Empty;
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
@@ -65,46 +72,52 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     private void ApplyTenantQueryFilters(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Organization>()
-            .HasQueryFilter(o => _tenant == null || !_tenant.IsSet || o.Id == _tenant.OrganizationId);
+            .HasQueryFilter(o => BypassTenantFilter || o.Id == CurrentOrganizationId);
 
         modelBuilder.Entity<User>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<UserInvitation>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Ticket>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Project>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<AuditLog>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<TicketComment>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Ticket.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<TicketHistory>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Ticket.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<TicketAttachment>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Ticket.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Ticket.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Notification>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Dependency>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Project.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Project.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Runtime>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Project.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Project.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Vulnerability>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.Dependency.Project.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.Dependency.Project.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<ApiKey>()
-            .HasQueryFilter(e => _tenant == null || !_tenant.IsSet || e.OrganizationId == _tenant.OrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
+
+        modelBuilder.Entity<PasswordResetToken>()
+            .HasQueryFilter(e => BypassTenantFilter || Users.Any(u => u.Id == e.UserId));
+
+        modelBuilder.Entity<EmailVerificationToken>()
+            .HasQueryFilter(e => BypassTenantFilter || Users.Any(u => u.Id == e.UserId));
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -116,8 +129,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Slug).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.AlertMinSeverity).HasConversion<string>().HasMaxLength(20);
-            entity.Property(e => e.GithubToken).HasMaxLength(500);
-            entity.Property(e => e.GitlabToken).HasMaxLength(500);
+            entity.Property(e => e.GithubToken).HasMaxLength(2000);
+            entity.Property(e => e.GitlabToken).HasMaxLength(2000);
             entity.Property(e => e.PlanTier).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.SubscriptionStatus).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.StripeCustomerId).HasMaxLength(255);

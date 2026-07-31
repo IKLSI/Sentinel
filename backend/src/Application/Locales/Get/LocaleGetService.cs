@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -6,7 +7,10 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.Application.Locales.Get;
 
-public class LocaleGetService(IContentPathProvider contentPath, LocaleGetValidator validator) : IService
+public class LocaleGetService(
+    IContentPathProvider contentPath,
+    IMemoryCache cache,
+    LocaleGetValidator validator) : IService
 {
     public async Task<Result<JsonElement>> ExecuteAsync(string culture, CancellationToken cancellationToken)
     {
@@ -14,6 +18,11 @@ public class LocaleGetService(IContentPathProvider contentPath, LocaleGetValidat
 
         if (!validationResult.IsSuccess)
             return Result<JsonElement>.From(validationResult);
+
+        string cacheKey = CacheKeys.Locale(culture);
+
+        if (cache.TryGetValue(cacheKey, out JsonElement cached))
+            return Result<JsonElement>.Success(cached);
 
         string baseDirectory = Path.GetFullPath(Path.Combine(contentPath.ContentRootPath, "Resources", "Locales"));
         string fullPath = Path.GetFullPath(Path.Combine(baseDirectory, $"{culture}.json"));
@@ -31,6 +40,14 @@ public class LocaleGetService(IContentPathProvider contentPath, LocaleGetValidat
         await using FileStream stream = File.OpenRead(fullPath);
         using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
 
-        return Result<JsonElement>.Success(document.RootElement.Clone());
+        JsonElement catalog = document.RootElement.Clone();
+
+        cache.Set(cacheKey, catalog, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = CacheKeys.LocaleTtl,
+            Size = 1
+        });
+
+        return Result<JsonElement>.Success(catalog);
     }
 }

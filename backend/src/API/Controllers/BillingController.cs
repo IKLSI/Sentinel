@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Billing.Checkout;
 using Sentinel.Application.Billing.GetPlans;
@@ -20,6 +21,8 @@ namespace Sentinel.API.Controllers;
 [Authorize]
 public class BillingController : BaseController
 {
+    private const int WebhookRequestSizeLimitBytes = 512 * 1024;
+
     [HttpGet("status")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<BillingStatusDto>> GetStatus(
@@ -51,6 +54,8 @@ public class BillingController : BaseController
 
     [HttpPost("webhook")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Webhook)]
+    [RequestSizeLimit(WebhookRequestSizeLimitBytes)]
     public async Task<IActionResult> Webhook(
         [FromServices] BillingWebhookService service,
         CancellationToken cancellationToken)

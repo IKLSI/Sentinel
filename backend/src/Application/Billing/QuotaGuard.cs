@@ -57,7 +57,7 @@ public class QuotaGuard(
         using IDisposable elevation = systemScope.Enter();
 
         PlanLimits limits = PlanLimits.For(
-            await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken));
+            await organizationRepository.GetEffectivePlanTierOrDefaultAsync(organizationId, cancellationToken));
 
         bool consumed = await organizationRepository.TryConsumeScanQuotaAsync(organizationId,
             limits.MaxScansPerMonth, cancellationToken);
@@ -106,7 +106,7 @@ public class QuotaGuard(
     {
         using IDisposable elevation = systemScope.Enter();
 
-        PlanTier tier = await organizationRepository.GetPlanTierOrDefaultAsync(organizationId, cancellationToken);
+        PlanTier tier = await organizationRepository.GetEffectivePlanTierOrDefaultAsync(organizationId, cancellationToken);
 
         return PlanLimits.For(tier);
     }

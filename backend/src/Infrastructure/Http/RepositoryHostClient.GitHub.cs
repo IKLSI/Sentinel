@@ -14,34 +14,41 @@ public partial class RepositoryHostClient
     {
         List<(string, string)> result = new();
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
-        int page = 1;
 
-        while (true)
+        for (int page = 1; page <= RepositoryPageLimit; page++)
         {
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://api.github.com/user/repos?per_page=100&page={page}&affiliation=owner,collaborator,organization_member");
+                $"https://api.github.com/user/repos?per_page={RepositoryPageSize}&page={page}&affiliation=owner,collaborator,organization_member");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            HttpResponseMessage response;
-            try { response = await client.SendAsync(request); }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to fetch GitHub repositories");
-                return (false, null, result);
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                logger.LogWarning("Failed to fetch GitHub repositories: status {Status}", response.StatusCode);
-                return (false, (int)response.StatusCode, result);
-            }
-
+            HttpResponseMessage? response = null;
             List<JsonElement>? repos;
-            try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
-            catch (Exception ex)
+
+            try
             {
-                logger.LogWarning(ex, "Failed to read GitHub repositories");
-                return (false, null, result);
+                try { response = await client.SendAsync(request); }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to fetch GitHub repositories");
+                    return (false, null, result);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Failed to fetch GitHub repositories: status {Status}", response.StatusCode);
+                    return (false, (int)response.StatusCode, result);
+                }
+
+                try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to read GitHub repositories");
+                    return (false, null, result);
+                }
+            }
+            finally
+            {
+                response?.Dispose();
             }
 
             if (repos == null || repos.Count == 0) break;
@@ -54,8 +61,12 @@ public partial class RepositoryHostClient
                     result.Add((name, url));
             }
 
-            if (repos.Count < 100) break;
-            page++;
+            if (repos.Count < RepositoryPageSize) break;
+
+            if (page == RepositoryPageLimit)
+            {
+                logger.LogWarning("GitHub repository listing truncated after {PageLimit} pages", RepositoryPageLimit);
+            }
         }
 
         return (true, null, result);

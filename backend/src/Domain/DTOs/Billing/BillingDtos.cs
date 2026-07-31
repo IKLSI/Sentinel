@@ -9,6 +9,8 @@ public class PlanQuotaDto
 public class BillingStatusDto
 {
     public string PlanTier { get; set; } = string.Empty;
+    public string EffectivePlanTier { get; set; } = string.Empty;
+    public string SubscriptionStatus { get; set; } = string.Empty;
     public PlanQuotaDto Projects { get; set; } = new();
     public PlanQuotaDto Members { get; set; } = new();
     public PlanQuotaDto Scans { get; set; } = new();

@@ -3,6 +3,7 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -20,6 +21,7 @@ public class AuthResendVerificationService(
     ISystemScope systemScope,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
+    QueuedTokenProtector tokenProtector,
     AuthResendVerificationValidator validator) : IService
 {
     private const int VerificationValidityHours = 48;
@@ -59,7 +61,9 @@ public class AuthResendVerificationService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, rawToken));
+        string protectedToken = tokenProtector.Protect(rawToken);
+
+        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, protectedToken));
 
         await auditLog.LogAsync(AuditAction.EmailVerificationResent, entityType: AuditEntityTypes.User);
 

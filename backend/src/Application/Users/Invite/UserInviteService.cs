@@ -5,6 +5,7 @@ using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -26,6 +27,7 @@ public class UserInviteService(
     ISystemScope systemScope,
     IOptions<FrontendSettings> frontendOptions,
     ITenantContext tenant,
+    QueuedTokenProtector tokenProtector,
     UserInviteValidator validator) : IService
 {
     private const int InvitationValidityHours = 48;
@@ -93,7 +95,9 @@ public class UserInviteService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, rawToken));
+        string protectedToken = tokenProtector.Protect(rawToken);
+
+        jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, protectedToken));
 
         await auditLog.LogAsync(
             AuditAction.UserInvited,

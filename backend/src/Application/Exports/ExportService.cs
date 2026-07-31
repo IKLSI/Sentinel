@@ -1,6 +1,8 @@
 using ClosedXML.Excel;
+using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 
@@ -12,7 +14,8 @@ public partial class ExportService(
     ITicketRepository ticketRepository,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
-    ILocalizer localizer)
+    ILocalizer localizer,
+    ILogger<ExportService> logger)
 {
     private const string BaseFont = "Segoe UI";
     private const string HoursFormat = "0.00 \"h\"";
@@ -49,6 +52,12 @@ public partial class ExportService(
 
         List<Ticket> tickets =
             (await ticketRepository.ListForExportAsync(organizationId, filter, CancellationToken.None)).ToList();
+
+        if (tickets.Count == ExportLimits.MaxTicketRows)
+        {
+            logger.LogWarning("Ticket export for {OrganizationId} truncated at {MaxRows} rows",
+                organizationId, ExportLimits.MaxTicketRows);
+        }
 
         ExportLabels labels = await GetLabelsAsync(currentUserId);
 

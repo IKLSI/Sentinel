@@ -10,7 +10,10 @@ public static class TestDbContextFactory
         => new(BuildOptions(name));
 
     public static SentinelContext CreateInMemory(ITenantContext tenant, string? name = null)
-        => new(BuildOptions(name), tenant);
+        => new(BuildOptions(name), tenant, new SystemScope());
+
+    public static SentinelContext CreateInMemory(ITenantContext tenant, ISystemScope systemScope, string? name = null)
+        => new(BuildOptions(name), tenant, systemScope);
 
     private static DbContextOptions<SentinelContext> BuildOptions(string? name) =>
         new DbContextOptionsBuilder<SentinelContext>()

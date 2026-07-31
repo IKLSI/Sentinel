@@ -116,7 +116,6 @@ public class DashboardStatsService(
             items.Add(new ActivityItemDto
             {
                 Color = "accent",
-                Text = $"Ticket résolu — {reference}",
                 Timestamp = ticket.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = ticket.Id.ToString(),
@@ -141,7 +140,6 @@ public class DashboardStatsService(
             items.Add(new ActivityItemDto
             {
                 Color = "green",
-                Text = $"Ticket créé — {reference}",
                 Timestamp = ticket.CreatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = ticket.Id.ToString(),
@@ -172,13 +170,7 @@ public class DashboardStatsService(
                 return new ActivityItemDto
                 {
                     Color = "red",
-                    Text = count > 1
-                        ? $"Vulnérabilités critiques détectées sur {worst.ProjectName}"
-                        : $"Vulnérabilité critique détectée sur {worst.ProjectName}",
                     Timestamp = group.Max(v => v.DetectedAt),
-                    Detail = count > 1
-                        ? $"{worst.CveId} +{count - 1} autre{(count > 2 ? "s" : "")} · CVSS {worst.CvssScore:F1}"
-                        : $"{worst.CveId} · CVSS {worst.CvssScore:F1}",
                     ProjectId = group.Key.ToString(),
                     Count = count > 1 ? count : null,
                     Type = "vuln",

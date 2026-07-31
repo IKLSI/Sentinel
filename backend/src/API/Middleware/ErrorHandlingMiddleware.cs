@@ -30,6 +30,15 @@ public class ErrorHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error while handling {Path}", context.Request.Path);
+
+            if (context.Response.HasStarted)
+            {
+                _logger.LogWarning("Response for {Path} already started, connection aborted without an error payload",
+                    context.Request.Path);
+                context.Abort();
+                return;
+            }
+
             await HandleExceptionAsync(context, ex);
         }
     }

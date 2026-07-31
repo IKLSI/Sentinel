@@ -4,6 +4,7 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -23,6 +24,7 @@ public class AuthRegisterService(
     ISystemScope systemScope,
     IBackgroundJobClient jobs,
     IAuditLogService auditLog,
+    QueuedTokenProtector tokenProtector,
     AuthRegisterValidator validator,
     ILogger<AuthRegisterService> logger) : IService
 {
@@ -87,7 +89,9 @@ public class AuthRegisterService(
 
         logger.LogInformation("New organization registered {Slug} by {Email}", organization.Slug, email);
 
-        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, rawToken));
+        string protectedToken = tokenProtector.Protect(rawToken);
+
+        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, protectedToken));
 
         await auditLog.LogAsync(AuditAction.OrganizationRegistered, entityType: AuditEntityTypes.Organization);
 

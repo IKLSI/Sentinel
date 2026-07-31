@@ -12,6 +12,8 @@ public interface IOrganizationRepository : ICrudEntityWithIdRepository<Organizat
 
     Task<PlanTier> GetPlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
 
+    Task<PlanTier> GetEffectivePlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
+
     Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
         CancellationToken cancellationToken);
 

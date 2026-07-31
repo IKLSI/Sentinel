@@ -8,4 +8,5 @@ public static class RateLimitPolicies
     public const string Register = "register";
     public const string Invitation = "invitation";
     public const string Scan = "scan";
+    public const string Webhook = "webhook";
 }

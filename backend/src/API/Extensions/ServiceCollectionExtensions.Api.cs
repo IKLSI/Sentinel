@@ -134,26 +134,4 @@ public static partial class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddOutputCachePolicy(this IServiceCollection services)
-    {
-        services.AddOutputCache(options =>
-        {
-            options.AddBasePolicy(builder => builder
-                .Expire(TimeSpan.FromSeconds(30))
-                .SetVaryByHeader("Authorization", "Accept-Language")
-                .Tag(OutputCacheTags.Default));
-
-            options.AddPolicy(OutputCachePolicies.Statuses, builder => builder
-                .Expire(TimeSpan.FromMinutes(5))
-                .SetVaryByHeader("Authorization")
-                .Tag(OutputCacheTags.Statuses));
-
-            options.AddPolicy(OutputCachePolicies.Dashboard, builder => builder
-                .Expire(TimeSpan.FromSeconds(60))
-                .SetVaryByHeader("Authorization")
-                .Tag(OutputCacheTags.Dashboard));
-        });
-
-        return services;
-    }
 }

@@ -188,7 +188,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
                     </>
                   );
                 }
-                return <Box component="span">{a.text}</Box>;
+                return null;
               };
 
               const renderDetail = () => {
@@ -217,7 +217,7 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
 
               return (
                 <Box
-                  key={`${a.timestamp}-${a.text}-${a.ticketId ?? ""}-${a.projectId ?? ""}`}
+                  key={`${a.timestamp}-${a.type ?? ""}-${a.ticketId ?? ""}-${a.projectId ?? ""}`}
                   onClick={target ? () => navigate(target) : undefined}
                   sx={{
                     display: "flex",

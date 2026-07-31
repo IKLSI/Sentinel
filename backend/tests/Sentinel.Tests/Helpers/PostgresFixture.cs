@@ -111,7 +111,8 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {AppRole};";
         return new SentinelContext(
             BuildOptions(new TenantCommandInterceptor(tenant, systemScope, sessionState),
                 new TenantConnectionInterceptor(sessionState)),
-            tenant);
+            tenant,
+            systemScope);
     }
 
     private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? commandInterceptor,

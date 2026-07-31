@@ -12,6 +12,8 @@ namespace Sentinel.Infrastructure.Http;
 public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
 {
     private const long MaxFileBytes = 5 * 1024 * 1024;
+    private const int RepositoryPageSize = 100;
+    private const int RepositoryPageLimit = 20;
 
     private static readonly HashSet<string> SkippedDirs = new(StringComparer.OrdinalIgnoreCase)
     {

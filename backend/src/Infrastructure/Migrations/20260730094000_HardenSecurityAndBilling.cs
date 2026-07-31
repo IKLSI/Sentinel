@@ -69,6 +69,8 @@ namespace Sentinel.Infrastructure.Migrations
 DO $$
 DECLARE nombre_doublons integer;
 BEGIN
+    PERFORM set_config('app.current_org', 'system', true);
+
     SELECT count(*)
     INTO nombre_doublons
     FROM (SELECT ""Email"" FROM ""Users"" GROUP BY ""Email"" HAVING count(*) > 1) AS doublons;

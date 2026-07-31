@@ -25,6 +25,19 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
             .Select(o => o.PlanTier)
             .FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<PlanTier> GetEffectivePlanTierOrDefaultAsync(Guid organizationId,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await Query(QueryTracking.NoTracking)
+            .Where(o => o.Id == organizationId)
+            .Select(o => new { o.PlanTier, o.SubscriptionStatus })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return subscription == null
+            ? PlanTier.Free
+            : PlanLimits.Effective(subscription.PlanTier, subscription.SubscriptionStatus);
+    }
+
     public Task<SubscriptionStatus> GetSubscriptionStatusOrDefaultAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)

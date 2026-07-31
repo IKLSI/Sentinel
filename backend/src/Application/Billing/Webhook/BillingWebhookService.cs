@@ -190,7 +190,8 @@ public class BillingWebhookService : IService
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await ClampProjectFrequenciesAsync(organizationId, organization.PlanTier, cancellationToken);
+        await ClampProjectFrequenciesAsync(organizationId,
+            PlanLimits.Effective(organization.PlanTier, organization.SubscriptionStatus), cancellationToken);
 
         _logger.LogInformation("Subscription activated for organization {OrganizationId} ({Plan})",
             organizationId, organization.PlanTier);
@@ -228,7 +229,8 @@ public class BillingWebhookService : IService
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await ClampProjectFrequenciesAsync(organization.Id, organization.PlanTier, cancellationToken);
+        await ClampProjectFrequenciesAsync(organization.Id,
+            PlanLimits.Effective(organization.PlanTier, organization.SubscriptionStatus), cancellationToken);
 
         _logger.LogInformation("Subscription updated for {OrganizationId}: {Status}",
             organization.Id, organization.SubscriptionStatus);

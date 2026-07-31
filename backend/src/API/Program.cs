@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
@@ -43,7 +44,6 @@ public static class Program
             .AddLoginRateLimiting()
             .AddMemoryCache(options => options.SizeLimit = 50_000)
             .AddResponseCompressionPolicy()
-            .AddOutputCachePolicy()
             .AddStripe(builder.Configuration)
             .AddDataProtectionPolicy(builder.Configuration);
 
@@ -90,7 +90,12 @@ public static class Program
         using (IServiceScope scope = app.Services.CreateScope())
         {
             SentinelContext context = scope.ServiceProvider.GetRequiredService<SentinelContext>();
-            await context.Database.MigrateAsync();
+            ISystemScope systemScope = scope.ServiceProvider.GetRequiredService<ISystemScope>();
+
+            using (systemScope.Enter())
+            {
+                await context.Database.MigrateAsync();
+            }
 
             if (app.Environment.IsDevelopment())
             {
@@ -116,7 +121,6 @@ public static class Program
         app.UseRateLimiter();
         app.UseMiddleware<ApiKeyMiddleware>();
         app.UseAuthorization();
-        app.UseOutputCache();
         app.ConfigureHangfire();
 
         app.MapControllers();

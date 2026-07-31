@@ -14,34 +14,41 @@ public partial class RepositoryHostClient
     {
         List<(string, string)> result = new();
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
-        int page = 1;
 
-        while (true)
+        for (int page = 1; page <= RepositoryPageLimit; page++)
         {
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://gitlab.com/api/v4/projects?membership=true&per_page=100&page={page}");
+                $"https://gitlab.com/api/v4/projects?membership=true&per_page={RepositoryPageSize}&page={page}");
             request.Headers.Add("PRIVATE-TOKEN", token);
 
-            HttpResponseMessage response;
-            try { response = await client.SendAsync(request); }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to fetch GitLab repositories");
-                return (false, null, result);
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                logger.LogWarning("Failed to fetch GitLab repositories: status {Status}", response.StatusCode);
-                return (false, (int)response.StatusCode, result);
-            }
-
+            HttpResponseMessage? response = null;
             List<JsonElement>? projects;
-            try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
-            catch (Exception ex)
+
+            try
             {
-                logger.LogWarning(ex, "Failed to read GitLab repositories");
-                return (false, null, result);
+                try { response = await client.SendAsync(request); }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to fetch GitLab repositories");
+                    return (false, null, result);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Failed to fetch GitLab repositories: status {Status}", response.StatusCode);
+                    return (false, (int)response.StatusCode, result);
+                }
+
+                try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to read GitLab repositories");
+                    return (false, null, result);
+                }
+            }
+            finally
+            {
+                response?.Dispose();
             }
 
             if (projects == null || projects.Count == 0) break;
@@ -54,8 +61,12 @@ public partial class RepositoryHostClient
                     result.Add((name, url));
             }
 
-            if (projects.Count < 100) break;
-            page++;
+            if (projects.Count < RepositoryPageSize) break;
+
+            if (page == RepositoryPageLimit)
+            {
+                logger.LogWarning("GitLab repository listing truncated after {PageLimit} pages", RepositoryPageLimit);
+            }
         }
 
         return (true, null, result);

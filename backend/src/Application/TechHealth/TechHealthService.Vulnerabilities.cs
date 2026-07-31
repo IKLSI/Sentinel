@@ -15,6 +15,7 @@ using Sentinel.Domain.Settings;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Application.TechHealth;
 
@@ -127,7 +128,13 @@ public partial class TechHealthService
 
                 if (ids.Count == 0)
                 {
-                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.UpToDate, new List<Vulnerability>()));
+                    if (dep.Status == DependencyStatus.Vulnerable)
+                    {
+                        scanResults.Add(new VulnerabilityScanResult(dep,
+                            DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion),
+                            new List<Vulnerability>()));
+                    }
+
                     continue;
                 }
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -65,7 +66,10 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
                 EF.Functions.ILike(t.Description, pattern));
         }
 
-        return await query.OrderByDescending(t => t.CreatedAt).ToListAsync(cancellationToken);
+        return await query
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(ExportLimits.MaxTicketRows)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
