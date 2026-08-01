@@ -7,7 +7,6 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
-using Sentinel.API.Hubs;
 namespace Sentinel.API;
 
 public static class Program
@@ -130,7 +129,6 @@ public static class Program
         app.ConfigureHangfire();
 
         app.MapControllers();
-        app.MapHub<NotificationHub>("/hubs/notifications");
 
         app.Run();
     }

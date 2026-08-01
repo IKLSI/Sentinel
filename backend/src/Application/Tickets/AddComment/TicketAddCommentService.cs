@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -17,11 +15,9 @@ public class TicketAddCommentService(
     ITicketCommentRepository commentRepository,
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    NotificationPublisher notificationPublisher,
     IAuditLogService auditLog,
     ITenantContext tenant,
-    TicketAddCommentValidator validator,
-    ILogger<TicketAddCommentService> logger) : IService
+    TicketAddCommentValidator validator) : IService
 {
     public async Task<Result<TicketCommentDto>> ExecuteAsync(Guid ticketId, CreateCommentDto model,
         CancellationToken cancellationToken)
@@ -57,8 +53,6 @@ public class TicketAddCommentService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await NotifyAssigneeAsync(ticket, userId, cancellationToken);
-
         await auditLog.LogAsync(
             AuditAction.CommentAdded,
             entityType: AuditEntityTypes.TicketComment,
@@ -78,26 +72,5 @@ public class TicketAddCommentService(
             Content = comment.Content,
             CreatedAt = comment.CreatedAt
         };
-    }
-
-    private async Task NotifyAssigneeAsync(Ticket ticket, Guid authorId, CancellationToken cancellationToken)
-    {
-        if (ticket.AssignedToId is not Guid assigneeId || assigneeId == authorId) return;
-
-        try
-        {
-            await notificationPublisher.PublishAsync(
-                assigneeId,
-                ticket.OrganizationId,
-                NotificationType.TicketCommentAdded,
-                NotificationCodes.TicketCommentAdded,
-                new Dictionary<string, string> { ["title"] = ticket.Title },
-                ticket.Id,
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Failed to create comment notification for ticket {TicketId}", ticket.Id);
-        }
     }
 }

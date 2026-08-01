@@ -11,16 +11,13 @@ import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleArrowLeftOutlined";
 import PersonOutlined from "@mui/icons-material/PersonOutlined";
-import NotificationsNone from "@mui/icons-material/NotificationsNone";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { useT } from "@/contexts/I18nContext";
-import { useNotifications } from "@/features/notifications/useNotifications";
 import { UserRole } from "@/enums";
-import { NotificationsModal } from "@/features/notifications/NotificationsModal";
 
 type NavPath = FileRouteTypes["to"];
 
@@ -197,8 +194,6 @@ export const Sidebar: React.FC = () => {
   };
 
   const isAdmin = user?.role === UserRole.Admin;
-  const { unreadCount } = useNotifications();
-  const [notifOpen, setNotifOpen] = useState(false);
   const filteredSections = useMemo(() => {
     return navSections
       .filter((s) => !s.adminOnly || isAdmin)
@@ -789,47 +784,6 @@ export const Sidebar: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <Tooltip
-              title={t("sidebar.item.notifications")}
-              placement="top"
-              arrow
-            >
-              <Box
-                component="button"
-                onClick={() => setNotifOpen(true)}
-                sx={{
-                  all: "unset",
-                  cursor: "pointer",
-                  width: 26,
-                  height: 26,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "var(--r-sm)",
-                  color: "var(--muted)",
-                  flexShrink: 0,
-                  position: "relative",
-                  transition: "color 0.12s, background 0.12s",
-                  "&:hover": { color: "var(--text)", background: "var(--s3)" },
-                }}
-              >
-                <NotificationsNone sx={{ fontSize: 14 }} />
-                {unreadCount > 0 && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      background: "var(--red)",
-                      border: "1px solid var(--s1)",
-                    }}
-                  />
-                )}
-              </Box>
-            </Tooltip>
             <Tooltip title={t("sidebar.logout")} placement="top" arrow>
               <Box
                 component="button"
@@ -855,10 +809,6 @@ export const Sidebar: React.FC = () => {
           </Box>
         </Box>
       </Box>
-      <NotificationsModal
-        open={notifOpen}
-        onClose={() => setNotifOpen(false)}
-      />
     </>
   );
 };

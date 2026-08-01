@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
 using Sentinel.API.Http;
-using Sentinel.API.Hubs;
 using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Audit;
@@ -8,7 +6,6 @@ using Sentinel.Application.Billing;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth;
 using Sentinel.Application.TechHealth.ComplianceReport;
@@ -80,7 +77,6 @@ public static partial class ServiceCollectionExtensions
         services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<TokenService>();
         services.AddScoped<ExportService>();
-        services.AddScoped<NotificationPublisher>();
         services.AddScoped<DashboardCache>();
         services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
@@ -106,10 +102,6 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<SendEmailVerificationJob>();
 
         services.AddSingleton<IEmailService, EmailService>();
-
-        services.AddSignalR();
-        services.AddSingleton<IUserIdProvider, NotificationUserIdProvider>();
-        services.AddScoped<INotificationPusher, SignalRNotificationPusher>();
 
         return services;
     }

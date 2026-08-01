@@ -30,7 +30,6 @@ import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/compon
 import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
 import { EditCommentModal } from "@/features/tickets/pages/TicketDetailPage/components/EditCommentModal";
 import { useApiError } from "@/hooks/useApiError";
-import { useNotifications } from "@/features/notifications/useNotifications";
 import { Theme } from "@/enums";
 import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
@@ -40,7 +39,6 @@ export const TicketDetailPage: React.FC = () => {
   const t = useT();
   const apiError = useApiError();
   const { id } = routeApi.useParams();
-  const { markReadByTicketId } = useNotifications();
   const { showToast } = useToast();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -72,10 +70,6 @@ export const TicketDetailPage: React.FC = () => {
     null,
   );
   const deleteCommentLoading = deleteCommentMutation.isPending;
-
-  useEffect(() => {
-    if (ticket && id) markReadByTicketId(id);
-  }, [ticket, id, markReadByTicketId]);
 
   useEffect(() => {
     if (notFound) showToast(t("tickets.detail.not_found_toast"), "error");

@@ -46,24 +46,12 @@ public static partial class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = ReadHubAccessToken,
                     OnTokenValidated = ValidateAccountStateAsync
                 };
             });
 
         services.AddAuthorization();
         return services;
-    }
-
-    private static Task ReadHubAccessToken(MessageReceivedContext context)
-    {
-        string? accessToken = context.Request.Query["access_token"];
-        PathString path = context.HttpContext.Request.Path;
-
-        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
-            context.Token = accessToken;
-
-        return Task.CompletedTask;
     }
 
     private static async Task ValidateAccountStateAsync(TokenValidatedContext context)

@@ -1,8 +1,6 @@
-using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -19,11 +17,9 @@ public class TicketUpdateService(
     IProjectRepository projectRepository,
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    NotificationPublisher notificationPublisher,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
     ITenantContext tenant,
-    ILogger<TicketUpdateService> logger,
     TicketUpdateValidator validator) : IService
 {
     public async Task<Result<TicketDto>> ExecuteAsync(Guid ticketId, UpdateTicketDto model,
@@ -65,7 +61,7 @@ public class TicketUpdateService(
         string oldStatusCode = ticket.Status.ToString().ToLower();
         string newStatusCode = (newStatus ?? ticket.Status).ToString().ToLower();
 
-        List<TicketHistory> changes = ApplyChanges(ticket, model, newStatus, userId, out bool assigneeChanged);
+        List<TicketHistory> changes = ApplyChanges(ticket, model, newStatus, userId);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
@@ -77,13 +73,7 @@ public class TicketUpdateService(
 
         dashboardCache.Invalidate(organizationId);
 
-        if (assigneeChanged)
-            await NotifyAssigneeAsync(ticket, model.AssignedToId, userId, cancellationToken);
-
         bool statusChanged = newStatus.HasValue && oldStatusCode != newStatusCode;
-
-        if (statusChanged)
-            await NotifyStatusChangeAsync(ticket, userId, oldStatusCode, newStatusCode, cancellationToken);
 
         await auditLog.LogAsync(
             statusChanged ? AuditAction.TicketStatusChanged : AuditAction.TicketUpdated,
@@ -99,7 +89,7 @@ public class TicketUpdateService(
     }
 
     private static List<TicketHistory> ApplyChanges(Ticket ticket, UpdateTicketDto model, TicketStatus? newStatus,
-        Guid userId, out bool assigneeChanged)
+        Guid userId)
     {
         List<TicketHistory> changes = [];
 
@@ -126,9 +116,7 @@ public class TicketUpdateService(
         if (model.ProjectId != ticket.ProjectId)
             ticket.ProjectId = model.ProjectId;
 
-        assigneeChanged = model.AssignedToId != ticket.AssignedToId;
-
-        if (assigneeChanged)
+        if (model.AssignedToId != ticket.AssignedToId)
         {
             changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "AssignedTo",
                 ticket.AssignedToId?.ToString(), model.AssignedToId?.ToString()));
@@ -152,55 +140,5 @@ public class TicketUpdateService(
         ticket.UpdatedAt = DateTime.UtcNow;
 
         return changes;
-    }
-
-    private async Task NotifyAssigneeAsync(Ticket ticket, Guid? assignedToId, Guid authorId,
-        CancellationToken cancellationToken)
-    {
-        if (assignedToId is not Guid assigneeId || assigneeId == authorId) return;
-
-        try
-        {
-            await notificationPublisher.PublishAsync(
-                assigneeId,
-                ticket.OrganizationId,
-                NotificationType.TicketAssigned,
-                NotificationCodes.TicketAssigned,
-                new Dictionary<string, string> { ["title"] = ticket.Title },
-                ticket.Id,
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Failed to create assignment notification for ticket {TicketId}", ticket.Id);
-        }
-    }
-
-    private async Task NotifyStatusChangeAsync(Ticket ticket, Guid authorId, string oldStatusCode,
-        string newStatusCode, CancellationToken cancellationToken)
-    {
-        if (ticket.AssignedToId is not Guid assigneeId || assigneeId == authorId) return;
-
-        try
-        {
-            await notificationPublisher.PublishAsync(
-                assigneeId,
-                ticket.OrganizationId,
-                NotificationType.TicketStatusChanged,
-                NotificationCodes.TicketStatusChanged,
-                new Dictionary<string, string>
-                {
-                    ["title"] = ticket.Title,
-                    ["oldStatus"] = oldStatusCode,
-                    ["newStatus"] = newStatusCode
-                },
-                ticket.Id,
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception,
-                "Failed to create status change notification for ticket {TicketId}", ticket.Id);
-        }
     }
 }

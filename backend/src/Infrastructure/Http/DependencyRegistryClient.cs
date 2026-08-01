@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
@@ -114,15 +115,13 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
     {
         string[] parts = package.Split(':');
         if (parts.Length < 2) return null;
+        string groupPath = parts[0].Replace('.', '/');
         using HttpResponseMessage response = await client.GetAsync(
-            $"https://search.maven.org/solrsearch/select?q=g:{Uri.EscapeDataString(parts[0])}+AND+a:{Uri.EscapeDataString(parts[1])}&rows=1&wt=json");
+            $"https://repo1.maven.org/maven2/{Uri.EscapeDataString(groupPath).Replace("%2F", "/")}/{Uri.EscapeDataString(parts[1])}/maven-metadata.xml");
         if (!response.IsSuccessStatusCode) return null;
-        using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        if (!doc.RootElement.TryGetProperty("response", out JsonElement resp)) return null;
-        if (!resp.TryGetProperty("docs", out JsonElement docs)) return null;
-        List<JsonElement> docsList = docs.EnumerateArray().ToList();
-        if (docsList.Count == 0) return null;
-        return docsList[0].TryGetProperty("latestVersion", out JsonElement v) ? v.GetString() : null;
+        XDocument doc = XDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.Root?.Element("versioning")?.Element("release")?.Value
+            ?? doc.Root?.Element("versioning")?.Element("latest")?.Value;
     }
 
     private static async Task<string?> FetchGoLatestAsync(HttpClient client, string module)

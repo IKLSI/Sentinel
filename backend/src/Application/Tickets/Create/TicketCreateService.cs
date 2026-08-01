@@ -1,8 +1,6 @@
-using Microsoft.Extensions.Logging;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
-using Sentinel.Application.Notifications;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -18,11 +16,9 @@ public class TicketCreateService(
     IProjectRepository projectRepository,
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    NotificationPublisher notificationPublisher,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
     ITenantContext tenant,
-    ILogger<TicketCreateService> logger,
     TicketCreateValidator validator) : IService
 {
     public async Task<Result<TicketDto>> ExecuteAsync(CreateTicketDto model, CancellationToken cancellationToken)
@@ -68,8 +64,6 @@ public class TicketCreateService(
 
         dashboardCache.Invalidate(organizationId);
 
-        await NotifyAssigneeAsync(ticket, userId, organizationId, cancellationToken);
-
         await auditLog.LogAsync(
             AuditAction.TicketCreated,
             entityType: AuditEntityTypes.Ticket,
@@ -81,27 +75,5 @@ public class TicketCreateService(
         Ticket? created = await ticketRepository.GetOrDefaultWithDetailsAsync(ticket.Id, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(created!));
-    }
-
-    private async Task NotifyAssigneeAsync(Ticket ticket, Guid authorId, Guid organizationId,
-        CancellationToken cancellationToken)
-    {
-        if (ticket.AssignedToId is not Guid assigneeId || assigneeId == authorId) return;
-
-        try
-        {
-            await notificationPublisher.PublishAsync(
-                assigneeId,
-                organizationId,
-                NotificationType.TicketAssigned,
-                NotificationCodes.TicketAssigned,
-                new Dictionary<string, string> { ["title"] = ticket.Title },
-                ticket.Id,
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Failed to create assignment notification for ticket {TicketId}", ticket.Id);
-        }
     }
 }

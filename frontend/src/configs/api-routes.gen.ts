@@ -78,18 +78,6 @@ export const ROUTES_API = {
         __path: "/api/locales/:culture",
       },
     },
-    notifications: {
-      __path: "/api/notifications",
-      readAll: {
-        __path: "/api/notifications/read-all",
-      },
-      ":id": {
-        __path: "/api/notifications/:id",
-        read: {
-          __path: "/api/notifications/:id/read",
-        },
-      },
-    },
     settings: {
       __path: "/api/settings",
       apiKeys: {
@@ -252,18 +240,6 @@ export const ROUTES_API = {
         __path: "/api/v1/locales",
         ":culture": {
           __path: "/api/v1/locales/:culture",
-        },
-      },
-      notifications: {
-        __path: "/api/v1/notifications",
-        readAll: {
-          __path: "/api/v1/notifications/read-all",
-        },
-        ":id": {
-          __path: "/api/v1/notifications/:id",
-          read: {
-            __path: "/api/v1/notifications/:id/read",
-          },
         },
       },
       settings: {

@@ -467,67 +467,6 @@ export interface paths {
       };
     };
   };
-  "/api/notifications": {
-    get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["NotificationsResponse"];
-            "text/json": components["schemas"]["NotificationsResponse"];
-            "text/plain": components["schemas"]["NotificationsResponse"];
-          };
-        };
-      };
-    };
-  };
-  "/api/notifications/{id}/read": {
-    patch: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-        path: {
-          id: string;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: never;
-        };
-      };
-    };
-  };
-  "/api/notifications/read-all": {
-    patch: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: never;
-        };
-      };
-    };
-  };
   "/api/settings/api-keys": {
     get: {
       parameters: {
@@ -1764,45 +1703,6 @@ export interface paths {
       };
     };
   };
-  "/api/v1/notifications": {
-    get: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["NotificationsResponse"];
-            "text/json": components["schemas"]["NotificationsResponse"];
-            "text/plain": components["schemas"]["NotificationsResponse"];
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/notifications/{id}/read": {
-    patch: {
-      parameters: {
-        path: {
-          id: string;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: never;
-        };
-      };
-    };
-  };
-  "/api/v1/notifications/read-all": {
-    patch: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: never;
-        };
-      };
-    };
-  };
   "/api/v1/settings/api-keys": {
     get: {
       responses: {
@@ -2638,25 +2538,6 @@ export interface components {
     LoginResponse: {
       accessToken: string;
       user: components["schemas"]["UserProfile"];
-    };
-    NotificationDto: {
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: uuid */
-      id: string;
-      isRead: boolean;
-      messageKey: string;
-      messageParams: {
-        [key: string]: string;
-      } | null;
-      /** Format: uuid */
-      ticketId: string | null;
-      type: string;
-    };
-    NotificationsResponse: {
-      items: components["schemas"]["NotificationDto"][];
-      /** Format: int32 */
-      unreadCount: number;
     };
     OrganizationSettingsDto: {
       alertMinSeverity: components["schemas"]["VulnerabilitySeverity"];
