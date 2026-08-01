@@ -5,7 +5,6 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import { useT } from "@/contexts/I18nContext";
 
 interface DeleteModalProps {
@@ -52,28 +51,10 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           p: "16px 20px",
           borderBottom: "1px solid var(--border)",
           background:
-            "linear-gradient(135deg, var(--red-subtle) 0%, var(--s2) 60%)",
+            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 28,
-              height: 28,
-              borderRadius: "8px",
-              background: "color-mix(in srgb, var(--red) 12%, transparent)",
-              border:
-                "1px solid color-mix(in srgb, var(--red) 22%, transparent)",
-              flexShrink: 0,
-            }}
-          >
-            <DeleteOutlined sx={{ fontSize: 14, color: "var(--red)" }} />
-          </Box>
-          {title}
-        </Box>
+        {title}
       </DialogTitle>
 
       <DialogContent sx={{ pt: "18px !important", pb: "18px" }}>
