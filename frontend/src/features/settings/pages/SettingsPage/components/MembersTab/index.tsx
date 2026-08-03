@@ -5,7 +5,6 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import GroupOutlined from "@mui/icons-material/GroupOutlined";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { formatDistanceToNow } from "date-fns";
@@ -18,6 +17,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useUpdateUserMutation } from "@/domains/users/mutations";
 import { useUsersQuery } from "@/domains/users/queries";
 import { MemberPagination } from "@/features/settings/pages/SettingsPage/components/MemberPagination";
+import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { useApiError } from "@/hooks/useApiError";
 import { SortDirection, UserRole, UserSortField } from "@/enums";
 
@@ -147,44 +147,13 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           flexShrink: 0,
         }}
       >
-        <Box
-          sx={{
-            flex: "0 0 240px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "var(--s1)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            px: "10px",
-            height: "32px",
-            "&:focus-within": {
-              borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px var(--accent-subtle)",
-            },
-          }}
-        >
-          <SearchOutlined
-            sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}
-          />
-          <Box
-            component="input"
-            placeholder={t("settings.members.search_placeholder")}
-            sx={{
-              flex: 1,
-              background: "none",
-              border: "none",
-              outline: "none",
-              fontSize: "12px",
-              color: "var(--text)",
-              fontFamily: "inherit",
-            }}
-            value={memberSearch}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setMemberSearch(e.target.value)
-            }
-          />
-        </Box>
+        <SearchInput
+          value={memberSearch}
+          onChange={setMemberSearch}
+          placeholder={t("settings.members.search_placeholder")}
+          width="240px"
+          sx={{ flex: "0 0 240px" }}
+        />
         <Box
           component="select"
           sx={{

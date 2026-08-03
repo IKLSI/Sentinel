@@ -18,6 +18,7 @@ import {
   coverageReasonKey,
   isCovered,
 } from "@/formatters/coverage";
+import { formatShortDateTime } from "@/formatters/date";
 
 interface Props {
   project: Project;
@@ -190,12 +191,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                 component="span"
                 sx={{ fontSize: "12px", color: "var(--muted)" }}
               >
-                {new Date(project.lastScanAt).toLocaleDateString(culture, {
-                  day: "2-digit",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatShortDateTime(project.lastScanAt, culture)}
               </Box>
             )}
           </Box>

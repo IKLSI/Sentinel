@@ -2,8 +2,9 @@ import type React from "react";
 import { memo, useRef } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useT } from "@/contexts/I18nContext";
+import { useVirtualRows } from "@/hooks/useVirtualRows";
 import type { Vulnerability } from "@/domains/projects/types";
 import type { VulnerabilitySeverity } from "@/enums";
 import {
@@ -19,7 +20,6 @@ const OVERSCAN = 10;
 const COLUMN_COUNT = 5;
 
 const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
-const spacerCellSx = { height: 0, padding: 0, border: 0 } as const;
 
 interface RowProps {
   vuln: VulnWithDep;
@@ -108,10 +108,10 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const virtualizer = useVirtualizer({
+  const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
     count: vulns.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    estimateSize: ESTIMATED_ROW_HEIGHT,
     overscan: OVERSCAN,
   });
 
@@ -131,12 +131,6 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
       </Box>
     );
   }
-
-  const items = virtualizer.getVirtualItems();
-  const totalSize = virtualizer.getTotalSize();
-  const paddingTop = items.length > 0 ? items[0].start : 0;
-  const paddingBottom =
-    items.length > 0 ? totalSize - items[items.length - 1].end : 0;
 
   return (
     <Box
@@ -194,15 +188,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
             <Box component="col" sx={{ width: "12%" }} />
           </Box>
           <Box component="tbody">
-            {paddingTop > 0 && (
-              <Box component="tr">
-                <Box
-                  component="td"
-                  colSpan={COLUMN_COUNT}
-                  sx={{ ...spacerCellSx, height: `${paddingTop}px` }}
-                />
-              </Box>
-            )}
+            <VirtualRowSpacer height={paddingTop} columnCount={COLUMN_COUNT} />
             {items.map((item) => {
               const v = vulns[item.index];
               return (
@@ -214,15 +200,10 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
                 />
               );
             })}
-            {paddingBottom > 0 && (
-              <Box component="tr">
-                <Box
-                  component="td"
-                  colSpan={COLUMN_COUNT}
-                  sx={{ ...spacerCellSx, height: `${paddingBottom}px` }}
-                />
-              </Box>
-            )}
+            <VirtualRowSpacer
+              height={paddingBottom}
+              columnCount={COLUMN_COUNT}
+            />
           </Box>
         </Box>
       </Box>

@@ -31,15 +31,7 @@ import {
   createApiKeySchema,
   type CreateApiKeyFormValues,
 } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab/schemas";
-
-function fmtDate(iso: string | null, locale: string): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+import { formatDate as fmtDate } from "@/formatters/date";
 
 export const ApiKeysTab: React.FC = () => {
   const t = useT();

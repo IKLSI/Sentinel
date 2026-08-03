@@ -14,6 +14,7 @@ import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
 import { useRecurringJobsQuery } from "@/domains/jobs/queries";
 import { JobSortField, JobState, SortDirection } from "@/enums";
 import { useApiError } from "@/hooks/useApiError";
+import { formatDateTime } from "@/formatters/date";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
   {
@@ -76,13 +77,7 @@ function formatDate(
   locale: string,
 ): string {
   if (!iso) return t("settings.jobs.never");
-  return new Date(iso).toLocaleString(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso, locale);
 }
 
 const CELL_SX = {

@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import AddOutlined from "@mui/icons-material/AddOutlined";
-import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import { selectSx } from "@/features/tickets/pages/TicketsPage/helpers";
+import { SearchInput } from "@/components/ui/forms/SearchInput";
+import { ExportButton } from "@/components/ui/common/ExportButton";
 
 interface FiltersState {
   priority: string;
@@ -63,44 +62,11 @@ export const TicketsToolbar: React.FC<Props> = ({
         zIndex: 2,
       }}
     >
-      <Box
-        sx={{
-          width: "280px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          background: "var(--s1)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r)",
-          px: "10px",
-          height: "32px",
-          transition: "border-color 0.15s, box-shadow 0.15s",
-          "&:focus-within": {
-            borderColor: "var(--accent-border)",
-            boxShadow: "0 0 0 3px var(--accent-subtle)",
-          },
-        }}
-      >
-        <SearchOutlined
-          sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
-        />
-        <Box
-          component="input"
-          placeholder={t("tickets.list.search_placeholder")}
-          value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onSearchChange(e.target.value)
-          }
-          sx={{
-            all: "unset",
-            flex: 1,
-            fontSize: "12.5px",
-            color: "var(--text)",
-            "&::placeholder": { color: "var(--muted)" },
-            "&:focus": { outline: "none", boxShadow: "none !important" },
-          }}
-        />
-      </Box>
+      <SearchInput
+        value={search}
+        onChange={onSearchChange}
+        placeholder={t("tickets.list.search_placeholder")}
+      />
 
       <Box ref={filtersRef} sx={{ position: "relative" }}>
         {hasFilter && (
@@ -322,26 +288,11 @@ export const TicketsToolbar: React.FC<Props> = ({
         {t("tickets.list.new_ticket")}
       </Button>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        size="small"
-        disabled={exporting}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          flexShrink: 0,
-        }}
+      <ExportButton
         onClick={onExport}
-      >
-        {exporting ? (
-          <CircularProgress size={12} sx={{ color: "#fff" }} />
-        ) : (
-          <FileDownloadOutlined sx={{ fontSize: 14 }} />
-        )}
-        {t("tickets.list.export")}
-      </Button>
+        exporting={exporting}
+        label={t("tickets.list.export")}
+      />
     </Box>
   );
 };

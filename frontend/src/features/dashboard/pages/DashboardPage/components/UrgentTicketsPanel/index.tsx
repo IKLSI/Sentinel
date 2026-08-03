@@ -8,6 +8,7 @@ import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import type { UrgentTicket } from "@/domains/dashboard/types";
 import {
   type DashPalette,
@@ -125,26 +126,12 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
           }}
         >
           {urgent.length === 0 ? (
-            <Box
-              className="empty-state"
-              sx={{ flex: 1, padding: "24px !important" }}
-            >
-              <Box className="empty-state-icon">
-                <ConfirmationNumberOutlined sx={{ fontSize: 32 }} />
-              </Box>
-              <Box
-                className="empty-state-title"
-                sx={{ fontSize: "12px !important" }}
-              >
-                {t("dashboard.urgent.empty_title")}
-              </Box>
-              <Box
-                className="empty-state-subtitle"
-                sx={{ fontSize: "11px !important" }}
-              >
-                {t("dashboard.urgent.empty_subtitle")}
-              </Box>
-            </Box>
+            <EmptyState
+              icon={ConfirmationNumberOutlined}
+              title={t("dashboard.urgent.empty_title")}
+              subtitle={t("dashboard.urgent.empty_subtitle")}
+              sx={{ flex: 1 }}
+            />
           ) : (
             urgent.map((ticket, i) => {
               const Icon = ticketIcon(ticket.type);

@@ -3,9 +3,10 @@ import { memo, useRef } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { StatusChip } from "@/components/ui/common/StatusChip";
+import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useT } from "@/contexts/I18nContext";
+import { useVirtualRows } from "@/hooks/useVirtualRows";
 import type { Dependency } from "@/domains/projects/types";
 import type { DependencyStatus } from "@/enums";
 import {
@@ -54,7 +55,6 @@ const latestSx = {
 } as const;
 const noVulnSx = { color: "var(--muted)", fontSize: "12px" } as const;
 const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
-const spacerCellSx = { height: 0, padding: 0, border: 0 } as const;
 
 interface RowProps {
   d: Dependency;
@@ -144,10 +144,10 @@ export const DependenciesTab: React.FC<Props> = ({
   const typeDev = t("tech_health.dep.type_dev");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const virtualizer = useVirtualizer({
+  const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
     count: filteredDeps.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    estimateSize: ESTIMATED_ROW_HEIGHT,
     overscan: OVERSCAN,
   });
 
@@ -164,12 +164,6 @@ export const DependenciesTab: React.FC<Props> = ({
       </Box>
     );
   }
-
-  const items = virtualizer.getVirtualItems();
-  const totalSize = virtualizer.getTotalSize();
-  const paddingTop = items.length > 0 ? items[0].start : 0;
-  const paddingBottom =
-    items.length > 0 ? totalSize - items[items.length - 1].end : 0;
 
   return (
     <Box
@@ -313,15 +307,10 @@ export const DependenciesTab: React.FC<Props> = ({
               </Box>
             ) : (
               <>
-                {paddingTop > 0 && (
-                  <Box component="tr">
-                    <Box
-                      component="td"
-                      colSpan={COLUMN_COUNT}
-                      sx={{ ...spacerCellSx, height: `${paddingTop}px` }}
-                    />
-                  </Box>
-                )}
+                <VirtualRowSpacer
+                  height={paddingTop}
+                  columnCount={COLUMN_COUNT}
+                />
                 {items.map((item) => {
                   const d = filteredDeps[item.index];
                   return (
@@ -335,15 +324,10 @@ export const DependenciesTab: React.FC<Props> = ({
                     />
                   );
                 })}
-                {paddingBottom > 0 && (
-                  <Box component="tr">
-                    <Box
-                      component="td"
-                      colSpan={COLUMN_COUNT}
-                      sx={{ ...spacerCellSx, height: `${paddingBottom}px` }}
-                    />
-                  </Box>
-                )}
+                <VirtualRowSpacer
+                  height={paddingBottom}
+                  columnCount={COLUMN_COUNT}
+                />
               </>
             )}
           </Box>
