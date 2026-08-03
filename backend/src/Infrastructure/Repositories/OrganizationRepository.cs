@@ -93,4 +93,20 @@ public class OrganizationRepository : CrudEntityWithIdRepository<Organization>, 
         Context.Database.ExecuteSqlAsync(
             $"""SELECT 1 FROM "Organizations" WHERE "Id" = {organizationId} FOR UPDATE""",
             cancellationToken);
+
+    public async Task<int> AllocateTicketNumberAsync(Guid organizationId, CancellationToken cancellationToken)
+    {
+        await Context.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE "Organizations"
+             SET "TicketCounter" = "TicketCounter" + 1
+             WHERE "Id" = {organizationId}
+             """,
+            cancellationToken);
+
+        return await Query(QueryTracking.NoTracking)
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.TicketCounter)
+            .FirstAsync(cancellationToken);
+    }
 }

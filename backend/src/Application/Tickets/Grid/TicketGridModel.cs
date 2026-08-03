@@ -7,7 +7,7 @@ public class TicketGridModel
 {
     public const int SearchMaxLength = 100;
     public const int MaxPageSize = 100;
-    public const int DefaultPageSize = 20;
+    public const int DefaultPageSize = 25;
 
     public string? Priority { get; set; }
     public string? Status { get; set; }

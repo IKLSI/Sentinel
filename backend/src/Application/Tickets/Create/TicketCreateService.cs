@@ -15,6 +15,7 @@ public class TicketCreateService(
     ITicketRepository ticketRepository,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
+    IOrganizationRepository organizationRepository,
     ICommitScopeFactory commitScopeFactory,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
@@ -56,11 +57,11 @@ public class TicketCreateService(
             UpdatedAt = DateTime.UtcNow
         };
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
+        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            await ticketRepository.AddAsync(ticket, cancellationToken);
-            await commitScope.CommitAsync(cancellationToken);
-        }
+            ticket.Number = await organizationRepository.AllocateTicketNumberAsync(organizationId, token);
+            await ticketRepository.AddAsync(ticket, token);
+        }, cancellationToken);
 
         dashboardCache.Invalidate(organizationId);
 

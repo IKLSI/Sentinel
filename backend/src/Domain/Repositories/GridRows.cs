@@ -4,6 +4,7 @@ namespace Sentinel.Domain.Repositories;
 
 public sealed record TicketGridRow(
     Guid Id,
+    int Number,
     Guid? ProjectId,
     string? ProjectName,
     string Title,

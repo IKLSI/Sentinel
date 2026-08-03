@@ -7,7 +7,7 @@ namespace Sentinel.Application.Users.Grid;
 public class UserGridModel
 {
     public const int MaxPageSize = 100;
-    public const int DefaultPageSize = 50;
+    public const int DefaultPageSize = 25;
 
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;

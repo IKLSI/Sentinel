@@ -18,6 +18,7 @@ public class Organization : IEntityWithId
     public DateTime? LastBillingEventAt { get; set; }
     public int MonthlyScanCount { get; set; }
     public DateTime ScanCountPeriodStart { get; set; } = DateTime.UtcNow;
+    public int TicketCounter { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

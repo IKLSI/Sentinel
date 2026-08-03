@@ -26,6 +26,7 @@ public class DashboardRepository : IDashboardRepository
             .Take(take)
             .Select(t => new UrgentTicketRow(
                 t.Id,
+                t.Number,
                 t.Title,
                 t.Priority.ToString().ToLower(),
                 t.Type.ToString().ToLower(),
@@ -42,6 +43,7 @@ public class DashboardRepository : IDashboardRepository
             .Take(take)
             .Select(t => new ClosedTicketActivityRow(
                 t.Id,
+                t.Number,
                 t.UpdatedAt,
                 t.Project != null ? t.Project.Name : null,
                 t.AssignedTo != null ? t.AssignedTo.FirstName : null,
@@ -58,6 +60,7 @@ public class DashboardRepository : IDashboardRepository
             .Take(take)
             .Select(t => new CreatedTicketActivityRow(
                 t.Id,
+                t.Number,
                 t.CreatedAt,
                 t.Project != null ? t.Project.Name : null,
                 t.CreatedBy != null ? t.CreatedBy.FirstName : null,

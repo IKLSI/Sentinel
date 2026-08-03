@@ -284,6 +284,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<int>("TicketCounter")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -505,6 +508,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -560,6 +566,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("OrganizationId", "CreatedAt");
+
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
 
                     b.HasIndex("OrganizationId", "Status");
 

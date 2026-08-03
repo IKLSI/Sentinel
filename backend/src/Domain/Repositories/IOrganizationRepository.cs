@@ -22,4 +22,6 @@ public interface IOrganizationRepository : ICrudEntityWithIdRepository<Organizat
     Task<DateTime> GetScanPeriodStartOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
 
     Task LockForUpdateAsync(Guid organizationId, CancellationToken cancellationToken);
+
+    Task<int> AllocateTicketNumberAsync(Guid organizationId, CancellationToken cancellationToken);
 }

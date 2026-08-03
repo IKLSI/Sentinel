@@ -40,6 +40,7 @@ public static class TicketStatusRules
 public class Ticket : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
+    public int Number { get; set; }
     public Guid OrganizationId { get; set; }
     public Guid? ProjectId { get; set; }
     public string Title { get; set; } = string.Empty;

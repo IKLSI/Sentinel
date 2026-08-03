@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -22,11 +22,8 @@ import { SortDirection, UserRole, UserSortField } from "@/enums";
 
 const ALL_ROLES_FILTER = "all";
 const ACTIONS_COLUMN_KEY = "actions";
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
-const TABLE_HEADER_HEIGHT = 52;
-const TABLE_FOOTER_HEIGHT = 41;
-const TABLE_ROW_HEIGHT = 52;
 
 interface Props {
   onInviteClick: () => void;
@@ -58,7 +55,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const [memberRoleFilter, setMemberRoleFilter] =
     useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [sort, setSort] = useState<{
     col: UserSortField;
     dir: SortDirection;
@@ -66,7 +62,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     col: UserSortField.Member,
     dir: SortDirection.Asc,
   });
-  const tableWrapRef = useRef<HTMLDivElement>(null);
 
   const toggleSort = useCallback((col: UserSortField) => {
     setSort((s) =>
@@ -84,25 +79,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   }, []);
 
   useEffect(() => {
-    const el = tableWrapRef.current;
-    if (!el) return;
-    const measure = () =>
-      setPageSize(
-        Math.max(
-          1,
-          Math.floor(
-            (el.clientHeight - TABLE_HEADER_HEIGHT - TABLE_FOOTER_HEIGHT) /
-              TABLE_ROW_HEIGHT,
-          ),
-        ),
-      );
-    measure();
-    const obs = new ResizeObserver(measure);
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(memberSearch);
       setPage(1);
@@ -112,7 +88,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
 
   const usersQuery = useUsersQuery({
     page,
-    pageSize,
+    pageSize: DEFAULT_PAGE_SIZE,
     sortBy: sort.col,
     sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -268,7 +244,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
       </Box>
 
       <Box
-        ref={tableWrapRef}
         sx={{
           flex: 1,
           overflow: "hidden",

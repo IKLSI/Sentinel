@@ -2,6 +2,7 @@ namespace Sentinel.Domain.Repositories;
 
 public sealed record UrgentTicketRow(
     Guid Id,
+    int Number,
     string Title,
     string Priority,
     string Type,
@@ -11,6 +12,7 @@ public sealed record UrgentTicketRow(
 
 public sealed record ClosedTicketActivityRow(
     Guid Id,
+    int Number,
     DateTime UpdatedAt,
     string? ProjectName,
     string? AssigneeFirstName,
@@ -20,6 +22,7 @@ public sealed record ClosedTicketActivityRow(
 
 public sealed record CreatedTicketActivityRow(
     Guid Id,
+    int Number,
     DateTime CreatedAt,
     string? ProjectName,
     string? CreatedByFirstName,

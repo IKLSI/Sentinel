@@ -97,6 +97,7 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
     private static readonly Expression<Func<Ticket, TicketGridRow>> ToGridRow = t => new TicketGridRow(
         t.Id,
+        t.Number,
         t.ProjectId,
         t.Project != null ? t.Project.Name : null,
         t.Title,

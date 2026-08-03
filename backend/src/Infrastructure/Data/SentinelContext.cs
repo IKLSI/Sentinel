@@ -230,6 +230,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
 
             entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => new { e.OrganizationId, e.Number }).IsUnique();
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.AssignedToId);
             entity.HasIndex(e => e.CreatedAt);

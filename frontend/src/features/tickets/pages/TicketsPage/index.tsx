@@ -101,7 +101,7 @@ export const TicketsPage: React.FC = () => {
     dir: SortDirection.Desc,
   });
 
-  const pageSize = 20;
+  const pageSize = 25;
 
   const createTicketMutation = useCreateTicketMutation();
   const updateTicketMutation = useUpdateTicketMutation();

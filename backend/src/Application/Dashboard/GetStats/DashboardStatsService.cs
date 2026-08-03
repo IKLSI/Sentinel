@@ -62,7 +62,7 @@ public class DashboardStatsService(
         return raw.Select(t => new UrgentTicketDto
         {
             Id = t.Id.ToString(),
-            Reference = TicketReference.For(t.Id),
+            Reference = TicketReference.For(t.Number),
             Title = t.Title,
             Priority = t.Priority,
             Type = t.Type,
@@ -102,7 +102,7 @@ public class DashboardStatsService(
 
         foreach (ClosedTicketActivityRow ticket in closedTickets)
         {
-            string reference = TicketReference.For(ticket.Id);
+            string reference = TicketReference.For(ticket.Number);
             string? userName = ticket.AssigneeFirstName is not null
                 ? $"{ticket.AssigneeFirstName} {ticket.AssigneeLastName}"
                 : ticket.CreatedByFirstName is not null
@@ -130,7 +130,7 @@ public class DashboardStatsService(
 
         foreach (CreatedTicketActivityRow ticket in createdTickets)
         {
-            string reference = TicketReference.For(ticket.Id);
+            string reference = TicketReference.For(ticket.Number);
 
             List<string> detailParts = [];
             if (ticket.ProjectName is string projectName) detailParts.Add(projectName);
