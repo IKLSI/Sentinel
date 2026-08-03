@@ -9,106 +9,6 @@ namespace Sentinel.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        private static readonly (string Table, string OrgExpression)[] DirectTenantTables =
-        {
-            ("Organizations", "\"Id\"::text"),
-            ("Users", "\"OrganizationId\"::text"),
-            ("UserInvitations", "\"OrganizationId\"::text"),
-            ("TicketStatuses", "\"OrganizationId\"::text"),
-            ("Tickets", "\"OrganizationId\"::text"),
-            ("Projects", "\"OrganizationId\"::text"),
-            ("AuditLogs", "\"OrganizationId\"::text"),
-            ("Notifications", "\"OrganizationId\"::text"),
-            ("ApiKeys", "\"OrganizationId\"::text"),
-            ("RemediationRequests", "\"OrganizationId\"::text"),
-        };
-
-        private static readonly (string Table, string Subquery)[] IndirectTenantTables =
-        {
-            ("TicketComments", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketComments\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-            ("TicketHistories", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketHistories\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-            ("TicketAttachments", "EXISTS (SELECT 1 FROM \"Tickets\" t WHERE t.\"Id\" = \"TicketAttachments\".\"TicketId\" AND t.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-            ("Dependencies", "EXISTS (SELECT 1 FROM \"Projects\" p WHERE p.\"Id\" = \"Dependencies\".\"ProjectId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-            ("Runtimes", "EXISTS (SELECT 1 FROM \"Projects\" p WHERE p.\"Id\" = \"Runtimes\".\"ProjectId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-            ("Vulnerabilities", "EXISTS (SELECT 1 FROM \"Dependencies\" d JOIN \"Projects\" p ON p.\"Id\" = d.\"ProjectId\" WHERE d.\"Id\" = \"Vulnerabilities\".\"DependencyId\" AND p.\"OrganizationId\"::text = current_setting('app.current_org', true))"),
-        };
-
-        private static string FailClosedPolicy(string table, string match) => $@"
-DROP POLICY IF EXISTS tenant_isolation ON ""{table}"";
-CREATE POLICY tenant_isolation ON ""{table}""
-USING (
-    current_setting('app.current_org', true) = 'system'
-    OR (
-        current_setting('app.current_org', true) <> ''
-        AND current_setting('app.current_org', true) IS NOT NULL
-        AND ({match})
-    )
-);";
-
-        private static string FailOpenPolicy(string table, string match) => $@"
-DROP POLICY IF EXISTS tenant_isolation ON ""{table}"";
-CREATE POLICY tenant_isolation ON ""{table}""
-USING (
-    current_setting('app.current_org', true) = ''
-    OR current_setting('app.current_org', true) IS NULL
-    OR ({match})
-);";
-
-        private static void ApplyRowLevelSecurity(MigrationBuilder migrationBuilder)
-        {
-            foreach ((string table, string orgExpr) in DirectTenantTables)
-            {
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" ENABLE ROW LEVEL SECURITY;");
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" FORCE ROW LEVEL SECURITY;");
-                migrationBuilder.Sql(FailClosedPolicy(table, $"{orgExpr} = current_setting('app.current_org', true)"));
-            }
-
-            foreach ((string table, string subquery) in IndirectTenantTables)
-            {
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" ENABLE ROW LEVEL SECURITY;");
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" FORCE ROW LEVEL SECURITY;");
-                migrationBuilder.Sql(FailClosedPolicy(table, subquery));
-            }
-        }
-
-        private static void RevertRowLevelSecurity(MigrationBuilder migrationBuilder)
-        {
-            foreach ((string table, string orgExpr) in DirectTenantTables)
-            {
-                migrationBuilder.Sql(FailOpenPolicy(table, $"{orgExpr} = current_setting('app.current_org', true)"));
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" DISABLE ROW LEVEL SECURITY;");
-            }
-
-            foreach ((string table, string subquery) in IndirectTenantTables)
-            {
-                migrationBuilder.Sql(FailOpenPolicy(table, subquery));
-                migrationBuilder.Sql($"ALTER TABLE \"{table}\" DISABLE ROW LEVEL SECURITY;");
-            }
-        }
-
-        private static void ApplyTrigramIndexes(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
-
-            migrationBuilder.Sql(@"
-                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Title_trgm""
-                ON ""Tickets""
-                USING gin (""Title"" gin_trgm_ops);
-            ");
-
-            migrationBuilder.Sql(@"
-                CREATE INDEX IF NOT EXISTS ""IX_Tickets_Description_trgm""
-                ON ""Tickets""
-                USING gin (""Description"" gin_trgm_ops);
-            ");
-
-            migrationBuilder.Sql(@"
-                CREATE INDEX IF NOT EXISTS ""IX_TicketComments_Content_trgm""
-                ON ""TicketComments""
-                USING gin (""Content"" gin_trgm_ops);
-            ");
-        }
-
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -149,6 +49,7 @@ USING (
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -169,15 +70,16 @@ USING (
                     Slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     SecurityAlertsEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     AlertMinSeverity = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    GithubToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    GitlabToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    GithubToken = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    GitlabToken = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     PlanTier = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     SubscriptionStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     StripeCustomerId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     StripeSubscriptionId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CurrentPeriodEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastBillingEventAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     MonthlyScanCount = table.Column<int>(type: "integer", nullable: false),
                     ScanCountPeriodStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TicketCounter = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -191,6 +93,7 @@ USING (
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     TokenHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -200,6 +103,33 @@ USING (
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PasswordResetTokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProcessedStripeEvents",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StripeEventId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProcessedStripeEvents", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RevokedTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Jti = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RevokedTokens", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -213,8 +143,9 @@ USING (
                     RepositoryType = table.Column<string>(type: "text", nullable: false),
                     LastScanAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     LastScanError = table.Column<string>(type: "text", nullable: true),
-                    HealthScore = table.Column<int>(type: "integer", nullable: false),
-                    HealthGrade = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
+                    HealthScore = table.Column<int>(type: "integer", nullable: true),
+                    HealthGrade = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: true),
+                    Coverage = table.Column<string>(type: "text", nullable: false),
                     ScanFrequency = table.Column<string>(type: "text", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
@@ -223,29 +154,6 @@ USING (
                     table.PrimaryKey("PK_Projects", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Projects_Organizations_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TicketStatuses",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Color = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Order = table.Column<int>(type: "integer", nullable: false),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
-                    IsClosed = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TicketStatuses", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TicketStatuses_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "Id",
@@ -296,43 +204,13 @@ USING (
                     LatestVersion = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Type = table.Column<string>(type: "text", nullable: false),
                     Ecosystem = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    ScannedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Dependencies", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Dependencies_Projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RemediationRequests",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    PullRequestUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    BranchName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    DependenciesPatched = table.Column<int>(type: "integer", nullable: false),
-                    HasBreakingChanges = table.Column<bool>(type: "boolean", nullable: false),
-                    TargetsJson = table.Column<string>(type: "text", nullable: true),
-                    Error = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RemediationRequests", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RemediationRequests_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
@@ -398,19 +276,20 @@ USING (
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Number = table.Column<int>(type: "integer", nullable: false),
                     OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: true),
                     Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Priority = table.Column<string>(type: "text", nullable: false),
+                    PriorityRank = table.Column<int>(type: "integer", nullable: false, computedColumnSql: "CASE \"Priority\" WHEN 'Critical' THEN 4 WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END", stored: true),
                     Type = table.Column<string>(type: "text", nullable: false),
-                    TicketStatusId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     AssignedToId = table.Column<Guid>(type: "uuid", nullable: true),
                     EstimatedHours = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Tags = table.Column<string>(type: "jsonb", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
@@ -426,12 +305,6 @@ USING (
                         name: "FK_Tickets_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Tickets_TicketStatuses_TicketStatusId",
-                        column: x => x.TicketStatusId,
-                        principalTable: "TicketStatuses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
@@ -490,7 +363,6 @@ USING (
                     Description = table.Column<string>(type: "text", nullable: false),
                     PackageName = table.Column<string>(type: "text", nullable: false),
                     FixedVersion = table.Column<string>(type: "text", nullable: true),
-                    AdvisoryUrl = table.Column<string>(type: "text", nullable: true),
                     Severity = table.Column<string>(type: "text", nullable: false),
                     DetectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -506,36 +378,6 @@ USING (
                 });
 
             migrationBuilder.CreateTable(
-                name: "Notifications",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
-                    Message = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    TicketId = table.Column<Guid>(type: "uuid", nullable: true),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Notifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Tickets_TicketId",
-                        column: x => x.TicketId,
-                        principalTable: "Tickets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TicketAttachments",
                 columns: table => new
                 {
@@ -543,9 +385,9 @@ USING (
                     TicketId = table.Column<Guid>(type: "uuid", nullable: false),
                     UploadedById = table.Column<Guid>(type: "uuid", nullable: false),
                     FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    StoragePath = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    StoragePath = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Content = table.Column<byte[]>(type: "bytea", nullable: true),
                     ContentType = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Size = table.Column<long>(type: "bigint", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -690,31 +532,6 @@ USING (
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Notifications_CreatedAt",
-                table: "Notifications",
-                column: "CreatedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_OrganizationId",
-                table: "Notifications",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_TicketId",
-                table: "Notifications",
-                column: "TicketId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserId",
-                table: "Notifications",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserId_IsRead",
-                table: "Notifications",
-                columns: new[] { "UserId", "IsRead" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_Slug",
                 table: "Organizations",
                 column: "Slug",
@@ -746,26 +563,37 @@ USING (
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProcessedStripeEvents_CompletedAt",
+                table: "ProcessedStripeEvents",
+                column: "CompletedAt",
+                filter: "\"CompletedAt\" IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProcessedStripeEvents_ProcessedAt",
+                table: "ProcessedStripeEvents",
+                column: "ProcessedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProcessedStripeEvents_StripeEventId",
+                table: "ProcessedStripeEvents",
+                column: "StripeEventId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_OrganizationId",
                 table: "Projects",
                 column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RemediationRequests_ActiveProject",
-                table: "RemediationRequests",
-                column: "ProjectId",
-                unique: true,
-                filter: "\"Status\" IN ('Pending', 'PullRequestOpen')");
+                name: "IX_RevokedTokens_ExpiresAt",
+                table: "RevokedTokens",
+                column: "ExpiresAt");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RemediationRequests_OrganizationId",
-                table: "RemediationRequests",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RemediationRequests_ProjectId_Status",
-                table: "RemediationRequests",
-                columns: new[] { "ProjectId", "Status" });
+                name: "IX_RevokedTokens_Jti",
+                table: "RevokedTokens",
+                column: "Jti",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Runtimes_ProjectId",
@@ -843,14 +671,25 @@ USING (
                 columns: new[] { "OrganizationId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_OrganizationId_Priority_TicketStatusId",
+                name: "IX_Tickets_OrganizationId_Number",
                 table: "Tickets",
-                columns: new[] { "OrganizationId", "Priority", "TicketStatusId" });
+                columns: new[] { "OrganizationId", "Number" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_OrganizationId_TicketStatusId",
+                name: "IX_Tickets_OrganizationId_Priority_Status",
                 table: "Tickets",
-                columns: new[] { "OrganizationId", "TicketStatusId" });
+                columns: new[] { "OrganizationId", "Priority", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tickets_OrganizationId_Status",
+                table: "Tickets",
+                columns: new[] { "OrganizationId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tickets_OrganizationId_Status_PriorityRank_CreatedAt",
+                table: "Tickets",
+                columns: new[] { "OrganizationId", "Status", "PriorityRank", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_OrganizationId_UpdatedAt",
@@ -868,14 +707,9 @@ USING (
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_TicketStatusId",
+                name: "IX_Tickets_Status",
                 table: "Tickets",
-                column: "TicketStatusId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TicketStatuses_OrganizationId",
-                table: "TicketStatuses",
-                column: "OrganizationId");
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserInvitations_Email",
@@ -901,7 +735,8 @@ USING (
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
-                column: "Email");
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_OrganizationId",
@@ -940,15 +775,11 @@ USING (
                 name: "IX_Vulnerabilities_Severity_DependencyId",
                 table: "Vulnerabilities",
                 columns: new[] { "Severity", "DependencyId" });
-
-            ApplyTrigramIndexes(migrationBuilder);
-            ApplyRowLevelSecurity(migrationBuilder);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            RevertRowLevelSecurity(migrationBuilder);
             migrationBuilder.DropTable(
                 name: "ApiKeys");
 
@@ -962,13 +793,13 @@ USING (
                 name: "EmailVerificationTokens");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
-
-            migrationBuilder.DropTable(
                 name: "PasswordResetTokens");
 
             migrationBuilder.DropTable(
-                name: "RemediationRequests");
+                name: "ProcessedStripeEvents");
+
+            migrationBuilder.DropTable(
+                name: "RevokedTokens");
 
             migrationBuilder.DropTable(
                 name: "Runtimes");
@@ -993,9 +824,6 @@ USING (
 
             migrationBuilder.DropTable(
                 name: "Dependencies");
-
-            migrationBuilder.DropTable(
-                name: "TicketStatuses");
 
             migrationBuilder.DropTable(
                 name: "Users");

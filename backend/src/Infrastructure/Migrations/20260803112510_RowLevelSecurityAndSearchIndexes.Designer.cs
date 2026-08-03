@@ -12,15 +12,15 @@ using Sentinel.Infrastructure.Data;
 namespace Sentinel.Infrastructure.Migrations
 {
     [DbContext(typeof(SentinelContext))]
-    [Migration("20260730113224_ClampScanFrequencyToPlan")]
-    partial class ClampScanFrequencyToPlan
+    [Migration("20260803112510_RowLevelSecurityAndSearchIndexes")]
+    partial class RowLevelSecurityAndSearchIndexes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -170,9 +170,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("ScannedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -228,55 +225,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("EmailVerificationTokens");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Notification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("MessageKey")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("MessageParams")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TicketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "IsRead");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -291,16 +239,13 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("CurrentPeriodEnd")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("GithubToken")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("GitlabToken")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime?>("LastBillingEventAt")
                         .HasColumnType("timestamp with time zone");
@@ -341,6 +286,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TicketCounter")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -407,11 +355,6 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
@@ -489,66 +432,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.RemediationRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BranchName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DependenciesPatched")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Error")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<bool>("HasBreakingChanges")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PullRequestUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TargetsJson")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("ProjectId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_RemediationRequests_ActiveProject")
-                        .HasFilter("\"Status\" IN ('Pending', 'PullRequestOpen')");
-
-                    b.HasIndex("ProjectId", "Status");
-
-                    b.ToTable("RemediationRequests");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.RevokedToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -562,9 +445,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
-
-                    b.Property<DateTime>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -631,6 +511,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -638,15 +521,18 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("PriorityRank")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("integer")
+                        .HasComputedColumnSql("CASE \"Priority\" WHEN 'Critical' THEN 4 WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END", true);
+
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Tags")
+                    b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid?>("TicketStatusId")
-                        .HasColumnType("uuid");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -680,15 +566,20 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("TicketStatusId");
+                    b.HasIndex("Status");
 
                     b.HasIndex("OrganizationId", "CreatedAt");
 
-                    b.HasIndex("OrganizationId", "TicketStatusId");
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "Status");
 
                     b.HasIndex("OrganizationId", "UpdatedAt");
 
-                    b.HasIndex("OrganizationId", "Priority", "TicketStatusId");
+                    b.HasIndex("OrganizationId", "Priority", "Status");
+
+                    b.HasIndex("OrganizationId", "Status", "PriorityRank", "CreatedAt");
 
                     b.ToTable("Tickets");
                 });
@@ -714,9 +605,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("StoragePath")
                         .HasMaxLength(500)
@@ -807,41 +695,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TicketHistories");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsClosed")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("TicketStatuses");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
@@ -983,9 +836,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AdvisoryUrl")
-                        .HasColumnType("text");
-
                     b.Property<string>("CveId")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1057,24 +907,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Notification", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
-                        .WithMany()
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Sentinel.Domain.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
                 {
                     b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
@@ -1084,17 +916,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.RemediationRequest", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
@@ -1132,11 +953,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sentinel.Domain.Models.TicketStatus", "TicketStatus")
-                        .WithMany("Tickets")
-                        .HasForeignKey("TicketStatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("AssignedTo");
 
                     b.Navigation("CreatedBy");
@@ -1144,8 +960,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("Project");
-
-                    b.Navigation("TicketStatus");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.TicketAttachment", b =>
@@ -1203,17 +1017,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Ticket");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
-                {
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
@@ -1283,11 +1086,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("History");
-                });
-
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketStatus", b =>
-                {
-                    b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618
         }
