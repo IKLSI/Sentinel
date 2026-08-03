@@ -1,5 +1,3 @@
-import type React from "react";
-import Box from "@mui/material/Box";
 import { HealthGrade } from "@/enums";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
 import ReportOutlined from "@mui/icons-material/ReportOutlined";
@@ -65,62 +63,33 @@ export interface ProjectSortState {
   dir: "asc" | "desc";
 }
 
-export const HeadCell: React.FC<{
-  children?: React.ReactNode;
-  align?: "left" | "center" | "right";
-  col?: string;
-  sort?: ProjectSortState | null;
-  onToggleSort?: (col: string) => void;
-}> = ({ children, align = "left", col, sort, onToggleSort }) => {
-  const sortable = !!col && !!onToggleSort;
-  const isActive = sortable && sort?.col === col;
-  return (
-    <Box
-      component="th"
-      onClick={() => {
-        if (sortable && col) onToggleSort?.(col);
-      }}
-      sx={{
-        padding: "9px 12px",
-        borderBottom: "1px solid var(--border)",
-        background: "var(--s2)",
-        fontFamily: "var(--font-mono)",
-        fontSize: "10px",
-        fontWeight: 700,
-        letterSpacing: "0.08em",
-        textTransform: "uppercase",
-        color: isActive ? "var(--accent)" : "var(--muted2)",
-        textAlign: align,
-        whiteSpace: "nowrap",
-        cursor: sortable ? "pointer" : "default",
-        userSelect: "none",
-        transition: "color 0.12s",
-        "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: align === "center" ? "center" : "flex-start",
-          gap: "5px",
-        }}
-      >
-        {children}
-        {isActive && (
-          <Box
-            sx={{
-              fontSize: "12px",
-              color: "var(--accent)",
-              lineHeight: 1,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {sort?.dir === "asc" ? "↑" : "↓"}
-          </Box>
-        )}
-      </Box>
-    </Box>
-  );
+export const sortProjects = (
+  items: Project[],
+  sort: ProjectSortState | null,
+): Project[] => {
+  if (!sort) return items;
+  const mul = sort.dir === "asc" ? 1 : -1;
+  return items.slice().sort((a, b) => {
+    switch (sort.col) {
+      case "name":
+        return mul * a.name.localeCompare(b.name);
+      case "vulnerabilities":
+        return (
+          mul *
+            ((a.totalVulnerabilities ?? 0) - (b.totalVulnerabilities ?? 0)) ||
+          (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0)
+        );
+      case "critical":
+        return (
+          mul *
+            ((a.criticalVulnerabilities ?? 0) -
+              (b.criticalVulnerabilities ?? 0)) ||
+          (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
+        );
+      case "tickets":
+        return mul * ((a.totalTickets ?? 0) - (b.totalTickets ?? 0));
+      default:
+        return 0;
+    }
+  });
 };

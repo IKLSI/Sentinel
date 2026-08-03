@@ -11,6 +11,7 @@ import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOu
 import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
 import { RowActions } from "@/components/ui/common/RowActions";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/contexts/I18nContext";
@@ -275,65 +276,22 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                 }}
               >
                 <Box component="thead">
-                  <Box
-                    component="tr"
-                    sx={{
-                      borderBottom: "1px solid var(--border)",
-                      background: "var(--s2)",
-                    }}
-                  >
+                  <Box component="tr">
                     {columns.map(({ key, label, width }) => {
                       const sortable = key !== ACTIONS_COLUMN_KEY;
-                      const isActive = sort.col === key;
                       return (
-                        <Box
-                          component="th"
+                        <SortableTh
                           key={key}
-                          onClick={() =>
-                            key !== ACTIONS_COLUMN_KEY && toggleSort(key)
+                          width={width}
+                          sortable={sortable}
+                          active={sort.col === key}
+                          ascending={sort.dir === SortDirection.Asc}
+                          onSort={() =>
+                            sortable && toggleSort(key as UserSortField)
                           }
-                          sx={{
-                            px: "16px",
-                            py: "10px",
-                            textAlign: "left",
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            color: isActive ? "var(--accent)" : "var(--muted)",
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
-                            whiteSpace: "nowrap",
-                            width,
-                            cursor: sortable ? "pointer" : "default",
-                            userSelect: "none",
-                            transition: "color 0.12s",
-                            "&:hover": sortable
-                              ? { color: "var(--text-secondary)" }
-                              : {},
-                          }}
                         >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                            }}
-                          >
-                            {label}
-                            {sortable && isActive && (
-                              <Box
-                                sx={{
-                                  fontSize: "12px",
-                                  color: "var(--accent)",
-                                  lineHeight: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                {sort.dir === SortDirection.Asc ? "↑" : "↓"}
-                              </Box>
-                            )}
-                          </Box>
-                        </Box>
+                          {label}
+                        </SortableTh>
                       );
                     })}
                   </Box>

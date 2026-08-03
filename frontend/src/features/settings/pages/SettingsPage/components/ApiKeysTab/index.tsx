@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
@@ -12,9 +12,11 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { RowActions } from "@/components/ui/common/RowActions";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
+import { useLocalSort } from "@/hooks/useLocalSort";
 import {
   useCreateApiKeyMutation,
   useRevokeApiKeyMutation,
@@ -71,20 +73,7 @@ export const ApiKeysTab: React.FC = () => {
 
   const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
 
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
-    {
-      col: "expires",
-      dir: "asc",
-    },
-  );
-
-  const toggleSort = useCallback((col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
-      return null;
-    });
-  }, []);
+  const [sort, toggleSort] = useLocalSort({ col: "expires", dir: "asc" });
 
   const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
@@ -231,13 +220,7 @@ export const ApiKeysTab: React.FC = () => {
               }}
             >
               <Box component="thead">
-                <Box
-                  component="tr"
-                  sx={{
-                    borderBottom: "1px solid var(--border)",
-                    background: "var(--s2)",
-                  }}
-                >
+                <Box component="tr">
                   {[
                     {
                       key: "name",
@@ -272,54 +255,17 @@ export const ApiKeysTab: React.FC = () => {
                     { key: "actions", label: "", width: "48px" },
                   ].map(({ key, label, width }) => {
                     const sortable = key !== "actions";
-                    const isActive = sort?.col === key;
                     return (
-                      <Box
-                        component="th"
+                      <SortableTh
                         key={key}
-                        onClick={() => sortable && toggleSort(key)}
-                        sx={{
-                          px: "16px",
-                          py: "10px",
-                          textAlign: "left",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: isActive ? "var(--accent)" : "var(--muted)",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          whiteSpace: "nowrap",
-                          width,
-                          cursor: sortable ? "pointer" : "default",
-                          userSelect: "none",
-                          transition: "color 0.12s",
-                          "&:hover": sortable
-                            ? { color: "var(--text-secondary)" }
-                            : {},
-                        }}
+                        width={width}
+                        sortable={sortable}
+                        active={sort?.col === key}
+                        ascending={sort?.dir === "asc"}
+                        onSort={() => toggleSort(key)}
                       >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "5px",
-                          }}
-                        >
-                          {label}
-                          {sortable && isActive && (
-                            <Box
-                              sx={{
-                                fontSize: "12px",
-                                color: "var(--accent)",
-                                lineHeight: 1,
-                                display: "flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              {sort?.dir === "asc" ? "↑" : "↓"}
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
+                        {label}
+                      </SortableTh>
                     );
                   })}
                 </Box>
