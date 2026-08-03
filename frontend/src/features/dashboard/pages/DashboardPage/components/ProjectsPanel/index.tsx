@@ -33,22 +33,25 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
       .map((p) => Math.max(0, Math.min(100, p.healthScore ?? 0)));
     const averageScore = scores.length
       ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
-      : 0;
+      : null;
     const belowCount = scores.filter(
       (s) => s < HEALTH_CRITICAL_THRESHOLD,
     ).length;
     return { averageScore, belowCount, scoredCount: scores.length };
   }, [projects]);
 
-  const belowText =
-    belowCount === 0
-      ? t("dashboard.park.below_none")
-      : t("dashboard.park.below_other", {
-          count: belowCount,
-          total: scoredCount,
-        });
+  const belowText = useMemo(() => {
+    if (scoredCount === 0) return t("dashboard.park.below_unavailable");
+    if (belowCount === 0) return t("dashboard.park.below_none");
+    return t("dashboard.park.below_other", {
+      count: belowCount,
+      total: scoredCount,
+    });
+  }, [belowCount, scoredCount, t]);
 
-  const gaugeColor = gradeMeta(scoreToGrade(averageScore)).color;
+  const gaugeColor = gradeMeta(
+    averageScore === null ? null : scoreToGrade(averageScore),
+  ).color;
 
   return (
     <Box

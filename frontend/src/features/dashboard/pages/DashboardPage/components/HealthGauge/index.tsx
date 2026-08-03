@@ -1,28 +1,37 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
+import { useT } from "@/contexts/I18nContext";
 import {
   GAUGE_CIRCUMFERENCE,
   GAUGE_MAX_SCORE,
   GAUGE_RADIUS,
   GAUGE_SIZE,
   GAUGE_STROKE,
+  GAUGE_UNAVAILABLE_LABEL,
 } from "@/features/dashboard/pages/DashboardPage/components/HealthGauge/constants";
 import { scoreToGrade } from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
-  score: number;
+  score: number | null;
   color: string;
 }
 
 export const HealthGauge: React.FC<Props> = ({ score, color }) => {
-  const clamped = Math.max(0, Math.min(GAUGE_MAX_SCORE, score));
+  const t = useT();
+  const clamped =
+    score === null ? 0 : Math.max(0, Math.min(GAUGE_MAX_SCORE, score));
   const filled = (clamped / GAUGE_MAX_SCORE) * GAUGE_CIRCUMFERENCE;
   const center = GAUGE_SIZE / 2;
-  const grade = scoreToGrade(clamped);
+  const grade =
+    score === null ? GAUGE_UNAVAILABLE_LABEL : scoreToGrade(clamped);
+  const tooltip =
+    score === null
+      ? t("dashboard.park.gauge_tooltip_unavailable")
+      : t("dashboard.park.gauge_tooltip", { score: Math.round(clamped) });
 
   return (
-    <Tooltip title={`Score moyen : ${Math.round(clamped)} / 100`} arrow>
+    <Tooltip title={tooltip} arrow>
       <Box
         sx={{
           position: "relative",

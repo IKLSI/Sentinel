@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useDashboard } from "@/domains/dashboard/queries";
@@ -17,8 +17,13 @@ import {
 } from "@/features/dashboard/pages/DashboardPage/helpers";
 import { UrgentTicketsPanel } from "@/features/dashboard/pages/DashboardPage/components/UrgentTicketsPanel";
 import { ActivityPanel } from "@/features/dashboard/pages/DashboardPage/components/ActivityPanel";
-import { VulnerabilityDiscoveryPanel } from "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel";
 import { ProjectsPanel } from "@/features/dashboard/pages/DashboardPage/components/ProjectsPanel";
+
+const VulnerabilityDiscoveryPanel = lazy(() =>
+  import(
+    "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel"
+  ).then((m) => ({ default: m.VulnerabilityDiscoveryPanel })),
+);
 
 export const DashboardPage: React.FC = () => {
   const { showToast } = useToast();
@@ -110,10 +115,12 @@ export const DashboardPage: React.FC = () => {
 
         <ActivityPanel activity={activity} palette={palette} />
 
-        <VulnerabilityDiscoveryPanel
-          data={stats?.vulnerabilitiesDetectedPerDay ?? []}
-          palette={palette}
-        />
+        <Suspense fallback={null}>
+          <VulnerabilityDiscoveryPanel
+            data={stats?.vulnerabilitiesDetectedPerDay ?? []}
+            palette={palette}
+          />
+        </Suspense>
       </Box>
     </Box>
   );

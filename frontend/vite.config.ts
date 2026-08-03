@@ -22,31 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 500,
-    rollupOptions: {
-      output: {
-        manualChunks(id: string) {
-          if (!id.includes("node_modules")) return;
-          if (id.includes("@mui/icons-material")) return "mui-icons";
-          if (id.includes("@mui/") || id.includes("@emotion/")) return "mui";
-          if (
-            id.includes("/react-dom/") ||
-            id.includes("/@tanstack/react-router/") ||
-            id.includes("/react/") ||
-            id.includes("/scheduler/")
-          )
-            return "react-vendor";
-          if (id.includes("recharts") || id.includes("d3-")) return "recharts";
-          if (
-            id.includes("@codemirror/") ||
-            id.includes("@uiw/react-codemirror") ||
-            id.includes("@lezer/")
-          )
-            return "codemirror";
-          if (id.includes("date-fns")) return "date";
-        },
-      },
-    },
+    chunkSizeWarningLimit: 700,
   },
   server: {
     port: 3000,
