@@ -15,6 +15,9 @@ public interface IVulnerabilityRepository : ICrudEntityWithIdRepository<Vulnerab
 {
     Task<HashSet<string>> GetCveIdsByProjectAsync(Guid projectId, CancellationToken cancellationToken);
 
+    Task<Dictionary<string, DateTime>> GetFirstDetectionsByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken);
+
     Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken);
 }
 

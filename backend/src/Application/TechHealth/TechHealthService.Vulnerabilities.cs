@@ -42,7 +42,9 @@ public partial class TechHealthService
 
     private const int OsvBatchSize = 500;
 
-    private async Task<List<VulnerabilityScanResult>> FetchVulnerabilitiesBatchAsync(IReadOnlyList<Dependency> dependencies)
+    private async Task<List<VulnerabilityScanResult>> FetchVulnerabilitiesBatchAsync(
+        IReadOnlyList<Dependency> dependencies,
+        IReadOnlyDictionary<string, DateTime> previousDetections)
     {
         List<(Dependency Dep, string Ecosystem)> mapped = new();
         foreach (Dependency dep in dependencies)
@@ -171,7 +173,9 @@ public partial class TechHealthService
                         PackageName = dep.Name,
                         FixedVersion = fixedVersion,
                         Severity = severity,
-                        DetectedAt = DateTime.UtcNow
+                        DetectedAt = previousDetections.TryGetValue(id, out DateTime firstDetectedAt)
+                            ? firstDetectedAt
+                            : DateTime.UtcNow
                     });
                 }
 

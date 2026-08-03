@@ -81,11 +81,7 @@ public class TenantContext : ITenantContext
 
             ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
 
-            if (user?.Identity?.IsAuthenticated is not true)
-            {
-                _resolved = true;
-                return;
-            }
+            if (user?.Identity?.IsAuthenticated is not true) return;
 
             if (Guid.TryParse(user.FindFirst(ClaimNames.OrganizationId)?.Value, out Guid organizationId))
                 _organizationId = organizationId;

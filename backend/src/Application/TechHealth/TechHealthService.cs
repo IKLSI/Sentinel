@@ -151,6 +151,9 @@ public partial class TechHealthService
         HashSet<string> previousCveIds =
             await _vulnerabilityRepository.GetCveIdsByProjectAsync(projectId, CancellationToken.None);
 
+        Dictionary<string, DateTime> previousDetections =
+            await _vulnerabilityRepository.GetFirstDetectionsByProjectAsync(projectId, CancellationToken.None);
+
         string? scanError = null;
         int manifestsRead = 0;
         bool scanRan = false;
@@ -213,7 +216,7 @@ public partial class TechHealthService
         }
 
         List<VulnerabilityScanResult> vulnResults =
-            await FetchVulnerabilitiesBatchAsync(project.Dependencies.ToList());
+            await FetchVulnerabilitiesBatchAsync(project.Dependencies.ToList(), previousDetections);
 
         RuntimeEolResult?[] eolResults = await Task.WhenAll(project.Runtimes.Select(r =>
             RunThrottledAsync(() => FetchRuntimeEolAsync(r))));

@@ -33,6 +33,14 @@ public class VulnerabilityRepository : CrudEntityWithIdRepository<Vulnerability>
             .Select(v => v.CveId)
             .ToHashSetAsync(cancellationToken);
 
+    public Task<Dictionary<string, DateTime>> GetFirstDetectionsByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(v => v.Dependency.ProjectId == projectId)
+            .GroupBy(v => v.CveId)
+            .Select(g => new { CveId = g.Key, DetectedAt = g.Min(v => v.DetectedAt) })
+            .ToDictionaryAsync(x => x.CveId, x => x.DetectedAt, cancellationToken);
+
     public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
         Query(QueryTracking.Tracked)
             .Where(v => v.Dependency.ProjectId == projectId)

@@ -10,8 +10,8 @@ import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
 import { useUpdateProjectFrequencyMutation } from "@/domains/projects/mutations";
-import { ScanFrequency } from "@/enums";
-import { modalSelectSx } from "@/features/tickets/pages/TicketsPage/helpers";
+import type { ScanFrequency } from "@/enums";
+import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 
 interface Props {
   project: Project;
@@ -32,12 +32,6 @@ export const ProjectRow: React.FC<Props> = React.memo(
     const updateFrequencyMutation = useUpdateProjectFrequencyMutation();
     const saving = updateFrequencyMutation.isPending;
 
-    const freqLabel = (f: string) => {
-      if (f === "Daily") return t("tech_health.scan_frequency.daily");
-      if (f === "Weekly") return t("tech_health.scan_frequency.weekly");
-      if (f === "Monthly") return t("tech_health.scan_frequency.monthly");
-      return t("tech_health.scan_frequency.manual");
-    };
 
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -301,20 +295,11 @@ export const ProjectRow: React.FC<Props> = React.memo(
             >
               {t("projects.modal.frequency_label")}
             </Box>
-            <Box
-              component="select"
+            <ScanFrequencyPicker
               value={selected}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setSelected(e.target.value as ScanFrequency)
-              }
-              sx={modalSelectSx}
-            >
-              {Object.values(ScanFrequency).map((freq) => (
-                <option key={freq} value={freq}>
-                  {freqLabel(freq)}
-                </option>
-              ))}
-            </Box>
+              onChange={setSelected}
+              disabled={saving}
+            />
           </Box>
         </AppModal>
       </>

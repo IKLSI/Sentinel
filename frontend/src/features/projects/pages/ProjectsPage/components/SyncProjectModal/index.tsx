@@ -11,6 +11,7 @@ import { useT } from "@/contexts/I18nContext";
 import { useCreateProjectMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
+import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useApiError } from "@/hooks/useApiError";
 
 interface Props {
@@ -41,12 +42,16 @@ export const SyncProjectModal: React.FC<Props> = ({
   const importing = createProjectMutation.isPending;
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [scanFrequency, setScanFrequency] = useState<ScanFrequency>(
+    ScanFrequency.Weekly,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
     setSearch("");
     setSelected(new Set());
+    setScanFrequency(ScanFrequency.Weekly);
     setTimeout(() => inputRef.current?.focus(), 80);
   }, [open]);
 
@@ -83,7 +88,7 @@ export const SyncProjectModal: React.FC<Props> = ({
               name: r.name,
               repositoryUrl: r.url,
               repositoryType: r.platform,
-              scanFrequency: ScanFrequency.Weekly,
+              scanFrequency,
             },
           }),
         ),
@@ -373,6 +378,38 @@ export const SyncProjectModal: React.FC<Props> = ({
           })
         )}
       </Box>
+
+      {selected.size > 0 && (
+        <Box
+          sx={{
+            px: "20px",
+            py: "12px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            flexShrink: 0,
+          }}
+        >
+          <Box
+            sx={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--text)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            {t("projects.modal.frequency_label")}
+          </Box>
+          <ScanFrequencyPicker
+            value={scanFrequency}
+            onChange={setScanFrequency}
+            disabled={importing}
+          />
+        </Box>
+      )}
 
       <Box
         sx={{
