@@ -1,9 +1,6 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { useGetQuery } from "@/domains/helpers";
-import {
-  ticketQueryKey,
-  ticketsQueryKey,
-} from "@/domains/tickets/constants";
+import { ticketQueryKey, ticketsQueryKey } from "@/domains/tickets/constants";
 import type {
   Ticket,
   TicketFilters,

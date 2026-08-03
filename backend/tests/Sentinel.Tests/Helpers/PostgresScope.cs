@@ -6,6 +6,8 @@ namespace Sentinel.Tests.Helpers;
 
 public sealed class PostgresScope : IAsyncDisposable
 {
+    private int _nextTicketNumber = 1;
+
     public PostgresScope(PostgresFixture fixture, Guid? organizationId = null, Guid? userId = null)
     {
         OrganizationId = organizationId ?? Guid.NewGuid();
@@ -72,10 +74,12 @@ public sealed class PostgresScope : IAsyncDisposable
         IsActive = true
     };
 
-    public Ticket NewTicket(string title, Guid? organizationId = null, Guid? createdById = null) => new()
+    public Ticket NewTicket(string title, Guid? organizationId = null, Guid? createdById = null,
+        int? number = null) => new()
     {
         Id = Guid.NewGuid(),
         OrganizationId = organizationId ?? OrganizationId,
+        Number = number ?? _nextTicketNumber++,
         Title = title,
         Description = "Description du ticket",
         Priority = TicketPriority.Medium,
