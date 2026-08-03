@@ -130,7 +130,11 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
               icon={ConfirmationNumberOutlined}
               title={t("dashboard.urgent.empty_title")}
               subtitle={t("dashboard.urgent.empty_subtitle")}
-              sx={{ flex: 1 }}
+              sx={{
+                flex: 1,
+                "& .empty-state-title": { fontSize: "12px !important" },
+                "& .empty-state-subtitle": { fontSize: "11px !important" },
+              }}
             />
           ) : (
             urgent.map((ticket, i) => {

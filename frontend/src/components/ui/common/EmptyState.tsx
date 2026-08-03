@@ -22,10 +22,10 @@ export const EmptyState: React.FC<Props> = ({
     <Box className="empty-state-icon">
       <Icon sx={{ fontSize: iconSize }} />
     </Box>
-    <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
+    <Box className="empty-state-title" sx={{ fontSize: "16px !important" }}>
       {title}
     </Box>
-    <Box className="empty-state-subtitle" sx={{ fontSize: "11px !important" }}>
+    <Box className="empty-state-subtitle" sx={{ fontSize: "14px !important" }}>
       {subtitle}
     </Box>
   </Box>

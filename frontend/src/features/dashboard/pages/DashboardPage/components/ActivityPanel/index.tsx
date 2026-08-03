@@ -96,7 +96,11 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
             icon={HistoryOutlined}
             title={t("dashboard.activity.empty_title")}
             subtitle={t("dashboard.activity.empty_subtitle")}
-            sx={{ flex: 1 }}
+            sx={{
+              flex: 1,
+              "& .empty-state-title": { fontSize: "12px !important" },
+              "& .empty-state-subtitle": { fontSize: "11px !important" },
+            }}
           />
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column" }}>
