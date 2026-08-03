@@ -21,4 +21,8 @@
     <EmbeddedResource Include="Templates/**/*.html" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sentinel.Tests" />
+  </ItemGroup>
+
 </Project>

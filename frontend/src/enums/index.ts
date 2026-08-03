@@ -108,10 +108,27 @@ export const ScanFrequency = {
 export type ScanFrequency = (typeof ScanFrequency)[keyof typeof ScanFrequency];
 
 export const SortDirection = {
-  Asc: "asc",
-  Desc: "desc",
+  Asc: "Asc",
+  Desc: "Desc",
 } as const;
 export type SortDirection = (typeof SortDirection)[keyof typeof SortDirection];
+
+export const UserSortField = {
+  Member: "Member",
+  Role: "Role",
+  Status: "Status",
+  LastLogin: "LastLogin",
+} as const;
+export type UserSortField = (typeof UserSortField)[keyof typeof UserSortField];
+
+export const TicketSortField = {
+  Title: "Title",
+  Priority: "Priority",
+  Status: "Status",
+  Assignee: "Assignee",
+} as const;
+export type TicketSortField =
+  (typeof TicketSortField)[keyof typeof TicketSortField];
 
 export const SettingsTab = {
   Jobs: "jobs",

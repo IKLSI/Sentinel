@@ -1,4 +1,6 @@
+using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.Grid;
 
@@ -11,6 +13,8 @@ public class UserGridModel
     public int PageSize { get; set; } = DefaultPageSize;
     public string? Search { get; set; }
     public UserRole? Role { get; set; }
+    public UserSortField SortBy { get; set; } = UserSortField.Member;
+    public SortDirection SortDirection { get; set; } = SortDirection.Asc;
 
     public int NormalizedPage => Page < 1 ? 1 : Page;
 

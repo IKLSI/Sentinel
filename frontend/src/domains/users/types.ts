@@ -1,5 +1,5 @@
 import type { components } from "@/types/api.gen";
-import type { UserRole } from "@/enums";
+import type { SortDirection, UserRole, UserSortField } from "@/enums";
 
 export type User = components["schemas"]["UserDto"];
 
@@ -24,4 +24,6 @@ export type UsersFilters = {
   pageSize?: number;
   search?: string;
   role?: UserRole;
+  sortBy?: UserSortField;
+  sortDirection?: SortDirection;
 };

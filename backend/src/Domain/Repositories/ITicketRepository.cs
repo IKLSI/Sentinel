@@ -9,8 +9,8 @@ public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
 
     Task<Ticket?> GetOrDefaultTrackedAsync(Guid ticketId, CancellationToken cancellationToken);
 
-    Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter, int page, int pageSize,
-        CancellationToken cancellationToken);
+    Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter, TicketSortField sortBy,
+        SortDirection sortDirection, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<TicketGridRow>> ListForExportAsync(Guid organizationId, TicketFilter filter, int maxRows,
         CancellationToken cancellationToken);

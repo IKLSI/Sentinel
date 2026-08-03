@@ -18,9 +18,10 @@ import { useUpdateUserMutation } from "@/domains/users/mutations";
 import { useUsersQuery } from "@/domains/users/queries";
 import { MemberPagination } from "@/features/settings/pages/SettingsPage/components/MemberPagination";
 import { useApiError } from "@/hooks/useApiError";
-import { UserRole } from "@/enums";
+import { SortDirection, UserRole, UserSortField } from "@/enums";
 
 const ALL_ROLES_FILTER = "all";
+const ACTIONS_COLUMN_KEY = "actions";
 const DEFAULT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 const TABLE_HEADER_HEIGHT = 52;
@@ -29,6 +30,12 @@ const TABLE_ROW_HEIGHT = 52;
 
 interface Props {
   onInviteClick: () => void;
+}
+
+interface MemberColumn {
+  key: UserSortField | typeof ACTIONS_COLUMN_KEY;
+  label: string;
+  width: string;
 }
 
 export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
@@ -52,20 +59,28 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
-    {
-      col: "member",
-      dir: "asc",
-    },
-  );
+  const [sort, setSort] = useState<{
+    col: UserSortField;
+    dir: SortDirection;
+  }>({
+    col: UserSortField.Member,
+    dir: SortDirection.Asc,
+  });
   const tableWrapRef = useRef<HTMLDivElement>(null);
 
-  const toggleSort = useCallback((col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
-      return null;
-    });
+  const toggleSort = useCallback((col: UserSortField) => {
+    setSort((s) =>
+      s.col === col
+        ? {
+            col,
+            dir:
+              s.dir === SortDirection.Asc
+                ? SortDirection.Desc
+                : SortDirection.Asc,
+          }
+        : { col, dir: SortDirection.Asc },
+    );
+    setPage(1);
   }, []);
 
   useEffect(() => {
@@ -98,6 +113,8 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const usersQuery = useUsersQuery({
     page,
     pageSize,
+    sortBy: sort.col,
+    sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(memberRoleFilter === ALL_ROLES_FILTER
       ? {}
@@ -108,41 +125,29 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1);
   const loadingMembers = usersQuery.isLoading;
 
-  const sortedMembers = useMemo(() => {
-    let list = members;
-    if (sort) {
-      const mul = sort.dir === "asc" ? 1 : -1;
-      list = list.slice().sort((a, b) => {
-        switch (sort.col) {
-          case "member":
-            return (
-              mul *
-              `${a.firstName}${a.lastName}`.localeCompare(
-                `${b.firstName}${b.lastName}`,
-              )
-            );
-          case "role":
-            return (
-              mul *
-              (ROLE_LABELS[a.role] ?? a.role).localeCompare(
-                ROLE_LABELS[b.role] ?? b.role,
-              )
-            );
-          case "status":
-            return mul * (Number(a.isActive) - Number(b.isActive));
-          case "last_login":
-            return (
-              mul *
-              ((a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : 0) -
-                (b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : 0))
-            );
-          default:
-            return 0;
-        }
-      });
-    }
-    return list;
-  }, [members, sort, ROLE_LABELS]);
+  const columns: MemberColumn[] = [
+    {
+      key: UserSortField.Member,
+      label: t("settings.members.col_member"),
+      width: "auto",
+    },
+    {
+      key: UserSortField.Role,
+      label: t("settings.members.col_role"),
+      width: "90px",
+    },
+    {
+      key: UserSortField.Status,
+      label: t("settings.members.col_status"),
+      width: "110px",
+    },
+    {
+      key: UserSortField.LastLogin,
+      label: t("settings.members.col_last_login"),
+      width: "220px",
+    },
+    { key: ACTIONS_COLUMN_KEY, label: "", width: "48px" },
+  ];
 
   const handleToggleActive = (memberId: string, currentlyActive: boolean) => {
     toggleActive.mutate(
@@ -285,7 +290,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           >
             <CircularProgress size={20} />
           </Box>
-        ) : sortedMembers.length === 0 ? (
+        ) : members.length === 0 ? (
           <Box
             className="empty-state"
             sx={{ flex: 1, justifyContent: "center" }}
@@ -317,36 +322,16 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                       background: "var(--s2)",
                     }}
                   >
-                    {[
-                      {
-                        key: "member",
-                        label: t("settings.members.col_member"),
-                        width: "auto",
-                      },
-                      {
-                        key: "role",
-                        label: t("settings.members.col_role"),
-                        width: "90px",
-                      },
-                      {
-                        key: "status",
-                        label: t("settings.members.col_status"),
-                        width: "110px",
-                      },
-                      {
-                        key: "last_login",
-                        label: t("settings.members.col_last_login"),
-                        width: "220px",
-                      },
-                      { key: "actions", label: "", width: "48px" },
-                    ].map(({ key, label, width }) => {
-                      const sortable = key !== "actions";
-                      const isActive = sort?.col === key;
+                    {columns.map(({ key, label, width }) => {
+                      const sortable = key !== ACTIONS_COLUMN_KEY;
+                      const isActive = sort.col === key;
                       return (
                         <Box
                           component="th"
                           key={key}
-                          onClick={() => sortable && toggleSort(key)}
+                          onClick={() =>
+                            key !== ACTIONS_COLUMN_KEY && toggleSort(key)
+                          }
                           sx={{
                             px: "16px",
                             py: "10px",
@@ -384,7 +369,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                                   alignItems: "center",
                                 }}
                               >
-                                {sort?.dir === "asc" ? "↑" : "↓"}
+                                {sort.dir === SortDirection.Asc ? "↑" : "↓"}
                               </Box>
                             )}
                           </Box>
@@ -394,7 +379,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                   </Box>
                 </Box>
                 <Box component="tbody">
-                  {sortedMembers.map((m) => (
+                  {members.map((m) => (
                     <Box
                       component="tr"
                       key={m.id}

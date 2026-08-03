@@ -27,7 +27,8 @@ public class TicketRepositoryTests
         await scope.SeedAsync(scope.NewTicket("Fuite mémoire sur le Scanner"));
 
         PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
-            scope.OrganizationId, new TicketFilter { Search = "SCANNER" }, 1, 20, CancellationToken.None);
+            scope.OrganizationId, new TicketFilter { Search = "SCANNER" }, TicketSortField.Priority,
+            SortDirection.Desc, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(1);
     }
@@ -50,7 +51,8 @@ public class TicketRepositoryTests
         });
 
         PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
-            scope.OrganizationId, new TicketFilter { Search = "parseur" }, 1, 20, CancellationToken.None);
+            scope.OrganizationId, new TicketFilter { Search = "parseur" }, TicketSortField.Priority,
+            SortDirection.Desc, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(1);
         page.Items.Single().Id.Should().Be(ticket.Id);
@@ -66,7 +68,8 @@ public class TicketRepositoryTests
         await scope.SeedAsync(scope.NewTicket("Un titre quelconque"));
 
         PagedList<TicketGridRow> page = await scope.Tickets.SearchAsync(
-            scope.OrganizationId, new TicketFilter { Search = "%" }, 1, 20, CancellationToken.None);
+            scope.OrganizationId, new TicketFilter { Search = "%" }, TicketSortField.Priority,
+            SortDirection.Desc, 1, 20, CancellationToken.None);
 
         page.TotalCount.Should().Be(0);
     }

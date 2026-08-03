@@ -896,6 +896,8 @@ export interface paths {
           Search?: string;
           Page?: number;
           PageSize?: number;
+          SortBy?: components["schemas"]["TicketSortField"];
+          SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
           "api-version"?: string;
@@ -1188,6 +1190,8 @@ export interface paths {
           PageSize?: number;
           Search?: string;
           Role?: components["schemas"]["UserRole"];
+          SortBy?: components["schemas"]["UserSortField"];
+          SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
           "api-version"?: string;
@@ -2004,6 +2008,8 @@ export interface paths {
           Search?: string;
           Page?: number;
           PageSize?: number;
+          SortBy?: components["schemas"]["TicketSortField"];
+          SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
         };
@@ -2232,6 +2238,8 @@ export interface paths {
           PageSize?: number;
           Search?: string;
           Role?: components["schemas"]["UserRole"];
+          SortBy?: components["schemas"]["UserSortField"];
+          SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
         };
@@ -2627,6 +2635,8 @@ export interface components {
       name: string;
       version: string;
     };
+    /** @enum {string} */
+    SortDirection: "Asc" | "Desc";
     TicketAttachmentDto: {
       contentType: string;
       /** Format: date-time */
@@ -2699,6 +2709,8 @@ export interface components {
     };
     /** @enum {string} */
     TicketPriority: "Low" | "Medium" | "High" | "Critical";
+    /** @enum {string} */
+    TicketSortField: "Title" | "Priority" | "Status" | "Assignee";
     /** @enum {string} */
     TicketType:
       | "Bug"
@@ -2822,6 +2834,8 @@ export interface components {
     };
     /** @enum {string} */
     UserRole: "Admin" | "Developer";
+    /** @enum {string} */
+    UserSortField: "Member" | "Role" | "Status" | "LastLogin";
     VerifyEmailRequest: {
       token: string;
     };

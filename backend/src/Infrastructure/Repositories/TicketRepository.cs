@@ -26,8 +26,9 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         Query(QueryTracking.Tracked)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-    public async Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter, int page,
-        int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter,
+        TicketSortField sortBy, SortDirection sortDirection, int page, int pageSize,
+        CancellationToken cancellationToken)
     {
         IQueryable<Ticket> query = ApplyFilter(FilteredQuery(organizationId), filter);
 
@@ -44,14 +45,54 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
         int totalCount = await query.CountAsync(cancellationToken);
 
-        List<TicketGridRow> items = await query
-            .OrderByDescending(t => t.CreatedAt)
+        List<TicketGridRow> items = await ApplySort(query, sortBy, sortDirection)
+            .ThenByDescending(t => t.CreatedAt)
+            .ThenBy(t => t.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(ToGridRow)
             .ToListAsync(cancellationToken);
 
         return new PagedList<TicketGridRow>(items, totalCount);
+    }
+
+    private static readonly Expression<Func<Ticket, int>> PriorityRank = t =>
+        t.Priority == TicketPriority.Low ? 0
+        : t.Priority == TicketPriority.Medium ? 1
+        : t.Priority == TicketPriority.High ? 2
+        : 3;
+
+    private static readonly Expression<Func<Ticket, int>> StatusRank = t =>
+        t.Status == TicketStatus.New ? 0
+        : t.Status == TicketStatus.InProgress ? 1
+        : t.Status == TicketStatus.Testing ? 2
+        : t.Status == TicketStatus.Resolved ? 3
+        : 4;
+
+    internal static IOrderedQueryable<Ticket> ApplySort(IQueryable<Ticket> query, TicketSortField sortBy,
+        SortDirection sortDirection)
+    {
+        bool descending = sortDirection == SortDirection.Desc;
+
+        return sortBy switch
+        {
+            TicketSortField.Title => descending
+                ? query.OrderByDescending(t => t.Title)
+                : query.OrderBy(t => t.Title),
+            TicketSortField.Status => descending
+                ? query.OrderByDescending(StatusRank)
+                : query.OrderBy(StatusRank),
+            TicketSortField.Assignee => descending
+                ? query.OrderBy(t => t.AssignedTo == null)
+                    .ThenByDescending(t => t.AssignedTo!.FirstName)
+                    .ThenByDescending(t => t.AssignedTo!.LastName)
+                : query.OrderBy(t => t.AssignedTo == null)
+                    .ThenBy(t => t.AssignedTo!.FirstName)
+                    .ThenBy(t => t.AssignedTo!.LastName),
+            _ => descending
+                ? query.OrderByDescending(PriorityRank)
+                : query.OrderBy(PriorityRank)
+        };
     }
 
     private static readonly Expression<Func<Ticket, TicketGridRow>> ToGridRow = t => new TicketGridRow(

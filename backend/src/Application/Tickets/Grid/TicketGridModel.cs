@@ -1,3 +1,6 @@
+using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Repositories;
+
 namespace Sentinel.Application.Tickets.Grid;
 
 public class TicketGridModel
@@ -13,6 +16,8 @@ public class TicketGridModel
     public string? Search { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;
+    public TicketSortField SortBy { get; set; } = TicketSortField.Priority;
+    public SortDirection SortDirection { get; set; } = SortDirection.Desc;
 
     public int NormalizedPage => Page < 1 ? 1 : Page;
 

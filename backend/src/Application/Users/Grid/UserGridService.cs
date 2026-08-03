@@ -19,7 +19,7 @@ public class UserGridService(IUserRepository userRepository, ITenantContext tena
         int pageSize = model.NormalizedPageSize;
 
         PagedList<UserGridRow> result = await userRepository.SearchInOrganizationAsync(organizationId, model.Search,
-            model.Role, page, pageSize, cancellationToken);
+            model.Role, model.SortBy, model.SortDirection, page, pageSize, cancellationToken);
 
         return new UserListDto
         {

@@ -4,23 +4,29 @@ import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOu
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
 import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketRow";
-import type { SortDirection } from "@/enums";
+import { SortDirection, TicketSortField } from "@/enums";
 
 export interface SortState {
-  col: string;
+  col: TicketSortField;
   dir: SortDirection;
+}
+
+interface TicketColumn {
+  col: TicketSortField | typeof ACTIONS_COLUMN_KEY;
+  label: string;
 }
 
 interface Props {
   tickets: Ticket[];
-  sort: SortState | null;
-  onToggleSort: (col: string) => void;
+  sort: SortState;
+  onToggleSort: (col: TicketSortField) => void;
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
   hasFiltersApplied: boolean;
 }
 
 const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
+const ACTIONS_COLUMN_KEY = "actions";
 
 const TicketsTableComponent: React.FC<Props> = ({
   tickets,
@@ -31,6 +37,14 @@ const TicketsTableComponent: React.FC<Props> = ({
   hasFiltersApplied,
 }) => {
   const t = useT();
+
+  const columns: TicketColumn[] = [
+    { col: TicketSortField.Title, label: t("tickets.list.col_ticket") },
+    { col: TicketSortField.Priority, label: t("tickets.list.col_priority") },
+    { col: TicketSortField.Status, label: t("tickets.list.col_status") },
+    { col: TicketSortField.Assignee, label: t("tickets.list.col_assignee") },
+    { col: ACTIONS_COLUMN_KEY, label: "" },
+  ];
 
   if (tickets.length === 0) {
     return (
@@ -77,20 +91,16 @@ const TicketsTableComponent: React.FC<Props> = ({
         </Box>
         <Box component="thead">
           <Box component="tr">
-            {[
-              { col: "title", label: t("tickets.list.col_ticket") },
-              { col: "priority", label: t("tickets.list.col_priority") },
-              { col: "status", label: t("tickets.list.col_status") },
-              { col: "assignee", label: t("tickets.list.col_assignee") },
-              { col: "", label: "" },
-            ].map(({ col, label }) => {
-              const sortable = col !== "";
-              const isActive = sort?.col === col;
+            {columns.map(({ col, label }) => {
+              const sortable = col !== ACTIONS_COLUMN_KEY;
+              const isActive = sort.col === col;
               return (
                 <Box
                   component="th"
-                  key={col || "actions"}
-                  onClick={() => sortable && onToggleSort(col)}
+                  key={col}
+                  onClick={() =>
+                    col !== ACTIONS_COLUMN_KEY && onToggleSort(col)
+                  }
                   sx={{
                     fontFamily: "var(--font-mono)",
                     fontSize: "10px",
@@ -125,7 +135,7 @@ const TicketsTableComponent: React.FC<Props> = ({
                           alignItems: "center",
                         }}
                       >
-                        {sort?.dir === "asc" ? "↑" : "↓"}
+                        {sort.dir === SortDirection.Asc ? "↑" : "↓"}
                       </Box>
                     )}
                   </Box>

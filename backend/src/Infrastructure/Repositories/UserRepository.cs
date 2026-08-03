@@ -53,7 +53,8 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .ToListAsync(cancellationToken);
 
     public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search,
-        UserRole? role, int page, int pageSize, CancellationToken cancellationToken)
+        UserRole? role, UserSortField sortBy, SortDirection sortDirection, int page, int pageSize,
+        CancellationToken cancellationToken)
     {
         IQueryable<User> query = Query(QueryTracking.NoTracking)
             .Where(u => u.OrganizationId == organizationId);
@@ -73,15 +74,38 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
         int total = await query.CountAsync(cancellationToken);
 
-        List<UserGridRow> users = await query
-            .OrderBy(u => u.LastName)
-            .ThenBy(u => u.FirstName)
+        List<UserGridRow> users = await ApplySort(query, sortBy, sortDirection)
+            .ThenBy(u => u.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(ToGridRow)
             .ToListAsync(cancellationToken);
 
         return new PagedList<UserGridRow>(users, total);
+    }
+
+    private static readonly Expression<Func<User, int>> RoleRank = u => u.Role == UserRole.Admin ? 0 : 1;
+
+    internal static IOrderedQueryable<User> ApplySort(IQueryable<User> query, UserSortField sortBy,
+        SortDirection sortDirection)
+    {
+        bool descending = sortDirection == SortDirection.Desc;
+
+        return sortBy switch
+        {
+            UserSortField.Role => descending
+                ? query.OrderByDescending(RoleRank)
+                : query.OrderBy(RoleRank),
+            UserSortField.Status => descending
+                ? query.OrderByDescending(u => u.IsActive)
+                : query.OrderBy(u => u.IsActive),
+            UserSortField.LastLogin => descending
+                ? query.OrderBy(u => u.LastLoginAt == null).ThenByDescending(u => u.LastLoginAt)
+                : query.OrderBy(u => u.LastLoginAt == null).ThenBy(u => u.LastLoginAt),
+            _ => descending
+                ? query.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName)
+                : query.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
+        };
     }
 
     private static readonly Expression<Func<User, UserGridRow>> ToGridRow = u => new UserGridRow(

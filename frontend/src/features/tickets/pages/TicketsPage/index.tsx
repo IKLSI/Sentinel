@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
@@ -23,12 +23,8 @@ import type {
   UpdateTicket,
 } from "@/domains/tickets/types";
 import { useUsersQuery } from "@/domains/users/queries";
-import { TICKET_STATUSES } from "@/features/tickets/constants";
-import type { TicketPriority, TicketStatus, TicketType } from "@/enums";
-import {
-  EMPTY_CREATE_TICKET_FORM,
-  PRIORITY_ORDER,
-} from "@/features/tickets/pages/TicketsPage/helpers";
+import type { TicketPriority, TicketType } from "@/enums";
+import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
 import {
   createTicketSchema,
   type CreateTicketFormValues,
@@ -44,7 +40,7 @@ import { Pagination } from "@/features/tickets/pages/TicketsPage/components/Pagi
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
 import { useApiError } from "@/hooks/useApiError";
-import { SortDirection } from "@/enums";
+import { SortDirection, TicketSortField } from "@/enums";
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -100,9 +96,9 @@ export const TicketsPage: React.FC = () => {
       estimatedMinutes: 0,
     },
   });
-  const [sort, setSort] = useState<SortState | null>({
-    col: "priority",
-    dir: SortDirection.Asc,
+  const [sort, setSort] = useState<SortState>({
+    col: TicketSortField.Priority,
+    dir: SortDirection.Desc,
   });
 
   const pageSize = 20;
@@ -193,12 +189,19 @@ export const TicketsPage: React.FC = () => {
     [resetEditForm],
   );
 
-  const toggleSort = useCallback((col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: SortDirection.Asc };
-      if (s.dir === SortDirection.Asc) return { col, dir: SortDirection.Desc };
-      return null;
-    });
+  const toggleSort = useCallback((col: TicketSortField) => {
+    setSort((s) =>
+      s.col === col
+        ? {
+            col,
+            dir:
+              s.dir === SortDirection.Asc
+                ? SortDirection.Desc
+                : SortDirection.Asc,
+          }
+        : { col, dir: SortDirection.Asc },
+    );
+    setPage(1);
   }, []);
 
   const onDeleteTarget = useCallback((id: string, reference: string) => {
@@ -253,6 +256,8 @@ export const TicketsPage: React.FC = () => {
   const ticketsFilters: TicketFilters = {
     page,
     pageSize,
+    sortBy: sort.col,
+    sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(filters.priority
       ? { priority: filters.priority as TicketPriority }
@@ -274,34 +279,7 @@ export const TicketsPage: React.FC = () => {
     if (openCreate) openCreateModal();
   }, [openCreate, openCreateModal]);
 
-  const filtered = useMemo(() => {
-    return (tickets?.items ?? []).slice().sort((a, b) => {
-      if (!sort) return 0;
-      const mul = sort.dir === SortDirection.Asc ? 1 : -1;
-      switch (sort.col) {
-        case "title":
-          return mul * (a.title ?? "").localeCompare(b.title ?? "");
-        case "priority":
-          return (
-            mul *
-            ((PRIORITY_ORDER[a.priority as TicketPriority] ?? 9) -
-              (PRIORITY_ORDER[b.priority as TicketPriority] ?? 9))
-          );
-        case "status":
-          return (
-            mul *
-            (TICKET_STATUSES.indexOf(a.status as TicketStatus) -
-              TICKET_STATUSES.indexOf(b.status as TicketStatus))
-          );
-        case "assignee":
-          return (
-            mul * (a.assignedToName ?? "").localeCompare(b.assignedToName ?? "")
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [tickets?.items, sort]);
+  const filtered = tickets?.items ?? [];
 
   const hasFiltersApplied = !!(
     debouncedSearch ||

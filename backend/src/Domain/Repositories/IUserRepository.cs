@@ -26,7 +26,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
         CancellationToken cancellationToken);
 
     Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search, UserRole? role,
-        int page, int pageSize, CancellationToken cancellationToken);
+        UserSortField sortBy, SortDirection sortDirection, int page, int pageSize,
+        CancellationToken cancellationToken);
 
     Task<string?> GetLanguageOrDefaultAsync(Guid userId, CancellationToken cancellationToken);
 

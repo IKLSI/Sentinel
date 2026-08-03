@@ -208,13 +208,6 @@ export const modalTextareaSx = {
   maxHeight: "200px",
 };
 
-export const PRIORITY_ORDER: Record<TicketPriority, number> = {
-  critical: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-};
-
 const FALLBACK_COLOR = "var(--muted2)";
 const FALLBACK_BADGE_STYLE = { bg: "transparent", color: FALLBACK_COLOR };
 
