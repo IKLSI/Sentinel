@@ -1,5 +1,5 @@
 import type React from "react";
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
@@ -16,7 +16,7 @@ import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/contexts/I18nContext";
 import { useApiError } from "@/hooks/useApiError";
-import { useLocalSort } from "@/hooks/useLocalSort";
+import { ApiKeySortField, SortDirection } from "@/enums";
 import {
   useCreateApiKeyMutation,
   useRevokeApiKeyMutation,
@@ -48,9 +48,34 @@ export const ApiKeysTab: React.FC = () => {
   const { showToast } = useToast();
   const formId = useId();
 
-  const apiKeysQuery = useApiKeysQuery();
+  const [sort, setSort] = useState<{
+    col: ApiKeySortField;
+    dir: SortDirection;
+  }>({
+    col: ApiKeySortField.Expires,
+    dir: SortDirection.Asc,
+  });
+
+  const toggleSort = (col: ApiKeySortField) => {
+    setSort((s) =>
+      s.col === col
+        ? {
+            col,
+            dir:
+              s.dir === SortDirection.Asc
+                ? SortDirection.Desc
+                : SortDirection.Asc,
+          }
+        : { col, dir: SortDirection.Asc },
+    );
+  };
+
+  const apiKeysQuery = useApiKeysQuery({
+    sortBy: sort.col,
+    sortDirection: sort.dir,
+  });
   const keys = apiKeysQuery.data ?? [];
-  const loading = apiKeysQuery.isLoading;
+  const loading = apiKeysQuery.isLoading && !apiKeysQuery.data;
   const createKeyMutation = useCreateApiKeyMutation();
   const revokeKeyMutation = useRevokeApiKeyMutation();
   const creating = createKeyMutation.isPending;
@@ -72,8 +97,6 @@ export const ApiKeysTab: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
-
-  const [sort, toggleSort] = useLocalSort({ col: "expires", dir: "asc" });
 
   const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
@@ -107,40 +130,6 @@ export const ApiKeysTab: React.FC = () => {
       },
     );
   };
-
-  const sortedKeys = useMemo(() => {
-    if (!sort) return keys;
-    const mul = sort.dir === "asc" ? 1 : -1;
-    return keys.slice().sort((a, b) => {
-      switch (sort.col) {
-        case "name":
-          return mul * a.name.localeCompare(b.name);
-        case "prefix":
-          return mul * a.prefix.localeCompare(b.prefix);
-        case "created_by":
-          return mul * a.createdByName.localeCompare(b.createdByName);
-        case "created":
-          return (
-            mul *
-            (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-          );
-        case "expires":
-          return (
-            mul *
-            ((a.expiresAt ? new Date(a.expiresAt).getTime() : Infinity) -
-              (b.expiresAt ? new Date(b.expiresAt).getTime() : Infinity))
-          );
-        case "last_used":
-          return (
-            mul *
-            ((a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0) -
-              (b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0))
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [keys, sort]);
 
   const handleCopy = async () => {
     if (!secretKey) return;
@@ -210,7 +199,14 @@ export const ApiKeysTab: React.FC = () => {
             </Box>
           </Box>
         ) : (
-          <Box sx={{ flex: 1, overflow: "auto" }}>
+          <Box
+            sx={{
+              flex: 1,
+              overflow: "auto",
+              opacity: apiKeysQuery.isFetching ? 0.6 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
             <Box
               component="table"
               sx={{
@@ -221,48 +217,61 @@ export const ApiKeysTab: React.FC = () => {
             >
               <Box component="thead">
                 <Box component="tr">
-                  {[
-                    {
-                      key: "name",
-                      label: t("settings.api_keys.col_name"),
-                      width: "auto",
-                    },
-                    {
-                      key: "prefix",
-                      label: t("settings.api_keys.col_prefix"),
-                      width: "130px",
-                    },
-                    {
-                      key: "created_by",
-                      label: t("settings.api_keys.col_created_by"),
-                      width: "160px",
-                    },
-                    {
-                      key: "created",
-                      label: t("settings.api_keys.col_created"),
-                      width: "120px",
-                    },
-                    {
-                      key: "expires",
-                      label: t("settings.api_keys.col_expires"),
-                      width: "120px",
-                    },
-                    {
-                      key: "last_used",
-                      label: t("settings.api_keys.col_last_used"),
-                      width: "200px",
-                    },
-                    { key: "actions", label: "", width: "48px" },
-                  ].map(({ key, label, width }) => {
-                    const sortable = key !== "actions";
+                  {(
+                    [
+                      {
+                        col: ApiKeySortField.Name,
+                        key: "name",
+                        label: t("settings.api_keys.col_name"),
+                        width: "auto",
+                      },
+                      {
+                        col: ApiKeySortField.Prefix,
+                        key: "prefix",
+                        label: t("settings.api_keys.col_prefix"),
+                        width: "130px",
+                      },
+                      {
+                        col: ApiKeySortField.CreatedBy,
+                        key: "created_by",
+                        label: t("settings.api_keys.col_created_by"),
+                        width: "160px",
+                      },
+                      {
+                        col: ApiKeySortField.Created,
+                        key: "created",
+                        label: t("settings.api_keys.col_created"),
+                        width: "120px",
+                      },
+                      {
+                        col: ApiKeySortField.Expires,
+                        key: "expires",
+                        label: t("settings.api_keys.col_expires"),
+                        width: "120px",
+                      },
+                      {
+                        col: ApiKeySortField.LastUsed,
+                        key: "last_used",
+                        label: t("settings.api_keys.col_last_used"),
+                        width: "200px",
+                      },
+                      {
+                        col: "actions" as const,
+                        key: "actions",
+                        label: "",
+                        width: "48px",
+                      },
+                    ] as const
+                  ).map(({ col, key, label, width }) => {
+                    const sortable = col !== "actions";
                     return (
                       <SortableTh
                         key={key}
                         width={width}
                         sortable={sortable}
-                        active={sort?.col === key}
-                        ascending={sort?.dir === "asc"}
-                        onSort={() => toggleSort(key)}
+                        active={sort.col === col}
+                        ascending={sort.dir === SortDirection.Asc}
+                        onSort={() => sortable && toggleSort(col)}
                       >
                         {label}
                       </SortableTh>
@@ -271,7 +280,7 @@ export const ApiKeysTab: React.FC = () => {
                 </Box>
               </Box>
               <Box component="tbody">
-                {sortedKeys.map((key) => (
+                {keys.map((key) => (
                   <Box
                     component="tr"
                     key={key.id}

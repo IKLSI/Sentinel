@@ -6,7 +6,8 @@ namespace Sentinel.Domain.Repositories;
 
 public interface IApiKeyRepository : ICrudEntityWithIdRepository<ApiKey>
 {
-    Task<IReadOnlyList<ApiKeyDto>> ListForOrganizationAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ApiKeyDto>> ListForOrganizationAsync(Guid organizationId, ApiKeySortField sortBy,
+        SortDirection sortDirection, CancellationToken cancellationToken);
 
     Task<ApiKey?> GetOrDefaultActiveInOrganizationAsync(Guid apiKeyId, Guid organizationId,
         CancellationToken cancellationToken);

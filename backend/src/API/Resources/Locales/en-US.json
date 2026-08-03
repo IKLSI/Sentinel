@@ -626,7 +626,7 @@
   "settings.members.status_active": "Active",
   "settings.members.status_inactive": "Inactive",
   "settings.org.alert_min_severity_label": "Minimum alert severity",
-  "settings.org.identity": "Identity",
+  "settings.org.identity": "Information",
   "settings.org.name_label": "Organization name",
   "settings.org.save": "Save",
   "settings.org.saving": "Saving…",

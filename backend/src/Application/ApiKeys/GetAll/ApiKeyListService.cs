@@ -9,11 +9,13 @@ namespace Sentinel.Application.ApiKeys.GetAll;
 
 public class ApiKeyListService(IApiKeyRepository apiKeyRepository, ITenantContext tenant) : IService
 {
-    public async Task<Result<List<ApiKeyDto>>> ExecuteAsync(CancellationToken cancellationToken)
+    public async Task<Result<List<ApiKeyDto>>> ExecuteAsync(ApiKeySortField sortBy, SortDirection sortDirection,
+        CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<List<ApiKeyDto>>.Unauthorized();
 
-        return (await apiKeyRepository.ListForOrganizationAsync(organizationId, cancellationToken)).ToList();
+        return (await apiKeyRepository.ListForOrganizationAsync(organizationId, sortBy, sortDirection,
+            cancellationToken)).ToList();
     }
 }

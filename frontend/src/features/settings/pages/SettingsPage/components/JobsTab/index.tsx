@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
@@ -12,9 +12,8 @@ import { useToast } from "@/hooks/useToast";
 import { type useT, useI18n } from "@/contexts/I18nContext";
 import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
 import { useRecurringJobsQuery } from "@/domains/jobs/queries";
-import { JobState } from "@/enums";
+import { JobSortField, JobState, SortDirection } from "@/enums";
 import { useApiError } from "@/hooks/useApiError";
-import { useLocalSort } from "@/hooks/useLocalSort";
 
 const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
   {
@@ -99,12 +98,33 @@ export const JobsTab: React.FC = () => {
   const { t, culture } = useI18n();
   const apiError = useApiError();
 
-  const jobsQuery = useRecurringJobsQuery();
+  const [sort, setSort] = useState<{ col: JobSortField; dir: SortDirection }>({
+    col: JobSortField.Job,
+    dir: SortDirection.Asc,
+  });
+
+  const toggleSort = useCallback((col: JobSortField) => {
+    setSort((s) =>
+      s.col === col
+        ? {
+            col,
+            dir:
+              s.dir === SortDirection.Asc
+                ? SortDirection.Desc
+                : SortDirection.Asc,
+          }
+        : { col, dir: SortDirection.Asc },
+    );
+  }, []);
+
+  const jobsQuery = useRecurringJobsQuery({
+    sortBy: sort.col,
+    sortDirection: sort.dir,
+  });
   const jobs = jobsQuery.data ?? [];
-  const loading = jobsQuery.isLoading;
+  const loading = jobsQuery.isLoading && !jobsQuery.data;
   const triggerScan = useTriggerTechHealthScanMutation();
   const triggering = triggerScan.isPending;
-  const [sort, toggleSort] = useLocalSort({ col: "col_job", dir: "asc" });
 
   const handleTrigger = () => {
     triggerScan.mutate(
@@ -126,35 +146,6 @@ export const JobsTab: React.FC = () => {
     },
     [t],
   );
-
-  const sortedJobs = useMemo(() => {
-    if (!sort) return jobs;
-    const mul = sort.dir === "asc" ? 1 : -1;
-    return jobs.slice().sort((a, b) => {
-      switch (sort.col) {
-        case "col_job":
-          return mul * jobName(a.id).localeCompare(jobName(b.id));
-        case "col_last_run":
-          return (
-            mul *
-            ((a.lastExecution ? new Date(a.lastExecution).getTime() : 0) -
-              (b.lastExecution ? new Date(b.lastExecution).getTime() : 0))
-          );
-        case "col_status":
-          return (
-            mul * (a.lastJobState ?? "").localeCompare(b.lastJobState ?? "")
-          );
-        case "col_next_run":
-          return (
-            mul *
-            ((a.nextExecution ? new Date(a.nextExecution).getTime() : 0) -
-              (b.nextExecution ? new Date(b.nextExecution).getTime() : 0))
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [jobs, sort, jobName]);
 
   return (
     <Box
@@ -191,29 +182,50 @@ export const JobsTab: React.FC = () => {
           </Box>
         </Box>
       ) : (
-        <Box sx={{ flex: 1, overflow: "auto" }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "auto",
+            opacity: jobsQuery.isFetching ? 0.6 : 1,
+            transition: "opacity 0.15s",
+          }}
+        >
           <Box
             component="table"
             sx={{ width: "100%", borderCollapse: "collapse" }}
           >
             <Box component="thead">
               <Box component="tr">
-                {[
-                  { key: "col_job", width: "auto" },
-                  { key: "col_last_run", width: "180px" },
-                  { key: "col_status", width: "140px" },
-                  { key: "col_next_run", width: "230px" },
-                  { key: "actions", width: "48px" },
-                ].map(({ key, width }) => {
-                  const sortable = key !== "actions";
+                {(
+                  [
+                    { col: JobSortField.Job, key: "col_job", width: "auto" },
+                    {
+                      col: JobSortField.LastRun,
+                      key: "col_last_run",
+                      width: "180px",
+                    },
+                    {
+                      col: JobSortField.Status,
+                      key: "col_status",
+                      width: "140px",
+                    },
+                    {
+                      col: JobSortField.NextRun,
+                      key: "col_next_run",
+                      width: "230px",
+                    },
+                    { col: "actions" as const, key: "actions", width: "48px" },
+                  ] as const
+                ).map(({ col, key, width }) => {
+                  const sortable = col !== "actions";
                   return (
                     <SortableTh
                       key={key}
                       width={width}
                       sortable={sortable}
-                      active={sort?.col === key}
-                      ascending={sort?.dir === "asc"}
-                      onSort={() => toggleSort(key)}
+                      active={sort.col === col}
+                      ascending={sort.dir === SortDirection.Asc}
+                      onSort={() => sortable && toggleSort(col)}
                     >
                       {key === "actions" ? "" : t(`settings.jobs.${key}`)}
                     </SortableTh>
@@ -222,7 +234,7 @@ export const JobsTab: React.FC = () => {
               </Box>
             </Box>
             <Box component="tbody">
-              {sortedJobs.map((job) => (
+              {jobs.map((job) => (
                 <Box
                   component="tr"
                   key={job.id}

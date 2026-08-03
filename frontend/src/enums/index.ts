@@ -130,6 +130,25 @@ export const TicketSortField = {
 export type TicketSortField =
   (typeof TicketSortField)[keyof typeof TicketSortField];
 
+export const JobSortField = {
+  Job: "Job",
+  LastRun: "LastRun",
+  Status: "Status",
+  NextRun: "NextRun",
+} as const;
+export type JobSortField = (typeof JobSortField)[keyof typeof JobSortField];
+
+export const ApiKeySortField = {
+  Name: "Name",
+  Prefix: "Prefix",
+  CreatedBy: "CreatedBy",
+  Created: "Created",
+  Expires: "Expires",
+  LastUsed: "LastUsed",
+} as const;
+export type ApiKeySortField =
+  (typeof ApiKeySortField)[keyof typeof ApiKeySortField];
+
 export const SettingsTab = {
   Jobs: "jobs",
   Billing: "billing",

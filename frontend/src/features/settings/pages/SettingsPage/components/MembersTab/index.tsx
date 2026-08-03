@@ -100,7 +100,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const members = usersQuery.data?.items ?? [];
   const totalMembers = usersQuery.data?.total ?? 0;
   const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1);
-  const loadingMembers = usersQuery.isLoading;
+  const loadingMembers = usersQuery.isLoading && !usersQuery.data;
 
   const columns: MemberColumn[] = [
     {
@@ -265,7 +265,16 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
             </Box>
           </Box>
         ) : (
-          <>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+              minHeight: 0,
+              opacity: usersQuery.isFetching ? 0.6 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
             <Box sx={{ flex: 1, overflow: "hidden" }}>
               <Box
                 component="table"
@@ -416,7 +425,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
               total={totalMembers}
               onChange={setPage}
             />
-          </>
+          </Box>
         )}
       </Box>
     </>

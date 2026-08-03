@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Jobs.GetRecurring;
 using Sentinel.Application.Jobs.TriggerTechHealthScan;
+using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Jobs;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.API.Controllers;
 
@@ -19,8 +21,11 @@ namespace Sentinel.API.Controllers;
 public class JobsController : BaseController
 {
     [HttpGet]
-    public ActionResult<List<RecurringJobStatusDto>> GetRecurringJobs([FromServices] RecurringJobListService service) =>
-        ToActionResult(service.Execute());
+    public ActionResult<List<RecurringJobStatusDto>> GetRecurringJobs(
+        [FromServices] RecurringJobListService service,
+        [FromQuery] JobSortField sortBy = JobSortField.Job,
+        [FromQuery] SortDirection sortDirection = SortDirection.Asc) =>
+        ToActionResult(service.Execute(sortBy, sortDirection));
 
     [HttpPost("tech-health-scan/trigger")]
     public ActionResult<ApiMessageResponse> TriggerTechHealthScan([FromServices] TechHealthScanTriggerService service) =>
