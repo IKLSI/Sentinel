@@ -97,11 +97,11 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {AppRole};";
 
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
             throw new InvalidOperationException(
-                $"Une base PostgreSQL est requise pour les tests d'intégration en intégration continue : {_unavailableReason}");
+                $"A PostgreSQL database is required for integration tests in continuous integration: {_unavailableReason}");
 
         Assert.Skip(
-            $"PostgreSQL indisponible, tests d'intégration ignorés. Démarrez Docker, ou renseignez "
-            + $"{ExternalDatabaseVariable} avec la chaîne de connexion d'une base jetable. Détail : {_unavailableReason}");
+            $"PostgreSQL unavailable, integration tests skipped. Start Docker, or set "
+            + $"{ExternalDatabaseVariable} with the connection string of a throwaway database. Detail: {_unavailableReason}");
     }
 
     public SentinelContext CreateContext(ITenantContext tenant, ISystemScope systemScope)

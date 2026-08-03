@@ -171,6 +171,6 @@ public class TicketRepositoryTests
             .IgnoreQueryFilters()
             .CountAsync(t => t.Id == foreignTicket.Id, TestContext.Current.CancellationToken);
 
-        visible.Should().Be(0, "la sécurité au niveau ligne doit filtrer même sans le filtre EF Core");
+        visible.Should().Be(0, "row level security must filter even without the EF Core filter");
     }
 }

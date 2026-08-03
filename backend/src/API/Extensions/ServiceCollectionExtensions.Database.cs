@@ -53,21 +53,37 @@ public static partial class ServiceCollectionExtensions
         if (builder.Port != TransactionPoolingPort) return;
 
         throw new InvalidOperationException(
-            $"La chaîne de connexion pointe le port {TransactionPoolingPort}, réservé au pooling en mode transaction. " +
-            "L'isolation multi-tenant repose sur set_config('app.current_org', …) appliqué à la session : " +
-            "en mode transaction, la connexion physique change entre deux transactions sans que l'application en soit avertie, " +
-            "et une requête peut s'exécuter sous l'organisation d'un autre client. Utiliser le port 5432 (mode session)");
+            $"The connection string targets port {TransactionPoolingPort}, reserved for transaction pooling mode. " +
+            "Multi-tenant isolation relies on set_config('app.current_org', …) applied to the session: " +
+            "in transaction mode, the physical connection changes between two transactions without the application being notified, " +
+            "and a query may run under another customer's organization. Use port 5432 (session mode)");
     }
 
-    public static IServiceCollection AddHangfireServices(this IServiceCollection services, string connectionString)
+    private const string HangfireApplicationName = "sentinel-hangfire";
+    private const int HangfireMaxPoolSize = 8;
+    private const int HangfireKeepAliveSeconds = 30;
+    private const int HangfireConnectionIdleLifetimeSeconds = 60;
+    private const int HangfireWorkerCount = 2;
+    private static readonly TimeSpan HangfireSchedulePollingInterval = TimeSpan.FromMinutes(1);
+
+    public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
     {
+        string connectionString = configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
+            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
+
+        DatabaseSettings database = ReadSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database);
+
         services.AddHangfire(config =>
         {
             config.UsePostgreSqlStorage(options =>
             {
                 NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder(connectionString)
                 {
-                    KeepAlive = 30,
+                    ApplicationName = HangfireApplicationName,
+                    MaxPoolSize = HangfireMaxPoolSize,
+                    CommandTimeout = database.CommandTimeoutSeconds,
+                    ConnectionIdleLifetime = HangfireConnectionIdleLifetimeSeconds,
+                    KeepAlive = HangfireKeepAliveSeconds,
                     TcpKeepAlive = true
                 };
                 options.UseNpgsqlConnection(builder.ToString());
@@ -76,7 +92,8 @@ public static partial class ServiceCollectionExtensions
 
         services.AddHangfireServer(options =>
         {
-            options.WorkerCount = 2;
+            options.WorkerCount = HangfireWorkerCount;
+            options.SchedulePollingInterval = HangfireSchedulePollingInterval;
         });
 
         return services;

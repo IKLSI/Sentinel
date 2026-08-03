@@ -86,7 +86,7 @@ public static partial class ServiceCollectionExtensions
         }
         catch (OperationCanceledException) when (context.HttpContext.RequestAborted.IsCancellationRequested)
         {
-            context.Fail("Requête annulée");
+            context.Fail("Request cancelled");
             return;
         }
 
@@ -210,9 +210,9 @@ public static partial class ServiceCollectionExtensions
 
         if (!environment.IsDevelopment() && settings.KnownProxies.Count == 0 && settings.KnownNetworks.Count == 0)
             throw new InvalidOperationException(
-                "ForwardedHeaders:KnownProxies ou ForwardedHeaders:KnownNetworks doit être renseigné hors développement : " +
-                "sans reverse proxy déclaré, X-Forwarded-For est ignoré et toutes les requêtes partagent l'adresse IP du proxy, " +
-                "ce qui rend le rate limiting global au lieu d'être par client");
+                "ForwardedHeaders:KnownProxies or ForwardedHeaders:KnownNetworks must be set outside development: " +
+                "without a declared reverse proxy, X-Forwarded-For is ignored and every request shares the proxy IP address, " +
+                "which makes rate limiting global instead of per client");
 
         services.Configure<ForwardedHeadersOptions>(options =>
         {

@@ -32,8 +32,8 @@ public class RealtimeEmissionTests
             .ToList();
 
         silent.Should().BeEmpty(
-            "un service qui mute l'état doit injecter IRealtimeNotifier, "
-            + "sinon les autres utilisateurs de l'organisation gardent des données périmées indéfiniment");
+            "a service that mutates state must inject IRealtimeNotifier, "
+            + "otherwise the other users of the organization keep stale data indefinitely");
     }
 
     [Fact]
@@ -55,8 +55,8 @@ public class RealtimeEmissionTests
         }
 
         silent.OrderBy(name => name, StringComparer.Ordinal).Should().BeEmpty(
-            "injecter IRealtimeNotifier sans jamais l'appeler laisse le service muet : "
-            + "l'événement doit être diffusé après le commit");
+            "injecting IRealtimeNotifier without ever calling it leaves the service silent: "
+            + "the event must be broadcast after the commit");
     }
 
     [Fact]
@@ -65,18 +65,18 @@ public class RealtimeEmissionTests
         List<string> serviceNames = MutationServices().Select(type => type.Name).ToList();
 
         ExemptedFromBroadcast.Should().BeSubsetOf(serviceNames,
-            "une exemption qui ne cible plus aucun service doit être retirée de la liste");
+            "an exemption that no longer targets any service must be removed from the list");
     }
 
     [DoesNotReturn]
     private static void ReportUnreachableSources()
     {
-        string message = $"{ApplicationSourceDirectory} est introuvable depuis {AppContext.BaseDirectory}";
+        string message = $"{ApplicationSourceDirectory} not found from {AppContext.BaseDirectory}";
 
         if (Environment.GetEnvironmentVariable("CI") != null)
-            Assert.Fail($"{message} : en intégration continue ce contrôle ne doit jamais être ignoré");
+            Assert.Fail($"{message}: in continuous integration this check must never be skipped");
 
-        Assert.Skip($"{message} : dépôt partiel ou build hors arborescence, émission non vérifiable");
+        Assert.Skip($"{message}: partial checkout or build outside the tree, emission cannot be verified");
         throw new InvalidOperationException(message);
     }
 

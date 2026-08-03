@@ -43,7 +43,7 @@ public class DependencyInjectionTests
         }
 
         failures.Should().BeEmpty(
-            "chaque service de cas d'usage doit être résolvable au démarrage, pas au premier appel de l'endpoint");
+            "every use-case service must be resolvable at startup, not on the first endpoint call");
     }
 
     private static IReadOnlyList<Type> UseCaseTypes() => typeof(IService).Assembly

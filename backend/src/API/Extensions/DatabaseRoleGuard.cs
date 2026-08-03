@@ -17,9 +17,9 @@ public static class DatabaseRoleGuard
         if (bypassesRowLevelSecurity.Count == 0 || !bypassesRowLevelSecurity[0]) return;
 
         throw new InvalidOperationException(
-            "Le rôle PostgreSQL utilisé par l'application est superutilisateur ou porte l'attribut BYPASSRLS : " +
-            "les politiques de Row Level Security ne lui sont pas appliquées et l'isolation entre organisations " +
-            "ne repose plus que sur les filtres Entity Framework. " +
-            "Créer un rôle applicatif dédié, non propriétaire des tables, sans BYPASSRLS");
+            "The PostgreSQL role used by the application is a superuser or carries the BYPASSRLS attribute: " +
+            "Row Level Security policies are not enforced for it, and isolation between organizations " +
+            "then relies solely on Entity Framework filters. " +
+            "Create a dedicated application role that does not own the tables and has no BYPASSRLS");
     }
 }

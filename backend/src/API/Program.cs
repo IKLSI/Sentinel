@@ -23,9 +23,6 @@ public static class Program
             .ReadFrom.Services(services)
             .Enrich.FromLogContext());
 
-        string connectionString = builder.Configuration.GetConnectionString(ConfigurationKeys.DefaultConnectionString)
-            ?? throw new InvalidOperationException("The DefaultConnection connection string is missing");
-
         builder.Services
             .AddSettings(builder.Configuration, builder.Environment)
             .AddTenantContext()
@@ -33,7 +30,7 @@ public static class Program
             .AddRepositories()
             .AddJwtAuthentication(builder.Configuration)
             .AddCorsPolicy(builder.Configuration)
-            .AddHangfireServices(connectionString)
+            .AddHangfireServices(builder.Configuration)
             .AddHttpRegistryClients()
             .AddRealtimeServices()
             .AddApplicationServices()

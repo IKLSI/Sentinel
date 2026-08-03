@@ -34,7 +34,7 @@ public static partial class ServiceCollectionExtensions
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Entrez 'Bearer' suivi d'un espace et de votre token JWT"
+                Description = "Enter 'Bearer' followed by a space and your JWT token"
             });
 
             options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement

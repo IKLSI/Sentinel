@@ -32,7 +32,6 @@ export const ProjectRow: React.FC<Props> = React.memo(
     const updateFrequencyMutation = useUpdateProjectFrequencyMutation();
     const saving = updateFrequencyMutation.isPending;
 
-
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
       setSelected(project.scanFrequency as ScanFrequency);

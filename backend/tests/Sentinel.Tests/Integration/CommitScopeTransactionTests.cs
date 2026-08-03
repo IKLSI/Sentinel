@@ -63,6 +63,6 @@ public class CommitScopeTransactionTests
 
         bool exists = await scope.Context.Tickets.AnyAsync(t => t.Id == ticket.Id, TestContext.Current.CancellationToken);
 
-        exists.Should().BeFalse("la transaction doit être annulée intégralement");
+        exists.Should().BeFalse("the transaction must be rolled back entirely");
     }
 }

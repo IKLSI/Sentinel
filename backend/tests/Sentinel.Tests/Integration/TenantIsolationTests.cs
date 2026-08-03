@@ -34,7 +34,7 @@ public class TenantIsolationTests
             .IgnoreQueryFilters()
             .CountAsync(t => t.Id == ticket.Id, TestContext.Current.CancellationToken);
 
-        visible.Should().Be(0, "les politiques doivent se fermer quand aucune organisation n'est positionnée");
+        visible.Should().Be(0, "the policies must close when no organization is set");
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class TenantIsolationTests
             .IgnoreQueryFilters()
             .CountAsync(c => c.Id == foreignComment.Id, TestContext.Current.CancellationToken);
 
-        visible.Should().Be(0, "la politique indirecte des commentaires doit filtrer sans le filtre EF Core");
+        visible.Should().Be(0, "the indirect comment policy must filter without the EF Core filter");
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class TenantIsolationTests
             .CountAsync(v => v.Id == foreignVulnerability.Id, TestContext.Current.CancellationToken);
 
         visibleDependencies.Should().Be(0);
-        visibleVulnerabilities.Should().Be(0, "la politique en cascade projet → dépendance → vulnérabilité doit filtrer");
+        visibleVulnerabilities.Should().Be(0, "the cascading project → dependency → vulnerability policy must filter");
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class TenantIsolationTests
         Func<Task> insertion = () => scope.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await insertion.Should().ThrowAsync<DbUpdateException>(
-            "la clause WITH CHECK déduite de la politique doit rejeter une écriture hors de l'organisation courante");
+            "the WITH CHECK clause inferred from the policy must reject a write outside the current organization");
 
         scope.Context.ChangeTracker.Clear();
     }
