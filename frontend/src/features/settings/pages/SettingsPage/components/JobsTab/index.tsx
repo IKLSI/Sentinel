@@ -8,6 +8,7 @@ import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
+import { StatusChip } from "@/components/ui/common/StatusChip";
 import { useToast } from "@/hooks/useToast";
 import { type useT, useI18n } from "@/contexts/I18nContext";
 import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
@@ -16,25 +17,14 @@ import { JobSortField, JobState, SortDirection } from "@/enums";
 import { useApiError } from "@/hooks/useApiError";
 import { formatDateTime } from "@/formatters/date";
 
-const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
-  {
-    [JobState.Succeeded]: {
-      bg: "color-mix(in srgb, var(--green) 15%, transparent)",
-      color: "var(--green)",
-    },
-    [JobState.Failed]: {
-      bg: "color-mix(in srgb, var(--red) 15%, transparent)",
-      color: "var(--red)",
-    },
-    [JobState.Processing]: {
-      bg: "color-mix(in srgb, var(--accent) 15%, transparent)",
-      color: "var(--accent)",
-    },
-    [JobState.Enqueued]: {
-      bg: "color-mix(in srgb, var(--yellow) 15%, transparent)",
-      color: "var(--yellow)",
-    },
-  };
+const STATUS_VARIANTS: Partial<
+  Record<JobState, "green" | "red" | "blue" | "yellow">
+> = {
+  [JobState.Succeeded]: "green",
+  [JobState.Failed]: "red",
+  [JobState.Processing]: "blue",
+  [JobState.Enqueued]: "yellow",
+};
 
 function StatusBadge({
   state,
@@ -46,28 +36,12 @@ function StatusBadge({
   if (!state)
     return <Box sx={{ color: "var(--muted)", fontSize: "11px" }}>—</Box>;
   const key = state.charAt(0).toUpperCase() + state.slice(1).toLowerCase();
-  const colors = STATUS_COLORS[key as JobState] ?? {
-    bg: "var(--s2)",
-    color: "var(--muted)",
-  };
+  const variant = STATUS_VARIANTS[key as JobState] ?? "gray";
   const labelKey = `settings.jobs.status.${state.toLowerCase()}`;
   return (
-    <Box
-      sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        px: "8px",
-        height: "20px",
-        borderRadius: "10px",
-        fontSize: "10px",
-        fontWeight: 600,
-        letterSpacing: "0.03em",
-        background: colors.bg,
-        color: colors.color,
-      }}
-    >
+    <StatusChip variant={variant}>
       {t(labelKey) === labelKey ? state : t(labelKey)}
-    </Box>
+    </StatusChip>
   );
 }
 

@@ -36,11 +36,14 @@ import {
   TicketsTable,
   type SortState,
 } from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
-import { Pagination } from "@/features/tickets/pages/TicketsPage/components/Pagination";
+import { Pagination } from "@/components/ui/common/Pagination";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
 import { useApiError } from "@/hooks/useApiError";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { SortDirection, TicketSortField } from "@/enums";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -51,13 +54,17 @@ export const TicketsPage: React.FC = () => {
   const { openCreate } = routeApi.useSearch();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   const [filters, setFilters] = useState({
     priority: "",
     status: "",
     type: "",
   });
   const [page, setPage] = useState(1);
+  const handleSearchChange = useCallback((v: string) => {
+    setSearch(v);
+    setPage(1);
+  }, []);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     reference: string;
@@ -249,14 +256,6 @@ export const TicketsPage: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
   const ticketsFilters: TicketFilters = {
     page,
     pageSize,
@@ -306,7 +305,7 @@ export const TicketsPage: React.FC = () => {
       >
         <TicketsToolbar
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={handleSearchChange}
           filters={filters}
           onFiltersChange={(f) => {
             setFilters(f);
@@ -356,6 +355,13 @@ export const TicketsPage: React.FC = () => {
               totalPages={tickets?.totalPages ?? 1}
               total={tickets?.totalCount ?? 0}
               onChange={setPage}
+              previousLabel={t("tickets.list.previous")}
+              nextLabel={t("tickets.list.next")}
+              countLabel={
+                (tickets?.totalCount ?? 0) > 1
+                  ? t("tickets.list.count_plural")
+                  : t("tickets.list.count_singular")
+              }
             />
           </Box>
         )}

@@ -14,6 +14,8 @@ interface DeleteModalProps {
   loading?: boolean;
   title: string;
   children: React.ReactNode;
+  confirmLabel?: string;
+  confirmingLabel?: string;
 }
 
 export const DeleteModal: React.FC<DeleteModalProps> = ({
@@ -23,6 +25,8 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
   loading = false,
   title,
   children,
+  confirmLabel,
+  confirmingLabel,
 }) => {
   const t = useT();
   return (
@@ -108,7 +112,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           onClick={onConfirm}
           disabled={loading}
         >
-          {loading ? t("common.deleting") : t("common.delete")}
+          {loading
+            ? (confirmingLabel ?? t("common.deleting"))
+            : (confirmLabel ?? t("common.delete"))}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -16,9 +16,10 @@ import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/contexts/I18nContext";
 import { useUpdateUserMutation } from "@/domains/users/mutations";
 import { useUsersQuery } from "@/domains/users/queries";
-import { MemberPagination } from "@/features/settings/pages/SettingsPage/components/MemberPagination";
+import { Pagination } from "@/components/ui/common/Pagination";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { useApiError } from "@/hooks/useApiError";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { SortDirection, UserRole, UserSortField } from "@/enums";
 
 const ALL_ROLES_FILTER = "all";
@@ -52,7 +53,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
 
   const toggleActive = useUpdateUserMutation();
   const [memberSearch, setMemberSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
   const [memberRoleFilter, setMemberRoleFilter] =
     useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
@@ -79,13 +80,10 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     setPage(1);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(memberSearch);
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [memberSearch]);
+  const handleSearchChange = useCallback((v: string) => {
+    setMemberSearch(v);
+    setPage(1);
+  }, []);
 
   const usersQuery = useUsersQuery({
     page,
@@ -149,7 +147,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
       >
         <SearchInput
           value={memberSearch}
-          onChange={setMemberSearch}
+          onChange={handleSearchChange}
           placeholder={t("settings.members.search_placeholder")}
           width="240px"
           sx={{ flex: "0 0 240px" }}
@@ -388,11 +386,18 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                 </Box>
               </Box>
             </Box>
-            <MemberPagination
+            <Pagination
               page={page}
               totalPages={totalPages}
               total={totalMembers}
               onChange={setPage}
+              previousLabel={t("settings.pagination.previous")}
+              nextLabel={t("settings.pagination.next")}
+              countLabel={
+                totalMembers > 1
+                  ? t("settings.members.count_plural")
+                  : t("settings.members.count_singular")
+              }
             />
           </Box>
         )}

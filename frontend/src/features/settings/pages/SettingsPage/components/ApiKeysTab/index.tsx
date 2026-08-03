@@ -11,6 +11,7 @@ import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useToast } from "@/hooks/useToast";
@@ -557,47 +558,18 @@ export const ApiKeysTab: React.FC = () => {
       </AppModal>
 
       {/* Modal — Confirmation révocation */}
-      <AppModal
+      <DeleteModal
         open={revokeTarget !== null}
         onClose={() => setRevokeTarget(null)}
+        onConfirm={handleRevoke}
+        loading={revoking}
         title={t("settings.api_keys.revoke")}
-        maxWidth="xs"
-        actions={
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              className="btn-cancel"
-              onClick={() => setRevokeTarget(null)}
-              disabled={revoking}
-            >
-              {t("settings.api_keys.revoke_confirm_no")}
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              disabled={revoking}
-              onClick={handleRevoke}
-            >
-              {revoking ? "…" : t("settings.api_keys.revoke_confirm_yes")}
-            </Button>
-          </>
-        }
+        confirmLabel={t("settings.api_keys.revoke_confirm_yes")}
+        confirmingLabel="…"
       >
-        <Box sx={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-          {t("settings.api_keys.revoke_confirm")}
-          {revokeTarget && (
-            <Box
-              component="span"
-              sx={{ fontWeight: 600, color: "var(--text)" }}
-            >
-              {" "}
-              {revokeTarget.name}
-            </Box>
-          )}
-        </Box>
-      </AppModal>
+        {t("settings.api_keys.revoke_confirm")}
+        {revokeTarget && <b> {revokeTarget.name}</b>}
+      </DeleteModal>
     </>
   );
 };

@@ -14,6 +14,7 @@ import {
 } from "@/domains/users/mutations";
 import { toIsoDate } from "@/formatters/fileName";
 import { MIME_TYPES } from "@/helpers/download";
+import { CARD_SX as BASE_CARD_SX } from "@/helpers/cardSx";
 import { useApiError } from "@/hooks/useApiError";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
@@ -51,10 +52,7 @@ const inp = {
 const inpRo = { ...inp, color: "var(--muted2)", cursor: "default" } as const;
 
 const CARD_SX = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r-md)",
-  overflow: "hidden",
+  ...BASE_CARD_SX,
   display: "flex",
   flexDirection: "column",
 } as const;
