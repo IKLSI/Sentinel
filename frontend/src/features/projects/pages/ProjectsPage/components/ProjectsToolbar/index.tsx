@@ -84,25 +84,12 @@ export const ProjectsToolbar: React.FC<Props> = ({
             variant="contained"
             size="small"
             sx={{
-              textTransform: "none",
               display: "flex",
               alignItems: "center",
               gap: "6px",
               flexShrink: 0,
-              "&.MuiButton-root": {
-                background:
-                  "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-                color: "#fff",
-                boxShadow: "none",
-                height: "32px",
-                px: "14px",
-              },
-              "&.MuiButton-root:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
+              height: "32px",
+              px: "14px",
             }}
             onClick={onImport}
           >
@@ -111,7 +98,8 @@ export const ProjectsToolbar: React.FC<Props> = ({
           </Button>
         )}
         <Button
-          variant="outlined"
+          variant="contained"
+          color="secondary"
           size="small"
           disabled={exporting}
           sx={{
@@ -119,18 +107,6 @@ export const ProjectsToolbar: React.FC<Props> = ({
             alignItems: "center",
             gap: "6px",
             flexShrink: 0,
-            textTransform: "none",
-            background:
-              "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
-            borderColor: "transparent",
-            color: "#fff",
-            "&:hover": {
-              background:
-                "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
-              borderColor: "transparent",
-              color: "#fff",
-            },
-            "&.Mui-disabled": { color: "#fff", opacity: 0.7 },
           }}
           onClick={onExport}
         >

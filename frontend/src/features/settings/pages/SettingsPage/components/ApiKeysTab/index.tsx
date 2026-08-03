@@ -30,21 +30,6 @@ import {
   type CreateApiKeyFormValues,
 } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab/schemas";
 
-const BTN_SX = {
-  textTransform: "none" as const,
-  background:
-    "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-  color: "#fff",
-  boxShadow: "none",
-  "&:hover": {
-    background:
-      "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-    boxShadow: "none",
-    transform: "none",
-  },
-  "&:active": { boxShadow: "none" },
-};
-
 function fmtDate(iso: string | null, locale: string): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(locale, {
@@ -192,10 +177,9 @@ export const ApiKeysTab: React.FC = () => {
         <Button
           variant="contained"
           size="small"
-          disableElevation
           startIcon={<KeyOutlined sx={{ fontSize: "13px !important" }} />}
           onClick={() => setCreateOpen(true)}
-          sx={{ ...BTN_SX, height: "34px", px: "16px", fontWeight: 600 }}
+          sx={{ height: "34px", px: "16px" }}
         >
           {t("settings.api_keys.create")}
         </Button>
@@ -499,7 +483,6 @@ export const ApiKeysTab: React.FC = () => {
               type="submit"
               form={formId}
               disabled={creating || !isValid}
-              sx={BTN_SX}
             >
               {creating
                 ? t("settings.api_keys.modal_creating")
@@ -553,7 +536,6 @@ export const ApiKeysTab: React.FC = () => {
           <Button
             variant="contained"
             size="small"
-            disableElevation
             onClick={
               copied
                 ? () => {
@@ -571,19 +553,15 @@ export const ApiKeysTab: React.FC = () => {
                 <ContentCopyOutlined sx={{ fontSize: "13px !important" }} />
               )
             }
-            sx={{
-              ...BTN_SX,
-              background: copied
-                ? "linear-gradient(135deg, var(--green) 0%, color-mix(in srgb, var(--green) 85%, black) 100%)"
-                : BTN_SX.background,
-              "&:hover": copied
+            sx={
+              copied
                 ? {
-                    background: "var(--green)",
-                    boxShadow: "none",
-                    transform: "none",
+                    background:
+                      "linear-gradient(135deg, var(--green) 0%, color-mix(in srgb, var(--green) 85%, black) 100%)",
+                    "&:hover": { background: "var(--green)" },
                   }
-                : BTN_SX["&:hover"],
-            }}
+                : undefined
+            }
           >
             {copied
               ? t("settings.api_keys.secret_close")
@@ -650,22 +628,10 @@ export const ApiKeysTab: React.FC = () => {
             </Button>
             <Button
               variant="contained"
+              color="error"
               size="small"
               disabled={revoking}
               onClick={handleRevoke}
-              sx={{
-                textTransform: "none",
-                background:
-                  "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 85%, black) 100%)",
-                color: "#fff",
-                boxShadow: "none",
-                "&:hover": {
-                  background: "var(--red)",
-                  boxShadow: "none",
-                  transform: "none",
-                },
-                "&:active": { boxShadow: "none" },
-              }}
             >
               {revoking ? "…" : t("settings.api_keys.revoke_confirm_yes")}
             </Button>

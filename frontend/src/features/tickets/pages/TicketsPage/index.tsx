@@ -235,10 +235,14 @@ export const TicketsPage: React.FC = () => {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
+    const reference = deleteTarget.reference;
     deleteTicketMutation.mutate(
       { id: deleteTarget.id },
       {
-        onSuccess: () => setDeleteTarget(null),
+        onSuccess: () => {
+          setDeleteTarget(null);
+          showToast(t("tickets.list.delete_success", { reference }), "success");
+        },
         onError: (err) =>
           showToast(apiError(err, t("tickets.list.delete_error")), "error"),
       },

@@ -172,25 +172,9 @@ export const IntegrationRow: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            disableElevation
             onClick={onConnect}
             disabled={connecting || !token.trim()}
-            sx={{
-              flexShrink: 0,
-              minWidth: "110px",
-              textTransform: "none",
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              color: "#fff",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-              "&:active": { boxShadow: "none" },
-            }}
+            sx={{ flexShrink: 0, minWidth: "110px" }}
           >
             {connecting
               ? t("settings.integrations.importing")

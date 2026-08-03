@@ -221,23 +221,8 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
         <Button
           variant="contained"
           size="small"
-          disableElevation
           onClick={onInviteClick}
           startIcon={<PersonAddOutlined sx={{ fontSize: "13px !important" }} />}
-          sx={{
-            textTransform: "none",
-            background:
-              "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-            color: "#fff",
-            boxShadow: "none",
-            "&:hover": {
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-              boxShadow: "none",
-              transform: "none",
-            },
-            "&:active": { boxShadow: "none" },
-          }}
         >
           {t("settings.members.add_member")}
         </Button>

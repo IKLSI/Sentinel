@@ -238,7 +238,8 @@ export const SyncProjectModal: React.FC<Props> = ({
               fontWeight: 600,
               cursor: "pointer",
               outline: "none",
-              "&:hover": { textDecoration: "underline" },
+              transition: "color 0.12s",
+              "&:hover": { color: "var(--accent2)" },
             }}
           >
             {t("projects.import_modal.select_all")}
@@ -427,7 +428,6 @@ export const SyncProjectModal: React.FC<Props> = ({
           variant="contained"
           size="small"
           className="btn-cancel"
-          sx={{ textTransform: "none" }}
           onClick={onClose}
           disabled={importing}
         >
@@ -436,22 +436,7 @@ export const SyncProjectModal: React.FC<Props> = ({
         <Button
           variant="contained"
           size="small"
-          disableElevation
           disabled={selected.size === 0 || importing}
-          sx={{
-            textTransform: "none",
-            background:
-              "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-            color: "#fff",
-            boxShadow: "none",
-            "&:hover": {
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-              boxShadow: "none",
-              transform: "none",
-            },
-            "&.Mui-disabled": { opacity: 0.5 },
-          }}
           onClick={handleImport}
         >
           {importLabel}

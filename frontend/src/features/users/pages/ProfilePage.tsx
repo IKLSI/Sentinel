@@ -324,18 +324,7 @@ export const ProfilePage: React.FC = () => {
             size="small"
             onClick={handleSave}
             disabled={savingPf || pfUnchanged}
-            sx={{
-              minWidth: "110px",
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
+            sx={{ minWidth: "110px" }}
           >
             {savingPf ? t("profile.button.saving") : t("profile.button.save")}
           </Button>
@@ -663,7 +652,6 @@ export const ProfilePage: React.FC = () => {
             size="small"
             onClick={handleExportGdpr}
             disabled={exportingGdpr}
-            sx={{ "&:hover": { transform: "none" } }}
           >
             {exportingGdpr
               ? t("profile.gdpr.exporting")
@@ -699,19 +687,9 @@ export const ProfilePage: React.FC = () => {
           </Box>
           <Button
             variant="contained"
+            color="error"
             size="small"
             onClick={() => setDeleteDialogOpen(true)}
-            sx={{
-              background:
-                "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
           >
             {t("profile.gdpr.delete_button")}
           </Button>
@@ -774,21 +752,10 @@ export const ProfilePage: React.FC = () => {
             </Button>
             <Button
               variant="contained"
+              color="error"
               size="small"
               onClick={handleDeleteAccount}
               disabled={deletingAccount || !deletePassword.trim()}
-              sx={{
-                background:
-                  "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
-                boxShadow: "none",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
-                  boxShadow: "none",
-                  transform: "none",
-                },
-                "&:disabled": { background: "var(--red)", opacity: 0.6 },
-              }}
             >
               {deletingAccount
                 ? t("profile.gdpr.deleting")

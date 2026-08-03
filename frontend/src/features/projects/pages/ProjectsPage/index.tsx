@@ -65,7 +65,6 @@ export const ProjectsPage: React.FC = () => {
   });
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanBaselineRef = useRef<string | null>(null);
-  const hasAutoExpandedUntracked = useRef(false);
 
   const toggleSort = useCallback((col: string) => {
     setSort((s) => {
@@ -90,12 +89,16 @@ export const ProjectsPage: React.FC = () => {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
+    const projectName = deleteTarget.name;
     deleteProjectMutation.mutate(
       { id: deleteTarget.id },
       {
         onSuccess: () => {
           setDeleteTarget(null);
-          showToast(t("projects.toast.delete_success"), "success");
+          showToast(
+            t("projects.toast.delete_success", { name: projectName }),
+            "success",
+          );
         },
         onError: (err) =>
           showToast(apiError(err, t("projects.toast.delete_error")), "error"),
@@ -223,8 +226,7 @@ export const ProjectsPage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (loading || hasAutoExpandedUntracked.current) return;
-    hasAutoExpandedUntracked.current = true;
+    if (loading) return;
     const onlyUntracked =
       filtered.length > 0 &&
       grouped[UNTRACKED_SECTION].length === filtered.length;
