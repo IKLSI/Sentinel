@@ -9,17 +9,19 @@ import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/contexts/I18nContext";
 import { useUpdateUserMutation } from "@/domains/users/mutations";
 import { useUsersQuery } from "@/domains/users/queries";
 import { Pagination } from "@/components/ui/common/Pagination";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useSortState } from "@/hooks/useSortState";
 import { SortDirection, UserRole, UserSortField } from "@/enums";
 
 const ALL_ROLES_FILTER = "all";
@@ -39,9 +41,8 @@ interface MemberColumn {
 
 export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const { user } = useAuth();
-  const { showToast } = useToast();
   const { t, culture } = useI18n();
-  const apiError = useApiError();
+  const onToggleError = useApiErrorToast("settings.toast.toggle_error");
 
   const ROLE_LABELS: Record<string, string> = useMemo(
     () => ({
@@ -57,28 +58,10 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const [memberRoleFilter, setMemberRoleFilter] =
     useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<{
-    col: UserSortField;
-    dir: SortDirection;
-  }>({
-    col: UserSortField.Member,
-    dir: SortDirection.Asc,
-  });
-
-  const toggleSort = useCallback((col: UserSortField) => {
-    setSort((s) =>
-      s.col === col
-        ? {
-            col,
-            dir:
-              s.dir === SortDirection.Asc
-                ? SortDirection.Desc
-                : SortDirection.Asc,
-          }
-        : { col, dir: SortDirection.Asc },
-    );
-    setPage(1);
-  }, []);
+  const [sort, toggleSort] = useSortState<UserSortField>(
+    { col: UserSortField.Member, dir: SortDirection.Asc },
+    () => setPage(1),
+  );
 
   const handleSearchChange = useCallback((v: string) => {
     setMemberSearch(v);
@@ -127,10 +110,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const handleToggleActive = (memberId: string, currentlyActive: boolean) => {
     toggleActive.mutate(
       { id: memberId, data: { isActive: !currentlyActive } },
-      {
-        onError: (err) =>
-          showToast(apiError(err, t("settings.toast.toggle_error")), "error"),
-      },
+      { onError: onToggleError },
     );
   };
 
@@ -208,29 +188,15 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
         }}
       >
         {loadingMembers ? (
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CircularProgress size={20} />
-          </Box>
+          <CenteredLoader />
         ) : members.length === 0 ? (
-          <Box
-            className="empty-state"
+          <EmptyState
+            icon={GroupOutlined}
+            title={t("settings.members.empty")}
+            subtitle={t("settings.members.empty_subtitle")}
+            iconSize={40}
             sx={{ flex: 1, justifyContent: "center" }}
-          >
-            <GroupOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-            <Box className="empty-state-title">
-              {t("settings.members.empty")}
-            </Box>
-            <Box className="empty-state-subtitle">
-              {t("settings.members.empty_subtitle")}
-            </Box>
-          </Box>
+          />
         ) : (
           <Box
             sx={{

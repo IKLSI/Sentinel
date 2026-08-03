@@ -10,9 +10,11 @@ import {
 } from "@/domains/projects/mutations";
 import { useProjectsQuery } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { EmptyState } from "@/components/ui/common/EmptyState";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
@@ -27,14 +29,15 @@ import { SCAN_FEEDBACK_TIMEOUT_MS } from "@/features/projects/pages/ProjectsPage
 import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
 
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onDeleteError = useApiErrorToast("projects.toast.delete_error");
+  const onScanError = useApiErrorToast("projects.toast.scan_start_error");
   const queryClient = useQueryClient();
   const { openImport } = routeApi.useSearch();
   const { data: projects = [], isLoading: loading } = useProjectsQuery();
@@ -87,8 +90,7 @@ export const ProjectsPage: React.FC = () => {
             "success",
           );
         },
-        onError: (err) =>
-          showToast(apiError(err, t("projects.toast.delete_error")), "error"),
+        onError: onDeleteError,
       },
     );
   };
@@ -119,10 +121,7 @@ export const ProjectsPage: React.FC = () => {
             }, SCAN_FEEDBACK_TIMEOUT_MS);
           },
           onError: (err) => {
-            showToast(
-              apiError(err, t("projects.toast.scan_start_error")),
-              "error",
-            );
+            onScanError(err);
             stopScanFeedback();
           },
         },
@@ -134,7 +133,7 @@ export const ProjectsPage: React.FC = () => {
       showToast,
       t,
       scanProjectMutation,
-      apiError,
+      onScanError,
       stopScanFeedback,
     ],
   );
@@ -196,18 +195,8 @@ export const ProjectsPage: React.FC = () => {
 
   return (
     <>
-      <Box
-        className="page-enter"
-        sx={{
-          p: "20px 28px",
-          height: "100vh",
-          maxHeight: "100vh",
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          overflow: "hidden",
-        }}
+      <PageContainer
+        sx={{ maxHeight: "100vh", boxSizing: "border-box", minHeight: 0 }}
       >
         <ProjectsToolbar
           search={search}
@@ -218,16 +207,7 @@ export const ProjectsPage: React.FC = () => {
         />
 
         {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: 1,
-            }}
-          >
-            <CircularProgress size={24} />
-          </Box>
+          <CenteredLoader />
         ) : (
           <Box
             sx={{
@@ -256,19 +236,16 @@ export const ProjectsPage: React.FC = () => {
                   borderRadius: "var(--r)",
                 }}
               >
-                <Box className="empty-state">
-                  <Box className="empty-state-icon">
-                    <AccountTreeOutlined sx={{ fontSize: 40 }} />
-                  </Box>
-                  <Box className="empty-state-title">
-                    {t("projects.empty.title")}
-                  </Box>
-                  <Box className="empty-state-subtitle">
-                    {projects.length === 0
+                <EmptyState
+                  icon={AccountTreeOutlined}
+                  title={t("projects.empty.title")}
+                  subtitle={
+                    projects.length === 0
                       ? t("projects.empty.create_first")
-                      : t("projects.empty.adjust_search")}
-                  </Box>
-                </Box>
+                      : t("projects.empty.adjust_search")
+                  }
+                  iconSize={40}
+                />
               </Box>
             ) : (
               <Box
@@ -300,7 +277,7 @@ export const ProjectsPage: React.FC = () => {
             )}
           </Box>
         )}
-      </Box>
+      </PageContainer>
 
       <SyncProjectModal
         open={showSyncModal}

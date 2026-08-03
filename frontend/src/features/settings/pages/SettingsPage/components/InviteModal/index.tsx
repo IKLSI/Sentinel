@@ -12,7 +12,7 @@ import { useT } from "@/contexts/I18nContext";
 import { useInviteUserMutation } from "@/domains/users/mutations";
 import { UserRole } from "@/enums";
 import { inp } from "@/features/settings/pages/SettingsPage/helpers";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
@@ -27,7 +27,7 @@ interface Props {
 export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onError = useApiErrorToast("settings.toast.invite_error");
   const formId = useId();
 
   const {
@@ -55,8 +55,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
           showToast(t("settings.toast.invite_sent"), "success");
           handleClose();
         },
-        onError: (err) =>
-          showToast(apiError(err, t("settings.toast.invite_error")), "error"),
+        onError,
       },
     );
   });

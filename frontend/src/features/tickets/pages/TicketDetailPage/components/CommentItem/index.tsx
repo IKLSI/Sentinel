@@ -7,9 +7,8 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
 import { useI18n } from "@/contexts/I18nContext";
-import { useToast } from "@/hooks/useToast";
 import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import type { Ticket } from "@/domains/tickets/types";
 import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { initialsFromName } from "@/formatters/initials";
@@ -66,22 +65,17 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   onEdit,
   onDelete,
 }) {
-  const { t, culture } = useI18n();
-  const apiError = useApiError();
-  const { showToast } = useToast();
+  const { culture } = useI18n();
+  const onDownloadError = useApiErrorToast(
+    "tickets.detail.attachments_download_error",
+  );
   const { mainText, attachments } = parseComment(c.content);
   const downloadMutation = useDownloadAttachmentMutation();
 
   const handleDownload = (a: Attachment) => {
     downloadMutation.mutate(
       { url: a.url, fileName: a.fileName },
-      {
-        onError: (err) =>
-          showToast(
-            apiError(err, t("tickets.detail.attachments_download_error")),
-            "error",
-          ),
-      },
+      { onError: onDownloadError },
     );
   };
 

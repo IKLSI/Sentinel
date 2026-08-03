@@ -1,11 +1,13 @@
 import type React from "react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { StatusChip } from "@/components/ui/common/StatusChip";
@@ -14,7 +16,8 @@ import { type useT, useI18n } from "@/contexts/I18nContext";
 import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
 import { useRecurringJobsQuery } from "@/domains/jobs/queries";
 import { JobSortField, JobState, SortDirection } from "@/enums";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useSortState } from "@/hooks/useSortState";
 import { formatDateTime } from "@/formatters/date";
 
 const STATUS_VARIANTS: Partial<
@@ -65,26 +68,12 @@ const CELL_SX = {
 export const JobsTab: React.FC = () => {
   const { showToast } = useToast();
   const { t, culture } = useI18n();
-  const apiError = useApiError();
+  const onTriggerError = useApiErrorToast("settings.jobs.trigger_error");
 
-  const [sort, setSort] = useState<{ col: JobSortField; dir: SortDirection }>({
+  const [sort, toggleSort] = useSortState<JobSortField>({
     col: JobSortField.Job,
     dir: SortDirection.Asc,
   });
-
-  const toggleSort = useCallback((col: JobSortField) => {
-    setSort((s) =>
-      s.col === col
-        ? {
-            col,
-            dir:
-              s.dir === SortDirection.Asc
-                ? SortDirection.Desc
-                : SortDirection.Asc,
-          }
-        : { col, dir: SortDirection.Asc },
-    );
-  }, []);
 
   const jobsQuery = useRecurringJobsQuery({
     sortBy: sort.col,
@@ -101,8 +90,7 @@ export const JobsTab: React.FC = () => {
       {
         onSuccess: () =>
           showToast(t("settings.jobs.trigger_success"), "success"),
-        onError: (err) =>
-          showToast(apiError(err, t("settings.jobs.trigger_error")), "error"),
+        onError: onTriggerError,
       },
     );
   };
@@ -129,27 +117,15 @@ export const JobsTab: React.FC = () => {
       }}
     >
       {loading ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CircularProgress size={20} />
-        </Box>
+        <CenteredLoader />
       ) : jobs.length === 0 ? (
-        <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
-          <AutoModeOutlined
-            className="empty-state-icon"
-            sx={{ fontSize: 40 }}
-          />
-          <Box className="empty-state-title">{t("settings.jobs.empty")}</Box>
-          <Box className="empty-state-subtitle">
-            {t("settings.jobs.empty_subtitle")}
-          </Box>
-        </Box>
+        <EmptyState
+          icon={AutoModeOutlined}
+          title={t("settings.jobs.empty")}
+          subtitle={t("settings.jobs.empty_subtitle")}
+          iconSize={40}
+          sx={{ flex: 1, justifyContent: "center" }}
+        />
       ) : (
         <Box
           sx={{

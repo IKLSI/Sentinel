@@ -1,30 +1,28 @@
 import type React from "react";
-import { memo, useRef } from "react";
+import { memo } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
-import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
+import { EmptyState } from "@/components/ui/common/EmptyState";
+import { TD } from "@/components/ui/common/VirtualTable/TableCells";
+import {
+  VirtualTable,
+  type VirtualTableColumn,
+} from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
-import { useVirtualRows } from "@/hooks/useVirtualRows";
 import type { Vulnerability } from "@/domains/projects/types";
 import type { VulnerabilitySeverity } from "@/enums";
-import {
-  SEV_CONFIG,
-  TD,
-  TH,
-} from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+import { SEV_CONFIG } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
 type VulnWithDep = Vulnerability & { dependencyName: string };
 
 const ESTIMATED_ROW_HEIGHT = 44;
-const OVERSCAN = 10;
-const COLUMN_COUNT = 5;
 
 const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
 
 interface RowProps {
   vuln: VulnWithDep;
   index: number;
-  measureRef: (el: HTMLElement | null) => void;
+  measureRef?: (el: HTMLElement | null) => void;
 }
 
 const VulnRow = memo<RowProps>(({ vuln, index, measureRef }) => {
@@ -106,107 +104,36 @@ interface Props {
 
 export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
   const t = useT();
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
-    count: vulns.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: ESTIMATED_ROW_HEIGHT,
-    overscan: OVERSCAN,
-  });
 
   if (vulns.length === 0) {
     return (
-      <Box className="empty-state">
-        <CheckCircleOutlined
-          className="empty-state-icon"
-          sx={{ fontSize: 40 }}
-        />
-        <Box className="empty-state-title">
-          {t("tech_health.empty.no_vulns_title")}
-        </Box>
-        <Box className="empty-state-subtitle">
-          {t("tech_health.empty.no_vulns_subtitle")}
-        </Box>
-      </Box>
+      <EmptyState
+        icon={CheckCircleOutlined}
+        title={t("tech_health.empty.no_vulns_title")}
+        subtitle={t("tech_health.empty.no_vulns_subtitle")}
+        iconSize={40}
+      />
     );
   }
 
+  const columns: VirtualTableColumn[] = [
+    { label: t("tech_health.table.vuln.score"), width: "6%" },
+    { label: t("tech_health.table.vuln.dependency"), width: "18%" },
+    { label: t("tech_health.table.vuln.vulnerability"), width: "34%" },
+    { label: t("tech_health.table.vuln.cve_ref"), width: "13%" },
+    { label: t("tech_health.table.vuln.fixed_version"), width: "12%" },
+  ];
+
   return (
-    <Box
-      sx={{
-        flex: 1,
-        minHeight: 0,
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r)",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Box sx={{ flexShrink: 0 }}>
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
-          <Box component="colgroup">
-            <Box component="col" sx={{ width: "6%" }} />
-            <Box component="col" sx={{ width: "18%" }} />
-            <Box component="col" sx={{ width: "34%" }} />
-            <Box component="col" sx={{ width: "13%" }} />
-            <Box component="col" sx={{ width: "12%" }} />
-          </Box>
-          <Box component="thead">
-            <Box component="tr">
-              <TH>{t("tech_health.table.vuln.score")}</TH>
-              <TH>{t("tech_health.table.vuln.dependency")}</TH>
-              <TH>{t("tech_health.table.vuln.vulnerability")}</TH>
-              <TH>{t("tech_health.table.vuln.cve_ref")}</TH>
-              <TH>{t("tech_health.table.vuln.fixed_version")}</TH>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-      <Box ref={scrollRef} sx={{ overflowY: "auto", flex: 1 }}>
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
-          <Box component="colgroup">
-            <Box component="col" sx={{ width: "6%" }} />
-            <Box component="col" sx={{ width: "18%" }} />
-            <Box component="col" sx={{ width: "34%" }} />
-            <Box component="col" sx={{ width: "13%" }} />
-            <Box component="col" sx={{ width: "12%" }} />
-          </Box>
-          <Box component="tbody">
-            <VirtualRowSpacer height={paddingTop} columnCount={COLUMN_COUNT} />
-            {items.map((item) => {
-              const v = vulns[item.index];
-              return (
-                <VulnRow
-                  key={v.id}
-                  vuln={v}
-                  index={item.index}
-                  measureRef={virtualizer.measureElement}
-                />
-              );
-            })}
-            <VirtualRowSpacer
-              height={paddingBottom}
-              columnCount={COLUMN_COUNT}
-            />
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+    <VirtualTable<VulnWithDep>
+      rows={vulns}
+      getRowId={(v) => v.id}
+      columns={columns}
+      estimateRowHeight={ESTIMATED_ROW_HEIGHT}
+      measureRows
+      renderRow={(v, index, measureRef) => (
+        <VulnRow key={v.id} vuln={v} index={index} measureRef={measureRef} />
+      )}
+    />
   );
 };

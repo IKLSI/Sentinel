@@ -25,12 +25,14 @@ import {
   inp,
 } from "@/features/settings/pages/SettingsPage/helpers";
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onOrgUpdateError = useApiErrorToast("settings.toast.org_update_error");
+  const onGithubError = useApiErrorToast("settings.toast.github_error");
+  const onGitlabError = useApiErrorToast("settings.toast.gitlab_error");
 
   const SEVERITIES = useMemo(
     () =>
@@ -86,11 +88,7 @@ export const OrganisationTab: React.FC = () => {
       },
       {
         onSuccess: () => showToast(t("settings.toast.org_updated"), "success"),
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.toast.org_update_error")),
-            "error",
-          ),
+        onError: onOrgUpdateError,
       },
     );
   };
@@ -107,8 +105,7 @@ export const OrganisationTab: React.FC = () => {
           setGithubToken("");
           showToast(t("settings.toast.github_connected"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("settings.toast.github_error")), "error"),
+        onError: onGithubError,
       },
     );
   };
@@ -125,8 +122,7 @@ export const OrganisationTab: React.FC = () => {
           setGitlabToken("");
           showToast(t("settings.toast.gitlab_connected"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("settings.toast.gitlab_error")), "error"),
+        onError: onGitlabError,
       },
     );
   };

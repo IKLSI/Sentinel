@@ -12,7 +12,7 @@ import { useCreateProjectMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
 import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 interface Props {
   open: boolean;
@@ -29,7 +29,7 @@ export const SyncProjectModal: React.FC<Props> = ({
   showToast,
 }) => {
   const t = useT();
-  const apiError = useApiError();
+  const onImportError = useApiErrorToast("projects.toast.import_error");
   const availableReposQuery = useAvailableReposQuery(open);
   const repos = availableReposQuery.data?.repos ?? [];
   const hasToken = availableReposQuery.data?.hasToken ?? true;
@@ -99,7 +99,7 @@ export const SyncProjectModal: React.FC<Props> = ({
       );
       onClose();
     } catch (err) {
-      showToast(apiError(err, t("projects.toast.import_error")), "error");
+      onImportError(err);
     }
   };
 

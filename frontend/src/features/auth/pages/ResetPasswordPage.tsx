@@ -4,28 +4,26 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { useResetPasswordMutation } from "@/domains/auth/mutations";
-import { useToast } from "@/hooks/useToast";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { useT } from "@/contexts/I18nContext";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
+import { AuthFormField } from "@/features/auth/components/AuthFormField";
+import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from "@/features/auth/schemas";
-import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/reset-password");
 
 export const ResetPasswordPage: React.FC = () => {
   const { token = "" } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onError = useApiErrorToast("auth.reset_password.error_invalid_token");
 
   const {
     register,
@@ -63,11 +61,7 @@ export const ResetPasswordPage: React.FC = () => {
           setDone(true);
           setTimeout(() => navigate({ to: ROUTES.LOGIN, replace: true }), 3500);
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("auth.reset_password.error_invalid_token")),
-            "error",
-          ),
+        onError,
       },
     );
   });
@@ -238,33 +232,16 @@ export const ResetPasswordPage: React.FC = () => {
         <Box className="lp-right">
           <Box className="lp-form-wrap">
             {done ? (
-              <Box className="aip-success">
-                <Box className="aip-success-icon">
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 28 28"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 14l6 6 10-10"
-                      style={{ stroke: "var(--auth-indigo-500)" }}
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Box>
-                <Box component="p" className="aip-success-title">
-                  {t("auth.reset_password.success_title")}
-                </Box>
-                <Box component="p" className="aip-success-sub">
-                  {t("auth.reset_password.success_line1")}
-                  <br />
-                  {t("auth.reset_password.success_line2")}
-                </Box>
-              </Box>
+              <AuthPageSuccess
+                title={t("auth.reset_password.success_title")}
+                subtitle={
+                  <>
+                    {t("auth.reset_password.success_line1")}
+                    <br />
+                    {t("auth.reset_password.success_line2")}
+                  </>
+                }
+              />
             ) : (
               <>
                 <Box className="lp-form-header">
@@ -277,79 +254,30 @@ export const ResetPasswordPage: React.FC = () => {
                 </Box>
 
                 <form onSubmit={onSubmit} noValidate>
-                  <Box className="lp-field">
-                    <Box
-                      component="label"
-                      className="lp-label"
-                      htmlFor={passwordId}
-                    >
-                      {t("auth.reset_password.password_label")}
-                    </Box>
-                    <Box className="lp-input-wrap">
-                      <Box
-                        component="input"
-                        id={passwordId}
-                        type={showPassword ? "text" : "password"}
-                        className={`lp-input${errors.password ? " lp-input--error" : ""}`}
-                        placeholder={t(
-                          "auth.reset_password.password_placeholder",
-                        )}
-                        autoComplete="new-password"
-                        sx={{ paddingRight: "44px" }}
-                        {...register("password")}
-                      />
-                      <button
-                        type="button"
-                        className="lp-pw-toggle"
-                        onClick={() => setShowPassword((v) => !v)}
-                        tabIndex={-1}
-                        aria-label={
-                          showPassword
-                            ? t("auth.reset_password.password_hide")
-                            : t("auth.reset_password.password_show")
-                        }
-                      >
-                        {showPassword ? (
-                          <VisibilityOffOutlined sx={{ fontSize: 16 }} />
-                        ) : (
-                          <VisibilityOutlined sx={{ fontSize: 16 }} />
-                        )}
-                      </button>
-                    </Box>
-                    {errors.password && (
-                      <Box className="lp-field-error">
-                        {resolveFieldError(errors.password, t)}
-                      </Box>
-                    )}
-                  </Box>
+                  <AuthPasswordField
+                    id={passwordId}
+                    label={t("auth.reset_password.password_label")}
+                    registration={register("password")}
+                    error={errors.password}
+                    t={t}
+                    placeholder={t("auth.reset_password.password_placeholder")}
+                    autoComplete="new-password"
+                    showPassword={showPassword}
+                    onToggleShow={() => setShowPassword((v) => !v)}
+                    showLabel={t("auth.reset_password.password_show")}
+                    hideLabel={t("auth.reset_password.password_hide")}
+                  />
 
-                  <Box className="lp-field">
-                    <Box
-                      component="label"
-                      className="lp-label"
-                      htmlFor={confirmId}
-                    >
-                      {t("auth.reset_password.confirm_label")}
-                    </Box>
-                    <Box className="lp-input-wrap">
-                      <Box
-                        component="input"
-                        id={confirmId}
-                        type={showPassword ? "text" : "password"}
-                        className={`lp-input${errors.confirm ? " lp-input--error" : ""}`}
-                        placeholder={t(
-                          "auth.reset_password.confirm_placeholder",
-                        )}
-                        autoComplete="new-password"
-                        {...register("confirm")}
-                      />
-                    </Box>
-                    {errors.confirm && (
-                      <Box className="lp-field-error">
-                        {resolveFieldError(errors.confirm, t)}
-                      </Box>
-                    )}
-                  </Box>
+                  <AuthFormField
+                    id={confirmId}
+                    label={t("auth.reset_password.confirm_label")}
+                    registration={register("confirm")}
+                    error={errors.confirm}
+                    t={t}
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t("auth.reset_password.confirm_placeholder")}
+                    autoComplete="new-password"
+                  />
 
                   <button
                     type="submit"

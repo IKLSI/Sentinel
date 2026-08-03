@@ -1,13 +1,13 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import StarOutlined from "@mui/icons-material/StarOutlined";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { useT } from "@/contexts/I18nContext";
 import { useToast } from "@/hooks/useToast";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   BILLING_INTERVAL,
   type BillingInterval,
@@ -38,7 +38,7 @@ const BILLING_RESULT = {
 
 export const BillingTab: React.FC = () => {
   const t = useT();
-  const apiError = useApiError();
+  const onCheckoutError = useApiErrorToast("settings.billing.error_generic");
   const { showToast } = useToast();
   const billingStatusQuery = useBillingStatusQuery();
   const billingPlansQuery = useBillingPlansQuery();
@@ -72,28 +72,13 @@ export const BillingTab: React.FC = () => {
         onSuccess: (session) => {
           if (session.url) window.location.href = session.url;
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.billing.error_generic")),
-            "error",
-          ),
+        onError: onCheckoutError,
       },
     );
   };
 
   if (loading || !status) {
-    return (
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress size={26} />
-      </Box>
-    );
+    return <CenteredLoader />;
   }
 
   const quotas = [

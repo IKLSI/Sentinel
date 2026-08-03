@@ -1,6 +1,7 @@
 import type React from "react";
 import { useContext, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
+import { PageContainer } from "@/components/layout/PageContainer";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
@@ -47,15 +48,7 @@ export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Billing);
 
   return (
-    <Box
-      className="page-enter"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
+    <PageContainer sx={{ p: 0 }}>
       <Box sx={{ px: "28px", pt: "20px", pb: 0, flexShrink: 0 }}>
         <Box
           sx={{
@@ -127,6 +120,6 @@ export const SettingsPage: React.FC = () => {
         {activeTab === SettingsTab.Billing && <BillingTab />}
         {activeTab === SettingsTab.ApiKeys && <ApiKeysTab />}
       </Box>
-    </Box>
+    </PageContainer>
   );
 };

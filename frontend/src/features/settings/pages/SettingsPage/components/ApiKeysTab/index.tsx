@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
@@ -12,11 +11,13 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
-import { useToast } from "@/hooks/useToast";
 import { useT, useI18n } from "@/contexts/I18nContext";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useSortState } from "@/hooks/useSortState";
 import { ApiKeySortField, SortDirection } from "@/enums";
 import {
   useCreateApiKeyMutation,
@@ -36,32 +37,15 @@ import { formatDate as fmtDate } from "@/formatters/date";
 
 export const ApiKeysTab: React.FC = () => {
   const t = useT();
-  const apiError = useApiError();
+  const onCreateError = useApiErrorToast("settings.api_keys.create_error");
+  const onRevokeError = useApiErrorToast("settings.api_keys.revoke_error");
   const { culture } = useI18n();
-  const { showToast } = useToast();
   const formId = useId();
 
-  const [sort, setSort] = useState<{
-    col: ApiKeySortField;
-    dir: SortDirection;
-  }>({
+  const [sort, toggleSort] = useSortState<ApiKeySortField>({
     col: ApiKeySortField.Expires,
     dir: SortDirection.Asc,
   });
-
-  const toggleSort = (col: ApiKeySortField) => {
-    setSort((s) =>
-      s.col === col
-        ? {
-            col,
-            dir:
-              s.dir === SortDirection.Asc
-                ? SortDirection.Desc
-                : SortDirection.Asc,
-          }
-        : { col, dir: SortDirection.Asc },
-    );
-  };
 
   const apiKeysQuery = useApiKeysQuery({
     sortBy: sort.col,
@@ -100,11 +84,7 @@ export const ApiKeysTab: React.FC = () => {
           reset({ name: "", expiresAt: "" });
           setSecretKey(created);
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.api_keys.create_error")),
-            "error",
-          ),
+        onError: onCreateError,
       },
     );
   });
@@ -115,11 +95,7 @@ export const ApiKeysTab: React.FC = () => {
       { id: revokeTarget.id },
       {
         onSuccess: () => setRevokeTarget(null),
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.api_keys.revoke_error")),
-            "error",
-          ),
+        onError: onRevokeError,
       },
     );
   };
@@ -168,29 +144,15 @@ export const ApiKeysTab: React.FC = () => {
         }}
       >
         {loading ? (
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CircularProgress size={20} />
-          </Box>
+          <CenteredLoader />
         ) : keys.length === 0 ? (
-          <Box
-            className="empty-state"
+          <EmptyState
+            icon={KeyOutlined}
+            title={t("settings.api_keys.empty")}
+            subtitle={t("settings.api_keys.empty_subtitle")}
+            iconSize={40}
             sx={{ flex: 1, justifyContent: "center" }}
-          >
-            <KeyOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-            <Box className="empty-state-title">
-              {t("settings.api_keys.empty")}
-            </Box>
-            <Box className="empty-state-subtitle">
-              {t("settings.api_keys.empty_subtitle")}
-            </Box>
-          </Box>
+          />
         ) : (
           <Box
             sx={{

@@ -8,6 +8,7 @@ interface Props {
   title: string;
   subtitle: string;
   sx?: SxProps<Theme>;
+  iconSize?: number;
 }
 
 export const EmptyState: React.FC<Props> = ({
@@ -15,10 +16,11 @@ export const EmptyState: React.FC<Props> = ({
   title,
   subtitle,
   sx,
+  iconSize = 32,
 }) => (
   <Box className="empty-state" sx={{ padding: "24px !important", ...sx }}>
     <Box className="empty-state-icon">
-      <Icon sx={{ fontSize: 32 }} />
+      <Icon sx={{ fontSize: iconSize }} />
     </Box>
     <Box className="empty-state-title" sx={{ fontSize: "12px !important" }}>
       {title}

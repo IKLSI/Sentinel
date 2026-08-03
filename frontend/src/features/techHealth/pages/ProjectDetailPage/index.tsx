@@ -2,6 +2,7 @@ import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
+import { PageContainer } from "@/components/layout/PageContainer";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
@@ -105,16 +106,7 @@ export const ProjectDetailPage: React.FC = () => {
   ];
 
   return (
-    <Box
-      className="page-enter"
-      sx={{
-        p: "20px 28px",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
+    <PageContainer>
       <ProjectHeaderCard
         project={project}
         eolRuntimes={eolRuntimes}
@@ -180,6 +172,6 @@ export const ProjectDetailPage: React.FC = () => {
           {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
         </Box>
       </Box>
-    </Box>
+    </PageContainer>
   );
 };

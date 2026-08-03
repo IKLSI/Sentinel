@@ -3,6 +3,7 @@ import { useState } from "react";
 import { version } from "@/../package.json";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/useToast";
@@ -15,7 +16,7 @@ import {
 import { toIsoDate } from "@/formatters/fileName";
 import { MIME_TYPES } from "@/helpers/download";
 import { CARD_SX as BASE_CARD_SX } from "@/helpers/cardSx";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
@@ -89,7 +90,9 @@ export const ProfilePage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onUpdateError = useApiErrorToast("profile.toast.update_error");
+  const onExportError = useApiErrorToast("profile.gdpr.export_error");
+  const onDeleteError = useApiErrorToast("profile.gdpr.delete_error");
   const { culture, setLanguage } = useI18n();
 
   const [pf, setPf] = useState({
@@ -129,8 +132,7 @@ export const ProfilePage: React.FC = () => {
             });
           showToast(t("profile.toast.updated"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.toast.update_error")), "error"),
+        onError: onUpdateError,
       },
     );
   };
@@ -156,8 +158,7 @@ export const ProfilePage: React.FC = () => {
           a.click();
           URL.revokeObjectURL(url);
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.gdpr.export_error")), "error"),
+        onError: onExportError,
       },
     );
   };
@@ -173,8 +174,7 @@ export const ProfilePage: React.FC = () => {
           });
           window.location.href = ROUTES.LOGIN;
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.gdpr.delete_error")), "error"),
+        onError: onDeleteError,
       },
     );
   };
@@ -187,17 +187,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <Box
-      className="page-enter"
-      sx={{
-        p: "20px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
+    <PageContainer sx={{ p: "20px 24px", gap: "16px" }}>
       <Box sx={CARD_SX}>
         <InnerDivider label={t("profile.section.info")} />
 
@@ -818,6 +808,6 @@ export const ProfilePage: React.FC = () => {
       >
         v{version}
       </Box>
-    </Box>
+    </PageContainer>
   );
 };
