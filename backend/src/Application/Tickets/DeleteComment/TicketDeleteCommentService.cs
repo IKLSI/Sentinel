@@ -5,6 +5,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.DeleteComment;
@@ -13,6 +14,7 @@ public class TicketDeleteCommentService(
     ITicketCommentRepository commentRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(Guid ticketId, Guid commentId, CancellationToken cancellationToken)
@@ -34,6 +36,10 @@ public class TicketDeleteCommentService(
             commentRepository.Remove(comment);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        if (tenant.OrganizationId is Guid organizationId)
+            await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+                new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.CommentDeleted,

@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Settings.ConnectIntegration;
@@ -17,6 +18,7 @@ public class IntegrationConnectService(
     IRepositoryHostClient repositoryHostClient,
     TokenProtector tokenProtector,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     IntegrationConnectValidator validator) : IService
 {
@@ -59,6 +61,9 @@ public class IntegrationConnectService(
 
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Integrations), cancellationToken);
 
         await auditLog.LogAsync(
             SavedAction(platform),

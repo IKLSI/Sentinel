@@ -46,12 +46,26 @@ public static partial class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = ReadHubAccessToken,
                     OnTokenValidated = ValidateAccountStateAsync
                 };
             });
 
         services.AddAuthorization();
         return services;
+    }
+
+    private static Task ReadHubAccessToken(MessageReceivedContext context)
+    {
+        if (!context.Request.Path.StartsWithSegments(RealtimeConstants.HubPath, StringComparison.OrdinalIgnoreCase))
+            return Task.CompletedTask;
+
+        string? accessToken = context.Request.Query[RealtimeConstants.AccessTokenQueryParameter];
+
+        if (!string.IsNullOrEmpty(accessToken))
+            context.Token = accessToken;
+
+        return Task.CompletedTask;
     }
 
     private static async Task ValidateAccountStateAsync(TokenValidatedContext context)
@@ -112,7 +126,11 @@ public static partial class ServiceCollectionExtensions
         if (!account.IsActive || account.TokenVersion != tokenVersion)
         {
             context.Fail("Expired session");
+            return;
         }
+
+        if (long.TryParse(context.Principal?.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
+            context.Properties.ExpiresUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds);
     }
 
     private static async Task<(bool IsActive, int TokenVersion)?> ReadAccountStateAsync(
@@ -138,7 +156,8 @@ public static partial class ServiceCollectionExtensions
             {
                 policy
                     .WithOrigins(origins)
-                    .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With")
+                    .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With",
+                        RealtimeConstants.UserAgentHeader)
                     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                     .AllowCredentials();
             });

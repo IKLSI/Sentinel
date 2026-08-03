@@ -1,6 +1,8 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Jobs;
@@ -8,6 +10,7 @@ namespace Sentinel.Application.Jobs;
 public class PurgeExpiredRevokedTokensJob(
     IRevokedTokenRepository revokedTokenRepository,
     IProcessedStripeEventRepository processedStripeEventRepository,
+    IRealtimeNotifier realtimeNotifier,
     ILogger<PurgeExpiredRevokedTokensJob> logger,
     ISystemScope systemScope)
 {
@@ -31,6 +34,11 @@ public class PurgeExpiredRevokedTokensJob(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to purge expired records");
+        }
+        finally
+        {
+            await realtimeNotifier.NotifyAllAsync(new RealtimeEvent(RealtimeResources.Jobs),
+                CancellationToken.None);
         }
     }
 }

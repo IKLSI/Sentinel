@@ -1,14 +1,8 @@
 import type React from "react";
 import { useEffect, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import {
-  DASHBOARD_QUERY_KEY,
-  DASHBOARD_REFRESH_EVENT,
-} from "@/domains/dashboard/constants";
 import { useDashboard } from "@/domains/dashboard/queries";
-import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
 import { useProjectsQuery } from "@/domains/projects/queries";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
@@ -32,7 +26,6 @@ export const DashboardPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
-  const queryClient = useQueryClient();
 
   const dashboardQuery = useDashboard();
   const projectsQuery = useProjectsQuery();
@@ -63,15 +56,6 @@ export const DashboardPage: React.FC = () => {
     if (projectsQuery.error)
       showToast(t("dashboard.toast.projects_load_error"), "error");
   }, [projectsQuery.error, showToast, t]);
-
-  useEffect(() => {
-    const handler = () => {
-      queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
-    };
-    window.addEventListener(DASHBOARD_REFRESH_EVENT, handler);
-    return () => window.removeEventListener(DASHBOARD_REFRESH_EVENT, handler);
-  }, [queryClient]);
 
   const urgent = useMemo(
     () =>

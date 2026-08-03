@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.CreateProject;
@@ -17,6 +18,7 @@ public class ProjectCreateService(
     TechHealthService techHealthService,
     QuotaGuard quotaGuard,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     ProjectCreateValidator validator) : IService
 {
@@ -61,6 +63,9 @@ public class ProjectCreateService(
             await projectRepository.AddAsync(project, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Projects), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.ProjectCreated,

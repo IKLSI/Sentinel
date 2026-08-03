@@ -43,6 +43,12 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Contrat temps réel à jour
+        run: |
+          pnpm generate:realtime
+          git diff --exit-code -- src/domains/realtime/contract.gen.ts \
+            || { echo "::error::contract.gen.ts est désynchronisé des constantes C#. Lancez 'pnpm generate:realtime' et committez le résultat."; exit 1; }
+
       - name: Lint & format (Biome CI)
         run: pnpm ci:check
 

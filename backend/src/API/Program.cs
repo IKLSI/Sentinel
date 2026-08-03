@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.API.Extensions;
 using Sentinel.API.Middleware;
+using Sentinel.API.Realtime;
 namespace Sentinel.API;
 
 public static class Program
@@ -34,6 +35,7 @@ public static class Program
             .AddCorsPolicy(builder.Configuration)
             .AddHangfireServices(connectionString)
             .AddHttpRegistryClients()
+            .AddRealtimeServices()
             .AddApplicationServices()
             .AddUseCases()
             .AddApiVersioningPolicy()
@@ -129,6 +131,8 @@ public static class Program
         app.ConfigureHangfire();
 
         app.MapControllers();
+        app.MapHub<SentinelHub>(RealtimeConstants.HubPath,
+            options => options.CloseOnAuthenticationExpiration = true);
 
         app.Run();
     }

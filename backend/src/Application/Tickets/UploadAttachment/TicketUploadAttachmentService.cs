@@ -6,6 +6,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.UploadAttachment;
@@ -15,6 +16,7 @@ public class TicketUploadAttachmentService(
     ITicketAttachmentRepository attachmentRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     IAttachmentStorage storage,
     TicketUploadAttachmentValidator validator) : IService
@@ -56,6 +58,9 @@ public class TicketUploadAttachmentService(
             await attachmentRepository.AddAsync(attachment, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.AttachmentUploaded,

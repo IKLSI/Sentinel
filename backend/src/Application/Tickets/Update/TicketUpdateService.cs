@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.Update;
@@ -19,6 +20,7 @@ public class TicketUpdateService(
     ICommitScopeFactory commitScopeFactory,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     TicketUpdateValidator validator) : IService
 {
@@ -72,6 +74,9 @@ public class TicketUpdateService(
         }
 
         dashboardCache.Invalidate(organizationId);
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
 
         bool statusChanged = newStatus.HasValue && oldStatusCode != newStatusCode;
 

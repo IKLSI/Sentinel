@@ -1,7 +1,6 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { useGetQuery } from "@/domains/helpers";
 import {
-  TICKETS_STALE_TIME_MS,
   ticketQueryKey,
   ticketsQueryKey,
 } from "@/domains/tickets/constants";
@@ -18,7 +17,6 @@ export const useTicketsQuery = (filters: TicketFilters, enabled = true) =>
     {
       queryKey: ticketsQueryKey(filters),
       enabled,
-      staleTime: TICKETS_STALE_TIME_MS,
       placeholderData: (previous) => previous,
     },
     filters,
@@ -31,6 +29,5 @@ export const useTicketQuery = (id: string | undefined) =>
     {
       queryKey: ticketQueryKey(id ?? ""),
       enabled: !!id,
-      staleTime: TICKETS_STALE_TIME_MS,
     },
   );

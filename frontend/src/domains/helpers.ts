@@ -26,7 +26,7 @@ const HTTP_METHODS = {
   DELETE: "DELETE",
 } as const satisfies Record<HttpMethod, HttpMethod>;
 
-export async function apiRequest<TResponse>(
+async function apiRequest<TResponse>(
   method: HttpMethod,
   url: string,
   config: AxiosRequestConfig = {},

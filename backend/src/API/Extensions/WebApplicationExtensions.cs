@@ -1,5 +1,6 @@
 using Hangfire;
 using Sentinel.Application.Jobs;
+using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Extensions;
 
@@ -9,12 +10,12 @@ public static class WebApplicationExtensions
     {
         IRecurringJobManager recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
         recurringJobs.AddOrUpdate<TechHealthScanJob>(
-            "tech-health-scan",
+            RecurringJobIds.TechHealthScan,
             job => job.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily(2));
 
         recurringJobs.AddOrUpdate<PurgeExpiredRevokedTokensJob>(
-            "purge-expired-revoked-tokens",
+            RecurringJobIds.PurgeExpiredRevokedTokens,
             job => job.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 

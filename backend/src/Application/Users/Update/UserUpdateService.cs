@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.Update;
@@ -17,6 +18,7 @@ public class UserUpdateService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     IMemoryCache cache,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
@@ -101,6 +103,9 @@ public class UserUpdateService(
 
         if (invalidatesSessions)
             cache.Remove(CacheKeys.AuthAccount(userId));
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.UserUpdated,

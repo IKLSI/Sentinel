@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.Create;
@@ -19,6 +20,7 @@ public class TicketCreateService(
     ICommitScopeFactory commitScopeFactory,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     TicketCreateValidator validator) : IService
 {
@@ -64,6 +66,9 @@ public class TicketCreateService(
         }, cancellationToken);
 
         dashboardCache.Invalidate(organizationId);
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Tickets), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.TicketCreated,

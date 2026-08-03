@@ -6,11 +6,11 @@ using Sentinel.Domain.DTOs.Common;
 
 namespace Sentinel.Application.Jobs.TriggerTechHealthScan;
 
-public class TechHealthScanTriggerService(IBackgroundJobClient backgroundJobs) : IService
+public class TechHealthScanTriggerService(IRecurringJobManager recurringJobs) : IService
 {
     public Result<ApiMessageResponse> Execute()
     {
-        backgroundJobs.Enqueue<TechHealthScanJob>(j => j.ExecuteAsync(JobCancellationToken.Null));
+        recurringJobs.Trigger(RecurringJobIds.TechHealthScan);
 
         return ApiMessageResponse.Create(SuccessCodes.JobTriggered);
     }

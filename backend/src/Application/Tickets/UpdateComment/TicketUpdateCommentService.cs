@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.UpdateComment;
@@ -15,6 +16,7 @@ public class TicketUpdateCommentService(
     ITicketCommentRepository commentRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     TicketAddCommentValidator validator) : IService
 {
@@ -45,6 +47,10 @@ public class TicketUpdateCommentService(
 
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        if (tenant.OrganizationId is Guid organizationId)
+            await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+                new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.CommentUpdated,

@@ -15,6 +15,7 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.Settings;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth;
@@ -51,6 +52,7 @@ public partial class TechHealthService
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
     private readonly IMemoryCache _cache;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public TechHealthService(
         IProjectRepository projectRepository,
@@ -69,7 +71,8 @@ public partial class TechHealthService
         IBackgroundJobClient backgroundJobs,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IRealtimeNotifier realtimeNotifier)
     {
         _projectRepository = projectRepository;
         _organizationRepository = organizationRepository;
@@ -89,6 +92,7 @@ public partial class TechHealthService
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
         _cache = cache;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task ScanProjectAsync(Guid projectId)
@@ -124,6 +128,7 @@ public partial class TechHealthService
             if (project == null)
             {
                 await _quotaGuard.RefundScanAsync(organizationId, CancellationToken.None);
+                await NotifyProjectChangedAsync(organizationId, projectId);
                 return;
             }
 
@@ -132,6 +137,7 @@ public partial class TechHealthService
         catch
         {
             await _quotaGuard.RefundScanAsync(organizationId, CancellationToken.None);
+            await NotifyProjectChangedAsync(organizationId, projectId);
             throw;
         }
     }
@@ -248,8 +254,13 @@ public partial class TechHealthService
 
         _cache.Remove(CacheKeys.Dashboard(project.OrganizationId));
 
+        await NotifyProjectChangedAsync(project.OrganizationId, projectId);
         await TrySendVulnerabilityAlertAsync(project, isFirstScan, previousCveIds);
     }
+
+    private Task NotifyProjectChangedAsync(Guid organizationId, Guid projectId) =>
+        _realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Project, projectId), CancellationToken.None);
 
     private async Task TrySendVulnerabilityAlertAsync(Project project, bool isFirstScan, HashSet<string> previousCveIds)
     {

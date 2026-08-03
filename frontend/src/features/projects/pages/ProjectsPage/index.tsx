@@ -2,13 +2,8 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  PROJECTS_QUERY_KEY,
-  projectQueryKey,
-} from "@/domains/projects/constants";
-import { DASHBOARD_REFRESH_EVENT } from "@/domains/dashboard/constants";
+import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
 import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
-import { fetchProject } from "@/domains/projects/fetchers";
 import {
   useDeleteProjectMutation,
   useScanProjectMutation,
@@ -29,6 +24,7 @@ import {
   isUntracked,
   type ProjectSortState,
 } from "@/features/projects/pages/ProjectsPage/helpers";
+import { SCAN_FEEDBACK_TIMEOUT_MS } from "@/features/projects/pages/ProjectsPage/constants";
 import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
@@ -67,7 +63,8 @@ export const ProjectsPage: React.FC = () => {
     col: "critical",
     dir: "desc",
   });
-  const scanPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scanBaselineRef = useRef<string | null>(null);
   const hasAutoExpandedUntracked = useRef(false);
 
   const toggleSort = useCallback((col: string) => {
@@ -80,18 +77,10 @@ export const ProjectsPage: React.FC = () => {
 
   useEffect(
     () => () => {
-      if (scanPollRef.current) clearTimeout(scanPollRef.current);
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     },
     [],
   );
-
-  useEffect(() => {
-    const handler = () => {
-      queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
-    };
-    window.addEventListener(DASHBOARD_REFRESH_EVENT, handler);
-    return () => window.removeEventListener(DASHBOARD_REFRESH_EVENT, handler);
-  }, [queryClient]);
 
   const handleExport = () => {
     exportProjectsMutation.mutate(undefined, {
@@ -114,73 +103,61 @@ export const ProjectsPage: React.FC = () => {
     );
   };
 
+  const stopScanFeedback = useCallback(() => {
+    if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    scanTimeoutRef.current = null;
+    setScanningId(null);
+  }, []);
+
   const handleScan = useCallback(
     (id: string) => {
       if (scanningId) return;
+      scanBaselineRef.current =
+        queryClient
+          .getQueryData<Project[]>(PROJECTS_QUERY_KEY)
+          ?.find((p) => p.id === id)?.lastScanAt ?? null;
       setScanningId(id);
-      const previousLastScanAt = queryClient
-        .getQueryData<Project[]>(PROJECTS_QUERY_KEY)
-        ?.find((p) => p.id === id)?.lastScanAt;
-      const deadline = Date.now() + 10 * 60 * 1000;
-
-      const poll = async () => {
-        if (Date.now() > deadline) {
-          setScanningId(null);
-          showToast(t("projects.toast.scan_timeout"), "warning");
-          return;
-        }
-        try {
-          const updated = await queryClient.fetchQuery({
-            queryKey: projectQueryKey(id),
-            queryFn: ({ signal }) => fetchProject(id, signal),
-          });
-          if (updated.lastScanAt !== previousLastScanAt) {
-            queryClient.setQueryData<Project[]>(PROJECTS_QUERY_KEY, (prev) =>
-              (prev ?? []).map((p) =>
-                p.id === id
-                  ? {
-                      ...p,
-                      healthScore: updated.healthScore,
-                      healthGrade: updated.healthGrade,
-                      totalDependencies: updated.totalDependencies,
-                      vulnerableDependencies: updated.vulnerableDependencies,
-                      criticalVulnerabilities: updated.criticalVulnerabilities,
-                      totalVulnerabilities: updated.totalVulnerabilities,
-                      totalTickets: updated.totalTickets,
-                    }
-                  : p,
-              ),
-            );
-            setScanningId(null);
-            showToast(t("projects.toast.scan_done"), "success");
-            window.dispatchEvent(new Event(DASHBOARD_REFRESH_EVENT));
-          } else {
-            scanPollRef.current = setTimeout(poll, 3000);
-          }
-        } catch {
-          scanPollRef.current = setTimeout(poll, 5000);
-        }
-      };
 
       scanProjectMutation.mutate(
         { id },
         {
           onSuccess: () => {
             showToast(t("projects.toast.scan_started"), "info");
-            scanPollRef.current = setTimeout(poll, 2000);
+            scanTimeoutRef.current = setTimeout(() => {
+              stopScanFeedback();
+              showToast(t("projects.toast.scan_timeout"), "warning");
+            }, SCAN_FEEDBACK_TIMEOUT_MS);
           },
           onError: (err) => {
             showToast(
               apiError(err, t("projects.toast.scan_start_error")),
               "error",
             );
-            setScanningId(null);
+            stopScanFeedback();
           },
         },
       );
     },
-    [scanningId, queryClient, showToast, t, scanProjectMutation, apiError],
+    [
+      scanningId,
+      queryClient,
+      showToast,
+      t,
+      scanProjectMutation,
+      apiError,
+      stopScanFeedback,
+    ],
   );
+
+  useEffect(() => {
+    if (!scanningId) return;
+    const scanned = projects.find((p) => p.id === scanningId);
+    if (!scanned || (scanned.lastScanAt ?? null) === scanBaselineRef.current)
+      return;
+
+    stopScanFeedback();
+    showToast(t("projects.toast.scan_done"), "success");
+  }, [projects, scanningId, stopScanFeedback, showToast, t]);
 
   const filtered = useMemo(
     () =>

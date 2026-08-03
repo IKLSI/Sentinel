@@ -3,8 +3,6 @@ import { useGetQuery } from "@/domains/helpers";
 import {
   AVAILABLE_REPOS_QUERY_KEY,
   PROJECTS_QUERY_KEY,
-  PROJECTS_STALE_TIME_MS,
-  PROJECT_STALE_TIME_MS,
   projectQueryKey,
 } from "@/domains/projects/constants";
 import type { AvailableRepos, Project } from "@/domains/projects/types";
@@ -16,7 +14,6 @@ export const useProjectsQuery = (enabled = true) =>
     {
       queryKey: PROJECTS_QUERY_KEY,
       enabled,
-      staleTime: PROJECTS_STALE_TIME_MS,
     },
   );
 
@@ -27,7 +24,6 @@ export const useProjectQuery = (id: string | undefined) =>
     {
       queryKey: projectQueryKey(id ?? ""),
       enabled: !!id,
-      staleTime: PROJECT_STALE_TIME_MS,
     },
   );
 

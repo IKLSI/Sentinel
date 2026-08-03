@@ -5,6 +5,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.ApiKeys.Revoke;
@@ -13,6 +14,7 @@ public class ApiKeyRevokeService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(Guid apiKeyId, CancellationToken cancellationToken)
@@ -31,6 +33,9 @@ public class ApiKeyRevokeService(
             apiKey.IsRevoked = true;
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.ApiKeys), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.ApiKeyRevoked,

@@ -78,6 +78,7 @@ public class DependencyInjectionTests
 
         services.AddDataProtection();
         services.AddSingleton<IBackgroundJobClient, StubBackgroundJobClient>();
+        services.AddSingleton<IRecurringJobManager, StubRecurringJobManager>();
 
         services
             .AddSettings(configuration, environment)
@@ -85,6 +86,7 @@ public class DependencyInjectionTests
             .AddDatabase(configuration)
             .AddRepositories()
             .AddHttpRegistryClients()
+            .AddRealtimeServices()
             .AddApplicationServices()
             .AddUseCases()
             .AddMemoryCache()
@@ -101,6 +103,15 @@ public class DependencyInjectionTests
         public string Create(Job job, IState state) => Guid.NewGuid().ToString();
 
         public bool ChangeState(string jobId, IState state, string expectedState) => true;
+    }
+
+    private sealed class StubRecurringJobManager : IRecurringJobManager
+    {
+        public void AddOrUpdate(string recurringJobId, Job job, string cronExpression, RecurringJobOptions options) { }
+
+        public void Trigger(string recurringJobId) { }
+
+        public void RemoveIfExists(string recurringJobId) { }
     }
 
     private sealed class StubWebHostEnvironment : IWebHostEnvironment

@@ -7,6 +7,7 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.AcceptInvitation;
@@ -18,6 +19,7 @@ public class UserAcceptInvitationService(
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     UserAcceptInvitationValidator validator) : IService
 {
     public async Task<Result<ApiMessageResponse>> ExecuteAsync(AcceptInvitationDto model,
@@ -67,6 +69,9 @@ public class UserAcceptInvitationService(
             await userRepository.AddAsync(user, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.InvitationAccepted,

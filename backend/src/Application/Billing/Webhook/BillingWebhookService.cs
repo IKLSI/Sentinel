@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 using Sentinel.Domain.Settings;
 using Stripe;
@@ -28,6 +29,7 @@ public class BillingWebhookService : IService
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
     private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly ILogger<BillingWebhookService> _logger;
 
     public BillingWebhookService(
@@ -40,6 +42,7 @@ public class BillingWebhookService : IService
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
         IBackgroundJobClient backgroundJobs,
+        IRealtimeNotifier realtimeNotifier,
         ILogger<BillingWebhookService> logger)
     {
         _organizationRepository = organizationRepository;
@@ -51,8 +54,13 @@ public class BillingWebhookService : IService
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
         _backgroundJobs = backgroundJobs;
+        _realtimeNotifier = realtimeNotifier;
         _logger = logger;
     }
+
+    private Task NotifyBillingChangedAsync(Guid organizationId, CancellationToken cancellationToken) =>
+        _realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Billing), cancellationToken);
 
     public async Task<Result> ExecuteAsync(BillingWebhookModel model, CancellationToken cancellationToken)
     {
@@ -191,6 +199,7 @@ public class BillingWebhookService : IService
         }
 
         await ClampProjectFrequenciesAsync(organizationId, organization.PlanTier, cancellationToken);
+        await NotifyBillingChangedAsync(organizationId, cancellationToken);
 
         _logger.LogInformation("Subscription activated for organization {OrganizationId} ({Plan})",
             organizationId, organization.PlanTier);
@@ -234,6 +243,7 @@ public class BillingWebhookService : IService
         }
 
         await ClampProjectFrequenciesAsync(organization.Id, organization.PlanTier, cancellationToken);
+        await NotifyBillingChangedAsync(organization.Id, cancellationToken);
 
         _logger.LogInformation("Subscription updated for {OrganizationId}: {Status}",
             organization.Id, organization.SubscriptionStatus);
@@ -270,6 +280,7 @@ public class BillingWebhookService : IService
         }
 
         await ClampProjectFrequenciesAsync(organization.Id, PlanTier.Free, cancellationToken);
+        await NotifyBillingChangedAsync(organization.Id, cancellationToken);
 
         _logger.LogInformation("Subscription cancelled for {OrganizationId} — reverted to the free plan", organization.Id);
 

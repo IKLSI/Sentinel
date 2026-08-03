@@ -6,6 +6,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.ApiKeys.Create;
@@ -14,6 +15,7 @@ public class ApiKeyCreateService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     ApiKeyCreateValidator validator) : IService
 {
@@ -46,6 +48,9 @@ public class ApiKeyCreateService(
             await apiKeyRepository.AddAsync(apiKey, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.ApiKeys), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.ApiKeyCreated,

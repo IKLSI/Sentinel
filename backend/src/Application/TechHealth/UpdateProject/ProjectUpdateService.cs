@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.UpdateProject;
@@ -16,6 +17,7 @@ public class ProjectUpdateService(
     ICommitScopeFactory commitScopeFactory,
     QuotaGuard quotaGuard,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     ProjectUpdateValidator validator) : IService
 {
@@ -54,6 +56,9 @@ public class ProjectUpdateService(
             project.ScanFrequency = scanFrequency;
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Project, projectId), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.ProjectUpdated,

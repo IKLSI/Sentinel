@@ -2,11 +2,14 @@ using Hangfire;
 using Microsoft.Extensions.Logging;
 using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.Realtime;
 
 namespace Sentinel.Application.Jobs;
 
 public class TechHealthScanJob(
     TechHealthService techHealthService,
+    IRealtimeNotifier realtimeNotifier,
     ILogger<TechHealthScanJob> logger,
     ISystemScope systemScope)
 {
@@ -24,6 +27,11 @@ public class TechHealthScanJob(
         catch (Exception ex)
         {
             logger.LogError(ex, "Tech health scan failed");
+        }
+        finally
+        {
+            await realtimeNotifier.NotifyAllAsync(new RealtimeEvent(RealtimeResources.Jobs),
+                CancellationToken.None);
         }
     }
 }

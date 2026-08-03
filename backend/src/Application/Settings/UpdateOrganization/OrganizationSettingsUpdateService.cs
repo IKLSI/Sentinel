@@ -6,6 +6,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Settings.UpdateOrganization;
@@ -14,6 +15,7 @@ public class OrganizationSettingsUpdateService(
     IOrganizationRepository organizationRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     OrganizationSettingsUpdateValidator validator) : IService
 {
@@ -43,6 +45,9 @@ public class OrganizationSettingsUpdateService(
 
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Organization), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.OrganizationUpdated,

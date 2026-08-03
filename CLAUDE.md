@@ -23,6 +23,11 @@
 - Migrations EF Core : `Infrastructure/Migrations/`, générées/appliquées via CLI standard `dotnet ef migrations add` / `dotnet ef database update` (pas de script wrapper)
 - Billing (Stripe.net) : `Application/Billing/*` (checkout/portal/webhook), idempotence webhooks via `Domain/Models/ProcessedStripeEvent.cs`
 - Exports (QuestPDF/ClosedXML) : `Application/Exports/ExportService*.cs`, PDF/Excel (compliance, SBOM) invoqués depuis `Application/TechHealth/{ExportExcel,ExportSbom}`
+- Temps réel (SignalR) : hub `API/Realtime/SentinelHub.cs` sur `/hubs/sync`, un groupe par organisation. Les services mutants diffusent un `RealtimeEvent` (`Domain/Realtime/`) via `IRealtimeNotifier` après commit ; le front mappe la ressource vers des query keys à invalider (`frontend/src/domains/realtime/constants.ts`)
+  - Le contrat du hub est **généré** : `pnpm --prefix frontend generate:realtime` lit `Domain/Constants/Realtime{Constants,Resources}.cs` et écrit `frontend/src/domains/realtime/contract.gen.ts` (commité, ne pas éditer à la main). Contrairement à `generate:api`, aucun backend à démarrer. Le C# est la source de vérité unique ; ajouter une ressource sans mapper ses query keys casse `tsc` sur le `switch` exhaustif de `resolveInvalidatedKeys`. La CI regénère et échoue si le fichier est désynchronisé
+  - **Mono-instance uniquement** : aucun backplane n'est configuré. En scale-out, un client connecté au nœud A ne recevra pas les événements émis par le nœud B. Ajouter `Microsoft.AspNetCore.SignalR.StackExchangeRedis` avant tout déploiement multi-instance
+  - Le handshake WebSocket transporte le JWT en query string (`?access_token=`, pattern standard SignalR). Masquer ce paramètre dans les logs d'accès du reverse-proxy en production
+  - L'auteur d'une mutation reçoit son propre événement (pas d'exclusion par `ConnectionId`) : il voit donc exactement les mêmes invalidations que ses collègues, au prix d'un refetch parfois redondant avec le `onSuccess` de la mutation. Ne pas « optimiser » en excluant l'émetteur : les `onSuccess` locaux n'invalident pas toujours autant que le mapping serveur
 
 ### Tests backend
 - `backend/tests/Sentinel.Tests` : xunit.v3 + FluentAssertions + Testcontainers.PostgreSql + EFCore.InMemory
@@ -33,7 +38,7 @@
 - `domains/*` = couche API/state uniquement, pas d'UI :
   - `queries.ts` : hooks TanStack Query `use<Entity>Query`, via wrapper partagé `useGetQuery` (`domains/helpers.ts`)
   - `mutations.ts` : hooks `use<Verb><Entity>Mutation`, via `usePostMutation`/`usePatchMutation`/`useDeleteMutation`, invalidation cache via `invalidateKeys([...])`
-  - `constants.ts` : query keys + stale-time
+  - `constants.ts` : query keys (le stale-time est global dans `configs/queryClient.ts`, la fraîcheur passe par le temps réel)
   - `types.ts` : DTO/entités
   - `fetchers.ts` / `downloads.ts` : appels imperatifs ponctuels
 - `features/*` = pages/UI :

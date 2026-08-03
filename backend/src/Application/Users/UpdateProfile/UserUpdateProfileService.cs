@@ -6,6 +6,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.UpdateProfile;
@@ -14,6 +15,7 @@ public class UserUpdateProfileService(
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     UserUpdateProfileValidator validator) : IService
 {
@@ -40,6 +42,9 @@ public class UserUpdateProfileService(
         {
             await commitScope.CommitAsync(cancellationToken);
         }
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.ProfileUpdated,

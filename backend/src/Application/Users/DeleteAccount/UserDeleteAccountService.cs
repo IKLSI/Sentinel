@@ -7,6 +7,7 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Users.DeleteAccount;
@@ -19,6 +20,7 @@ public class UserDeleteAccountService(
     IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
+    IRealtimeNotifier realtimeNotifier,
     IMemoryCache cache,
     ITenantContext tenant) : IService
 {
@@ -69,6 +71,9 @@ public class UserDeleteAccountService(
             return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
 
         cache.Remove(CacheKeys.AuthAccount(currentUserId));
+
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
+            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
 
         await auditLog.LogAsync(
             AuditAction.AccountDeleted,

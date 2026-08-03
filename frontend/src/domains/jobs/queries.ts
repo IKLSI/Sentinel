@@ -7,5 +7,5 @@ export const useRecurringJobsQuery = () =>
   useGetQuery<RecurringJobStatus[]>(
     ROUTES_API.api.jobs.__path,
     {},
-    { queryKey: JOBS_QUERY_KEY },
+    { queryKey: JOBS_QUERY_KEY, refetchOnMount: "always" },
   );

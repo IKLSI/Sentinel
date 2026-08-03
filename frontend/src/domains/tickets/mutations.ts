@@ -1,10 +1,8 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { queryClient } from "@/configs/queryClient";
 import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
-import {
-  DASHBOARD_QUERY_KEY,
-  DASHBOARD_REFRESH_EVENT,
-} from "@/domains/dashboard/constants";
+import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
+import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
 import {
   invalidateKeys,
   useDeleteMutation,
@@ -23,8 +21,8 @@ import type {
 
 const invalidateTickets = () => invalidateKeys([[TICKETS_QUERY_KEY]]);
 
-const notifyDashboard = () =>
-  window.dispatchEvent(new Event(DASHBOARD_REFRESH_EVENT));
+const invalidateTicketCounters = () =>
+  invalidateKeys([DASHBOARD_QUERY_KEY, PROJECTS_QUERY_KEY]);
 
 const updateCachedComments = (
   ticketId: string,
@@ -41,7 +39,8 @@ export const useCreateTicketMutation = () =>
     ROUTES_API.api.tickets.__path,
     {
       onSuccess: () => {
-        invalidateKeys([[TICKETS_QUERY_KEY], DASHBOARD_QUERY_KEY]);
+        invalidateTickets();
+        invalidateTicketCounters();
       },
     },
   );
@@ -53,7 +52,7 @@ export const useUpdateTicketMutation = () =>
       onSuccess: (updated) => {
         queryClient.setQueryData(ticketQueryKey(updated.id), updated);
         invalidateTickets();
-        notifyDashboard();
+        invalidateTicketCounters();
       },
     },
   );
@@ -64,7 +63,7 @@ export const useDeleteTicketMutation = () =>
     {
       onSuccess: () => {
         invalidateTickets();
-        notifyDashboard();
+        invalidateTicketCounters();
       },
     },
   );
