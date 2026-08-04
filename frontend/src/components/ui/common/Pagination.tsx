@@ -1,17 +1,15 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { useT } from "@/contexts/I18nContext";
-import {
-  getPageNumbers,
-  navBtnSx,
-  pageBtnSx,
-} from "@/features/tickets/pages/TicketsPage/helpers";
+import { getPageNumbers, navBtnSx, pageBtnSx } from "@/helpers/pagination";
 
 interface Props {
   page: number;
   totalPages: number;
   total: number;
   onChange: (p: number) => void;
+  previousLabel: string;
+  nextLabel: string;
+  countLabel: string;
 }
 
 export const Pagination: React.FC<Props> = ({
@@ -19,8 +17,10 @@ export const Pagination: React.FC<Props> = ({
   totalPages,
   total,
   onChange,
+  previousLabel,
+  nextLabel,
+  countLabel,
 }) => {
-  const t = useT();
   const pages = getPageNumbers(page, totalPages);
   return (
     <Box
@@ -43,10 +43,7 @@ export const Pagination: React.FC<Props> = ({
           letterSpacing: "0.04em",
         }}
       >
-        {total}{" "}
-        {total > 1
-          ? t("tickets.list.count_plural")
-          : t("tickets.list.count_singular")}
+        {total} {countLabel}
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -55,7 +52,7 @@ export const Pagination: React.FC<Props> = ({
           sx={navBtnSx(page === 1)}
           onClick={() => onChange(page - 1)}
         >
-          {t("tickets.list.previous")}
+          {previousLabel}
         </Box>
 
         <Box
@@ -93,7 +90,7 @@ export const Pagination: React.FC<Props> = ({
           sx={navBtnSx(page === totalPages)}
           onClick={() => onChange(page + 1)}
         >
-          {t("tickets.list.next")}
+          {nextLabel}
         </Box>
       </Box>
     </Box>

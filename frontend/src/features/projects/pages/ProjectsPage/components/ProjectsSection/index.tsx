@@ -1,25 +1,25 @@
 import type React from "react";
+import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 import {
   GRADE_VISUAL,
   type SectionKey,
   UNTRACKED_SECTION,
-  HeadCell,
-  type ProjectSortState,
+  sortProjects,
 } from "@/features/projects/pages/ProjectsPage/helpers";
 import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
+import { useLocalSort } from "@/hooks/useLocalSort";
 
 interface Props {
   grade: SectionKey;
   items: Project[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  sort: ProjectSortState | null;
-  onToggleSort: (col: string) => void;
   scanningId: string | null;
   onDelete: (project: Project) => void;
   onScan: (id: string) => void;
@@ -30,13 +30,13 @@ export const ProjectsSection: React.FC<Props> = ({
   items,
   collapsed,
   onToggleCollapsed,
-  sort,
-  onToggleSort,
   scanningId,
   onDelete,
   onScan,
 }) => {
   const t = useT();
+  const [sort, toggleSort] = useLocalSort({ col: "critical", dir: "desc" });
+  const sortedItems = useMemo(() => sortProjects(items, sort), [items, sort]);
   const cfg = GRADE_VISUAL[grade];
   const isUntrackedSection = grade === UNTRACKED_SECTION;
   const scoredItems = items.filter((p) => p.healthScore !== null);
@@ -210,38 +210,46 @@ export const ProjectsSection: React.FC<Props> = ({
             </Box>
             <Box component="thead">
               <Box component="tr">
-                <HeadCell col="name" sort={sort} onToggleSort={onToggleSort}>
+                <SortableTh
+                  sortable
+                  active={sort?.col === "name"}
+                  ascending={sort?.dir === "asc"}
+                  onSort={() => toggleSort("name")}
+                >
                   {t("projects.table.project")}
-                </HeadCell>
-                <HeadCell
+                </SortableTh>
+                <SortableTh
                   align="center"
-                  col="vulnerabilities"
-                  sort={sort}
-                  onToggleSort={onToggleSort}
+                  sortable
+                  active={sort?.col === "vulnerabilities"}
+                  ascending={sort?.dir === "asc"}
+                  onSort={() => toggleSort("vulnerabilities")}
                 >
                   {t("projects.table.vulnerabilities")}
-                </HeadCell>
-                <HeadCell
+                </SortableTh>
+                <SortableTh
                   align="center"
-                  col="critical"
-                  sort={sort}
-                  onToggleSort={onToggleSort}
+                  sortable
+                  active={sort?.col === "critical"}
+                  ascending={sort?.dir === "asc"}
+                  onSort={() => toggleSort("critical")}
                 >
                   {t("projects.table.critical")}
-                </HeadCell>
-                <HeadCell
+                </SortableTh>
+                <SortableTh
                   align="center"
-                  col="tickets"
-                  sort={sort}
-                  onToggleSort={onToggleSort}
+                  sortable
+                  active={sort?.col === "tickets"}
+                  ascending={sort?.dir === "asc"}
+                  onSort={() => toggleSort("tickets")}
                 >
                   {t("projects.table.tickets")}
-                </HeadCell>
-                <HeadCell />
+                </SortableTh>
+                <SortableTh />
               </Box>
             </Box>
             <Box component="tbody">
-              {items.map((project) => (
+              {sortedItems.map((project) => (
                 <ProjectRow
                   key={project.id}
                   project={project}

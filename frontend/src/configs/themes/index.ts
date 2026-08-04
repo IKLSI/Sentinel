@@ -102,18 +102,10 @@ const baseComponents = {
         },
       },
       contained: {
-        background:
-          "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, white) 100%)",
-        boxShadow:
-          "0 2px 12px color-mix(in srgb, var(--accent) 25%, transparent)",
-        "&:hover": {
-          background:
-            "linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%)",
-          boxShadow:
-            "0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent)",
-          transform: "translateY(-1px)",
-        },
-        "&:active": { transform: "translateY(0)" },
+        color: "#fff",
+        boxShadow: "none",
+        "&:hover": { boxShadow: "none" },
+        "&:active": { boxShadow: "none" },
         "&.Mui-disabled": {
           opacity: 0.5,
           background: "var(--s3)",
@@ -139,6 +131,46 @@ const baseComponents = {
         padding: "8px 16px",
       },
     },
+    variants: [
+      {
+        props: { variant: "contained" as const, color: "primary" as const },
+        style: {
+          background:
+            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+          "&:hover": {
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+          },
+        },
+      },
+      {
+        props: { variant: "contained" as const, color: "secondary" as const },
+        style: {
+          background:
+            "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
+          "&:hover": {
+            background:
+              "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
+          },
+          "&.Mui-disabled": {
+            color: "#fff",
+            opacity: 0.7,
+            background: "var(--cta)",
+          },
+        },
+      },
+      {
+        props: { variant: "contained" as const, color: "error" as const },
+        style: {
+          background:
+            "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+          "&:hover": {
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+          },
+        },
+      },
+    ],
   },
   MuiPaper: {
     styleOverrides: {
@@ -263,6 +295,7 @@ export const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: { main: "#6366f1", dark: "#4f52cf" },
+    secondary: { main: "#7c6fcd", dark: "#6a5eb8" },
     error: { main: "#ef4444" },
     success: { main: "#22c55e" },
     warning: { main: "#f59e0b" },
@@ -289,6 +322,7 @@ export const lightTheme = createTheme({
   palette: {
     mode: "light",
     primary: { main: "#4f46e5", dark: "#3730a3" },
+    secondary: { main: "#7c6fcd", dark: "#6a5eb8" },
     error: { main: "#dc2626" },
     success: { main: "#16a34a" },
     warning: { main: "#d97706" },

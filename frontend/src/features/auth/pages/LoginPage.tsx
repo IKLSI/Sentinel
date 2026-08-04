@@ -6,17 +6,17 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import Box from "@mui/material/Box";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { useT } from "@/contexts/I18nContext";
 import { useResendVerificationMutation } from "@/domains/auth/mutations";
 import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
+import { AuthFormField } from "@/features/auth/components/AuthFormField";
+import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
 import { ForgotPasswordModal } from "@/features/auth/pages/ForgotPasswordModal";
 import { RegisterModal } from "@/features/auth/pages/RegisterModal";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
-import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -25,6 +25,7 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const t = useT();
   const apiError = useApiError();
+  const onResendError = useApiErrorToast("auth.login.invalid_credentials");
   const {
     register,
     handleSubmit: handleFormSubmit,
@@ -86,11 +87,7 @@ export const LoginPage: React.FC = () => {
       { data: { email } },
       {
         onSuccess: () => showToast(t("auth.login.resend_done"), "success"),
-        onError: (err) =>
-          showToast(
-            apiError(err, t("auth.login.invalid_credentials")),
-            "error",
-          ),
+        onError: onResendError,
       },
     );
   };
@@ -235,76 +232,47 @@ export const LoginPage: React.FC = () => {
             </Box>
 
             <form onSubmit={onSubmit} noValidate style={{ marginTop: "30px" }}>
-              <Box className="lp-field">
-                <Box component="label" className="lp-label" htmlFor={emailId}>
-                  {t("auth.login.email_label")}
-                </Box>
-                <input
-                  id={emailId}
-                  type="email"
-                  className={`lp-input${hasError || errors.email ? " lp-input--error" : ""}`}
-                  placeholder={t("auth.login.email_placeholder")}
-                  autoComplete="email"
-                  {...emailField}
-                  onChange={(e) => {
-                    emailField.onChange(e);
+              <AuthFormField
+                id={emailId}
+                label={t("auth.login.email_label")}
+                registration={{
+                  ...emailField,
+                  onChange: async (e) => {
+                    const result = await emailField.onChange(e);
                     setHasError(false);
-                  }}
-                />
-                {errors.email && (
-                  <Box className="lp-field-error">
-                    {resolveFieldError(errors.email, t)}
-                  </Box>
-                )}
-              </Box>
+                    return result;
+                  },
+                }}
+                error={errors.email}
+                t={t}
+                type="email"
+                placeholder={t("auth.login.email_placeholder")}
+                autoComplete="email"
+                invalid={hasError || !!errors.email}
+              />
 
-              <Box className="lp-field">
-                <Box
-                  component="label"
-                  className="lp-label"
-                  htmlFor={passwordId}
-                >
-                  {t("auth.login.password_label")}
-                </Box>
-                <Box className="lp-input-wrap">
-                  <Box
-                    component="input"
-                    id={passwordId}
-                    type={showPassword ? "text" : "password"}
-                    className={`lp-input${hasError || errors.password ? " lp-input--error" : ""}`}
-                    placeholder="••••••••••"
-                    autoComplete="current-password"
-                    sx={{ paddingRight: "44px" }}
-                    {...passwordField}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      passwordField.onChange(e);
-                      setHasError(false);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="lp-pw-toggle"
-                    onClick={() => setShowPassword((v) => !v)}
-                    tabIndex={-1}
-                    aria-label={
-                      showPassword
-                        ? t("auth.login.password_hide")
-                        : t("auth.login.password_show")
-                    }
-                  >
-                    {showPassword ? (
-                      <VisibilityOffOutlined sx={{ fontSize: 19 }} />
-                    ) : (
-                      <VisibilityOutlined sx={{ fontSize: 19 }} />
-                    )}
-                  </button>
-                </Box>
-                {errors.password && (
-                  <Box className="lp-field-error">
-                    {resolveFieldError(errors.password, t)}
-                  </Box>
-                )}
-              </Box>
+              <AuthPasswordField
+                id={passwordId}
+                label={t("auth.login.password_label")}
+                registration={{
+                  ...passwordField,
+                  onChange: async (e) => {
+                    const result = await passwordField.onChange(e);
+                    setHasError(false);
+                    return result;
+                  },
+                }}
+                error={errors.password}
+                invalid={hasError || !!errors.password}
+                t={t}
+                placeholder="••••••••••"
+                autoComplete="current-password"
+                showPassword={showPassword}
+                onToggleShow={() => setShowPassword((v) => !v)}
+                showLabel={t("auth.login.password_show")}
+                hideLabel={t("auth.login.password_hide")}
+                toggleIconSize={19}
+              />
 
               <button
                 type="submit"

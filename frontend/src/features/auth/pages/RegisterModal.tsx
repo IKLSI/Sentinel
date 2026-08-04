@@ -2,24 +2,22 @@ import type React from "react";
 import { useState, useEffect, useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
+import { AppModal } from "@/components/ui/common/AppModal";
+import { AuthFormField } from "@/features/auth/components/AuthFormField";
+import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import {
   useRegisterMutation,
   useResendVerificationMutation,
 } from "@/domains/auth/mutations";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   registerSchema,
   type RegisterFormValues,
 } from "@/features/auth/schemas";
-import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface RegisterModalProps {
   open: boolean;
@@ -40,7 +38,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onError = useApiErrorToast("auth.register.error_generic");
   const {
     register,
     handleSubmit: handleFormSubmit,
@@ -75,11 +73,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const onSubmit = handleFormSubmit((data) => {
     registerMutation.mutate(
       { data },
-      {
-        onSuccess: () => setDone(true),
-        onError: (err) =>
-          showToast(apiError(err, t("auth.register.error_generic")), "error"),
-      },
+      { onSuccess: () => setDone(true), onError },
     );
   });
 
@@ -88,8 +82,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       { data: { email: getValues("email") } },
       {
         onSuccess: () => showToast(t("auth.register.resend_done"), "success"),
-        onError: (err) =>
-          showToast(apiError(err, t("auth.register.error_generic")), "error"),
+        onError,
       },
     );
   };
@@ -97,292 +90,122 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const fieldStyle = { animation: "none !important", opacity: "1 !important" };
 
   return (
-    <Dialog
+    <AppModal
       open={open}
       onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{
-        paper: {
-          sx: {
-            bgcolor: "var(--s1)",
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: "var(--r-xl)",
-            overflow: "hidden",
-            m: "24px",
-            width: "calc(100% - 48px)",
-            maxWidth: "460px",
-          },
-        },
-        backdrop: {
-          sx: {
-            backdropFilter: "blur(6px)",
-            background: "color-mix(in srgb, var(--auth-bg) 75%, transparent)",
-          },
-        },
-      }}
+      title={t("auth.register.form_title")}
+      maxWidthPx="460px"
+      closeButton
+      backdropVariant="auth"
     >
-      <DialogTitle
-        sx={{
-          fontSize: "14px",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          p: "16px 24px",
-          borderBottom: "1px solid var(--border)",
-          background:
-            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {t("auth.register.form_title")}
-        <Box
-          component="button"
-          onClick={onClose}
-          sx={{
-            width: 24,
-            height: 24,
-            borderRadius: "var(--r-sm)",
-            border: "1px solid var(--border)",
-            background: "var(--s1)",
-            color: "var(--muted)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 15,
-            "&:hover": { background: "var(--s2)", color: "var(--text)" },
+      {done ? (
+        <AuthModalSuccess
+          title={t("auth.register.success_title")}
+          subtitle={t("auth.register.success_sub")}
+          actionLabel="OK"
+          onAction={onClose}
+          actionClassName="lp-submit no-elevation"
+          actionStyle={{
+            marginBottom: "12px",
+            animation: "none",
+            opacity: 1,
           }}
-          aria-label="Fermer"
         >
-          ×
-        </Box>
-      </DialogTitle>
-
-      <DialogContent sx={{ pt: "20px !important", pb: "24px" }}>
-        {done ? (
-          <Box sx={{ textAlign: "center", py: "8px" }}>
+          <Box sx={{ textAlign: "center", mt: "10px" }}>
             <Box
-              sx={{
-                width: 44,
-                height: 44,
-                borderRadius: "var(--r-md)",
-                background: "var(--accent-subtle)",
-                border: "1px solid var(--accent-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mx: "auto",
-                mb: "14px",
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 10l4 4 8-8"
-                  stroke="var(--accent)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Box>
-            <Box
-              sx={{
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "var(--text)",
-                letterSpacing: "-0.02em",
-                mb: "5px",
-              }}
-            >
-              {t("auth.register.success_title")}
-            </Box>
-            <Box
-              sx={{
-                fontSize: "12.5px",
-                color: "var(--muted2)",
-                lineHeight: 1.65,
-                mb: "18px",
-              }}
-            >
-              {t("auth.register.success_sub")}
-            </Box>
-            <button
+              component="button"
               type="button"
-              className="lp-submit no-elevation"
-              onClick={onClose}
-              style={{ marginBottom: "12px", animation: "none", opacity: 1 }}
+              onClick={handleResend}
+              sx={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "12px",
+                color: "var(--muted2)",
+                "&:hover": { color: "var(--text)" },
+              }}
             >
-              OK
-            </button>
-            <Box sx={{ textAlign: "center", mt: "10px" }}>
-              <Box
-                component="button"
-                type="button"
-                onClick={handleResend}
-                sx={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  color: "var(--muted2)",
-                  "&:hover": { color: "var(--text)" },
-                }}
-              >
-                {t("auth.register.resend_link")}
-              </Box>
+              {t("auth.register.resend_link")}
             </Box>
           </Box>
-        ) : (
-          <form onSubmit={onSubmit} noValidate>
-            <Box className="lp-field" sx={fieldStyle}>
-              <Box component="label" className="lp-label" htmlFor={orgId}>
-                {t("auth.register.organization_label")}
-              </Box>
-              <input
-                id={orgId}
-                type="text"
-                className={`lp-input${errors.organizationName ? " lp-input--error" : ""}`}
-                placeholder={t("auth.register.organization_placeholder")}
-                autoComplete="organization"
-                {...register("organizationName")}
-              />
-              {errors.organizationName && (
-                <Box className="lp-field-error">
-                  {resolveFieldError(errors.organizationName, t)}
-                </Box>
-              )}
-            </Box>
+        </AuthModalSuccess>
+      ) : (
+        <form onSubmit={onSubmit} noValidate>
+          <AuthFormField
+            id={orgId}
+            label={t("auth.register.organization_label")}
+            registration={register("organizationName")}
+            error={errors.organizationName}
+            t={t}
+            placeholder={t("auth.register.organization_placeholder")}
+            autoComplete="organization"
+            sx={fieldStyle}
+          />
 
-            <Box sx={{ display: "flex", gap: "12px" }}>
-              <Box className="lp-field" sx={{ flex: 1, ...fieldStyle }}>
-                <Box
-                  component="label"
-                  className="lp-label"
-                  htmlFor={firstNameId}
-                >
-                  {t("auth.register.firstname_label")}
-                </Box>
-                <input
-                  id={firstNameId}
-                  type="text"
-                  className={`lp-input${errors.firstName ? " lp-input--error" : ""}`}
-                  placeholder={t("auth.register.firstname_placeholder")}
-                  autoComplete="given-name"
-                  {...register("firstName")}
-                />
-                {errors.firstName && (
-                  <Box className="lp-field-error">
-                    {resolveFieldError(errors.firstName, t)}
-                  </Box>
-                )}
-              </Box>
-              <Box className="lp-field" sx={{ flex: 1, ...fieldStyle }}>
-                <Box
-                  component="label"
-                  className="lp-label"
-                  htmlFor={lastNameId}
-                >
-                  {t("auth.register.lastname_label")}
-                </Box>
-                <input
-                  id={lastNameId}
-                  type="text"
-                  className={`lp-input${errors.lastName ? " lp-input--error" : ""}`}
-                  placeholder={t("auth.register.lastname_placeholder")}
-                  autoComplete="family-name"
-                  {...register("lastName")}
-                />
-                {errors.lastName && (
-                  <Box className="lp-field-error">
-                    {resolveFieldError(errors.lastName, t)}
-                  </Box>
-                )}
-              </Box>
-            </Box>
+          <Box sx={{ display: "flex", gap: "12px" }}>
+            <AuthFormField
+              id={firstNameId}
+              label={t("auth.register.firstname_label")}
+              registration={register("firstName")}
+              error={errors.firstName}
+              t={t}
+              placeholder={t("auth.register.firstname_placeholder")}
+              autoComplete="given-name"
+              sx={{ flex: 1, ...fieldStyle }}
+            />
+            <AuthFormField
+              id={lastNameId}
+              label={t("auth.register.lastname_label")}
+              registration={register("lastName")}
+              error={errors.lastName}
+              t={t}
+              placeholder={t("auth.register.lastname_placeholder")}
+              autoComplete="family-name"
+              sx={{ flex: 1, ...fieldStyle }}
+            />
+          </Box>
 
-            <Box className="lp-field" sx={fieldStyle}>
-              <Box component="label" className="lp-label" htmlFor={emailId}>
-                {t("auth.register.email_label")}
-              </Box>
-              <input
-                id={emailId}
-                type="email"
-                className={`lp-input${errors.email ? " lp-input--error" : ""}`}
-                placeholder={t("auth.register.email_placeholder")}
-                autoComplete="email"
-                {...register("email")}
-              />
-              {errors.email && (
-                <Box className="lp-field-error">
-                  {resolveFieldError(errors.email, t)}
-                </Box>
-              )}
-            </Box>
+          <AuthFormField
+            id={emailId}
+            label={t("auth.register.email_label")}
+            registration={register("email")}
+            error={errors.email}
+            t={t}
+            type="email"
+            placeholder={t("auth.register.email_placeholder")}
+            autoComplete="email"
+            sx={fieldStyle}
+          />
 
-            <Box className="lp-field" sx={fieldStyle}>
-              <Box component="label" className="lp-label" htmlFor={passwordId}>
-                {t("auth.register.password_label")}
-              </Box>
-              <Box className="lp-input-wrap">
-                <Box
-                  component="input"
-                  id={passwordId}
-                  type={showPassword ? "text" : "password"}
-                  className={`lp-input${errors.password ? " lp-input--error" : ""}`}
-                  placeholder={t("auth.register.password_placeholder")}
-                  autoComplete="new-password"
-                  sx={{ paddingRight: "44px" }}
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  className="lp-pw-toggle"
-                  onClick={() => setShowPassword((v) => !v)}
-                  tabIndex={-1}
-                  aria-label={
-                    showPassword
-                      ? t("auth.register.password_hide")
-                      : t("auth.register.password_show")
-                  }
-                >
-                  {showPassword ? (
-                    <VisibilityOffOutlined sx={{ fontSize: 16 }} />
-                  ) : (
-                    <VisibilityOutlined sx={{ fontSize: 16 }} />
-                  )}
-                </button>
-              </Box>
-              {errors.password && (
-                <Box className="lp-field-error">
-                  {resolveFieldError(errors.password, t)}
-                </Box>
-              )}
-            </Box>
+          <AuthPasswordField
+            id={passwordId}
+            label={t("auth.register.password_label")}
+            registration={register("password")}
+            error={errors.password}
+            t={t}
+            placeholder={t("auth.register.password_placeholder")}
+            autoComplete="new-password"
+            showPassword={showPassword}
+            onToggleShow={() => setShowPassword((v) => !v)}
+            showLabel={t("auth.register.password_show")}
+            hideLabel={t("auth.register.password_hide")}
+            sx={fieldStyle}
+          />
 
-            <button
-              type="submit"
-              className="lp-submit no-elevation"
-              disabled={loading}
-              style={{ marginTop: "4px", animation: "none", opacity: 1 }}
-            >
-              {loading ? (
-                <Box className="lp-submit-loader" />
-              ) : (
-                t("auth.register.submit")
-              )}
-            </button>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+          <button
+            type="submit"
+            className="lp-submit no-elevation"
+            disabled={loading}
+            style={{ marginTop: "4px", animation: "none", opacity: 1 }}
+          >
+            {loading ? (
+              <Box className="lp-submit-loader" />
+            ) : (
+              t("auth.register.submit")
+            )}
+          </button>
+        </form>
+      )}
+    </AppModal>
   );
 };

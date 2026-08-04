@@ -53,7 +53,8 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
   return (
     <>
       <Button
-        variant="outlined"
+        variant="contained"
+        color="secondary"
         size="small"
         disabled={busy}
         onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -65,21 +66,6 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
           )
         }
         endIcon={<KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />}
-        sx={{
-          textTransform: "none",
-          background:
-            "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
-          borderColor: "transparent",
-          color: "#fff",
-          "&:hover": {
-            background:
-              "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
-            borderColor: "transparent",
-            color: "#fff",
-          },
-          "&.MuiButton-root:hover": { transform: "none" },
-          "&.Mui-disabled": { color: "#fff", opacity: 0.7 },
-        }}
       >
         {t("tech_health.export.menu")}
       </Button>

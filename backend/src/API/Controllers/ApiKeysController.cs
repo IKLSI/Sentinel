@@ -5,8 +5,10 @@ using Sentinel.API.Attributes;
 using Sentinel.Application.ApiKeys.Create;
 using Sentinel.Application.ApiKeys.GetAll;
 using Sentinel.Application.ApiKeys.Revoke;
+using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.API.Controllers;
 
@@ -21,8 +23,10 @@ public class ApiKeysController : BaseController
     [HttpGet]
     public async Task<ActionResult<List<ApiKeyDto>>> List(
         [FromServices] ApiKeyListService service,
-        CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(cancellationToken));
+        [FromQuery] ApiKeySortField sortBy = ApiKeySortField.Created,
+        [FromQuery] SortDirection sortDirection = SortDirection.Desc,
+        CancellationToken cancellationToken = default) =>
+        ToActionResult(await service.ExecuteAsync(sortBy, sortDirection, cancellationToken));
 
     [HttpPost]
     public async Task<ActionResult<CreatedApiKeyDto>> Create(

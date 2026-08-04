@@ -269,7 +269,6 @@ export const ProjectRow: React.FC<Props> = React.memo(
                 variant="contained"
                 size="small"
                 className="btn-cancel"
-                sx={{ textTransform: "none" }}
                 onClick={() => setModalOpen(false)}
                 disabled={saving}
               >
@@ -278,7 +277,6 @@ export const ProjectRow: React.FC<Props> = React.memo(
               <Button
                 variant="contained"
                 size="small"
-                sx={{ textTransform: "none" }}
                 onClick={handleSave}
                 disabled={saving}
               >

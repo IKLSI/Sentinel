@@ -9,6 +9,7 @@ import { fr, enUS, type Locale } from "date-fns/locale";
 import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/contexts/I18nContext";
 import { Language } from "@/enums";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import type { ActivityItem } from "@/domains/dashboard/types";
 import {
   type DashPalette,
@@ -91,26 +92,16 @@ export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
         }}
       >
         {activity.length === 0 ? (
-          <Box
-            className="empty-state"
-            sx={{ flex: 1, padding: "24px !important" }}
-          >
-            <Box className="empty-state-icon">
-              <HistoryOutlined sx={{ fontSize: 32 }} />
-            </Box>
-            <Box
-              className="empty-state-title"
-              sx={{ fontSize: "12px !important" }}
-            >
-              {t("dashboard.activity.empty_title")}
-            </Box>
-            <Box
-              className="empty-state-subtitle"
-              sx={{ fontSize: "11px !important" }}
-            >
-              {t("dashboard.activity.empty_subtitle")}
-            </Box>
-          </Box>
+          <EmptyState
+            icon={HistoryOutlined}
+            title={t("dashboard.activity.empty_title")}
+            subtitle={t("dashboard.activity.empty_subtitle")}
+            sx={{
+              flex: 1,
+              "& .empty-state-title": { fontSize: "12px !important" },
+              "& .empty-state-subtitle": { fontSize: "11px !important" },
+            }}
+          />
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             {activity.map((a) => {

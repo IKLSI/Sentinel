@@ -1,68 +1,14 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { SettingsTab } from "@/enums";
+import { CARD_SX } from "@/helpers/cardSx";
+
+export { CARD_SX };
 
 export type Tab = SettingsTab;
 export { SettingsTab };
 
 export const SEVERITY_VALUES = ["Critical", "High", "Medium", "Low"] as const;
-
-export function getPageNumbers(
-  page: number,
-  totalPages: number,
-): (number | "...")[] {
-  if (totalPages <= 3)
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  const pages: (number | "...")[] = [1, 2];
-  if (page > 3) pages.push("...");
-  if (page > 2 && page < totalPages) pages.push(page);
-  if (page < totalPages - 1) pages.push("...");
-  if (!pages.includes(totalPages)) pages.push(totalPages);
-  return pages;
-}
-
-export const navBtnSx = (disabled: boolean) => ({
-  all: "unset" as const,
-  cursor: disabled ? "default" : "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "6px",
-  height: "30px",
-  px: "10px",
-  borderRadius: "var(--r-sm)",
-  fontSize: "12px",
-  fontWeight: 600,
-  color: disabled ? "var(--muted)" : "var(--text-secondary)",
-  background: "var(--s2)",
-  border: "1px solid var(--border)",
-  opacity: disabled ? 0.35 : 1,
-  pointerEvents: disabled ? "none" : "auto",
-  transition: "background 0.12s, color 0.12s",
-  ...(!disabled && {
-    "&:hover": { background: "var(--s3)", color: "var(--text)" },
-  }),
-});
-
-export const pageBtnSx = (active: boolean) => ({
-  all: "unset" as const,
-  cursor: active ? "default" : "pointer",
-  minWidth: "30px",
-  height: "30px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: "var(--r-sm)",
-  fontSize: "12px",
-  fontWeight: active ? 700 : 500,
-  color: active ? "var(--s1)" : "var(--text-secondary)",
-  background: active ? "var(--accent)" : "transparent",
-  boxShadow: active ? "0 2px 8px var(--accent-border)" : "none",
-  transition: "background 0.12s, color 0.12s",
-  ...(!active && {
-    "&:hover": { background: "var(--s2)", color: "var(--text)" },
-  }),
-});
 
 export const inp = {
   width: "100%",
@@ -81,13 +27,6 @@ export const inp = {
     borderColor: "var(--accent-border)",
     boxShadow: "0 0 0 3px var(--accent-subtle)",
   },
-} as const;
-
-export const CARD_SX = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r-md)",
-  overflow: "hidden",
 } as const;
 
 export function CardHeader({ label }: { label: string }) {

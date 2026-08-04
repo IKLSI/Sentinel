@@ -1,20 +1,24 @@
 import type React from "react";
-import { useCallback, useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
-import { useToast } from "@/hooks/useToast";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 import { useT, useI18n } from "@/contexts/I18nContext";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useSortState } from "@/hooks/useSortState";
+import { ApiKeySortField, SortDirection } from "@/enums";
 import {
   useCreateApiKeyMutation,
   useRevokeApiKeyMutation,
@@ -29,41 +33,26 @@ import {
   createApiKeySchema,
   type CreateApiKeyFormValues,
 } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab/schemas";
-
-const BTN_SX = {
-  textTransform: "none" as const,
-  background:
-    "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-  color: "#fff",
-  boxShadow: "none",
-  "&:hover": {
-    background:
-      "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-    boxShadow: "none",
-    transform: "none",
-  },
-  "&:active": { boxShadow: "none" },
-};
-
-function fmtDate(iso: string | null, locale: string): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+import { formatDate as fmtDate } from "@/formatters/date";
 
 export const ApiKeysTab: React.FC = () => {
   const t = useT();
-  const apiError = useApiError();
+  const onCreateError = useApiErrorToast("settings.api_keys.create_error");
+  const onRevokeError = useApiErrorToast("settings.api_keys.revoke_error");
   const { culture } = useI18n();
-  const { showToast } = useToast();
   const formId = useId();
 
-  const apiKeysQuery = useApiKeysQuery();
+  const [sort, toggleSort] = useSortState<ApiKeySortField>({
+    col: ApiKeySortField.Expires,
+    dir: SortDirection.Asc,
+  });
+
+  const apiKeysQuery = useApiKeysQuery({
+    sortBy: sort.col,
+    sortDirection: sort.dir,
+  });
   const keys = apiKeysQuery.data ?? [];
-  const loading = apiKeysQuery.isLoading;
+  const loading = apiKeysQuery.isLoading && !apiKeysQuery.data;
   const createKeyMutation = useCreateApiKeyMutation();
   const revokeKeyMutation = useRevokeApiKeyMutation();
   const creating = createKeyMutation.isPending;
@@ -86,21 +75,6 @@ export const ApiKeysTab: React.FC = () => {
 
   const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
 
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
-    {
-      col: "expires",
-      dir: "asc",
-    },
-  );
-
-  const toggleSort = useCallback((col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
-      return null;
-    });
-  }, []);
-
   const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
       { data: { name: data.name.trim(), expiresAt: data.expiresAt || null } },
@@ -110,11 +84,7 @@ export const ApiKeysTab: React.FC = () => {
           reset({ name: "", expiresAt: "" });
           setSecretKey(created);
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.api_keys.create_error")),
-            "error",
-          ),
+        onError: onCreateError,
       },
     );
   });
@@ -125,48 +95,10 @@ export const ApiKeysTab: React.FC = () => {
       { id: revokeTarget.id },
       {
         onSuccess: () => setRevokeTarget(null),
-        onError: (err) =>
-          showToast(
-            apiError(err, t("settings.api_keys.revoke_error")),
-            "error",
-          ),
+        onError: onRevokeError,
       },
     );
   };
-
-  const sortedKeys = useMemo(() => {
-    if (!sort) return keys;
-    const mul = sort.dir === "asc" ? 1 : -1;
-    return keys.slice().sort((a, b) => {
-      switch (sort.col) {
-        case "name":
-          return mul * a.name.localeCompare(b.name);
-        case "prefix":
-          return mul * a.prefix.localeCompare(b.prefix);
-        case "created_by":
-          return mul * a.createdByName.localeCompare(b.createdByName);
-        case "created":
-          return (
-            mul *
-            (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-          );
-        case "expires":
-          return (
-            mul *
-            ((a.expiresAt ? new Date(a.expiresAt).getTime() : Infinity) -
-              (b.expiresAt ? new Date(b.expiresAt).getTime() : Infinity))
-          );
-        case "last_used":
-          return (
-            mul *
-            ((a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0) -
-              (b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0))
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [keys, sort]);
 
   const handleCopy = async () => {
     if (!secretKey) return;
@@ -192,10 +124,9 @@ export const ApiKeysTab: React.FC = () => {
         <Button
           variant="contained"
           size="small"
-          disableElevation
           startIcon={<KeyOutlined sx={{ fontSize: "13px !important" }} />}
           onClick={() => setCreateOpen(true)}
-          sx={{ ...BTN_SX, height: "34px", px: "16px", fontWeight: 600 }}
+          sx={{ height: "34px", px: "16px" }}
         >
           {t("settings.api_keys.create")}
         </Button>
@@ -213,31 +144,24 @@ export const ApiKeysTab: React.FC = () => {
         }}
       >
         {loading ? (
+          <CenteredLoader />
+        ) : keys.length === 0 ? (
+          <EmptyState
+            icon={KeyOutlined}
+            title={t("settings.api_keys.empty")}
+            subtitle={t("settings.api_keys.empty_subtitle")}
+            iconSize={40}
+            sx={{ flex: 1, justifyContent: "center" }}
+          />
+        ) : (
           <Box
             sx={{
               flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              overflow: "auto",
+              opacity: apiKeysQuery.isFetching ? 0.6 : 1,
+              transition: "opacity 0.15s",
             }}
           >
-            <CircularProgress size={20} />
-          </Box>
-        ) : keys.length === 0 ? (
-          <Box
-            className="empty-state"
-            sx={{ flex: 1, justifyContent: "center" }}
-          >
-            <KeyOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-            <Box className="empty-state-title">
-              {t("settings.api_keys.empty")}
-            </Box>
-            <Box className="empty-state-subtitle">
-              {t("settings.api_keys.empty_subtitle")}
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ flex: 1, overflow: "auto" }}>
             <Box
               component="table"
               sx={{
@@ -247,101 +171,71 @@ export const ApiKeysTab: React.FC = () => {
               }}
             >
               <Box component="thead">
-                <Box
-                  component="tr"
-                  sx={{
-                    borderBottom: "1px solid var(--border)",
-                    background: "var(--s2)",
-                  }}
-                >
-                  {[
-                    {
-                      key: "name",
-                      label: t("settings.api_keys.col_name"),
-                      width: "auto",
-                    },
-                    {
-                      key: "prefix",
-                      label: t("settings.api_keys.col_prefix"),
-                      width: "130px",
-                    },
-                    {
-                      key: "created_by",
-                      label: t("settings.api_keys.col_created_by"),
-                      width: "160px",
-                    },
-                    {
-                      key: "created",
-                      label: t("settings.api_keys.col_created"),
-                      width: "120px",
-                    },
-                    {
-                      key: "expires",
-                      label: t("settings.api_keys.col_expires"),
-                      width: "120px",
-                    },
-                    {
-                      key: "last_used",
-                      label: t("settings.api_keys.col_last_used"),
-                      width: "200px",
-                    },
-                    { key: "actions", label: "", width: "48px" },
-                  ].map(({ key, label, width }) => {
-                    const sortable = key !== "actions";
-                    const isActive = sort?.col === key;
+                <Box component="tr">
+                  {(
+                    [
+                      {
+                        col: ApiKeySortField.Name,
+                        key: "name",
+                        label: t("settings.api_keys.col_name"),
+                        width: "auto",
+                      },
+                      {
+                        col: ApiKeySortField.Prefix,
+                        key: "prefix",
+                        label: t("settings.api_keys.col_prefix"),
+                        width: "130px",
+                      },
+                      {
+                        col: ApiKeySortField.CreatedBy,
+                        key: "created_by",
+                        label: t("settings.api_keys.col_created_by"),
+                        width: "160px",
+                      },
+                      {
+                        col: ApiKeySortField.Created,
+                        key: "created",
+                        label: t("settings.api_keys.col_created"),
+                        width: "120px",
+                      },
+                      {
+                        col: ApiKeySortField.Expires,
+                        key: "expires",
+                        label: t("settings.api_keys.col_expires"),
+                        width: "120px",
+                      },
+                      {
+                        col: ApiKeySortField.LastUsed,
+                        key: "last_used",
+                        label: t("settings.api_keys.col_last_used"),
+                        width: "200px",
+                      },
+                      {
+                        col: "actions" as const,
+                        key: "actions",
+                        label: "",
+                        width: "48px",
+                      },
+                    ] as const
+                  ).map(({ col, key, label, width }) => {
+                    const sortable = col !== "actions";
                     return (
-                      <Box
-                        component="th"
+                      <SortableTh
                         key={key}
-                        onClick={() => sortable && toggleSort(key)}
-                        sx={{
-                          px: "16px",
-                          py: "10px",
-                          textAlign: "left",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: isActive ? "var(--accent)" : "var(--muted)",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          whiteSpace: "nowrap",
-                          width,
-                          cursor: sortable ? "pointer" : "default",
-                          userSelect: "none",
-                          transition: "color 0.12s",
-                          "&:hover": sortable
-                            ? { color: "var(--text-secondary)" }
-                            : {},
-                        }}
+                        width={width}
+                        sortable={sortable}
+                        active={sort.col === col}
+                        ascending={sort.dir === SortDirection.Asc}
+                        onSort={() => sortable && toggleSort(col)}
                       >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "5px",
-                          }}
-                        >
-                          {label}
-                          {sortable && isActive && (
-                            <Box
-                              sx={{
-                                fontSize: "12px",
-                                color: "var(--accent)",
-                                lineHeight: 1,
-                                display: "flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              {sort?.dir === "asc" ? "↑" : "↓"}
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
+                        {label}
+                      </SortableTh>
                     );
                   })}
                 </Box>
               </Box>
               <Box component="tbody">
-                {sortedKeys.map((key) => (
+                {keys.map((key) => (
                   <Box
                     component="tr"
                     key={key.id}
@@ -499,7 +393,6 @@ export const ApiKeysTab: React.FC = () => {
               type="submit"
               form={formId}
               disabled={creating || !isValid}
-              sx={BTN_SX}
             >
               {creating
                 ? t("settings.api_keys.modal_creating")
@@ -553,7 +446,6 @@ export const ApiKeysTab: React.FC = () => {
           <Button
             variant="contained"
             size="small"
-            disableElevation
             onClick={
               copied
                 ? () => {
@@ -571,19 +463,15 @@ export const ApiKeysTab: React.FC = () => {
                 <ContentCopyOutlined sx={{ fontSize: "13px !important" }} />
               )
             }
-            sx={{
-              ...BTN_SX,
-              background: copied
-                ? "linear-gradient(135deg, var(--green) 0%, color-mix(in srgb, var(--green) 85%, black) 100%)"
-                : BTN_SX.background,
-              "&:hover": copied
+            sx={
+              copied
                 ? {
-                    background: "var(--green)",
-                    boxShadow: "none",
-                    transform: "none",
+                    background:
+                      "linear-gradient(135deg, var(--green) 0%, color-mix(in srgb, var(--green) 85%, black) 100%)",
+                    "&:hover": { background: "var(--green)" },
                   }
-                : BTN_SX["&:hover"],
-            }}
+                : undefined
+            }
           >
             {copied
               ? t("settings.api_keys.secret_close")
@@ -632,59 +520,18 @@ export const ApiKeysTab: React.FC = () => {
       </AppModal>
 
       {/* Modal — Confirmation révocation */}
-      <AppModal
+      <DeleteModal
         open={revokeTarget !== null}
         onClose={() => setRevokeTarget(null)}
+        onConfirm={handleRevoke}
+        loading={revoking}
         title={t("settings.api_keys.revoke")}
-        maxWidth="xs"
-        actions={
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              className="btn-cancel"
-              onClick={() => setRevokeTarget(null)}
-              disabled={revoking}
-            >
-              {t("settings.api_keys.revoke_confirm_no")}
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              disabled={revoking}
-              onClick={handleRevoke}
-              sx={{
-                textTransform: "none",
-                background:
-                  "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 85%, black) 100%)",
-                color: "#fff",
-                boxShadow: "none",
-                "&:hover": {
-                  background: "var(--red)",
-                  boxShadow: "none",
-                  transform: "none",
-                },
-                "&:active": { boxShadow: "none" },
-              }}
-            >
-              {revoking ? "…" : t("settings.api_keys.revoke_confirm_yes")}
-            </Button>
-          </>
-        }
+        confirmLabel={t("settings.api_keys.revoke_confirm_yes")}
+        confirmingLabel="…"
       >
-        <Box sx={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-          {t("settings.api_keys.revoke_confirm")}
-          {revokeTarget && (
-            <Box
-              component="span"
-              sx={{ fontWeight: 600, color: "var(--text)" }}
-            >
-              {" "}
-              {revokeTarget.name}
-            </Box>
-          )}
-        </Box>
-      </AppModal>
+        {t("settings.api_keys.revoke_confirm")}
+        {revokeTarget && <b> {revokeTarget.name}</b>}
+      </DeleteModal>
     </>
   );
 };

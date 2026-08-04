@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { passwordComplexitySchema } from "@/helpers/validation/password";
+import {
+  passwordComplexitySchema,
+  withPasswordConfirmRefine,
+} from "@/helpers/validation/password";
 
 export const loginSchema = z.object({
   email: z.string().trim().min(1, { message: "auth.login.fill_all_fields" }),
@@ -33,26 +36,19 @@ export const forgotPasswordSchema = z.object({
 });
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export const resetPasswordSchema = z
-  .object({
+export const resetPasswordSchema = withPasswordConfirmRefine(
+  z.object({
     password: passwordComplexitySchema(
       "auth.reset_password.error_password_min_length",
     ),
     confirm: z.string(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.password !== data.confirm) {
-      ctx.addIssue({
-        code: "custom",
-        message: "auth.reset_password.error_passwords_mismatch",
-        path: ["confirm"],
-      });
-    }
-  });
+  }),
+  "auth.reset_password.error_passwords_mismatch",
+);
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export const acceptInvitationSchema = z
-  .object({
+export const acceptInvitationSchema = withPasswordConfirmRefine(
+  z.object({
     firstName: z
       .string()
       .trim()
@@ -62,14 +58,7 @@ export const acceptInvitationSchema = z
       "auth.accept_invitation.error_password_min_length",
     ),
     confirm: z.string(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.password !== data.confirm) {
-      ctx.addIssue({
-        code: "custom",
-        message: "auth.accept_invitation.error_passwords_mismatch",
-        path: ["confirm"],
-      });
-    }
-  });
+  }),
+  "auth.accept_invitation.error_passwords_mismatch",
+);
 export type AcceptInvitationFormValues = z.infer<typeof acceptInvitationSchema>;

@@ -1,38 +1,33 @@
 import type React from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
+import { SortableTh } from "@/components/ui/common/SortableTh";
+import { StatusChip } from "@/components/ui/common/StatusChip";
 import { useToast } from "@/hooks/useToast";
 import { type useT, useI18n } from "@/contexts/I18nContext";
 import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
 import { useRecurringJobsQuery } from "@/domains/jobs/queries";
-import { JobState } from "@/enums";
-import { useApiError } from "@/hooks/useApiError";
+import { JobSortField, JobState, SortDirection } from "@/enums";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useSortState } from "@/hooks/useSortState";
+import { formatDateTime } from "@/formatters/date";
 
-const STATUS_COLORS: Partial<Record<JobState, { bg: string; color: string }>> =
-  {
-    [JobState.Succeeded]: {
-      bg: "color-mix(in srgb, var(--green) 15%, transparent)",
-      color: "var(--green)",
-    },
-    [JobState.Failed]: {
-      bg: "color-mix(in srgb, var(--red) 15%, transparent)",
-      color: "var(--red)",
-    },
-    [JobState.Processing]: {
-      bg: "color-mix(in srgb, var(--accent) 15%, transparent)",
-      color: "var(--accent)",
-    },
-    [JobState.Enqueued]: {
-      bg: "color-mix(in srgb, var(--yellow) 15%, transparent)",
-      color: "var(--yellow)",
-    },
-  };
+const STATUS_VARIANTS: Partial<
+  Record<JobState, "green" | "red" | "blue" | "yellow">
+> = {
+  [JobState.Succeeded]: "green",
+  [JobState.Failed]: "red",
+  [JobState.Processing]: "blue",
+  [JobState.Enqueued]: "yellow",
+};
 
 function StatusBadge({
   state,
@@ -44,28 +39,12 @@ function StatusBadge({
   if (!state)
     return <Box sx={{ color: "var(--muted)", fontSize: "11px" }}>—</Box>;
   const key = state.charAt(0).toUpperCase() + state.slice(1).toLowerCase();
-  const colors = STATUS_COLORS[key as JobState] ?? {
-    bg: "var(--s2)",
-    color: "var(--muted)",
-  };
+  const variant = STATUS_VARIANTS[key as JobState] ?? "gray";
   const labelKey = `settings.jobs.status.${state.toLowerCase()}`;
   return (
-    <Box
-      sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        px: "8px",
-        height: "20px",
-        borderRadius: "10px",
-        fontSize: "10px",
-        fontWeight: 600,
-        letterSpacing: "0.03em",
-        background: colors.bg,
-        color: colors.color,
-      }}
-    >
+    <StatusChip variant={variant}>
       {t(labelKey) === labelKey ? state : t(labelKey)}
-    </Box>
+    </StatusChip>
   );
 }
 
@@ -75,13 +54,7 @@ function formatDate(
   locale: string,
 ): string {
   if (!iso) return t("settings.jobs.never");
-  return new Date(iso).toLocaleString(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso, locale);
 }
 
 const CELL_SX = {
@@ -95,27 +68,21 @@ const CELL_SX = {
 export const JobsTab: React.FC = () => {
   const { showToast } = useToast();
   const { t, culture } = useI18n();
-  const apiError = useApiError();
+  const onTriggerError = useApiErrorToast("settings.jobs.trigger_error");
 
-  const jobsQuery = useRecurringJobsQuery();
+  const [sort, toggleSort] = useSortState<JobSortField>({
+    col: JobSortField.Job,
+    dir: SortDirection.Asc,
+  });
+
+  const jobsQuery = useRecurringJobsQuery({
+    sortBy: sort.col,
+    sortDirection: sort.dir,
+  });
   const jobs = jobsQuery.data ?? [];
-  const loading = jobsQuery.isLoading;
+  const loading = jobsQuery.isLoading && !jobsQuery.data;
   const triggerScan = useTriggerTechHealthScanMutation();
   const triggering = triggerScan.isPending;
-  const [sort, setSort] = useState<{ col: string; dir: "asc" | "desc" } | null>(
-    {
-      col: "col_job",
-      dir: "asc",
-    },
-  );
-
-  const toggleSort = useCallback((col: string) => {
-    setSort((s) => {
-      if (s?.col !== col) return { col, dir: "asc" };
-      if (s.dir === "asc") return { col, dir: "desc" };
-      return null;
-    });
-  }, []);
 
   const handleTrigger = () => {
     triggerScan.mutate(
@@ -123,8 +90,7 @@ export const JobsTab: React.FC = () => {
       {
         onSuccess: () =>
           showToast(t("settings.jobs.trigger_success"), "success"),
-        onError: (err) =>
-          showToast(apiError(err, t("settings.jobs.trigger_error")), "error"),
+        onError: onTriggerError,
       },
     );
   };
@@ -137,35 +103,6 @@ export const JobsTab: React.FC = () => {
     },
     [t],
   );
-
-  const sortedJobs = useMemo(() => {
-    if (!sort) return jobs;
-    const mul = sort.dir === "asc" ? 1 : -1;
-    return jobs.slice().sort((a, b) => {
-      switch (sort.col) {
-        case "col_job":
-          return mul * jobName(a.id).localeCompare(jobName(b.id));
-        case "col_last_run":
-          return (
-            mul *
-            ((a.lastExecution ? new Date(a.lastExecution).getTime() : 0) -
-              (b.lastExecution ? new Date(b.lastExecution).getTime() : 0))
-          );
-        case "col_status":
-          return (
-            mul * (a.lastJobState ?? "").localeCompare(b.lastJobState ?? "")
-          );
-        case "col_next_run":
-          return (
-            mul *
-            ((a.nextExecution ? new Date(a.nextExecution).getTime() : 0) -
-              (b.nextExecution ? new Date(b.nextExecution).getTime() : 0))
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [jobs, sort, jobName]);
 
   return (
     <Box
@@ -180,99 +117,69 @@ export const JobsTab: React.FC = () => {
       }}
     >
       {loading ? (
+        <CenteredLoader />
+      ) : jobs.length === 0 ? (
+        <EmptyState
+          icon={AutoModeOutlined}
+          title={t("settings.jobs.empty")}
+          subtitle={t("settings.jobs.empty_subtitle")}
+          iconSize={40}
+          sx={{ flex: 1, justifyContent: "center" }}
+        />
+      ) : (
         <Box
           sx={{
             flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "auto",
+            opacity: jobsQuery.isFetching ? 0.6 : 1,
+            transition: "opacity 0.15s",
           }}
         >
-          <CircularProgress size={20} />
-        </Box>
-      ) : jobs.length === 0 ? (
-        <Box className="empty-state" sx={{ flex: 1, justifyContent: "center" }}>
-          <AutoModeOutlined
-            className="empty-state-icon"
-            sx={{ fontSize: 40 }}
-          />
-          <Box className="empty-state-title">{t("settings.jobs.empty")}</Box>
-          <Box className="empty-state-subtitle">
-            {t("settings.jobs.empty_subtitle")}
-          </Box>
-        </Box>
-      ) : (
-        <Box sx={{ flex: 1, overflow: "auto" }}>
           <Box
             component="table"
             sx={{ width: "100%", borderCollapse: "collapse" }}
           >
             <Box component="thead">
               <Box component="tr">
-                {[
-                  { key: "col_job", width: "auto" },
-                  { key: "col_last_run", width: "180px" },
-                  { key: "col_status", width: "140px" },
-                  { key: "col_next_run", width: "230px" },
-                  { key: "actions", width: "48px" },
-                ].map(({ key, width }) => {
-                  const sortable = key !== "actions";
-                  const isActive = sort?.col === key;
+                {(
+                  [
+                    { col: JobSortField.Job, key: "col_job", width: "auto" },
+                    {
+                      col: JobSortField.LastRun,
+                      key: "col_last_run",
+                      width: "180px",
+                    },
+                    {
+                      col: JobSortField.Status,
+                      key: "col_status",
+                      width: "140px",
+                    },
+                    {
+                      col: JobSortField.NextRun,
+                      key: "col_next_run",
+                      width: "230px",
+                    },
+                    { col: "actions" as const, key: "actions", width: "48px" },
+                  ] as const
+                ).map(({ col, key, width }) => {
+                  const sortable = col !== "actions";
                   return (
-                    <Box
-                      component="th"
+                    <SortableTh
                       key={key}
-                      onClick={() => sortable && toggleSort(key)}
-                      sx={{
-                        px: "16px",
-                        py: "10px",
-                        textAlign: "left",
-                        width,
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        color: isActive ? "var(--accent)" : "var(--muted)",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        whiteSpace: "nowrap",
-                        borderBottom: "1px solid var(--border)",
-                        background: "var(--s2)",
-                        cursor: sortable ? "pointer" : "default",
-                        userSelect: "none",
-                        transition: "color 0.12s",
-                        "&:hover": sortable
-                          ? { color: "var(--text-secondary)" }
-                          : {},
-                      }}
+                      width={width}
+                      sortable={sortable}
+                      active={sort.col === col}
+                      ascending={sort.dir === SortDirection.Asc}
+                      onSort={() => sortable && toggleSort(col)}
                     >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                        }}
-                      >
-                        {key === "actions" ? "" : t(`settings.jobs.${key}`)}
-                        {sortable && isActive && (
-                          <Box
-                            sx={{
-                              fontSize: "12px",
-                              color: "var(--accent)",
-                              lineHeight: 1,
-                              display: "flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            {sort?.dir === "asc" ? "↑" : "↓"}
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
+                      {key === "actions" ? "" : t(`settings.jobs.${key}`)}
+                    </SortableTh>
                   );
                 })}
               </Box>
             </Box>
             <Box component="tbody">
-              {sortedJobs.map((job) => (
+              {jobs.map((job) => (
                 <Box
                   component="tr"
                   key={job.id}

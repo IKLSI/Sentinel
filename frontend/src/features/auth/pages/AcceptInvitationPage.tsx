@@ -4,28 +4,28 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import { useAcceptInvitationMutation } from "@/domains/users/mutations";
-import { useToast } from "@/hooks/useToast";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { useT } from "@/contexts/I18nContext";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
+import { AuthFormField } from "@/features/auth/components/AuthFormField";
+import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import {
   acceptInvitationSchema,
   type AcceptInvitationFormValues,
 } from "@/features/auth/schemas";
-import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 const routeApi = getRouteApi("/accept-invitation");
 
 export const AcceptInvitationPage: React.FC = () => {
   const { token = "" } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onError = useApiErrorToast(
+    "auth.accept_invitation.error_invalid_token",
+  );
 
   const STEPS = [
     {
@@ -89,11 +89,7 @@ export const AcceptInvitationPage: React.FC = () => {
           setDone(true);
           setTimeout(() => navigate({ to: ROUTES.LOGIN, replace: true }), 3500);
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("auth.accept_invitation.error_invalid_token")),
-            "error",
-          ),
+        onError,
       },
     );
   });
@@ -147,33 +143,16 @@ export const AcceptInvitationPage: React.FC = () => {
         <Box className="aip-right">
           <Box className="aip-form-wrap">
             {done ? (
-              <Box className="aip-success">
-                <Box className="aip-success-icon">
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 28 28"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 14l6 6 10-10"
-                      style={{ stroke: "var(--auth-indigo-500)" }}
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Box>
-                <Box component="p" className="aip-success-title">
-                  {t("auth.accept_invitation.success_title")}
-                </Box>
-                <Box component="p" className="aip-success-sub">
-                  {t("auth.accept_invitation.success_line1")}
-                  <br />
-                  {t("auth.accept_invitation.success_line2")}
-                </Box>
-              </Box>
+              <AuthPageSuccess
+                title={t("auth.accept_invitation.success_title")}
+                subtitle={
+                  <>
+                    {t("auth.accept_invitation.success_line1")}
+                    <br />
+                    {t("auth.accept_invitation.success_line2")}
+                  </>
+                }
+              />
             ) : (
               <>
                 <Box className="aip-form-header">
@@ -188,126 +167,65 @@ export const AcceptInvitationPage: React.FC = () => {
                 <form onSubmit={onSubmit} noValidate>
                   <Box className="lp-field aip-row">
                     <Box>
-                      <Box
-                        component="label"
-                        className="lp-label"
-                        htmlFor={firstNameId}
-                      >
-                        {t("auth.accept_invitation.firstname_label")}{" "}
-                        <span style={{ color: "var(--auth-red-500)" }}>*</span>
-                      </Box>
-                      <input
+                      <AuthFormField
+                        bare
                         id={firstNameId}
-                        type="text"
-                        className={`lp-input${errors.firstName ? " lp-input--error" : ""}`}
+                        label={t("auth.accept_invitation.firstname_label")}
+                        registration={register("firstName")}
+                        error={errors.firstName}
+                        t={t}
                         placeholder={t(
                           "auth.accept_invitation.firstname_placeholder",
                         )}
                         autoComplete="given-name"
-                        {...register("firstName")}
+                        required
                       />
-                      {errors.firstName && (
-                        <Box className="lp-field-error">
-                          {resolveFieldError(errors.firstName, t)}
-                        </Box>
-                      )}
                     </Box>
                     <Box>
-                      <Box
-                        component="label"
-                        className="lp-label"
-                        htmlFor={lastNameId}
-                      >
-                        {t("auth.accept_invitation.lastname_label")}
-                      </Box>
-                      <input
+                      <AuthFormField
+                        bare
                         id={lastNameId}
-                        type="text"
-                        className="lp-input"
+                        label={t("auth.accept_invitation.lastname_label")}
+                        registration={register("lastName")}
+                        t={t}
                         placeholder={t(
                           "auth.accept_invitation.lastname_placeholder",
                         )}
                         autoComplete="family-name"
-                        {...register("lastName")}
                       />
                     </Box>
                   </Box>
 
-                  <Box className="lp-field">
-                    <Box
-                      component="label"
-                      className="lp-label"
-                      htmlFor={passwordId}
-                    >
-                      {t("auth.accept_invitation.password_label")}{" "}
-                      <span style={{ color: "var(--auth-red-500)" }}>*</span>
-                    </Box>
-                    <Box className="lp-input-wrap">
-                      <Box
-                        component="input"
-                        id={passwordId}
-                        type={showPassword ? "text" : "password"}
-                        className={`lp-input${errors.password ? " lp-input--error" : ""}`}
-                        placeholder={t(
-                          "auth.accept_invitation.password_placeholder",
-                        )}
-                        autoComplete="new-password"
-                        sx={{ paddingRight: "44px" }}
-                        {...register("password")}
-                      />
-                      <button
-                        type="button"
-                        className="lp-pw-toggle"
-                        onClick={() => setShowPassword((v) => !v)}
-                        tabIndex={-1}
-                        aria-label={
-                          showPassword
-                            ? t("auth.accept_invitation.password_hide")
-                            : t("auth.accept_invitation.password_show")
-                        }
-                      >
-                        {showPassword ? (
-                          <VisibilityOffOutlined sx={{ fontSize: 16 }} />
-                        ) : (
-                          <VisibilityOutlined sx={{ fontSize: 16 }} />
-                        )}
-                      </button>
-                    </Box>
-                    {errors.password && (
-                      <Box className="lp-field-error">
-                        {resolveFieldError(errors.password, t)}
-                      </Box>
+                  <AuthPasswordField
+                    id={passwordId}
+                    label={t("auth.accept_invitation.password_label")}
+                    registration={register("password")}
+                    error={errors.password}
+                    t={t}
+                    placeholder={t(
+                      "auth.accept_invitation.password_placeholder",
                     )}
-                  </Box>
+                    autoComplete="new-password"
+                    required
+                    showPassword={showPassword}
+                    onToggleShow={() => setShowPassword((v) => !v)}
+                    showLabel={t("auth.accept_invitation.password_show")}
+                    hideLabel={t("auth.accept_invitation.password_hide")}
+                  />
 
-                  <Box className="lp-field">
-                    <Box
-                      component="label"
-                      className="lp-label"
-                      htmlFor={confirmId}
-                    >
-                      {t("auth.accept_invitation.confirm_label")}{" "}
-                      <span style={{ color: "var(--auth-red-500)" }}>*</span>
-                    </Box>
-                    <Box className="lp-input-wrap">
-                      <Box
-                        component="input"
-                        id={confirmId}
-                        type={showPassword ? "text" : "password"}
-                        className={`lp-input${errors.confirm ? " lp-input--error" : ""}`}
-                        placeholder={t(
-                          "auth.accept_invitation.confirm_placeholder",
-                        )}
-                        autoComplete="new-password"
-                        {...register("confirm")}
-                      />
-                    </Box>
-                    {errors.confirm && (
-                      <Box className="lp-field-error">
-                        {resolveFieldError(errors.confirm, t)}
-                      </Box>
+                  <AuthFormField
+                    id={confirmId}
+                    label={t("auth.accept_invitation.confirm_label")}
+                    registration={register("confirm")}
+                    error={errors.confirm}
+                    t={t}
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t(
+                      "auth.accept_invitation.confirm_placeholder",
                     )}
-                  </Box>
+                    autoComplete="new-password"
+                    required
+                  />
 
                   <button
                     type="submit"

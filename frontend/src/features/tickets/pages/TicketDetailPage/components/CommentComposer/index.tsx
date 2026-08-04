@@ -10,8 +10,7 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useT } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useToast } from "@/hooks/useToast";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { useUploadAttachmentMutation } from "@/domains/tickets/mutations";
 import { ROUTES_API } from "@/configs/api-routes.gen";
@@ -58,8 +57,9 @@ export const CommentComposer: React.FC<Props> = ({
   const t = useT();
   const { theme } = useTheme();
   const isDark = theme === Theme.Dark;
-  const { showToast } = useToast();
-  const apiError = useApiError();
+  const onUploadError = useApiErrorToast(
+    "tickets.detail.attachments_upload_error",
+  );
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,11 +93,7 @@ export const CommentComposer: React.FC<Props> = ({
             },
           ]);
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("tickets.detail.attachments_upload_error")),
-            "error",
-          ),
+        onError: onUploadError,
       },
     );
   };
@@ -272,18 +268,6 @@ export const CommentComposer: React.FC<Props> = ({
             size="small"
             onClick={handleSubmit}
             disabled={!hasContent || submitting}
-            sx={{
-              textTransform: "none",
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
           >
             {submitting ? (
               <CircularProgress size={14} sx={{ color: "var(--s1)" }} />

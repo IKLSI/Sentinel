@@ -3,6 +3,7 @@ import { useState } from "react";
 import { version } from "@/../package.json";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/useToast";
@@ -14,7 +15,8 @@ import {
 } from "@/domains/users/mutations";
 import { toIsoDate } from "@/formatters/fileName";
 import { MIME_TYPES } from "@/helpers/download";
-import { useApiError } from "@/hooks/useApiError";
+import { CARD_SX as BASE_CARD_SX } from "@/helpers/cardSx";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
@@ -51,10 +53,7 @@ const inp = {
 const inpRo = { ...inp, color: "var(--muted2)", cursor: "default" } as const;
 
 const CARD_SX = {
-  background: "var(--s1)",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r-md)",
-  overflow: "hidden",
+  ...BASE_CARD_SX,
   display: "flex",
   flexDirection: "column",
 } as const;
@@ -91,7 +90,9 @@ export const ProfilePage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const t = useT();
-  const apiError = useApiError();
+  const onUpdateError = useApiErrorToast("profile.toast.update_error");
+  const onExportError = useApiErrorToast("profile.gdpr.export_error");
+  const onDeleteError = useApiErrorToast("profile.gdpr.delete_error");
   const { culture, setLanguage } = useI18n();
 
   const [pf, setPf] = useState({
@@ -131,8 +132,7 @@ export const ProfilePage: React.FC = () => {
             });
           showToast(t("profile.toast.updated"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.toast.update_error")), "error"),
+        onError: onUpdateError,
       },
     );
   };
@@ -158,8 +158,7 @@ export const ProfilePage: React.FC = () => {
           a.click();
           URL.revokeObjectURL(url);
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.gdpr.export_error")), "error"),
+        onError: onExportError,
       },
     );
   };
@@ -175,8 +174,7 @@ export const ProfilePage: React.FC = () => {
           });
           window.location.href = ROUTES.LOGIN;
         },
-        onError: (err) =>
-          showToast(apiError(err, t("profile.gdpr.delete_error")), "error"),
+        onError: onDeleteError,
       },
     );
   };
@@ -189,17 +187,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <Box
-      className="page-enter"
-      sx={{
-        p: "20px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
+    <PageContainer sx={{ p: "20px 24px", gap: "16px" }}>
       <Box sx={CARD_SX}>
         <InnerDivider label={t("profile.section.info")} />
 
@@ -324,18 +312,7 @@ export const ProfilePage: React.FC = () => {
             size="small"
             onClick={handleSave}
             disabled={savingPf || pfUnchanged}
-            sx={{
-              minWidth: "110px",
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
+            sx={{ minWidth: "110px" }}
           >
             {savingPf ? t("profile.button.saving") : t("profile.button.save")}
           </Button>
@@ -663,7 +640,6 @@ export const ProfilePage: React.FC = () => {
             size="small"
             onClick={handleExportGdpr}
             disabled={exportingGdpr}
-            sx={{ "&:hover": { transform: "none" } }}
           >
             {exportingGdpr
               ? t("profile.gdpr.exporting")
@@ -699,19 +675,9 @@ export const ProfilePage: React.FC = () => {
           </Box>
           <Button
             variant="contained"
+            color="error"
             size="small"
             onClick={() => setDeleteDialogOpen(true)}
-            sx={{
-              background:
-                "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
-              boxShadow: "none",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
-                boxShadow: "none",
-                transform: "none",
-              },
-            }}
           >
             {t("profile.gdpr.delete_button")}
           </Button>
@@ -774,21 +740,10 @@ export const ProfilePage: React.FC = () => {
             </Button>
             <Button
               variant="contained"
+              color="error"
               size="small"
               onClick={handleDeleteAccount}
               disabled={deletingAccount || !deletePassword.trim()}
-              sx={{
-                background:
-                  "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
-                boxShadow: "none",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
-                  boxShadow: "none",
-                  transform: "none",
-                },
-                "&:disabled": { background: "var(--red)", opacity: 0.6 },
-              }}
             >
               {deletingAccount
                 ? t("profile.gdpr.deleting")
@@ -853,6 +808,6 @@ export const ProfilePage: React.FC = () => {
       >
         v{version}
       </Box>
-    </Box>
+    </PageContainer>
   );
 };

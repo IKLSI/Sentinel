@@ -1,10 +1,12 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
 import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketRow";
 import { SortDirection, TicketSortField } from "@/enums";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 
 export interface SortState {
   col: TicketSortField;
@@ -56,19 +58,16 @@ const TicketsTableComponent: React.FC<Props> = ({
           justifyContent: "center",
         }}
       >
-        <Box className="empty-state">
-          <Box className="empty-state-icon">
-            <ConfirmationNumberOutlined sx={{ fontSize: 40 }} />
-          </Box>
-          <Box className="empty-state-title">
-            {t("tickets.list.empty_title")}
-          </Box>
-          <Box className="empty-state-subtitle">
-            {!hasFiltersApplied
+        <EmptyState
+          icon={ConfirmationNumberOutlined}
+          title={t("tickets.list.empty_title")}
+          subtitle={
+            !hasFiltersApplied
               ? t("tickets.list.empty_subtitle_create")
-              : t("tickets.list.empty_subtitle_search")}
-          </Box>
-        </Box>
+              : t("tickets.list.empty_subtitle_search")
+          }
+          iconSize={40}
+        />
       </Box>
     );
   }
@@ -93,53 +92,17 @@ const TicketsTableComponent: React.FC<Props> = ({
           <Box component="tr">
             {columns.map(({ col, label }) => {
               const sortable = col !== ACTIONS_COLUMN_KEY;
-              const isActive = sort.col === col;
               return (
-                <Box
-                  component="th"
+                <SortableTh
                   key={col}
-                  onClick={() =>
-                    col !== ACTIONS_COLUMN_KEY && onToggleSort(col)
-                  }
-                  sx={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: isActive ? "var(--accent)" : "var(--muted)",
-                    textAlign: "left",
-                    padding: "10px 14px",
-                    borderBottom: "1px solid var(--border)",
-                    background: "var(--s2)",
-                    whiteSpace: "nowrap",
-                    cursor: sortable ? "pointer" : "default",
-                    userSelect: "none",
-                    transition: "color 0.12s",
-                    "&:hover": sortable
-                      ? { color: "var(--text-secondary)" }
-                      : {},
-                  }}
+                  mono
+                  sortable={sortable}
+                  active={sort.col === col}
+                  ascending={sort.dir === SortDirection.Asc}
+                  onSort={() => col !== ACTIONS_COLUMN_KEY && onToggleSort(col)}
                 >
-                  <Box
-                    sx={{ display: "flex", alignItems: "center", gap: "5px" }}
-                  >
-                    {label}
-                    {sortable && isActive && (
-                      <Box
-                        sx={{
-                          fontSize: "12px",
-                          color: "var(--accent)",
-                          lineHeight: 1,
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        {sort.dir === SortDirection.Asc ? "↑" : "↓"}
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
+                  {label}
+                </SortableTh>
               );
             })}
           </Box>

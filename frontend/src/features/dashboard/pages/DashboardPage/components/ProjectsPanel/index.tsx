@@ -6,6 +6,7 @@ import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import type { Project } from "@/domains/projects/types";
 import {
   type DashPalette,
@@ -126,26 +127,16 @@ export const ProjectsPanel: React.FC<Props> = ({ projects, palette }) => {
         }}
       >
         {projects.length === 0 ? (
-          <Box
-            className="empty-state"
-            sx={{ flex: 1, padding: "24px !important" }}
-          >
-            <Box className="empty-state-icon">
-              <AccountTreeOutlined sx={{ fontSize: 32 }} />
-            </Box>
-            <Box
-              className="empty-state-title"
-              sx={{ fontSize: "12px !important" }}
-            >
-              {t("dashboard.projects.empty_title")}
-            </Box>
-            <Box
-              className="empty-state-subtitle"
-              sx={{ fontSize: "11px !important" }}
-            >
-              {t("dashboard.projects.empty_subtitle")}
-            </Box>
-          </Box>
+          <EmptyState
+            icon={AccountTreeOutlined}
+            title={t("dashboard.projects.empty_title")}
+            subtitle={t("dashboard.projects.empty_subtitle")}
+            sx={{
+              flex: 1,
+              "& .empty-state-title": { fontSize: "12px !important" },
+              "& .empty-state-subtitle": { fontSize: "11px !important" },
+            }}
+          />
         ) : (
           projects.map((project) => (
             <ProjectRankRow

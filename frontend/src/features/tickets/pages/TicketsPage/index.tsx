@@ -4,8 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { useProjectsQuery } from "@/domains/projects/queries";
@@ -36,28 +37,38 @@ import {
   TicketsTable,
   type SortState,
 } from "@/features/tickets/pages/TicketsPage/components/TicketsTable";
-import { Pagination } from "@/features/tickets/pages/TicketsPage/components/Pagination";
+import { Pagination } from "@/components/ui/common/Pagination";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useSortState } from "@/hooks/useSortState";
 import { SortDirection, TicketSortField } from "@/enums";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
-  const apiError = useApiError();
+  const onCreateError = useApiErrorToast("tickets.list.create_error");
+  const onEditError = useApiErrorToast("tickets.list.edit_error");
+  const onDeleteError = useApiErrorToast("tickets.list.delete_error");
   const navigate = routeApi.useNavigate();
   const { openCreate } = routeApi.useSearch();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   const [filters, setFilters] = useState({
     priority: "",
     status: "",
     type: "",
   });
   const [page, setPage] = useState(1);
+  const handleSearchChange = useCallback((v: string) => {
+    setSearch(v);
+    setPage(1);
+  }, []);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     reference: string;
@@ -96,10 +107,10 @@ export const TicketsPage: React.FC = () => {
       estimatedMinutes: 0,
     },
   });
-  const [sort, setSort] = useState<SortState>({
-    col: TicketSortField.Priority,
-    dir: SortDirection.Desc,
-  });
+  const [sort, toggleSort] = useSortState<SortState["col"]>(
+    { col: TicketSortField.Priority, dir: SortDirection.Desc },
+    () => setPage(1),
+  );
 
   const pageSize = 25;
 
@@ -163,8 +174,7 @@ export const TicketsPage: React.FC = () => {
             navigate({ to: "/tickets/$id", params: { id: created.id } });
           }
         },
-        onError: (err) =>
-          showToast(apiError(err, t("tickets.list.create_error")), "error"),
+        onError: onCreateError,
       },
     );
   });
@@ -188,21 +198,6 @@ export const TicketsPage: React.FC = () => {
     },
     [resetEditForm],
   );
-
-  const toggleSort = useCallback((col: TicketSortField) => {
-    setSort((s) =>
-      s.col === col
-        ? {
-            col,
-            dir:
-              s.dir === SortDirection.Asc
-                ? SortDirection.Desc
-                : SortDirection.Asc,
-          }
-        : { col, dir: SortDirection.Asc },
-    );
-    setPage(1);
-  }, []);
 
   const onDeleteTarget = useCallback((id: string, reference: string) => {
     setDeleteTarget({ id, reference });
@@ -229,29 +224,24 @@ export const TicketsPage: React.FC = () => {
       });
       setEditTarget(null);
     } catch (err) {
-      showToast(apiError(err, t("tickets.list.edit_error")), "error");
+      onEditError(err);
     }
   });
 
   const handleDelete = () => {
     if (!deleteTarget) return;
+    const reference = deleteTarget.reference;
     deleteTicketMutation.mutate(
       { id: deleteTarget.id },
       {
-        onSuccess: () => setDeleteTarget(null),
-        onError: (err) =>
-          showToast(apiError(err, t("tickets.list.delete_error")), "error"),
+        onSuccess: () => {
+          setDeleteTarget(null);
+          showToast(t("tickets.list.delete_success", { reference }), "success");
+        },
+        onError: onDeleteError,
       },
     );
   };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
 
   const ticketsFilters: TicketFilters = {
     page,
@@ -290,19 +280,10 @@ export const TicketsPage: React.FC = () => {
 
   return (
     <>
-      <Box
-        className="page-enter"
-        sx={{
-          p: "20px 28px",
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+      <PageContainer>
         <TicketsToolbar
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={handleSearchChange}
           filters={filters}
           onFiltersChange={(f) => {
             setFilters(f);
@@ -314,16 +295,7 @@ export const TicketsPage: React.FC = () => {
         />
 
         {loading && !tickets ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: 1,
-            }}
-          >
-            <CircularProgress size={24} />
-          </Box>
+          <CenteredLoader />
         ) : (
           <Box
             sx={{
@@ -352,10 +324,17 @@ export const TicketsPage: React.FC = () => {
               totalPages={tickets?.totalPages ?? 1}
               total={tickets?.totalCount ?? 0}
               onChange={setPage}
+              previousLabel={t("tickets.list.previous")}
+              nextLabel={t("tickets.list.next")}
+              countLabel={
+                (tickets?.totalCount ?? 0) > 1
+                  ? t("tickets.list.count_plural")
+                  : t("tickets.list.count_singular")
+              }
             />
           </Box>
         )}
-      </Box>
+      </PageContainer>
 
       <CreateTicketModal
         open={showCreateModal}

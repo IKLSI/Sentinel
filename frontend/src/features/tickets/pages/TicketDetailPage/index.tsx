@@ -6,6 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/contexts/I18nContext";
@@ -29,7 +30,7 @@ import { CommentComposer } from "@/features/tickets/pages/TicketDetailPage/compo
 import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/components/PropertiesCard";
 import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
 import { EditCommentModal } from "@/features/tickets/pages/TicketDetailPage/components/EditCommentModal";
-import { useApiError } from "@/hooks/useApiError";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { Theme } from "@/enums";
 import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
@@ -37,7 +38,11 @@ const routeApi = getRouteApi("/_authenticated/tickets/$id");
 
 export const TicketDetailPage: React.FC = () => {
   const t = useT();
-  const apiError = useApiError();
+  const onAddCommentError = useApiErrorToast(
+    "tickets.detail.add_comment_error",
+  );
+  const onUpdateCommentError = useApiErrorToast("tickets.detail.update_error");
+  const onDeleteCommentError = useApiErrorToast("tickets.detail.delete_error");
   const { id } = routeApi.useParams();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -99,11 +104,7 @@ export const TicketDetailPage: React.FC = () => {
           setComposerValue("");
           showToast(t("tickets.detail.reply_sent"), "success");
         },
-        onError: (err) =>
-          showToast(
-            apiError(err, t("tickets.detail.add_comment_error")),
-            "error",
-          ),
+        onError: onAddCommentError,
       },
     );
   };
@@ -126,8 +127,7 @@ export const TicketDetailPage: React.FC = () => {
           setEditCommentTarget(null);
           showToast(t("tickets.detail.comment_updated"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("tickets.detail.update_error")), "error"),
+        onError: onUpdateCommentError,
       },
     );
   };
@@ -141,8 +141,7 @@ export const TicketDetailPage: React.FC = () => {
           setDeleteCommentTarget(null);
           showToast(t("tickets.detail.comment_deleted"), "success");
         },
-        onError: (err) =>
-          showToast(apiError(err, t("tickets.detail.delete_error")), "error"),
+        onError: onDeleteCommentError,
       },
     );
   };
@@ -195,15 +194,15 @@ export const TicketDetailPage: React.FC = () => {
 
   return (
     <>
-      <Box
-        className="page-enter"
+      <PageContainer
         sx={{
           p: { xs: "20px 8px", md: "20px 28px" },
+          height: "auto",
           minHeight: "100vh",
-          display: "flex",
           gap: "14px",
           alignItems: "flex-start",
           flexDirection: { xs: "column", lg: "row" },
+          overflow: "visible",
         }}
       >
         <Box
@@ -310,7 +309,7 @@ export const TicketDetailPage: React.FC = () => {
             priorityConfig={priorityConfig}
           />
         </Box>
-      </Box>
+      </PageContainer>
 
       <EditCommentModal
         open={!!editCommentTarget}
