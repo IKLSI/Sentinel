@@ -15,8 +15,8 @@ using Sentinel.Application.TechHealth.Projects;
 using Sentinel.Application.TechHealth.TriggerScan;
 using Sentinel.Application.TechHealth.UpdateProject;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
+using Sentinel.Application.TechHealth;
 
 namespace Sentinel.API.Controllers;
 

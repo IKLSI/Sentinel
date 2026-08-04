@@ -13,12 +13,13 @@ using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
 using Sentinel.Infrastructure.Http;
+using Sentinel.Infrastructure.Jobs;
 using Sentinel.Infrastructure.Localization;
 using Sentinel.Infrastructure.Storage;
+using Sentinel.Application.Options;
 
 namespace Sentinel.API.Extensions;
 
@@ -81,6 +82,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
+        services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
+        services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
+        services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+        services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<SbomService>();

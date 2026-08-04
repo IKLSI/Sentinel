@@ -1,4 +1,3 @@
-using Sentinel.Domain.DTOs.Settings;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Settings;

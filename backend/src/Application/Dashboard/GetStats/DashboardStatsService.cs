@@ -4,7 +4,6 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Dashboard;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

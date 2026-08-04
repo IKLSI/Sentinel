@@ -5,10 +5,9 @@ using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
-using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.Application.Auth.VerifyEmail;
 

@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Tickets.Update;

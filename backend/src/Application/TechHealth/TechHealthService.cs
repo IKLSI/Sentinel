@@ -1,19 +1,16 @@
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth.Scan;
 using Hangfire;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
+using Sentinel.Application.Options;
+using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
@@ -41,14 +38,14 @@ public partial class TechHealthService
     private readonly IRuntimeRepository _runtimeRepository;
     private readonly IUserRepository _userRepository;
     private readonly ICommitScopeFactory _commitScopeFactory;
-    private readonly HttpClient _osvClient;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IVulnerabilityFeedClient _vulnerabilityFeed;
+    private readonly IRuntimeLifecycleClient _runtimeLifecycle;
     private readonly ILogger<TechHealthService> _logger;
     private readonly RepositoryScannerService _repositoryScanner;
     private readonly QuotaGuard _quotaGuard;
     private readonly TokenProtector _tokenProtector;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly IJobScheduler _backgroundJobs;
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
     private readonly IMemoryCache _cache;
@@ -62,13 +59,14 @@ public partial class TechHealthService
         IRuntimeRepository runtimeRepository,
         IUserRepository userRepository,
         ICommitScopeFactory commitScopeFactory,
-        IHttpClientFactory httpClientFactory,
+        IVulnerabilityFeedClient vulnerabilityFeed,
+        IRuntimeLifecycleClient runtimeLifecycle,
         ILogger<TechHealthService> logger,
         RepositoryScannerService repositoryScanner,
         QuotaGuard quotaGuard,
         TokenProtector tokenProtector,
         IServiceScopeFactory scopeFactory,
-        IBackgroundJobClient backgroundJobs,
+        IJobScheduler backgroundJobs,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
         IMemoryCache cache,
@@ -81,8 +79,8 @@ public partial class TechHealthService
         _runtimeRepository = runtimeRepository;
         _userRepository = userRepository;
         _commitScopeFactory = commitScopeFactory;
-        _httpClientFactory = httpClientFactory;
-        _osvClient = httpClientFactory.CreateClient(HttpClientNames.Osv);
+        _vulnerabilityFeed = vulnerabilityFeed;
+        _runtimeLifecycle = runtimeLifecycle;
         _logger = logger;
         _repositoryScanner = repositoryScanner;
         _quotaGuard = quotaGuard;

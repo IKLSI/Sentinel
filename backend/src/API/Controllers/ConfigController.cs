@@ -1,7 +1,6 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Application.Config.Get;
-using Sentinel.Domain.DTOs.Config;
 
 namespace Sentinel.API.Controllers;
 

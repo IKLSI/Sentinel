@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Settings;
+using Sentinel.API.Options;
+using Sentinel.Application.Options;
 
 namespace Sentinel.API.Services;
 

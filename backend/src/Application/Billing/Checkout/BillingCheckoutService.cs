@@ -6,13 +6,12 @@ using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
 using Stripe;
 using PlanTier = Sentinel.Domain.Models.PlanTier;
 using Stripe.Checkout;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Billing.Checkout;
 

@@ -1,12 +1,11 @@
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Domain.Repositories;
 
 public interface IApiKeyRepository : ICrudEntityWithIdRepository<ApiKey>
 {
-    Task<IReadOnlyList<ApiKeyDto>> ListForOrganizationAsync(Guid organizationId, ApiKeySortField sortBy,
+    Task<IReadOnlyList<ApiKeyListRow>> ListForOrganizationAsync(Guid organizationId, ApiKeySortField sortBy,
         SortDirection sortDirection, CancellationToken cancellationToken);
 
     Task<ApiKey?> GetOrDefaultActiveInOrganizationAsync(Guid apiKeyId, Guid organizationId,

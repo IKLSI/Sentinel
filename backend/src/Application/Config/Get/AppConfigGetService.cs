@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Domain.DTOs.Config;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Config.Get;
 

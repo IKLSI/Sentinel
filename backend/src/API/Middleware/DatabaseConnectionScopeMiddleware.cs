@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
+using Sentinel.API.Options;
 
 namespace Sentinel.API.Middleware;
 

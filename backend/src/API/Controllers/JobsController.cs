@@ -5,10 +5,9 @@ using Sentinel.API.Attributes;
 using Sentinel.Application.Jobs.GetRecurring;
 using Sentinel.Application.Jobs.TriggerTechHealthScan;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.Common;
-using Sentinel.Domain.DTOs.Jobs;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Controllers;
 

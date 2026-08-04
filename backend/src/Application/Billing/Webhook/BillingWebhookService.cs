@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
@@ -9,10 +8,10 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
 using Stripe;
 using PlanTier = Sentinel.Domain.Models.PlanTier;
 using Session = Stripe.Checkout.Session;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Billing.Webhook;
 
@@ -28,7 +27,7 @@ public class BillingWebhookService : IService
     private readonly StripePriceCatalog _priceCatalog;
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
-    private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly IJobScheduler _backgroundJobs;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly ILogger<BillingWebhookService> _logger;
 
@@ -41,7 +40,7 @@ public class BillingWebhookService : IService
         StripePriceCatalog priceCatalog,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
-        IBackgroundJobClient backgroundJobs,
+        IJobScheduler backgroundJobs,
         IRealtimeNotifier realtimeNotifier,
         ILogger<BillingWebhookService> logger)
     {

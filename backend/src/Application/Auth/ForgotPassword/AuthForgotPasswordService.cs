@@ -1,4 +1,3 @@
-using Hangfire;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
@@ -7,10 +6,9 @@ using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
-using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.Application.Auth.ForgotPassword;
 
@@ -19,7 +17,7 @@ public class AuthForgotPasswordService(
     IPasswordResetTokenRepository tokenRepository,
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
-    IBackgroundJobClient jobs,
+    IJobScheduler jobs,
     IAuditLogService auditLog,
     QueuedTokenProtector tokenProtector,
     AuthForgotPasswordValidator validator) : IService

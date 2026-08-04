@@ -1,4 +1,3 @@
-using Hangfire;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
@@ -12,7 +11,7 @@ namespace Sentinel.Application.TechHealth.TriggerScan;
 
 public class ProjectScanTriggerService(
     IProjectRepository projectRepository,
-    IBackgroundJobClient backgroundJobs,
+    IJobScheduler backgroundJobs,
     QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService

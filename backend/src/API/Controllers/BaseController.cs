@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Controllers;
 

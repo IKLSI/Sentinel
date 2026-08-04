@@ -1,16 +1,16 @@
-using Hangfire;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Application.Common.Contracts;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
 
 namespace Sentinel.Application.Jobs.TriggerTechHealthScan;
 
-public class TechHealthScanTriggerService(IRecurringJobManager recurringJobs) : IService
+public class TechHealthScanTriggerService(IJobScheduler jobs) : IService
 {
     public Result<ApiMessageResponse> Execute()
     {
-        recurringJobs.Trigger(RecurringJobIds.TechHealthScan);
+        jobs.TriggerRecurring(RecurringJobIds.TechHealthScan);
 
         return ApiMessageResponse.Create(SuccessCodes.JobTriggered);
     }

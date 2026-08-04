@@ -1,4 +1,4 @@
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth;
 

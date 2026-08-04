@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
@@ -9,12 +8,11 @@ using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
-using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Common.Contracts;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Users.Invite;
 
@@ -22,7 +20,7 @@ public class UserInviteService(
     IUserInvitationRepository invitationRepository,
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    IBackgroundJobClient jobs,
+    IJobScheduler jobs,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     QuotaGuard quotaGuard,

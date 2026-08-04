@@ -1,228 +1,105 @@
-using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth.Scan;
-using Hangfire;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
-using System.Text.Json;
-using Sentinel.Application.Billing;
-using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
-using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Application.TechHealth;
 
 public partial class TechHealthService
 {
-    private static readonly Dictionary<DependencyEcosystem, string> OsvEcosystemMap = new()
-    {
-        [DependencyEcosystem.Npm] = "npm",
-        [DependencyEcosystem.PyPI] = "PyPI",
-        [DependencyEcosystem.NuGet] = "NuGet",
-        [DependencyEcosystem.Maven] = "Maven",
-        [DependencyEcosystem.Go] = "Go",
-        [DependencyEcosystem.Composer] = "Packagist",
-        [DependencyEcosystem.Gem] = "RubyGems",
-        [DependencyEcosystem.Cargo] = "crates.io",
-        [DependencyEcosystem.Gradle] = "Maven",
-        [DependencyEcosystem.Hex] = "Hex",
-        [DependencyEcosystem.Pub] = "Pub",
-        [DependencyEcosystem.Swift] = "SwiftURL",
-    };
-
     private sealed record VulnerabilityScanResult(Dependency Dependency, DependencyStatus? Status,
         List<Vulnerability> NewVulnerabilities, List<Vulnerability> ResolvedVulnerabilities);
-
-    private const int OsvBatchSize = 500;
 
     private async Task<List<VulnerabilityScanResult>> FetchVulnerabilitiesBatchAsync(
         IReadOnlyList<Dependency> dependencies,
         IReadOnlyDictionary<string, DateTime> previousDetections)
     {
-        List<(Dependency Dep, string Ecosystem)> mapped = new();
-        foreach (Dependency dep in dependencies)
-        {
-            if (OsvEcosystemMap.TryGetValue(dep.Ecosystem, out string? ecosystem))
-                mapped.Add((dep, ecosystem));
-        }
+        if (dependencies.Count == 0) return new List<VulnerabilityScanResult>();
 
-        if (mapped.Count == 0) return new List<VulnerabilityScanResult>();
+        List<VulnerabilityQuery> queries = dependencies
+            .Select(dep => new VulnerabilityQuery(dep.Name, dep.Ecosystem, dep.CurrentVersion))
+            .ToList();
 
-        List<string>?[] depVulnIds = new List<string>?[mapped.Count];
-
-        for (int start = 0; start < mapped.Count; start += OsvBatchSize)
-        {
-            List<(Dependency Dep, string Ecosystem)> chunk = mapped.Skip(start).Take(OsvBatchSize).ToList();
-
-            var batchBody = new
-            {
-                queries = chunk.Select(m => new
-                {
-                    version = m.Dep.CurrentVersion,
-                    package = new { name = m.Dep.Name, ecosystem = m.Ecosystem }
-                }).ToArray()
-            };
-
-            try
-            {
-                using HttpResponseMessage response =
-                    await _osvClient.PostAsJsonAsync("https://api.osv.dev/v1/querybatch", batchBody);
-                if (!response.IsSuccessStatusCode) continue;
-
-                using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                if (!doc.RootElement.TryGetProperty("results", out JsonElement results)) continue;
-
-                int i = 0;
-                foreach (JsonElement result in results.EnumerateArray())
-                {
-                    if (i >= chunk.Count) break;
-
-                    List<string> ids = new();
-                    if (result.TryGetProperty("vulns", out JsonElement vulns))
-                    {
-                        foreach (JsonElement v in vulns.EnumerateArray())
-                        {
-                            if (v.TryGetProperty("id", out JsonElement idProp) && idProp.GetString() is { } id)
-                                ids.Add(id);
-                        }
-                    }
-
-                    depVulnIds[start + i] = ids;
-                    i++;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "OSV querybatch failed (batch {Start})", start);
-            }
-        }
+        IReadOnlyList<IReadOnlyList<string>?> reportedIds = await _vulnerabilityFeed.QueryAsync(queries);
 
         HashSet<string> idsToHydrate = new();
-        for (int i = 0; i < mapped.Count; i++)
+        for (int i = 0; i < dependencies.Count; i++)
         {
-            List<string>? ids = depVulnIds[i];
+            IReadOnlyList<string>? ids = reportedIds[i];
             if (ids == null) continue;
 
-            HashSet<string> existing = mapped[i].Dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
+            HashSet<string> existing = dependencies[i].Vulnerabilities.Select(v => v.CveId).ToHashSet();
             foreach (string id in ids)
             {
                 if (!existing.Contains(id)) idsToHydrate.Add(id);
             }
         }
 
-        Dictionary<string, JsonDocument> details = await FetchVulnDetailsAsync(idsToHydrate);
+        IReadOnlyDictionary<string, VulnerabilityAdvisory> advisories =
+            await _vulnerabilityFeed.GetAdvisoriesAsync(idsToHydrate);
 
-        try
+        List<VulnerabilityScanResult> scanResults = new();
+
+        for (int i = 0; i < dependencies.Count; i++)
         {
-            List<VulnerabilityScanResult> scanResults = new();
+            Dependency dep = dependencies[i];
+            IReadOnlyList<string>? ids = reportedIds[i];
+            if (ids == null) continue;
 
-            for (int i = 0; i < mapped.Count; i++)
+            if (ids.Count == 0)
             {
-                Dependency dep = mapped[i].Dep;
-                List<string>? ids = depVulnIds[i];
-                if (ids == null) continue;
+                List<Vulnerability> allResolved = dep.Vulnerabilities.ToList();
 
-                if (ids.Count == 0)
+                if (dep.Status == DependencyStatus.Vulnerable || allResolved.Count > 0)
                 {
-                    List<Vulnerability> allResolved = dep.Vulnerabilities.ToList();
-
-                    if (dep.Status == DependencyStatus.Vulnerable || allResolved.Count > 0)
-                    {
-                        scanResults.Add(new VulnerabilityScanResult(dep,
-                            DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion),
-                            new List<Vulnerability>(),
-                            allResolved));
-                    }
-
-                    continue;
+                    scanResults.Add(new VulnerabilityScanResult(dep,
+                        DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion),
+                        new List<Vulnerability>(),
+                        allResolved));
                 }
 
-                HashSet<string> reportedCves = ids.ToHashSet();
-                List<Vulnerability> resolvedVulns = dep.Vulnerabilities
-                    .Where(v => !reportedCves.Contains(v.CveId))
-                    .ToList();
-
-                HashSet<string> existingCves = dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
-                List<Vulnerability> newVulns = new();
-
-                foreach (string id in ids)
-                {
-                    if (existingCves.Contains(id)) continue;
-                    if (!details.TryGetValue(id, out JsonDocument? detailDoc)) continue;
-
-                    JsonElement vuln = detailDoc.RootElement;
-                    (decimal cvss, VulnerabilitySeverity severity) = ExtractSeverity(vuln);
-                    string? fixedVersion = ExtractFixedVersion(vuln, dep.Name);
-                    string summary = vuln.TryGetProperty("summary", out JsonElement sumProp)
-                        ? sumProp.GetString() ?? string.Empty
-                        : string.Empty;
-
-                    newVulns.Add(new Vulnerability
-                    {
-                        DependencyId = dep.Id,
-                        CveId = id,
-                        CvssScore = cvss,
-                        Description = summary,
-                        PackageName = dep.Name,
-                        FixedVersion = fixedVersion,
-                        Severity = severity,
-                        DetectedAt = previousDetections.TryGetValue(id, out DateTime firstDetectedAt)
-                            ? firstDetectedAt
-                            : DateTime.UtcNow
-                    });
-                }
-
-                if (newVulns.Count > 0 || resolvedVulns.Count > 0)
-                    scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.Vulnerable, newVulns,
-                        resolvedVulns));
+                continue;
             }
 
-            return scanResults;
+            HashSet<string> reportedCves = ids.ToHashSet();
+            List<Vulnerability> resolvedVulns = dep.Vulnerabilities
+                .Where(v => !reportedCves.Contains(v.CveId))
+                .ToList();
+
+            HashSet<string> existingCves = dep.Vulnerabilities.Select(v => v.CveId).ToHashSet();
+            List<Vulnerability> newVulns = new();
+
+            foreach (string id in ids)
+            {
+                if (existingCves.Contains(id)) continue;
+                if (!advisories.TryGetValue(id, out VulnerabilityAdvisory? advisory)) continue;
+
+                newVulns.Add(new Vulnerability
+                {
+                    DependencyId = dep.Id,
+                    CveId = id,
+                    CvssScore = advisory.CvssScore,
+                    Description = advisory.Summary,
+                    PackageName = dep.Name,
+                    FixedVersion = ResolveFixedVersion(advisory, dep.Name),
+                    Severity = advisory.Severity,
+                    DetectedAt = previousDetections.TryGetValue(id, out DateTime firstDetectedAt)
+                        ? firstDetectedAt
+                        : DateTime.UtcNow
+                });
+            }
+
+            if (newVulns.Count > 0 || resolvedVulns.Count > 0)
+                scanResults.Add(new VulnerabilityScanResult(dep, DependencyStatus.Vulnerable, newVulns,
+                    resolvedVulns));
         }
-        finally
-        {
-            foreach (JsonDocument doc in details.Values) doc.Dispose();
-        }
+
+        return scanResults;
     }
 
-    private async Task<Dictionary<string, JsonDocument>> FetchVulnDetailsAsync(HashSet<string> ids)
+    private static string? ResolveFixedVersion(VulnerabilityAdvisory advisory, string packageName)
     {
-        Dictionary<string, JsonDocument> details = new();
-        if (ids.Count == 0) return details;
+        if (advisory.FixedVersionsByPackage.TryGetValue(packageName, out string? matched)) return matched;
 
-        using SemaphoreSlim throttle = new SemaphoreSlim(10);
-
-        IEnumerable<Task<(string Id, JsonDocument? Doc)>> tasks = ids.Select(async id =>
-        {
-            await throttle.WaitAsync();
-            try
-            {
-                using HttpResponseMessage response = await _osvClient.GetAsync($"https://api.osv.dev/v1/vulns/{id}");
-                if (!response.IsSuccessStatusCode) return (id, (JsonDocument?)null);
-
-                return (id, (JsonDocument?)JsonDocument.Parse(await response.Content.ReadAsStringAsync()));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "OSV detail lookup failed for {VulnId}", id);
-                return (id, (JsonDocument?)null);
-            }
-            finally { throttle.Release(); }
-        });
-
-        foreach ((string id, JsonDocument? doc) in await Task.WhenAll(tasks))
-        {
-            if (doc != null) details[id] = doc;
-        }
-
-        return details;
+        return advisory.FixedVersionsByPackage.TryGetValue(string.Empty, out string? unscoped) ? unscoped : null;
     }
-
 }

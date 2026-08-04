@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
@@ -9,11 +8,10 @@ using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
-using Sentinel.Domain.DTOs.Common;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Common.Contracts;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth.Register;
 
@@ -24,7 +22,7 @@ public class AuthRegisterService(
     IEmailVerificationTokenRepository verificationTokenRepository,
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
-    IBackgroundJobClient jobs,
+    IJobScheduler jobs,
     IAuditLogService auditLog,
     QueuedTokenProtector tokenProtector,
     AuthRegisterValidator validator,

@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
@@ -16,16 +15,16 @@ public class PurgeExpiredRevokedTokensJob(
 {
     private static readonly TimeSpan ProcessedStripeEventRetention = TimeSpan.FromDays(30);
 
-    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
         try
         {
-            int deletedTokens = await revokedTokenRepository.DeleteExpiredAsync(cancellationToken.ShutdownToken);
+            int deletedTokens = await revokedTokenRepository.DeleteExpiredAsync(cancellationToken);
 
             int deletedEvents = await processedStripeEventRepository.DeleteProcessedBeforeAsync(
-                DateTime.UtcNow - ProcessedStripeEventRetention, cancellationToken.ShutdownToken);
+                DateTime.UtcNow - ProcessedStripeEventRetention, cancellationToken);
 
             logger.LogInformation(
                 "Purge completed: {TokenCount} expired revoked token(s), {EventCount} archived Stripe event(s)",

@@ -2,9 +2,9 @@ using FluentAssertions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets.GetById;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Tests.Helpers;
+using Sentinel.Application.Tickets;
 
 namespace Sentinel.Tests.Services;
 

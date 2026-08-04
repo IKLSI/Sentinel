@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.DTOs.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

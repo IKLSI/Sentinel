@@ -1,4 +1,3 @@
-using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Application.Auth;

@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
 
 namespace Sentinel.Application.Auth.ResetPassword;
 

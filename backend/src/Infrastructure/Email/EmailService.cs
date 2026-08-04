@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
-using Sentinel.Domain.Settings;
 
 namespace Sentinel.Infrastructure.Email;
 

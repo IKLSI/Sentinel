@@ -11,9 +11,10 @@ using Microsoft.IdentityModel.Tokens;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
-using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
+using Sentinel.API.Options;
+using Sentinel.Application.Common.Contracts;
+using Sentinel.Application.Options;
 
 namespace Sentinel.API.Extensions;
 

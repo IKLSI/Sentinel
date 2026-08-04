@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -11,19 +10,17 @@ public class AuditLogRepository : CrudEntityWithIdRepository<AuditLog>, IAuditLo
 {
     public AuditLogRepository(SentinelContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<UserExportAuditLogDto>> ListForUserExportAsync(Guid userId,
+    public async Task<IReadOnlyList<UserExportAuditLogRow>> ListForUserExportAsync(Guid userId,
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
             .Where(a => a.UserId == userId)
             .OrderByDescending(al => al.CreatedAt)
-            .Select(al => new UserExportAuditLogDto
-            {
-                Id = al.Id,
-                Action = al.Action.ToString(),
-                EntityType = al.EntityType,
-                EntityId = al.EntityId,
-                CreatedAt = al.CreatedAt
-            })
+            .Select(al => new UserExportAuditLogRow(
+                al.Id,
+                al.Action.ToString(),
+                al.EntityType,
+                al.EntityId,
+                al.CreatedAt))
             .ToListAsync(cancellationToken);
 
     public Task<int> DetachUserAsync(Guid userId, CancellationToken cancellationToken) =>

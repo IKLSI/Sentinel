@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -11,7 +10,7 @@ public class ApiKeyRepository : CrudEntityWithIdRepository<ApiKey>, IApiKeyRepos
 {
     public ApiKeyRepository(SentinelContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<ApiKeyDto>> ListForOrganizationAsync(Guid organizationId,
+    public async Task<IReadOnlyList<ApiKeyListRow>> ListForOrganizationAsync(Guid organizationId,
         ApiKeySortField sortBy, SortDirection sortDirection, CancellationToken cancellationToken)
     {
         IQueryable<ApiKey> query = Query(QueryTracking.NoTracking)
@@ -19,16 +18,14 @@ public class ApiKeyRepository : CrudEntityWithIdRepository<ApiKey>, IApiKeyRepos
             .Where(k => !k.IsRevoked);
 
         return await ApplySort(query, sortBy, sortDirection)
-            .Select(k => new ApiKeyDto
-            {
-                Id = k.Id,
-                Name = k.Name,
-                Prefix = k.Prefix,
-                ExpiresAt = k.ExpiresAt,
-                LastUsedAt = k.LastUsedAt,
-                CreatedAt = k.CreatedAt,
-                CreatedByName = k.CreatedBy.FullName,
-            })
+            .Select(k => new ApiKeyListRow(
+                k.Id,
+                k.Name,
+                k.Prefix,
+                k.ExpiresAt,
+                k.LastUsedAt,
+                k.CreatedAt,
+                k.CreatedBy.FullName))
             .ToListAsync(cancellationToken);
     }
 

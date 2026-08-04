@@ -1,20 +1,17 @@
-using Hangfire;
-using Hangfire.Storage;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.Jobs;
+using Sentinel.Domain.Jobs;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Jobs.GetRecurring;
 
-public class RecurringJobListService : IService
+public class RecurringJobListService(IRecurringJobMonitor recurringJobs) : IService
 {
     public Result<List<RecurringJobStatusDto>> Execute(JobSortField sortBy, SortDirection sortDirection)
     {
-        using IStorageConnection connection = JobStorage.Current.GetConnection();
-
-        List<RecurringJobStatusDto> jobs = connection.GetRecurringJobs()
+        List<RecurringJobStatusDto> jobs = recurringJobs.List()
             .Select(job => new RecurringJobStatusDto(
                 job.Id,
                 job.Cron,

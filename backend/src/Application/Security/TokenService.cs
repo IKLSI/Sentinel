@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Security;
 

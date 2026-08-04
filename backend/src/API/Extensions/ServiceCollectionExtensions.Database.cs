@@ -5,8 +5,8 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Sentinel.API.Options;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
 using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.API.Extensions;

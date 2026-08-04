@@ -3,7 +3,6 @@ using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 
@@ -25,7 +24,7 @@ public class UserExportDataService(
         if (user == null)
             return Result<UserDataExportDto>.NotFound(ErrorCodes.UserNotFound);
 
-        IReadOnlyList<UserExportAuditLogDto> auditLogs = await auditLogRepository
+        IReadOnlyList<UserExportAuditLogRow> auditLogs = await auditLogRepository
             .ListForUserExportAsync(currentUserId, cancellationToken);
 
         return new UserDataExportDto
@@ -42,7 +41,14 @@ public class UserExportDataService(
                 LastLoginAt = user.LastLoginAt,
                 Language = user.Language
             },
-            AuditLogs = auditLogs
+            AuditLogs = auditLogs.Select(row => new UserExportAuditLogDto
+            {
+                Id = row.Id,
+                Action = row.Action,
+                EntityType = row.EntityType,
+                EntityId = row.EntityId,
+                CreatedAt = row.CreatedAt
+            }).ToList()
         };
     }
 }

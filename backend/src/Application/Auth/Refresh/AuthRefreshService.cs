@@ -8,10 +8,9 @@ using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth.Refresh;
 

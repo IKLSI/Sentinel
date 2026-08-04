@@ -12,9 +12,9 @@ using Sentinel.Application.Users.Update;
 using Sentinel.Application.Users.UpdatePreferences;
 using Sentinel.Application.Users.UpdateProfile;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
-using Sentinel.Domain.DTOs.Users;
 using Sentinel.Domain.Models;
+using Sentinel.Application.Common.Contracts;
+using Sentinel.Application.Users;
 
 namespace Sentinel.API.Controllers;
 

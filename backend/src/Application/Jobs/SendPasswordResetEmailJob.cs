@@ -3,7 +3,7 @@ using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Jobs;
 

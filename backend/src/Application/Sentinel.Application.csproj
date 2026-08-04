@@ -3,10 +3,13 @@
   <ItemGroup>
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="CycloneDX.Core" />
-    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.Core" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="Stripe.net" />

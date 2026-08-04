@@ -12,8 +12,8 @@ using Sentinel.Application.Auth.ResendVerification;
 using Sentinel.Application.Auth.ResetPassword;
 using Sentinel.Application.Auth.VerifyEmail;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
-using Sentinel.Domain.DTOs.Common;
+using Sentinel.Application.Auth;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Controllers;
 

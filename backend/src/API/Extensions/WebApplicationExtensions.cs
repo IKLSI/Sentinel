@@ -11,12 +11,12 @@ public static class WebApplicationExtensions
         IRecurringJobManager recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
         recurringJobs.AddOrUpdate<TechHealthScanJob>(
             RecurringJobIds.TechHealthScan,
-            job => job.ExecuteAsync(JobCancellationToken.Null),
+            job => job.ExecuteAsync(CancellationToken.None),
             Cron.Daily(2));
 
         recurringJobs.AddOrUpdate<PurgeExpiredRevokedTokensJob>(
             RecurringJobIds.PurgeExpiredRevokedTokens,
-            job => job.ExecuteAsync(JobCancellationToken.Null),
+            job => job.ExecuteAsync(CancellationToken.None),
             Cron.Hourly());
 
         return app;

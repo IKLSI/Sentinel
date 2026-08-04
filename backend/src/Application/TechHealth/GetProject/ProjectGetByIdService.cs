@@ -2,7 +2,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.GetProject;

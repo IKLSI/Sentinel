@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Models;
-using Sentinel.Domain.Settings;
+using Sentinel.Application.Options;
 
 namespace Sentinel.Tests.Services;
 

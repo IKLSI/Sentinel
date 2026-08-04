@@ -1,6 +1,5 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Domain.DTOs.Users;
 
 namespace Sentinel.Application.Users.UpdateProfile;
 

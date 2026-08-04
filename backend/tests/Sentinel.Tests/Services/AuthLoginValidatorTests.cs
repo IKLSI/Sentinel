@@ -2,7 +2,6 @@ using FluentAssertions;
 using Sentinel.Application.Auth.Login;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Auth;
 
 namespace Sentinel.Tests.Services;
 

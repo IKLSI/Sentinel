@@ -1,18 +1,13 @@
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
-using Hangfire;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Sentinel.Application.Billing;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

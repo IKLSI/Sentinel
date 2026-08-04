@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Settings;
+using Sentinel.API.Options;
+using Sentinel.Application.Options;
+using Sentinel.Infrastructure.Email;
 
 namespace Sentinel.API.Extensions;
 

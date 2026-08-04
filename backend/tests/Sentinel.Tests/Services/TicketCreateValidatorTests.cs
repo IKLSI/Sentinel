@@ -2,7 +2,6 @@ using FluentAssertions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets.Create;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Tests.Services;

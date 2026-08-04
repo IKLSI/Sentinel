@@ -2,10 +2,9 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.Common;
-using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.Application.Tickets.Grid;
 

@@ -6,7 +6,6 @@ using Sentinel.Application.ApiKeys.Create;
 using Sentinel.Application.ApiKeys.GetAll;
 using Sentinel.Application.ApiKeys.Revoke;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.ApiKeys;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

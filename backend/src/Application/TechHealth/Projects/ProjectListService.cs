@@ -2,7 +2,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.DTOs.TechHealth;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

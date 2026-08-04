@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.DTOs.Common;
+using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Extensions;
 

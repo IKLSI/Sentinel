@@ -1,4 +1,3 @@
-using Sentinel.Domain.DTOs.Tickets;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
 

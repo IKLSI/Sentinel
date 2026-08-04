@@ -173,6 +173,3 @@ temp/
 *.pid
 *.seed
 *.pid.lock
-
-# Graphify
-graphify-out/
