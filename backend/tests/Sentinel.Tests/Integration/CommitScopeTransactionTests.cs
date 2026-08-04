@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;
 
 namespace Sentinel.Tests.Integration;

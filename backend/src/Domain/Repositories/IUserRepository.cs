@@ -1,6 +1,6 @@
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Domain.Repositories;
 

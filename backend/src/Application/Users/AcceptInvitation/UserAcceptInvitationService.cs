@@ -4,7 +4,7 @@ using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 using Sentinel.Application.Common.Contracts;

@@ -1,5 +1,5 @@
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;

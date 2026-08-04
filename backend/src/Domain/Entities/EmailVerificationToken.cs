@@ -1,7 +1,7 @@
 using Sentinel.Domain.Abstractions.Persistence;
-namespace Sentinel.Domain.Models;
+namespace Sentinel.Domain.Entities;
 
-public class PasswordResetToken : IEntityWithId
+public class EmailVerificationToken : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid UserId { get; set; }

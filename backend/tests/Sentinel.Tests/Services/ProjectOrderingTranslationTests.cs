@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.Tests.Services;

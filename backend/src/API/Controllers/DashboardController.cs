@@ -2,7 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Dashboard.GetStats;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.API.Controllers;
 

@@ -1,4 +1,4 @@
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
 

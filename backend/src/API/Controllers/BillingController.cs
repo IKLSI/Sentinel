@@ -10,7 +10,7 @@ using Sentinel.Application.Billing.GetStatus;
 using Sentinel.Application.Billing.Portal;
 using Sentinel.Application.Billing.Webhook;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Application.Billing;
 
 namespace Sentinel.API.Controllers;

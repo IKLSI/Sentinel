@@ -3,7 +3,7 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.AvailableRepos;

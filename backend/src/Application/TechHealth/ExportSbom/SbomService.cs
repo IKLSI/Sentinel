@@ -5,9 +5,9 @@ using System.Text.Json.Serialization;
 using CycloneDX.Json;
 using CycloneDX.Models;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
-using Dependency = Sentinel.Domain.Models.Dependency;
+using Dependency = Sentinel.Domain.Entities.Dependency;
 
 namespace Sentinel.Application.TechHealth.ExportSbom;
 

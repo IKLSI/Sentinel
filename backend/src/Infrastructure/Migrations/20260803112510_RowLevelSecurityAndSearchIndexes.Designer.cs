@@ -44,7 +44,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("DataProtectionKeys");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.ApiKey", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -95,7 +95,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("ApiKeys");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.AuditLog", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -143,7 +143,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Dependency", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -187,7 +187,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Dependencies");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.EmailVerificationToken", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.EmailVerificationToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,7 +225,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("EmailVerificationTokens");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Organization", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,7 +309,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Organizations");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.PasswordResetToken", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -347,7 +347,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("PasswordResetTokens");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.ProcessedStripeEvent", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.ProcessedStripeEvent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -377,7 +377,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("ProcessedStripeEvents");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Project", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -432,7 +432,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.RevokedToken", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.RevokedToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -456,7 +456,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("RevokedTokens");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Runtime", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -488,7 +488,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Runtimes");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Ticket", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -584,7 +584,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketAttachment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketAttachment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -627,7 +627,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("TicketAttachments");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketComment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -660,7 +660,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("TicketComments");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketHistory", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -697,7 +697,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("TicketHistories");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -781,7 +781,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.UserInvitation", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.UserInvitation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -830,7 +830,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("UserInvitations");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Vulnerability", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Vulnerability", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -877,15 +877,15 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.ApiKey", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.User", "CreatedBy")
+                    b.HasOne("Sentinel.Domain.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -896,9 +896,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Dependency", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany("Dependencies")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -907,9 +907,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Project", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -918,9 +918,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Runtime", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Runtime", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany("Runtimes")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -929,26 +929,26 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Ticket", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.User", "AssignedTo")
+                    b.HasOne("Sentinel.Domain.Entities.User", "AssignedTo")
                         .WithMany()
                         .HasForeignKey("AssignedToId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sentinel.Domain.Models.User", "CreatedBy")
+                    b.HasOne("Sentinel.Domain.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.Project", "Project")
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -962,15 +962,15 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketAttachment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketAttachment", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Entities.Ticket", "Ticket")
                         .WithMany("Attachments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.User", "UploadedBy")
+                    b.HasOne("Sentinel.Domain.Entities.User", "UploadedBy")
                         .WithMany()
                         .HasForeignKey("UploadedById")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -981,15 +981,15 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("UploadedBy");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketComment", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketComment", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.User", "Author")
+                    b.HasOne("Sentinel.Domain.Entities.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Entities.Ticket", "Ticket")
                         .WithMany("Comments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1000,15 +1000,15 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.TicketHistory", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.TicketHistory", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Ticket", "Ticket")
+                    b.HasOne("Sentinel.Domain.Entities.Ticket", "Ticket")
                         .WithMany("History")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.User", "User")
+                    b.HasOne("Sentinel.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1019,9 +1019,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.User", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.User", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany("Users")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1030,15 +1030,15 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.UserInvitation", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.UserInvitation", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.User", "InvitedBy")
+                    b.HasOne("Sentinel.Domain.Entities.User", "InvitedBy")
                         .WithMany()
                         .HasForeignKey("InvitedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sentinel.Domain.Models.Organization", "Organization")
+                    b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1049,9 +1049,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Vulnerability", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Vulnerability", b =>
                 {
-                    b.HasOne("Sentinel.Domain.Models.Dependency", "Dependency")
+                    b.HasOne("Sentinel.Domain.Entities.Dependency", "Dependency")
                         .WithMany("Vulnerabilities")
                         .HasForeignKey("DependencyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1060,17 +1060,17 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Dependency");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Dependency", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Dependency", b =>
                 {
                     b.Navigation("Vulnerabilities");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Organization", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Organization", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Project", b =>
                 {
                     b.Navigation("Dependencies");
 
@@ -1079,7 +1079,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Navigation("Tickets");
                 });
 
-            modelBuilder.Entity("Sentinel.Domain.Models.Ticket", b =>
+            modelBuilder.Entity("Sentinel.Domain.Entities.Ticket", b =>
                 {
                     b.Navigation("Attachments");
 

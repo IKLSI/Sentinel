@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Infrastructure.Email;
 

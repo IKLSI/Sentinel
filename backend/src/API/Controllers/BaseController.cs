@@ -1,3 +1,4 @@
+using Sentinel.API.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;

@@ -1,4 +1,4 @@
-namespace Sentinel.Application.Common.Contracts;
+namespace Sentinel.API.Contracts;
 
 public class ApiValidationErrorResponse : ApiErrorResponse
 {

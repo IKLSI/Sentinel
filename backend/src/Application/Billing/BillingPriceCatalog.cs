@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using Sentinel.Application.Common;
 using Sentinel.Application.Options;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.Billing;
 

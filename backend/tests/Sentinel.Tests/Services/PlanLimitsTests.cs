@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Tests.Services;
 

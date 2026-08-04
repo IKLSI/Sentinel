@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.API.Attributes;
 

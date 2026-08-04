@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Sentinel.Application.ApiKeys.Validate;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
 
 namespace Sentinel.API.Middleware;
 
@@ -29,19 +29,21 @@ public class ApiKeyMiddleware
             ApiKeyValidateService apiKeyValidateService =
                 context.RequestServices.GetRequiredService<ApiKeyValidateService>();
 
-            var result = await apiKeyValidateService.ExecuteAsync(rawKey.ToString(), context.RequestAborted);
-            if (result.HasValue)
+            Result<ApiKeyPrincipalDto> result =
+                await apiKeyValidateService.ExecuteAsync(rawKey.ToString(), context.RequestAborted);
+
+            if (result.IsSuccess)
             {
-                (ApiKey key, User user) = result.Value;
+                ApiKeyPrincipalDto principal = result.Value!;
                 Claim[] claims =
                 [
-                    new Claim(ClaimNames.UserId, user.Id.ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role.ToString()),
-                    new Claim(ClaimNames.OrganizationId, user.OrganizationId.ToString()),
-                    new Claim(ClaimNames.ApiKeyId, key.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Jti, key.Id.ToString()),
+                    new Claim(ClaimNames.UserId, principal.UserId.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, principal.UserId.ToString()),
+                    new Claim(ClaimTypes.Email, principal.Email),
+                    new Claim(ClaimTypes.Role, principal.Role),
+                    new Claim(ClaimNames.OrganizationId, principal.OrganizationId.ToString()),
+                    new Claim(ClaimNames.ApiKeyId, principal.ApiKeyId.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Jti, principal.ApiKeyId.ToString()),
                 ];
                 ClaimsIdentity identity = new ClaimsIdentity(claims, "ApiKey");
                 context.User = new ClaimsPrincipal(identity);

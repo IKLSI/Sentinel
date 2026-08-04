@@ -2,7 +2,7 @@ using FluentAssertions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Tests.Helpers;
 
 namespace Sentinel.Tests.Services;

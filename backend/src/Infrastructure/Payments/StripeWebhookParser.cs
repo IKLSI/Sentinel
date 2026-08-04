@@ -2,10 +2,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Billing;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Stripe;
 using CheckoutSession = Stripe.Checkout.Session;
-using PlanTier = Sentinel.Domain.Models.PlanTier;
+using PlanTier = Sentinel.Domain.Entities.PlanTier;
 
 namespace Sentinel.Infrastructure.Payments;
 

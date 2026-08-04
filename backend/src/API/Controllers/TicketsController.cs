@@ -18,7 +18,7 @@ using Sentinel.Application.Tickets.Update;
 using Sentinel.Application.Tickets.UpdateComment;
 using Sentinel.Application.Tickets.UploadAttachment;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Application.Common.Contracts;
 using Sentinel.Application.Tickets;
 

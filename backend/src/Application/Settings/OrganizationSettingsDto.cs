@@ -1,4 +1,4 @@
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.Settings;
 

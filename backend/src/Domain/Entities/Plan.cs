@@ -1,4 +1,4 @@
-namespace Sentinel.Domain.Models;
+namespace Sentinel.Domain.Entities;
 
 public enum PlanTier
 {

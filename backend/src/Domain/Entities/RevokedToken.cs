@@ -1,6 +1,6 @@
 using Sentinel.Domain.Abstractions.Persistence;
 
-namespace Sentinel.Domain.Models;
+namespace Sentinel.Domain.Entities;
 
 public class RevokedToken : IEntityWithId
 {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Sentinel.Application.Common.Contracts;
+namespace Sentinel.API.Contracts;
 
 public class ApiErrorResponse
 {

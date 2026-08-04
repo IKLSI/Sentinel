@@ -1,7 +1,8 @@
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.ApiKeys.Validate;
@@ -13,19 +14,23 @@ public class ApiKeyValidateService(
 {
     private static readonly TimeSpan LastUsedAtUpdateThreshold = TimeSpan.FromMinutes(1);
 
-    public async Task<(ApiKey Key, User User)?> ExecuteAsync(string rawKey, CancellationToken cancellationToken)
+    public async Task<Result<ApiKeyPrincipalDto>> ExecuteAsync(string rawKey, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();
 
         ApiKey? apiKey = await apiKeyRepository
             .GetOrDefaultActiveByHashAcrossTenantsAsync(ApiKeyGenerator.Hash(rawKey), cancellationToken);
 
-        if (apiKey == null) return null;
-        if (apiKey.ExpiresAt.HasValue && apiKey.ExpiresAt.Value < DateTime.UtcNow) return null;
+        if (apiKey == null)
+            return Result<ApiKeyPrincipalDto>.Unauthorized();
+
+        if (apiKey.ExpiresAt.HasValue && apiKey.ExpiresAt.Value < DateTime.UtcNow)
+            return Result<ApiKeyPrincipalDto>.Unauthorized();
 
         User user = apiKey.CreatedBy;
 
-        if (!user.IsActive) return null;
+        if (!user.IsActive)
+            return Result<ApiKeyPrincipalDto>.Unauthorized();
 
         if (apiKey.LastUsedAt is null || DateTime.UtcNow - apiKey.LastUsedAt.Value > LastUsedAtUpdateThreshold)
         {
@@ -35,6 +40,13 @@ public class ApiKeyValidateService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        return (apiKey, user);
+        return new ApiKeyPrincipalDto
+        {
+            ApiKeyId = apiKey.Id,
+            UserId = user.Id,
+            Email = user.Email,
+            Role = user.Role.ToString(),
+            OrganizationId = user.OrganizationId
+        };
     }
 }

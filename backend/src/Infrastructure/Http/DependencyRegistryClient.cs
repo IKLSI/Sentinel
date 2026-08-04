@@ -4,7 +4,7 @@ using System.Xml.Linq;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Infrastructure.Http;

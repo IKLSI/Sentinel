@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.Scan;

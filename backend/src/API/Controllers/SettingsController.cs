@@ -6,7 +6,7 @@ using Sentinel.Application.Settings.ConnectIntegration;
 using Sentinel.Application.Settings.GetIntegrations;
 using Sentinel.Application.Settings.GetOrganization;
 using Sentinel.Application.Settings.UpdateOrganization;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Application.Settings;
 
 namespace Sentinel.API.Controllers;

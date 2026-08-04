@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
 
@@ -15,9 +15,4 @@ public class TicketAttachmentRepository : CrudEntityWithIdRepository<TicketAttac
         Query(QueryTracking.NoTracking)
             .Include(a => a.Ticket)
             .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == ticketId, cancellationToken);
-}
-
-public class TicketHistoryRepository : CrudEntityWithIdRepository<TicketHistory>, ITicketHistoryRepository
-{
-    public TicketHistoryRepository(SentinelContext context) : base(context) { }
 }

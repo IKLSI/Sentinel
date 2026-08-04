@@ -28,7 +28,7 @@ public class FakeSystemScope : ISystemScope
 public class FakeAuditLogService : Sentinel.Application.Audit.IAuditLogService
 {
     public Task LogAsync(
-        Sentinel.Domain.Models.AuditAction action,
+        Sentinel.Domain.Entities.AuditAction action,
         string entityType,
         Guid? organizationId = null,
         Guid? userId = null,

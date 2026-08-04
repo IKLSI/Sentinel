@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Models;
+using Sentinel.Domain.Entities;
 
 namespace Sentinel.Tests.Services;
 

@@ -1,4 +1,3 @@
-using Sentinel.API.Http;
 using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Audit;

@@ -1,6 +1,7 @@
+using Microsoft.Extensions.Logging;
 using System.Net;
 
-namespace Sentinel.API.Http;
+namespace Sentinel.Infrastructure.Http;
 
 public sealed class ResilientHttpHandler : DelegatingHandler
 {
