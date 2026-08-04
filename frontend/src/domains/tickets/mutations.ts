@@ -75,7 +75,13 @@ export const useAddCommentMutation = (ticketId: string) =>
     { id: string; data: CreateComment }
   >(ROUTES_API.api.tickets[":id"].comments.__path, {
     onSuccess: (created) =>
-      updateCachedComments(ticketId, (comments) => [...comments, created]),
+      updateCachedComments(ticketId, (comments) =>
+        comments.some((comment) => comment.id === created.id)
+          ? comments.map((comment) =>
+              comment.id === created.id ? created : comment,
+            )
+          : [...comments, created],
+      ),
   });
 
 export const useUpdateCommentMutation = (ticketId: string) =>

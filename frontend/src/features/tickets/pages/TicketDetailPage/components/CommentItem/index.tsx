@@ -2,51 +2,23 @@ import React from "react";
 import Box from "@mui/material/Box";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
-import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
-import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
 import { useI18n } from "@/contexts/I18nContext";
 import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import type { Ticket } from "@/domains/tickets/types";
-import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import {
+  AttachmentChip,
+  type CommentAttachment,
+} from "@/components/ui/common/AttachmentChip";
+import {
+  type DetailPalette,
+  parseCommentContent,
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { initialsFromName } from "@/formatters/initials";
 
 type Comment = Ticket["comments"][number];
-
-interface Attachment {
-  fileName: string;
-  url: string;
-  isImage: boolean;
-}
-
-const ATTACH_SEP = "<!-- attachments -->";
-
-function parseComment(content: string): {
-  mainText: string;
-  attachments: Attachment[];
-} {
-  const idx = content.indexOf(ATTACH_SEP);
-  if (idx === -1) return { mainText: content, attachments: [] };
-
-  const mainText = content.slice(0, idx).trimEnd();
-  const section = content.slice(idx + ATTACH_SEP.length).trim();
-
-  const attachments = section
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => {
-      const img = line.match(/^!\[(.+?)\]\((.+?)\)$/);
-      if (img) return { fileName: img[1], url: img[2], isImage: true };
-      const lnk = line.match(/^\[(.+?)\]\((.+?)\)$/);
-      if (lnk) return { fileName: lnk[1], url: lnk[2], isImage: false };
-      return null;
-    })
-    .filter((a): a is Attachment => a !== null);
-
-  return { mainText, attachments };
-}
 
 interface Props {
   comment: Comment;
@@ -69,10 +41,10 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   const onDownloadError = useApiErrorToast(
     "tickets.detail.attachments_download_error",
   );
-  const { mainText, attachments } = parseComment(c.content);
+  const { text: mainText, attachments } = parseCommentContent(c.content);
   const downloadMutation = useDownloadAttachmentMutation();
 
-  const handleDownload = (a: Attachment) => {
+  const handleDownload = (a: CommentAttachment) => {
     downloadMutation.mutate(
       { url: a.url, fileName: a.fileName },
       { onError: onDownloadError },
@@ -206,7 +178,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               <Box
                 sx={{
                   fontSize: "13px",
-                  color: palette.mdText,
+                  color: palette.bodyText,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
                   lineHeight: 1.6,
@@ -229,51 +201,11 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               }}
             >
               {attachments.map((a) => (
-                <Box
+                <AttachmentChip
                   key={a.url}
-                  component="button"
-                  type="button"
+                  attachment={a}
                   onClick={() => handleDownload(a)}
-                  sx={{
-                    all: "unset",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    px: "8px",
-                    height: "26px",
-                    borderRadius: "var(--r)",
-                    border: `1px solid ${palette.composerBorder}`,
-                    background: palette.tabStripBg,
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    color: palette.tabIdleFg,
-                    maxWidth: "220px",
-                    transition: "background 0.12s, color 0.12s",
-                    "&:hover": {
-                      background: palette.toolbarHoverBg,
-                      color: palette.toolbarHoverFg,
-                    },
-                  }}
-                >
-                  {a.isImage ? (
-                    <ImageOutlined sx={{ fontSize: 13, flexShrink: 0 }} />
-                  ) : (
-                    <InsertDriveFileOutlined
-                      sx={{ fontSize: 13, flexShrink: 0 }}
-                    />
-                  )}
-                  <Box
-                    component="span"
-                    sx={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {a.fileName}
-                  </Box>
-                </Box>
+                />
               ))}
             </Box>
           )}

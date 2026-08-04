@@ -18,8 +18,6 @@ import {
 } from "@/domains/tickets/mutations";
 import { useTicketQuery } from "@/domains/tickets/queries";
 import {
-  buildFieldSx,
-  buildMarkdownSx,
   buildPalette,
   buildPriorityConfig,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
@@ -50,8 +48,6 @@ export const TicketDetailPage: React.FC = () => {
   const isDark = theme === Theme.Dark;
   const palette = useMemo(() => buildPalette(isDark), [isDark]);
   const priorityConfig = useMemo(() => buildPriorityConfig(isDark), [isDark]);
-  const markdownSx = useMemo(() => buildMarkdownSx(palette), [palette]);
-  const fieldSx = useMemo(() => buildFieldSx(palette), [palette]);
 
   const ticketQuery = useTicketQuery(id);
   const ticket = ticketQuery.data ?? null;
@@ -69,7 +65,6 @@ export const TicketDetailPage: React.FC = () => {
     content: string;
   } | null>(null);
   const [editCommentValue, setEditCommentValue] = useState("");
-  const [editCommentPreview, setEditCommentPreview] = useState(false);
   const editCommentSaving = updateCommentMutation.isPending;
   const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(
     null,
@@ -243,7 +238,7 @@ export const TicketDetailPage: React.FC = () => {
                   <Box
                     sx={{
                       fontSize: "13px",
-                      color: palette.mdText,
+                      color: palette.bodyText,
                       whiteSpace: "pre-wrap",
                       lineHeight: 1.6,
                     }}
@@ -268,7 +263,6 @@ export const TicketDetailPage: React.FC = () => {
               onEdit={(idValue, content) => {
                 setEditCommentTarget({ id: idValue, content });
                 setEditCommentValue(content);
-                setEditCommentPreview(false);
               }}
               onDelete={setDeleteCommentTarget}
             />
@@ -279,9 +273,6 @@ export const TicketDetailPage: React.FC = () => {
               onValueChange={setComposerValue}
               submitting={submitting}
               onSubmit={handleAddComment}
-              palette={palette}
-              fieldSx={fieldSx}
-              markdownSx={markdownSx}
             />
           </Box>
         </Box>
@@ -312,16 +303,13 @@ export const TicketDetailPage: React.FC = () => {
       </PageContainer>
 
       <EditCommentModal
+        ticketId={id ?? ""}
         open={!!editCommentTarget}
         onClose={() => setEditCommentTarget(null)}
         value={editCommentValue}
         onValueChange={setEditCommentValue}
-        preview={editCommentPreview}
-        onPreviewChange={setEditCommentPreview}
         saving={editCommentSaving}
         onSubmit={handleEditComment}
-        markdownSx={markdownSx}
-        fieldSx={fieldSx}
       />
 
       <DeleteModal

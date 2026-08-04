@@ -1,18 +1,63 @@
 import { format } from "date-fns";
 import type { Locale } from "date-fns/locale";
 import type { Ticket, TicketHistory } from "@/domains/tickets/types";
+import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
 import { statusLabel } from "@/features/tickets/constants";
+
+const ATTACHMENT_SEPARATOR = "<!-- attachments -->";
+const IMAGE_LINK_PATTERN = /^!\[(.+?)\]\((.+?)\)$/;
+const FILE_LINK_PATTERN = /^\[(.+?)\]\((.+?)\)$/;
+const SEPARATOR_PREFIX = "\n\n";
+
+export function parseCommentContent(content: string): {
+  text: string;
+  attachments: CommentAttachment[];
+} {
+  const index = content.indexOf(ATTACHMENT_SEPARATOR);
+  if (index === -1) return { text: content, attachments: [] };
+
+  const rawText = content.slice(0, index);
+  const text = rawText.endsWith(SEPARATOR_PREFIX)
+    ? rawText.slice(0, -SEPARATOR_PREFIX.length)
+    : rawText.trimEnd();
+
+  const attachments = content
+    .slice(index + ATTACHMENT_SEPARATOR.length)
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const image = line.match(IMAGE_LINK_PATTERN);
+      if (image) return { fileName: image[1], url: image[2], isImage: true };
+      const file = line.match(FILE_LINK_PATTERN);
+      if (file) return { fileName: file[1], url: file[2], isImage: false };
+      return null;
+    })
+    .filter((a): a is CommentAttachment => a !== null);
+
+  return { text, attachments };
+}
+
+export function buildCommentContent(
+  text: string,
+  attachments: CommentAttachment[],
+): string {
+  if (attachments.length === 0) return text;
+  const links = attachments
+    .map((a) =>
+      a.isImage ? `![${a.fileName}](${a.url})` : `[${a.fileName}](${a.url})`,
+    )
+    .join("\n");
+  const block = `${ATTACHMENT_SEPARATOR}\n${links}`;
+  return text ? `${text}${SEPARATOR_PREFIX}${block}` : block;
+}
 
 export interface DetailPalette {
   panelBg: string;
   panelBorder: string;
   panelShadow: string;
-  breadcrumbText: string;
-  folderIcon: string;
   chevron: string;
-  referenceText: string;
   muted: string;
-  strongText: string;
   title: string;
   endpointFg: string;
   endpointBg: string;
@@ -20,7 +65,6 @@ export interface DetailPalette {
   endpointIcon: string;
   sectionDivider: string;
   sectionLabel: string;
-  descFallback: string;
   threadLine: string;
   commentAuthor: string;
   commentTime: string;
@@ -33,54 +77,22 @@ export interface DetailPalette {
   commentBgExternal: string;
   emptyFg: string;
   emptySub: string;
-  tabStripBg: string;
-  tabStripBorder: string;
-  tabActiveFg: string;
-  tabIdleFg: string;
-  tabActiveBg: string;
-  tabActiveShadow: string;
-  composerBorder: string;
-  composerBg: string;
-  composerDivider: string;
-  toolbarIdle: string;
-  toolbarHoverBg: string;
-  toolbarHoverFg: string;
-  sendBtnGradient: string;
-  fieldRowHover: string;
   fieldLabel: string;
   fieldValue: string;
   fieldSep: string;
-  discChevron: string;
-  typeIcon: string;
   historyTimeline: string;
   historyDotBorder: string;
   historyMsg: string;
   historySub: string;
-  inputBg: string;
-  inputBorder: string;
-  inputText: string;
-  inputFocusBorder: string;
-  inputFocusRing: string;
-  mdText: string;
-  mdInlineCodeBg: string;
-  mdInlineCodeBorder: string;
-  mdInlineCodeFg: string;
-  mdPreBg: string;
-  mdPreBorder: string;
-  mdPreFg: string;
-  mdStrong: string;
+  bodyText: string;
 }
 
 export const buildPalette = (_isDark: boolean): DetailPalette => ({
   panelBg: "var(--s1)",
   panelBorder: "var(--border)",
   panelShadow: "var(--sh-1)",
-  breadcrumbText: "var(--text-secondary)",
-  folderIcon: "var(--purple)",
   chevron: "var(--muted)",
-  referenceText: "var(--text-secondary)",
   muted: "var(--muted2)",
-  strongText: "var(--text-secondary)",
   title: "var(--text)",
   endpointFg: "var(--purple)",
   endpointBg:
@@ -89,7 +101,6 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   endpointIcon: "var(--purple)",
   sectionDivider: "var(--border)",
   sectionLabel: "var(--muted2)",
-  descFallback: "var(--muted2)",
   threadLine: "var(--border)",
   commentAuthor: "var(--text)",
   commentTime: "var(--muted2)",
@@ -102,44 +113,15 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   commentBgExternal: "var(--s2)",
   emptyFg: "var(--muted2)",
   emptySub: "var(--muted)",
-  tabStripBg: "var(--s3)",
-  tabStripBorder: "var(--border)",
-  tabActiveFg: "var(--text)",
-  tabIdleFg: "var(--text-secondary)",
-  tabActiveBg: "var(--s1)",
-  tabActiveShadow: "var(--sh-1)",
-  composerBorder: "var(--border)",
-  composerBg: "var(--s1)",
-  composerDivider: "var(--border)",
-  toolbarIdle: "var(--muted2)",
-  toolbarHoverBg: "var(--s2)",
-  toolbarHoverFg: "var(--text-secondary)",
-  sendBtnGradient:
-    "linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%)",
-  fieldRowHover: "var(--s2)",
   fieldLabel: "var(--muted2)",
   fieldValue: "var(--text)",
   fieldSep: "var(--border)",
-  discChevron: "var(--muted)",
-  typeIcon: "var(--text-secondary)",
   historyTimeline:
     "linear-gradient(180deg, var(--border) 0%, var(--border) 80%, transparent 100%)",
   historyDotBorder: "var(--s1)",
   historyMsg: "var(--text)",
   historySub: "var(--muted2)",
-  inputBg: "var(--s1)",
-  inputBorder: "var(--border)",
-  inputText: "var(--text)",
-  inputFocusBorder: "var(--accent)",
-  inputFocusRing: "var(--accent-border)",
-  mdText: "var(--text-secondary)",
-  mdInlineCodeBg: "var(--s3)",
-  mdInlineCodeBorder: "var(--border)",
-  mdInlineCodeFg: "var(--text)",
-  mdPreBg: "var(--bg)",
-  mdPreBorder: "var(--border)",
-  mdPreFg: "var(--text)",
-  mdStrong: "var(--text)",
+  bodyText: "var(--text-secondary)",
 });
 
 export const buildPriorityConfig = (
@@ -175,65 +157,6 @@ export const typeLabelKeys: Record<string, string> = {
   maintenance: "tickets.detail.type_maintenance",
   question: "tickets.detail.type_question",
 };
-
-export const buildMarkdownSx = (p: DetailPalette) =>
-  ({
-    fontSize: "13px",
-    color: p.mdText,
-    lineHeight: 1.7,
-    "& p": { m: 0, mb: "10px" },
-    "& p:last-child": { mb: 0 },
-    "& code": {
-      fontFamily: "var(--font-mono)",
-      fontSize: "12px",
-      background: p.mdInlineCodeBg,
-      border: `1px solid ${p.mdInlineCodeBorder}`,
-      borderRadius: "var(--r-sm)",
-      px: "6px",
-      py: "2px",
-      color: p.mdInlineCodeFg,
-    },
-    "& pre": {
-      mt: "14px",
-      mb: "6px",
-      borderRadius: "var(--r-lg)",
-      border: `1px solid ${p.mdPreBorder}`,
-      background: p.mdPreBg,
-      overflow: "auto",
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
-    },
-    "& pre code": {
-      display: "block",
-      background: "transparent",
-      border: "none",
-      fontSize: "13px",
-      lineHeight: 1.7,
-      color: p.mdPreFg,
-      p: "14px 18px",
-    },
-    "& strong": { color: p.mdStrong, fontWeight: 700 },
-    "& ul, & ol": { pl: "20px", m: 0 },
-  }) as const;
-
-export const buildFieldSx = (p: DetailPalette) =>
-  ({
-    background: p.inputBg,
-    border: `1px solid ${p.inputBorder}`,
-    borderRadius: "var(--r-lg)",
-    px: "18px",
-    py: "14px",
-    fontSize: "14px",
-    color: p.inputText,
-    width: "100%",
-    outline: "none",
-    fontFamily: "var(--font-ui)",
-    boxSizing: "border-box",
-    transition: "border-color 0.12s, box-shadow 0.12s",
-    "&:focus": {
-      borderColor: p.inputFocusBorder,
-      boxShadow: `0 0 0 3px ${p.inputFocusRing}`,
-    },
-  }) as const;
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
 

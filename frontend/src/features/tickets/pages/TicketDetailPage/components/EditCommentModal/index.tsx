@@ -1,73 +1,44 @@
 import type React from "react";
-import { useRef } from "react";
-import Box from "@mui/material/Box";
+import { useMemo } from "react";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import FormatBoldRounded from "@mui/icons-material/FormatBoldRounded";
-import FormatItalicRounded from "@mui/icons-material/FormatItalicRounded";
-import CodeRounded from "@mui/icons-material/CodeRounded";
-import LinkOutlined from "@mui/icons-material/LinkOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { Theme } from "@/enums";
+import { CommentEditor } from "@/components/ui/forms/CommentEditor";
+import { AttachmentButton } from "@/features/tickets/pages/TicketDetailPage/components/AttachmentButton";
 import {
-  MarkdownEditor,
-  type MarkdownEditorHandle,
-} from "@/components/ui/forms/MarkdownEditor";
+  buildCommentContent,
+  parseCommentContent,
+} from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
+  ticketId: string;
   open: boolean;
   onClose: () => void;
   value: string;
   onValueChange: (v: string) => void;
-  preview: boolean;
-  onPreviewChange: (preview: boolean) => void;
   saving: boolean;
   onSubmit: () => void;
-  markdownSx: object;
-  fieldSx: object;
 }
 
+const EDITOR_MIN_HEIGHT = 180;
+
 export const EditCommentModal: React.FC<Props> = ({
+  ticketId,
   open,
   onClose,
   value,
   onValueChange,
-  preview: _preview,
-  onPreviewChange: _onPreviewChange,
   saving,
   onSubmit,
-  markdownSx: _markdownSx,
-  fieldSx: _fieldSx,
 }) => {
   const t = useT();
-  const { theme } = useTheme();
-  const isDark = theme === Theme.Dark;
-  const editorRef = useRef<MarkdownEditorHandle>(null);
+  const { text, attachments } = useMemo(
+    () => parseCommentContent(value),
+    [value],
+  );
 
-  const applyWrap = (before: string, after: string) => {
-    editorRef.current?.applyWrap(before, after);
-  };
-
-  const applyCode = () => {
-    const [from, to] = editorRef.current?.getSelection() ?? [0, 0];
-    const selected = value.slice(from, to);
-    if (selected.includes("\n")) applyWrap("```\n", "\n```");
-    else applyWrap("`", "`");
-  };
-
-  const toolbarBtnSx = {
-    all: "unset" as const,
-    width: "26px",
-    height: "26px",
-    borderRadius: "var(--r-sm)",
-    cursor: "pointer",
-    color: "var(--muted)",
-    display: "grid",
-    placeItems: "center",
-    "&:hover": { background: "var(--s3)", color: "var(--text)" },
-  };
+  const canSave = text.trim().length > 0 || attachments.length > 0;
 
   return (
     <AppModal
@@ -89,7 +60,7 @@ export const EditCommentModal: React.FC<Props> = ({
             variant="contained"
             size="small"
             onClick={onSubmit}
-            disabled={!value.trim() || saving}
+            disabled={!canSave || saving}
           >
             {saving ? (
               <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
@@ -100,76 +71,35 @@ export const EditCommentModal: React.FC<Props> = ({
         </>
       }
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {/* formatting toolbar */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: "2px" }}>
-          <Box
-            component="button"
-            onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-            onClick={() => applyWrap("**", "**")}
-            sx={toolbarBtnSx}
-          >
-            <FormatBoldRounded sx={{ fontSize: 15 }} />
-          </Box>
-          <Box
-            component="button"
-            onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-            onClick={() => applyWrap("*", "*")}
-            sx={toolbarBtnSx}
-          >
-            <FormatItalicRounded sx={{ fontSize: 15 }} />
-          </Box>
-          <Box
-            component="button"
-            onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-            onClick={applyCode}
-            sx={toolbarBtnSx}
-          >
-            <CodeRounded sx={{ fontSize: 15 }} />
-          </Box>
-          <Box
-            component="button"
-            onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-            onClick={() => editorRef.current?.insertLink()}
-            sx={toolbarBtnSx}
-          >
-            <LinkOutlined sx={{ fontSize: 15 }} />
-          </Box>
-          <Box sx={{ flex: 1 }} />
-          <Box
-            sx={{
-              fontSize: "10px",
-              color: "var(--muted)",
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {t("tickets.detail.markdown_supported")}
-          </Box>
-        </Box>
-
-        {/* editor */}
-        <Box
-          sx={{
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            overflow: "hidden",
-            background: "var(--s2)",
-            cursor: "text",
-            minHeight: "200px",
-          }}
-          onClick={() => editorRef.current?.focus()}
-        >
-          <MarkdownEditor
-            ref={editorRef}
-            value={value}
-            onChange={onValueChange}
-            onSubmit={onSubmit}
-            minHeight={180}
-            isDark={isDark}
-            autoFocus
+      <CommentEditor
+        value={text}
+        onValueChange={(next) =>
+          onValueChange(buildCommentContent(next, attachments))
+        }
+        onSubmit={onSubmit}
+        minHeight={EDITOR_MIN_HEIGHT}
+        background="var(--s2)"
+        autoFocus
+        attachments={attachments}
+        onRemoveAttachment={(index) =>
+          onValueChange(
+            buildCommentContent(
+              text,
+              attachments.filter((_, i) => i !== index),
+            ),
+          )
+        }
+        actions={
+          <AttachmentButton
+            ticketId={ticketId}
+            onUploaded={(attachment) =>
+              onValueChange(
+                buildCommentContent(text, [...attachments, attachment]),
+              )
+            }
           />
-        </Box>
-      </Box>
+        }
+      />
     </AppModal>
   );
 };
