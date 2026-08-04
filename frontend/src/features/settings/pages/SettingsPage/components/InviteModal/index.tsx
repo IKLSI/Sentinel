@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import EmailOutlined from "@mui/icons-material/EmailOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useToast } from "@/hooks/useToast";
@@ -96,60 +95,6 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
         noValidate
         sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            p: "16px",
-            borderRadius: "var(--r-md)",
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent) 0%, color-mix(in srgb, var(--accent) 3%, transparent) 100%)",
-            border: "1px solid var(--accent-border)",
-          }}
-        >
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "var(--r-md)",
-              flexShrink: 0,
-              background:
-                "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, white) 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 6px 16px var(--accent-border)",
-            }}
-          >
-            <EmailOutlined sx={{ fontSize: 20, color: "var(--s1)" }} />
-          </Box>
-          <Box>
-            <Box
-              sx={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--text)",
-                letterSpacing: "-0.02em",
-                mb: "3px",
-              }}
-            >
-              {t("settings.invite.banner_title")}
-            </Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                color: "var(--muted2)",
-                lineHeight: 1.55,
-              }}
-            >
-              {t("settings.invite.banner_line1")}
-              <br />
-              {t("settings.invite.banner_line2")}
-            </Box>
-          </Box>
-        </Box>
-
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <Box>
             <Box

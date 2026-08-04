@@ -4,7 +4,7 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
-import { useI18n } from "@/contexts/I18nContext";
+import { useI18n, useT } from "@/contexts/I18nContext";
 import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import type { Ticket } from "@/domains/tickets/types";
@@ -12,6 +12,7 @@ import {
   AttachmentChip,
   type CommentAttachment,
 } from "@/components/ui/common/AttachmentChip";
+import { RowActions } from "@/components/ui/common/RowActions";
 import {
   type DetailPalette,
   parseCommentContent,
@@ -40,6 +41,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   onDelete,
 }) {
   const { culture } = useI18n();
+  const t = useT();
   const onDownloadError = useApiErrorToast(
     "tickets.detail.attachments_download_error",
   );
@@ -55,7 +57,13 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
 
   return (
     <Box
-      sx={{ display: "flex", gap: "10px", mb: "12px", position: "relative" }}
+      sx={{
+        display: "flex",
+        gap: "10px",
+        mb: "12px",
+        position: "relative",
+        "&:hover .row-actions": { opacity: "1 !important" },
+      }}
     >
       {!isLast && (
         <Box
@@ -118,47 +126,23 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           </Box>
 
           {isOwn && (
-            <Box sx={{ ml: "auto", display: "flex", gap: "4px" }}>
-              <Box
-                component="button"
-                onClick={() => onEdit(c.id, c.content)}
-                sx={{
-                  all: "unset",
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "var(--r)",
-                  cursor: "pointer",
-                  color: palette.iconBtnIdle,
-                  display: "grid",
-                  placeItems: "center",
-                  "&:hover": {
-                    background: palette.iconBtnEditHoverBg,
-                    color: palette.iconBtnEditHoverFg,
+            <Box sx={{ ml: "auto" }}>
+              <RowActions
+                actions={[
+                  {
+                    icon: <EditOutlined sx={{ fontSize: 13 }} />,
+                    label: t("common.edit"),
+                    onClick: () => onEdit(c.id, c.content),
+                    color: "accent",
                   },
-                }}
-              >
-                <EditOutlined sx={{ fontSize: 15 }} />
-              </Box>
-              <Box
-                component="button"
-                onClick={() => onDelete(c.id)}
-                sx={{
-                  all: "unset",
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "var(--r)",
-                  cursor: "pointer",
-                  color: palette.iconBtnIdle,
-                  display: "grid",
-                  placeItems: "center",
-                  "&:hover": {
-                    background: palette.iconBtnDelHoverBg,
-                    color: palette.iconBtnDelHoverFg,
+                  {
+                    icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />,
+                    label: t("common.delete"),
+                    onClick: () => onDelete(c.id),
+                    color: "red",
                   },
-                }}
-              >
-                <DeleteOutlineOutlined sx={{ fontSize: 15 }} />
-              </Box>
+                ]}
+              />
             </Box>
           )}
         </Box>

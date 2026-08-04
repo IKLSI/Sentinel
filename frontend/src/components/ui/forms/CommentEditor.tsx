@@ -82,6 +82,7 @@ export const CommentEditor: React.FC<Props> = ({
           wordBreak: "break-word",
           overflow: "auto",
           resize: "vertical",
+          "&:focus": { boxShadow: "none", outline: "none" },
           "&::placeholder": { color: "var(--muted2)", opacity: 1 },
         }}
       />

@@ -68,11 +68,6 @@ export interface DetailPalette {
   threadLine: string;
   commentAuthor: string;
   commentTime: string;
-  iconBtnIdle: string;
-  iconBtnEditHoverBg: string;
-  iconBtnEditHoverFg: string;
-  iconBtnDelHoverBg: string;
-  iconBtnDelHoverFg: string;
   commentBorderExternal: string;
   commentBgExternal: string;
   emptyFg: string;
@@ -104,11 +99,6 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   threadLine: "var(--border)",
   commentAuthor: "var(--text)",
   commentTime: "var(--muted2)",
-  iconBtnIdle: "var(--muted2)",
-  iconBtnEditHoverBg: "var(--s2)",
-  iconBtnEditHoverFg: "var(--text)",
-  iconBtnDelHoverBg: "color-mix(in srgb, var(--red) 18%, transparent)",
-  iconBtnDelHoverFg: "var(--red)",
   commentBorderExternal: "var(--border)",
   commentBgExternal: "var(--s2)",
   emptyFg: "var(--muted2)",

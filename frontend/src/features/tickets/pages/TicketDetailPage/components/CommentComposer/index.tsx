@@ -66,7 +66,7 @@ export const CommentComposer: React.FC<Props> = ({
         placeholder={t("tickets.detail.composer_reply_placeholder")}
         minHeight={EDITOR_MIN_HEIGHT}
         borderColor={
-          isEditing
+          isEditing || hasContent
             ? "color-mix(in srgb, var(--accent) 32%, transparent)"
             : undefined
         }

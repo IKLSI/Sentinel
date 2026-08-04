@@ -73,10 +73,8 @@ export const AttachmentButton: React.FC<Props> = ({ ticketId, onUploaded }) => {
             display: "grid",
             placeItems: "center",
             opacity: uploading ? 0.5 : 1,
-            "&:hover": {
-              background: "var(--s2)",
-              color: "var(--text-secondary)",
-            },
+            transition: "color .15s ease",
+            "&:hover": { color: "var(--accent)" },
           }}
         >
           {uploading ? (
