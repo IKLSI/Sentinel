@@ -15,6 +15,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<User?> GetOrDefaultActiveWithOrganizationAsync(Guid userId, CancellationToken cancellationToken);
 
+    Task<User?> GetOrDefaultWithOrganizationAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<User?> GetOrDefaultInOrganizationAsync(Guid userId, Guid organizationId, QueryTracking tracking,
         CancellationToken cancellationToken);
 

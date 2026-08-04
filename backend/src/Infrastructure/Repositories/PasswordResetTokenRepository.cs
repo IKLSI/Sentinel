@@ -21,4 +21,9 @@ public class PasswordResetTokenRepository
         Query(QueryTracking.Tracked)
             .Where(t => t.Email == email.ToLowerInvariant() && !t.IsUsed)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true), cancellationToken);
+
+    public Task InvalidatePendingForUserAsync(Guid userId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.Tracked)
+            .Where(t => t.UserId == userId && !t.IsUsed)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsUsed, true), cancellationToken);
 }

@@ -8,4 +8,6 @@ public interface IPasswordResetTokenRepository : ICrudEntityWithIdRepository<Pas
     Task<PasswordResetToken?> GetOrDefaultValidByTokenHashAsync(string tokenHash, CancellationToken cancellationToken);
 
     Task InvalidatePendingAsync(string email, CancellationToken cancellationToken);
+
+    Task InvalidatePendingForUserAsync(Guid userId, CancellationToken cancellationToken);
 }

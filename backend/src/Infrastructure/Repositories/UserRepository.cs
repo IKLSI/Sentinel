@@ -29,6 +29,11 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Include(u => u.Organization)
             .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
 
+    public Task<User?> GetOrDefaultWithOrganizationAsync(Guid userId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Include(u => u.Organization)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
     public Task<User?> GetOrDefaultInOrganizationAsync(Guid userId, Guid organizationId, QueryTracking tracking,
         CancellationToken cancellationToken) =>
         Query(tracking)

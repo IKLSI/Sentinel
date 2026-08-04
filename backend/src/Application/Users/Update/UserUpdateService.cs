@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Jobs;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -15,9 +16,11 @@ public class UserUpdateService(
     IUserRepository userRepository,
     IOrganizationRepository organizationRepository,
     IApiKeyRepository apiKeyRepository,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
+    IJobScheduler jobs,
     IMemoryCache cache,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
@@ -51,6 +54,8 @@ public class UserUpdateService(
         }
 
         bool willDeactivate = model.IsActive.HasValue && !model.IsActive.Value;
+
+        bool deactivationTransition = willDeactivate && user.IsActive;
 
         bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willDeactivate;
 
@@ -89,7 +94,10 @@ public class UserUpdateService(
             if (invalidatesSessions) tracked.TokenVersion++;
 
             if (willDeactivate)
+            {
                 await apiKeyRepository.RevokeAllForUserAsync(userId, token);
+                await passwordResetTokenRepository.InvalidatePendingForUserAsync(userId, token);
+            }
 
             updatedUser = tracked;
         }, cancellationToken);
@@ -102,6 +110,9 @@ public class UserUpdateService(
 
         if (invalidatesSessions)
             cache.Remove(CacheKeys.AuthAccount(userId));
+
+        if (deactivationTransition)
+            jobs.Enqueue<SendAccountDeactivatedEmailJob>(j => j.ExecuteAsync(userId));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Users), cancellationToken);

@@ -24,6 +24,7 @@ interface Props {
   comment: Comment;
   isLast: boolean;
   isOwn: boolean;
+  isEditing: boolean;
   palette: DetailPalette;
   onEdit: (id: string, content: string) => void;
   onDelete: (id: string) => void;
@@ -33,6 +34,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   comment: c,
   isLast,
   isOwn,
+  isEditing,
   palette,
   onEdit,
   onDelete,
@@ -163,9 +165,15 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
 
         <Box
           sx={{
-            border: `1px solid ${palette.commentBorderExternal}`,
+            border: `1px solid ${
+              isEditing
+                ? "color-mix(in srgb, var(--accent) 45%, transparent)"
+                : palette.commentBorderExternal
+            }`,
             borderRadius: "var(--r-lg)",
-            background: palette.commentBgExternal,
+            background: isEditing
+              ? "color-mix(in srgb, var(--accent) 7%, transparent)"
+              : palette.commentBgExternal,
           }}
         >
           {mainText && (

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -17,9 +17,11 @@ import {
   useUpdateCommentMutation,
 } from "@/domains/tickets/mutations";
 import { useTicketQuery } from "@/domains/tickets/queries";
+import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
 import {
   buildPalette,
   buildPriorityConfig,
+  parseCommentContent,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { TicketHeader } from "@/features/tickets/pages/TicketDetailPage/components/TicketHeader";
 import { SectionDivider } from "@/features/tickets/pages/TicketDetailPage/components/SectionDivider";
@@ -27,7 +29,6 @@ import { CommentThread } from "@/features/tickets/pages/TicketDetailPage/compone
 import { CommentComposer } from "@/features/tickets/pages/TicketDetailPage/components/CommentComposer";
 import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/components/PropertiesCard";
 import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
-import { EditCommentModal } from "@/features/tickets/pages/TicketDetailPage/components/EditCommentModal";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { Theme } from "@/enums";
 import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
@@ -58,14 +59,18 @@ export const TicketDetailPage: React.FC = () => {
   const deleteCommentMutation = useDeleteCommentMutation(id ?? "");
 
   const [composerValue, setComposerValue] = useState("");
-  const submitting = addCommentMutation.isPending;
-
-  const [editCommentTarget, setEditCommentTarget] = useState<{
-    id: string;
-    content: string;
+  const [composerAttachments, setComposerAttachments] = useState<
+    CommentAttachment[]
+  >([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const draftRef = useRef<{
+    value: string;
+    attachments: CommentAttachment[];
   } | null>(null);
-  const [editCommentValue, setEditCommentValue] = useState("");
-  const editCommentSaving = updateCommentMutation.isPending;
+  const submitting = editingCommentId
+    ? updateCommentMutation.isPending
+    : addCommentMutation.isPending;
+
   const [deleteCommentTarget, setDeleteCommentTarget] = useState<string | null>(
     null,
   );
@@ -90,39 +95,57 @@ export const TicketDetailPage: React.FC = () => {
     return title;
   }, [ticket, endpointMatch]);
 
-  const handleAddComment = (content: string) => {
+  const startEditComment = useCallback(
+    (commentId: string, content: string) => {
+      const { text, attachments } = parseCommentContent(content);
+      setEditingCommentId((current) => {
+        if (!current) {
+          draftRef.current = {
+            value: composerValue,
+            attachments: composerAttachments,
+          };
+        }
+        return commentId;
+      });
+      setComposerValue(text);
+      setComposerAttachments(attachments);
+    },
+    [composerValue, composerAttachments],
+  );
+
+  const cancelEditComment = useCallback(() => {
+    setEditingCommentId(null);
+    setComposerValue(draftRef.current?.value ?? "");
+    setComposerAttachments(draftRef.current?.attachments ?? []);
+    draftRef.current = null;
+  }, []);
+
+  const handleSubmitComment = (content: string) => {
     if (!ticket || !commentContentSchema.safeParse(content).success) return;
+
+    if (editingCommentId) {
+      updateCommentMutation.mutate(
+        { id: ticket.id, commentId: editingCommentId, data: { content } },
+        {
+          onSuccess: () => {
+            cancelEditComment();
+            showToast(t("tickets.detail.comment_updated"), "success");
+          },
+          onError: onUpdateCommentError,
+        },
+      );
+      return;
+    }
+
     addCommentMutation.mutate(
       { id: ticket.id, data: { content } },
       {
         onSuccess: () => {
           setComposerValue("");
+          setComposerAttachments([]);
           showToast(t("tickets.detail.reply_sent"), "success");
         },
         onError: onAddCommentError,
-      },
-    );
-  };
-
-  const handleEditComment = () => {
-    if (
-      !ticket ||
-      !editCommentTarget ||
-      !commentContentSchema.safeParse(editCommentValue).success
-    )
-      return;
-    updateCommentMutation.mutate(
-      {
-        id: ticket.id,
-        commentId: editCommentTarget.id,
-        data: { content: editCommentValue },
-      },
-      {
-        onSuccess: () => {
-          setEditCommentTarget(null);
-          showToast(t("tickets.detail.comment_updated"), "success");
-        },
-        onError: onUpdateCommentError,
       },
     );
   };
@@ -133,6 +156,7 @@ export const TicketDetailPage: React.FC = () => {
       { id: ticket.id, commentId: deleteCommentTarget },
       {
         onSuccess: () => {
+          if (editingCommentId === deleteCommentTarget) cancelEditComment();
           setDeleteCommentTarget(null);
           showToast(t("tickets.detail.comment_deleted"), "success");
         },
@@ -260,10 +284,8 @@ export const TicketDetailPage: React.FC = () => {
               comments={ticket.comments ?? []}
               currentUserId={user?.id}
               palette={palette}
-              onEdit={(idValue, content) => {
-                setEditCommentTarget({ id: idValue, content });
-                setEditCommentValue(content);
-              }}
+              editingCommentId={editingCommentId}
+              onEdit={startEditComment}
               onDelete={setDeleteCommentTarget}
             />
 
@@ -271,8 +293,12 @@ export const TicketDetailPage: React.FC = () => {
               ticketId={id ?? ""}
               value={composerValue}
               onValueChange={setComposerValue}
+              attachments={composerAttachments}
+              onAttachmentsChange={setComposerAttachments}
               submitting={submitting}
-              onSubmit={handleAddComment}
+              onSubmit={handleSubmitComment}
+              editingCommentId={editingCommentId}
+              onCancelEdit={cancelEditComment}
             />
           </Box>
         </Box>
@@ -301,16 +327,6 @@ export const TicketDetailPage: React.FC = () => {
           />
         </Box>
       </PageContainer>
-
-      <EditCommentModal
-        ticketId={id ?? ""}
-        open={!!editCommentTarget}
-        onClose={() => setEditCommentTarget(null)}
-        value={editCommentValue}
-        onValueChange={setEditCommentValue}
-        saving={editCommentSaving}
-        onSubmit={handleEditComment}
-      />
 
       <DeleteModal
         open={!!deleteCommentTarget}

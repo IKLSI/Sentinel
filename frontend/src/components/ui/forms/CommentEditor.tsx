@@ -14,8 +14,10 @@ interface Props {
   minHeight?: number;
   autoFocus?: boolean;
   background?: string;
+  borderColor?: string;
   attachments?: CommentAttachment[];
   onRemoveAttachment?: (index: number) => void;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
   actions?: React.ReactNode;
 }
 
@@ -29,26 +31,29 @@ export const CommentEditor: React.FC<Props> = ({
   minHeight = DEFAULT_MIN_HEIGHT,
   autoFocus = false,
   background = "var(--s1)",
+  borderColor = "var(--border)",
   attachments = [],
   onRemoveAttachment,
+  inputRef,
   actions,
 }) => {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef ?? localRef;
 
   return (
     <Box
       sx={{
-        border: "1px solid var(--border)",
+        border: `1px solid ${borderColor}`,
         borderRadius: "var(--r-lg)",
         overflow: "hidden",
         background,
         cursor: "text",
       }}
-      onClick={() => inputRef.current?.focus()}
+      onClick={() => textareaRef.current?.focus()}
     >
       <Box
         component="textarea"
-        ref={inputRef}
+        ref={textareaRef}
         value={value}
         placeholder={placeholder}
         autoFocus={autoFocus}

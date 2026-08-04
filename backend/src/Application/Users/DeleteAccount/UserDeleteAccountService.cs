@@ -17,6 +17,7 @@ public class UserDeleteAccountService(
     IPasswordHasher passwordHasher,
     IAuditLogRepository auditLogRepository,
     IApiKeyRepository apiKeyRepository,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
@@ -62,6 +63,7 @@ public class UserDeleteAccountService(
 
             await auditLogRepository.DetachUserAsync(currentUserId, token);
             await apiKeyRepository.RevokeAllForUserAsync(currentUserId, token);
+            await passwordResetTokenRepository.InvalidatePendingForUserAsync(currentUserId, token);
 
             Anonymize(tracked);
         }, cancellationToken);

@@ -3,9 +3,11 @@ import { useState, useEffect, useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
-import { AuthFormField } from "@/features/auth/components/AuthFormField";
-import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { ModalFormField } from "@/features/auth/components/ModalFormField";
+import { ModalPasswordField } from "@/features/auth/components/ModalPasswordField";
 import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import {
   useRegisterMutation,
@@ -55,6 +57,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const resendVerificationMutation = useResendVerificationMutation();
   const loading = registerMutation.isPending;
   const [done, setDone] = useState(false);
+  const formId = useId();
   const orgId = useId();
   const firstNameId = useId();
   const lastNameId = useId();
@@ -87,51 +90,70 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     );
   };
 
-  const fieldStyle = { animation: "none !important", opacity: "1 !important" };
-
   return (
     <AppModal
       open={open}
       onClose={onClose}
       title={t("auth.register.form_title")}
-      maxWidthPx="460px"
-      closeButton
-      backdropVariant="auth"
+      actions={
+        done ? (
+          <>
+            <Button
+              variant="contained"
+              size="small"
+              className="btn-cancel"
+              onClick={handleResend}
+              disabled={resendVerificationMutation.isPending}
+              sx={{ mr: "auto" }}
+            >
+              {t("auth.register.resend_link")}
+            </Button>
+            <Button variant="contained" size="small" onClick={onClose}>
+              {t("common.close")}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="contained"
+              size="small"
+              className="btn-cancel"
+              onClick={onClose}
+              disabled={loading}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              type="submit"
+              form={formId}
+              disabled={loading}
+            >
+              {loading ? (
+                <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
+              ) : (
+                t("auth.register.submit")
+              )}
+            </Button>
+          </>
+        )
+      }
     >
       {done ? (
         <AuthModalSuccess
           title={t("auth.register.success_title")}
           subtitle={t("auth.register.success_sub")}
-          actionLabel="OK"
-          onAction={onClose}
-          actionClassName="lp-submit no-elevation"
-          actionStyle={{
-            marginBottom: "12px",
-            animation: "none",
-            opacity: 1,
-          }}
-        >
-          <Box sx={{ textAlign: "center", mt: "10px" }}>
-            <Box
-              component="button"
-              type="button"
-              onClick={handleResend}
-              sx={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "12px",
-                color: "var(--muted2)",
-                "&:hover": { color: "var(--text)" },
-              }}
-            >
-              {t("auth.register.resend_link")}
-            </Box>
-          </Box>
-        </AuthModalSuccess>
+        />
       ) : (
-        <form onSubmit={onSubmit} noValidate>
-          <AuthFormField
+        <Box
+          component="form"
+          id={formId}
+          onSubmit={onSubmit}
+          noValidate
+          sx={{ display: "flex", flexDirection: "column", gap: "14px" }}
+        >
+          <ModalFormField
             id={orgId}
             label={t("auth.register.organization_label")}
             registration={register("organizationName")}
@@ -139,11 +161,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             t={t}
             placeholder={t("auth.register.organization_placeholder")}
             autoComplete="organization"
-            sx={fieldStyle}
+            required
           />
 
-          <Box sx={{ display: "flex", gap: "12px" }}>
-            <AuthFormField
+          <Box sx={{ display: "flex", gap: "14px" }}>
+            <ModalFormField
               id={firstNameId}
               label={t("auth.register.firstname_label")}
               registration={register("firstName")}
@@ -151,9 +173,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               t={t}
               placeholder={t("auth.register.firstname_placeholder")}
               autoComplete="given-name"
-              sx={{ flex: 1, ...fieldStyle }}
+              required
+              sx={{ flex: 1, minWidth: 0 }}
             />
-            <AuthFormField
+            <ModalFormField
               id={lastNameId}
               label={t("auth.register.lastname_label")}
               registration={register("lastName")}
@@ -161,11 +184,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               t={t}
               placeholder={t("auth.register.lastname_placeholder")}
               autoComplete="family-name"
-              sx={{ flex: 1, ...fieldStyle }}
+              required
+              sx={{ flex: 1, minWidth: 0 }}
             />
           </Box>
 
-          <AuthFormField
+          <ModalFormField
             id={emailId}
             label={t("auth.register.email_label")}
             registration={register("email")}
@@ -174,10 +198,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             type="email"
             placeholder={t("auth.register.email_placeholder")}
             autoComplete="email"
-            sx={fieldStyle}
+            required
           />
 
-          <AuthPasswordField
+          <ModalPasswordField
             id={passwordId}
             label={t("auth.register.password_label")}
             registration={register("password")}
@@ -185,26 +209,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             t={t}
             placeholder={t("auth.register.password_placeholder")}
             autoComplete="new-password"
+            required
             showPassword={showPassword}
             onToggleShow={() => setShowPassword((v) => !v)}
             showLabel={t("auth.register.password_show")}
             hideLabel={t("auth.register.password_hide")}
-            sx={fieldStyle}
           />
-
-          <button
-            type="submit"
-            className="lp-submit no-elevation"
-            disabled={loading}
-            style={{ marginTop: "4px", animation: "none", opacity: 1 }}
-          >
-            {loading ? (
-              <Box className="lp-submit-loader" />
-            ) : (
-              t("auth.register.submit")
-            )}
-          </button>
-        </form>
+        </Box>
       )}
     </AppModal>
   );

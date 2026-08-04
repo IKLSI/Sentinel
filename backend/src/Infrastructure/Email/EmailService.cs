@@ -160,6 +160,33 @@ public partial class EmailService : IEmailService
         _logger.LogInformation("Verification email sent to {Email}", email);
     }
 
+    public async Task SendAccountDeactivatedAsync(string email, string organizationName, string culture)
+    {
+        string html = RenderTemplate("account-deactivated.html", culture, new Dictionary<string, string>
+        {
+            ["{{ORGANIZATION}}"] = organizationName
+        });
+
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(
+            _email.FromName,
+            _email.FromAddress
+        ));
+        message.To.Add(new MailboxAddress(email, email));
+        message.Subject = Text(culture, "emails.account_deactivated.subject",
+            new Dictionary<string, string> { ["organization"] = organizationName });
+        message.Body = new BodyBuilder
+        {
+            HtmlBody = html,
+            TextBody = Text(culture, "emails.account_deactivated.text_body",
+                new Dictionary<string, string> { ["organization"] = organizationName })
+        }.ToMessageBody();
+
+        await SendAsync(message);
+
+        _logger.LogInformation("Account deactivation email sent to {Email}", email);
+    }
+
     public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
     {
         int critical = newVulns.Count(v => v.Severity == "Critical");

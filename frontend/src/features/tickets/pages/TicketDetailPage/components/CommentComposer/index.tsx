@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -14,8 +14,12 @@ interface Props {
   ticketId: string;
   value: string;
   onValueChange: (v: string) => void;
+  attachments: CommentAttachment[];
+  onAttachmentsChange: (attachments: CommentAttachment[]) => void;
   submitting: boolean;
   onSubmit: (content: string) => void;
+  editingCommentId: string | null;
+  onCancelEdit: () => void;
 }
 
 const EDITOR_MIN_HEIGHT = 90;
@@ -24,23 +28,33 @@ export const CommentComposer: React.FC<Props> = ({
   ticketId,
   value,
   onValueChange,
+  attachments,
+  onAttachmentsChange,
   submitting,
   onSubmit,
+  editingCommentId,
+  onCancelEdit,
 }) => {
   const t = useT();
-  const [attachments, setAttachments] = useState<CommentAttachment[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isEditing = editingCommentId !== null;
+
+  useEffect(() => {
+    if (!editingCommentId) return;
+    inputRef.current?.focus();
+    inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [editingCommentId]);
 
   const hasContent = value.trim().length > 0 || attachments.length > 0;
 
   const removeAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
+    onAttachmentsChange(attachments.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
     const content = buildCommentContent(value.trimEnd(), attachments);
     if (!commentContentSchema.safeParse(content).success) return;
     onSubmit(content);
-    setAttachments([]);
   };
 
   return (
@@ -51,17 +65,34 @@ export const CommentComposer: React.FC<Props> = ({
         onSubmit={handleSubmit}
         placeholder={t("tickets.detail.composer_reply_placeholder")}
         minHeight={EDITOR_MIN_HEIGHT}
+        borderColor={
+          isEditing
+            ? "color-mix(in srgb, var(--accent) 32%, transparent)"
+            : undefined
+        }
         attachments={attachments}
         onRemoveAttachment={removeAttachment}
+        inputRef={inputRef}
         actions={
           <>
             <AttachmentButton
               ticketId={ticketId}
               onUploaded={(attachment) =>
-                setAttachments((prev) => [...prev, attachment])
+                onAttachmentsChange([...attachments, attachment])
               }
             />
             <Box sx={{ flex: 1 }} />
+            {isEditing && (
+              <Button
+                variant="contained"
+                size="small"
+                className="btn-cancel"
+                onClick={onCancelEdit}
+                disabled={submitting}
+              >
+                {t("common.cancel")}
+              </Button>
+            )}
             <Button
               variant="contained"
               size="small"
@@ -70,6 +101,8 @@ export const CommentComposer: React.FC<Props> = ({
             >
               {submitting ? (
                 <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
+              ) : isEditing ? (
+                t("common.save")
               ) : (
                 t("tickets.detail.send")
               )}

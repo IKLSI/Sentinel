@@ -22,6 +22,8 @@ public interface IEmailService
 
     Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture);
 
+    Task SendAccountDeactivatedAsync(string email, string organizationName, string culture);
+
     Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName,
         string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
 

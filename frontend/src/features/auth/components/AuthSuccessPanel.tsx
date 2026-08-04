@@ -4,47 +4,35 @@ import Box from "@mui/material/Box";
 interface AuthModalSuccessProps {
   title: string;
   subtitle: string;
-  actionLabel: string;
-  onAction: () => void;
-  actionClassName?: string;
-  actionStyle?: React.CSSProperties;
   children?: React.ReactNode;
 }
 
 export const AuthModalSuccess: React.FC<AuthModalSuccessProps> = ({
   title,
   subtitle,
-  actionLabel,
-  onAction,
-  actionClassName = "lp-submit",
-  actionStyle = { animation: "none", opacity: 1 },
   children,
 }) => (
   <Box sx={{ textAlign: "center", py: "8px" }}>
     <Box
       sx={{
-        width: 44,
-        height: 44,
-        borderRadius: "var(--r-md)",
-        background: "var(--accent-subtle)",
-        border: "1px solid var(--accent-border)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        color: "var(--text)",
         mx: "auto",
         mb: "14px",
       }}
     >
       <svg
-        width="20"
-        height="20"
+        width="32"
+        height="32"
         viewBox="0 0 20 20"
         fill="none"
         aria-hidden="true"
       >
         <path
           d="M4 10l4 4 8-8"
-          stroke="var(--accent)"
+          stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -67,19 +55,10 @@ export const AuthModalSuccess: React.FC<AuthModalSuccessProps> = ({
         fontSize: "12.5px",
         color: "var(--muted2)",
         lineHeight: 1.65,
-        mb: "18px",
       }}
     >
       {subtitle}
     </Box>
-    <button
-      type="button"
-      className={actionClassName}
-      onClick={onAction}
-      style={actionStyle}
-    >
-      {actionLabel}
-    </button>
     {children}
   </Box>
 );

@@ -102,6 +102,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();
+        services.AddTransient<SendAccountDeactivatedEmailJob>();
 
         return services;
     }
