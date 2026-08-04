@@ -1,13 +1,5 @@
 import type { SelectFieldOption } from "@/components/ui/forms/SelectField";
-import {
-  TICKET_STATUSES,
-  statusColor,
-  statusLabelKeys,
-} from "@/features/tickets/constants";
-import {
-  priorityColorOf,
-  typeBadgeStyleOf,
-} from "@/features/tickets/pages/TicketsPage/helpers";
+import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import { TicketPriority, TicketType } from "@/enums";
 
 export interface TicketFiltersState {
@@ -19,6 +11,7 @@ export interface TicketFiltersState {
 export interface TicketFilterGroup {
   key: keyof TicketFiltersState;
   label: string;
+  tone: string;
   options: SelectFieldOption[];
 }
 
@@ -34,36 +27,36 @@ export const buildTicketFilterGroups = (t: Translate): TicketFilterGroup[] => [
   {
     key: "priority",
     label: t("tickets.list.filter_priority"),
+    tone: "var(--sky)",
     options: [
       { value: "", label: t("tickets.list.filter_all_feminine") },
       ...TICKET_PRIORITIES.map((priority) => ({
         value: priority,
         label: t(`tickets.list.priority_${priority}`),
-        color: priorityColorOf(priority),
       })),
     ],
   },
   {
     key: "status",
     label: t("tickets.list.filter_status"),
+    tone: "var(--cyan)",
     options: [
       { value: "", label: t("tickets.list.filter_all_masculine") },
       ...TICKET_STATUSES.map((status) => ({
         value: status,
         label: t(statusLabelKeys[status]),
-        color: statusColor(status),
       })),
     ],
   },
   {
     key: "type",
     label: t("tickets.list.filter_type"),
+    tone: "var(--purple)",
     options: [
       { value: "", label: t("tickets.list.filter_all_masculine") },
       ...TICKET_TYPES.map((type) => ({
         value: type,
         label: t(`tickets.list.type_${type}`),
-        color: typeBadgeStyleOf(type).color,
       })),
     ],
   },

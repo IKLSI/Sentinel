@@ -67,13 +67,6 @@ const typeTooltipKeys: Record<TicketType, string> = {
   question: "tickets.list.type_question",
 };
 
-const priorityColor: Record<TicketPriority, string> = {
-  critical: "var(--red)",
-  high: "var(--orange)",
-  medium: "var(--accent)",
-  low: "var(--green)",
-};
-
 export const modalSelectSx = {
   appearance: "none",
   WebkitAppearance: "none",
@@ -118,9 +111,6 @@ export const modalTextareaSx = {
 
 const FALLBACK_COLOR = "var(--muted2)";
 const FALLBACK_BADGE_STYLE = { bg: "transparent", color: FALLBACK_COLOR };
-
-export const priorityColorOf = (priority: string): string =>
-  priorityColor[priority as TicketPriority] ?? FALLBACK_COLOR;
 
 export const priorityLabelKeyOf = (priority: string): string =>
   priorityLabelKeys[priority as TicketPriority] ?? priority;

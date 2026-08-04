@@ -8,7 +8,6 @@ import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutl
 export interface SelectFieldOption {
   value: string;
   label: string;
-  color?: string;
 }
 
 interface Props {
@@ -19,12 +18,12 @@ interface Props {
   variant?: "field" | "pill";
   placeholder?: string;
   clearLabel?: string;
+  tone?: string;
 }
 
 const OPTION_HEIGHT = "30px";
 const MAX_LIST_HEIGHT = "260px";
 const PILL_LIST_WIDTH = "180px";
-const DOT_SIZE = "7px";
 const DEFAULT_ACCENT = "var(--accent)";
 
 const tint = (color: string, percent: number) =>
@@ -38,6 +37,7 @@ export const SelectField: React.FC<Props> = ({
   variant = "field",
   placeholder,
   clearLabel,
+  tone = DEFAULT_ACCENT,
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +49,6 @@ export const SelectField: React.FC<Props> = ({
   const isPill = variant === "pill";
   const isActive = isPill && !!value;
   const selected = options[selectedIndex];
-  const tone = selected?.color ?? DEFAULT_ACCENT;
   const triggerLabel = isPill && !value ? placeholder : selected?.label;
 
   useEffect(() => {
@@ -131,7 +130,7 @@ export const SelectField: React.FC<Props> = ({
             ? {
                 gap: "7px",
                 height: "32px",
-                pl: isActive ? "10px" : "12px",
+                pl: "12px",
                 pr: isActive ? "5px" : "8px",
                 fontSize: "12.5px",
                 fontWeight: isActive ? 600 : 500,
@@ -166,18 +165,6 @@ export const SelectField: React.FC<Props> = ({
           "&:focus-visible": { borderColor: "var(--accent)" },
         }}
       >
-        {isActive && (
-          <Box
-            component="span"
-            sx={{
-              width: DOT_SIZE,
-              height: DOT_SIZE,
-              borderRadius: "50%",
-              background: tone,
-              flexShrink: 0,
-            }}
-          />
-        )}
         {triggerLabel}
         {isActive ? (
           <Box
@@ -245,42 +232,56 @@ export const SelectField: React.FC<Props> = ({
             animation: "fadeInUp 0.12s ease forwards",
           }}
         >
-          {options.map((option, index) => (
-            <Box
-              key={option.value}
-              role="option"
-              aria-selected={option.value === value}
-              onClick={() => select(index)}
-              onMouseEnter={() => setActiveIndex(index)}
-              sx={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                height: OPTION_HEIGHT,
-                px: "8px",
-                borderRadius: "var(--r-sm)",
-                fontSize: "12.5px",
-                letterSpacing: "-0.01em",
-                fontWeight: option.value === value ? 600 : 500,
-                color:
-                  option.value === value
-                    ? "var(--text)"
-                    : "var(--text-secondary)",
-                background: index === activeIndex ? "var(--s3)" : "transparent",
-                transition: "background 0.1s",
-              }}
-            >
-              <Box component="span" sx={{ flex: 1 }}>
-                {option.label}
+          {options.map((option, index) => {
+            const isSelected = option.value === value;
+            const isToned = isSelected && !!option.value;
+            return (
+              <Box
+                key={option.value}
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => select(index)}
+                onMouseEnter={() => setActiveIndex(index)}
+                sx={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  height: OPTION_HEIGHT,
+                  px: "8px",
+                  borderRadius: "var(--r-sm)",
+                  fontSize: "12.5px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: isSelected ? 600 : 500,
+                  color: isToned
+                    ? tone
+                    : isSelected
+                      ? "var(--text)"
+                      : "var(--text-secondary)",
+                  background:
+                    index === activeIndex
+                      ? isToned
+                        ? tint(tone, 12)
+                        : "var(--s3)"
+                      : "transparent",
+                  transition: "background 0.1s",
+                }}
+              >
+                <Box component="span" sx={{ flex: 1 }}>
+                  {option.label}
+                </Box>
+                {isSelected && (
+                  <CheckOutlined
+                    sx={{
+                      fontSize: 14,
+                      flexShrink: 0,
+                      color: isToned ? tone : "var(--muted2)",
+                    }}
+                  />
+                )}
               </Box>
-              {option.value === value && (
-                <CheckOutlined
-                  sx={{ fontSize: 14, flexShrink: 0, color: "var(--muted2)" }}
-                />
-              )}
-            </Box>
-          ))}
+            );
+          })}
         </Box>
       )}
     </Box>

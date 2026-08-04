@@ -8,7 +8,6 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
   "/api/auth/forgot-password": {
     post: {
@@ -2450,7 +2449,13 @@ export interface components {
       prefix: string;
     };
     /** @enum {string} */
-    ApiKeySortField: "Name" | "Prefix" | "CreatedBy" | "Created" | "Expires" | "LastUsed";
+    ApiKeySortField:
+      | "Name"
+      | "Prefix"
+      | "CreatedBy"
+      | "Created"
+      | "Expires"
+      | "LastUsed";
     ApiMessageResponse: {
       code: string;
       params: {
@@ -2735,7 +2740,13 @@ export interface components {
     /** @enum {string} */
     TicketSortField: "Title" | "Priority" | "Status" | "Assignee";
     /** @enum {string} */
-    TicketType: "Bug" | "Feature" | "Question" | "Security" | "Performance" | "Maintenance";
+    TicketType:
+      | "Bug"
+      | "Feature"
+      | "Question"
+      | "Security"
+      | "Performance"
+      | "Maintenance";
     UpdateMyProfileDto: {
       firstName?: string | null;
       lastName?: string | null;

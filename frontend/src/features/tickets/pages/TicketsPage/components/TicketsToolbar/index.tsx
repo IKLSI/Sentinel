@@ -52,10 +52,11 @@ export const TicketsToolbar: React.FC<Props> = ({
         placeholder={t("tickets.list.search_placeholder")}
       />
 
-      {groups.map(({ key, label, options }) => (
+      {groups.map(({ key, label, tone, options }) => (
         <SelectField
           key={key}
           variant="pill"
+          tone={tone}
           value={filters[key]}
           options={options}
           ariaLabel={label}

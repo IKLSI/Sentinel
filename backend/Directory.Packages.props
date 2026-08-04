@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup Label="ASP.NET Core / Microsoft.Extensions">
@@ -27,7 +28,7 @@
   <ItemGroup Label="API / Documentation">
     <PackageVersion Include="Asp.Versioning.Mvc" Version="10.0.1" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.1" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.17" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
@@ -55,6 +56,10 @@
     <PackageVersion Include="MailKit" Version="4.17.0" />
     <PackageVersion Include="QuestPDF" Version="2026.7.2" />
     <PackageVersion Include="Stripe.net" Version="52.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Epinglage transitif">
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">

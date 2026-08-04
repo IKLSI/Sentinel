@@ -26,11 +26,6 @@ export const SettingsPage: React.FC = () => {
       isAdmin
         ? [
             {
-              id: SettingsTab.Billing,
-              label: t("settings.tab.billing"),
-              icon: CreditCardOutlined,
-            },
-            {
               id: SettingsTab.Jobs,
               label: t("settings.tab.jobs"),
               icon: TerminalOutlined,
@@ -40,12 +35,17 @@ export const SettingsPage: React.FC = () => {
               label: t("settings.tab.api_keys"),
               icon: KeyOutlined,
             },
+            {
+              id: SettingsTab.Billing,
+              label: t("settings.tab.billing"),
+              icon: CreditCardOutlined,
+            },
           ]
         : [],
     [t, isAdmin],
   );
 
-  const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Billing);
+  const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Jobs);
 
   return (
     <PageContainer sx={{ p: 0 }}>
