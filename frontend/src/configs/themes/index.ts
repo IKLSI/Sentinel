@@ -245,20 +245,32 @@ const baseComponents = {
     },
   },
   MuiTooltip: {
+    defaultProps: {
+      enterDelay: 250,
+      enterNextDelay: 250,
+      leaveDelay: 0,
+      slotProps: {
+        transition: { timeout: 120 },
+      },
+    },
     styleOverrides: {
       tooltip: {
         fontSize: "11px",
-        fontWeight: 500,
+        fontWeight: 600,
+        letterSpacing: "0.01em",
         fontFamily: "Inter, sans-serif",
         borderRadius: "var(--r-sm)",
-        padding: "5px 10px",
-        background: "var(--s3)",
-        color: "var(--text)",
-        border: "1px solid var(--border2)",
+        padding: "6px 10px",
+        background: "var(--s2)",
+        color: "var(--text-secondary)",
+        border: "1px solid var(--border)",
         boxShadow: "var(--sh-2)",
       },
       arrow: {
-        color: "var(--s3)",
+        color: "var(--s2)",
+        "&::before": {
+          border: "1px solid var(--border)",
+        },
       },
     },
   },

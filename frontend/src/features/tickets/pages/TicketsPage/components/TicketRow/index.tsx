@@ -1,9 +1,9 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
@@ -48,11 +48,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         <Box
           sx={{ display: "flex", alignItems: "center", gap: "7px", mb: "4px" }}
         >
-          <Tooltip
-            title={t(typeTooltipKeyOf(ticket.type))}
-            arrow
-            placement="top"
-          >
+          <AppTooltip title={t(typeTooltipKeyOf(ticket.type))}>
             <Box
               sx={{
                 display: "inline-flex",
@@ -64,7 +60,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             >
               {typeIconOf(ticket.type)}
             </Box>
-          </Tooltip>
+          </AppTooltip>
           <Box
             sx={{
               fontSize: "13px",

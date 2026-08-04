@@ -1,6 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import {
   GAUGE_CIRCUMFERENCE,
@@ -31,7 +31,7 @@ export const HealthGauge: React.FC<Props> = ({ score, color }) => {
       : t("dashboard.park.gauge_tooltip", { score: Math.round(clamped) });
 
   return (
-    <Tooltip title={tooltip} arrow>
+    <AppTooltip title={tooltip}>
       <Box
         sx={{
           position: "relative",
@@ -92,6 +92,6 @@ export const HealthGauge: React.FC<Props> = ({ score, color }) => {
           </Box>
         </Box>
       </Box>
-    </Tooltip>
+    </AppTooltip>
   );
 };
