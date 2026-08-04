@@ -1,23 +1,22 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Common;
+using Sentinel.Application.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Billing;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Stripe;
-using Stripe.BillingPortal;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Billing.Portal;
 
 public class BillingPortalService : IService
 {
     private readonly IOrganizationRepository _organizationRepository;
-    private readonly IStripeClient _stripeClient;
+    private readonly IBillingGateway _billingGateway;
     private readonly FrontendSettings _frontend;
     private readonly IAuditLogService _auditLog;
     private readonly ITenantContext _tenant;
@@ -25,14 +24,14 @@ public class BillingPortalService : IService
 
     public BillingPortalService(
         IOrganizationRepository organizationRepository,
-        IStripeClient stripeClient,
+        IBillingGateway billingGateway,
         IOptions<FrontendSettings> frontendOptions,
         IAuditLogService auditLog,
         ITenantContext tenant,
         ILogger<BillingPortalService> logger)
     {
         _organizationRepository = organizationRepository;
-        _stripeClient = stripeClient;
+        _billingGateway = billingGateway;
         _frontend = frontendOptions.Value;
         _auditLog = auditLog;
         _tenant = tenant;
@@ -61,9 +60,9 @@ public class BillingPortalService : IService
 
             return new CheckoutSessionDto { Url = sessionResult.Value! };
         }
-        catch (StripeException exception)
+        catch (BillingProviderException exception)
         {
-            _logger.LogError(exception, "Stripe error while opening the billing portal");
+            _logger.LogError(exception, "Billing provider error while opening the billing portal");
             return Result<CheckoutSessionDto>.Error(ErrorCodes.BillingProviderUnavailable);
         }
     }
@@ -80,15 +79,7 @@ public class BillingPortalService : IService
         if (string.IsNullOrEmpty(organization.StripeCustomerId))
             return Result<string>.Error(ErrorCodes.BillingNoActiveSubscription);
 
-        SessionCreateOptions options = new SessionCreateOptions
-        {
-            Customer = organization.StripeCustomerId,
-            ReturnUrl = $"{_frontend.BaseUrl.TrimEnd('/')}/settings"
-        };
-
-        Session session = await new SessionService(_stripeClient)
-            .CreateAsync(options, cancellationToken: cancellationToken);
-
-        return session.Url;
+        return await _billingGateway.CreatePortalSessionAsync(organization.StripeCustomerId,
+            $"{_frontend.BaseUrl.TrimEnd('/')}/settings", cancellationToken);
     }
 }

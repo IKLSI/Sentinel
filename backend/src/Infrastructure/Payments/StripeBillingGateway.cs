@@ -1,0 +1,113 @@
+using Microsoft.Extensions.Logging;
+using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Billing;
+using Stripe;
+using CheckoutSession = Stripe.Checkout.Session;
+using CheckoutSessionOptions = Stripe.Checkout.SessionCreateOptions;
+using CheckoutSessionService = Stripe.Checkout.SessionService;
+using PortalSession = Stripe.BillingPortal.Session;
+using PortalSessionOptions = Stripe.BillingPortal.SessionCreateOptions;
+using PortalSessionService = Stripe.BillingPortal.SessionService;
+
+namespace Sentinel.Infrastructure.Payments;
+
+public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBillingGateway> logger) : IBillingGateway
+{
+    private const string SubscriptionMode = "subscription";
+
+    public async Task<string> CreateCustomerAsync(BillingCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        CustomerCreateOptions options = new()
+        {
+            Name = request.OrganizationName,
+            Email = request.AdminEmail,
+            Metadata = new Dictionary<string, string>
+            {
+                [StripeMetadataKeys.OrganizationId] = request.OrganizationId.ToString()
+            }
+        };
+
+        try
+        {
+            Customer customer = await new CustomerService(stripeClient)
+                .CreateAsync(options, cancellationToken: cancellationToken);
+
+            return customer.Id;
+        }
+        catch (StripeException exception)
+        {
+            throw new BillingProviderException("Unable to create the billing customer", exception);
+        }
+    }
+
+    public async Task<string> CreateCheckoutSessionAsync(BillingCheckoutRequest request,
+        CancellationToken cancellationToken)
+    {
+        CheckoutSessionOptions options = new()
+        {
+            Mode = SubscriptionMode,
+            Customer = request.CustomerId,
+            ClientReferenceId = request.OrganizationId.ToString(),
+            LineItems = [new Stripe.Checkout.SessionLineItemOptions { Price = request.PriceId, Quantity = 1 }],
+            SuccessUrl = request.SuccessUrl,
+            CancelUrl = request.CancelUrl,
+            Metadata = new Dictionary<string, string>
+            {
+                [StripeMetadataKeys.OrganizationId] = request.OrganizationId.ToString(),
+                [StripeMetadataKeys.PlanTier] = request.Tier.ToString(),
+                [StripeMetadataKeys.BillingInterval] = request.BillingInterval
+            }
+        };
+
+        try
+        {
+            CheckoutSession session = await new CheckoutSessionService(stripeClient)
+                .CreateAsync(options, cancellationToken: cancellationToken);
+
+            return session.Url;
+        }
+        catch (StripeException exception)
+        {
+            throw new BillingProviderException("Unable to create the checkout session", exception);
+        }
+    }
+
+    public async Task<string> CreatePortalSessionAsync(string customerId, string returnUrl,
+        CancellationToken cancellationToken)
+    {
+        PortalSessionOptions options = new()
+        {
+            Customer = customerId,
+            ReturnUrl = returnUrl
+        };
+
+        try
+        {
+            PortalSession session = await new PortalSessionService(stripeClient)
+                .CreateAsync(options, cancellationToken: cancellationToken);
+
+            return session.Url;
+        }
+        catch (StripeException exception)
+        {
+            throw new BillingProviderException("Unable to open the billing portal", exception);
+        }
+    }
+
+    public async Task<decimal?> GetPriceAmountOrDefaultAsync(string priceId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            Price price = await new PriceService(stripeClient).GetAsync(priceId, cancellationToken: cancellationToken);
+
+            return (price.UnitAmount ?? 0) / 100m;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Unable to fetch the Stripe price {PriceId}", priceId);
+
+            return null;
+        }
+    }
+}

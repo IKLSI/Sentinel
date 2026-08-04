@@ -2,16 +2,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Application.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Billing;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
-using Stripe;
-using PlanTier = Sentinel.Domain.Models.PlanTier;
-using Session = Stripe.Checkout.Session;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Billing.Webhook;
 
@@ -24,7 +22,8 @@ public class BillingWebhookService : IService
     private readonly IUserRepository _userRepository;
     private readonly IProcessedStripeEventRepository _processedStripeEventRepository;
     private readonly ICommitScopeFactory _commitScopeFactory;
-    private readonly StripePriceCatalog _priceCatalog;
+    private readonly BillingPriceCatalog _priceCatalog;
+    private readonly IBillingWebhookParser _webhookParser;
     private readonly FrontendSettings _frontend;
     private readonly ISystemScope _systemScope;
     private readonly IJobScheduler _backgroundJobs;
@@ -37,7 +36,8 @@ public class BillingWebhookService : IService
         IUserRepository userRepository,
         IProcessedStripeEventRepository processedStripeEventRepository,
         ICommitScopeFactory commitScopeFactory,
-        StripePriceCatalog priceCatalog,
+        BillingPriceCatalog priceCatalog,
+        IBillingWebhookParser webhookParser,
         IOptions<FrontendSettings> frontendOptions,
         ISystemScope systemScope,
         IJobScheduler backgroundJobs,
@@ -50,6 +50,7 @@ public class BillingWebhookService : IService
         _processedStripeEventRepository = processedStripeEventRepository;
         _commitScopeFactory = commitScopeFactory;
         _priceCatalog = priceCatalog;
+        _webhookParser = webhookParser;
         _frontend = frontendOptions.Value;
         _systemScope = systemScope;
         _backgroundJobs = backgroundJobs;
@@ -63,79 +64,70 @@ public class BillingWebhookService : IService
 
     public async Task<Result> ExecuteAsync(BillingWebhookModel model, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(_priceCatalog.WebhookSecret))
-            throw new InvalidOperationException("Stripe:WebhookSecret is missing");
+        BillingWebhookEvent? billingEvent = _webhookParser.ParseOrDefault(model.Payload, model.Signature);
 
-        Event stripeEvent;
-
-        try
-        {
-            stripeEvent = EventUtility.ConstructEvent(model.Payload, model.Signature, _priceCatalog.WebhookSecret,
-                throwOnApiVersionMismatch: false);
-        }
-        catch (StripeException exception)
-        {
-            _logger.LogWarning(exception, "Invalid Stripe webhook");
+        if (billingEvent == null)
             return Result.Error();
-        }
 
         using IDisposable elevation = _systemScope.Enter();
 
         bool claimed = await _processedStripeEventRepository
-            .TryClaimAsync(stripeEvent.Id, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
+            .TryClaimAsync(billingEvent.Id, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
 
         if (!claimed)
         {
-            _logger.LogInformation("Stripe event {EventId} already processed or in flight, skipped",
-                stripeEvent.Id);
+            _logger.LogInformation("Billing event {EventId} already processed or in flight, skipped",
+                billingEvent.Id);
             return Result.Success();
         }
 
-        DateTime eventCreatedAt = stripeEvent.Created;
-
         try
         {
-            switch (stripeEvent.Type)
-            {
-                case "checkout.session.completed":
-                    if (stripeEvent.Data.Object is Session session)
-                        await ApplyCheckoutCompletedAsync(session, eventCreatedAt, cancellationToken);
-                    break;
-
-                case "customer.subscription.created":
-                case "customer.subscription.updated":
-                    if (stripeEvent.Data.Object is Subscription subscription)
-                        await ApplySubscriptionUpdateAsync(subscription, eventCreatedAt, cancellationToken);
-                    break;
-
-                case "customer.subscription.deleted":
-                    if (stripeEvent.Data.Object is Subscription canceled)
-                        await ApplySubscriptionCanceledAsync(canceled, eventCreatedAt, cancellationToken);
-                    break;
-            }
+            await DispatchAsync(billingEvent, cancellationToken);
         }
         catch
         {
-            await TryReleaseClaimAsync(stripeEvent.Id);
+            await TryReleaseClaimAsync(billingEvent.Id);
             throw;
         }
 
-        await _processedStripeEventRepository.MarkCompletedAsync(stripeEvent.Id, CancellationToken.None);
+        await _processedStripeEventRepository.MarkCompletedAsync(billingEvent.Id, CancellationToken.None);
 
         return Result.Success();
     }
 
-    private async Task TryReleaseClaimAsync(string stripeEventId)
+    private async Task DispatchAsync(BillingWebhookEvent billingEvent, CancellationToken cancellationToken)
+    {
+        switch (billingEvent.Type)
+        {
+            case BillingWebhookEventType.CheckoutCompleted:
+                if (billingEvent.Checkout is { } checkout)
+                    await ApplyCheckoutCompletedAsync(checkout, billingEvent.CreatedAt, cancellationToken);
+                break;
+
+            case BillingWebhookEventType.SubscriptionChanged:
+                if (billingEvent.Subscription is { } subscription)
+                    await ApplySubscriptionUpdateAsync(subscription, billingEvent.CreatedAt, cancellationToken);
+                break;
+
+            case BillingWebhookEventType.SubscriptionCanceled:
+                if (billingEvent.Subscription is { } canceled)
+                    await ApplySubscriptionCanceledAsync(canceled, billingEvent.CreatedAt, cancellationToken);
+                break;
+        }
+    }
+
+    private async Task TryReleaseClaimAsync(string billingEventId)
     {
         try
         {
-            await _processedStripeEventRepository.ReleaseAsync(stripeEventId, CancellationToken.None);
+            await _processedStripeEventRepository.ReleaseAsync(billingEventId, CancellationToken.None);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception,
-                "Unable to release the Stripe event {EventId} claim: it will be replayable after {Delay}",
-                stripeEventId, StaleClaimDelay);
+                "Unable to release the billing event {EventId} claim: it will be replayable after {Delay}",
+                billingEventId, StaleClaimDelay);
         }
     }
 
@@ -161,10 +153,10 @@ public class BillingWebhookService : IService
         }
     }
 
-    private async Task ApplyCheckoutCompletedAsync(Session session, DateTime eventCreatedAt,
+    private async Task ApplyCheckoutCompletedAsync(BillingCheckoutCompleted checkout, DateTime eventCreatedAt,
         CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(session.ClientReferenceId, out Guid organizationId)) return;
+        if (checkout.OrganizationId is not Guid organizationId) return;
 
         Organization? organization = await _organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.Tracked, cancellationToken);
@@ -174,22 +166,18 @@ public class BillingWebhookService : IService
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
+                "Billing event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 
         using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             organization.LastBillingEventAt = eventCreatedAt;
-            organization.StripeCustomerId = session.CustomerId ?? organization.StripeCustomerId;
-            organization.StripeSubscriptionId = session.SubscriptionId ?? organization.StripeSubscriptionId;
+            organization.StripeCustomerId = checkout.CustomerId ?? organization.StripeCustomerId;
+            organization.StripeSubscriptionId = checkout.SubscriptionId ?? organization.StripeSubscriptionId;
 
-            if (session.Metadata != null
-                && session.Metadata.TryGetValue(StripeMetadataKeys.PlanTier, out string? tierValue)
-                && Enum.TryParse(tierValue, out PlanTier tier))
-            {
+            if (checkout.Tier is { } tier)
                 organization.PlanTier = tier;
-            }
 
             organization.SubscriptionStatus = SubscriptionStatus.Active;
             organization.UpdatedAt = DateTime.UtcNow;
@@ -204,30 +192,30 @@ public class BillingWebhookService : IService
             organizationId, organization.PlanTier);
     }
 
-    private async Task ApplySubscriptionUpdateAsync(Subscription subscription, DateTime eventCreatedAt,
+    private async Task ApplySubscriptionUpdateAsync(BillingSubscriptionSnapshot subscription, DateTime eventCreatedAt,
         CancellationToken cancellationToken)
     {
         Organization? organization = await _organizationRepository
-            .GetOrDefaultByStripeReferenceAsync(subscription.Id, subscription.CustomerId, cancellationToken);
+            .GetOrDefaultByStripeReferenceAsync(subscription.SubscriptionId, subscription.CustomerId, cancellationToken);
 
         if (organization == null) return;
 
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
+                "Billing event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 
         PlanTier previousPlan = organization.PlanTier;
-        PlanTier? tier = _priceCatalog.TierFor(subscription.Items?.Data?.FirstOrDefault()?.Price?.Id);
+        PlanTier? tier = _priceCatalog.TierFor(subscription.PriceId);
         bool planApplied;
 
         using (ICommitScope commitScope = _commitScopeFactory.Begin())
         {
             organization.LastBillingEventAt = eventCreatedAt;
-            organization.StripeSubscriptionId = subscription.Id;
-            organization.SubscriptionStatus = StripePriceCatalog.MapStatus(subscription.Status);
+            organization.StripeSubscriptionId = subscription.SubscriptionId;
+            organization.SubscriptionStatus = subscription.Status;
 
             planApplied = tier.HasValue
                 && tier.Value != previousPlan
@@ -252,18 +240,18 @@ public class BillingWebhookService : IService
         await NotifyPlanChangedAsync(organization, previousPlan, organization.PlanTier, cancellationToken);
     }
 
-    private async Task ApplySubscriptionCanceledAsync(Subscription subscription, DateTime eventCreatedAt,
-        CancellationToken cancellationToken)
+    private async Task ApplySubscriptionCanceledAsync(BillingSubscriptionSnapshot subscription,
+        DateTime eventCreatedAt, CancellationToken cancellationToken)
     {
         Organization? organization = await _organizationRepository
-            .GetOrDefaultByStripeReferenceAsync(subscription.Id, subscription.CustomerId, cancellationToken);
+            .GetOrDefaultByStripeReferenceAsync(subscription.SubscriptionId, subscription.CustomerId, cancellationToken);
 
         if (organization == null) return;
 
         if (IsOutdatedEvent(organization, eventCreatedAt))
         {
             _logger.LogInformation(
-                "Stripe event older than the current state of {OrganizationId}, skipped", organization.Id);
+                "Billing event older than the current state of {OrganizationId}, skipped", organization.Id);
             return;
         }
 

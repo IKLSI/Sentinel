@@ -34,6 +34,7 @@ public static class Program
             .AddHttpRegistryClients()
             .AddRealtimeServices()
             .AddApplicationServices()
+            .AddInfrastructureServices()
             .AddUseCases()
             .AddApiVersioningPolicy()
             .AddSwaggerWithJwt()

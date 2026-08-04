@@ -1,15 +1,15 @@
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Constants;
+using Sentinel.Domain.Billing;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Stripe;
 
 namespace Sentinel.Application.Billing;
 
-public class StripeCustomerProvisioner(
+public class BillingCustomerProvisioner(
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    IStripeClient stripeClient)
+    IBillingGateway billingGateway)
 {
     public async Task<string> EnsureCustomerAsync(Organization organization, CancellationToken cancellationToken)
     {
@@ -19,24 +19,15 @@ public class StripeCustomerProvisioner(
         string? adminEmail = await userRepository
             .GetOldestActiveAdminEmailAsync(organization.Id, cancellationToken);
 
-        CustomerCreateOptions options = new CustomerCreateOptions
-        {
-            Name = organization.Name,
-            Email = adminEmail,
-            Metadata = new Dictionary<string, string>
-            {
-                [StripeMetadataKeys.OrganizationId] = organization.Id.ToString()
-            }
-        };
-
-        Customer customer = await new CustomerService(stripeClient).CreateAsync(options, cancellationToken: cancellationToken);
+        string customerId = await billingGateway.CreateCustomerAsync(
+            new BillingCustomerRequest(organization.Id, organization.Name, adminEmail), cancellationToken);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
-            organization.StripeCustomerId = customer.Id;
+            organization.StripeCustomerId = customerId;
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        return customer.Id;
+        return customerId;
     }
 }

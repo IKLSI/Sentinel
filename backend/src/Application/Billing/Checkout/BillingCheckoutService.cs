@@ -1,26 +1,24 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Common;
+using Sentinel.Application.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Billing;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
 using Sentinel.Domain.Repositories;
-using Stripe;
-using PlanTier = Sentinel.Domain.Models.PlanTier;
-using Stripe.Checkout;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Billing.Checkout;
 
 public class BillingCheckoutService : IService
 {
     private readonly IOrganizationRepository _organizationRepository;
-    private readonly StripeCustomerProvisioner _customerProvisioner;
-    private readonly StripePriceCatalog _priceCatalog;
-    private readonly IStripeClient _stripeClient;
+    private readonly BillingCustomerProvisioner _customerProvisioner;
+    private readonly BillingPriceCatalog _priceCatalog;
+    private readonly IBillingGateway _billingGateway;
     private readonly FrontendSettings _frontend;
     private readonly IAuditLogService _auditLog;
     private readonly ITenantContext _tenant;
@@ -29,9 +27,9 @@ public class BillingCheckoutService : IService
 
     public BillingCheckoutService(
         IOrganizationRepository organizationRepository,
-        StripeCustomerProvisioner customerProvisioner,
-        StripePriceCatalog priceCatalog,
-        IStripeClient stripeClient,
+        BillingCustomerProvisioner customerProvisioner,
+        BillingPriceCatalog priceCatalog,
+        IBillingGateway billingGateway,
         IOptions<FrontendSettings> frontendOptions,
         IAuditLogService auditLog,
         ITenantContext tenant,
@@ -41,7 +39,7 @@ public class BillingCheckoutService : IService
         _organizationRepository = organizationRepository;
         _customerProvisioner = customerProvisioner;
         _priceCatalog = priceCatalog;
-        _stripeClient = stripeClient;
+        _billingGateway = billingGateway;
         _frontend = frontendOptions.Value;
         _auditLog = auditLog;
         _tenant = tenant;
@@ -78,9 +76,9 @@ public class BillingCheckoutService : IService
 
             return new CheckoutSessionDto { Url = sessionResult.Value! };
         }
-        catch (StripeException exception)
+        catch (BillingProviderException exception)
         {
-            _logger.LogError(exception, "Stripe error while creating the checkout session");
+            _logger.LogError(exception, "Billing provider error while creating the checkout session");
             return Result<CheckoutSessionDto>.Error(ErrorCodes.BillingProviderUnavailable);
         }
     }
@@ -102,25 +100,15 @@ public class BillingCheckoutService : IService
         string customerId = await _customerProvisioner.EnsureCustomerAsync(organization, cancellationToken);
         string baseUrl = _frontend.BaseUrl.TrimEnd('/');
 
-        SessionCreateOptions options = new SessionCreateOptions
-        {
-            Mode = "subscription",
-            Customer = customerId,
-            ClientReferenceId = organization.Id.ToString(),
-            LineItems = [new SessionLineItemOptions { Price = priceResult.Value, Quantity = 1 }],
-            SuccessUrl = $"{baseUrl}/settings?billing=success",
-            CancelUrl = $"{baseUrl}/settings?billing=cancel",
-            Metadata = new Dictionary<string, string>
-            {
-                [StripeMetadataKeys.OrganizationId] = organization.Id.ToString(),
-                [StripeMetadataKeys.PlanTier] = tier.ToString(),
-                [StripeMetadataKeys.BillingInterval] = billingInterval
-            }
-        };
+        BillingCheckoutRequest request = new(
+            organization.Id,
+            customerId,
+            priceResult.Value!,
+            tier,
+            billingInterval,
+            $"{baseUrl}/settings?billing=success",
+            $"{baseUrl}/settings?billing=cancel");
 
-        Session session = await new SessionService(_stripeClient)
-            .CreateAsync(options, cancellationToken: cancellationToken);
-
-        return session.Url;
+        return await _billingGateway.CreateCheckoutSessionAsync(request, cancellationToken);
     }
 }

@@ -1,4 +1,4 @@
-namespace Sentinel.Domain.Constants;
+namespace Sentinel.Infrastructure.Http;
 
 public static class HttpClientNames
 {

@@ -88,6 +88,7 @@ public class DependencyInjectionTests
             .AddHttpRegistryClients()
             .AddRealtimeServices()
             .AddApplicationServices()
+            .AddInfrastructureServices()
             .AddUseCases()
             .AddMemoryCache()
             .AddStripe(configuration);

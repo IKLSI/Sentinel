@@ -1,4 +1,4 @@
-namespace Sentinel.Domain.Constants;
+namespace Sentinel.API.Constants;
 
 public static class RateLimitPolicies
 {

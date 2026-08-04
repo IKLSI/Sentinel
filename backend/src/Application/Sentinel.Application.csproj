@@ -12,7 +12,6 @@
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="QuestPDF" />
-    <PackageReference Include="Stripe.net" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
 

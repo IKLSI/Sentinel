@@ -3,7 +3,7 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Infrastructure.Storage;
 
-public class DatabaseAttachmentStorage : IAttachmentStorage
+public class InlineAttachmentStorage : IAttachmentStorage
 {
     public async Task<AttachmentLocation> SaveAsync(Guid attachmentId, Stream content,
         CancellationToken cancellationToken)

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Sentinel.Application.Options;
+namespace Sentinel.Infrastructure.Payments;
 
 public class StripeSettings
 {
@@ -9,6 +9,4 @@ public class StripeSettings
 
     [Required(ErrorMessage = "Stripe:WebhookSecret is required in the configuration")]
     public string WebhookSecret { get; set; } = string.Empty;
-
-    public StripePrices Prices { get; set; } = new();
 }

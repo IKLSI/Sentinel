@@ -1,4 +1,4 @@
-namespace Sentinel.Domain.Constants;
+namespace Sentinel.Infrastructure.Payments;
 
 public static class StripeMetadataKeys
 {

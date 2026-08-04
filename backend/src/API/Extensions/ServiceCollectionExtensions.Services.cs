@@ -18,8 +18,8 @@ using Sentinel.Infrastructure.Email;
 using Sentinel.Infrastructure.Http;
 using Sentinel.Infrastructure.Jobs;
 using Sentinel.Infrastructure.Localization;
+using Sentinel.Infrastructure.Payments;
 using Sentinel.Infrastructure.Storage;
-using Sentinel.Application.Options;
 
 namespace Sentinel.API.Extensions;
 
@@ -76,29 +76,20 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<AuditLogQueue>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddHostedService<AuditLogBackgroundWriter>();
+        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
         services.AddScoped<TokenService>();
+        services.AddScoped<TokenProtector>();
+        services.AddScoped<QueuedTokenProtector>();
         services.AddScoped<ExportService>();
         services.AddScoped<DashboardCache>();
-        services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<ManifestParserService>();
-        services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
-        services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
-        services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
-        services.AddScoped<IJobScheduler, HangfireJobScheduler>();
-        services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<TechHealthService>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<QuotaGuard>();
-        services.AddScoped<DataSeeder>();
-        services.AddScoped<TokenProtector>();
-        services.AddScoped<QueuedTokenProtector>();
-        services.AddScoped<StripePriceCatalog>();
-        services.AddScoped<StripeCustomerProvisioner>();
-
-        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
-        services.AddSingleton<IAttachmentStorage, DatabaseAttachmentStorage>();
+        services.AddScoped<BillingPriceCatalog>();
+        services.AddScoped<BillingCustomerProvisioner>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<PurgeExpiredRevokedTokensJob>();
@@ -106,7 +97,20 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    {
+        services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
+        services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
+        services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
+        services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
+        services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+        services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
         services.AddSingleton<IEmailService, EmailService>();
+        services.AddSingleton<IAttachmentStorage, InlineAttachmentStorage>();
+        services.AddScoped<DataSeeder>();
 
         return services;
     }
@@ -133,6 +137,8 @@ public static partial class ServiceCollectionExtensions
         string apiKey = string.IsNullOrEmpty(stripe.SecretKey) ? "sk_test_placeholder" : stripe.SecretKey;
 
         services.AddSingleton<Stripe.IStripeClient>(new Stripe.StripeClient(apiKey));
+        services.AddScoped<IBillingGateway, StripeBillingGateway>();
+        services.AddScoped<IBillingWebhookParser, StripeWebhookParser>();
 
         return services;
     }

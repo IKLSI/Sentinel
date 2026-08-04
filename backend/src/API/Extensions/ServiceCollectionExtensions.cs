@@ -4,6 +4,7 @@ using Sentinel.Domain.Constants;
 using Sentinel.API.Options;
 using Sentinel.Application.Options;
 using Sentinel.Infrastructure.Email;
+using Sentinel.Infrastructure.Payments;
 
 namespace Sentinel.API.Extensions;
 
@@ -17,6 +18,7 @@ public static partial class ServiceCollectionExtensions
         services.BindSettings<EmailSettings>(configuration, ConfigurationKeys.Sections.Email, validateDeploymentSettings);
         services.BindSettings<FrontendSettings>(configuration, ConfigurationKeys.Sections.Frontend, validateDeploymentSettings);
         services.BindSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe, validateDeploymentSettings);
+        services.BindSettings<StripePrices>(configuration, ConfigurationKeys.Sections.StripePrices, false);
         services.BindSettings<SupportSettings>(configuration, ConfigurationKeys.Sections.Support, false);
         services.BindSettings<CorsSettings>(configuration, ConfigurationKeys.Sections.Cors, false);
         services.BindSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection, false);
