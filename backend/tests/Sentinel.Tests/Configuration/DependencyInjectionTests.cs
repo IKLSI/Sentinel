@@ -46,6 +46,43 @@ public class DependencyInjectionTests
             "every use-case service must be resolvable at startup, not on the first endpoint call");
     }
 
+    [Fact]
+    public void ChaqueServiceApplicatifEnregistre_EstResolvableDepuisLeConteneur()
+    {
+        ServiceCollection services = BuildServices();
+
+        using ServiceProvider provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true
+        });
+        using IServiceScope scope = provider.CreateScope();
+
+        List<Type> applicationTypes = services
+            .Select(descriptor => descriptor.ServiceType)
+            .Where(type => !type.IsGenericTypeDefinition && type.Assembly == typeof(IService).Assembly)
+            .Distinct()
+            .OrderBy(type => type.FullName)
+            .ToList();
+
+        List<string> failures = [];
+
+        foreach (Type applicationType in applicationTypes)
+        {
+            try
+            {
+                scope.ServiceProvider.GetRequiredService(applicationType);
+            }
+            catch (Exception exception)
+            {
+                failures.Add($"{applicationType.FullName} → {RootCause(exception).Message}");
+            }
+        }
+
+        failures.Should().BeEmpty(
+            "every registered application service must be resolvable at startup, including those only reached "
+            + "through a background job or a scoped runner");
+    }
+
     private static IReadOnlyList<Type> UseCaseTypes() => typeof(IService).Assembly
         .GetTypes()
         .Where(type => type is { IsClass: true, IsAbstract: false }
@@ -56,7 +93,13 @@ public class DependencyInjectionTests
     private static Exception RootCause(Exception exception) =>
         exception.InnerException == null ? exception : RootCause(exception.InnerException);
 
-    private static ServiceProvider BuildProvider()
+    private static ServiceProvider BuildProvider() =>
+        BuildServices().BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true
+        });
+
+    private static ServiceCollection BuildServices()
     {
         const string connectionString =
             "Host=localhost;Database=sentinel_non_connecte;Username=sentinel;Password=sentinel";
@@ -93,10 +136,7 @@ public class DependencyInjectionTests
             .AddMemoryCache()
             .AddStripe(configuration);
 
-        return services.BuildServiceProvider(new ServiceProviderOptions
-        {
-            ValidateScopes = true
-        });
+        return services;
     }
 
     private sealed class StubBackgroundJobClient : IBackgroundJobClient

@@ -27,7 +27,7 @@ public class ProjectListService(
 
         return projects.Select(project =>
         {
-            ProjectDto dto = TechHealthService.MapToDto(project);
+            ProjectDto dto = ProjectMapper.ToDto(project);
             dto.TotalTickets = ticketCounts.GetValueOrDefault(project.Id);
             return dto;
         }).ToList();

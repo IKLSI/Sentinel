@@ -2,6 +2,7 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
+using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Models;
@@ -32,8 +33,8 @@ public class ProjectScanTriggerService(
         if (!quotaResult.IsSuccess)
             return quotaResult;
 
-        backgroundJobs.Enqueue<TechHealthService>(s =>
-            s.ScanProjectWithReservedQuotaAsync(projectId, organizationId));
+        backgroundJobs.Enqueue<ProjectScanService>(service =>
+            service.ScanProjectWithReservedQuotaAsync(projectId, organizationId));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

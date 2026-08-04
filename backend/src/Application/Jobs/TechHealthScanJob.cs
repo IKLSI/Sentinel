@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Sentinel.Application.TechHealth;
+using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Realtime;
@@ -7,7 +7,7 @@ using Sentinel.Domain.Realtime;
 namespace Sentinel.Application.Jobs;
 
 public class TechHealthScanJob(
-    TechHealthService techHealthService,
+    DueProjectScanService dueProjectScanService,
     IRealtimeNotifier realtimeNotifier,
     ILogger<TechHealthScanJob> logger,
     ISystemScope systemScope)
@@ -20,7 +20,7 @@ public class TechHealthScanJob(
 
         try
         {
-            await techHealthService.ScanAllProjectsDueAsync(cancellationToken);
+            await dueProjectScanService.ScanAllDueAsync(cancellationToken);
             logger.LogInformation("Tech health scan completed");
         }
         catch (Exception ex)

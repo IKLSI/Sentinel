@@ -1,11 +1,8 @@
 using System.Threading.Channels;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Models;
-using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Audit;
 
@@ -74,7 +71,7 @@ public class AuditLogQueue
 
 public class AuditLogBackgroundWriter(
     AuditLogQueue auditLogQueue,
-    IServiceScopeFactory scopeFactory,
+    IScopedServiceRunner scopeRunner,
     ISystemScope systemScope,
     ILogger<AuditLogBackgroundWriter> logger) : BackgroundService
 {
@@ -157,15 +154,8 @@ public class AuditLogBackgroundWriter(
             try
             {
                 using IDisposable elevation = systemScope.Enter();
-                using IServiceScope scope = scopeFactory.CreateScope();
 
-                IAuditLogRepository repository = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-                ICommitScopeFactory commitScopeFactory = scope.ServiceProvider.GetRequiredService<ICommitScopeFactory>();
-
-                using ICommitScope commitScope = commitScopeFactory.Begin();
-
-                await repository.AddRangeAsync(logs, ct);
-                await commitScope.CommitAsync(ct);
+                await scopeRunner.RunAsync<AuditLogBatchWriter>(writer => writer.WriteAsync(logs, ct));
 
                 return;
             }

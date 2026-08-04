@@ -14,7 +14,6 @@ namespace Sentinel.Application.TechHealth.CreateProject;
 public class ProjectCreateService(
     IProjectRepository projectRepository,
     ICommitScopeFactory commitScopeFactory,
-    TechHealthService techHealthService,
     QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
@@ -74,8 +73,9 @@ public class ProjectCreateService(
             entityId: project.Id,
             jti: tenant.Jti);
 
-        ProjectDto? created = await techHealthService.GetProjectWithDetailsAsync(project.Id);
+        Project? created = await projectRepository
+            .GetOrDefaultWithHealthDetailsAsync(project.Id, QueryTracking.NoTracking, cancellationToken);
 
-        return Result<ProjectDto>.Success(created!);
+        return Result<ProjectDto>.Success(ProjectMapper.ToDto(created!));
     }
 }

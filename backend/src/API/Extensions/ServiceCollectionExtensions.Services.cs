@@ -15,6 +15,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
+using Sentinel.Infrastructure.Hosting;
 using Sentinel.Infrastructure.Http;
 using Sentinel.Infrastructure.Jobs;
 using Sentinel.Infrastructure.Localization;
@@ -75,6 +76,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddSingleton<AuditLogQueue>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<AuditLogBatchWriter>();
         services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
         services.AddScoped<TokenService>();
@@ -84,7 +86,12 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<DashboardCache>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
-        services.AddScoped<TechHealthService>();
+        services.AddScoped<VulnerabilityScanService>();
+        services.AddScoped<RuntimeEolScanService>();
+        services.AddScoped<VulnerabilityAlertService>();
+        services.AddScoped<ProjectInventoryWriter>();
+        services.AddScoped<ProjectScanService>();
+        services.AddScoped<DueProjectScanService>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<QuotaGuard>();
@@ -108,6 +115,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
+        services.AddSingleton<IScopedServiceRunner, ScopedServiceRunner>();
         services.AddSingleton<IEmailService, EmailService>();
         services.AddSingleton<IAttachmentStorage, InlineAttachmentStorage>();
         services.AddScoped<DataSeeder>();

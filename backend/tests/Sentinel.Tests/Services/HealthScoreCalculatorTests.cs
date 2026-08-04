@@ -1,10 +1,10 @@
 using FluentAssertions;
-using Sentinel.Application.TechHealth;
+using Sentinel.Domain.TechHealth;
 using Sentinel.Domain.Models;
 
 namespace Sentinel.Tests.Services;
 
-public class TechHealthServiceCoverageTests
+public class HealthScoreCalculatorTests
 {
     private static Project EmptyProject() => new Project
     {
@@ -47,114 +47,114 @@ public class TechHealthServiceCoverageTests
     }
 
     [Fact]
-    public void ResolveCoverage_WhenNeverScanned_ReturnsNotScanned()
+    public void Resolve_WhenNeverScanned_ReturnsNotScanned()
     {
-        ScanCoverage coverage = TechHealthService.ResolveCoverage(EmptyProject(), scanRan: false, scanError: null, manifestsRead: 0);
+        ScanCoverage coverage = ScanCoverageResolver.Resolve(EmptyProject(), scanRan: false, scanError: null, manifestsRead: 0);
 
         coverage.Should().Be(ScanCoverage.NotScanned);
     }
 
     [Fact]
-    public void ResolveCoverage_WhenScanFailedAndNoExistingData_ReturnsFailed()
+    public void Resolve_WhenScanFailedAndNoExistingData_ReturnsFailed()
     {
-        ScanCoverage coverage = TechHealthService.ResolveCoverage(
+        ScanCoverage coverage = ScanCoverageResolver.Resolve(
             EmptyProject(), scanRan: true, scanError: "Token expiré", manifestsRead: 0);
 
         coverage.Should().Be(ScanCoverage.Failed);
     }
 
     [Fact]
-    public void ResolveCoverage_WhenNoManifestCouldBeRead_ReturnsNoManifest()
+    public void Resolve_WhenNoManifestCouldBeRead_ReturnsNoManifest()
     {
-        ScanCoverage coverage = TechHealthService.ResolveCoverage(
+        ScanCoverage coverage = ScanCoverageResolver.Resolve(
             EmptyProject(), scanRan: true, scanError: null, manifestsRead: 0);
 
         coverage.Should().Be(ScanCoverage.NoManifest);
     }
 
     [Fact]
-    public void ResolveCoverage_WhenManifestReadButEmpty_ReturnsNoDependencies()
+    public void Resolve_WhenManifestReadButEmpty_ReturnsNoDependencies()
     {
-        ScanCoverage coverage = TechHealthService.ResolveCoverage(
+        ScanCoverage coverage = ScanCoverageResolver.Resolve(
             EmptyProject(), scanRan: true, scanError: null, manifestsRead: 3);
 
         coverage.Should().Be(ScanCoverage.NoDependencies);
     }
 
     [Fact]
-    public void ResolveCoverage_WhenScanFailedButDataPreserved_ReturnsCovered()
+    public void Resolve_WhenScanFailedButDataPreserved_ReturnsCovered()
     {
         Project project = ProjectWithDependencies(1, DependencyStatus.UpToDate);
 
-        ScanCoverage coverage = TechHealthService.ResolveCoverage(
+        ScanCoverage coverage = ScanCoverageResolver.Resolve(
             project, scanRan: true, scanError: "Limite de requêtes atteinte", manifestsRead: 0);
 
         coverage.Should().Be(ScanCoverage.Covered);
     }
 
     [Fact]
-    public void CalculateHealthScore_OutdatedPenaltyIsIndependentOfProjectSize()
+    public void Calculate_OutdatedPenaltyIsIndependentOfProjectSize()
     {
         Project small = ProjectWithDependencies(10, DependencyStatus.MinorUpdate);
         Project large = ProjectWithDependencies(500, DependencyStatus.MinorUpdate);
 
-        TechHealthService.CalculateHealthScore(small)
-            .Should().Be(TechHealthService.CalculateHealthScore(large));
+        HealthScoreCalculator.Calculate(small)
+            .Should().Be(HealthScoreCalculator.Calculate(large));
     }
 
     [Fact]
-    public void CalculateHealthScore_AllMajorUpdates_AppliesMaxOutdatedPenalty()
+    public void Calculate_AllMajorUpdates_AppliesMaxOutdatedPenalty()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.MajorUpdate);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(77);
+        HealthScoreCalculator.Calculate(project).Should().Be(77);
     }
 
     [Fact]
-    public void CalculateHealthScore_AllMinorUpdates_AppliesHalfOutdatedPenalty()
+    public void Calculate_AllMinorUpdates_AppliesHalfOutdatedPenalty()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.MinorUpdate);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(88);
+        HealthScoreCalculator.Calculate(project).Should().Be(88);
     }
 
     [Fact]
-    public void CalculateHealthScore_AllUpToDate_ReturnsPerfectScore()
+    public void Calculate_AllUpToDate_ReturnsPerfectScore()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(100);
+        HealthScoreCalculator.Calculate(project).Should().Be(100);
     }
 
     [Fact]
-    public void CalculateHealthScore_CriticalVulnerabilityPenaltyIsAbsolute()
+    public void Calculate_CriticalVulnerabilityPenaltyIsAbsolute()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(90);
+        HealthScoreCalculator.Calculate(project).Should().Be(90);
     }
 
     [Fact]
-    public void CalculateHealthScore_EolRuntime_AppliesPenalty()
+    public void Calculate_EolRuntime_AppliesPenalty()
     {
         Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
         project.Runtimes.Add(new Runtime { Name = "Python", Version = "3.8", IsEol = true });
 
-        TechHealthService.CalculateHealthScore(project).Should().Be(90);
+        HealthScoreCalculator.Calculate(project).Should().Be(90);
     }
 
     [Fact]
-    public void CalculateHealthScore_MassiveVulnerabilityCount_NeverSaturatesAtZero()
+    public void Calculate_MassiveVulnerabilityCount_NeverSaturatesAtZero()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerabilities(project, VulnerabilitySeverity.High, 60);
 
-        TechHealthService.CalculateHealthScore(project).Should().BeGreaterThan(0);
+        HealthScoreCalculator.Calculate(project).Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public void CalculateHealthScore_FixingVulnerabilities_AlwaysRaisesScore()
+    public void Calculate_FixingVulnerabilities_AlwaysRaisesScore()
     {
         Project heavilyAffected = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerabilities(heavilyAffected, VulnerabilitySeverity.High, 60);
@@ -162,12 +162,12 @@ public class TechHealthServiceCoverageTests
         Project partiallyFixed = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerabilities(partiallyFixed, VulnerabilitySeverity.High, 30);
 
-        TechHealthService.CalculateHealthScore(partiallyFixed)
-            .Should().BeGreaterThan(TechHealthService.CalculateHealthScore(heavilyAffected));
+        HealthScoreCalculator.Calculate(partiallyFixed)
+            .Should().BeGreaterThan(HealthScoreCalculator.Calculate(heavilyAffected));
     }
 
     [Fact]
-    public void CalculateHealthScore_WorseProject_AlwaysScoresLowerThanBadProject()
+    public void Calculate_WorseProject_AlwaysScoresLowerThanBadProject()
     {
         Project bad = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerabilities(bad, VulnerabilitySeverity.High, 20);
@@ -175,7 +175,7 @@ public class TechHealthServiceCoverageTests
         Project worse = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerabilities(worse, VulnerabilitySeverity.High, 80);
 
-        TechHealthService.CalculateHealthScore(worse)
-            .Should().BeLessThan(TechHealthService.CalculateHealthScore(bad));
+        HealthScoreCalculator.Calculate(worse)
+            .Should().BeLessThan(HealthScoreCalculator.Calculate(bad));
     }
 }

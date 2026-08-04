@@ -4,10 +4,10 @@ using Sentinel.Domain.Models;
 
 namespace Sentinel.Tests.Services;
 
-public class TechHealthServiceMapToDtoTests
+public class ProjectMapperTests
 {
     [Fact]
-    public void MapToDto_EmptyProject_ReturnsZeroCounts()
+    public void ToDto_EmptyProject_ReturnsZeroCounts()
     {
         Project project = new Project
         {
@@ -21,7 +21,7 @@ public class TechHealthServiceMapToDtoTests
             Runtimes = new List<Runtime>(),
         };
 
-        var dto = TechHealthService.MapToDto(project);
+        var dto = ProjectMapper.ToDto(project);
 
         dto.TotalDependencies.Should().Be(0);
         dto.VulnerableDependencies.Should().Be(0);
@@ -32,7 +32,7 @@ public class TechHealthServiceMapToDtoTests
     }
 
     [Fact]
-    public void MapToDto_CountsVulnerableDependencies()
+    public void ToDto_CountsVulnerableDependencies()
     {
         Project project = new Project
         {
@@ -50,14 +50,14 @@ public class TechHealthServiceMapToDtoTests
             Runtimes = new List<Runtime>(),
         };
 
-        var dto = TechHealthService.MapToDto(project);
+        var dto = ProjectMapper.ToDto(project);
 
         dto.TotalDependencies.Should().Be(3);
         dto.VulnerableDependencies.Should().Be(2);
     }
 
     [Fact]
-    public void MapToDto_CountsCriticalVulnsAcrossDependencies()
+    public void ToDto_CountsCriticalVulnsAcrossDependencies()
     {
         Project project = new Project
         {
@@ -89,14 +89,14 @@ public class TechHealthServiceMapToDtoTests
             Runtimes = new List<Runtime>(),
         };
 
-        var dto = TechHealthService.MapToDto(project);
+        var dto = ProjectMapper.ToDto(project);
 
         dto.TotalVulnerabilities.Should().Be(3);
         dto.CriticalVulnerabilities.Should().Be(2);
     }
 
     [Fact]
-    public void MapToDto_MapsRuntimes()
+    public void ToDto_MapsRuntimes()
     {
         Project project = new Project
         {
@@ -113,7 +113,7 @@ public class TechHealthServiceMapToDtoTests
             },
         };
 
-        var dto = TechHealthService.MapToDto(project);
+        var dto = ProjectMapper.ToDto(project);
 
         dto.Runtimes.Should().HaveCount(2);
         dto.Runtimes.Should().Contain(r => r.Name == "Node.js" && r.IsEol == false);
