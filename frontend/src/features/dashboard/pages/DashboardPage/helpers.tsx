@@ -49,7 +49,7 @@ export interface DashPalette {
 export const buildPalette = (_isDark: boolean): DashPalette => ({
   panelBg: "var(--s1)",
   panelBorder: "var(--border)",
-  panelShadow: "0 2px 6px rgba(0,0,0,0.08)",
+  panelShadow: "var(--sh-1)",
   headerBorder: "var(--border)",
   textPrimary: "var(--text)",
   textHeading: "var(--text)",

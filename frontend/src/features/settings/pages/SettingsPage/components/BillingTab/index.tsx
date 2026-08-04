@@ -318,7 +318,7 @@ export const BillingTab: React.FC = () => {
                         : "var(--s1)",
                     boxShadow: highlight
                       ? "0 8px 28px color-mix(in srgb, var(--accent) 14%, transparent)"
-                      : "0 1px 2px rgba(0,0,0,0.04)",
+                      : "var(--sh-1)",
                     position: "relative",
                   }}
                 >

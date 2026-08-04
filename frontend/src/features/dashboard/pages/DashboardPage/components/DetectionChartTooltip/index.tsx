@@ -24,7 +24,7 @@ export const DetectionChartTooltip: React.FC<Props> = ({
         background: "var(--s2)",
         border: "1px solid var(--accent-border)",
         borderRadius: "var(--r-sm)",
-        boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+        boxShadow: "var(--sh-2)",
         px: "10px",
         py: "6px",
       }}

@@ -265,7 +265,7 @@ export const Sidebar: React.FC = () => {
           borderRadius: isMobile ? 0 : "var(--r-lg)",
           boxShadow: isMobile
             ? "none"
-            : "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.03)",
+            : "var(--sh-2), inset 0 1px 0 rgba(255,255,255,0.04)",
           display: "flex",
           flexDirection: "column",
           position: "fixed",

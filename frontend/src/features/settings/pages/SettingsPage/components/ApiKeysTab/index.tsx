@@ -467,8 +467,8 @@ export const ApiKeysTab: React.FC = () => {
               copied
                 ? {
                     background:
-                      "linear-gradient(135deg, var(--green) 0%, color-mix(in srgb, var(--green) 85%, black) 100%)",
-                    "&:hover": { background: "var(--green)" },
+                      "linear-gradient(135deg, var(--green-fill) 0%, color-mix(in srgb, var(--green-fill) 85%, black) 100%)",
+                    "&:hover": { background: "var(--green-fill)" },
                   }
                 : undefined
             }

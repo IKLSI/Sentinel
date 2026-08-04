@@ -1,35 +1,43 @@
 import { createTheme } from "@mui/material/styles";
+import type { Shadows } from "@mui/material/styles";
 
 const darkCssVars = `
   :root {
     color-scheme: dark;
-    --bg: #080c14;
-    --s1: #0d1120;
-    --s2: #121829;
-    --s3: #192036;
-    --border: #1e2a42;
-    --border2: #263352;
-    --text: #e6eaf6;
-    --text-secondary: #a0aec9;
-    --muted: #4d5e82;
-    --muted2: #7488aa;
-    --accent: #6366f1;
-    --accent2: #4f52cf;
-    --accent-subtle: rgba(99, 102, 241, 0.10);
-    --accent-border: rgba(99, 102, 241, 0.30);
-    --blue: #6366f1;
-    --green: #22c55e;
-    --green-subtle: rgba(34, 197, 94, 0.10);
-    --yellow: #f59e0b;
-    --yellow-subtle: rgba(245, 158, 11, 0.10);
-    --orange: #f97316;
-    --orange-subtle: rgba(249, 115, 22, 0.10);
-    --red: #ef4444;
-    --red-subtle: rgba(239, 68, 68, 0.10);
-    --cyan: #06b6d4;
-    --cyan-subtle: rgba(6, 182, 212, 0.10);
-    --purple: #a855f7;
-    --purple-subtle: rgba(168, 85, 247, 0.10);
+    --bg: #0a0f1a;
+    --s1: #121a2b;
+    --s2: #182136;
+    --s3: #202b45;
+    --border: #2a3654;
+    --border2: #3b4a6d;
+    --text: #edf1fb;
+    --text-secondary: #b4c0d9;
+    --muted: #7b8db0;
+    --muted2: #9aabc8;
+    --accent: #818cf8;
+    --accent2: #a5b4fc;
+    --accent-fill: #5457e8;
+    --accent-fill-2: #4245cf;
+    --accent-subtle: rgba(129, 140, 248, 0.14);
+    --accent-border: rgba(129, 140, 248, 0.36);
+    --blue: #818cf8;
+    --green: #4ade80;
+    --green-subtle: rgba(74, 222, 128, 0.14);
+    --green-fill: #15803d;
+    --yellow: #fbbf24;
+    --yellow-subtle: rgba(251, 191, 36, 0.14);
+    --orange: #fb923c;
+    --orange-subtle: rgba(251, 146, 60, 0.14);
+    --red: #f87171;
+    --red-subtle: rgba(248, 113, 113, 0.14);
+    --red-fill: #dc2626;
+    --cyan: #22d3ee;
+    --cyan-subtle: rgba(34, 211, 238, 0.14);
+    --purple: #c084fc;
+    --purple-subtle: rgba(192, 132, 252, 0.14);
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --sh-2: 0 6px 16px rgba(0, 0, 0, 0.55);
+    --sh-3: 0 20px 48px rgba(0, 0, 0, 0.62);
     --r-xs: 4px;
     --r-sm: 6px;
     --r: 8px;
@@ -57,21 +65,28 @@ const lightCssVars = `
     --muted2: #5c6f90;
     --accent: #4f46e5;
     --accent2: #3730a3;
+    --accent-fill: #4f46e5;
+    --accent-fill-2: #3730a3;
     --accent-subtle: rgba(79, 70, 229, 0.08);
     --accent-border: rgba(79, 70, 229, 0.25);
     --blue: #4f46e5;
     --green: #16a34a;
     --green-subtle: rgba(22, 163, 74, 0.08);
+    --green-fill: #15803d;
     --yellow: #d97706;
     --yellow-subtle: rgba(217, 119, 6, 0.08);
     --orange: #ea580c;
     --orange-subtle: rgba(234, 88, 12, 0.08);
     --red: #dc2626;
     --red-subtle: rgba(220, 38, 38, 0.08);
+    --red-fill: #dc2626;
     --cyan: #0891b2;
     --cyan-subtle: rgba(8, 145, 178, 0.08);
     --purple: #9333ea;
     --purple-subtle: rgba(147, 51, 234, 0.08);
+    --sh-1: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --sh-2: 0 6px 16px rgba(16, 24, 40, 0.09);
+    --sh-3: 0 20px 48px rgba(16, 24, 40, 0.13);
     --r-xs: 4px;
     --r-sm: 6px;
     --r: 8px;
@@ -83,6 +98,29 @@ const lightCssVars = `
   }
   body { scrollbar-width: thin; }
 `;
+
+const darkShadowSteps = [
+  "0 1px 2px rgba(0, 0, 0, 0.45)",
+  "0 2px 6px rgba(0, 0, 0, 0.5)",
+  "0 6px 16px rgba(0, 0, 0, 0.55)",
+  "0 12px 32px rgba(0, 0, 0, 0.6)",
+  "0 24px 60px rgba(0, 0, 0, 0.65)",
+];
+
+const lightShadowSteps = [
+  "0 1px 2px rgba(16, 24, 40, 0.05)",
+  "0 2px 6px rgba(16, 24, 40, 0.07)",
+  "0 6px 16px rgba(16, 24, 40, 0.09)",
+  "0 12px 32px rgba(16, 24, 40, 0.11)",
+  "0 24px 60px rgba(16, 24, 40, 0.14)",
+];
+
+const MUI_SHADOW_LEVELS = 25;
+
+const buildShadows = (steps: string[]) =>
+  Array.from({ length: MUI_SHADOW_LEVELS }, (_, level) =>
+    level === 0 ? "none" : steps[Math.min(level - 1, steps.length - 1)],
+  ) as unknown as Shadows;
 
 const baseComponents = {
   MuiButton: {
@@ -136,10 +174,11 @@ const baseComponents = {
         props: { variant: "contained" as const, color: "primary" as const },
         style: {
           background:
-            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%)",
+            "linear-gradient(135deg, var(--accent-fill) 0%, color-mix(in srgb, var(--accent-fill) 88%, white) 100%)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
           "&:hover": {
             background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)",
+              "linear-gradient(135deg, var(--accent-fill-2) 0%, var(--accent-fill) 100%)",
           },
         },
       },
@@ -163,10 +202,10 @@ const baseComponents = {
         props: { variant: "contained" as const, color: "error" as const },
         style: {
           background:
-            "linear-gradient(135deg, var(--red) 0%, color-mix(in srgb, var(--red) 92%, white) 100%)",
+            "linear-gradient(135deg, var(--red-fill) 0%, color-mix(in srgb, var(--red-fill) 88%, white) 100%)",
           "&:hover": {
             background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--red) 85%, black) 0%, var(--red) 100%)",
+              "linear-gradient(135deg, color-mix(in srgb, var(--red-fill) 85%, black) 0%, var(--red-fill) 100%)",
           },
         },
       },
@@ -185,12 +224,14 @@ const baseComponents = {
       root: {
         "& .MuiBackdrop-root": {
           backdropFilter: "blur(4px)",
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: "rgba(4, 7, 14, 0.62)",
         },
       },
       paper: {
         borderRadius: "var(--r-lg)",
-        boxShadow: "0 24px 60px rgba(0,0,0,0.4)",
+        background: "var(--s1)",
+        border: "1px solid var(--border)",
+        boxShadow: "var(--sh-3)",
       },
     },
   },
@@ -211,6 +252,13 @@ const baseComponents = {
         fontFamily: "Inter, sans-serif",
         borderRadius: "var(--r-sm)",
         padding: "5px 10px",
+        background: "var(--s3)",
+        color: "var(--text)",
+        border: "1px solid var(--border2)",
+        boxShadow: "var(--sh-2)",
+      },
+      arrow: {
+        color: "var(--s3)",
       },
     },
   },
@@ -246,6 +294,121 @@ const baseComponents = {
       root: {
         borderRadius: "var(--r-sm)",
         transition: "all 0.12s ease",
+        "&:hover": { background: "var(--s2)" },
+        "&.Mui-selected": {
+          background: "var(--accent-subtle)",
+          color: "var(--accent)",
+          "&:hover": { background: "var(--accent-subtle)" },
+        },
+      },
+    },
+  },
+  MuiOutlinedInput: {
+    styleOverrides: {
+      root: {
+        background: "var(--s2)",
+        borderRadius: "var(--r)",
+        fontSize: "13px",
+        "& .MuiOutlinedInput-notchedOutline": {
+          borderColor: "var(--border)",
+          transition: "border-color 0.15s",
+        },
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+          borderColor: "var(--border2)",
+        },
+        "&.Mui-focused": {
+          boxShadow: "0 0 0 3px var(--accent-subtle)",
+        },
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+          borderColor: "var(--accent)",
+          borderWidth: "1px",
+        },
+        "&.Mui-error .MuiOutlinedInput-notchedOutline": {
+          borderColor: "var(--red)",
+        },
+        "&.Mui-disabled": { opacity: 0.55 },
+      },
+      input: {
+        color: "var(--text)",
+        "&::placeholder": { color: "var(--muted)", opacity: 1 },
+      },
+    },
+  },
+  MuiInputLabel: {
+    styleOverrides: {
+      root: {
+        color: "var(--muted2)",
+        fontSize: "13px",
+        "&.Mui-focused": { color: "var(--accent)" },
+        "&.Mui-error": { color: "var(--red)" },
+      },
+    },
+  },
+  MuiFormHelperText: {
+    styleOverrides: {
+      root: {
+        color: "var(--muted2)",
+        "&.Mui-error": { color: "var(--red)" },
+      },
+    },
+  },
+  MuiIconButton: {
+    styleOverrides: {
+      root: {
+        color: "var(--muted2)",
+        borderRadius: "var(--r-sm)",
+        transition: "background 0.12s, color 0.12s",
+        "&:hover": { background: "var(--s3)", color: "var(--text)" },
+      },
+    },
+  },
+  MuiSkeleton: {
+    styleOverrides: {
+      root: {
+        backgroundColor: "var(--s3)",
+        borderRadius: "var(--r-sm)",
+      },
+    },
+  },
+  MuiSwitch: {
+    styleOverrides: {
+      switchBase: {
+        color: "var(--muted2)",
+        "&.Mui-checked": { color: "var(--accent)" },
+        "&.Mui-checked + .MuiSwitch-track": {
+          backgroundColor: "var(--accent)",
+          opacity: 0.5,
+        },
+      },
+      track: { backgroundColor: "var(--border2)", opacity: 1 },
+    },
+  },
+  MuiAlert: {
+    styleOverrides: {
+      root: {
+        fontSize: "13px",
+        borderRadius: "var(--r)",
+        border: "1px solid",
+      },
+      standardError: {
+        background: "var(--red-subtle)",
+        borderColor: "color-mix(in srgb, var(--red) 32%, transparent)",
+        color: "var(--red)",
+      },
+      standardSuccess: {
+        background: "var(--green-subtle)",
+        borderColor: "color-mix(in srgb, var(--green) 32%, transparent)",
+        color: "var(--green)",
+      },
+      standardWarning: {
+        background: "var(--yellow-subtle)",
+        borderColor: "color-mix(in srgb, var(--yellow) 32%, transparent)",
+        color: "var(--yellow)",
+      },
+      standardInfo: {
+        background: "var(--accent-subtle)",
+        borderColor: "var(--accent-border)",
+        color: "var(--accent)",
       },
     },
   },
@@ -257,6 +420,17 @@ const baseComponents = {
       },
     },
   },
+  MuiMenu: {
+    styleOverrides: {
+      paper: {
+        background: "var(--s2)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--r)",
+        boxShadow: "var(--sh-3)",
+        backgroundImage: "none",
+      },
+    },
+  },
   MuiMenuItem: {
     styleOverrides: {
       root: {
@@ -264,6 +438,13 @@ const baseComponents = {
         borderRadius: "var(--r-sm)",
         margin: "1px 4px",
         transition: "background 0.1s",
+        color: "var(--text-secondary)",
+        "&:hover": { background: "var(--s3)", color: "var(--text)" },
+        "&.Mui-selected": {
+          background: "var(--accent-subtle)",
+          color: "var(--accent)",
+          "&:hover": { background: "var(--accent-subtle)" },
+        },
       },
     },
   },
@@ -294,19 +475,27 @@ const baseComponents = {
 export const darkTheme = createTheme({
   palette: {
     mode: "dark",
-    primary: { main: "#6366f1", dark: "#4f52cf" },
-    secondary: { main: "#7c6fcd", dark: "#6a5eb8" },
-    error: { main: "#ef4444" },
-    success: { main: "#22c55e" },
-    warning: { main: "#f59e0b" },
-    background: { default: "#080c14", paper: "#0d1120" },
-    text: { primary: "#e6eaf6", secondary: "#a0aec9" },
-    divider: "#1e2a42",
+    primary: { main: "#818cf8", dark: "#6366f1", contrastText: "#0a0f1a" },
+    secondary: { main: "#a5a0e8", dark: "#6d5fc4" },
+    error: { main: "#f87171" },
+    success: { main: "#4ade80" },
+    warning: { main: "#fbbf24" },
+    info: { main: "#22d3ee" },
+    background: { default: "#0a0f1a", paper: "#121a2b" },
+    text: {
+      primary: "#edf1fb",
+      secondary: "#b4c0d9",
+      disabled: "#7b8db0",
+    },
+    divider: "#2a3654",
     action: {
-      hover: "rgba(255,255,255,0.04)",
-      selected: "rgba(99, 102, 241, 0.12)",
+      hover: "rgba(255,255,255,0.06)",
+      selected: "rgba(129, 140, 248, 0.16)",
+      disabled: "#7b8db0",
+      disabledBackground: "#202b45",
     },
   },
+  shadows: buildShadows(darkShadowSteps),
   shape: { borderRadius: 8 },
   typography: {
     fontFamily: "Inter, system-ui, -apple-system, sans-serif",
@@ -334,6 +523,7 @@ export const lightTheme = createTheme({
       selected: "rgba(79, 70, 229, 0.08)",
     },
   },
+  shadows: buildShadows(lightShadowSteps),
   shape: { borderRadius: 8 },
   typography: {
     fontFamily: "Inter, system-ui, -apple-system, sans-serif",

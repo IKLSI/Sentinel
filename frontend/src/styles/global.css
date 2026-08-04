@@ -84,6 +84,83 @@
   --preview-lt-accent: rgba(79, 70, 229, 0.35);
   --preview-lt-text-soft: rgba(14, 18, 32, 0.4);
   --preview-lt-text-strong: rgba(14, 18, 32, 0.45);
+
+  --auth-surface: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --sky: #7dd3fc;
+  --sky-subtle: rgba(125, 211, 252, 0.16);
+  --sky-border: rgba(125, 211, 252, 0.32);
+  --violet: #c4b5fd;
+  --violet-subtle: rgba(196, 181, 253, 0.16);
+  --violet-border: rgba(196, 181, 253, 0.32);
+  --emerald: #6ee7b7;
+  --emerald-subtle: rgba(110, 231, 183, 0.16);
+  --emerald-border: rgba(110, 231, 183, 0.32);
+  --slate: #94a3b8;
+  --slate-subtle: rgba(148, 163, 184, 0.16);
+  --slate-border: rgba(148, 163, 184, 0.3);
+  --rose: #fda4af;
+  --rose-subtle: rgba(253, 164, 175, 0.16);
+  --rose-border: rgba(253, 164, 175, 0.32);
+  --teal: #5eead4;
+  --teal-subtle: rgba(94, 234, 212, 0.16);
+  --teal-border: rgba(94, 234, 212, 0.32);
+
+  --brand-github: #30363d;
+
+  --cta: #6d5fc4;
+  --cta-2: #5b4fae;
+
+  --prio-bg-1: #4a1f2e;
+  --prio-bg-2: #5e2438;
+  --prio-fg: #ffb3c5;
+
+  --avatar-user-1: #818cf8;
+  --avatar-user-2: #4f46e5;
+  --avatar-peer-1: #fb7185;
+  --avatar-peer-2: #be123c;
+
+  --flag-1: #1e2a4a;
+  --flag-2: #263457;
+  --flag-3: #4a2632;
+
+  --overlay: rgba(4, 7, 14, 0.68);
+
+  --auth-bg: #0a0f1a;
+  --auth-surface: #121a2b;
+  --auth-indigo-950: #1e1b6e;
+  --auth-indigo-900: #3b37b8;
+  --auth-indigo-800: #4f46e5;
+  --auth-indigo-700: #5457e8;
+  --auth-indigo-500: #818cf8;
+  --auth-indigo-400: #a5b4fc;
+  --auth-indigo-300: #c7d2fe;
+  --auth-indigo-200: #3b4a6d;
+  --auth-indigo-50: rgba(129, 140, 248, 0.14);
+  --auth-gray-900: #edf1fb;
+  --auth-gray-500: #9aabc8;
+  --auth-gray-400: #7b8db0;
+  --auth-gray-300: #3b4a6d;
+  --auth-gray-200: #2a3654;
+  --auth-gray-50: #182136;
+  --auth-red-600: #f87171;
+  --auth-red-500: #f87171;
+  --auth-red-300: #b91c1c;
+  --auth-red-50: rgba(248, 113, 113, 0.12);
+  --auth-register: #a5b4fc;
+  --auth-register-hover: #c7d2fe;
+  --auth-shadow: #000000;
+
+  --preview-dk-bg: #0a0f1a;
+  --preview-dk-surface: #121a2b;
+  --preview-dk-surface2: #202b45;
+  --preview-dk-bar1: #3b4a6d;
+  --preview-dk-bar2: #202b45;
+  --preview-dk-accent: rgba(129, 140, 248, 0.55);
+  --preview-dk-text-soft: rgba(237, 241, 251, 0.4);
+  --preview-dk-text-strong: rgba(237, 241, 251, 0.6);
 }
 
 html {
@@ -537,8 +614,8 @@ a:hover {
   padding: 10px 20px;
   background: linear-gradient(
     135deg,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent) 78%, white) 100%
+    var(--accent-fill) 0%,
+    color-mix(in srgb, var(--accent-fill) 82%, white) 100%
   );
   border: none;
   border-radius: var(--r);
@@ -557,7 +634,11 @@ a:hover {
   text-decoration: none;
 }
 .ep-btn-primary:hover {
-  background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--accent-fill-2) 0%,
+    var(--accent-fill) 100%
+  );
   box-shadow:
     0 6px 22px color-mix(in srgb, var(--accent) 38%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
@@ -914,7 +995,7 @@ a:hover {
 /* ── Panel droit ── */
 .lp-right {
   flex: 0 0 50%;
-  background: #fff;
+  background: var(--auth-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1000,8 +1081,8 @@ a:hover {
 .lp-input:focus {
   border-color: var(--auth-indigo-500);
   box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--auth-indigo-500) 10%, transparent);
-  background: #fff;
+    color-mix(in srgb, var(--auth-indigo-500) 14%, transparent);
+  background: var(--auth-surface);
 }
 .lp-pw-toggle {
   position: absolute;
@@ -1377,7 +1458,7 @@ a:hover {
 /* ── Panel droit ── */
 .aip-right {
   flex: 1;
-  background: #fff;
+  background: var(--auth-surface);
   display: flex;
   align-items: center;
   justify-content: center;

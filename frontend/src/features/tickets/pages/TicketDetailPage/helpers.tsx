@@ -74,7 +74,7 @@ export interface DetailPalette {
 export const buildPalette = (_isDark: boolean): DetailPalette => ({
   panelBg: "var(--s1)",
   panelBorder: "var(--border)",
-  panelShadow: "0 1px 2px rgba(0,0,0,0.18), 0 12px 30px -18px rgba(0,0,0,0.3)",
+  panelShadow: "var(--sh-1)",
   breadcrumbText: "var(--text-secondary)",
   folderIcon: "var(--purple)",
   chevron: "var(--muted)",
@@ -107,7 +107,7 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   tabActiveFg: "var(--text)",
   tabIdleFg: "var(--text-secondary)",
   tabActiveBg: "var(--s1)",
-  tabActiveShadow: "0 1px 2px rgba(0,0,0,0.18)",
+  tabActiveShadow: "var(--sh-1)",
   composerBorder: "var(--border)",
   composerBg: "var(--s1)",
   composerDivider: "var(--border)",

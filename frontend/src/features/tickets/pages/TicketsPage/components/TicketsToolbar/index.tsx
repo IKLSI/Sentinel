@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import AddOutlined from "@mui/icons-material/AddOutlined";
-import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
+import FilterAltOutlined from "@mui/icons-material/FilterAltOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import { selectSx } from "@/features/tickets/pages/TicketsPage/helpers";
@@ -108,7 +108,7 @@ export const TicketsToolbar: React.FC<Props> = ({
             },
           }}
         >
-          <FilterListOutlined sx={{ fontSize: 15 }} />
+          <FilterAltOutlined sx={{ fontSize: 15 }} />
           {t("tickets.list.filters")}
         </Box>
 
@@ -152,7 +152,7 @@ export const TicketsToolbar: React.FC<Props> = ({
                 border: "1px solid var(--border)",
                 borderRadius: "var(--r-md)",
                 p: "16px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                boxShadow: "var(--sh-3)",
                 minWidth: "220px",
                 display: "flex",
                 flexDirection: "column",

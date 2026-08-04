@@ -453,7 +453,7 @@ export const ProfilePage: React.FC = () => {
               {t("profile.field.appearance")}
             </Box>
             <Box sx={{ display: "flex", gap: "8px" }}>
-              {([Theme.Dark, Theme.Light] as const).map((mode) => (
+              {([Theme.Light, Theme.Dark] as const).map((mode) => (
                 <Box
                   key={mode}
                   component="button"

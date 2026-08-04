@@ -63,10 +63,13 @@ const SURFACE_TOKENS = ["bg", "s1", "s2", "s3", "border", "border2"] as const;
 const TEXT_TOKENS = ["text", "text-secondary", "muted", "muted2"] as const;
 const SEMANTIC_TOKENS = [
   { name: "accent", desc: "primary" },
+  { name: "accent-fill", desc: "primary fill" },
   { name: "green", desc: "success" },
+  { name: "green-fill", desc: "success fill" },
   { name: "yellow", desc: "warning" },
   { name: "orange", desc: "orange" },
   { name: "red", desc: "destructive" },
+  { name: "red-fill", desc: "destructive fill" },
   { name: "cyan", desc: "cyan" },
   { name: "purple", desc: "purple" },
 ] as const;
