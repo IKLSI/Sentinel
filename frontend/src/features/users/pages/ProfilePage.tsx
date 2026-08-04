@@ -22,6 +22,7 @@ import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { LanguageFlag } from "@/components/ui/common/LanguageFlag";
 import { useT, useI18n } from "@/contexts/I18nContext";
 import { Theme, Language, UserRole } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
@@ -347,17 +348,15 @@ export const ProfilePage: React.FC = () => {
               {[
                 {
                   code: Language.Fr,
-                  flag: "🇫🇷",
                   label: t("profile.language.fr"),
                   bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)",
                 },
                 {
                   code: Language.En,
-                  flag: "🇬🇧",
                   label: t("profile.language.en"),
                   bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
                 },
-              ].map(({ code, flag, label, bg }) => (
+              ].map(({ code, label, bg }) => (
                 <Box
                   key={code}
                   component="button"
@@ -390,17 +389,7 @@ export const ProfilePage: React.FC = () => {
                       justifyContent: "center",
                     }}
                   >
-                    <Box
-                      component="span"
-                      sx={{
-                        fontSize: "18px",
-                        lineHeight: "18px",
-                        display: "block",
-                        filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
-                      }}
-                    >
-                      {flag}
-                    </Box>
+                    <LanguageFlag language={code} />
                   </Box>
                   <Box
                     sx={{
