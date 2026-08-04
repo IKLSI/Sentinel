@@ -74,26 +74,6 @@ const priorityColor: Record<TicketPriority, string> = {
   low: "var(--green)",
 };
 
-export const selectSx = {
-  appearance: "none",
-  WebkitAppearance: "none",
-  background: "var(--s1)",
-  backgroundImage:
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 12px center",
-  border: "1px solid var(--border)",
-  borderRadius: "var(--r)",
-  px: "12px",
-  py: "7px",
-  pr: "36px",
-  fontSize: "13px",
-  color: "var(--text)",
-  width: "auto",
-  outline: "none",
-  fontFamily: "inherit",
-};
-
 export const modalSelectSx = {
   appearance: "none",
   WebkitAppearance: "none",

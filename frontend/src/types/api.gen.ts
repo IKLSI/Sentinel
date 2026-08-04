@@ -8,6 +8,7 @@
  * Do not make direct changes to the file.
  */
 
+
 export interface paths {
   "/api/auth/forgot-password": {
     post: {
@@ -406,6 +407,8 @@ export interface paths {
     get: {
       parameters: {
         query?: {
+          sortBy?: components["schemas"]["JobSortField"];
+          sortDirection?: components["schemas"]["SortDirection"];
           "api-version"?: string;
         };
         header?: {
@@ -471,6 +474,8 @@ export interface paths {
     get: {
       parameters: {
         query?: {
+          sortBy?: components["schemas"]["ApiKeySortField"];
+          sortDirection?: components["schemas"]["SortDirection"];
           "api-version"?: string;
         };
         header?: {
@@ -1666,6 +1671,12 @@ export interface paths {
   };
   "/api/v1/jobs": {
     get: {
+      parameters: {
+        query?: {
+          sortBy?: components["schemas"]["JobSortField"];
+          sortDirection?: components["schemas"]["SortDirection"];
+        };
+      };
       responses: {
         /** @description OK */
         200: {
@@ -1709,6 +1720,12 @@ export interface paths {
   };
   "/api/v1/settings/api-keys": {
     get: {
+      parameters: {
+        query?: {
+          sortBy?: components["schemas"]["ApiKeySortField"];
+          sortDirection?: components["schemas"]["SortDirection"];
+        };
+      };
       responses: {
         /** @description OK */
         200: {
@@ -2432,6 +2449,8 @@ export interface components {
       name: string;
       prefix: string;
     };
+    /** @enum {string} */
+    ApiKeySortField: "Name" | "Prefix" | "CreatedBy" | "Created" | "Expires" | "LastUsed";
     ApiMessageResponse: {
       code: string;
       params: {
@@ -2539,6 +2558,8 @@ export interface components {
       hasGithubToken: boolean;
       hasGitlabToken: boolean;
     };
+    /** @enum {string} */
+    JobSortField: "Job" | "LastRun" | "Status" | "NextRun";
     LoginRequest: {
       email: string;
       password: string;
@@ -2661,6 +2682,8 @@ export interface components {
       /** Format: uuid */
       assignedToId: string | null;
       assignedToName: string | null;
+      /** Format: int32 */
+      commentCount: number;
       comments: components["schemas"]["TicketCommentDto"][];
       /** Format: date-time */
       createdAt: string;
@@ -2712,13 +2735,7 @@ export interface components {
     /** @enum {string} */
     TicketSortField: "Title" | "Priority" | "Status" | "Assignee";
     /** @enum {string} */
-    TicketType:
-      | "Bug"
-      | "Feature"
-      | "Question"
-      | "Security"
-      | "Performance"
-      | "Maintenance";
+    TicketType: "Bug" | "Feature" | "Question" | "Security" | "Performance" | "Maintenance";
     UpdateMyProfileDto: {
       firstName?: string | null;
       lastName?: string | null;

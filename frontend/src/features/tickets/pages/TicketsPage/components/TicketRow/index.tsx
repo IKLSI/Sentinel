@@ -7,9 +7,8 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
-import { statusColor, statusLabel } from "@/features/tickets/constants";
+import { statusLabel } from "@/features/tickets/constants";
 import {
-  priorityColorOf,
   priorityLabelKeyOf,
   typeBadgeStyleOf,
   typeIconOf,
@@ -109,23 +108,11 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       >
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "9px",
-            fontSize: "12px",
-            color: "var(--text-secondary)",
+            fontSize: "13px",
+            lineHeight: 1.25,
+            color: "var(--text)",
           }}
         >
-          <Box
-            sx={{
-              width: "7px",
-              height: "7px",
-              borderRadius: "50%",
-              background: priorityColorOf(ticket.priority),
-              flexShrink: 0,
-              boxShadow: `0 0 5px ${priorityColorOf(ticket.priority)}`,
-            }}
-          />
           {t(priorityLabelKeyOf(ticket.priority))}
         </Box>
       </Box>
@@ -140,32 +127,12 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       >
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "9px",
-            fontSize: "12px",
-            color: "var(--text-secondary)",
+            fontSize: "13px",
+            lineHeight: 1.25,
+            color: "var(--text)",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Box
-              sx={{
-                width: "7px",
-                height: "7px",
-                borderRadius: "50%",
-                background: statusColor(ticket.status),
-                flexShrink: 0,
-                boxShadow: `0 0 5px ${statusColor(ticket.status)}`,
-              }}
-            />
-            {statusLabel(t, ticket.status)}
-          </Box>
+          {statusLabel(t, ticket.status)}
         </Box>
       </Box>
 
@@ -180,8 +147,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         {ticket.assignedToName ? (
           <Box
             sx={{
-              fontSize: "12px",
-              color: "var(--text-secondary)",
+              fontSize: "13px",
+              lineHeight: 1.25,
+              color: "var(--text)",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -190,8 +158,34 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             {ticket.assignedToName}
           </Box>
         ) : (
-          <Box sx={{ fontSize: "12px", color: "var(--muted)" }}>—</Box>
+          <Box
+            sx={{ fontSize: "13px", lineHeight: 1.25, color: "var(--muted2)" }}
+          >
+            —
+          </Box>
         )}
+      </Box>
+
+      <Box
+        component="td"
+        sx={{
+          padding: "11px 14px",
+          borderBottom: "1px solid var(--border)",
+          verticalAlign: "middle",
+          textAlign: "center",
+        }}
+      >
+        <Box
+          sx={{
+            fontSize: "13px",
+            lineHeight: 1.25,
+            fontFamily: "var(--font-mono)",
+            fontWeight: 500,
+            color: ticket.commentCount > 0 ? "var(--text)" : "var(--muted2)",
+          }}
+        >
+          {ticket.commentCount}
+        </Box>
       </Box>
 
       <Box

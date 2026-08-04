@@ -22,6 +22,7 @@ public static class TicketMapper
         CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
         UpdatedAt = ticket.UpdatedAt,
+        CommentCount = ticket.Comments?.Count ?? 0,
         Comments = ticket.Comments?.Select(ToDto).OrderBy(c => c.CreatedAt).ToList() ?? [],
         History = ticket.History?.Select(ToDto).OrderByDescending(h => h.CreatedAt).ToList() ?? []
     };
@@ -42,7 +43,8 @@ public static class TicketMapper
         EstimatedHours = row.EstimatedHours,
         CreatedByName = FullName(row.CreatedByFirstName, row.CreatedByLastName) ?? string.Empty,
         CreatedAt = row.CreatedAt,
-        UpdatedAt = row.UpdatedAt
+        UpdatedAt = row.UpdatedAt,
+        CommentCount = row.CommentCount
     };
 
     private static string? FullName(string? firstName, string? lastName) =>

@@ -112,7 +112,8 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         t.CreatedBy != null ? t.CreatedBy.FirstName : null,
         t.CreatedBy != null ? t.CreatedBy.LastName : null,
         t.CreatedAt,
-        t.UpdatedAt);
+        t.UpdatedAt,
+        t.Comments.Count);
 
     public async Task<IReadOnlyList<TicketGridRow>> ListForExportAsync(Guid organizationId, TicketFilter filter,
         int maxRows, CancellationToken cancellationToken)

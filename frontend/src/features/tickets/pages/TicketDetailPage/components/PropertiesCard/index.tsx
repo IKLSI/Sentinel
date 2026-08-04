@@ -7,9 +7,7 @@ import {
   type buildPriorityConfig,
   typeLabelKeys,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
-import StatusPriorityBadge from "@/features/tickets/components/StatusPriorityBadge";
-import { statusColor, statusLabel } from "@/features/tickets/constants";
-import { priorityColorOf } from "@/features/tickets/pages/TicketsPage/helpers";
+import { statusLabel } from "@/features/tickets/constants";
 
 interface Props {
   ticket: Ticket;
@@ -25,38 +23,29 @@ export const PropertiesCard: React.FC<Props> = ({
   const t = useT();
   const priority = priorityConfig[ticket.priority] ?? priorityConfig.medium;
 
+  const valueSx = {
+    color: palette.fieldValue,
+    fontWeight: 400,
+    fontSize: "12px",
+  };
+  const emptyValueSx = { ...valueSx, color: palette.muted };
+
   const rows = [
     {
       key: "status",
       label: t("tickets.detail.field_status"),
-      value: (
-        <StatusPriorityBadge
-          dotColor={statusColor(ticket.status)}
-          label={statusLabel(t, ticket.status)}
-        />
-      ),
+      value: <Box sx={valueSx}>{statusLabel(t, ticket.status)}</Box>,
     },
     {
       key: "priority",
       label: t("tickets.detail.field_priority"),
-      value: (
-        <StatusPriorityBadge
-          dotColor={priorityColorOf(ticket.priority)}
-          label={t(priority.labelKey)}
-        />
-      ),
+      value: <Box sx={valueSx}>{t(priority.labelKey)}</Box>,
     },
     {
       key: "type",
       label: t("tickets.detail.field_type"),
       value: (
-        <Box
-          sx={{
-            color: palette.fieldValue,
-            fontWeight: 400,
-            fontSize: "12px",
-          }}
-        >
+        <Box sx={valueSx}>
           {typeLabelKeys[ticket.type]
             ? t(typeLabelKeys[ticket.type])
             : ticket.type}
@@ -67,30 +56,18 @@ export const PropertiesCard: React.FC<Props> = ({
       key: "assignee",
       label: t("tickets.detail.field_assignee"),
       value: ticket.assignedToName ? (
-        <Box
-          sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
-        >
-          {ticket.assignedToName}
-        </Box>
+        <Box sx={valueSx}>{ticket.assignedToName}</Box>
       ) : (
-        <Box sx={{ color: palette.muted, fontWeight: 400, fontSize: "12px" }}>
-          {t("tickets.detail.unassigned")}
-        </Box>
+        <Box sx={emptyValueSx}>{t("tickets.detail.unassigned")}</Box>
       ),
     },
     {
       key: "project",
       label: t("tickets.detail.field_project"),
       value: ticket.projectName ? (
-        <Box
-          sx={{ color: palette.fieldValue, fontWeight: 400, fontSize: "12px" }}
-        >
-          {ticket.projectName}
-        </Box>
+        <Box sx={valueSx}>{ticket.projectName}</Box>
       ) : (
-        <Box sx={{ color: palette.muted, fontWeight: 400, fontSize: "12px" }}>
-          {t("tickets.detail.unassigned")}
-        </Box>
+        <Box sx={emptyValueSx}>{t("tickets.detail.unassigned")}</Box>
       ),
     },
   ];

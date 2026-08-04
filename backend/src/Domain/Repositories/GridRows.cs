@@ -19,7 +19,8 @@ public sealed record TicketGridRow(
     string? CreatedByFirstName,
     string? CreatedByLastName,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    int CommentCount);
 
 public sealed record UserGridRow(
     Guid Id,

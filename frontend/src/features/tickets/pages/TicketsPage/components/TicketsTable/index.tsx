@@ -14,7 +14,7 @@ export interface SortState {
 }
 
 interface TicketColumn {
-  col: TicketSortField | typeof ACTIONS_COLUMN_KEY;
+  col: TicketSortField | typeof COMMENTS_COLUMN_KEY | typeof ACTIONS_COLUMN_KEY;
   label: string;
 }
 
@@ -27,8 +27,12 @@ interface Props {
   hasFiltersApplied: boolean;
 }
 
-const COLS = ["52%", "10%", "11%", "15%", "12%"] as const;
+const COLS = ["44%", "10%", "11%", "15%", "8%", "12%"] as const;
+const COMMENTS_COLUMN_KEY = "comments";
 const ACTIONS_COLUMN_KEY = "actions";
+
+const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
+  col !== COMMENTS_COLUMN_KEY && col !== ACTIONS_COLUMN_KEY;
 
 const TicketsTableComponent: React.FC<Props> = ({
   tickets,
@@ -45,6 +49,7 @@ const TicketsTableComponent: React.FC<Props> = ({
     { col: TicketSortField.Priority, label: t("tickets.list.col_priority") },
     { col: TicketSortField.Status, label: t("tickets.list.col_status") },
     { col: TicketSortField.Assignee, label: t("tickets.list.col_assignee") },
+    { col: COMMENTS_COLUMN_KEY, label: t("tickets.list.col_comments") },
     { col: ACTIONS_COLUMN_KEY, label: "" },
   ];
 
@@ -91,15 +96,16 @@ const TicketsTableComponent: React.FC<Props> = ({
         <Box component="thead">
           <Box component="tr">
             {columns.map(({ col, label }) => {
-              const sortable = col !== ACTIONS_COLUMN_KEY;
+              const sortable = isSortableColumn(col);
               return (
                 <SortableTh
                   key={col}
                   mono
+                  align={col === COMMENTS_COLUMN_KEY ? "center" : "left"}
                   sortable={sortable}
-                  active={sort.col === col}
+                  active={sortable && sort.col === col}
                   ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => col !== ACTIONS_COLUMN_KEY && onToggleSort(col)}
+                  onSort={() => isSortableColumn(col) && onToggleSort(col)}
                 >
                   {label}
                 </SortableTh>

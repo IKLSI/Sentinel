@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
@@ -24,8 +24,9 @@ import type {
   UpdateTicket,
 } from "@/domains/tickets/types";
 import { useUsersQuery } from "@/domains/users/queries";
-import type { TicketPriority, TicketType } from "@/enums";
+import type { TicketPriority, TicketStatus, TicketType } from "@/enums";
 import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
+import type { TicketFiltersState } from "@/features/tickets/pages/TicketsPage/filters";
 import {
   createTicketSchema,
   type CreateTicketFormValues,
@@ -55,16 +56,34 @@ export const TicketsPage: React.FC = () => {
   const onEditError = useApiErrorToast("tickets.list.edit_error");
   const onDeleteError = useApiErrorToast("tickets.list.delete_error");
   const navigate = routeApi.useNavigate();
-  const { openCreate } = routeApi.useSearch();
+  const { openCreate, priority, status, type } = routeApi.useSearch();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
-  const [filters, setFilters] = useState({
-    priority: "",
-    status: "",
-    type: "",
-  });
+  const filters = useMemo<TicketFiltersState>(
+    () => ({
+      priority: priority ?? "",
+      status: status ?? "",
+      type: type ?? "",
+    }),
+    [priority, status, type],
+  );
   const [page, setPage] = useState(1);
+  const handleFiltersChange = useCallback(
+    (next: TicketFiltersState) => {
+      setPage(1);
+      navigate({
+        search: (previous) => ({
+          ...previous,
+          priority: (next.priority as TicketPriority) || undefined,
+          status: (next.status as TicketStatus) || undefined,
+          type: (next.type as TicketType) || undefined,
+        }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
   const handleSearchChange = useCallback((v: string) => {
     setSearch(v);
     setPage(1);
@@ -285,10 +304,7 @@ export const TicketsPage: React.FC = () => {
           search={search}
           onSearchChange={handleSearchChange}
           filters={filters}
-          onFiltersChange={(f) => {
-            setFilters(f);
-            setPage(1);
-          }}
+          onFiltersChange={handleFiltersChange}
           onCreate={openCreateModal}
           onExport={handleExport}
           exporting={exporting}
