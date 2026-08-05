@@ -52,7 +52,6 @@ public class TicketCreateService(
             Type = model.Type,
             Status = TicketStatus.New,
             AssignedToId = model.AssignedToId,
-            EstimatedHours = model.EstimatedHours,
             CreatedById = userId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

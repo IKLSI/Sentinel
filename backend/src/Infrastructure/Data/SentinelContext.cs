@@ -227,7 +227,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .HasComputedColumnSql(TicketPriorityRankSql, stored: true);
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
-            entity.Property(e => e.EstimatedHours).HasPrecision(10, 2);
 
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.OrganizationId, e.Number }).IsUnique();
@@ -317,7 +316,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.ScanFrequency).HasConversion<string>();
             entity.Property(e => e.Coverage).HasConversion<string>();
             entity.Property(e => e.HealthGrade).HasMaxLength(2);
-            entity.Property(e => e.LastScanWarning).HasMaxLength(100);
             entity.Property(e => e.LastScannedCommitSha).HasMaxLength(64);
             entity.HasIndex(e => e.OrganizationId);
 

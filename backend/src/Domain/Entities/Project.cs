@@ -33,7 +33,6 @@ public class Project : IEntityWithId
     public RepositoryType RepositoryType { get; set; } = RepositoryType.GitHub;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }
-    public string? LastScanWarning { get; set; }
     public string? LastScannedCommitSha { get; set; }
     public int? HealthScore { get; set; }
     public string? HealthGrade { get; set; }

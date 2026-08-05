@@ -2525,8 +2525,6 @@ export interface components {
       /** Format: uuid */
       assignedToId?: string | null;
       description: string;
-      /** Format: double */
-      estimatedHours?: number | null;
       priority: components["schemas"]["TicketPriority"];
       /** Format: uuid */
       projectId?: string | null;
@@ -2610,8 +2608,6 @@ export interface components {
       id: string;
       /** Format: date-time */
       lastScanAt: string | null;
-      lastScanError: string | null;
-      lastScanWarning: string | null;
       name: string;
       repositoryType: string;
       repositoryUrl: string | null;
@@ -2695,8 +2691,6 @@ export interface components {
       createdAt: string;
       createdByName: string;
       description: string;
-      /** Format: double */
-      estimatedHours: number | null;
       history: components["schemas"]["TicketHistoryDto"][];
       /** Format: uuid */
       id: string;
@@ -2768,8 +2762,6 @@ export interface components {
       /** Format: uuid */
       assignedToId?: string | null;
       description?: string | null;
-      /** Format: double */
-      estimatedHours?: number | null;
       priority?: components["schemas"]["TicketPriority"];
       /** Format: uuid */
       projectId?: string | null;

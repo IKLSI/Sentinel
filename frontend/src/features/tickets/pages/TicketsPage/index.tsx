@@ -96,11 +96,10 @@ export const TicketsPage: React.FC = () => {
   const {
     register: createRegister,
     handleSubmit: handleCreateSubmit,
-    control: createControl,
     reset: resetCreateForm,
   } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
-    defaultValues: { ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 },
+    defaultValues: EMPTY_CREATE_TICKET_FORM,
   });
   const [createAnother, setCreateAnother] = useState(false);
   const { data: projectsData } = useProjectsQuery();
@@ -111,7 +110,6 @@ export const TicketsPage: React.FC = () => {
   const {
     register: editRegister,
     handleSubmit: handleEditSubmit,
-    control: editControl,
     reset: resetEditForm,
   } = useForm<EditTicketFormValues>({
     resolver: zodResolver(editTicketSchema),
@@ -123,7 +121,6 @@ export const TicketsPage: React.FC = () => {
       status: "",
       projectId: "",
       assignedToId: "",
-      estimatedMinutes: 0,
     },
   });
   const [sort, toggleSort] = useSortState<SortState["col"]>(
@@ -158,7 +155,7 @@ export const TicketsPage: React.FC = () => {
   };
 
   const openCreateModal = useCallback(() => {
-    resetCreateForm({ ...EMPTY_CREATE_TICKET_FORM, estimatedMinutes: 0 });
+    resetCreateForm(EMPTY_CREATE_TICKET_FORM);
     setShowCreateModal(true);
   }, [resetCreateForm]);
 
@@ -171,17 +168,12 @@ export const TicketsPage: React.FC = () => {
     };
     if (data.projectId) payload.projectId = data.projectId;
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
-    if (data.estimatedMinutes > 0)
-      payload.estimatedHours = data.estimatedMinutes / 60;
     createTicketMutation.mutate(
       { data: payload },
       {
         onSuccess: (created) => {
           if (createAnother) {
-            resetCreateForm({
-              ...EMPTY_CREATE_TICKET_FORM,
-              estimatedMinutes: 0,
-            });
+            resetCreateForm(EMPTY_CREATE_TICKET_FORM);
             showToast(
               t("tickets.list.create_success", {
                 reference: created.reference,
@@ -208,10 +200,6 @@ export const TicketsPage: React.FC = () => {
         status: ticket.status,
         projectId: ticket.projectId ?? "",
         assignedToId: ticket.assignedToId ?? "",
-        estimatedMinutes:
-          ticket.estimatedHours != null
-            ? Math.round(ticket.estimatedHours * 60)
-            : 0,
       });
       setEditTarget(ticket);
     },
@@ -232,8 +220,6 @@ export const TicketsPage: React.FC = () => {
     };
     if (data.projectId) payload.projectId = data.projectId;
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
-    if (data.estimatedMinutes > 0)
-      payload.estimatedHours = data.estimatedMinutes / 60;
     if (data.status && data.status !== editTarget.status)
       payload.status = data.status;
     try {
@@ -356,7 +342,6 @@ export const TicketsPage: React.FC = () => {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         register={createRegister}
-        control={createControl}
         projects={modalProjects}
         users={modalUsers}
         submitting={createSubmitting}
@@ -369,7 +354,6 @@ export const TicketsPage: React.FC = () => {
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
         register={editRegister}
-        control={editControl}
         projects={modalProjects}
         users={modalUsers}
         saving={editSaving}

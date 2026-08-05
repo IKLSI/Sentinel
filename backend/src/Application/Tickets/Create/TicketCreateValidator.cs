@@ -14,9 +14,7 @@ public class TicketCreateValidator : IValidator
             .MaxLength(nameof(model.Description), model.Description, 10000,
                 ValidationCodes.TicketDescriptionMaxLength)
             .DefinedEnum(nameof(model.Priority), model.Priority, ValidationCodes.TicketPriorityInvalid)
-            .DefinedEnum(nameof(model.Type), model.Type, ValidationCodes.TicketTypeInvalid)
-            .InRange(nameof(model.EstimatedHours), (decimal?)model.EstimatedHours, 0, 10000,
-                ValidationCodes.TicketEstimatedHoursMin, ValidationCodes.TicketEstimatedHoursMax);
+            .DefinedEnum(nameof(model.Type), model.Type, ValidationCodes.TicketTypeInvalid);
 
         return Task.FromResult(errors.ToResult());
     }

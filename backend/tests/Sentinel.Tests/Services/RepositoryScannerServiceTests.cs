@@ -9,8 +9,8 @@ namespace Sentinel.Tests.Services;
 
 public class RepositoryScannerServiceTests
 {
-    private sealed class FakeRepositoryHost(Dictionary<string, string> filesByUrl, string? headCommitSha = null,
-        bool truncated = false) : IRepositoryHostClient
+    private sealed class FakeRepositoryHost(Dictionary<string, string> filesByUrl, string? headCommitSha = null)
+        : IRepositoryHostClient
     {
         public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform) =>
             throw new NotSupportedException();
@@ -30,7 +30,7 @@ public class RepositoryScannerServiceTests
             RequestedCommitSha = commitSha;
 
             return Task.FromResult(new RepositoryFileListing(
-                filesByUrl.Keys.Select(url => (Path.GetFileName(url), url)).ToList(), truncated));
+                filesByUrl.Keys.Select(url => (Path.GetFileName(url), url)).ToList(), false));
         }
 
         public Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null) =>
@@ -238,38 +238,7 @@ public class RepositoryScannerServiceTests
     }
 
     [Fact]
-    public async Task ScanRepository_CompleteListing_ReportsNoWarning()
-    {
-        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
-        {
-            ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
-        });
-
-        outcome.Warning.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task ScanRepository_TruncatedListing_ReportsPartialCoverage()
-    {
-        RepositoryScannerService scanner = new RepositoryScannerService(
-            new FakeRepositoryHost(
-                new Dictionary<string, string>
-                {
-                    ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
-                },
-                truncated: true),
-            new ManifestParserService(),
-            new NoopRegistry(),
-            NullLogger<RepositoryScannerService>.Instance);
-
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app");
-
-        outcome.Warning.Should().Be(ScanWarningCodes.RepositoryTruncated);
-        outcome.Dependencies.Should().ContainSingle();
-    }
-
-    [Fact]
-    public async Task ScanRepository_UnreadableManifest_ReportsPartialCoverage()
+    public async Task ScanRepository_UnreadableManifest_KeepsTheReadableDependencies()
     {
         ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
         {
@@ -277,7 +246,6 @@ public class RepositoryScannerServiceTests
             ["https://host/apps/api/package.json"] = null!,
         });
 
-        outcome.Warning.Should().Be(ScanWarningCodes.ManifestUnreadable);
         outcome.Dependencies.Should().ContainSingle();
     }
 

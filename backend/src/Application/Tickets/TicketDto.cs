@@ -13,7 +13,6 @@ public class TicketDto
     public string Status { get; set; } = string.Empty;
     public Guid? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
-    public decimal? EstimatedHours { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

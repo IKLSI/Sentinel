@@ -38,7 +38,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataProtectionKeys");
+                    b.ToTable("DataProtectionKeys", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>
@@ -89,7 +89,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("ApiKeys");
+                    b.ToTable("ApiKeys", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.AuditLog", b =>
@@ -137,7 +137,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("EntityType", "EntityId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Dependency", b =>
@@ -181,7 +181,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Dependencies");
+                    b.ToTable("Dependencies", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.EmailVerificationToken", b =>
@@ -219,7 +219,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("EmailVerificationTokens");
+                    b.ToTable("EmailVerificationTokens", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Organization", b =>
@@ -303,7 +303,7 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"StripeSubscriptionId\" IS NOT NULL");
 
-                    b.ToTable("Organizations");
+                    b.ToTable("Organizations", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.PasswordResetToken", b =>
@@ -341,7 +341,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("PasswordResetTokens");
+                    b.ToTable("PasswordResetTokens", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.ProcessedStripeEvent", b =>
@@ -371,7 +371,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("StripeEventId")
                         .IsUnique();
 
-                    b.ToTable("ProcessedStripeEvents");
+                    b.ToTable("ProcessedStripeEvents", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Project", b =>
@@ -396,10 +396,6 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<string>("LastScanError")
                         .HasColumnType("text");
-
-                    b.Property<string>("LastScanWarning")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("LastScannedCommitSha")
                         .HasMaxLength(64)
@@ -434,7 +430,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.RevokedToken", b =>
@@ -458,7 +454,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("Jti")
                         .IsUnique();
 
-                    b.ToTable("RevokedTokens");
+                    b.ToTable("RevokedTokens", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Runtime", b =>
@@ -490,7 +486,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Runtimes");
+                    b.ToTable("Runtimes", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Ticket", b =>
@@ -511,10 +507,6 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<decimal?>("EstimatedHours")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
 
                     b.Property<int>("Number")
                         .HasColumnType("integer");
@@ -586,7 +578,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId", "Status", "PriorityRank", "CreatedAt");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.TicketAttachment", b =>
@@ -629,7 +621,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("UploadedById");
 
-                    b.ToTable("TicketAttachments");
+                    b.ToTable("TicketAttachments", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.TicketComment", b =>
@@ -662,7 +654,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketComments");
+                    b.ToTable("TicketComments", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.TicketHistory", b =>
@@ -699,7 +691,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TicketHistories");
+                    b.ToTable("TicketHistories", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.User", b =>
@@ -783,7 +775,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("OrganizationId", "Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.UserInvitation", b =>
@@ -832,7 +824,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("UserInvitations");
+                    b.ToTable("UserInvitations", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Vulnerability", b =>
@@ -883,7 +875,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("Severity", "DependencyId");
 
-                    b.ToTable("Vulnerabilities");
+                    b.ToTable("Vulnerabilities", (string)null);
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>

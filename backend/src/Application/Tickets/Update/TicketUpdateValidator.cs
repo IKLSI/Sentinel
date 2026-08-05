@@ -32,9 +32,6 @@ public class TicketUpdateValidator : IValidator
         if (model.Status != null)
             errors.ParsableEnum<TicketStatus>(nameof(model.Status), model.Status, ValidationCodes.TicketStatusInvalid);
 
-        errors.InRange(nameof(model.EstimatedHours), (decimal?)model.EstimatedHours, 0, 10000,
-            ValidationCodes.TicketEstimatedHoursMin, ValidationCodes.TicketEstimatedHoursMax);
-
         return Task.FromResult(errors.ToResult());
     }
 }

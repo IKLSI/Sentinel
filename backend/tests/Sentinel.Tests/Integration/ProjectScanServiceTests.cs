@@ -37,7 +37,6 @@ public class ProjectScanServiceTests
         public string HeadCommitSha { get; set; } = "sha-1";
         public string ManifestContent { get; set; } = PackageJson;
         public bool ListingFails { get; set; }
-        public bool Truncated { get; set; }
         public int ListFilesCalls { get; private set; }
         public string? LastRequestedSha { get; private set; }
 
@@ -58,7 +57,7 @@ public class ProjectScanServiceTests
 
             return Task.FromResult(ListingFails
                 ? new RepositoryFileListing([], false)
-                : new RepositoryFileListing([("package.json", "https://host/package.json")], Truncated));
+                : new RepositoryFileListing([("package.json", "https://host/package.json")], false));
         }
 
         public Task<string?> FetchTextAsync(string host, string url, string? token = null) =>
@@ -283,22 +282,6 @@ public class ProjectScanServiceTests
         Project scanned = await harness.ReloadAsync();
         scanned.LastScanError.Should().Be(ErrorCodes.ScanVulnerabilityDataIncomplete);
         scanned.Coverage.Should().Be(ScanCoverage.Covered);
-    }
-
-    [Fact]
-    public async Task Scan_ArbreTronque_PersisteLAvertissementDeCouverturePartielle()
-    {
-        _fixture.EnsureAvailable();
-
-        await using Harness harness = await Harness.CreateAsync(_fixture);
-
-        harness.Host.Truncated = true;
-
-        await harness.ScanAsync();
-
-        Project scanned = await harness.ReloadAsync();
-        scanned.LastScanWarning.Should().Be(ScanWarningCodes.RepositoryTruncated);
-        scanned.LastScanError.Should().BeNull();
     }
 
     [Fact]

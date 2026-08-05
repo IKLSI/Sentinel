@@ -14,7 +14,6 @@ export const createTicketSchema = z.object({
   ]),
   projectId: z.string().optional(),
   assignedToId: z.string().optional(),
-  estimatedMinutes: z.number(),
 });
 export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
 
@@ -26,6 +25,5 @@ export const editTicketSchema = z.object({
   status: z.string(),
   projectId: z.string(),
   assignedToId: z.string(),
-  estimatedMinutes: z.number(),
 });
 export type EditTicketFormValues = z.infer<typeof editTicketSchema>;

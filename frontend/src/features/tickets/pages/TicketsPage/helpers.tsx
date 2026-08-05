@@ -8,10 +8,7 @@ import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
 import type { TicketPriority, TicketType } from "@/enums";
 import type { CreateTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 
-export const EMPTY_CREATE_TICKET_FORM: Omit<
-  CreateTicketFormValues,
-  "estimatedMinutes"
-> = {
+export const EMPTY_CREATE_TICKET_FORM: CreateTicketFormValues = {
   title: "",
   description: "",
   priority: "Medium",

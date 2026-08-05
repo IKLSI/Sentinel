@@ -32,17 +32,6 @@ public class TicketCreateValidatorTests
         result.ValidationErrors.Should().Contain(error => error.Code == ValidationCodes.TicketTitleRequired);
     }
 
-    [Fact]
-    public async Task ValidateAsync_WhenEstimatedHoursExceedsMaximum_ReturnsInvalid()
-    {
-        CreateTicketDto model = NewModel();
-        model.EstimatedHours = 10001;
-
-        Result result = await _sut.ValidateAsync(model, CancellationToken.None);
-
-        result.ValidationErrors.Should().Contain(error => error.Code == ValidationCodes.TicketEstimatedHoursMax);
-    }
-
     private static CreateTicketDto NewModel() => new()
     {
         Title = "Ticket valide",

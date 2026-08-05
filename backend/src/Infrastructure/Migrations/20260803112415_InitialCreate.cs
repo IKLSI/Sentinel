@@ -286,7 +286,6 @@ namespace Sentinel.Infrastructure.Migrations
                     Type = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     AssignedToId = table.Column<Guid>(type: "uuid", nullable: true),
-                    EstimatedHours = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

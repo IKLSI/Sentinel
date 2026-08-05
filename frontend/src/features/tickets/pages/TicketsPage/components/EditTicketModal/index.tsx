@@ -1,12 +1,9 @@
 import type React from "react";
-import type { Control, UseFormRegister } from "react-hook-form";
-import { Controller } from "react-hook-form";
+import type { UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
-import { InfoTooltip } from "@/components/ui/common/InfoTooltip";
-import { DurationPicker } from "@/components/ui/forms/DurationPicker";
 import { useT } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
 import type { User } from "@/domains/users/types";
@@ -22,7 +19,6 @@ interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<EditTicketFormValues>;
-  control: Control<EditTicketFormValues>;
   projects: Project[];
   users: User[];
   saving: boolean;
@@ -52,7 +48,6 @@ export const EditTicketModal: React.FC<Props> = ({
   open,
   onClose,
   register,
-  control,
   projects,
   users,
   saving,
@@ -176,58 +171,19 @@ export const EditTicketModal: React.FC<Props> = ({
             </Box>
           </Box>
         </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
-          <Box>
-            <Label>{t("tickets.list.field_assignee")}</Label>
-            <Box
-              component="select"
-              sx={modalSelectSx}
-              {...register("assignedToId")}
-            >
-              <option value="">{t("tickets.list.unassigned")}</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.firstName} {u.lastName}
-                </option>
-              ))}
-            </Box>
-          </Box>
-          <Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                mb: "8px",
-              }}
-            >
-              <Box
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "var(--muted2)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {t("tickets.list.field_estimation")}
-              </Box>
-              <InfoTooltip title={t("tickets.list.estimation_tooltip")} />
-            </Box>
-            <Controller
-              name="estimatedMinutes"
-              control={control}
-              render={({ field }) => (
-                <DurationPicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  width="100%"
-                />
-              )}
-            />
+        <Box>
+          <Label>{t("tickets.list.field_assignee")}</Label>
+          <Box
+            component="select"
+            sx={modalSelectSx}
+            {...register("assignedToId")}
+          >
+            <option value="">{t("tickets.list.unassigned")}</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.firstName} {u.lastName}
+              </option>
+            ))}
           </Box>
         </Box>
         <Box>

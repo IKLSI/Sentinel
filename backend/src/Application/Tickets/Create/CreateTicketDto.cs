@@ -10,5 +10,4 @@ public class CreateTicketDto
     public TicketPriority Priority { get; set; } = TicketPriority.Medium;
     public TicketType Type { get; set; } = TicketType.Bug;
     public Guid? AssignedToId { get; set; }
-    public decimal? EstimatedHours { get; set; }
 }

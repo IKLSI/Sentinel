@@ -11,8 +11,6 @@ public static class ProjectMapper
         RepositoryUrl = project.RepositoryUrl,
         RepositoryType = project.RepositoryType.ToString(),
         LastScanAt = project.LastScanAt,
-        LastScanError = project.LastScanError,
-        LastScanWarning = project.LastScanWarning,
         HealthScore = project.HealthScore,
         HealthGrade = project.HealthGrade,
         Coverage = project.Coverage.ToString(),

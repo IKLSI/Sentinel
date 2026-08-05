@@ -10,6 +10,5 @@ public class UpdateTicketDto
     public TicketType? Type { get; set; }
     public Guid? ProjectId { get; set; }
     public Guid? AssignedToId { get; set; }
-    public decimal? EstimatedHours { get; set; }
     public string? Status { get; set; }
 }

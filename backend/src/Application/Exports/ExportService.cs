@@ -18,7 +18,6 @@ public partial class ExportService(
     ILogger<ExportService> logger)
 {
     private const string BaseFont = "Segoe UI";
-    private const string HoursFormat = "0.00 \"h\"";
 
     private const int TitleRow = 1;
     private const int MetaRow = 2;
@@ -121,12 +120,6 @@ public partial class ExportService(
 
             SetDateCell(ws.Cell(row, 9), t.CreatedAt, L.DateFormat);
             SetDateCell(ws.Cell(row, 10), t.UpdatedAt, L.DateFormat);
-
-            if (t.EstimatedHours.HasValue)
-            {
-                ws.Cell(row, 11).Value = (double)t.EstimatedHours.Value;
-                ws.Cell(row, 11).Style.NumberFormat.Format = HoursFormat;
-            }
         }
 
         int lastDataRow = tickets.Count > 0 ? tickets.Count + FirstDataRow - 1 : HeaderRow;
@@ -135,10 +128,8 @@ public partial class ExportService(
         {
             int totalsRow = lastDataRow + 1;
             ApplyTotalsRow(ws, totalsRow, headers.Length);
-            ws.Range(totalsRow, 1, totalsRow, 10).Merge();
+            ws.Range(totalsRow, 1, totalsRow, headers.Length).Merge();
             ws.Cell(totalsRow, 1).Value = $"{L.TotalWord} — {tickets.Count} {L.UnitTickets}";
-            ws.Cell(totalsRow, 11).Value = tickets.Where(t => t.EstimatedHours.HasValue).Sum(t => (double)t.EstimatedHours!.Value);
-            ws.Cell(totalsRow, 11).Style.NumberFormat.Format = HoursFormat;
         }
 
         FinalizeSheet(ws, headers.Length, HeaderRow, HeaderRow, lastDataRow, HeaderRow);

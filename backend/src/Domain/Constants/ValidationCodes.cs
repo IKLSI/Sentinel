@@ -40,8 +40,6 @@ public static class ValidationCodes
     public const string TicketDescriptionMaxLength = "validation.ticket.description_max_length";
     public const string TicketPriorityInvalid = "validation.ticket.priority_invalid";
     public const string TicketTypeInvalid = "validation.ticket.type_invalid";
-    public const string TicketEstimatedHoursMin = "validation.ticket.estimated_hours_min";
-    public const string TicketEstimatedHoursMax = "validation.ticket.estimated_hours_max";
     public const string TicketCommentRequired = "validation.ticket.comment_required";
     public const string TicketCommentMaxLength = "validation.ticket.comment_max_length";
     public const string TicketStatusRequired = "validation.ticket.status_required";

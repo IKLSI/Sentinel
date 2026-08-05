@@ -507,10 +507,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("EstimatedHours")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
                     b.Property<int>("Number")
                         .HasColumnType("integer");
 

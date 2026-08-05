@@ -127,13 +127,6 @@ public class TicketUpdateService(
             ticket.AssignedToId = model.AssignedToId;
         }
 
-        if (model.EstimatedHours.HasValue && model.EstimatedHours != ticket.EstimatedHours)
-        {
-            changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "EstimatedHours",
-                ticket.EstimatedHours?.ToString(), model.EstimatedHours.Value.ToString()));
-            ticket.EstimatedHours = model.EstimatedHours;
-        }
-
         if (newStatus.HasValue && newStatus.Value != ticket.Status)
         {
             changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "Status",

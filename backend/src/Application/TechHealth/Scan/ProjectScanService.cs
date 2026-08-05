@@ -95,7 +95,6 @@ public class ProjectScanService(
         bool repositoryUnchanged = false;
         bool inventoryReplaced = false;
         string? scannedCommitSha = null;
-        string? scanWarning = null;
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
@@ -127,7 +126,6 @@ public class ProjectScanService(
                         CancellationToken.None);
 
                     scannedCommitSha = headCommitSha;
-                    scanWarning = outcome.Warning;
                     inventoryReplaced = true;
                 }
                 else if (scanError != null)
@@ -155,7 +153,6 @@ public class ProjectScanService(
         else if (inventoryReplaced)
         {
             project.LastScannedCommitSha = scannedCommitSha;
-            project.LastScanWarning = scanWarning;
         }
 
         VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScanner

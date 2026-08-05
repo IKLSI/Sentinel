@@ -15,7 +15,6 @@ public sealed record TicketGridRow(
     Guid? AssignedToId,
     string? AssignedToFirstName,
     string? AssignedToLastName,
-    decimal? EstimatedHours,
     string? CreatedByFirstName,
     string? CreatedByLastName,
     DateTime CreatedAt,

@@ -14,7 +14,6 @@ import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpe
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
 import { ExportActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ExportActions";
-import { ScanWarningBanner } from "@/features/techHealth/pages/ProjectDetailPage/components/ScanWarningBanner";
 import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
 import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
@@ -115,14 +114,6 @@ export const ProjectDetailPage: React.FC = () => {
           <ExportActions projectId={project.id} projectName={project.name} />
         }
       />
-
-      {project.lastScanError && (
-        <ScanWarningBanner messageKey={project.lastScanError} tone="error" />
-      )}
-
-      {project.lastScanWarning && (
-        <ScanWarningBanner messageKey={project.lastScanWarning} tone="warning" />
-      )}
 
       <Box
         sx={{

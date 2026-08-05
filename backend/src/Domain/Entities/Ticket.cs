@@ -50,7 +50,6 @@ public class Ticket : IEntityWithId
     public TicketType Type { get; set; } = TicketType.Bug;
     public TicketStatus Status { get; set; } = TicketStatus.New;
     public Guid? AssignedToId { get; set; }
-    public decimal? EstimatedHours { get; set; }
     public Guid CreatedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

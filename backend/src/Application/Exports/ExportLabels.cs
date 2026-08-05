@@ -64,8 +64,7 @@ internal sealed class ExportLabels
                 Text("exports.header.ticket.project"),
                 Text("exports.header.ticket.created_by"),
                 Text("exports.header.ticket.created_on"),
-                Text("exports.header.ticket.updated_on"),
-                Text("exports.header.ticket.estimated_hours")
+                Text("exports.header.ticket.updated_on")
             ],
             RecapHeaders =
             [

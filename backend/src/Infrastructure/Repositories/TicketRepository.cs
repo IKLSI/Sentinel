@@ -108,7 +108,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         t.AssignedToId,
         t.AssignedTo != null ? t.AssignedTo.FirstName : null,
         t.AssignedTo != null ? t.AssignedTo.LastName : null,
-        t.EstimatedHours,
         t.CreatedBy != null ? t.CreatedBy.FirstName : null,
         t.CreatedBy != null ? t.CreatedBy.LastName : null,
         t.CreatedAt,

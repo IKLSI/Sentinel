@@ -7,8 +7,7 @@ using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
-public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0,
-    string? Warning = null);
+public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0);
 
 internal record ParsedManifest(bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
 
@@ -41,14 +40,6 @@ public class RepositoryScannerService(
                 dependency.Type = declared;
             }
         }
-    }
-
-    private static string? ResolveWarning(bool listingTruncated, int discoveredManifests, int unreadableManifests)
-    {
-        if (listingTruncated) return ScanWarningCodes.RepositoryTruncated;
-        if (discoveredManifests > MaxManifestFiles) return ScanWarningCodes.ManifestLimitReached;
-
-        return unreadableManifests > 0 ? ScanWarningCodes.ManifestUnreadable : null;
     }
 
     public Task<string?> GetHeadCommitAsync(string repoUrl, string? tokenOverride = null)
@@ -136,9 +127,6 @@ public class RepositoryScannerService(
             List<Runtime> allRuntimes = new();
             int manifestsRead = 0;
 
-            string? warning = ResolveWarning(listing.Truncated, discoveredManifests.Count,
-                parsedManifests.Count(parsed => parsed == null));
-
             foreach (ParsedManifest parsed in parsedManifests.OfType<ParsedManifest>())
             {
                 manifestsRead++;
@@ -176,7 +164,7 @@ public class RepositoryScannerService(
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead, warning);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead);
         }
         catch (Exception ex)
         {
