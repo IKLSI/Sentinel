@@ -107,6 +107,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             fontSize: "13px",
             lineHeight: 1.25,
             color: "var(--text)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {t(priorityLabelKeyOf(ticket.priority))}
@@ -126,6 +129,9 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             fontSize: "13px",
             lineHeight: 1.25,
             color: "var(--text)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {statusLabel(t, ticket.status)}
@@ -188,7 +194,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         component="td"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={{
-          padding: "6px 36px 6px 0",
+          padding: "6px 20px 6px 0",
           borderBottom: "1px solid var(--border)",
           whiteSpace: "nowrap",
           overflow: "visible",

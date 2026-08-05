@@ -11,14 +11,18 @@
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
     :root { color-scheme: light only; supported-color-schemes: light only; }
     body { margin:0; padding:0; width:100% !important; }
     a { text-decoration:none; }
     @media only screen and (max-width:600px) {
-      .sp-pad   { padding:30px 22px !important; }
-      .sp-h1    { font-size:23px !important; }
-      .sp-shell { padding:28px 12px !important; }
+      .sp-shell    { padding:26px 12px !important; }
+      .sp-pad      { padding:30px 22px 28px !important; }
+      .sp-h1       { font-size:23px !important; }
+      .sp-cta      { width:100% !important; }
+      .sp-cta-link { display:block !important; text-align:center !important; }
+      .sp-split    { display:block !important; width:100% !important; border-right:0 !important; border-bottom:1px solid #e3e8f4 !important; }
+      .sp-split-last { display:block !important; width:100% !important; border-bottom:0 !important; }
     }
   </style>
 </head>
@@ -28,16 +32,19 @@
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
     <tr>
-      <td align="center" class="sp-shell" style="padding:48px 16px;">
+      <td align="center" class="sp-shell" style="padding:44px 16px;">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
           <!-- ─── HEADER ─── -->
           <tr>
-            <td style="padding:0 6px 20px;">
-              <table role="presentation" cellpadding="0" cellspacing="0">
+            <td style="padding:0 4px 18px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="vertical-align:middle;">
-                    <span style="font-size:15px;font-weight:700;color:#0e1220;letter-spacing:0.18em;font-family:'Space Grotesk','Inter',Arial,sans-serif;">SENTINEL</span>
+                  <td style="vertical-align:middle;white-space:nowrap;padding-right:14px;">
+                    <span style="font-size:13px;font-weight:800;color:#0e1220;letter-spacing:0.2em;font-family:'Bricolage Grotesque','Inter',Arial,sans-serif;">SENTINEL</span>
+                  </td>
+                  <td style="vertical-align:middle;font-size:0;line-height:0;">
+                    <div style="height:1px;background-color:#dde3f2;font-size:0;line-height:0;">&nbsp;</div>
                   </td>
                 </tr>
               </table>
@@ -46,85 +53,61 @@
 
           <!-- ─── CARD ─── -->
           <tr>
-            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(14,18,32,0.04),0 14px 32px rgba(14,18,32,0.07);">
+            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,0.05),0 12px 32px rgba(16,24,40,0.10);">
 
-              <!-- Card body -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td class="sp-pad" style="padding:42px 46px 38px;">
-
-                    <!-- Icon + Email -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
-                      <tr>
-                        <td style="vertical-align:middle;padding-right:15px;">
-                          <!--[if mso]>
-                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" stroke="f" fillcolor="#4f46e5" arcsize="27%" style="width:50px;height:50px;v-text-anchor:middle;">
-                            <v:fill type="gradient" color="#4f46e5" color2="#6366f1" angle="135" />
-                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:21px;font-weight:bold;">@</center>
-                          </v:roundrect>
-                          <![endif]-->
-                          <!--[if !mso]><!-->
-                          <div style="width:50px;height:50px;border-radius:13px;background-color:#4f46e5;background:linear-gradient(135deg,#4f46e5,#6366f1);text-align:center;line-height:50px;font-size:21px;font-weight:700;color:#ffffff;font-family:'JetBrains Mono',monospace;">@</div>
-                          <!--<![endif]-->
-                        </td>
-                        <td style="vertical-align:middle;">
-                          <p style="margin:0;font-size:11px;color:#8898bb;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;">{{T:emails.invitation.eyebrow}}</p>
-                          <p style="margin:5px 0 0;font-size:13px;color:#4f46e5;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-weight:500;">{{EMAIL}}</p>
-                        </td>
-                      </tr>
-                    </table>
+                  <td class="sp-pad" style="padding:40px 44px 36px;">
 
                     <!-- Main heading -->
-                    <p class="sp-h1" style="margin:0 0 14px;font-size:27px;font-weight:700;color:#0e1220;letter-spacing:-0.6px;line-height:1.22;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.invitation.heading_line1}}<br/>{{T:emails.invitation.heading_line2}}</p>
+                    <p class="sp-h1" style="margin:0 0 10px;font-size:28px;font-weight:800;color:#0e1220;letter-spacing:-0.035em;line-height:1.25;font-family:'Bricolage Grotesque','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.invitation.heading_line1}}<br/>{{T:emails.invitation.heading_line2}}</p>
+                    <p style="margin:0 0 22px;font-size:14px;color:#5c6f90;line-height:1.6;">{{T:emails.common.address}} <span style="color:#0e1220;font-weight:600;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:13px;word-break:break-all;">{{EMAIL}}</span></p>
 
                     <!-- Subtext -->
-                    <p style="margin:0 0 30px;font-size:15px;color:#4d5e82;line-height:1.7;">
+                    <p style="margin:0 0 28px;font-size:14.5px;color:#3a4768;line-height:1.72;">
                       <span style="color:#0e1220;font-weight:600;">{{INVITED_BY}}</span> {{T:emails.invitation.intro_added_to}}
                       <span style="color:#0e1220;font-weight:600;">{{ORGANIZATION}}</span>. {{T:emails.invitation.intro_accept}}
                     </p>
 
                     <!-- Info card -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:12px;">
                       <tr>
-                        <td width="50%" style="padding:17px 20px;border-right:1px solid #e3e8f4;">
-                          <p style="margin:0 0 7px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">{{T:emails.common.organization}}</p>
-                          <p style="margin:0;font-size:14px;font-weight:600;color:#0e1220;">{{ORGANIZATION}}</p>
+                        <td width="50%" class="sp-split" style="padding:16px 20px;border-right:1px solid #e3e8f4;">
+                          <p style="margin:0 0 7px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.14em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{T:emails.common.organization}}</p>
+                          <p style="margin:0;font-size:14px;font-weight:600;color:#0e1220;letter-spacing:-0.01em;">{{ORGANIZATION}}</p>
                         </td>
-                        <td width="50%" style="padding:17px 20px;">
-                          <p style="margin:0 0 7px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">{{T:emails.invitation.role_label}}</p>
+                        <td width="50%" class="sp-split-last" style="padding:16px 20px;">
+                          <p style="margin:0 0 7px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.14em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{T:emails.invitation.role_label}}</p>
                           <p style="margin:0;">
-                            <span style="display:inline-block;padding:3px 10px;background-color:{{ROLE_BG}};color:{{ROLE_COLOR}};font-size:11px;font-weight:700;border-radius:6px;letter-spacing:0.03em;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{ROLE_LABEL}}</span>
+                            <span style="display:inline-block;padding:4px 10px;background-color:{{ROLE_BG}};color:{{ROLE_COLOR}};font-size:11px;font-weight:700;border-radius:6px;letter-spacing:0.04em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{ROLE_LABEL}}</span>
                           </p>
                         </td>
                       </tr>
                     </table>
 
                     <!-- CTA Button -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td align="left">
-                          <!--[if mso]>
-                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ACCEPT_URL}}" stroke="f" fillcolor="#4f46e5" arcsize="22%" style="height:50px;width:280px;v-text-anchor:middle;">
-                            <v:fill type="gradient" color="#6366f1" color2="#4f46e5" angle="135" />
-                            <w:anchorlock/>
-                            <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">{{T:emails.invitation.cta}} &#8594;</center>
-                          </v:roundrect>
-                          <![endif]-->
-                          <!--[if !mso]><!-->
-                          <a href="{{ACCEPT_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">{{T:emails.invitation.cta}} &rarr;</a>
-                          <!--<![endif]-->
+                        <td style="padding:0 0 26px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" class="sp-cta">
+                            <tr>
+                              <td align="center" bgcolor="#4f46e5" style="border-radius:10px;background-color:#4f46e5;background-image:linear-gradient(135deg,#4f46e5 0%,#6366f1 100%);mso-padding-alt:15px 32px;box-shadow:0 4px 14px rgba(79,70,229,0.28);">
+                                <a href="{{ACCEPT_URL}}" class="sp-cta-link" style="display:inline-block;padding:15px 32px;font-family:'Inter',Arial,sans-serif;font-size:14.5px;font-weight:700;line-height:20px;letter-spacing:-0.01em;color:#ffffff;text-decoration:none;white-space:nowrap;mso-line-height-rule:exactly;">{{T:emails.invitation.cta}}&nbsp;&rarr;</a>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                     </table>
 
                     <!-- Expiry notice -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:8px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:12px;">
                       <tr>
-                        <td style="padding:14px 18px;">
-                          <p style="margin:0 0 5px;font-size:12px;color:#4d5e82;line-height:1.6;">
+                        <td style="padding:16px 18px;">
+                          <p style="margin:0 0 6px;font-size:12.5px;color:#3a4768;line-height:1.65;">
                             {{T:emails.common.link_valid_for}} <span style="color:#0e1220;font-weight:700;">{{T:emails.common.duration_48h}}</span> {{T:emails.common.from_receipt}}
                           </p>
-                          <p style="margin:0;font-size:12px;color:#8898bb;line-height:1.6;">
+                          <p style="margin:0;font-size:12.5px;color:#8898bb;line-height:1.65;">
                             {{T:emails.common.ignore_if_not_you}}
                           </p>
                         </td>
@@ -132,8 +115,8 @@
                     </table>
 
                     <!-- Fallback link -->
-                    <p style="margin:0;font-size:11px;color:#8898bb;line-height:1.6;">
-                      {{T:emails.common.button_not_working}} <a href="{{ACCEPT_URL}}" style="color:#4f46e5;text-decoration:underline;">{{T:emails.invitation.fallback_link}}</a>
+                    <p style="margin:0;font-size:11.5px;color:#8898bb;line-height:1.65;">
+                      {{T:emails.common.button_not_working}} <a href="{{ACCEPT_URL}}" style="color:#4f46e5;font-weight:600;text-decoration:underline;">{{T:emails.invitation.fallback_link}}</a>
                     </p>
 
                   </td>
@@ -144,11 +127,11 @@
 
           <!-- ─── FOOTER ─── -->
           <tr>
-            <td style="padding:26px 8px 0;">
+            <td style="padding:24px 8px 0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="border-top:1px solid #dde3f2;padding-top:20px;text-align:center;">
-                    <p style="margin:0;font-size:10px;color:#a3aecb;">{{T:emails.common.footer}}</p>
+                  <td style="border-top:1px solid #dde3f2;padding-top:18px;text-align:center;">
+                    <p style="margin:0;font-size:10.5px;color:#8898bb;line-height:1.6;letter-spacing:0.02em;">{{T:emails.common.footer}}</p>
                   </td>
                 </tr>
               </table>

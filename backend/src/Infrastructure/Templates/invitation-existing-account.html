@@ -11,14 +11,16 @@
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
     :root { color-scheme: light only; supported-color-schemes: light only; }
     body { margin:0; padding:0; width:100% !important; }
     a { text-decoration:none; }
     @media only screen and (max-width:600px) {
-      .sp-pad   { padding:30px 22px !important; }
-      .sp-h1    { font-size:20px !important; }
-      .sp-shell { padding:28px 12px !important; }
+      .sp-shell    { padding:26px 12px !important; }
+      .sp-pad      { padding:30px 22px 28px !important; }
+      .sp-h1       { font-size:21px !important; }
+      .sp-cta      { width:100% !important; }
+      .sp-cta-link { display:block !important; text-align:center !important; }
     }
   </style>
 </head>
@@ -28,16 +30,19 @@
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
     <tr>
-      <td align="center" class="sp-shell" style="padding:48px 16px;">
+      <td align="center" class="sp-shell" style="padding:44px 16px;">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
           <!-- ─── HEADER ─── -->
           <tr>
-            <td style="padding:0 6px 20px;">
-              <table role="presentation" cellpadding="0" cellspacing="0">
+            <td style="padding:0 4px 18px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="vertical-align:middle;">
-                    <span style="font-size:15px;font-weight:700;color:#0e1220;letter-spacing:0.18em;font-family:'Space Grotesk','Inter',Arial,sans-serif;">SENTINEL</span>
+                  <td style="vertical-align:middle;white-space:nowrap;padding-right:14px;">
+                    <span style="font-size:13px;font-weight:800;color:#0e1220;letter-spacing:0.2em;font-family:'Bricolage Grotesque','Inter',Arial,sans-serif;">SENTINEL</span>
+                  </td>
+                  <td style="vertical-align:middle;font-size:0;line-height:0;">
+                    <div style="height:1px;background-color:#dde3f2;font-size:0;line-height:0;">&nbsp;</div>
                   </td>
                 </tr>
               </table>
@@ -46,64 +51,65 @@
 
           <!-- ─── CARD ─── -->
           <tr>
-            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(14,18,32,0.04),0 14px 32px rgba(14,18,32,0.07);">
+            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,0.05),0 12px 32px rgba(16,24,40,0.10);">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td class="sp-pad" style="padding:42px 46px 38px;">
-
-                    <!-- Badge + title -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
-                      <tr>
-                        <td style="vertical-align:middle;padding-right:15px;">
-                          <!--[if !mso]><!-->
-                          <div style="width:50px;height:50px;border-radius:13px;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);text-align:center;line-height:50px;font-size:24px;color:#ffffff;">&#x2139;</div>
-                          <!--<![endif]-->
-                        </td>
-                        <td style="vertical-align:middle;">
-                          <p style="margin:0;font-size:11px;color:#8898bb;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;">{{T:emails.existing_account.eyebrow}}</p>
-                          <p style="margin:5px 0 0;font-size:13px;color:#4f46e5;font-weight:700;">{{T:emails.existing_account.badge}}</p>
-                        </td>
-                      </tr>
-                    </table>
+                  <td class="sp-pad" style="padding:40px 44px 36px;">
 
                     <!-- Heading -->
-                    <p class="sp-h1" style="margin:0 0 8px;font-size:23px;font-weight:700;color:#0e1220;letter-spacing:-0.5px;line-height:1.3;font-family:'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.existing_account.heading}}</p>
-                    <p style="margin:0 0 28px;font-size:14px;color:#4d5e82;">{{T:emails.common.address}} <span style="color:#0e1220;font-weight:600;">{{EMAIL}}</span></p>
+                    <p class="sp-h1" style="margin:0 0 10px;font-size:25px;font-weight:800;color:#0e1220;letter-spacing:-0.035em;line-height:1.25;font-family:'Bricolage Grotesque','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.existing_account.heading}}</p>
+                    <p style="margin:0 0 26px;font-size:14px;color:#5c6f90;line-height:1.6;">{{T:emails.common.address}} <span style="color:#0e1220;font-weight:600;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:13px;">{{EMAIL}}</span></p>
 
                     <!-- Info box -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#eef2ff;border:1px solid #d5dcfb;border-radius:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;background-color:#eef2ff;border:1px solid #d5dcfb;border-radius:12px;">
                       <tr>
-                        <td style="padding:18px 22px;">
-                          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#4338ca;">{{T:emails.existing_account.notice_title}}</p>
-                          <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">{{T:emails.existing_account.notice_body}}</p>
+                        <td style="padding:18px 20px;">
+                          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#4338ca;letter-spacing:-0.01em;">{{T:emails.existing_account.notice_title}}</p>
+                          <p style="margin:0;font-size:13px;color:#3a4768;line-height:1.65;">{{T:emails.existing_account.notice_body}}</p>
                         </td>
                       </tr>
                     </table>
 
                     <!-- Next steps -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:8px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:12px;">
                       <tr>
-                        <td style="padding:16px 20px;">
-                          <p style="margin:0 0 12px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.1em;text-transform:uppercase;">{{T:emails.existing_account.what_to_do}}</p>
-                          <p style="margin:0 0 8px;font-size:13px;color:#0e1220;line-height:1.6;">&#x2022; {{T:emails.existing_account.step_login}}</p>
-                          <p style="margin:0;font-size:13px;color:#0e1220;line-height:1.6;">&#x2022; {{T:emails.existing_account.step_other_org}}</p>
+                        <td style="padding:18px 20px;">
+                          <p style="margin:0 0 14px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.14em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{T:emails.existing_account.what_to_do}}</p>
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="16" style="vertical-align:top;padding-top:7px;">
+                                <div style="width:5px;height:5px;border-radius:3px;background-color:#4f46e5;font-size:0;line-height:0;">&nbsp;</div>
+                              </td>
+                              <td style="font-size:13px;color:#3a4768;line-height:1.65;padding-bottom:10px;">{{T:emails.existing_account.step_login}}</td>
+                            </tr>
+                            <tr>
+                              <td width="16" style="vertical-align:top;padding-top:7px;">
+                                <div style="width:5px;height:5px;border-radius:3px;background-color:#4f46e5;font-size:0;line-height:0;">&nbsp;</div>
+                              </td>
+                              <td style="font-size:13px;color:#3a4768;line-height:1.65;">{{T:emails.existing_account.step_other_org}}</td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                     </table>
 
                     <!-- CTA -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td align="left">
-                          <!--[if !mso]><!-->
-                          <a href="{{LOGIN_URL}}" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;background-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.30);">{{T:emails.existing_account.cta}} &rarr;</a>
-                          <!--<![endif]-->
+                        <td style="padding:0 0 24px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" class="sp-cta">
+                            <tr>
+                              <td align="center" bgcolor="#4f46e5" style="border-radius:10px;background-color:#4f46e5;background-image:linear-gradient(135deg,#4f46e5 0%,#6366f1 100%);mso-padding-alt:15px 32px;box-shadow:0 4px 14px rgba(79,70,229,0.28);">
+                                <a href="{{LOGIN_URL}}" class="sp-cta-link" style="display:inline-block;padding:15px 32px;font-family:'Inter',Arial,sans-serif;font-size:14.5px;font-weight:700;line-height:20px;letter-spacing:-0.01em;color:#ffffff;text-decoration:none;white-space:nowrap;mso-line-height-rule:exactly;">{{T:emails.existing_account.cta}}&nbsp;&rarr;</a>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                     </table>
 
-                    <p style="margin:0;font-size:11px;color:#8898bb;line-height:1.6;">
-                      {{T:emails.common.direct_link}} <a href="{{LOGIN_URL}}" style="color:#4f46e5;text-decoration:underline;">{{LOGIN_URL}}</a>
+                    <p style="margin:0;font-size:11.5px;color:#8898bb;line-height:1.65;word-break:break-all;">
+                      {{T:emails.common.direct_link}} <a href="{{LOGIN_URL}}" style="color:#4f46e5;font-weight:600;text-decoration:underline;">{{LOGIN_URL}}</a>
                     </p>
 
                   </td>
@@ -114,11 +120,11 @@
 
           <!-- ─── FOOTER ─── -->
           <tr>
-            <td style="padding:26px 8px 0;">
+            <td style="padding:24px 8px 0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="border-top:1px solid #dde3f2;padding-top:20px;text-align:center;">
-                    <p style="margin:0;font-size:10px;color:#a3aecb;">{{T:emails.common.footer}}</p>
+                  <td style="border-top:1px solid #dde3f2;padding-top:18px;text-align:center;">
+                    <p style="margin:0;font-size:10.5px;color:#8898bb;line-height:1.6;letter-spacing:0.02em;">{{T:emails.common.footer}}</p>
                   </td>
                 </tr>
               </table>

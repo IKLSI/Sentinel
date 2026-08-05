@@ -15,6 +15,14 @@ import {
 import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
 import { useLocalSort } from "@/hooks/useLocalSort";
 
+const COLUMN_WIDTHS = [
+  { id: "name", width: "auto" },
+  { id: "vulnerabilities", width: "130px" },
+  { id: "critical", width: "110px" },
+  { id: "tickets", width: "100px" },
+  { id: "actions", width: "110px" },
+] as const;
+
 interface Props {
   grade: SectionKey;
   items: Project[];
@@ -185,27 +193,18 @@ export const ProjectsSection: React.FC<Props> = ({
       </Box>
 
       {!collapsed && (
-        <Box sx={{ overflowX: "auto" }}>
+        <Box sx={{ overflow: "hidden" }}>
           <Box
             component="table"
             sx={{
               width: "100%",
-              minWidth: "1060px",
               borderCollapse: "collapse",
               tableLayout: "fixed",
             }}
           >
             <Box component="colgroup">
-              {(
-                [
-                  { id: "name", w: "56%" },
-                  { id: "vulnerabilities", w: "12%" },
-                  { id: "critical", w: "10%" },
-                  { id: "tickets", w: "12%" },
-                  { id: "actions", w: "10%" },
-                ] as const
-              ).map(({ id, w }) => (
-                <Box key={id} component="col" sx={{ width: w }} />
+              {COLUMN_WIDTHS.map(({ id, width }) => (
+                <Box key={id} component="col" sx={{ width }} />
               ))}
             </Box>
             <Box component="thead">

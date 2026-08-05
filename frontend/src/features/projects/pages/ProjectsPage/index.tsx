@@ -213,7 +213,8 @@ export const ProjectsPage: React.FC = () => {
             sx={{
               flex: 1,
               minHeight: 0,
-              overflow: "auto",
+              overflowY: "auto",
+              overflowX: "hidden",
               pr: "4px",
               pb: "2px",
               "&::-webkit-scrollbar": { width: "6px" },
@@ -250,7 +251,6 @@ export const ProjectsPage: React.FC = () => {
             ) : (
               <Box
                 sx={{
-                  minWidth: "1060px",
                   display: "flex",
                   flexDirection: "column",
                   gap: "10px",

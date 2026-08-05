@@ -308,10 +308,10 @@ public partial class EmailService : IEmailService
         {
             (string color, string bg, string border) = v.Severity switch
             {
-                "Critical" => ("#dc2626", "#fef2f2", "#fbd2d2"),
-                "High"     => ("#ea580c", "#fff7ed", "#fed8b4"),
-                "Medium"   => ("#ca8a04", "#fefce8", "#fae9b0"),
-                _          => ("#475569", "#f1f5f9", "#dde3ec")
+                "Critical" => ("#b91c1c", "#fef2f2", "#f6c9c9"),
+                "High"     => ("#c2410c", "#fff7ed", "#fcd7ae"),
+                "Medium"   => ("#a16207", "#fefce8", "#f7e8a8"),
+                _          => ("#5c6f90", "#eef1f9", "#d8e0ee")
             };
             string severityLabel = v.Severity switch
             {
@@ -322,15 +322,15 @@ public partial class EmailService : IEmailService
                 _          => v.Severity
             };
             string fixLabel = Text(culture, "emails.vuln_alert.fix");
-            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; {WebUtility.HtmlEncode(fixLabel)} : <span style=\"color:#059669;font-weight:700;\">{WebUtility.HtmlEncode(v.FixedVersion)}</span>";
-            return $"""<p style="margin:0 0 10px;font-size:13px;color:#64748b;line-height:1.6;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;background-color:{bg};border:1px solid {border};color:{color};font-size:11px;font-weight:700;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span><span style="color:#0f172a;font-weight:700;">{WebUtility.HtmlEncode(v.PackageName)}</span> &mdash; <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#64748b;">{WebUtility.HtmlEncode(v.CveId)}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
+            string fix = string.IsNullOrEmpty(v.FixedVersion) ? "" : $" &rarr; {WebUtility.HtmlEncode(fixLabel)} : <span style=\"color:#16a34a;font-weight:700;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;\">{WebUtility.HtmlEncode(v.FixedVersion)}</span>";
+            return $"""<p style="margin:0 0 11px;font-size:13px;color:#5c6f90;line-height:1.65;"><span style="display:inline-block;padding:3px 8px;border-radius:6px;background-color:{bg};border:1px solid {border};color:{color};font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span><span style="color:#0e1220;font-weight:700;">{WebUtility.HtmlEncode(v.PackageName)}</span> &mdash; <span style="font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#5c6f90;">{WebUtility.HtmlEncode(v.CveId)}</span> (CVSS {v.CvssScore:F1}){fix}</p>""";
         }));
 
         if (newVulns.Count > 15)
         {
             string more = Text(culture, "emails.vuln_alert.more",
                 new Dictionary<string, string> { ["count"] = (newVulns.Count - 15).ToString() });
-            rows += $"""<p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">{WebUtility.HtmlEncode(more)}</p>""";
+            rows += $"""<p style="margin:12px 0 0;font-size:12px;color:#8898bb;">{WebUtility.HtmlEncode(more)}</p>""";
         }
 
         return rows;

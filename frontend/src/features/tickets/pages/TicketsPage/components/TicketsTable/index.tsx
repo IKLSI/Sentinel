@@ -27,7 +27,7 @@ interface Props {
   hasFiltersApplied: boolean;
 }
 
-const COLS = ["44%", "10%", "11%", "15%", "8%", "12%"] as const;
+const COLS = ["auto", "110px", "130px", "170px", "100px", "120px"] as const;
 const COMMENTS_COLUMN_KEY = "comments";
 const ACTIONS_COLUMN_KEY = "actions";
 
@@ -78,9 +78,23 @@ const TicketsTableComponent: React.FC<Props> = ({
   }
 
   return (
-    <>
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       <Box
-        sx={{ flexShrink: 0, overflow: "hidden", scrollbarGutter: "stable" }}
+        sx={{
+          flexShrink: 0,
+          overflow: "hidden",
+          scrollbarGutter: "stable",
+          background: "var(--s2)",
+          boxShadow: "inset 0 -1px 0 var(--border)",
+        }}
       >
         <Box
           component="table"
@@ -144,7 +158,7 @@ const TicketsTableComponent: React.FC<Props> = ({
           </Box>
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 
