@@ -105,6 +105,13 @@ public partial class RepositoryHostClient
             return result;
         }
 
+        if (treeResponse.TryGetProperty("truncated", out JsonElement truncated) &&
+            truncated.ValueKind == JsonValueKind.True)
+        {
+            logger.LogWarning("GitHub tree for {Owner}/{Repo} is truncated: some manifests are not analyzed",
+                owner, repo);
+        }
+
         if (!treeResponse.TryGetProperty("tree", out JsonElement tree)) return result;
 
         foreach (JsonElement item in tree.EnumerateArray())

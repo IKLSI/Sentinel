@@ -3,6 +3,7 @@ import { memo } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TD } from "@/components/ui/common/VirtualTable/TableCells";
@@ -14,34 +15,37 @@ import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
 import type { DependencyStatus } from "@/enums";
 import { DEP_STATUS } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+import { useIsTextTruncated } from "@/hooks/useIsTextTruncated";
 
 const ESTIMATED_ROW_HEIGHT = 45;
 const COLUMN_COUNT = 6;
 
-const iconSx = { fontSize: 13, color: "var(--muted)", flexShrink: 0 } as const;
 const nameSx = {
+  display: "block",
   fontFamily: "var(--font-mono)",
-  fontSize: "13px",
+  fontSize: "11px",
   fontWeight: 600,
-} as const;
-const nameWrapSx = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 } as const;
 const ecoSx = {
   fontFamily: "var(--font-mono)",
-  fontSize: "10px",
+  fontSize: "11px",
   color: "var(--muted)",
   background: "var(--s3)",
   px: "7px",
   py: "2px",
   borderRadius: "var(--r-xs)",
 } as const;
+const chipWrapSx = {
+  "& .MuiChip-root": { fontSize: "11px" },
+} as const;
 const versionWrapSx = {
   display: "flex",
   alignItems: "center",
   gap: "6px",
+  fontSize: "11px",
 } as const;
 const arrowSx = {
   color: "var(--muted)",
@@ -52,7 +56,7 @@ const latestSx = {
   fontWeight: 600,
   fontFamily: "var(--font-mono)",
 } as const;
-const noVulnSx = { color: "var(--muted)", fontSize: "12px" } as const;
+const noVulnSx = { color: "var(--muted)", fontSize: "11px" } as const;
 const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
 const noResultsSx = {
   padding: "32px",
@@ -61,6 +65,17 @@ const noResultsSx = {
   fontSize: "13px",
   borderBottom: "none",
 } as const;
+
+const DependencyName: React.FC<{ name: string }> = ({ name }) => {
+  const { ref, truncated } = useIsTextTruncated<HTMLSpanElement>();
+  return (
+    <AppTooltip title={name} disableHoverListener={!truncated}>
+      <Box component="span" ref={ref} sx={nameSx}>
+        {name}
+      </Box>
+    </AppTooltip>
+  );
+};
 
 interface RowProps {
   d: Dependency;
@@ -78,12 +93,7 @@ const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev, index }) => {
   return (
     <Box component="tr" data-index={index} sx={rowSx}>
       <TD>
-        <Box sx={nameWrapSx}>
-          <InventoryOutlined sx={iconSx} />
-          <Box component="span" sx={nameSx}>
-            {d.name}
-          </Box>
-        </Box>
+        <DependencyName name={d.name} />
       </TD>
       <TD>
         <Box component="span" sx={ecoSx}>
@@ -91,9 +101,11 @@ const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev, index }) => {
         </Box>
       </TD>
       <TD>
-        <StatusChip variant="gray">
-          {d.type === "Prod" ? typeProd : typeDev}
-        </StatusChip>
+        <Box sx={chipWrapSx}>
+          <StatusChip variant="gray">
+            {d.type === "Prod" ? typeProd : typeDev}
+          </StatusChip>
+        </Box>
       </TD>
       <TD mono muted>
         <Box sx={versionWrapSx}>
@@ -111,13 +123,17 @@ const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev, index }) => {
         </Box>
       </TD>
       <TD>
-        <StatusChip variant={s.variant}>
-          {s.labelKey ? t(s.labelKey) : d.status}
-        </StatusChip>
+        <Box sx={chipWrapSx}>
+          <StatusChip variant={s.variant}>
+            {s.labelKey ? t(s.labelKey) : d.status}
+          </StatusChip>
+        </Box>
       </TD>
-      <TD>
+      <TD align="center">
         {d.vulnerabilities.length > 0 ? (
-          <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+          <Box sx={chipWrapSx}>
+            <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
+          </Box>
         ) : (
           <Box component="span" sx={noVulnSx}>
             —
@@ -163,7 +179,7 @@ export const DependenciesTab: React.FC<Props> = ({
     { label: t("tech_health.table.dep.type"), width: "6%" },
     { label: t("tech_health.table.dep.version"), width: "17%" },
     { label: t("tech_health.table.dep.status"), width: "10%" },
-    { label: t("tech_health.table.dep.vulns"), width: "12%" },
+    { label: t("tech_health.table.dep.vulns"), width: "12%", align: "center" },
   ];
 
   const toolbar = (

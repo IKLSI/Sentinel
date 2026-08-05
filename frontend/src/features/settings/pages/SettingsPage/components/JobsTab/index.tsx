@@ -225,7 +225,10 @@ export const JobsTab: React.FC = () => {
                   <Box component="td" sx={CELL_SX}>
                     {formatDate(job.nextExecution, t, culture)}
                   </Box>
-                  <Box component="td" sx={{ ...CELL_SX, textAlign: "right" }}>
+                  <Box
+                    component="td"
+                    sx={{ ...CELL_SX, textAlign: "right", pl: 0, pr: "60px" }}
+                  >
                     {job.id === "tech-health-scan" && (
                       <RowActions
                         actions={[

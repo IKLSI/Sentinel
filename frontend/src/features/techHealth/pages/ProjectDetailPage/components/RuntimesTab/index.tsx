@@ -17,6 +17,20 @@ import {
 
 const ESTIMATED_ROW_HEIGHT = 44;
 
+const nameSx = {
+  display: "block",
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+  fontWeight: 600,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+} as const;
+const versionSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+} as const;
+
 const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
   const t = useT();
   const urgency = getRuntimeUrgency(r);
@@ -26,23 +40,20 @@ const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
   return (
     <TR accent={uc.stripe}>
       <TD>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <StorageOutlined
-            sx={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}
-          />
-          <Box component="span" sx={{ fontSize: "13px", fontWeight: 600 }}>
-            {r.name}
-          </Box>
+        <Box component="span" sx={nameSx}>
+          {r.name}
         </Box>
       </TD>
-      <TD mono muted>
-        {r.version}
+      <TD muted>
+        <Box component="span" sx={versionSx}>
+          {r.version}
+        </Box>
       </TD>
       <TD>
         <Box
           component="span"
           sx={{
-            fontSize: "12px",
+            fontSize: "11px",
             color: uc.text,
             fontWeight: urgency !== "ok" ? 600 : 400,
           }}

@@ -125,19 +125,23 @@ public class ProjectScanService(
 
         project = reloadedProject;
 
-        List<VulnerabilityScanResult> vulnerabilityResults = await vulnerabilityScanner
+        VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScanner
             .ScanAsync(project.Dependencies.ToList(), previousDetections);
 
         IReadOnlyList<RuntimeEolResult> runtimeResults = await runtimeEolScanner.ScanAsync(project.Runtimes.ToList());
 
-        await inventoryWriter.StageVulnerabilityChangesAsync(vulnerabilityResults, CancellationToken.None);
+        await inventoryWriter.StageVulnerabilityChangesAsync(vulnerabilityOutcome.Results, CancellationToken.None);
         ProjectInventoryWriter.StageRuntimeChanges(runtimeResults);
 
         project.Coverage = ScanCoverageResolver.Resolve(project, scanRan, scanError, manifestsRead);
         project.HealthScore = project.Coverage == ScanCoverage.Covered ? HealthScoreCalculator.Calculate(project) : null;
         project.HealthGrade = project.HealthScore is { } score ? HealthScoreCalculator.ToGrade(score) : null;
         project.LastScanAt = DateTime.UtcNow;
-        project.LastScanError = scanError;
+        project.LastScanError = scanError
+            ?? (vulnerabilityOutcome.IsComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
+
+        if (!vulnerabilityOutcome.IsComplete)
+            logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
 
         await inventoryWriter.SaveAsync(CancellationToken.None);
 

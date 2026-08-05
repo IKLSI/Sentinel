@@ -349,6 +349,7 @@
   "errors.scan.invalid_repository_url": "URL du dépôt invalide.",
   "errors.scan.no_accessible_files": "Aucun fichier accessible dans le dépôt (dépôt privé sans token valide, token expiré, ou limite de requêtes atteinte).",
   "errors.scan.failed": "Échec du scan du dépôt. Vérifiez l'URL, l'accès et le token de l'organisation.",
+  "errors.scan.vulnerability_data_incomplete": "Analyse des vulnérabilités incomplète : la base OSV n'a pas répondu pour une partie des dépendances. Relancez un scan.",
   "exports.at": "à",
   "exports.date_format": "dd/mm/yyyy",
   "exports.dependency_status.eol": "Obsolète",

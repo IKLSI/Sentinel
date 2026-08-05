@@ -24,9 +24,7 @@ public partial class ManifestParserService
             string line = raw.Trim();
             if (line.StartsWith('#') || line.StartsWith('-') || string.IsNullOrEmpty(line)) continue;
 
-            string[] parts = Regex.Split(line, @"[=><~!^;]+");
-            string name = parts[0].Trim();
-            string version = parts.Length > 1 ? parts[^1].Trim() : "";
+            (string name, string version) = ParseRequirementLine(line);
 
             if (string.IsNullOrEmpty(name)) continue;
 
@@ -43,6 +41,36 @@ public partial class ManifestParserService
                 Status = DependencyStatus.UpToDate,
             });
         }
+    }
+
+    private static (string Name, string Version) ParseRequirementLine(string line)
+    {
+        int comment = line.IndexOf('#');
+        if (comment >= 0) line = line[..comment];
+
+        int environmentMarker = line.IndexOf(';');
+        if (environmentMarker >= 0) line = line[..environmentMarker];
+
+        line = line.Trim();
+
+        Match name = RequirementNameRegex().Match(line);
+        if (!name.Success) return (string.Empty, string.Empty);
+
+        string constraints = line[name.Length..].Trim();
+
+        if (constraints.StartsWith('['))
+        {
+            int extrasEnd = constraints.IndexOf(']');
+            if (extrasEnd < 0) return (name.Groups[1].Value, string.Empty);
+            constraints = constraints[(extrasEnd + 1)..];
+        }
+
+        Match pinned = RequirementPinnedVersionRegex().Match(constraints);
+        if (pinned.Success) return (name.Groups[1].Value, pinned.Groups[1].Value.TrimEnd('*', '.'));
+
+        Match minimum = RequirementMinimumVersionRegex().Match(constraints);
+
+        return (name.Groups[1].Value, minimum.Success ? minimum.Groups[1].Value : string.Empty);
     }
 
     private static void ParsePyprojectToml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)

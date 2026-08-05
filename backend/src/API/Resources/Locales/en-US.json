@@ -349,6 +349,7 @@
   "errors.scan.invalid_repository_url": "Invalid repository URL.",
   "errors.scan.no_accessible_files": "No file accessible in the repository (private repository without a valid token, expired token, or rate limit reached).",
   "errors.scan.failed": "Repository scan failed. Check the URL, the access and the organization token.",
+  "errors.scan.vulnerability_data_incomplete": "Vulnerability analysis incomplete: the OSV database did not answer for part of the dependencies. Run a new scan.",
   "exports.at": "at",
   "exports.date_format": "mm/dd/yyyy",
   "exports.dependency_status.eol": "Obsolete",

@@ -71,4 +71,5 @@ public static class ErrorCodes
     public const string ScanInvalidRepositoryUrl = "errors.scan.invalid_repository_url";
     public const string ScanNoAccessibleFiles = "errors.scan.no_accessible_files";
     public const string ScanFailed = "errors.scan.failed";
+    public const string ScanVulnerabilityDataIncomplete = "errors.scan.vulnerability_data_incomplete";
 }

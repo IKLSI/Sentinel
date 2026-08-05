@@ -179,7 +179,7 @@ public partial class ManifestParserService
 
                 if (currentName == null) continue;
 
-                Match vMatch = Regex.Match(line.Trim(), @"^version\s+[""']([^""']+)[""']");
+                Match vMatch = Regex.Match(line.Trim(), @"^version:?\s+[""']?([^""'\s]+)[""']?$");
                 if (!vMatch.Success) continue;
 
                 deps.Add(new Dependency

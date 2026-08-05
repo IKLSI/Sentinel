@@ -91,18 +91,18 @@ public class RepositoryScannerService(
                 }
             }
 
-            HashSet<string> lockNames = lockDeps
-                .Select(d => d.Name.ToLowerInvariant())
+            HashSet<(DependencyEcosystem Ecosystem, string Name)> lockedPackages = lockDeps
+                .Select(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
                 .ToHashSet();
 
             List<Dependency> dedupedDeps = lockDeps
-                .Concat(manifestDeps.Where(d => !lockNames.Contains(d.Name.ToLowerInvariant())))
-                .GroupBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First())
+                .Concat(manifestDeps.Where(d => !lockedPackages.Contains((d.Ecosystem, d.Name.ToLowerInvariant()))))
+                .GroupBy(d => (d.Ecosystem, Name: d.Name.ToLowerInvariant(), d.CurrentVersion))
+                .Select(g => g.OrderBy(d => d.Type).First())
                 .ToList();
 
             List<Runtime> dedupedRuntimes = allRuntimes
-                .GroupBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+                .GroupBy(r => (Name: r.Name.ToLowerInvariant(), r.Version))
                 .Select(g => g.First())
                 .ToList();
 

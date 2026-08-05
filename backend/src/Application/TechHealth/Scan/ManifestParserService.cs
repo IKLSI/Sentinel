@@ -8,7 +8,7 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public partial class ManifestParserService
 {
-    [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testRuntimeOnly|annotationProcessor|classpath)\s*[(""]([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+)[)""]", RegexOptions.Multiline)]
+    [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testRuntimeOnly|annotationProcessor|classpath)\s*[('""]([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+)['"")]", RegexOptions.Multiline)]
     private static partial Regex CoordPatternRegex();
 
     [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation)\s+group\s*:\s*['""]([^'""]+)['""]\s*,\s*name\s*:\s*['""]([^'""]+)['""]\s*,\s*version\s*:\s*['""]([^'""]+)['""]", RegexOptions.Multiline)]
@@ -16,6 +16,15 @@ public partial class ManifestParserService
 
     [GeneratedRegex(@"^gem\s+['""]([^'""]+)['""](?:\s*,\s*['""]([^'""]*)['""])?", RegexOptions.Multiline)]
     private static partial Regex GemPatternRegex();
+
+    [GeneratedRegex(@"^([A-Za-z0-9][A-Za-z0-9._-]*)")]
+    private static partial Regex RequirementNameRegex();
+
+    [GeneratedRegex(@"==\s*([A-Za-z0-9][A-Za-z0-9.*\-_+!]*)")]
+    private static partial Regex RequirementPinnedVersionRegex();
+
+    [GeneratedRegex(@"(?:~=|>=|>)\s*([A-Za-z0-9][A-Za-z0-9.\-_+!]*)")]
+    private static partial Regex RequirementMinimumVersionRegex();
 
     private static readonly HashSet<string> ManifestFileNames = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -45,6 +54,8 @@ public partial class ManifestParserService
         "pubspec.lock",
         "Package.swift",
         "Package.resolved",
+        "Directory.Packages.props",
+        "libs.versions.toml",
     };
 
     private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
@@ -101,6 +112,8 @@ public partial class ManifestParserService
         else if (lower == "pubspec.lock") ParsePubspecLock(projectId, content, deps);
         else if (lower == "package.swift") ParsePackageSwift(projectId, content, runtimes);
         else if (lower == "package.resolved") ParsePackageResolved(projectId, content, deps);
+        else if (lower == "directory.packages.props") ParseDirectoryPackagesProps(projectId, content, deps);
+        else if (lower == "libs.versions.toml") ParseVersionCatalog(projectId, content, deps);
 
         return (deps, runtimes);
     }

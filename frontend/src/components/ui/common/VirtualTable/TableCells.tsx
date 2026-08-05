@@ -1,10 +1,13 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 
-export const TH: React.FC<{ children: React.ReactNode; width?: string }> = ({
-  children,
-  width,
-}) => (
+export type CellAlign = "left" | "center" | "right";
+
+export const TH: React.FC<{
+  children: React.ReactNode;
+  width?: string;
+  align?: CellAlign;
+}> = ({ children, width, align = "left" }) => (
   <Box
     component="th"
     sx={{
@@ -14,7 +17,7 @@ export const TH: React.FC<{ children: React.ReactNode; width?: string }> = ({
       letterSpacing: "0.08em",
       textTransform: "uppercase",
       color: "var(--muted)",
-      textAlign: "left",
+      textAlign: align,
       padding: "10px 16px",
       background: "var(--s2)",
       borderBottom: "1px solid var(--border)",
@@ -33,7 +36,8 @@ export const TD: React.FC<{
   children: React.ReactNode;
   mono?: boolean;
   muted?: boolean;
-}> = ({ children, mono, muted }) => (
+  align?: CellAlign;
+}> = ({ children, mono, muted, align = "left" }) => (
   <Box
     component="td"
     sx={{
@@ -43,6 +47,7 @@ export const TD: React.FC<{
       fontFamily: mono ? "var(--font-mono)" : "inherit",
       color: muted ? "var(--muted2)" : "var(--text)",
       verticalAlign: "middle",
+      textAlign: align,
     }}
   >
     {children}

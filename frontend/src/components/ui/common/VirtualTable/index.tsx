@@ -1,13 +1,17 @@
 import type React from "react";
 import { Fragment, useRef } from "react";
 import Box from "@mui/material/Box";
-import { TH } from "@/components/ui/common/VirtualTable/TableCells";
+import {
+  type CellAlign,
+  TH,
+} from "@/components/ui/common/VirtualTable/TableCells";
 import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
 
 export interface VirtualTableColumn {
   label: string;
   width: string;
+  align?: CellAlign;
 }
 
 export interface VirtualTableProps<T> {
@@ -84,7 +88,9 @@ export function VirtualTable<T>({
           <Box component="thead">
             <Box component="tr">
               {columns.map((c) => (
-                <TH key={c.label}>{c.label}</TH>
+                <TH key={c.label} align={c.align}>
+                  {c.label}
+                </TH>
               ))}
             </Box>
           </Box>
