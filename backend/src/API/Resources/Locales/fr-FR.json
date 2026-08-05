@@ -511,6 +511,7 @@
   "projects.import_modal.title": "Dépôts disponibles",
   "projects.import_repos": "Importer depuis GitHub/GitLab",
   "projects.modal.cancel": "Annuler",
+  "projects.modal.frequency_error": "Impossible de modifier la fréquence de scan",
   "projects.modal.frequency_label": "Fréquence",
   "projects.modal.frequency_title": "Modifier le projet",
   "projects.modal.save": "Enregistrer",

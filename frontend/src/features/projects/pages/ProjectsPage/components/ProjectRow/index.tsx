@@ -12,6 +12,7 @@ import type { Project } from "@/domains/projects/types";
 import { useUpdateProjectFrequencyMutation } from "@/domains/projects/mutations";
 import type { ScanFrequency } from "@/enums";
 import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 interface Props {
   project: Project;
@@ -31,6 +32,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
     );
     const updateFrequencyMutation = useUpdateProjectFrequencyMutation();
     const saving = updateFrequencyMutation.isPending;
+    const onFrequencyError = useApiErrorToast("projects.modal.frequency_error");
 
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -45,7 +47,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
       }
       updateFrequencyMutation.mutate(
         { id: project.id, data: { scanFrequency: selected } },
-        { onSuccess: () => setModalOpen(false) },
+        { onSuccess: () => setModalOpen(false), onError: onFrequencyError },
       );
     };
 
@@ -285,10 +287,23 @@ export const ProjectRow: React.FC<Props> = React.memo(
             </>
           }
         >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "8px",
+            }}
+          >
             <Box
               component="label"
-              sx={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600 }}
+              sx={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--text)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
               {t("projects.modal.frequency_label")}
             </Box>

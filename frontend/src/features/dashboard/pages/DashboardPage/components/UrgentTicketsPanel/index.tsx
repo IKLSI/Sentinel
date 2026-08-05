@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useNavigate } from "@tanstack/react-router";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import MessageOutlined from "@mui/icons-material/MessageOutlined";
@@ -227,12 +227,10 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
                       </span>
                     </Box>
                   </Box>
-                  <Tooltip
+                  <AppTooltip
                     title={
                       ticket.assignedToName ?? t("dashboard.urgent.unassigned")
                     }
-                    placement="top"
-                    arrow
                   >
                     {ticket.assignedToName ? (
                       <Box
@@ -265,7 +263,7 @@ export const UrgentTicketsPanel: React.FC<Props> = React.memo(
                         <PersonOffOutlined sx={{ fontSize: 14 }} />
                       </Box>
                     )}
-                  </Tooltip>
+                  </AppTooltip>
                 </Box>
               );
             })

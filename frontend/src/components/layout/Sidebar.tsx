@@ -12,7 +12,7 @@ import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleArrowLeftOutlined";
 import PersonOutlined from "@mui/icons-material/PersonOutlined";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
@@ -281,7 +281,7 @@ export const Sidebar: React.FC = () => {
         }}
       >
         {collapsed && !isMobile ? (
-          <Tooltip title={t("sidebar.expand")} placement="top" arrow>
+          <AppTooltip title={t("sidebar.expand")}>
             <Box
               component="button"
               onClick={toggleCollapse}
@@ -300,7 +300,7 @@ export const Sidebar: React.FC = () => {
             >
               <SentinelLogo />
             </Box>
-          </Tooltip>
+          </AppTooltip>
         ) : (
           <Box
             sx={{
@@ -350,7 +350,7 @@ export const Sidebar: React.FC = () => {
             </Box>
 
             {!isMobile && (
-              <Tooltip title={t("sidebar.collapse")} placement="top" arrow>
+              <AppTooltip title={t("sidebar.collapse")}>
                 <Box
                   component="button"
                   onClick={toggleCollapse}
@@ -375,7 +375,7 @@ export const Sidebar: React.FC = () => {
                 >
                   <KeyboardDoubleArrowLeftOutlined sx={{ fontSize: 14 }} />
                 </Box>
-              </Tooltip>
+              </AppTooltip>
             )}
           </Box>
         )}
@@ -402,11 +402,10 @@ export const Sidebar: React.FC = () => {
                   ) ?? section.items[0];
                 const ItemIcon = activeItem.icon ?? section.icon;
                 return (
-                  <Tooltip
+                  <AppTooltip
                     key={section.titleKey}
                     title={t(section.titleKey)}
                     placement="right"
-                    arrow
                   >
                     <Box
                       component="button"
@@ -441,7 +440,7 @@ export const Sidebar: React.FC = () => {
                         }}
                       />
                     </Box>
-                  </Tooltip>
+                  </AppTooltip>
                 );
               })
             : [
@@ -687,12 +686,10 @@ export const Sidebar: React.FC = () => {
             gap: collapsed ? "4px" : "8px",
           }}
         >
-          <Tooltip
+          <AppTooltip
             title={
               collapsed ? `${user?.firstName} ${user?.lastName?.[0]}.` : ""
             }
-            placement="top"
-            arrow
           >
             <Box
               component="button"
@@ -773,7 +770,7 @@ export const Sidebar: React.FC = () => {
                 </Box>
               )}
             </Box>
-          </Tooltip>
+          </AppTooltip>
 
           <Box
             sx={{
@@ -784,7 +781,7 @@ export const Sidebar: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <Tooltip title={t("sidebar.logout")} placement="top" arrow>
+            <AppTooltip title={t("sidebar.logout")}>
               <Box
                 component="button"
                 onClick={handleLogout}
@@ -805,7 +802,7 @@ export const Sidebar: React.FC = () => {
               >
                 <LogoutOutlined sx={{ fontSize: 14 }} />
               </Box>
-            </Tooltip>
+            </AppTooltip>
           </Box>
         </Box>
       </Box>

@@ -1,4 +1,5 @@
-import { Box, Tooltip } from "@mui/material";
+import { Box } from "@mui/material";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 
 interface RowAction {
   icon: React.ReactNode;
@@ -56,12 +57,7 @@ export const RowActions: React.FC<{
       {visible.map((action) => {
         const c = COLOR_MAP[action.color ?? "accent"];
         return (
-          <Tooltip
-            key={action.label}
-            title={action.label}
-            placement="top"
-            arrow
-          >
+          <AppTooltip key={action.label} title={action.label}>
             <Box
               component="button"
               type="button"
@@ -87,7 +83,7 @@ export const RowActions: React.FC<{
             >
               {action.icon}
             </Box>
-          </Tooltip>
+          </AppTooltip>
         );
       })}
     </Box>

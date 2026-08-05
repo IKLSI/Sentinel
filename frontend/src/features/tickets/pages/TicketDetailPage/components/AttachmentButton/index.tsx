@@ -2,8 +2,8 @@ import type React from "react";
 import { useRef } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import AttachFileOutlined from "@mui/icons-material/AttachFileOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useUploadAttachmentMutation } from "@/domains/tickets/mutations";
@@ -57,7 +57,7 @@ export const AttachmentButton: React.FC<Props> = ({ ticketId, onUploaded }) => {
 
   return (
     <>
-      <Tooltip title={t("tickets.detail.attachment_tooltip")} placement="top">
+      <AppTooltip title={t("tickets.detail.attachment_tooltip")}>
         <Box
           component="button"
           type="button"
@@ -83,7 +83,7 @@ export const AttachmentButton: React.FC<Props> = ({ ticketId, onUploaded }) => {
             <AttachFileOutlined sx={{ fontSize: 16 }} />
           )}
         </Box>
-      </Tooltip>
+      </AppTooltip>
       <input
         ref={fileInputRef}
         type="file"

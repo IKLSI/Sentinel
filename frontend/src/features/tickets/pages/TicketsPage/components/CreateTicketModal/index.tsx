@@ -4,8 +4,8 @@ import { Controller } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { InfoTooltip } from "@/components/ui/common/InfoTooltip";
 import { DurationPicker } from "@/components/ui/forms/DurationPicker";
 import { useT } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
@@ -236,31 +236,7 @@ export const CreateTicketModal: React.FC<Props> = ({
             >
               {t("tickets.list.field_estimation")}
             </Box>
-            <Tooltip
-              title={t("tickets.list.estimation_tooltip")}
-              placement="right"
-              arrow
-            >
-              <Box
-                sx={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  color: "var(--muted)",
-                  cursor: "default",
-                  lineHeight: 1,
-                  flexShrink: 0,
-                }}
-              >
-                i
-              </Box>
-            </Tooltip>
+            <InfoTooltip title={t("tickets.list.estimation_tooltip")} />
           </Box>
           <Controller
             name="estimatedMinutes"

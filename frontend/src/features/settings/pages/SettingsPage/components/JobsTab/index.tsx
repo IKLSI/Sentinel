@@ -2,10 +2,10 @@ import type React from "react";
 import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
 import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
@@ -210,7 +210,7 @@ export const JobsTab: React.FC = () => {
                     >
                       <StatusBadge state={job.lastJobState} t={t} />
                       {job.error && (
-                        <Tooltip title={job.error} placement="top" arrow>
+                        <AppTooltip title={job.error}>
                           <ErrorOutlineOutlined
                             sx={{
                               fontSize: 15,
@@ -218,7 +218,7 @@ export const JobsTab: React.FC = () => {
                               cursor: "help",
                             }}
                           />
-                        </Tooltip>
+                        </AppTooltip>
                       )}
                     </Box>
                   </Box>

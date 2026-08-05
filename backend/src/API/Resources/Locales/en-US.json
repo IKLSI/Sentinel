@@ -511,6 +511,7 @@
   "projects.import_modal.title": "Available repositories",
   "projects.import_repos": "Import from GitHub/GitLab",
   "projects.modal.cancel": "Cancel",
+  "projects.modal.frequency_error": "Could not update the scan frequency",
   "projects.modal.frequency_label": "Frequency",
   "projects.modal.frequency_title": "Edit project",
   "projects.modal.save": "Save",
