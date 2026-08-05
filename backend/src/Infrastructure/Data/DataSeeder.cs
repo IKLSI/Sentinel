@@ -47,7 +47,7 @@ public class DataSeeder
             FirstName = "Admin",
             LastName = "Sentinel",
             Role = UserRole.Admin,
-            IsActive = true,
+            AccessStatus = UserAccessStatus.Active,
             IsEmailVerified = true,
             CreatedAt = now,
             Theme = ThemeType.Light

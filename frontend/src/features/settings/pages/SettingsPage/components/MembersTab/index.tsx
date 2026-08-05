@@ -22,7 +22,12 @@ import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSortState } from "@/hooks/useSortState";
-import { SortDirection, UserRole, UserSortField } from "@/enums";
+import {
+  SortDirection,
+  UserAccessStatus,
+  UserRole,
+  UserSortField,
+} from "@/enums";
 
 const ALL_ROLES_FILTER = "all";
 const ACTIONS_COLUMN_KEY = "actions";
@@ -52,7 +57,7 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     [t],
   );
 
-  const toggleActive = useUpdateUserMutation();
+  const updateAccessStatus = useUpdateUserMutation();
   const [memberSearch, setMemberSearch] = useState("");
   const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
   const [memberRoleFilter, setMemberRoleFilter] =
@@ -107,9 +112,20 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     { key: ACTIONS_COLUMN_KEY, label: "", width: "48px" },
   ];
 
-  const handleToggleActive = (memberId: string, currentlyActive: boolean) => {
-    toggleActive.mutate(
-      { id: memberId, data: { isActive: !currentlyActive } },
+  const handleToggleAccessStatus = (
+    memberId: string,
+    currentStatus: string,
+  ) => {
+    updateAccessStatus.mutate(
+      {
+        id: memberId,
+        data: {
+          accessStatus:
+            currentStatus === UserAccessStatus.Active
+              ? UserAccessStatus.Suspended
+              : UserAccessStatus.Active,
+        },
+      },
       { onError: onToggleError },
     );
   };
@@ -296,9 +312,9 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                             lineHeight: 1.3,
                           }}
                         >
-                          {m.isActive
+                          {m.accessStatus === UserAccessStatus.Active
                             ? t("settings.members.status_active")
-                            : t("settings.members.status_inactive")}
+                            : t("settings.members.status_suspended")}
                         </Box>
                       </Box>
                       <Box
@@ -322,26 +338,35 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
                         sx={{ px: "16px", py: "10px", textAlign: "right" }}
                       >
                         {m.id !== user?.id &&
-                          (toggleActive.isPending &&
-                          toggleActive.variables?.id === m.id ? (
+                          (updateAccessStatus.isPending &&
+                          updateAccessStatus.variables?.id === m.id ? (
                             <CircularProgress size={13} />
                           ) : (
                             <RowActions
                               actions={[
                                 {
-                                  icon: m.isActive ? (
-                                    <BlockOutlined sx={{ fontSize: 13 }} />
-                                  ) : (
-                                    <CheckCircleOutlineOutlined
-                                      sx={{ fontSize: 13 }}
-                                    />
-                                  ),
-                                  label: m.isActive
-                                    ? t("settings.members.deactivate")
-                                    : t("settings.members.activate"),
+                                  icon:
+                                    m.accessStatus ===
+                                    UserAccessStatus.Active ? (
+                                      <BlockOutlined sx={{ fontSize: 13 }} />
+                                    ) : (
+                                      <CheckCircleOutlineOutlined
+                                        sx={{ fontSize: 13 }}
+                                      />
+                                    ),
+                                  label:
+                                    m.accessStatus === UserAccessStatus.Active
+                                      ? t("settings.members.suspend")
+                                      : t("settings.members.reactivate"),
                                   onClick: () =>
-                                    handleToggleActive(m.id, m.isActive),
-                                  color: m.isActive ? "red" : "green",
+                                    handleToggleAccessStatus(
+                                      m.id,
+                                      m.accessStatus,
+                                    ),
+                                  color:
+                                    m.accessStatus === UserAccessStatus.Active
+                                      ? "red"
+                                      : "green",
                                 },
                               ]}
                             />

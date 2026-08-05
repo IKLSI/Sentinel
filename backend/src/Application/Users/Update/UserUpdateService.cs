@@ -53,11 +53,21 @@ public class UserUpdateService(
             newRole = parsedRole;
         }
 
-        bool willDeactivate = model.IsActive.HasValue && !model.IsActive.Value;
+        UserAccessStatus? newAccessStatus = null;
 
-        bool deactivationTransition = willDeactivate && user.IsActive;
+        if (!string.IsNullOrEmpty(model.AccessStatus))
+        {
+            if (!Enum.TryParse(model.AccessStatus, true, out UserAccessStatus parsedAccessStatus))
+                return Result<UserDto>.Error(ErrorCodes.UserInvalidAccessStatus);
 
-        bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willDeactivate;
+            newAccessStatus = parsedAccessStatus;
+        }
+
+        bool willSuspend = newAccessStatus == UserAccessStatus.Suspended;
+
+        bool suspensionTransition = willSuspend && user.AccessStatus == UserAccessStatus.Active;
+
+        bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willSuspend;
 
         User? updatedUser = null;
         bool lastAdminBlocked = false;
@@ -69,9 +79,9 @@ public class UserUpdateService(
 
             if (tracked == null) return;
 
-            bool wasActiveAdmin = tracked.Role == UserRole.Admin && tracked.IsActive;
+            bool wasActiveAdmin = tracked.Role == UserRole.Admin && tracked.AccessStatus == UserAccessStatus.Active;
             bool staysActiveAdmin = (newRole ?? tracked.Role) == UserRole.Admin
-                && (model.IsActive ?? tracked.IsActive);
+                && (newAccessStatus ?? tracked.AccessStatus) == UserAccessStatus.Active;
 
             if (wasActiveAdmin && !staysActiveAdmin)
             {
@@ -89,11 +99,11 @@ public class UserUpdateService(
 
             if (!string.IsNullOrEmpty(model.FirstName)) tracked.FirstName = model.FirstName;
             if (!string.IsNullOrEmpty(model.LastName)) tracked.LastName = model.LastName;
-            if (model.IsActive.HasValue) tracked.IsActive = model.IsActive.Value;
+            if (newAccessStatus.HasValue) tracked.AccessStatus = newAccessStatus.Value;
             if (newRole.HasValue) tracked.Role = newRole.Value;
             if (invalidatesSessions) tracked.TokenVersion++;
 
-            if (willDeactivate)
+            if (willSuspend)
             {
                 await apiKeyRepository.RevokeAllForUserAsync(userId, token);
                 await passwordResetTokenRepository.InvalidatePendingForUserAsync(userId, token);
@@ -111,8 +121,8 @@ public class UserUpdateService(
         if (invalidatesSessions)
             cache.Remove(CacheKeys.AuthAccount(userId));
 
-        if (deactivationTransition)
-            jobs.Enqueue<SendAccountDeactivatedEmailJob>(j => j.ExecuteAsync(userId));
+        if (suspensionTransition)
+            jobs.Enqueue<SendAccountSuspendedEmailJob>(j => j.ExecuteAsync(userId));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Users), cancellationToken);

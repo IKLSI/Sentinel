@@ -47,7 +47,7 @@ public class UserDeleteAccountService(
 
             if (tracked == null) return;
 
-            if (tracked.Role == UserRole.Admin && tracked.IsActive)
+            if (tracked.Role == UserRole.Admin && tracked.AccessStatus == UserAccessStatus.Active)
             {
                 await organizationRepository.LockForUpdateAsync(organizationId, token);
 
@@ -95,7 +95,7 @@ public class UserDeleteAccountService(
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
         user.PreviousRefreshTokenHash = null;
-        user.IsActive = false;
+        user.AccessStatus = UserAccessStatus.Suspended;
         user.TokenVersion++;
     }
 }

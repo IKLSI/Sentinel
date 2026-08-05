@@ -87,6 +87,6 @@ public class QuotaGuardTests
         LastName = "Test",
         PasswordHash = "hash",
         Role = UserRole.Developer,
-        IsActive = true
+        AccessStatus = UserAccessStatus.Active
     };
 }

@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
+using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Options;
 using Sentinel.Application.Common.Contracts;
@@ -105,12 +106,12 @@ public static partial class ServiceCollectionExtensions
         IMemoryCache cache = sp.GetRequiredService<IMemoryCache>();
         string cacheKey = CacheKeys.AuthAccount(userId);
 
-        if (!cache.TryGetValue(cacheKey, out (bool IsActive, int TokenVersion) account))
+        if (!cache.TryGetValue(cacheKey, out (UserAccessStatus AccessStatus, int TokenVersion) account))
         {
             SentinelContext db = sp.GetRequiredService<SentinelContext>();
             ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
 
-            (bool IsActive, int TokenVersion)? found = await ReadAccountStateAsync(db, systemScope, userId);
+            (UserAccessStatus AccessStatus, int TokenVersion)? found = await ReadAccountStateAsync(db, systemScope, userId);
 
             if (found == null)
             {
@@ -126,7 +127,7 @@ public static partial class ServiceCollectionExtensions
             });
         }
 
-        if (!account.IsActive || account.TokenVersion != tokenVersion)
+        if (account.AccessStatus != UserAccessStatus.Active || account.TokenVersion != tokenVersion)
         {
             context.Fail("Expired session");
             return;
@@ -136,17 +137,17 @@ public static partial class ServiceCollectionExtensions
             context.Properties.ExpiresUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds);
     }
 
-    private static async Task<(bool IsActive, int TokenVersion)?> ReadAccountStateAsync(
+    private static async Task<(UserAccessStatus AccessStatus, int TokenVersion)?> ReadAccountStateAsync(
         SentinelContext db, ISystemScope systemScope, Guid userId)
     {
         using IDisposable elevation = systemScope.Enter();
 
         var found = await db.Users
             .Where(u => u.Id == userId)
-            .Select(u => new { u.IsActive, u.TokenVersion })
+            .Select(u => new { u.AccessStatus, u.TokenVersion })
             .FirstOrDefaultAsync();
 
-        return found == null ? null : (found.IsActive, found.TokenVersion);
+        return found == null ? null : (found.AccessStatus, found.TokenVersion);
     }
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)

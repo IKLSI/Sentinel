@@ -27,7 +27,7 @@ public sealed record UserGridRow(
     string FirstName,
     string LastName,
     UserRole Role,
-    bool IsActive,
+    UserAccessStatus AccessStatus,
     DateTime CreatedAt,
     DateTime? LastLoginAt,
     ThemeType Theme,

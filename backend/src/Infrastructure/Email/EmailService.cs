@@ -160,9 +160,9 @@ public partial class EmailService : IEmailService
         _logger.LogInformation("Verification email sent to {Email}", email);
     }
 
-    public async Task SendAccountDeactivatedAsync(string email, string organizationName, string culture)
+    public async Task SendAccountSuspendedAsync(string email, string organizationName, string culture)
     {
-        string html = RenderTemplate("account-deactivated.html", culture, new Dictionary<string, string>
+        string html = RenderTemplate("account-suspended.html", culture, new Dictionary<string, string>
         {
             ["{{ORGANIZATION}}"] = organizationName
         });
@@ -173,18 +173,18 @@ public partial class EmailService : IEmailService
             _email.FromAddress
         ));
         message.To.Add(new MailboxAddress(email, email));
-        message.Subject = Text(culture, "emails.account_deactivated.subject",
+        message.Subject = Text(culture, "emails.account_suspended.subject",
             new Dictionary<string, string> { ["organization"] = organizationName });
         message.Body = new BodyBuilder
         {
             HtmlBody = html,
-            TextBody = Text(culture, "emails.account_deactivated.text_body",
+            TextBody = Text(culture, "emails.account_suspended.text_body",
                 new Dictionary<string, string> { ["organization"] = organizationName })
         }.ToMessageBody();
 
         await SendAsync(message);
 
-        _logger.LogInformation("Account deactivation email sent to {Email}", email);
+        _logger.LogInformation("Account suspension email sent to {Email}", email);
     }
 
     public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)

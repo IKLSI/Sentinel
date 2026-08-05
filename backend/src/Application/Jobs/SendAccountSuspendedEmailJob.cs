@@ -6,18 +6,18 @@ using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Jobs;
 
-public class SendAccountDeactivatedEmailJob
+public class SendAccountSuspendedEmailJob
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
     private readonly ISystemScope _systemScope;
-    private readonly ILogger<SendAccountDeactivatedEmailJob> _logger;
+    private readonly ILogger<SendAccountSuspendedEmailJob> _logger;
 
-    public SendAccountDeactivatedEmailJob(
+    public SendAccountSuspendedEmailJob(
         IUserRepository userRepository,
         IEmailService emailService,
         ISystemScope systemScope,
-        ILogger<SendAccountDeactivatedEmailJob> logger)
+        ILogger<SendAccountSuspendedEmailJob> logger)
     {
         _userRepository = userRepository;
         _emailService = emailService;
@@ -36,16 +36,16 @@ public class SendAccountDeactivatedEmailJob
 
         if (user == null)
         {
-            _logger.LogWarning("User {UserId} not found for deactivation email", userId);
+            _logger.LogWarning("User {UserId} not found for suspension email", userId);
             return;
         }
 
-        if (user.IsActive)
+        if (user.AccessStatus == UserAccessStatus.Active)
         {
-            _logger.LogInformation("User {UserId} reactivated before the deactivation email was sent", userId);
+            _logger.LogInformation("User {UserId} reactivated before the suspension email was sent", userId);
             return;
         }
 
-        await _emailService.SendAccountDeactivatedAsync(user.Email, user.Organization.Name, user.Language);
+        await _emailService.SendAccountSuspendedAsync(user.Email, user.Organization.Name, user.Language);
     }
 }

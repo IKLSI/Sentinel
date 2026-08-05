@@ -4,6 +4,13 @@ export const UserRole = {
 } as const;
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+export const UserAccessStatus = {
+  Active: "Active",
+  Suspended: "Suspended",
+} as const;
+export type UserAccessStatus =
+  (typeof UserAccessStatus)[keyof typeof UserAccessStatus];
+
 export const Theme = {
   Dark: "dark",
   Light: "light",

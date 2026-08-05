@@ -18,16 +18,17 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
     public Task<User?> GetOrDefaultActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken) =>
-        Query(tracking).FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant() && u.IsActive, cancellationToken);
+        Query(tracking).FirstOrDefaultAsync(
+            u => u.Email == email.ToLowerInvariant() && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
 
     public Task<User?> GetOrDefaultActiveAsync(Guid userId, QueryTracking tracking,
         CancellationToken cancellationToken) =>
-        Query(tracking).FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
+        Query(tracking).FirstOrDefaultAsync(u => u.Id == userId && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
 
     public Task<User?> GetOrDefaultActiveWithOrganizationAsync(Guid userId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .Include(u => u.Organization)
-            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == userId && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
 
     public Task<User?> GetOrDefaultWithOrganizationAsync(Guid userId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
@@ -44,17 +45,19 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u =>
                 u.RefreshToken == tokenHash
                 && u.RefreshTokenExpiry > DateTime.UtcNow
-                && u.IsActive, cancellationToken);
+                && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
 
     public Task<User?> GetOrDefaultByPreviousRefreshTokenHashAsync(string tokenHash,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.Tracked)
-            .FirstOrDefaultAsync(u => u.PreviousRefreshTokenHash == tokenHash && u.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                u => u.PreviousRefreshTokenHash == tokenHash && u.AccessStatus == UserAccessStatus.Active,
+                cancellationToken);
 
     public async Task<IReadOnlyList<User>> ListActiveByEmailAsync(string email, QueryTracking tracking,
         CancellationToken cancellationToken) =>
         await Query(tracking)
-            .Where(u => u.Email == email.ToLowerInvariant() && u.IsActive)
+            .Where(u => u.Email == email.ToLowerInvariant() && u.AccessStatus == UserAccessStatus.Active)
             .ToListAsync(cancellationToken);
 
     public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search,
@@ -102,8 +105,8 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
                 ? query.OrderByDescending(RoleRank)
                 : query.OrderBy(RoleRank),
             UserSortField.Status => descending
-                ? query.OrderByDescending(u => u.IsActive)
-                : query.OrderBy(u => u.IsActive),
+                ? query.OrderByDescending(u => u.AccessStatus == UserAccessStatus.Active)
+                : query.OrderBy(u => u.AccessStatus == UserAccessStatus.Active),
             UserSortField.LastLogin => descending
                 ? query.OrderBy(u => u.LastLoginAt == null).ThenByDescending(u => u.LastLoginAt)
                 : query.OrderBy(u => u.LastLoginAt == null).ThenBy(u => u.LastLoginAt),
@@ -119,7 +122,7 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
         u.FirstName,
         u.LastName,
         u.Role,
-        u.IsActive,
+        u.AccessStatus,
         u.CreatedAt,
         u.LastLoginAt,
         u.Theme,
@@ -158,7 +161,7 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
     public Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .CountAsync(u => u.OrganizationId == organizationId && u.IsActive, cancellationToken);
+            .CountAsync(u => u.OrganizationId == organizationId && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
 
     public Task<List<EmailRecipient>> GetActiveAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken) =>
         ActiveAdmins(organizationId)
@@ -174,10 +177,10 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
     public Task<int> CountActiveAdminsExcludingAsync(Guid organizationId, Guid excludedUserId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .CountAsync(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive
+            .CountAsync(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.AccessStatus == UserAccessStatus.Active
                 && u.Id != excludedUserId, cancellationToken);
 
     private IQueryable<User> ActiveAdmins(Guid organizationId) =>
         Query(QueryTracking.NoTracking)
-            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.IsActive);
+            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.AccessStatus == UserAccessStatus.Active);
 }

@@ -20,6 +20,12 @@ public enum UserRole
     Developer
 }
 
+public enum UserAccessStatus
+{
+    Active,
+    Suspended
+}
+
 public class User : IEntityWithId
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
@@ -29,7 +35,7 @@ public class User : IEntityWithId
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Developer;
-    public bool IsActive { get; set; } = true;
+    public UserAccessStatus AccessStatus { get; set; } = UserAccessStatus.Active;
     public bool IsEmailVerified { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }

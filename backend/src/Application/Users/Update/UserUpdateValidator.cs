@@ -12,7 +12,9 @@ public class UserUpdateValidator : IValidator
         ValidationErrors errors = new ValidationErrors()
             .MaxLength(nameof(model.FirstName), model.FirstName, 100)
             .MaxLength(nameof(model.LastName), model.LastName, 100)
-            .ParsableEnum<UserRole>(nameof(model.Role), model.Role, ValidationCodes.RoleInvalid);
+            .ParsableEnum<UserRole>(nameof(model.Role), model.Role, ValidationCodes.RoleInvalid)
+            .ParsableEnum<UserAccessStatus>(nameof(model.AccessStatus), model.AccessStatus,
+                ValidationCodes.AccessStatusInvalid);
 
         return Task.FromResult(errors.ToResult());
     }

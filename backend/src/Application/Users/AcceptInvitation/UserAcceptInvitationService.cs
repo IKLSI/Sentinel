@@ -56,7 +56,7 @@ public class UserAcceptInvitationService(
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Role = invitation.Role,
-                IsActive = true,
+                AccessStatus = UserAccessStatus.Active,
                 IsEmailVerified = true,
                 CreatedAt = DateTime.UtcNow
             };

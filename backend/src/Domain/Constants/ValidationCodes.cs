@@ -20,6 +20,7 @@ public static class ValidationCodes
     public const string LastNameRequired = "validation.account.last_name_required";
     public const string RoleRequired = "validation.account.role_required";
     public const string RoleInvalid = "validation.account.role_invalid";
+    public const string AccessStatusInvalid = "validation.account.access_status_invalid";
     public const string ThemeInvalid = "validation.account.theme_invalid";
 
     public const string OrganizationNameRequired = "validation.organization.name_required";

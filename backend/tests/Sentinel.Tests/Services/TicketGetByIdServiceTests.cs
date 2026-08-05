@@ -65,7 +65,7 @@ public class TicketGetByIdServiceTests
         LastName = "Test",
         PasswordHash = "hash",
         Role = UserRole.Developer,
-        IsActive = true
+        AccessStatus = UserAccessStatus.Active
     };
 
     private static Ticket NewTicket(Guid organizationId, Guid createdById) => new()

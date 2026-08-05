@@ -29,7 +29,7 @@ public class ApiKeyValidateService(
 
         User user = apiKey.CreatedBy;
 
-        if (!user.IsActive)
+        if (user.AccessStatus != UserAccessStatus.Active)
             return Result<ApiKeyPrincipalDto>.Unauthorized();
 
         if (apiKey.LastUsedAt is null || DateTime.UtcNow - apiKey.LastUsedAt.Value > LastUsedAtUpdateThreshold)

@@ -2770,8 +2770,8 @@ export interface components {
       type?: components["schemas"]["TicketType"];
     };
     UpdateUserDto: {
+      accessStatus?: string | null;
       firstName?: string | null;
-      isActive?: boolean | null;
       lastName?: string | null;
       role?: string | null;
     };
@@ -2793,13 +2793,13 @@ export interface components {
       profile: components["schemas"]["UserExportProfileDto"];
     };
     UserDto: {
+      accessStatus: string;
       /** Format: date-time */
       createdAt: string;
       email: string;
       firstName: string;
       /** Format: uuid */
       id: string;
-      isActive: boolean;
       language: string;
       /** Format: date-time */
       lastLoginAt: string | null;

@@ -71,7 +71,7 @@ public sealed class PostgresScope : IAsyncDisposable
         LastName = "Test",
         PasswordHash = "hash",
         Role = UserRole.Developer,
-        IsActive = true
+        AccessStatus = UserAccessStatus.Active
     };
 
     public Ticket NewTicket(string title, Guid? organizationId = null, Guid? createdById = null,

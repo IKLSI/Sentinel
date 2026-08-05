@@ -24,6 +24,7 @@ public static class ErrorCodes
     public const string UserInvitationAlreadyPending = "errors.users.invitation_already_pending";
     public const string UserInvitationInvalid = "errors.users.invitation_invalid";
     public const string UserInvalidRole = "errors.users.invalid_role";
+    public const string UserInvalidAccessStatus = "errors.users.invalid_access_status";
     public const string UserLastAdminRequired = "errors.users.last_admin_required";
     public const string UserCannotDeleteLastAdmin = "errors.users.cannot_delete_last_admin";
     public const string UserWrongPassword = "errors.users.wrong_password";

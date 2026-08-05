@@ -158,6 +158,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.LastName).HasMaxLength(100).IsRequired();
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.Role).HasConversion<string>();
+            entity.Property(e => e.AccessStatus).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.Theme).HasConversion(
                 v => v.ToString().ToLowerInvariant(),
                 v => Enum.Parse<ThemeType>(v, ignoreCase: true)

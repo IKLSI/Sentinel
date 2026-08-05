@@ -70,7 +70,7 @@ public class AuthRegisterService(
                 FirstName = model.FirstName.Trim(),
                 LastName = model.LastName.Trim(),
                 Role = UserRole.Admin,
-                IsActive = true,
+                AccessStatus = UserAccessStatus.Active,
                 IsEmailVerified = false,
                 CreatedAt = now
             };

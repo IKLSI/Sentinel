@@ -158,6 +158,6 @@ public class TenantQueryFilterTests
         LastName = "Utilisateur",
         PasswordHash = "hash",
         Role = UserRole.Admin,
-        IsActive = true
+        AccessStatus = UserAccessStatus.Active
     };
 }
