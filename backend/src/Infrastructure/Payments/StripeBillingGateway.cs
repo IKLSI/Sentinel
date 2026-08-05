@@ -14,6 +14,7 @@ namespace Sentinel.Infrastructure.Payments;
 public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBillingGateway> logger) : IBillingGateway
 {
     private const string SubscriptionMode = "subscription";
+    private const string TermsOfServiceRequired = "required";
 
     public async Task<string> CreateCustomerAsync(BillingCustomerRequest request,
         CancellationToken cancellationToken)
@@ -52,6 +53,10 @@ public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBill
             LineItems = [new Stripe.Checkout.SessionLineItemOptions { Price = request.PriceId, Quantity = 1 }],
             SuccessUrl = request.SuccessUrl,
             CancelUrl = request.CancelUrl,
+            ConsentCollection = new Stripe.Checkout.SessionConsentCollectionOptions
+            {
+                TermsOfService = TermsOfServiceRequired
+            },
             Metadata = new Dictionary<string, string>
             {
                 [StripeMetadataKeys.OrganizationId] = request.OrganizationId.ToString(),

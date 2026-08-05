@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { ROUTES } from "@/constants/routes";
 import {
   registerSchema,
   type RegisterFormValues,
@@ -25,6 +26,17 @@ interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
 }
+
+const LEGAL_LINK_PROPS = {
+  target: "_blank",
+  rel: "noopener noreferrer",
+  sx: {
+    color: "var(--accent)",
+    fontWeight: 600,
+    textDecoration: "none",
+    "&:hover": { textDecoration: "underline" },
+  },
+} as const;
 
 const EMPTY_FORM: RegisterFormValues = {
   organizationName: "",
@@ -215,6 +227,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             showLabel={t("auth.register.password_show")}
             hideLabel={t("auth.register.password_hide")}
           />
+
+          <Box
+            sx={{
+              fontSize: "11.5px",
+              lineHeight: 1.7,
+              color: "var(--muted2)",
+            }}
+          >
+            {t("legal.consent.prefix")}{" "}
+            <Box component="a" href={ROUTES.TERMS} {...LEGAL_LINK_PROPS}>
+              {t("legal.consent.terms")}
+            </Box>{" "}
+            {t("legal.consent.separator")}{" "}
+            <Box component="a" href={ROUTES.PRIVACY} {...LEGAL_LINK_PROPS}>
+              {t("legal.consent.privacy")}
+            </Box>
+            .
+          </Box>
         </Box>
       )}
     </AppModal>

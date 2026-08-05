@@ -27,6 +27,7 @@ import { useT, useI18n } from "@/contexts/I18nContext";
 import { Theme, Language, UserRole } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
 import { ROUTES } from "@/constants/routes";
+import { LegalLinks } from "@/features/legal/components/LegalLinks";
 
 const JSON_INDENT = 2;
 const GDPR_EXPORT_FILE_PREFIX = "sentinel-export";
@@ -57,6 +58,7 @@ const CARD_SX = {
   ...BASE_CARD_SX,
   display: "flex",
   flexDirection: "column",
+  flexShrink: 0,
 } as const;
 
 function InnerDivider({ label }: { label: string }) {
@@ -188,7 +190,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <PageContainer sx={{ p: "20px 24px", gap: "16px" }}>
+    <PageContainer sx={{ p: "20px 24px", gap: "16px", overflowY: "auto" }}>
       <Box sx={CARD_SX}>
         <InnerDivider label={t("profile.section.info")} />
 
@@ -675,31 +677,34 @@ export const ProfilePage: React.FC = () => {
         <Box
           sx={{
             px: "16px",
-            py: "10px",
+            py: "14px",
             display: "flex",
-            justifyContent: "flex-end",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "14px",
+            borderTop: "1px solid var(--border)",
           }}
         >
-          <a
-            href={ROUTES.PRIVACY}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: "var(--muted2)",
-              fontSize: "11px",
-              fontFamily: "inherit",
-              textDecoration: "underline",
-              transition: "color 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--text)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--muted2)";
-            }}
-          >
-            {t("privacy.title")}
-          </a>
+          <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
+            <Box
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--text)",
+                mb: "2px",
+              }}
+            >
+              {t("profile.legal.label")}
+            </Box>
+            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+              {t("profile.legal.help")}
+            </Box>
+          </Box>
+          <LegalLinks
+            tone="app"
+            variant="chips"
+            sx={{ justifyContent: "flex-end" }}
+          />
         </Box>
       </Box>
 

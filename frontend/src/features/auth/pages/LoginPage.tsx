@@ -17,6 +17,7 @@ import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField"
 import { ForgotPasswordModal } from "@/features/auth/pages/ForgotPasswordModal";
 import { RegisterModal } from "@/features/auth/pages/RegisterModal";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import { LegalLinks } from "@/features/legal/components/LegalLinks";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -329,6 +330,8 @@ export const LoginPage: React.FC = () => {
                 </button>
               )}
             </Box>
+
+            <LegalLinks tone="auth" sx={{ mt: "30px" }} />
           </Box>
         </Box>
       </Box>

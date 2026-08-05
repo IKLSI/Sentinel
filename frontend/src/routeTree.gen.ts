@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
+import { Route as LegalNoticeRouteImport } from './routes/legal-notice'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StyleGuideRouteImport } from './routes/style-guide'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
@@ -36,6 +38,11 @@ const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
   path: '/accept-invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalNoticeRoute = LegalNoticeRouteImport.update({
+  id: '/legal-notice',
+  path: '/legal-notice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -54,6 +61,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const StyleGuideRoute = StyleGuideRouteImport.update({
   id: '/style-guide',
   path: '/style-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -118,10 +130,12 @@ const AuthenticatedTicketsIdRoute = AuthenticatedTicketsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/organisation': typeof AuthenticatedAdminOrganisationRoute
@@ -134,10 +148,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/accept-invitation': typeof AcceptInvitationRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/': typeof AuthenticatedIndexRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -153,10 +169,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invitation': typeof AcceptInvitationRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -174,10 +192,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invitation'
+    | '/legal-notice'
     | '/login'
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
+    | '/terms'
     | '/verify-email'
     | '/profile'
     | '/organisation'
@@ -190,10 +210,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invitation'
+    | '/legal-notice'
     | '/login'
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
+    | '/terms'
     | '/verify-email'
     | '/'
     | '/profile'
@@ -208,10 +230,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/accept-invitation'
+    | '/legal-notice'
     | '/login'
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
+    | '/terms'
     | '/verify-email'
     | '/_authenticated/_admin'
     | '/_authenticated/profile'
@@ -228,10 +252,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInvitationRoute: typeof AcceptInvitationRoute
+  LegalNoticeRoute: typeof LegalNoticeRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StyleGuideRoute: typeof StyleGuideRoute
+  TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
@@ -249,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/accept-invitation'
       fullPath: '/accept-invitation'
       preLoaderRoute: typeof AcceptInvitationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal-notice': {
+      id: '/legal-notice'
+      path: '/legal-notice'
+      fullPath: '/legal-notice'
+      preLoaderRoute: typeof LegalNoticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -277,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/style-guide'
       fullPath: '/style-guide'
       preLoaderRoute: typeof StyleGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -403,10 +443,12 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInvitationRoute: AcceptInvitationRoute,
+  LegalNoticeRoute: LegalNoticeRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StyleGuideRoute: StyleGuideRoute,
+  TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport

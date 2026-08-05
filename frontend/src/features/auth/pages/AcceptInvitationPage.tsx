@@ -16,6 +16,7 @@ import {
   acceptInvitationSchema,
   type AcceptInvitationFormValues,
 } from "@/features/auth/schemas";
+import { LegalLinks } from "@/features/legal/components/LegalLinks";
 
 const routeApi = getRouteApi("/accept-invitation");
 
@@ -240,6 +241,8 @@ export const AcceptInvitationPage: React.FC = () => {
                     )}
                   </button>
                 </form>
+
+                <LegalLinks tone="auth" sx={{ mt: "30px" }} />
               </>
             )}
           </Box>
