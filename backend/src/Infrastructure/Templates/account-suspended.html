@@ -16,109 +16,76 @@
     body { margin:0; padding:0; width:100% !important; }
     a { text-decoration:none; }
     @media only screen and (max-width:600px) {
-      .sp-shell { padding:26px 12px !important; }
-      .sp-pad   { padding:30px 22px 28px !important; }
-      .sp-h1    { font-size:21px !important; }
+      .sp-shell      { padding:24px 12px !important; }
+      .sp-band       { padding:28px 24px 32px !important; }
+      .sp-band-title { font-size:19px !important; }
+      .sp-pad        { padding:30px 24px 32px !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f0f2f8;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#eef0f7;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{T:emails.account_suspended.preheader}}&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f7;">
     <tr>
-      <td align="center" class="sp-shell" style="padding:44px 16px;">
-        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+      <td align="center" class="sp-shell" style="padding:40px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 20px 45px rgba(127,29,29,0.18);">
 
-          <!-- ─── HEADER ─── -->
+          <!-- ─── BAND ─── -->
           <tr>
-            <td style="padding:0 4px 18px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="vertical-align:middle;white-space:nowrap;padding-right:14px;">
-                    <span style="font-size:13px;font-weight:800;color:#0e1220;letter-spacing:0.2em;font-family:'Bricolage Grotesque','Inter',Arial,sans-serif;">SENTINEL</span>
-                  </td>
-                  <td style="vertical-align:middle;font-size:0;line-height:0;">
-                    <div style="height:1px;background-color:#dde3f2;font-size:0;line-height:0;">&nbsp;</div>
-                  </td>
-                </tr>
-              </table>
+            <td class="sp-band" bgcolor="#b91c1c" style="background-color:#b91c1c;background-image:linear-gradient(135deg,#b91c1c 0%,#dc2626 55%,#ef4444 100%);padding:34px 40px 40px;">
+              <span style="font-family:'Bricolage Grotesque','Inter',Arial,sans-serif;font-size:13px;font-weight:800;color:#ffffff;letter-spacing:0.2em;">SENTINEL</span>
+              <p class="sp-band-title" style="margin:22px 0 0;font-family:'Bricolage Grotesque','Inter',-apple-system,Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;line-height:1.3;text-transform:uppercase;white-space:nowrap;">{{T:emails.account_suspended.heading}}</p>
+              <p style="margin:10px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.02em;text-transform:uppercase;">{{T:emails.account_suspended.eyebrow}}</p>
             </td>
           </tr>
 
-          <!-- ─── CARD ─── -->
+          <!-- ─── WHITE CONTENT ─── -->
           <tr>
-            <td style="background-color:#ffffff;border:1px solid #dde3f2;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,0.05),0 12px 32px rgba(16,24,40,0.10);">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <td class="sp-pad" bgcolor="#ffffff" style="background-color:#ffffff;padding:36px 40px 40px;">
+
+              <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#b91c1c;letter-spacing:-0.01em;">{{T:emails.account_suspended.notice_title}}</p>
+              <p style="margin:0 0 26px;font-size:14.5px;color:#3a4768;line-height:1.72;">{{T:emails.account_suspended.notice_body}}</p>
+
+              <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#0e1220;letter-spacing:-0.01em;">{{T:emails.account_suspended.effects_title}}</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
                 <tr>
-                  <td class="sp-pad" style="padding:40px 44px 36px;">
-
-                    <!-- Heading -->
-                    <p class="sp-h1" style="margin:0 0 10px;font-size:25px;font-weight:800;color:#0e1220;letter-spacing:-0.035em;line-height:1.25;font-family:'Bricolage Grotesque','Inter',-apple-system,Helvetica,Arial,sans-serif;">{{T:emails.account_suspended.heading}}</p>
-                    <p style="margin:0 0 26px;font-size:14px;color:#5c6f90;line-height:1.6;">{{T:emails.common.organization}} <span style="color:#0e1220;font-weight:600;">{{ORGANIZATION}}</span></p>
-
-                    <!-- Info box -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;background-color:#fef2f2;border:1px solid #fbd2d2;border-radius:12px;">
-                      <tr>
-                        <td style="padding:18px 20px;">
-                          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#b91c1c;letter-spacing:-0.01em;">{{T:emails.account_suspended.notice_title}}</p>
-                          <p style="margin:0;font-size:13px;color:#3a4768;line-height:1.65;">{{T:emails.account_suspended.notice_body}}</p>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- Details -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;background-color:#f5f7fc;border:1px solid #e3e8f4;border-radius:12px;">
-                      <tr>
-                        <td style="padding:18px 20px;">
-                          <p style="margin:0 0 14px;font-size:10px;font-weight:700;color:#8898bb;letter-spacing:0.14em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;">{{T:emails.account_suspended.effects_title}}</p>
-                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                              <td width="16" style="vertical-align:top;padding-top:7px;">
-                                <div style="width:5px;height:5px;border-radius:3px;background-color:#dc2626;font-size:0;line-height:0;">&nbsp;</div>
-                              </td>
-                              <td style="font-size:13px;color:#3a4768;line-height:1.65;padding-bottom:10px;">{{T:emails.account_suspended.effect_login}}</td>
-                            </tr>
-                            <tr>
-                              <td width="16" style="vertical-align:top;padding-top:7px;">
-                                <div style="width:5px;height:5px;border-radius:3px;background-color:#dc2626;font-size:0;line-height:0;">&nbsp;</div>
-                              </td>
-                              <td style="font-size:13px;color:#3a4768;line-height:1.65;padding-bottom:10px;">{{T:emails.account_suspended.effect_reset}}</td>
-                            </tr>
-                            <tr>
-                              <td width="16" style="vertical-align:top;padding-top:7px;">
-                                <div style="width:5px;height:5px;border-radius:3px;background-color:#dc2626;font-size:0;line-height:0;">&nbsp;</div>
-                              </td>
-                              <td style="font-size:13px;color:#3a4768;line-height:1.65;">{{T:emails.account_suspended.effect_api_keys}}</td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <p style="margin:0;font-size:13px;color:#5c6f90;line-height:1.65;">{{T:emails.account_suspended.contact}}</p>
-
-                  </td>
+                  <td width="16" valign="top" style="font-size:14.5px;color:#dc2626;font-weight:700;line-height:1.6;">&middot;</td>
+                  <td style="font-size:14.5px;color:#3a4768;line-height:1.6;">{{T:emails.account_suspended.effect_login}}</td>
                 </tr>
               </table>
-            </td>
-          </tr>
 
-          <!-- ─── FOOTER ─── -->
-          <tr>
-            <td style="padding:24px 8px 0;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
                 <tr>
-                  <td style="border-top:1px solid #dde3f2;padding-top:18px;text-align:center;">
-                    <p style="margin:0;font-size:10.5px;color:#8898bb;line-height:1.6;letter-spacing:0.02em;">{{T:emails.common.footer}}</p>
-                  </td>
+                  <td width="16" valign="top" style="font-size:14.5px;color:#dc2626;font-weight:700;line-height:1.6;">&middot;</td>
+                  <td style="font-size:14.5px;color:#3a4768;line-height:1.6;">{{T:emails.account_suspended.effect_reset}}</td>
                 </tr>
               </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td width="16" valign="top" style="font-size:14.5px;color:#dc2626;font-weight:700;line-height:1.6;">&middot;</td>
+                  <td style="font-size:14.5px;color:#3a4768;line-height:1.6;">{{T:emails.account_suspended.effect_api_keys}}</td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:14px;color:#5c6f90;line-height:1.65;">{{T:emails.account_suspended.contact}}</p>
+
             </td>
           </tr>
 
         </table>
+
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+          <tr>
+            <td align="center" style="padding-top:22px;">
+              <p style="margin:0;font-size:10.5px;color:#8898bb;line-height:1.6;letter-spacing:0.02em;">{{T:emails.common.footer}}</p>
+            </td>
+          </tr>
+        </table>
+
       </td>
     </tr>
   </table>
