@@ -18,7 +18,6 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
       component="nav"
       className="legal-no-print"
       sx={{
-        display: { xs: "none", lg: "block" },
         position: "sticky",
         top: `${LEGAL_HEADER_HEIGHT + 24}px`,
       }}
@@ -26,12 +25,12 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
       <Box
         sx={{
           fontFamily: "var(--font-mono)",
-          fontSize: "10px",
+          fontSize: { xs: "9px", lg: "10px" },
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: "var(--muted)",
-          pl: "14px",
-          mb: "12px",
+          pl: { xs: "10px", lg: "14px" },
+          mb: { xs: "8px", lg: "12px" },
         }}
       >
         {t("legal.shell.summary")}
@@ -53,13 +52,13 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
               onClick={() => scrollToSection(section.id)}
               sx={{
                 display: "flex",
-                gap: "9px",
+                gap: { xs: "6px", lg: "9px" },
                 alignItems: "baseline",
                 textAlign: "left",
                 ml: "-1px",
-                pl: "13px",
-                pr: "8px",
-                py: "7px",
+                pl: { xs: "9px", lg: "13px" },
+                pr: { xs: "4px", lg: "8px" },
+                py: { xs: "6px", lg: "7px" },
                 border: "none",
                 borderLeft: `2px solid ${active ? "var(--accent)" : "transparent"}`,
                 background: active
@@ -67,7 +66,7 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
                   : "transparent",
                 color: active ? "var(--accent)" : "var(--muted2)",
                 fontFamily: "inherit",
-                fontSize: "12px",
+                fontSize: { xs: "11px", lg: "12px" },
                 fontWeight: active ? 600 : 500,
                 lineHeight: 1.45,
                 cursor: "pointer",

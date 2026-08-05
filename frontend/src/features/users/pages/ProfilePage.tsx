@@ -61,12 +61,23 @@ const CARD_SX = {
   flexShrink: 0,
 } as const;
 
+const SCROLL_AREA_SX = {
+  flex: 1,
+  minHeight: 0,
+  overflowY: "auto",
+  overflowX: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  pr: "4px",
+} as const;
+
 function InnerDivider({ label }: { label: string }) {
   return (
     <Box
       sx={{
         px: "16px",
-        minHeight: "44px",
+        minHeight: "38px",
         display: "flex",
         alignItems: "center",
         borderBottom: "1px solid var(--border)",
@@ -190,521 +201,531 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <PageContainer sx={{ p: "20px 24px", gap: "16px", overflowY: "auto" }}>
-      <Box sx={CARD_SX}>
-        <InnerDivider label={t("profile.section.info")} />
+    <PageContainer sx={{ p: "20px 24px" }}>
+      <Box sx={SCROLL_AREA_SX}>
+        <Box sx={CARD_SX}>
+          <InnerDivider label={t("profile.section.info")} />
 
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "8px",
-            px: "16px",
-            py: "9px",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "5px",
-              }}
-            >
-              {t("profile.field.first_name")}
-            </Box>
-            <Box
-              component="input"
-              type="text"
-              sx={inp}
-              value={pf.firstName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPf((f) => ({ ...f, firstName: e.target.value }))
-              }
-            />
-          </Box>
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "5px",
-              }}
-            >
-              {t("profile.field.last_name")}
-            </Box>
-            <Box
-              component="input"
-              type="text"
-              sx={inp}
-              value={pf.lastName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPf((f) => ({ ...f, lastName: e.target.value }))
-              }
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "8px",
-            px: "16px",
-            py: "9px",
-            pb: "16px",
-          }}
-        >
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "5px",
-              }}
-            >
-              {t("profile.field.email")}
-            </Box>
-            <Box
-              component="input"
-              type="email"
-              sx={inpRo}
-              value={user?.email ?? ""}
-              readOnly
-            />
-          </Box>
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "5px",
-              }}
-            >
-              {t("profile.field.role")}
-            </Box>
-            <Box
-              component="input"
-              type="text"
-              sx={inpRo}
-              value={
-                user?.role && ROLE_LABEL_KEYS[user.role as UserRole]
-                  ? t(ROLE_LABEL_KEYS[user.role as UserRole])
-                  : (user?.role ?? "")
-              }
-              readOnly
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            px: "16px",
-            py: "10px",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleSave}
-            disabled={savingPf || pfUnchanged}
-            sx={{ minWidth: "110px" }}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "8px",
+              px: "16px",
+              py: "8px",
+              borderBottom: "1px solid var(--border)",
+            }}
           >
-            {savingPf ? t("profile.button.saving") : t("profile.button.save")}
-          </Button>
-        </Box>
-      </Box>
-
-      <Box sx={CARD_SX}>
-        <InnerDivider label={t("profile.section.preferences")} />
-
-        <Box
-          sx={{
-            px: "16px",
-            py: "16px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          {/* Langue */}
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "8px",
-              }}
-            >
-              {t("profile.field.language")}
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "5px",
+                }}
+              >
+                {t("profile.field.first_name")}
+              </Box>
+              <Box
+                component="input"
+                type="text"
+                sx={inp}
+                value={pf.firstName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPf((f) => ({ ...f, firstName: e.target.value }))
+                }
+              />
             </Box>
-            <Box sx={{ display: "flex", gap: "8px" }}>
-              {[
-                {
-                  code: Language.Fr,
-                  label: t("profile.language.fr"),
-                  bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)",
-                },
-                {
-                  code: Language.En,
-                  label: t("profile.language.en"),
-                  bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
-                },
-              ].map(({ code, label, bg }) => (
-                <Box
-                  key={code}
-                  component="button"
-                  type="button"
-                  onClick={() => handleLanguageChange(code)}
-                  sx={{
-                    all: "unset",
-                    cursor: "pointer",
-                    width: 100,
-                    boxSizing: "border-box",
-                    borderRadius: "var(--r-sm)",
-                    overflow: "hidden",
-                    border:
-                      culture === code
-                        ? "2px solid var(--accent)"
-                        : "2px solid var(--border)",
-                    boxShadow:
-                      culture === code
-                        ? "0 0 0 2px var(--accent-subtle)"
-                        : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "5px",
+                }}
+              >
+                {t("profile.field.last_name")}
+              </Box>
+              <Box
+                component="input"
+                type="text"
+                sx={inp}
+                value={pf.lastName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPf((f) => ({ ...f, lastName: e.target.value }))
+                }
+              />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "8px",
+              px: "16px",
+              py: "8px",
+              pb: "12px",
+            }}
+          >
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "5px",
+                }}
+              >
+                {t("profile.field.email")}
+              </Box>
+              <Box
+                component="input"
+                type="email"
+                sx={inpRo}
+                value={user?.email ?? ""}
+                readOnly
+              />
+            </Box>
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "5px",
+                }}
+              >
+                {t("profile.field.role")}
+              </Box>
+              <Box
+                component="input"
+                type="text"
+                sx={inpRo}
+                value={
+                  user?.role && ROLE_LABEL_KEYS[user.role as UserRole]
+                    ? t(ROLE_LABEL_KEYS[user.role as UserRole])
+                    : (user?.role ?? "")
+                }
+                readOnly
+              />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              px: "16px",
+              py: "8px",
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleSave}
+              disabled={savingPf || pfUnchanged}
+              sx={{ minWidth: "110px" }}
+            >
+              {savingPf ? t("profile.button.saving") : t("profile.button.save")}
+            </Button>
+          </Box>
+        </Box>
+
+        <Box sx={CARD_SX}>
+          <InnerDivider label={t("profile.section.preferences")} />
+
+          <Box
+            sx={{
+              px: "16px",
+              py: "12px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+            }}
+          >
+            {/* Langue */}
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "8px",
+                }}
+              >
+                {t("profile.field.language")}
+              </Box>
+              <Box sx={{ display: "flex", gap: "8px" }}>
+                {[
+                  {
+                    code: Language.Fr,
+                    label: t("profile.language.fr"),
+                    bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)",
+                  },
+                  {
+                    code: Language.En,
+                    label: t("profile.language.en"),
+                    bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
+                  },
+                ].map(({ code, label, bg }) => (
                   <Box
+                    key={code}
+                    component="button"
+                    type="button"
+                    onClick={() => handleLanguageChange(code)}
                     sx={{
-                      height: 48,
-                      background: bg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <LanguageFlag language={code} />
-                  </Box>
-                  <Box
-                    sx={{
-                      px: "8px",
-                      py: "4px",
-                      background: "var(--s2)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                      all: "unset",
+                      cursor: "pointer",
+                      width: 100,
+                      boxSizing: "border-box",
+                      borderRadius: "var(--r-sm)",
+                      overflow: "hidden",
+                      border:
+                        culture === code
+                          ? "2px solid var(--accent)"
+                          : "2px solid var(--border)",
+                      boxShadow:
+                        culture === code
+                          ? "0 0 0 2px var(--accent-subtle)"
+                          : "none",
+                      transition: "all 0.15s",
                     }}
                   >
                     <Box
-                      sx={{ display: "flex", alignItems: "center", gap: "3px" }}
+                      sx={{
+                        height: 40,
+                        background: bg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
                     >
-                      <TranslateOutlined
-                        sx={{ fontSize: 8, color: "var(--muted)" }}
+                      <LanguageFlag language={code} />
+                    </Box>
+                    <Box
+                      sx={{
+                        px: "8px",
+                        py: "4px",
+                        background: "var(--s2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "3px",
+                        }}
+                      >
+                        <TranslateOutlined
+                          sx={{ fontSize: 8, color: "var(--muted)" }}
+                        />
+                        <Box
+                          sx={{
+                            fontSize: "9px",
+                            fontWeight: 600,
+                            color: "var(--muted)",
+                          }}
+                        >
+                          {label}
+                        </Box>
+                      </Box>
+                      {culture === code && (
+                        <Box
+                          sx={{
+                            width: 11,
+                            height: 11,
+                            borderRadius: "50%",
+                            background: "var(--accent)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckOutlined
+                            sx={{ fontSize: 7, color: "var(--s1)" }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Apparence */}
+            <Box>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "8px",
+                }}
+              >
+                {t("profile.field.appearance")}
+              </Box>
+              <Box sx={{ display: "flex", gap: "8px" }}>
+                {([Theme.Light, Theme.Dark] as const).map((mode) => (
+                  <Box
+                    key={mode}
+                    component="button"
+                    type="button"
+                    onClick={() => handleThemeToggle(mode)}
+                    sx={{
+                      all: "unset",
+                      cursor: "pointer",
+                      width: 100,
+                      boxSizing: "border-box",
+                      borderRadius: "var(--r-sm)",
+                      overflow: "hidden",
+                      border:
+                        theme === mode
+                          ? "2px solid var(--accent)"
+                          : "2px solid var(--border)",
+                      boxShadow:
+                        theme === mode
+                          ? "0 0 0 2px var(--accent-subtle)"
+                          : "none",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        height: 40,
+                        background:
+                          mode === Theme.Dark
+                            ? "linear-gradient(150deg,var(--preview-dk-surface) 55%,var(--preview-dk-surface2) 100%)"
+                            : "linear-gradient(150deg,#fff 55%,var(--preview-lt-bg) 100%)",
+                        p: "6px 8px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "3px",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: 3,
+                          width: "60%",
+                          borderRadius: "var(--r-xs)",
+                          background:
+                            mode === "dark"
+                              ? "var(--preview-dk-bar1)"
+                              : "var(--preview-lt-bar1)",
+                        }}
                       />
                       <Box
                         sx={{
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {label}
-                      </Box>
-                    </Box>
-                    {culture === code && (
-                      <Box
-                        sx={{
-                          width: 11,
-                          height: 11,
-                          borderRadius: "50%",
-                          background: "var(--accent)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <CheckOutlined
-                          sx={{ fontSize: 7, color: "var(--s1)" }}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Apparence */}
-          <Box>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "8px",
-              }}
-            >
-              {t("profile.field.appearance")}
-            </Box>
-            <Box sx={{ display: "flex", gap: "8px" }}>
-              {([Theme.Light, Theme.Dark] as const).map((mode) => (
-                <Box
-                  key={mode}
-                  component="button"
-                  type="button"
-                  onClick={() => handleThemeToggle(mode)}
-                  sx={{
-                    all: "unset",
-                    cursor: "pointer",
-                    width: 100,
-                    boxSizing: "border-box",
-                    borderRadius: "var(--r-sm)",
-                    overflow: "hidden",
-                    border:
-                      theme === mode
-                        ? "2px solid var(--accent)"
-                        : "2px solid var(--border)",
-                    boxShadow:
-                      theme === mode
-                        ? "0 0 0 2px var(--accent-subtle)"
-                        : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: 48,
-                      background:
-                        mode === Theme.Dark
-                          ? "linear-gradient(150deg,var(--preview-dk-surface) 55%,var(--preview-dk-surface2) 100%)"
-                          : "linear-gradient(150deg,#fff 55%,var(--preview-lt-bg) 100%)",
-                      p: "6px 8px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "3px",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        height: 3,
-                        width: "60%",
-                        borderRadius: "var(--r-xs)",
-                        background:
-                          mode === "dark"
-                            ? "var(--preview-dk-bar1)"
-                            : "var(--preview-lt-bar1)",
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        height: 3,
-                        width: "80%",
-                        borderRadius: "var(--r-xs)",
-                        background:
-                          mode === "dark"
-                            ? "var(--preview-dk-bar2)"
-                            : "var(--preview-lt-bar2)",
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        height: 3,
-                        width: "40%",
-                        borderRadius: "var(--r-xs)",
-                        background:
-                          mode === "dark"
-                            ? "var(--preview-dk-accent)"
-                            : "var(--preview-lt-accent)",
-                      }}
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      px: "8px",
-                      py: "4px",
-                      background:
-                        mode === "dark"
-                          ? "var(--preview-dk-bg)"
-                          : "var(--preview-lt-bg)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: "3px" }}
-                    >
-                      {mode === "dark" ? (
-                        <DarkModeOutlined
-                          sx={{
-                            fontSize: 8,
-                            color: "var(--preview-dk-text-soft)",
-                          }}
-                        />
-                      ) : (
-                        <LightModeOutlined
-                          sx={{
-                            fontSize: 8,
-                            color: "var(--preview-lt-text-soft)",
-                          }}
-                        />
-                      )}
-                      <Box
-                        sx={{
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          color:
+                          height: 3,
+                          width: "80%",
+                          borderRadius: "var(--r-xs)",
+                          background:
                             mode === "dark"
-                              ? "var(--preview-dk-text-strong)"
-                              : "var(--preview-lt-text-strong)",
+                              ? "var(--preview-dk-bar2)"
+                              : "var(--preview-lt-bar2)",
                         }}
-                      >
-                        {mode === "dark"
-                          ? t("profile.theme.dark")
-                          : t("profile.theme.light")}
-                      </Box>
-                    </Box>
-                    {theme === mode && (
+                      />
                       <Box
                         sx={{
-                          width: 11,
-                          height: 11,
-                          borderRadius: "50%",
-                          background: "var(--accent)",
+                          height: 3,
+                          width: "40%",
+                          borderRadius: "var(--r-xs)",
+                          background:
+                            mode === "dark"
+                              ? "var(--preview-dk-accent)"
+                              : "var(--preview-lt-accent)",
+                        }}
+                      />
+                    </Box>
+                    <Box
+                      sx={{
+                        px: "8px",
+                        py: "4px",
+                        background:
+                          mode === "dark"
+                            ? "var(--preview-dk-bg)"
+                            : "var(--preview-lt-bg)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box
+                        sx={{
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
+                          gap: "3px",
                         }}
                       >
-                        <CheckOutlined
-                          sx={{ fontSize: 7, color: "var(--s1)" }}
-                        />
+                        {mode === "dark" ? (
+                          <DarkModeOutlined
+                            sx={{
+                              fontSize: 8,
+                              color: "var(--preview-dk-text-soft)",
+                            }}
+                          />
+                        ) : (
+                          <LightModeOutlined
+                            sx={{
+                              fontSize: 8,
+                              color: "var(--preview-lt-text-soft)",
+                            }}
+                          />
+                        )}
+                        <Box
+                          sx={{
+                            fontSize: "9px",
+                            fontWeight: 600,
+                            color:
+                              mode === "dark"
+                                ? "var(--preview-dk-text-strong)"
+                                : "var(--preview-lt-text-strong)",
+                          }}
+                        >
+                          {mode === "dark"
+                            ? t("profile.theme.dark")
+                            : t("profile.theme.light")}
+                        </Box>
                       </Box>
-                    )}
+                      {theme === mode && (
+                        <Box
+                          sx={{
+                            width: 11,
+                            height: 11,
+                            borderRadius: "50%",
+                            background: "var(--accent)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckOutlined
+                            sx={{ fontSize: 7, color: "var(--s1)" }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                ))}
+              </Box>
             </Box>
           </Box>
         </Box>
-      </Box>
 
-      <Box sx={CARD_SX}>
-        <InnerDivider label={t("profile.section.gdpr")} />
+        <Box sx={CARD_SX}>
+          <InnerDivider label={t("profile.section.gdpr")} />
 
-        {/* Export row */}
-        <Box
-          sx={{
-            px: "16px",
-            py: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "2px",
-              }}
-            >
-              {t("profile.gdpr.export_label")}
-            </Box>
-            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-              {t("profile.gdpr.export_help")}
-            </Box>
-          </Box>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleExportGdpr}
-            disabled={exportingGdpr}
+          {/* Export row */}
+          <Box
+            sx={{
+              px: "16px",
+              py: "11px",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              borderBottom: "1px solid var(--border)",
+            }}
           >
-            {exportingGdpr
-              ? t("profile.gdpr.exporting")
-              : t("profile.gdpr.export_button")}
-          </Button>
-        </Box>
-
-        {/* Danger zone */}
-        <Box
-          sx={{
-            px: "16px",
-            py: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            background: "transparent",
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--red)",
-                mb: "2px",
-              }}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "2px",
+                }}
+              >
+                {t("profile.gdpr.export_label")}
+              </Box>
+              <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                {t("profile.gdpr.export_help")}
+              </Box>
+            </Box>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleExportGdpr}
+              disabled={exportingGdpr}
             >
-              {t("profile.gdpr.delete_label")}
-            </Box>
-            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-              {t("profile.gdpr.delete_help")}
-            </Box>
+              {exportingGdpr
+                ? t("profile.gdpr.exporting")
+                : t("profile.gdpr.export_button")}
+            </Button>
           </Box>
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => setDeleteDialogOpen(true)}
+
+          {/* Danger zone */}
+          <Box
+            sx={{
+              px: "16px",
+              py: "11px",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              background: "transparent",
+            }}
           >
-            {t("profile.gdpr.delete_button")}
-          </Button>
-        </Box>
-
-        <Box
-          sx={{
-            px: "16px",
-            py: "14px",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: "14px",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text)",
-                mb: "2px",
-              }}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--red)",
+                  mb: "2px",
+                }}
+              >
+                {t("profile.gdpr.delete_label")}
+              </Box>
+              <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                {t("profile.gdpr.delete_help")}
+              </Box>
+            </Box>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => setDeleteDialogOpen(true)}
             >
-              {t("profile.legal.label")}
-            </Box>
-            <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-              {t("profile.legal.help")}
-            </Box>
+              {t("profile.gdpr.delete_button")}
+            </Button>
           </Box>
-          <LegalLinks
-            tone="app"
-            variant="chips"
-            sx={{ justifyContent: "flex-end" }}
-          />
+
+          <Box
+            sx={{
+              px: "16px",
+              py: "11px",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "14px",
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  mb: "2px",
+                }}
+              >
+                {t("profile.legal.label")}
+              </Box>
+              <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
+                {t("profile.legal.help")}
+              </Box>
+            </Box>
+            <LegalLinks
+              tone="app"
+              variant="chips"
+              sx={{ justifyContent: "flex-end" }}
+            />
+          </Box>
         </Box>
       </Box>
 

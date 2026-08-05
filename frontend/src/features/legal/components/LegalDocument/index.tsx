@@ -10,7 +10,6 @@ import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
 import { LegalSectionCard } from "@/features/legal/components/LegalSectionCard";
 import { LegalSummary } from "@/features/legal/components/LegalSummary";
-import { LegalSummaryBar } from "@/features/legal/components/LegalSummaryBar";
 import {
   LEGAL_DOCUMENTS,
   LEGAL_HEADER_HEIGHT,
@@ -150,8 +149,6 @@ export const LegalDocument: React.FC<Props> = ({
         />
       </Box>
 
-      <LegalSummaryBar sections={sections} activeId={activeId} />
-
       <Box
         sx={{
           ...CONTENT_SX,
@@ -276,8 +273,12 @@ export const LegalDocument: React.FC<Props> = ({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", lg: "244px minmax(0, 1fr)" },
-            gap: { xs: "24px", lg: "40px" },
+            gridTemplateColumns: {
+              xs: "124px minmax(0, 1fr)",
+              sm: "180px minmax(0, 1fr)",
+              lg: "244px minmax(0, 1fr)",
+            },
+            gap: { xs: "14px", sm: "24px", lg: "40px" },
             mt: "30px",
             alignItems: "start",
           }}

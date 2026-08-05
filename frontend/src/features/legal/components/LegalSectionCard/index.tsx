@@ -37,15 +37,11 @@ export const LegalSectionCard: React.FC<Props> = ({
         <Box
           sx={{
             fontFamily: "var(--font-mono)",
-            fontSize: "10.5px",
+            fontSize: "15px",
             fontWeight: 700,
             color: "var(--accent)",
-            background: "var(--accent-subtle)",
-            border: "1px solid var(--accent-border)",
-            borderRadius: "var(--r-sm)",
-            px: "7px",
-            py: "3px",
-            lineHeight: 1.3,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.1,
           }}
         >
           {numbered(index)}
