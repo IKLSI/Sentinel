@@ -397,6 +397,14 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("LastScanError")
                         .HasColumnType("text");
 
+                    b.Property<string>("LastScanWarning")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastScannedCommitSha")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -832,6 +840,10 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("CveAlias")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("CveId")
                         .IsRequired()

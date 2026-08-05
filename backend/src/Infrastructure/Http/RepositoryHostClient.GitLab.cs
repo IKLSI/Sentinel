@@ -74,9 +74,35 @@ public partial class RepositoryHostClient
         return new RepositoryListing(true, null, result, truncated);
     }
 
-    private static async Task<List<(string Name, string Url)>> ListGitLabFilesAsync(HttpClient client, string owner, string repo, string? token = null)
+    private async Task<string?> GetGitLabHeadCommitAsync(string owner, string repo, string? token)
     {
-        List<(string, string)> result = new List<(string, string)>();
+        string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
+
+        try
+        {
+            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
+                $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/commits?per_page=1");
+            if (!string.IsNullOrEmpty(token)) request.Headers.Add("PRIVATE-TOKEN", token);
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return null;
+
+            List<JsonElement>? commits = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+            if (commits == null || commits.Count == 0) return null;
+
+            return commits[0].TryGetProperty("id", out JsonElement id) ? id.GetString() : null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "GitLab head commit lookup failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    private static async Task<RepositoryFileListing> ListGitLabFilesAsync(HttpClient client, string owner, string repo, string reference, string? token = null)
+    {
+        List<(string Name, string Url)> result = new List<(string, string)>();
         string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
         int page = 1;
 
@@ -86,7 +112,7 @@ public partial class RepositoryHostClient
             try
             {
                 using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
-                    $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/tree?recursive=true&per_page=100&page={page}");
+                    $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/tree?recursive=true&per_page=100&page={page}&ref={reference}");
                 if (!string.IsNullOrEmpty(token))
                     request.Headers.Add("PRIVATE-TOKEN", token);
                 using HttpResponseMessage response = await client.SendAsync(request);
@@ -106,7 +132,7 @@ public partial class RepositoryHostClient
                 if (type != "blob") continue;
                 if (IsInSkippedDirectory(path)) continue;
 
-                string rawUrl = $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/files/{Uri.EscapeDataString(path)}/raw?ref=HEAD";
+                string rawUrl = $"https://gitlab.com/api/v4/projects/{encodedPath}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={reference}";
                 result.Add((name, rawUrl));
             }
 
@@ -114,7 +140,7 @@ public partial class RepositoryHostClient
             page++;
         }
 
-        return result;
+        return new RepositoryFileListing(result, false);
     }
 
 }

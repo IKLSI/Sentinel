@@ -16,15 +16,25 @@ public class HealthScoreCalculatorTests
         Runtimes = new List<Runtime>(),
     };
 
-    private static Project ProjectWithDependencies(int count, DependencyStatus status)
+    private static Project ProjectWithDependencies(int count, DependencyStatus status,
+        DependencyType type = DependencyType.Prod)
     {
+        (string current, string latest) = status switch
+        {
+            DependencyStatus.MajorUpdate => ("1.0.0", "2.0.0"),
+            DependencyStatus.MinorUpdate => ("1.0.0", "1.1.0"),
+            _ => ("1.0.0", "1.0.0"),
+        };
+
         Project project = EmptyProject();
         for (int i = 0; i < count; i++)
         {
             project.Dependencies.Add(new Dependency
             {
                 Name = $"dep-{i}",
-                CurrentVersion = "1.0.0",
+                CurrentVersion = current,
+                LatestVersion = latest,
+                Type = type,
                 Status = status,
             });
         }
@@ -164,6 +174,42 @@ public class HealthScoreCalculatorTests
 
         HealthScoreCalculator.Calculate(partiallyFixed)
             .Should().BeGreaterThan(HealthScoreCalculator.Calculate(heavilyAffected));
+    }
+
+    [Fact]
+    public void Calculate_OutdatedDevDependencies_WeighLessThanProdOnes()
+    {
+        Project prod = ProjectWithDependencies(50, DependencyStatus.MajorUpdate, DependencyType.Prod);
+        Project dev = ProjectWithDependencies(50, DependencyStatus.MajorUpdate, DependencyType.Dev);
+
+        HealthScoreCalculator.Calculate(dev)
+            .Should().BeGreaterThan(HealthScoreCalculator.Calculate(prod));
+    }
+
+    [Fact]
+    public void Calculate_VulnerableDevDependency_WeighsLessThanAProdOne()
+    {
+        Project prod = ProjectWithDependencies(10, DependencyStatus.UpToDate, DependencyType.Prod);
+        AddVulnerability(prod.Dependencies.First(), VulnerabilitySeverity.Critical);
+
+        Project dev = ProjectWithDependencies(10, DependencyStatus.UpToDate, DependencyType.Dev);
+        AddVulnerability(dev.Dependencies.First(), VulnerabilitySeverity.Critical);
+
+        HealthScoreCalculator.Calculate(dev)
+            .Should().BeGreaterThan(HealthScoreCalculator.Calculate(prod));
+    }
+
+    [Fact]
+    public void Calculate_VulnerableDependency_IsStillCountedAsOutdated()
+    {
+        Project outdated = ProjectWithDependencies(10, DependencyStatus.MajorUpdate);
+        Project current = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+
+        foreach (Dependency dependency in outdated.Dependencies.Concat(current.Dependencies))
+            dependency.Status = DependencyStatus.Vulnerable;
+
+        HealthScoreCalculator.Calculate(outdated)
+            .Should().BeLessThan(HealthScoreCalculator.Calculate(current));
     }
 
     [Fact]

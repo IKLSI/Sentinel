@@ -2611,6 +2611,7 @@ export interface components {
       /** Format: date-time */
       lastScanAt: string | null;
       lastScanError: string | null;
+      lastScanWarning: string | null;
       name: string;
       repositoryType: string;
       repositoryUrl: string | null;
@@ -2873,6 +2874,7 @@ export interface components {
       date: string;
     };
     VulnerabilityDto: {
+      cveAlias: string | null;
       cveId: string;
       /** Format: double */
       cvssScore: number;

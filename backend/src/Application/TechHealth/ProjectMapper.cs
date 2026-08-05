@@ -12,6 +12,7 @@ public static class ProjectMapper
         RepositoryType = project.RepositoryType.ToString(),
         LastScanAt = project.LastScanAt,
         LastScanError = project.LastScanError,
+        LastScanWarning = project.LastScanWarning,
         HealthScore = project.HealthScore,
         HealthGrade = project.HealthGrade,
         Coverage = project.Coverage.ToString(),
@@ -45,6 +46,7 @@ public static class ProjectMapper
     {
         Id = vulnerability.Id,
         CveId = vulnerability.CveId,
+        CveAlias = vulnerability.CveAlias,
         CvssScore = vulnerability.CvssScore,
         Description = vulnerability.Description,
         Severity = vulnerability.Severity.ToString(),

@@ -79,13 +79,24 @@ public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, 
         return null;
     }
 
-    public async Task<List<(string Name, string Url)>> ListFilesAsync(string host, string owner, string repo, string? tokenOverride = null)
+    public async Task<string?> GetHeadCommitAsync(string host, string owner, string repo, string? tokenOverride = null)
     {
         if (host.Contains("github"))
-            return await ListGitHubFilesAsync(owner, repo, tokenOverride);
+            return await GetGitHubHeadCommitAsync(owner, repo, tokenOverride);
         if (host.Contains("gitlab"))
-            return await ListGitLabFilesAsync(httpClientFactory.CreateClient(HttpClientNames.Registry), owner, repo, tokenOverride);
-        return [];
+            return await GetGitLabHeadCommitAsync(owner, repo, tokenOverride);
+        return null;
+    }
+
+    public async Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo, string? tokenOverride = null, string? commitSha = null)
+    {
+        string reference = string.IsNullOrEmpty(commitSha) ? "HEAD" : commitSha;
+
+        if (host.Contains("github"))
+            return await ListGitHubFilesAsync(owner, repo, reference, tokenOverride);
+        if (host.Contains("gitlab"))
+            return await ListGitLabFilesAsync(httpClientFactory.CreateClient(HttpClientNames.Registry), owner, repo, reference, tokenOverride);
+        return new RepositoryFileListing([], false);
     }
 
     public async Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null)

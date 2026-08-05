@@ -317,6 +317,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.ScanFrequency).HasConversion<string>();
             entity.Property(e => e.Coverage).HasConversion<string>();
             entity.Property(e => e.HealthGrade).HasMaxLength(2);
+            entity.Property(e => e.LastScanWarning).HasMaxLength(100);
+            entity.Property(e => e.LastScannedCommitSha).HasMaxLength(64);
             entity.HasIndex(e => e.OrganizationId);
 
             entity.HasOne(e => e.Organization)
@@ -353,6 +355,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CveId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CveAlias).HasMaxLength(50);
             entity.Property(e => e.CvssScore).HasPrecision(4, 1);
             entity.Property(e => e.Severity).HasConversion<string>();
             entity.HasIndex(e => e.DependencyId);

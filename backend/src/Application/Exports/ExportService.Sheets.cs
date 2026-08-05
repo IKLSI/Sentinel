@@ -248,7 +248,7 @@ public partial class ExportService
                 (Dependency dep, Vulnerability v) = vulnPairs[i];
                 SetRowBackground(ws, currentRow, vulnHeaders.Length, i % 2 == 1 ? AltRowColor : XLColor.White, autoHeight: true);
 
-                ws.Cell(currentRow, 1).Value = v.CveId;
+                ws.Cell(currentRow, 1).Value = v.CveAlias ?? v.CveId;
                 ws.Cell(currentRow, 1).Style.Font.FontColor = LinkColor;
 
                 IXLCell cvssCell = ws.Cell(currentRow, 2);

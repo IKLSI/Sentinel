@@ -92,29 +92,52 @@ public class ProjectScanService(
         string? scanError = null;
         int manifestsRead = 0;
         bool scanRan = false;
+        bool repositoryUnchanged = false;
+        bool inventoryReplaced = false;
+        string? scannedCommitSha = null;
+        string? scanWarning = null;
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
             scanRan = true;
 
-            ScanOutcome outcome = await repositoryScanner.ScanRepositoryAsync(projectId, project.RepositoryUrl,
-                await ResolveRepositoryTokenAsync(project));
+            string? repositoryToken = await ResolveRepositoryTokenAsync(project);
+            string? headCommitSha = await repositoryScanner.GetHeadCommitAsync(project.RepositoryUrl, repositoryToken);
 
-            scanError = outcome.Error;
-            manifestsRead = outcome.ManifestsRead;
+            repositoryUnchanged = headCommitSha != null
+                && headCommitSha == project.LastScannedCommitSha
+                && project.Coverage == ScanCoverage.Covered;
 
-            if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
+            if (repositoryUnchanged)
             {
-                await inventoryWriter.ReplaceInventoryAsync(projectId, outcome.Dependencies, outcome.Runtimes,
-                    CancellationToken.None);
-            }
-            else if (scanError != null)
-            {
-                logger.LogWarning("Scan of {Url} failed: {Error} — existing data kept", project.RepositoryUrl, scanError);
+                logger.LogInformation("Project {ProjectId}: repository unchanged at {Sha}, manifests not re-read",
+                    projectId, headCommitSha);
             }
             else
             {
-                logger.LogWarning("Scan of {Url}: no data returned, existing data kept", project.RepositoryUrl);
+                ScanOutcome outcome = await repositoryScanner.ScanRepositoryAsync(projectId, project.RepositoryUrl,
+                    repositoryToken, headCommitSha);
+
+                scanError = outcome.Error;
+                manifestsRead = outcome.ManifestsRead;
+
+                if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
+                {
+                    await inventoryWriter.ReplaceInventoryAsync(projectId, outcome.Dependencies, outcome.Runtimes,
+                        CancellationToken.None);
+
+                    scannedCommitSha = headCommitSha;
+                    scanWarning = outcome.Warning;
+                    inventoryReplaced = true;
+                }
+                else if (scanError != null)
+                {
+                    logger.LogWarning("Scan of {Url} failed: {Error} — existing data kept", project.RepositoryUrl, scanError);
+                }
+                else
+                {
+                    logger.LogWarning("Scan of {Url}: no data returned, existing data kept", project.RepositoryUrl);
+                }
             }
         }
 
@@ -124,6 +147,16 @@ public class ProjectScanService(
         if (reloadedProject == null) return;
 
         project = reloadedProject;
+
+        if (repositoryUnchanged)
+        {
+            await repositoryScanner.RefreshVersionsAsync(project.Dependencies.ToList());
+        }
+        else if (inventoryReplaced)
+        {
+            project.LastScannedCommitSha = scannedCommitSha;
+            project.LastScanWarning = scanWarning;
+        }
 
         VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScanner
             .ScanAsync(project.Dependencies.ToList(), previousDetections);

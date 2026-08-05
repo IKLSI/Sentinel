@@ -82,37 +82,62 @@ public partial class RepositoryHostClient
         return request;
     }
 
-    private async Task<List<(string Name, string Url)>> ListGitHubFilesAsync(string owner, string repo, string? token = null)
+    private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token)
     {
-        List<(string, string)> result = new List<(string, string)>();
+        try
+        {
+            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
+                $"https://api.github.com/repos/{owner}/{repo}/commits/HEAD", token);
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return null;
+
+            JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+            return payload.TryGetProperty("sha", out JsonElement sha) ? sha.GetString() : null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "GitHub head commit lookup failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
+    private async Task<RepositoryFileListing> ListGitHubFilesAsync(string owner, string repo, string reference, string? token = null)
+    {
+        List<(string Name, string Url)> result = new List<(string, string)>();
         JsonElement treeResponse;
         try
         {
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
-                $"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1", token);
+                $"https://api.github.com/repos/{owner}/{repo}/git/trees/{reference}?recursive=1", token);
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("GitHub API {Owner}/{Repo}: {StatusCode}", owner, repo, (int)response.StatusCode);
-                return result;
+                return new RepositoryFileListing(result, false);
             }
             treeResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "GitHub file listing failed for {Owner}/{Repo}", owner, repo);
-            return result;
+            return new RepositoryFileListing(result, false);
         }
 
-        if (treeResponse.TryGetProperty("truncated", out JsonElement truncated) &&
-            truncated.ValueKind == JsonValueKind.True)
+        bool isTruncated = treeResponse.TryGetProperty("truncated", out JsonElement truncated)
+            && truncated.ValueKind == JsonValueKind.True;
+
+        if (isTruncated)
         {
             logger.LogWarning("GitHub tree for {Owner}/{Repo} is truncated: some manifests are not analyzed",
                 owner, repo);
         }
 
-        if (!treeResponse.TryGetProperty("tree", out JsonElement tree)) return result;
+        if (!treeResponse.TryGetProperty("tree", out JsonElement tree))
+            return new RepositoryFileListing(result, isTruncated);
 
         foreach (JsonElement item in tree.EnumerateArray())
         {
@@ -123,10 +148,10 @@ public partial class RepositoryHostClient
             if (IsInSkippedDirectory(path)) continue;
 
             string fileName = Path.GetFileName(path);
-            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}"));
+            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}"));
         }
 
-        return result;
+        return new RepositoryFileListing(result, isTruncated);
     }
 
 }

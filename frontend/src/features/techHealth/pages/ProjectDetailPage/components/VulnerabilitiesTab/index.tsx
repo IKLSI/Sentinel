@@ -2,6 +2,7 @@ import type React from "react";
 import { memo } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { TD } from "@/components/ui/common/VirtualTable/TableCells";
 import {
@@ -57,20 +58,22 @@ const VulnRow = memo<RowProps>(({ vuln, index, measureRef }) => {
       </TD>
       <TD>{vuln.description}</TD>
       <TD>
-        <Box
-          component="span"
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "10px",
-            color: "var(--cyan)",
-            background: "var(--cyan-subtle)",
-            px: "7px",
-            py: "3px",
-            borderRadius: "var(--r-xs)",
-          }}
-        >
-          {vuln.cveId}
-        </Box>
+        <AppTooltip title={vuln.cveAlias ? vuln.cveId : ""}>
+          <Box
+            component="span"
+            sx={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              color: "var(--cyan)",
+              background: "var(--cyan-subtle)",
+              px: "7px",
+              py: "3px",
+              borderRadius: "var(--r-xs)",
+            }}
+          >
+            {vuln.cveAlias ?? vuln.cveId}
+          </Box>
+        </AppTooltip>
       </TD>
       <TD>
         {vuln.fixedVersion ? (

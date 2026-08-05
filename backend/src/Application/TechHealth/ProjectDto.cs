@@ -8,6 +8,7 @@ public class ProjectDto
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }
+    public string? LastScanWarning { get; set; }
     public int? HealthScore { get; set; }
     public string? HealthGrade { get; set; }
     public string Coverage { get; set; } = string.Empty;
@@ -37,6 +38,7 @@ public class VulnerabilityDto
 {
     public Guid Id { get; set; }
     public string CveId { get; set; } = string.Empty;
+    public string? CveAlias { get; set; }
     public decimal CvssScore { get; set; }
     public string Description { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;

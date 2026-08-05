@@ -39,7 +39,9 @@ public static partial class ServiceCollectionExtensions
 
     public static IServiceCollection AddHttpRegistryClients(this IServiceCollection services)
     {
+        services.AddSingleton<HostConcurrencyLimiter>();
         services.AddTransient<ResilientHttpHandler>();
+        services.AddTransient<HostConcurrencyHandler>();
 
         services.AddResilientHttpClient(HttpClientNames.Osv, 90, client =>
         {
@@ -66,7 +68,9 @@ public static partial class ServiceCollectionExtensions
         {
             configure(client);
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        }).AddHttpMessageHandler<ResilientHttpHandler>();
+        })
+        .AddHttpMessageHandler<ResilientHttpHandler>()
+        .AddHttpMessageHandler<HostConcurrencyHandler>();
 
         return services;
     }

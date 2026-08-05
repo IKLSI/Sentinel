@@ -1,9 +1,11 @@
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Domain.TechHealth;
 
 public static class HealthScoreCalculator
 {
+    private const double DevDependencyWeight = 0.25;
     private const int MaxOutdatedPenalty = 40;
     private const int MajorUpdateWeight = 2;
     private const int MinorUpdateWeight = 1;
@@ -18,18 +20,21 @@ public static class HealthScoreCalculator
 
     public static int Calculate(Project project)
     {
-        int penalty = OutdatedPenalty(project);
+        double penalty = OutdatedPenalty(project);
 
         foreach (Dependency dependency in project.Dependencies)
         {
-            if (dependency.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty;
+            double weight = WeightOf(dependency);
 
-            penalty += dependency.Vulnerabilities.Sum(vulnerability => SeverityPenalty(vulnerability.Severity));
+            if (dependency.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty * weight;
+
+            penalty += dependency.Vulnerabilities.Sum(vulnerability => SeverityPenalty(vulnerability.Severity))
+                * weight;
         }
 
         penalty += project.Runtimes.Count(runtime => runtime.IsEol) * EolRuntimePenalty;
 
-        return (int)Math.Round(MaxScore * Math.Exp(-penalty / (double)ScoreDecayConstant));
+        return (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
     }
 
     public static string ToGrade(int score) => score switch
@@ -51,19 +56,26 @@ public static class HealthScoreCalculator
         _ => 0
     };
 
-    private static int OutdatedPenalty(Project project)
+    private static double WeightOf(Dependency dependency) =>
+        dependency.Type == DependencyType.Dev ? DevDependencyWeight : 1;
+
+    private static double OutdatedPenalty(Project project)
     {
         if (project.Dependencies.Count == 0) return 0;
 
-        int outdatedWeight = project.Dependencies.Sum(dependency => dependency.Status switch
+        double outdatedWeight = project.Dependencies
+            .Sum(dependency => UpdateWeight(dependency) * WeightOf(dependency));
+
+        double maxWeight = project.Dependencies.Count * MajorUpdateWeight;
+
+        return outdatedWeight / maxWeight * MaxOutdatedPenalty;
+    }
+
+    private static int UpdateWeight(Dependency dependency) =>
+        DependencyStatusCalculator.Compute(dependency.CurrentVersion, dependency.LatestVersion) switch
         {
             DependencyStatus.MajorUpdate => MajorUpdateWeight,
             DependencyStatus.MinorUpdate => MinorUpdateWeight,
             _ => 0
-        });
-
-        double maxWeight = project.Dependencies.Count * MajorUpdateWeight;
-
-        return (int)Math.Round(outdatedWeight / maxWeight * MaxOutdatedPenalty);
-    }
+        };
 }

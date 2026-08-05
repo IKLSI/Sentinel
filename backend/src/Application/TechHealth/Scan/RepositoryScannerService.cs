@@ -7,7 +7,8 @@ using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
-public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0);
+public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0,
+    string? Warning = null);
 
 internal record ParsedManifest(bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
 
@@ -20,7 +21,57 @@ public class RepositoryScannerService(
     private const int MaxConcurrentDownloads = 10;
     private const int MaxManifestFiles = 200;
 
-    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null)
+    private static void ApplyDeclaredTypes(List<Dependency> lockDeps, List<Dependency> manifestDeps)
+    {
+        if (lockDeps.Count == 0 || manifestDeps.Count == 0) return;
+
+        Dictionary<(DependencyEcosystem, string), DependencyType> declaredTypes = manifestDeps
+            .GroupBy(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
+            .ToDictionary(
+                group => group.Key,
+                group => group.Any(d => d.Type == DependencyType.Prod)
+                    ? DependencyType.Prod
+                    : DependencyType.Dev);
+
+        foreach (Dependency dependency in lockDeps)
+        {
+            if (declaredTypes.TryGetValue((dependency.Ecosystem, dependency.Name.ToLowerInvariant()),
+                out DependencyType declared))
+            {
+                dependency.Type = declared;
+            }
+        }
+    }
+
+    private static string? ResolveWarning(bool listingTruncated, int discoveredManifests, int unreadableManifests)
+    {
+        if (listingTruncated) return ScanWarningCodes.RepositoryTruncated;
+        if (discoveredManifests > MaxManifestFiles) return ScanWarningCodes.ManifestLimitReached;
+
+        return unreadableManifests > 0 ? ScanWarningCodes.ManifestUnreadable : null;
+    }
+
+    public Task<string?> GetHeadCommitAsync(string repoUrl, string? tokenOverride = null)
+    {
+        if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
+            return Task.FromResult<string?>(null);
+
+        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, tokenOverride);
+    }
+
+    public async Task RefreshVersionsAsync(List<Dependency> dependencies)
+    {
+        if (dependencies.Count == 0) return;
+
+        await registry.FetchLatestVersionsAsync(dependencies);
+
+        foreach (Dependency dependency in dependencies)
+            dependency.Status = DependencyStatusCalculator.Compute(dependency.CurrentVersion,
+                dependency.LatestVersion);
+    }
+
+    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null,
+        string? commitSha = null)
     {
         try
         {
@@ -31,15 +82,16 @@ public class RepositoryScannerService(
             }
 
             (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
-            List<(string Name, string Url)> files = await hostClient.ListFilesAsync(host, owner, repo, tokenOverride);
+            RepositoryFileListing listing = await hostClient.ListFilesAsync(host, owner, repo, tokenOverride,
+                commitSha);
 
-            if (files.Count == 0)
+            if (listing.Files.Count == 0)
             {
                 return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
                     ErrorCodes.ScanNoAccessibleFiles);
             }
 
-            List<(string Name, string Url)> discoveredManifests = files
+            List<(string Name, string Url)> discoveredManifests = listing.Files
                 .Where(f => ManifestParserService.IsManifest(f.Name))
                 .ToList();
 
@@ -84,6 +136,9 @@ public class RepositoryScannerService(
             List<Runtime> allRuntimes = new();
             int manifestsRead = 0;
 
+            string? warning = ResolveWarning(listing.Truncated, discoveredManifests.Count,
+                parsedManifests.Count(parsed => parsed == null));
+
             foreach (ParsedManifest parsed in parsedManifests.OfType<ParsedManifest>())
             {
                 manifestsRead++;
@@ -98,6 +153,8 @@ public class RepositoryScannerService(
                     allRuntimes.AddRange(parsed.Runtimes);
                 }
             }
+
+            ApplyDeclaredTypes(lockDeps, manifestDeps);
 
             HashSet<(DependencyEcosystem Ecosystem, string Name)> lockedPackages = lockDeps
                 .Select(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
@@ -119,7 +176,7 @@ public class RepositoryScannerService(
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead, warning);
         }
         catch (Exception ex)
         {
