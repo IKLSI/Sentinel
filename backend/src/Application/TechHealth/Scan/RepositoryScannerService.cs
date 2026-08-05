@@ -66,9 +66,17 @@ public class RepositoryScannerService(
 
                 if (content == null) return null;
 
-                (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
+                try
+                {
+                    (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
 
-                return new ParsedManifest(ManifestParserService.IsLockFile(file.Name), deps, rts);
+                    return new ParsedManifest(ManifestParserService.IsLockFile(file.Name), deps, rts);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Manifest {File} could not be parsed and is ignored", file.Name);
+                    return null;
+                }
             }));
 
             List<Dependency> manifestDeps = new();

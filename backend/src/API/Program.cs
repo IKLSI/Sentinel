@@ -12,8 +12,12 @@ namespace Sentinel.API;
 
 public static class Program
 {
+    private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromSeconds(2);
+
     public static async Task Main(string[] args)
     {
+        AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", RegexMatchTimeout);
+
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;

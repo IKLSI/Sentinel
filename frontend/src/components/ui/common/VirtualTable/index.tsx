@@ -70,6 +70,8 @@ export function VirtualTable<T>({
           flexShrink: 0,
           overflow: "hidden",
           scrollbarGutter: "stable",
+          background: "var(--s2)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <Box

@@ -19,8 +19,6 @@ export const TH: React.FC<{
       color: "var(--muted)",
       textAlign: align,
       padding: "10px 16px",
-      background: "var(--s2)",
-      borderBottom: "1px solid var(--border)",
       whiteSpace: "nowrap",
       width: width ?? "auto",
       position: "sticky",
