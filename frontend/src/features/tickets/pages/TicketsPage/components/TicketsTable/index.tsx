@@ -80,42 +80,45 @@ const TicketsTableComponent: React.FC<Props> = ({
   return (
     <>
       <Box
-        component="table"
-        sx={{
-          width: "100%",
-          borderCollapse: "collapse",
-          tableLayout: "fixed",
-          flexShrink: 0,
-        }}
+        sx={{ flexShrink: 0, overflow: "hidden", scrollbarGutter: "stable" }}
       >
-        <Box component="colgroup">
-          {COLS.map((w) => (
-            <Box key={w} component="col" sx={{ width: w }} />
-          ))}
-        </Box>
-        <Box component="thead">
-          <Box component="tr">
-            {columns.map(({ col, label }) => {
-              const sortable = isSortableColumn(col);
-              return (
-                <SortableTh
-                  key={col}
-                  mono
-                  align={col === COMMENTS_COLUMN_KEY ? "center" : "left"}
-                  sortable={sortable}
-                  active={sortable && sort.col === col}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => isSortableColumn(col) && onToggleSort(col)}
-                >
-                  {label}
-                </SortableTh>
-              );
-            })}
+        <Box
+          component="table"
+          sx={{
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
+          }}
+        >
+          <Box component="colgroup">
+            {COLS.map((w) => (
+              <Box key={w} component="col" sx={{ width: w }} />
+            ))}
+          </Box>
+          <Box component="thead">
+            <Box component="tr">
+              {columns.map(({ col, label }) => {
+                const sortable = isSortableColumn(col);
+                return (
+                  <SortableTh
+                    key={col}
+                    mono
+                    align={col === COMMENTS_COLUMN_KEY ? "center" : "left"}
+                    sortable={sortable}
+                    active={sortable && sort.col === col}
+                    ascending={sort.dir === SortDirection.Asc}
+                    onSort={() => isSortableColumn(col) && onToggleSort(col)}
+                  >
+                    {label}
+                  </SortableTh>
+                );
+              })}
+            </Box>
           </Box>
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: "auto" }}>
+      <Box sx={{ flex: 1, overflowY: "auto", scrollbarGutter: "stable" }}>
         <Box
           component="table"
           sx={{

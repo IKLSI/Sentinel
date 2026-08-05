@@ -103,7 +103,11 @@ export const EditTicketModal: React.FC<Props> = ({
           />
         </Box>
         <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "14px",
+          }}
         >
           <Box>
             <Label>{t("tickets.list.field_priority")}</Label>
@@ -132,10 +136,6 @@ export const EditTicketModal: React.FC<Props> = ({
               ))}
             </Box>
           </Box>
-        </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
           <Box>
             <Label>{t("tickets.list.field_type")}</Label>
             <Box component="select" sx={modalSelectSx} {...register("type")}>
@@ -155,6 +155,10 @@ export const EditTicketModal: React.FC<Props> = ({
               </option>
             </Box>
           </Box>
+        </Box>
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
+        >
           <Box>
             <Label>{t("tickets.list.field_project")}</Label>
             <Box
@@ -170,20 +174,20 @@ export const EditTicketModal: React.FC<Props> = ({
               ))}
             </Box>
           </Box>
-        </Box>
-        <Box>
-          <Label>{t("tickets.list.field_assignee")}</Label>
-          <Box
-            component="select"
-            sx={modalSelectSx}
-            {...register("assignedToId")}
-          >
-            <option value="">{t("tickets.list.unassigned")}</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.firstName} {u.lastName}
-              </option>
-            ))}
+          <Box>
+            <Label>{t("tickets.list.field_assignee")}</Label>
+            <Box
+              component="select"
+              sx={modalSelectSx}
+              {...register("assignedToId")}
+            >
+              <option value="">{t("tickets.list.unassigned")}</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.firstName} {u.lastName}
+                </option>
+              ))}
+            </Box>
           </Box>
         </Box>
         <Box>
