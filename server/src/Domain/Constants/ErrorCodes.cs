@@ -7,7 +7,6 @@ public static class ErrorCodes
     public const string Forbidden = "errors.common.forbidden";
     public const string NotFound = "errors.common.not_found";
     public const string InvalidRequest = "errors.common.invalid_request";
-    public const string InvalidOperation = "errors.common.invalid_operation";
     public const string Concurrency = "errors.common.concurrency";
     public const string ValidationFailed = "errors.common.validation_failed";
     public const string TooManyRequests = "errors.common.too_many_requests";
@@ -31,12 +30,9 @@ public static class ErrorCodes
 
     public const string ApiKeyNameRequired = "errors.api_keys.name_required";
     public const string ApiKeyNameTooLong = "errors.api_keys.name_too_long";
-    public const string ApiKeyNotFound = "errors.api_keys.not_found";
 
     public const string BillingInvalidPlan = "errors.billing.invalid_plan";
     public const string BillingProviderUnavailable = "errors.billing.provider_unavailable";
-    public const string BillingFreePlanNoPayment = "errors.billing.free_plan_no_payment";
-    public const string BillingNoActiveSubscription = "errors.billing.no_active_subscription";
     public const string BillingPriceNotConfigured = "errors.billing.price_not_configured";
 
     public const string QuotaProjectsExceeded = "errors.quota.projects_exceeded";
@@ -51,12 +47,10 @@ public static class ErrorCodes
     public const string SettingsTokenRequired = "errors.settings.token_required";
     public const string SettingsInvalidGithubToken = "errors.settings.invalid_github_token";
     public const string SettingsInvalidGitlabToken = "errors.settings.invalid_gitlab_token";
-    public const string SettingsOrganizationNameRequired = "errors.settings.organization_name_required";
 
     public const string TicketNotFound = "errors.tickets.not_found";
     public const string TicketSearchTooLong = "errors.tickets.search_too_long";
     public const string TicketCommentNotFound = "errors.tickets.comment_not_found";
-    public const string TicketCommentContentRequired = "errors.tickets.comment_content_required";
     public const string TicketInvalidStatus = "errors.tickets.invalid_status";
     public const string TicketAttachmentNotFound = "errors.tickets.attachment_not_found";
     public const string TicketAttachmentFileMissing = "errors.tickets.attachment_file_missing";

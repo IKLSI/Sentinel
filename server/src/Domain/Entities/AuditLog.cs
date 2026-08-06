@@ -26,7 +26,6 @@ public enum AuditAction
     CommentUpdated,
     CommentDeleted,
     AttachmentUploaded,
-    AttachmentDeleted,
 
     ProjectCreated,
     ProjectUpdated,
@@ -38,8 +37,6 @@ public enum AuditAction
     GitlabIntegrationSaved,
 
     CheckoutStarted,
-    BillingPortalOpened,
-    SubscriptionUpdated,
 
     ApiKeyCreated,
     ApiKeyRevoked,

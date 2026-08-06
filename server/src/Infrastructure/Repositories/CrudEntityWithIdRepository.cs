@@ -21,9 +21,6 @@ public abstract class CrudEntityWithIdRepository<TEntity> : ICrudEntityWithIdRep
     public Task<TEntity?> GetOrDefaultAsync(Guid id, QueryTracking tracking, CancellationToken cancellationToken) =>
         Query(tracking).FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
-    public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking).AnyAsync(entity => entity.Id == id, cancellationToken);
-
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken) =>
         await Context.Set<TEntity>().AddAsync(entity, cancellationToken);
 

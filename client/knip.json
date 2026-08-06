@@ -1,10 +1,6 @@
 {
   "entry": ["index.html"],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignore": [
-    "src/types/api.gen.ts",
-    "src/configs/api-routes.gen.ts",
-    "src/domains/realtime/contract.gen.ts"
-  ],
+  "ignore": ["src/types/api.gen.ts"],
   "vite": { "config": ["vite.config.ts"] }
 }

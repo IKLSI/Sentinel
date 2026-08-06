@@ -10,5 +10,4 @@ export const ROUTES = {
   PRIVACY: "/privacy",
   LEGAL_NOTICE: "/legal-notice",
   TERMS: "/terms",
-  STYLE_GUIDE: "/style-guide",
 } as const;

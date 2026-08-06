@@ -30,8 +30,6 @@
   --prio-bg-2: #eaa8b6;
   --prio-fg: #8b1c38;
 
-  --avatar-user-1: #c4b5fd;
-  --avatar-user-2: #818cf8;
   --avatar-peer-1: #fda4af;
   --avatar-peer-2: #fb7185;
 
@@ -39,11 +37,8 @@
   --flag-2: #c4d8ff;
   --flag-3: #ffd8d8;
 
-  --overlay: rgba(8, 10, 16, 0.55);
-
   --auth-bg: #f0f1f8;
   --auth-indigo-950: #1e1b6e;
-  --auth-indigo-900: #312e9e;
   --auth-indigo-800: #4338ca;
   --auth-indigo-700: #4f46e5;
   --auth-indigo-500: #6366f1;
@@ -52,7 +47,6 @@
   --auth-indigo-200: #c7d2fe;
   --auth-indigo-50: #eef2ff;
   --auth-violet-400: #a78bfa;
-  --auth-pink-500: #ec4899;
   --auth-pink-300: #f9a8d4;
   --auth-amber-400: #fbbf24;
   --auth-gray-900: #111827;
@@ -117,8 +111,6 @@
   --prio-bg-2: #5e2438;
   --prio-fg: #ffb3c5;
 
-  --avatar-user-1: #818cf8;
-  --avatar-user-2: #4f46e5;
   --avatar-peer-1: #fb7185;
   --avatar-peer-2: #be123c;
 
@@ -126,12 +118,9 @@
   --flag-2: #263457;
   --flag-3: #4a2632;
 
-  --overlay: rgba(4, 7, 14, 0.68);
-
   --auth-bg: #0a0f1a;
   --auth-surface: #121a2b;
   --auth-indigo-950: #1e1b6e;
-  --auth-indigo-900: #3b37b8;
   --auth-indigo-800: #4f46e5;
   --auth-indigo-700: #5457e8;
   --auth-indigo-500: #818cf8;
@@ -1444,15 +1433,6 @@ a:hover {
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.72);
   line-height: 1.5;
-}
-
-/* Decorative grid SVG */
-.aip-decor {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
 }
 
 /* ── Panel droit ── */

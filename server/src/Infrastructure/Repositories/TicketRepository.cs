@@ -22,10 +22,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .Include(t => t.History).ThenInclude(h => h.User)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-    public Task<Ticket?> GetOrDefaultTrackedAsync(Guid ticketId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.Tracked)
-            .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
-
     public async Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter,
         TicketSortField sortBy, SortDirection sortDirection, int page, int pageSize,
         CancellationToken cancellationToken)

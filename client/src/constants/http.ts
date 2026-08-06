@@ -1,6 +1,5 @@
 export const HTTP_HEADERS = {
   CONTENT_TYPE: "Content-Type",
-  AUTHORIZATION: "Authorization",
 } as const;
 
 export const CONTENT_TYPES = {

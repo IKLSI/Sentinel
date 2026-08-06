@@ -296,28 +296,6 @@ export interface paths {
       };
     };
   };
-  "/api/billing/portal": {
-    post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CheckoutSessionDto"];
-            "text/json": components["schemas"]["CheckoutSessionDto"];
-            "text/plain": components["schemas"]["CheckoutSessionDto"];
-          };
-        };
-      };
-    };
-  };
   "/api/billing/status": {
     get: {
       parameters: {
@@ -1597,20 +1575,6 @@ export interface paths {
             "application/json": components["schemas"]["PlanOptionDto"][];
             "text/json": components["schemas"]["PlanOptionDto"][];
             "text/plain": components["schemas"]["PlanOptionDto"][];
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/billing/portal": {
-    post: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CheckoutSessionDto"];
-            "text/json": components["schemas"]["CheckoutSessionDto"];
-            "text/plain": components["schemas"]["CheckoutSessionDto"];
           };
         };
       };

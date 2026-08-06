@@ -7,9 +7,11 @@ import {
   useCallback,
   useMemo,
 } from "react";
+import { ROUTES_API } from "@/configs/api-routes.gen";
 import apiClient from "@/configs/apiClient";
 import { Language } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { buildUrl } from "@/helpers/url";
 
 type Translations = Record<string, string>;
 
@@ -54,7 +56,11 @@ export const I18nProvider: React.FC<{
   useEffect(() => {
     setTranslations(null);
     apiClient
-      .get<Translations>(`/api/locales/${language}`)
+      .get<Translations>(
+        buildUrl(ROUTES_API.api.locales[":culture"].__path, {
+          culture: language,
+        }),
+      )
       .then((response) => setTranslations(response.data))
       .catch(() => setTranslations({}));
   }, [language]);

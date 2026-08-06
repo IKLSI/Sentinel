@@ -5,9 +5,6 @@ using Stripe;
 using CheckoutSession = Stripe.Checkout.Session;
 using CheckoutSessionOptions = Stripe.Checkout.SessionCreateOptions;
 using CheckoutSessionService = Stripe.Checkout.SessionService;
-using PortalSession = Stripe.BillingPortal.Session;
-using PortalSessionOptions = Stripe.BillingPortal.SessionCreateOptions;
-using PortalSessionService = Stripe.BillingPortal.SessionService;
 
 namespace Sentinel.Infrastructure.Payments;
 
@@ -75,28 +72,6 @@ public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBill
         catch (StripeException exception)
         {
             throw new BillingProviderException("Unable to create the checkout session", exception);
-        }
-    }
-
-    public async Task<string> CreatePortalSessionAsync(string customerId, string returnUrl,
-        CancellationToken cancellationToken)
-    {
-        PortalSessionOptions options = new()
-        {
-            Customer = customerId,
-            ReturnUrl = returnUrl
-        };
-
-        try
-        {
-            PortalSession session = await new PortalSessionService(stripeClient)
-                .CreateAsync(options, cancellationToken: cancellationToken);
-
-            return session.Url;
-        }
-        catch (StripeException exception)
-        {
-            throw new BillingProviderException("Unable to open the billing portal", exception);
         }
     }
 
