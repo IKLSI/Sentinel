@@ -1,4 +1,5 @@
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth;
 
@@ -25,7 +26,9 @@ public static class ProjectMapper
             .SelectMany(dependency => dependency.Vulnerabilities)
             .Count() ?? 0,
         Dependencies = project.Dependencies?.Select(ToDto).ToList() ?? [],
-        Runtimes = project.Runtimes?.Select(ToDto).ToList() ?? []
+        Runtimes = project.Runtimes == null
+            ? []
+            : RuntimeGrouping.ByName(project.Runtimes).Select(ToDto).ToList()
     };
 
     private static DependencyDto ToDto(Dependency dependency) => new()
@@ -51,12 +54,13 @@ public static class ProjectMapper
         FixedVersion = vulnerability.FixedVersion
     };
 
-    private static RuntimeDto ToDto(Runtime runtime) => new()
+    private static RuntimeDto ToDto(RuntimeGroup group) => new()
     {
-        Id = runtime.Id,
-        Name = runtime.Name,
-        Version = runtime.Version,
-        EolDate = runtime.EolDate,
-        IsEol = runtime.IsEol
+        Id = group.MostAtRisk.Id,
+        Name = group.MostAtRisk.Name,
+        Version = group.MostAtRisk.Version,
+        Versions = group.Versions.ToList(),
+        EolDate = group.MostAtRisk.EolDate,
+        IsEol = group.MostAtRisk.IsEol
     };
 }

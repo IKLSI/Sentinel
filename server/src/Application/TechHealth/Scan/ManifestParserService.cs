@@ -55,7 +55,21 @@ public partial class ManifestParserService
         "Package.swift",
         "Package.resolved",
         "Directory.Packages.props",
+        "Directory.Build.props",
         "libs.versions.toml",
+        "global.json",
+        "go.work",
+        "runtime.txt",
+        "Dockerfile",
+        "rust-toolchain",
+        "rust-toolchain.toml",
+        ".tool-versions",
+        ".nvmrc",
+        ".node-version",
+        ".python-version",
+        ".ruby-version",
+        ".java-version",
+        ".go-version",
     };
 
     private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
@@ -74,11 +88,23 @@ public partial class ManifestParserService
         "Package.resolved",
     };
 
+    private static readonly string[] ProjectFileExtensions = [".csproj", ".fsproj", ".vbproj"];
+
     public static bool IsManifest(string name)
-        => ManifestFileNames.Contains(name) || name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase);
+        => ManifestFileNames.Contains(name) || IsProjectFile(name);
+
+    private static bool IsProjectFile(string name)
+        => ProjectFileExtensions.Any(extension => name.EndsWith(extension, StringComparison.OrdinalIgnoreCase));
 
     public static bool IsLockFile(string name)
         => LockFileNames.Contains(name);
+
+    public static int ScanPriority(string name)
+    {
+        if (IsRuntimeDeclaration(name)) return 0;
+
+        return IsLockFile(name) ? 2 : 1;
+    }
 
     public (List<Dependency>, List<Runtime>) Parse(Guid projectId, string fileName, string content)
     {
@@ -90,7 +116,7 @@ public partial class ManifestParserService
         else if (lower == "package-lock.json") ParsePackageLockJson(projectId, content, deps);
         else if (lower == "yarn.lock") ParseYarnLock(projectId, content, deps);
         else if (lower == "pnpm-lock.yaml") ParsePnpmLock(projectId, content, deps);
-        else if (lower.EndsWith(".csproj")) ParseCsproj(projectId, content, deps, runtimes);
+        else if (lower is "directory.build.props" || IsProjectFile(lower)) ParseCsproj(projectId, content, deps, runtimes);
         else if (lower == "pom.xml") ParsePomXml(projectId, content, deps, runtimes);
         else if (lower == "requirements.txt") ParseRequirementsTxt(projectId, content, deps, runtimes);
         else if (lower == "pipfile.lock") ParsePipfileLock(projectId, content, deps);
@@ -114,6 +140,13 @@ public partial class ManifestParserService
         else if (lower == "package.resolved") ParsePackageResolved(projectId, content, deps);
         else if (lower == "directory.packages.props") ParseDirectoryPackagesProps(projectId, content, deps);
         else if (lower == "libs.versions.toml") ParseVersionCatalog(projectId, content, deps);
+        else if (lower == "global.json") ParseGlobalJson(projectId, content, runtimes);
+        else if (lower == "go.work") ParseGoWork(projectId, content, runtimes);
+        else if (lower == "runtime.txt") ParseRuntimeTxt(projectId, content, runtimes);
+        else if (lower == "dockerfile") ParseDockerfile(projectId, content, runtimes);
+        else if (lower is "rust-toolchain" or "rust-toolchain.toml") ParseRustToolchain(projectId, content, runtimes);
+        else if (lower == ".tool-versions") ParseToolVersions(projectId, content, runtimes);
+        else if (VersionFileRuntimes.ContainsKey(lower)) ParseVersionFile(projectId, lower, content, runtimes);
 
         return (deps, runtimes);
     }

@@ -119,4 +119,29 @@ public class ProjectMapperTests
         dto.Runtimes.Should().Contain(r => r.Name == "Node.js" && r.IsEol == false);
         dto.Runtimes.Should().Contain(r => r.Name == "Python" && r.IsEol == true);
     }
+
+    [Fact]
+    public void ToDto_GroupsRuntimeDeclarationsOfTheSameTechnology()
+    {
+        Project project = new Project
+        {
+            Id = Guid.NewGuid(),
+            Name = "Monorepo",
+            RepositoryType = RepositoryType.GitHub,
+            ScanFrequency = ScanFrequency.Weekly,
+            Dependencies = new List<Dependency>(),
+            Runtimes = new List<Runtime>
+            {
+                new() { Name = "Node.js", Version = "20.11.0", IsEol = false },
+                new() { Name = "Node.js", Version = "18.20.4", IsEol = true },
+            },
+        };
+
+        var dto = ProjectMapper.ToDto(project);
+
+        RuntimeDto runtime = dto.Runtimes.Should().ContainSingle().Subject;
+        runtime.Version.Should().Be("18.20.4");
+        runtime.IsEol.Should().BeTrue();
+        runtime.Versions.Should().ContainInOrder("18.20.4", "20.11.0");
+    }
 }

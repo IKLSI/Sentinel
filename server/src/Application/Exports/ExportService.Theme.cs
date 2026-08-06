@@ -47,10 +47,12 @@ public partial class ExportService
 
     private static (string label, XLColor fg) RuntimeStatus(Runtime r, ExportLabels L)
     {
-        if (r.IsEol)
+        if (r.IsEol == true)
             return (L.RuntimeEol, RedFg);
         if (r.EolDate.HasValue && r.EolDate.Value < DateTime.Now.AddMonths(6))
             return (L.RuntimeSoonEol, OrangeFg);
+        if (r.IsEol == null)
+            return (L.RuntimeUnknown, GrayFg);
         return (L.RuntimeActive, GreenFg);
     }
 

@@ -50,7 +50,7 @@ public class ComplianceReportService(
             .ToList();
 
         List<Runtime> eolRuntimes = project.Runtimes
-            .Where(r => r.IsEol)
+            .Where(r => r.IsEol == true)
             .OrderBy(r => r.Name)
             .ToList();
 

@@ -8,6 +8,13 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public partial class ManifestParserService
 {
+    private static readonly HashSet<string> SymfonyRuntimePackages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "symfony/symfony",
+        "symfony/framework-bundle",
+        "symfony/runtime",
+    };
+
     private static void ParseGoMod(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
         bool inRequireBlock = false;
@@ -75,7 +82,7 @@ public partial class ManifestParserService
                     if (prop.Name.Equals("laravel/framework", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
                         runtimes.Add(new Runtime { ProjectId = projectId, Name = "Laravel", Version = version });
 
-                    if (prop.Name.Equals("symfony/symfony", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
+                    if (SymfonyRuntimePackages.Contains(prop.Name) && !string.IsNullOrEmpty(version))
                         runtimes.Add(new Runtime { ProjectId = projectId, Name = "Symfony", Version = version });
 
                     if (string.IsNullOrEmpty(version)) continue;
@@ -155,7 +162,9 @@ public partial class ManifestParserService
 
     private static void ParseCargoToml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Rust", Version = DetectRustEdition(content) });
+        string? rustVersion = DetectRustVersion(content);
+        if (rustVersion != null)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Rust", Version = rustVersion });
 
         bool inDev = false;
         bool inDeps = false;
@@ -211,10 +220,11 @@ public partial class ManifestParserService
         }
     }
 
-    private static string DetectRustEdition(string content)
+    private static string? DetectRustVersion(string content)
     {
-        Match m = Regex.Match(content, @"edition\s*=\s*[""'](\d{4})[""']");
-        return m.Success ? m.Groups[1].Value : "unknown";
+        Match minimumSupported = Regex.Match(content, @"rust-version\s*=\s*[""']([\d.]+)[""']");
+
+        return minimumSupported.Success ? minimumSupported.Groups[1].Value : null;
     }
 
     private static void ParseCargoLock(Guid projectId, string content, List<Dependency> deps)

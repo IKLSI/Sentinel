@@ -155,6 +155,15 @@ public class HealthScoreCalculatorTests
     }
 
     [Fact]
+    public void Calculate_UnassessedRuntime_AppliesNoPenalty()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        project.Runtimes.Add(new Runtime { Name = "NestJS", Version = "10.3.0", IsEol = null });
+
+        HealthScoreCalculator.Calculate(project).Should().Be(100);
+    }
+
+    [Fact]
     public void Calculate_MassiveVulnerabilityCount_NeverSaturatesAtZero()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);

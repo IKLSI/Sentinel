@@ -42,6 +42,7 @@ internal sealed class ExportLabels
     public required string RuntimeActive { get; init; }
     public required string RuntimeSoonEol { get; init; }
     public required string RuntimeEol { get; init; }
+    public required string RuntimeUnknown { get; init; }
 
     public static ExportLabels For(ILocalizer localizer, string culture)
     {
@@ -125,7 +126,8 @@ internal sealed class ExportLabels
             GradeNotAvailable = Text("exports.grade_not_available"),
             RuntimeActive = Text("exports.runtime.active"),
             RuntimeSoonEol = Text("exports.runtime.soon_eol"),
-            RuntimeEol = Text("exports.runtime.eol")
+            RuntimeEol = Text("exports.runtime.eol"),
+            RuntimeUnknown = Text("exports.runtime.unknown")
         };
     }
 }

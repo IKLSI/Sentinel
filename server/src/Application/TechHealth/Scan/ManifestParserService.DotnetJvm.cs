@@ -14,11 +14,15 @@ public partial class ManifestParserService
         {
             XDocument doc = System.Xml.Linq.XDocument.Parse(content);
 
-            string? tf = doc.Descendants("TargetFramework").FirstOrDefault()?.Value
-                  ?? doc.Descendants("TargetFrameworks").FirstOrDefault()?.Value?.Split(';').FirstOrDefault();
+            IEnumerable<string> targetFrameworks = doc.Descendants("TargetFramework").Select(e => e.Value)
+                .Concat(doc.Descendants("TargetFrameworks").SelectMany(e => e.Value.Split(';')));
 
-            if (!string.IsNullOrEmpty(tf))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = ".NET", Version = ParseDotNetVersion(tf) });
+            foreach (string targetFramework in targetFrameworks)
+            {
+                if (ParseTargetFramework(targetFramework) is not (string name, string version)) continue;
+
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
+            }
 
             foreach (XElement pkgRef in doc.Descendants("PackageReference"))
             {
@@ -40,13 +44,23 @@ public partial class ManifestParserService
         catch { }
     }
 
-    private static string ParseDotNetVersion(string tf)
+    private static (string Name, string Version)? ParseTargetFramework(string targetFramework)
     {
-        Match m1 = Regex.Match(tf, @"net(\d+\.\d+)");
-        if (m1.Success) return m1.Groups[1].Value;
-        Match m2 = Regex.Match(tf, @"net(\d+)");
-        if (m2.Success) return m2.Groups[1].Value + ".0";
-        return tf;
+        string moniker = targetFramework.Trim().ToLowerInvariant();
+
+        if (moniker.StartsWith("netstandard", StringComparison.Ordinal)) return null;
+
+        Match modern = Regex.Match(moniker, @"^net(?:coreapp)?(\d+)\.(\d+)");
+        if (modern.Success) return (".NET", $"{modern.Groups[1].Value}.{modern.Groups[2].Value}");
+
+        Match legacy = Regex.Match(moniker, @"^net(\d)(\d)(\d)?$");
+        if (!legacy.Success) return null;
+
+        string version = legacy.Groups[3].Success
+            ? $"{legacy.Groups[1].Value}.{legacy.Groups[2].Value}.{legacy.Groups[3].Value}"
+            : $"{legacy.Groups[1].Value}.{legacy.Groups[2].Value}";
+
+        return (".NET Framework", version);
     }
 
     private static void ParsePomXml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
@@ -58,10 +72,19 @@ public partial class ManifestParserService
 
             Dictionary<string, string> properties = ReadMavenProperties(doc, ns);
 
-            string? javaVersion = doc.Descendants(ns + "maven.compiler.source").FirstOrDefault()?.Value
+            string? javaVersion = doc.Descendants(ns + "maven.compiler.release").FirstOrDefault()?.Value
+                           ?? doc.Descendants(ns + "maven.compiler.source").FirstOrDefault()?.Value
+                           ?? doc.Descendants(ns + "maven.compiler.target").FirstOrDefault()?.Value
                            ?? doc.Descendants(ns + "java.version").FirstOrDefault()?.Value;
+
+            javaVersion = ResolveMavenVersion(javaVersion ?? string.Empty, properties);
+
             if (!string.IsNullOrEmpty(javaVersion))
                 runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
+
+            string? springBootVersion = ReadSpringBootParentVersion(doc, ns);
+            if (!string.IsNullOrEmpty(springBootVersion))
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootVersion });
 
             foreach (XElement dep in doc.Descendants(ns + "dependency"))
             {
@@ -85,6 +108,14 @@ public partial class ManifestParserService
             }
         }
         catch { }
+    }
+
+    private static string? ReadSpringBootParentVersion(XDocument doc, XNamespace ns)
+    {
+        XElement? parent = doc.Descendants(ns + "parent")
+            .FirstOrDefault(p => p.Element(ns + "artifactId")?.Value == "spring-boot-starter-parent");
+
+        return parent?.Element(ns + "version")?.Value;
     }
 
     private static Dictionary<string, string> ReadMavenProperties(XDocument doc, XNamespace ns)
@@ -226,13 +257,20 @@ public partial class ManifestParserService
 
     private static void ParseBuildGradle(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Match javaVersionMatch = Regex.Match(content, @"sourceCompatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?");
-        if (javaVersionMatch.Success)
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersionMatch.Groups[1].Value });
+        string? javaVersion = ReadGradleJavaVersion(content);
+        if (javaVersion != null)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
 
         Match kotlinMatch = Regex.Match(content, @"kotlin\(['""]jvm['""]\)\s+version\s+['""]([^'""]+)['""]");
+        if (!kotlinMatch.Success)
+            kotlinMatch = Regex.Match(content, @"id\s*[\(\s]['""]org\.jetbrains\.kotlin\.jvm['""]\)?\s+version\s+['""]([^'""]+)['""]");
         if (kotlinMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Kotlin", Version = kotlinMatch.Groups[1].Value });
+
+        Match springBootMatch = Regex.Match(content,
+            @"id\s*[\(\s]['""]org\.springframework\.boot['""]\)?\s+version\s+['""]([^'""]+)['""]");
+        if (springBootMatch.Success)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootMatch.Groups[1].Value });
 
         foreach (Match m in CoordPatternRegex().Matches(content))
         {
@@ -268,6 +306,28 @@ public partial class ManifestParserService
                 Status = DependencyStatus.UpToDate,
             });
         }
+    }
+
+    private static string? ReadGradleJavaVersion(string content)
+    {
+        Match toolchain = Regex.Match(content, @"JavaLanguageVersion\.of\s*\(\s*['""]?(\d+)['""]?\s*\)");
+        if (toolchain.Success) return toolchain.Groups[1].Value;
+
+        Match jvmToolchain = Regex.Match(content, @"jvmToolchain\s*\(\s*['""]?(\d+)['""]?\s*\)");
+        if (jvmToolchain.Success) return jvmToolchain.Groups[1].Value;
+
+        Match javaVersionConstant = Regex.Match(content,
+            @"(?:source|target)Compatibility\s*[=:]\s*JavaVersion\.VERSION_(\d+)(?:_(\d+))?");
+        if (javaVersionConstant.Success)
+        {
+            return javaVersionConstant.Groups[2].Success
+                ? javaVersionConstant.Groups[2].Value
+                : javaVersionConstant.Groups[1].Value;
+        }
+
+        Match literal = Regex.Match(content, @"(?:source|target)Compatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?");
+
+        return literal.Success ? literal.Groups[1].Value : null;
     }
 
     private static void ParseNuGetLockJson(Guid projectId, string content, List<Dependency> deps)

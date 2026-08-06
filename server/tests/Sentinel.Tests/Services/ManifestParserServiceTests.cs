@@ -23,6 +23,13 @@ public class ManifestParserServiceTests
     [InlineData("pnpm-lock.yaml", true)]
     [InlineData("Directory.Packages.props", true)]
     [InlineData("libs.versions.toml", true)]
+    [InlineData("App.fsproj", true)]
+    [InlineData("App.vbproj", true)]
+    [InlineData("Dockerfile", true)]
+    [InlineData(".nvmrc", true)]
+    [InlineData(".tool-versions", true)]
+    [InlineData("global.json", true)]
+    [InlineData("rust-toolchain.toml", true)]
     [InlineData("README.md", false)]
     [InlineData("package.json.bak", false)]
     public void IsManifest_RecognizesSupportedFiles(string fileName, bool expected)
@@ -38,6 +45,17 @@ public class ManifestParserServiceTests
     public void IsLockFile_SeparatesResolvedFromDeclaredManifests(string fileName, bool expected)
     {
         ManifestParserService.IsLockFile(fileName).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(".tool-versions", 0)]
+    [InlineData("Dockerfile", 0)]
+    [InlineData(".nvmrc", 0)]
+    [InlineData("package.json", 1)]
+    [InlineData("package-lock.json", 2)]
+    public void ScanPriority_ReadsRuntimeDeclarationsBeforeLockFiles(string fileName, int expected)
+    {
+        ManifestParserService.ScanPriority(fileName).Should().Be(expected);
     }
 
     [Fact]
@@ -546,12 +564,13 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
-    public void ParseCargoToml_ReadsInlineTablesAndEdition()
+    public void ParseCargoToml_ReadsInlineTablesAndMinimumSupportedRustVersion()
     {
         const string content = """
         [package]
         name = "app"
         edition = "2021"
+        rust-version = "1.76"
 
         [dependencies]
         serde = "1.0.197"
@@ -566,7 +585,7 @@ public class ManifestParserServiceTests
         dependencies.Should().HaveCount(3);
         SingleDependency(dependencies, "tokio").CurrentVersion.Should().Be("1.36.0");
         SingleDependency(dependencies, "criterion").Type.Should().Be(DependencyType.Dev);
-        SingleRuntime(runtimes, "Rust").Version.Should().Be("2021");
+        SingleRuntime(runtimes, "Rust").Version.Should().Be("1.76");
     }
 
     [Fact]
@@ -590,17 +609,18 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
-    public void ParseCMakeLists_ReadsDeclaredLanguages()
+    public void ParseCMakeLists_ReadsToolchainAndLanguageStandard()
     {
         const string content = """
         cmake_minimum_required(VERSION 3.20)
         project(app LANGUAGES C CXX)
+        set(CMAKE_CXX_STANDARD 20)
         """;
 
         (_, List<Runtime> runtimes) = Parse("CMakeLists.txt", content);
 
-        runtimes.Select(runtime => runtime.Name).Should().BeEquivalentTo("C", "C++");
-        runtimes.Should().OnlyContain(runtime => runtime.Version == "3.20");
+        SingleRuntime(runtimes, "CMake").Version.Should().Be("3.20");
+        SingleRuntime(runtimes, "C++").Version.Should().Be("20");
     }
 
     [Fact]
@@ -724,6 +744,247 @@ public class ManifestParserServiceTests
         dependencies.Should().ContainSingle();
         SingleDependency(dependencies, "github.com/Alamofire/Alamofire").CurrentVersion.Should().Be("5.9.1");
         dependencies.Should().OnlyContain(dependency => dependency.Ecosystem == DependencyEcosystem.Swift);
+    }
+
+    [Theory]
+    [InlineData("net10.0", ".NET", "10.0")]
+    [InlineData("net10.0-windows", ".NET", "10.0")]
+    [InlineData("netcoreapp3.1", ".NET", "3.1")]
+    [InlineData("net48", ".NET Framework", "4.8")]
+    [InlineData("net472", ".NET Framework", "4.7.2")]
+    public void ParseCsproj_MapsTargetFrameworkMonikerToRuntime(string moniker, string expectedName,
+        string expectedVersion)
+    {
+        string content = $"""
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>{moniker}</TargetFramework>
+          </PropertyGroup>
+        </Project>
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("App.csproj", content);
+
+        SingleRuntime(runtimes, expectedName).Version.Should().Be(expectedVersion);
+    }
+
+    [Fact]
+    public void ParseCsproj_MultiTargeting_KeepsEveryRuntimeAndIgnoresNetStandard()
+    {
+        const string content = """
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+          </PropertyGroup>
+        </Project>
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("App.fsproj", content);
+
+        runtimes.Select(runtime => runtime.Version).Should().BeEquivalentTo("8.0", "10.0");
+        runtimes.Should().OnlyContain(runtime => runtime.Name == ".NET");
+    }
+
+    [Fact]
+    public void ParseDirectoryBuildProps_ReadsSharedTargetFramework()
+    {
+        const string content = """
+        <Project>
+          <PropertyGroup>
+            <TargetFramework>net10.0</TargetFramework>
+          </PropertyGroup>
+        </Project>
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("Directory.Build.props", content);
+
+        SingleRuntime(runtimes, ".NET").Version.Should().Be("10.0");
+    }
+
+    [Fact]
+    public void ParsePomXml_PrefersCompilerReleaseAndReadsSpringBootParent()
+    {
+        const string content = """
+        <project xmlns="http://maven.apache.org/POM/4.0.0">
+          <parent>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>3.3.0</version>
+          </parent>
+          <properties>
+            <maven.compiler.release>21</maven.compiler.release>
+          </properties>
+        </project>
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("pom.xml", content);
+
+        SingleRuntime(runtimes, "Java").Version.Should().Be("21");
+        SingleRuntime(runtimes, "Spring Boot").Version.Should().Be("3.3.0");
+    }
+
+    [Theory]
+    [InlineData("java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }", "21")]
+    [InlineData("kotlin { jvmToolchain(17) }", "17")]
+    [InlineData("sourceCompatibility = JavaVersion.VERSION_1_8", "8")]
+    [InlineData("targetCompatibility = JavaVersion.VERSION_17", "17")]
+    public void ParseBuildGradle_ReadsModernToolchainDeclarations(string declaration, string expectedVersion)
+    {
+        (_, List<Runtime> runtimes) = Parse("build.gradle.kts", declaration);
+
+        SingleRuntime(runtimes, "Java").Version.Should().Be(expectedVersion);
+    }
+
+    [Fact]
+    public void ParseBuildGradle_ReadsSpringBootPluginVersion()
+    {
+        const string content = """
+        plugins {
+            id("org.springframework.boot") version "3.3.1"
+            id("org.jetbrains.kotlin.jvm") version "2.0.0"
+        }
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("build.gradle.kts", content);
+
+        SingleRuntime(runtimes, "Spring Boot").Version.Should().Be("3.3.1");
+        SingleRuntime(runtimes, "Kotlin").Version.Should().Be("2.0.0");
+    }
+
+    [Fact]
+    public void ParsePackageJson_KeepsEveryDetectedFramework()
+    {
+        const string content = """
+        {
+          "dependencies": { "react": "^19.0.0", "express": "4.19.2" }
+        }
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("package.json", content);
+
+        SingleRuntime(runtimes, "React").Version.Should().Be("19.0.0");
+        SingleRuntime(runtimes, "Express").Version.Should().Be("4.19.2");
+    }
+
+    [Fact]
+    public void ParseComposerJson_DetectsSymfonyThroughFrameworkBundle()
+    {
+        const string content = """
+        {
+          "require": { "php": "^8.3", "symfony/framework-bundle": "^7.1" }
+        }
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("composer.json", content);
+
+        SingleRuntime(runtimes, "PHP").Version.Should().Be("8.3");
+        SingleRuntime(runtimes, "Symfony").Version.Should().Be("7.1");
+    }
+
+    [Theory]
+    [InlineData(".nvmrc", "v20.11.0", "Node.js", "20.11.0")]
+    [InlineData(".node-version", "22", "Node.js", "22")]
+    [InlineData(".python-version", "3.12.1", "Python", "3.12.1")]
+    [InlineData(".ruby-version", "ruby-3.3.0", "Ruby", "3.3.0")]
+    [InlineData(".java-version", "temurin-21.0.2", "Java", "21.0.2")]
+    [InlineData(".go-version", "1.22.5", "Go", "1.22.5")]
+    public void ParseVersionFile_ReadsDeclaredRuntime(string fileName, string content, string expectedName,
+        string expectedVersion)
+    {
+        (_, List<Runtime> runtimes) = Parse(fileName, content);
+
+        SingleRuntime(runtimes, expectedName).Version.Should().Be(expectedVersion);
+    }
+
+    [Fact]
+    public void ParseVersionFile_IgnoresNonNumericAliases()
+    {
+        (_, List<Runtime> runtimes) = Parse(".nvmrc", "lts/hydrogen");
+
+        runtimes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseToolVersions_ReadsEveryKnownTool()
+    {
+        const string content = """
+        # asdf
+        nodejs 20.11.0
+        python 3.12.1
+        java temurin-21.0.2
+        terraform 1.7.0
+        """;
+
+        (_, List<Runtime> runtimes) = Parse(".tool-versions", content);
+
+        runtimes.Should().HaveCount(3);
+        SingleRuntime(runtimes, "Node.js").Version.Should().Be("20.11.0");
+        SingleRuntime(runtimes, "Java").Version.Should().Be("21.0.2");
+    }
+
+    [Fact]
+    public void ParseGlobalJson_ReadsSdkBand()
+    {
+        (_, List<Runtime> runtimes) = Parse("global.json", """{ "sdk": { "version": "10.0.100" } }""");
+
+        SingleRuntime(runtimes, ".NET").Version.Should().Be("10.0");
+    }
+
+    [Fact]
+    public void ParseGoWork_ReadsWorkspaceGoVersion()
+    {
+        const string content = """
+        go 1.22
+
+        use ./service
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("go.work", content);
+
+        SingleRuntime(runtimes, "Go").Version.Should().Be("1.22");
+    }
+
+    [Fact]
+    public void ParseRuntimeTxt_ReadsPlatformDeclaration()
+    {
+        (_, List<Runtime> runtimes) = Parse("runtime.txt", "python-3.11.6");
+
+        SingleRuntime(runtimes, "Python").Version.Should().Be("3.11.6");
+    }
+
+    [Theory]
+    [InlineData("channel = \"1.76.0\"", "1.76.0")]
+    [InlineData("1.75.0", "1.75.0")]
+    public void ParseRustToolchain_ReadsPinnedChannel(string content, string expectedVersion)
+    {
+        (_, List<Runtime> runtimes) = Parse("rust-toolchain.toml", content);
+
+        SingleRuntime(runtimes, "Rust").Version.Should().Be(expectedVersion);
+    }
+
+    [Fact]
+    public void ParseRustToolchain_IgnoresRollingChannels()
+    {
+        (_, List<Runtime> runtimes) = Parse("rust-toolchain", "stable");
+
+        runtimes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseDockerfile_ReadsKnownBaseImagesAcrossStages()
+    {
+        const string content = """
+        FROM node:20-alpine AS build
+        FROM mcr.microsoft.com/dotnet/aspnet:10.0
+        FROM nginx:latest
+        FROM python:alpine
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("Dockerfile", content);
+
+        runtimes.Should().HaveCount(2);
+        SingleRuntime(runtimes, "Node.js").Version.Should().Be("20");
+        SingleRuntime(runtimes, ".NET").Version.Should().Be("10.0");
     }
 
     [Theory]

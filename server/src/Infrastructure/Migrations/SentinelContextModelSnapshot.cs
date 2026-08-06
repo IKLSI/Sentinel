@@ -466,7 +466,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime?>("EolDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsEol")
+                    b.Property<bool?>("IsEol")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")

@@ -10,34 +10,22 @@ public partial class ManifestParserService
 {
     private static void ParseCMakeLists(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match cmakeVersionMatch = Regex.Match(content, @"cmake_minimum_required\s*\(\s*VERSION\s+([\d.]+)", RegexOptions.IgnoreCase);
-        Match projectMatch = Regex.Match(content, @"project\s*\(.*?LANGUAGES\s+([\w\s]+)\)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        Match cmakeVersionMatch = Regex.Match(content, @"cmake_minimum_required\s*\(\s*VERSION\s+([\d.]+)",
+            RegexOptions.IgnoreCase);
 
-        HashSet<string> languages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!cmakeVersionMatch.Success) return;
 
-        if (projectMatch.Success)
+        runtimes.Add(new Runtime
         {
-            foreach (string lang in projectMatch.Groups[1].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (lang.Equals("C", StringComparison.OrdinalIgnoreCase)) languages.Add("C");
-                else if (lang.Equals("CXX", StringComparison.OrdinalIgnoreCase)) languages.Add("C++");
-                else if (lang.Equals("CUDA", StringComparison.OrdinalIgnoreCase)) languages.Add("CUDA");
-                else if (lang.Equals("Fortran", StringComparison.OrdinalIgnoreCase)) languages.Add("Fortran");
-            }
-        }
+            ProjectId = projectId,
+            Name = "CMake",
+            Version = cmakeVersionMatch.Groups[1].Value.TrimEnd('.')
+        });
 
-        if (languages.Count == 0)
-        {
-            if (Regex.IsMatch(content, @"\.(cpp|cc|cxx)\b", RegexOptions.IgnoreCase)) languages.Add("C++");
-            if (Regex.IsMatch(content, @"\.(c)\b")) languages.Add("C");
-        }
+        Match cxxStandard = Regex.Match(content, @"CMAKE_CXX_STANDARD\s+(\d+)", RegexOptions.IgnoreCase);
 
-        if (languages.Count == 0) languages.Add("C/C++");
-
-        string cmakeVersion = cmakeVersionMatch.Success ? cmakeVersionMatch.Groups[1].Value : "";
-
-        foreach (string lang in languages)
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = lang, Version = cmakeVersion });
+        if (cxxStandard.Success)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "C++", Version = cxxStandard.Groups[1].Value });
     }
 
     private static void ParseMixExs(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)

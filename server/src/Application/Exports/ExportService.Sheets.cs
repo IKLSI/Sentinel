@@ -47,7 +47,7 @@ public partial class ExportService
             int toUpdate = p.Dependencies.Count(d => d.Status == DependencyStatus.MinorUpdate || d.Status == DependencyStatus.MajorUpdate);
             int vulnerableDeps = p.Dependencies.Count(d => d.Vulnerabilities.Any());
             int criticals = p.Dependencies.SelectMany(d => d.Vulnerabilities).Count(v => v.Severity == VulnerabilitySeverity.Critical);
-            int eolRuntimes = p.Runtimes.Count(r => r.IsEol);
+            int eolRuntimes = p.Runtimes.Count(r => r.IsEol == true);
 
             sumDeps += p.Dependencies.Count;
             sumUpdate += toUpdate;

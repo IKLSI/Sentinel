@@ -8,7 +8,7 @@ public class Runtime : IEntityWithId
     public string Name { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
     public DateTime? EolDate { get; set; }
-    public bool IsEol { get; set; } = false;
+    public bool? IsEol { get; set; }
 
     public Project Project { get; set; } = null!;
 }

@@ -22,9 +22,8 @@ public partial class ManifestParserService
                     runtimes.Add(new Runtime { ProjectId = projectId, Name = "Node.js", Version = v });
             }
 
-            (string Name, string Version)? frameworkRuntime = DetectNpmFrameworkRuntime(root);
-            if (frameworkRuntime.HasValue)
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = frameworkRuntime.Value.Name, Version = frameworkRuntime.Value.Version });
+            foreach ((string name, string version) in DetectNpmFrameworkRuntimes(root))
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
 
             if (root.TryGetProperty("dependencies", out JsonElement prodDeps))
                 ExtractNpmDeps(projectId, prodDeps, DependencyType.Prod, deps);
@@ -35,7 +34,7 @@ public partial class ManifestParserService
         catch { }
     }
 
-    private static (string Name, string Version)? DetectNpmFrameworkRuntime(JsonElement root)
+    private static List<(string Name, string Version)> DetectNpmFrameworkRuntimes(JsonElement root)
     {
         Dictionary<string, string> frameworkMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -53,20 +52,22 @@ public partial class ManifestParserService
             ["astro"] = "Astro",
         };
 
+        List<(string Name, string Version)> detected = new List<(string, string)>();
+
         foreach (string depsKey in new[] { "dependencies", "devDependencies" })
         {
             if (!root.TryGetProperty(depsKey, out JsonElement deps)) continue;
             foreach ((string? pkg, string? name) in frameworkMap)
             {
-                if (deps.TryGetProperty(pkg, out JsonElement vProp))
-                {
-                    string v = VersionText.Clean(vProp.GetString() ?? "");
-                    if (!string.IsNullOrEmpty(v))
-                        return (name, v);
-                }
+                if (detected.Any(runtime => runtime.Name == name)) continue;
+                if (!deps.TryGetProperty(pkg, out JsonElement vProp)) continue;
+
+                string v = VersionText.Clean(vProp.GetString() ?? "");
+                if (!string.IsNullOrEmpty(v)) detected.Add((name, v));
             }
         }
-        return null;
+
+        return detected;
     }
 
     private static void ExtractNpmDeps(Guid projectId, JsonElement element, DependencyType type, List<Dependency> deps)

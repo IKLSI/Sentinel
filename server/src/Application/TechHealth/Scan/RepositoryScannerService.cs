@@ -84,6 +84,7 @@ public class RepositoryScannerService(
 
             List<(string Name, string Url)> discoveredManifests = listing.Files
                 .Where(f => ManifestParserService.IsManifest(f.Name))
+                .OrderBy(f => ManifestParserService.ScanPriority(f.Name))
                 .ToList();
 
             List<(string Name, string Url)> manifestFiles = discoveredManifests
@@ -155,8 +156,11 @@ public class RepositoryScannerService(
                 .ToList();
 
             List<Runtime> dedupedRuntimes = allRuntimes
-                .GroupBy(r => (Name: r.Name.ToLowerInvariant(), r.Version))
+                .Where(r => !string.IsNullOrWhiteSpace(r.Version))
+                .GroupBy(r => (Name: r.Name.ToLowerInvariant(), Version: r.Version.Trim()))
                 .Select(g => g.First())
+                .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             await registry.FetchLatestVersionsAsync(dedupedDeps);

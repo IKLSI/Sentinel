@@ -48,6 +48,7 @@ public class RuntimeDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
+    public List<string> Versions { get; set; } = [];
     public DateTime? EolDate { get; set; }
-    public bool IsEol { get; set; }
+    public bool? IsEol { get; set; }
 }

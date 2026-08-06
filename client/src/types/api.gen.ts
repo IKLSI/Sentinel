@@ -2654,9 +2654,10 @@ export interface components {
       eolDate: string | null;
       /** Format: uuid */
       id: string;
-      isEol: boolean;
+      isEol: boolean | null;
       name: string;
       version: string;
+      versions: string[];
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";

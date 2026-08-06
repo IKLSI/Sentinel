@@ -32,7 +32,7 @@ public static class HealthScoreCalculator
                 * weight;
         }
 
-        penalty += project.Runtimes.Count(runtime => runtime.IsEol) * EolRuntimePenalty;
+        penalty += project.Runtimes.Count(runtime => runtime.IsEol == true) * EolRuntimePenalty;
 
         return (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
     }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
@@ -8,74 +9,111 @@ namespace Sentinel.Infrastructure.Http;
 
 public class EndOfLifeRuntimeLifecycleClient(
     IHttpClientFactory httpClientFactory,
+    IMemoryCache cache,
     ILogger<EndOfLifeRuntimeLifecycleClient> logger) : IRuntimeLifecycleClient
 {
-    private static readonly Dictionary<string, string> Products = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Node.js"] = "nodejs",
-        ["Python"] = "python",
-        [".NET"] = "dotnet",
-        ["PHP"] = "php",
-        ["Ruby"] = "ruby",
-        ["Go"] = "go",
-        ["Java"] = "java",
-        ["Rust"] = "rust",
-        ["React"] = "react",
-        ["Vue"] = "vue",
-        ["Angular"] = "angular",
-        ["Next.js"] = "nextjs",
-        ["Nuxt"] = "nuxt",
-        ["Svelte"] = "svelte",
-        ["Express"] = "express",
-        ["Django"] = "django",
-        ["Laravel"] = "laravel",
-        ["Symfony"] = "symfony",
-        ["Rails"] = "rails",
-        ["Kotlin"] = "kotlin",
-        ["Elixir"] = "elixir",
-    };
-
     public async Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version)
     {
-        if (!Products.TryGetValue(runtimeName, out string? product)) return null;
+        string? product = EndOfLifeCatalog.ResolveProduct(runtimeName);
+        if (product == null) return null;
 
-        string[] parts = version.Split('.');
-        if (parts.Length == 0 || parts[0] == "unknown") return null;
+        string? normalizedVersion = EndOfLifeCatalog.NormalizeVersion(runtimeName, version);
+        if (normalizedVersion == null) return null;
 
-        string cycle = runtimeName.ToLowerInvariant() switch
+        IReadOnlyCollection<EndOfLifeCycle> cycles = await GetCyclesAsync(product);
+
+        EndOfLifeCycle? cycle = EndOfLifeCatalog.SelectCycle(cycles, normalizedVersion);
+
+        if (cycle == null)
         {
-            "node.js" or "nodejs" => parts[0],
-            "react" or "angular" or "next.js" or "nuxt" or "svelte" or "express" or "laravel" => parts[0],
-            ".net" or "dotnet" => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0],
-            _ => parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : parts[0]
-        };
+            logger.LogDebug("No end-of-life cycle matches {Runtime} {Version} on product {Product}",
+                runtimeName, version, product);
+            return null;
+        }
 
+        return new RuntimeLifecycle(cycle.IsEndOfLife, cycle.EndOfLifeDate);
+    }
+
+    private async Task<IReadOnlyCollection<EndOfLifeCycle>> GetCyclesAsync(string product)
+    {
+        string cacheKey = CacheKeys.RuntimeLifecycle(product);
+
+        if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
+            return cached;
+
+        IReadOnlyCollection<EndOfLifeCycle> cycles = await FetchCyclesAsync(product);
+
+        cache.Set(cacheKey, cycles, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = cycles.Count == 0
+                ? CacheKeys.RuntimeLifecycleUnresolvedTtl
+                : CacheKeys.RuntimeLifecycleTtl,
+            Size = 1
+        });
+
+        return cycles;
+    }
+
+    private async Task<IReadOnlyCollection<EndOfLifeCycle>> FetchCyclesAsync(string product)
+    {
         try
         {
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.EolDate);
 
             using HttpResponseMessage response =
-                await client.GetAsync($"https://endoflife.date/api/{product}/{cycle}.json");
+                await client.GetAsync($"https://endoflife.date/api/{product}.json");
 
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("End-of-life product {Product} returned {StatusCode}",
+                    product, (int)response.StatusCode);
+                return [];
+            }
 
             using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
-            if (!document.RootElement.TryGetProperty("eol", out JsonElement eol)) return null;
+            if (document.RootElement.ValueKind != JsonValueKind.Array) return [];
 
-            if (eol.ValueKind == JsonValueKind.True) return new RuntimeLifecycle(true, null);
+            List<EndOfLifeCycle> cycles = new List<EndOfLifeCycle>();
 
-            if (eol.ValueKind == JsonValueKind.False) return new RuntimeLifecycle(false, null);
+            foreach (JsonElement release in document.RootElement.EnumerateArray())
+            {
+                EndOfLifeCycle? cycle = ReadCycle(release);
+                if (cycle != null) cycles.Add(cycle);
+            }
 
-            if (eol.ValueKind == JsonValueKind.String && DateTime.TryParse(eol.GetString(), out DateTime eolDate))
-                return new RuntimeLifecycle(null, DateTime.SpecifyKind(eolDate, DateTimeKind.Utc));
-
-            return null;
+            return cycles;
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "EOL check unavailable for {Runtime} {Version}", runtimeName, version);
-            return null;
+            logger.LogDebug(ex, "End-of-life data unavailable for product {Product}", product);
+            return [];
         }
+    }
+
+    private static EndOfLifeCycle? ReadCycle(JsonElement release)
+    {
+        if (!release.TryGetProperty("cycle", out JsonElement cycleProperty)) return null;
+
+        string? cycle = cycleProperty.ValueKind switch
+        {
+            JsonValueKind.String => cycleProperty.GetString(),
+            JsonValueKind.Number => cycleProperty.GetRawText(),
+            _ => null
+        };
+
+        if (string.IsNullOrEmpty(cycle)) return null;
+
+        if (!release.TryGetProperty("eol", out JsonElement eol))
+            return new EndOfLifeCycle(cycle, null, null);
+
+        return eol.ValueKind switch
+        {
+            JsonValueKind.True => new EndOfLifeCycle(cycle, true, null),
+            JsonValueKind.False => new EndOfLifeCycle(cycle, false, null),
+            JsonValueKind.String when DateTime.TryParse(eol.GetString(), out DateTime eolDate) =>
+                new EndOfLifeCycle(cycle, null, DateTime.SpecifyKind(eolDate, DateTimeKind.Utc)),
+            _ => new EndOfLifeCycle(cycle, null, null)
+        };
     }
 }

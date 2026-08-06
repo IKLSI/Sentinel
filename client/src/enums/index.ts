@@ -94,6 +94,7 @@ export const RuntimeEolStatus = {
   Danger: "danger",
   Warn: "warn",
   Ok: "ok",
+  Unknown: "unknown",
 } as const;
 export type RuntimeEolStatus =
   (typeof RuntimeEolStatus)[keyof typeof RuntimeEolStatus];

@@ -97,10 +97,19 @@ export const EOL_COLOR: Record<
     stripe: "var(--accent)",
     border: "var(--border)",
   },
+  unknown: {
+    text: "var(--muted2)",
+    stripe: "var(--border)",
+    border: "var(--border)",
+  },
 };
 
 export function getRuntimeUrgency(r: Runtime): RuntimeEolStatus {
-  if (!r.eolDate) return r.isEol ? RuntimeEolStatus.Eol : RuntimeEolStatus.Ok;
+  if (!r.eolDate) {
+    if (r.isEol === null || r.isEol === undefined)
+      return RuntimeEolStatus.Unknown;
+    return r.isEol ? RuntimeEolStatus.Eol : RuntimeEolStatus.Ok;
+  }
   const days = Math.round(
     (new Date(r.eolDate).getTime() - Date.now()) / 86400000,
   );
@@ -114,7 +123,13 @@ export function getDaysLabel(
   r: Runtime,
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): string {
-  if (!r.eolDate) return r.isEol ? t("tech_health.runtime.expired") : "—";
+  if (!r.eolDate) {
+    if (r.isEol === null || r.isEol === undefined)
+      return t("tech_health.runtime.not_assessed");
+    return r.isEol
+      ? t("tech_health.runtime.expired")
+      : t("tech_health.runtime.supported");
+  }
   const days = Math.round(
     (new Date(r.eolDate).getTime() - Date.now()) / 86400000,
   );

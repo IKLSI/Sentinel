@@ -8,6 +8,7 @@ import {
   type VirtualTableColumn,
 } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
+import { RuntimeEolStatus } from "@/enums";
 import type { Runtime } from "@/domains/projects/types";
 import {
   EMPTY_STATE_SX,
@@ -31,12 +32,19 @@ const versionSx = {
   fontFamily: "var(--font-mono)",
   fontSize: "11px",
 } as const;
+const otherVersionsSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "10px",
+  color: "var(--muted2)",
+  marginLeft: "6px",
+} as const;
 
 const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
   const t = useT();
   const urgency = getRuntimeUrgency(r);
   const uc = EOL_COLOR[urgency];
   const daysLabel = getDaysLabel(r, t);
+  const otherVersions = r.versions.filter((version) => version !== r.version);
 
   return (
     <TR accent={uc.stripe}>
@@ -49,6 +57,11 @@ const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
         <Box component="span" sx={versionSx}>
           {r.version}
         </Box>
+        {otherVersions.length > 0 && (
+          <Box component="span" sx={otherVersionsSx}>
+            {`+ ${otherVersions.join(" · ")}`}
+          </Box>
+        )}
       </TD>
       <TD>
         <Box
@@ -56,7 +69,11 @@ const RuntimeRow: React.FC<{ runtime: Runtime }> = ({ runtime: r }) => {
           sx={{
             fontSize: "11px",
             color: uc.text,
-            fontWeight: urgency !== "ok" ? 600 : 400,
+            fontWeight:
+              urgency === RuntimeEolStatus.Ok ||
+              urgency === RuntimeEolStatus.Unknown
+                ? 400
+                : 600,
           }}
         >
           {daysLabel}
