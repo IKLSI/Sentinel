@@ -175,7 +175,7 @@ export const GRADE_ORDER: Record<string, number> = {
   A: 5,
 };
 
-export interface GradeMeta {
+interface GradeMeta {
   color: string;
   subtle: string;
 }

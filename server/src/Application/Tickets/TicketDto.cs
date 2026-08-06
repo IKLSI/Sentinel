@@ -15,7 +15,6 @@ public class TicketDto
     public string? AssignedToName { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
     public int CommentCount { get; set; }
     public List<TicketCommentDto> Comments { get; set; } = new();
     public List<TicketHistoryDto> History { get; set; } = new();
@@ -33,7 +32,6 @@ public class TicketCommentDto
 public class TicketHistoryDto
 {
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string Field { get; set; } = string.Empty;
     public string? OldValue { get; set; }

@@ -12,7 +12,6 @@ public class ProjectDto
     public string Coverage { get; set; } = string.Empty;
     public string ScanFrequency { get; set; } = string.Empty;
     public int TotalDependencies { get; set; }
-    public int VulnerableDependencies { get; set; }
     public int CriticalVulnerabilities { get; set; }
     public int TotalVulnerabilities { get; set; }
     public int TotalTickets { get; set; }

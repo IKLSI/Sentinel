@@ -20,7 +20,6 @@ public static class TicketMapper
         AssignedToName = ticket.AssignedTo?.FullName,
         CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
-        UpdatedAt = ticket.UpdatedAt,
         CommentCount = ticket.Comments?.Count ?? 0,
         Comments = ticket.Comments?.Select(ToDto).OrderBy(c => c.CreatedAt).ToList() ?? [],
         History = ticket.History?.Select(ToDto).OrderByDescending(h => h.CreatedAt).ToList() ?? []
@@ -41,7 +40,6 @@ public static class TicketMapper
         AssignedToName = FullName(row.AssignedToFirstName, row.AssignedToLastName),
         CreatedByName = FullName(row.CreatedByFirstName, row.CreatedByLastName) ?? string.Empty,
         CreatedAt = row.CreatedAt,
-        UpdatedAt = row.UpdatedAt,
         CommentCount = row.CommentCount
     };
 
@@ -60,7 +58,6 @@ public static class TicketMapper
     public static TicketHistoryDto ToDto(TicketHistory history) => new()
     {
         Id = history.Id,
-        UserId = history.UserId,
         UserName = history.User?.FullName ?? string.Empty,
         Field = history.Field,
         OldValue = history.OldValue,

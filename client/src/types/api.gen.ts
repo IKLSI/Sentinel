@@ -11,14 +11,6 @@
 export interface paths {
   "/api/auth/forgot-password": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["ForgotPasswordRequest"];
@@ -40,14 +32,6 @@ export interface paths {
   };
   "/api/auth/login": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["LoginRequest"];
@@ -69,14 +53,6 @@ export interface paths {
   };
   "/api/auth/logout": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -87,14 +63,6 @@ export interface paths {
   };
   "/api/auth/me": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -109,14 +77,6 @@ export interface paths {
   };
   "/api/auth/refresh": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -131,14 +91,6 @@ export interface paths {
   };
   "/api/auth/register": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["RegisterRequest"];
@@ -160,14 +112,6 @@ export interface paths {
   };
   "/api/auth/resend-verification": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["ResendVerificationRequest"];
@@ -189,14 +133,6 @@ export interface paths {
   };
   "/api/auth/reset-password": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["ResetPasswordRequest"];
@@ -218,14 +154,6 @@ export interface paths {
   };
   "/api/auth/verify-email": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["VerifyEmailRequest"];
@@ -247,14 +175,6 @@ export interface paths {
   };
   "/api/billing/checkout": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["CheckoutRequest"];
@@ -276,14 +196,6 @@ export interface paths {
   };
   "/api/billing/plans": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -298,14 +210,6 @@ export interface paths {
   };
   "/api/billing/status": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -320,14 +224,6 @@ export interface paths {
   };
   "/api/billing/webhook": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -338,14 +234,6 @@ export interface paths {
   };
   "/api/config": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -360,14 +248,6 @@ export interface paths {
   };
   "/api/dashboard/stats": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -386,10 +266,6 @@ export interface paths {
         query?: {
           sortBy?: components["schemas"]["JobSortField"];
           sortDirection?: components["schemas"]["SortDirection"];
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
       };
       responses: {
@@ -406,14 +282,6 @@ export interface paths {
   };
   "/api/jobs/tech-health-scan/trigger": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -429,12 +297,6 @@ export interface paths {
   "/api/locales/{culture}": {
     get: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           culture: string;
         };
@@ -453,10 +315,6 @@ export interface paths {
         query?: {
           sortBy?: components["schemas"]["ApiKeySortField"];
           sortDirection?: components["schemas"]["SortDirection"];
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
       };
       responses: {
@@ -471,14 +329,6 @@ export interface paths {
       };
     };
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["CreateApiKeyDto"];
@@ -501,12 +351,6 @@ export interface paths {
   "/api/settings/api-keys/{id}": {
     delete: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -521,14 +365,6 @@ export interface paths {
   };
   "/api/settings/integrations": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -543,14 +379,6 @@ export interface paths {
   };
   "/api/settings/integrations/github": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["ConnectIntegrationDto"];
@@ -568,14 +396,6 @@ export interface paths {
   };
   "/api/settings/integrations/gitlab": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["ConnectIntegrationDto"];
@@ -593,14 +413,6 @@ export interface paths {
   };
   "/api/settings/organization": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -613,14 +425,6 @@ export interface paths {
       };
     };
     put: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["UpdateOrganizationSettingsDto"];
@@ -642,14 +446,6 @@ export interface paths {
   };
   "/api/tech-health/projects": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -662,14 +458,6 @@ export interface paths {
       };
     };
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["CreateProjectDto"];
@@ -692,12 +480,6 @@ export interface paths {
   "/api/tech-health/projects/{id}": {
     get: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -715,12 +497,6 @@ export interface paths {
     };
     delete: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -734,12 +510,6 @@ export interface paths {
     };
     patch: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -766,12 +536,6 @@ export interface paths {
   "/api/tech-health/projects/{id}/compliance-report": {
     get: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -789,10 +553,6 @@ export interface paths {
       parameters: {
         query?: {
           format?: string;
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
         path: {
           id: string;
@@ -809,12 +569,6 @@ export interface paths {
   "/api/tech-health/projects/{id}/scan": {
     post: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -829,14 +583,6 @@ export interface paths {
   };
   "/api/tech-health/projects/available-repos": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -851,14 +597,6 @@ export interface paths {
   };
   "/api/tech-health/projects/export/excel": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -882,10 +620,6 @@ export interface paths {
           SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
       };
       responses: {
@@ -900,14 +634,6 @@ export interface paths {
       };
     };
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["CreateTicketDto"];
@@ -930,12 +656,6 @@ export interface paths {
   "/api/tickets/{id}": {
     get: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -953,12 +673,6 @@ export interface paths {
     };
     put: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -983,12 +697,6 @@ export interface paths {
     };
     delete: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -1004,12 +712,6 @@ export interface paths {
   "/api/tickets/{id}/attachments": {
     post: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -1037,12 +739,6 @@ export interface paths {
   "/api/tickets/{id}/attachments/{attachmentId}": {
     get: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
           attachmentId: string;
@@ -1059,12 +755,6 @@ export interface paths {
   "/api/tickets/{id}/comments": {
     post: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -1091,12 +781,6 @@ export interface paths {
   "/api/tickets/{id}/comments/{commentId}": {
     put: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
           commentId: string;
@@ -1122,12 +806,6 @@ export interface paths {
     };
     delete: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
           commentId: string;
@@ -1150,10 +828,6 @@ export interface paths {
           AssignedTo?: string;
           Type?: string;
           Search?: string;
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
       };
       responses: {
@@ -1176,10 +850,6 @@ export interface paths {
           SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
         };
       };
       responses: {
@@ -1194,14 +864,6 @@ export interface paths {
       };
     };
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["CreateUserDto"];
@@ -1224,12 +886,6 @@ export interface paths {
   "/api/users/{id}": {
     put: {
       parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
         path: {
           id: string;
         };
@@ -1255,14 +911,6 @@ export interface paths {
   };
   "/api/users/accept-invitation": {
     post: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["AcceptInvitationDto"];
@@ -1284,14 +932,6 @@ export interface paths {
   };
   "/api/users/me": {
     delete: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["DeleteAccountDto"];
@@ -1307,14 +947,6 @@ export interface paths {
       };
     };
     patch: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["UpdateMyProfileDto"];
@@ -1336,14 +968,6 @@ export interface paths {
   };
   "/api/users/me/export": {
     get: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -1358,14 +982,6 @@ export interface paths {
   };
   "/api/users/me/preferences": {
     patch: {
-      parameters: {
-        query?: {
-          "api-version"?: string;
-        };
-        header?: {
-          "X-Api-Version"?: string;
-        };
-      };
       requestBody?: {
         content: {
           "application/*+json": components["schemas"]["UpdatePreferencesDto"];
@@ -1455,12 +1071,10 @@ export interface components {
       truncated: boolean;
     };
     BillingStatusDto: {
-      effectivePlanTier: string;
       members: components["schemas"]["PlanQuotaDto"];
       planTier: string;
       projects: components["schemas"]["PlanQuotaDto"];
       scans: components["schemas"]["PlanQuotaDto"];
-      subscriptionStatus: string;
     };
     CheckoutRequest: {
       billingInterval: string;
@@ -1595,14 +1209,11 @@ export interface components {
       totalTickets: number;
       /** Format: int32 */
       totalVulnerabilities: number;
-      /** Format: int32 */
-      vulnerableDependencies: number;
     };
     ProjectScanFrequencyDto: {
       scanFrequency: string;
     };
     RecurringJobStatusDto: {
-      cron: string;
       error: string | null;
       id: string;
       /** Format: date-time */
@@ -1638,7 +1249,6 @@ export interface components {
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";
     TicketAttachmentDto: {
-      contentType: string;
       /** Format: date-time */
       createdAt: string;
       fileName: string;
@@ -1679,8 +1289,6 @@ export interface components {
       status: string;
       title: string;
       type: string;
-      /** Format: date-time */
-      updatedAt: string;
     };
     TicketDtoPagedResult: {
       hasNextPage: boolean;
@@ -1703,8 +1311,6 @@ export interface components {
       id: string;
       newValue: string | null;
       oldValue: string | null;
-      /** Format: uuid */
-      userId: string;
       userName: string;
     };
     /** @enum {string} */
@@ -1825,8 +1431,6 @@ export interface components {
       id: string;
       language: string;
       lastName: string;
-      /** Format: uuid */
-      organizationId: string;
       role: string;
       theme: string;
     };

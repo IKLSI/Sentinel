@@ -1,5 +1,4 @@
 using Sentinel.API.Constants;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -15,7 +14,6 @@ using Sentinel.Application.Billing;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
-[ApiVersion("1.0")]
 [Route("api/billing")]
 [Authorize]
 public class BillingController : BaseController

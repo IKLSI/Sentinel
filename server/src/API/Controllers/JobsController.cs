@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.API.Attributes;
@@ -12,7 +11,6 @@ using Sentinel.Application.Common.Contracts;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
-[ApiVersion("1.0")]
 [Route("api/jobs")]
 [Authorize]
 [AuthorizeRoles(UserRole.Admin)]

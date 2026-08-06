@@ -8,14 +8,13 @@ import {
 } from "@tanstack/react-query";
 import apiClient from "@/configs/apiClient";
 import { queryClient } from "@/configs/queryClient";
-import { buildUrl } from "@/helpers/url";
+import { buildUrl, type UrlParams } from "@/helpers/url";
 import type {
   FilterPaginationAndSortType,
   HttpMethod,
   MutationFunctionVariables,
   MutationWrapperOptions,
   QueryWrapperOptions,
-  UrlParamsType,
 } from "@/domains/types";
 
 const HTTP_METHODS = {
@@ -43,11 +42,10 @@ export function invalidateKeys(keys: QueryKey[] = []): void {
   for (const queryKey of keys) queryClient.invalidateQueries({ queryKey });
 }
 
-/** @public */
-export function useQueryWrapper<TResponse, TResult = TResponse>(
+function useQueryWrapper<TResponse, TResult = TResponse>(
   method: HttpMethod,
   urlTemplate: string,
-  params: UrlParamsType = {},
+  params: UrlParams = {},
   options: QueryWrapperOptions<TResponse, TResult> = {},
   filtersPaginationAndSort: FilterPaginationAndSortType = {},
 ): UseQueryResult<TResult> {
@@ -91,7 +89,7 @@ export function useMutationWrapper<
 
 export const useGetQuery = <TResponse, TResult = TResponse>(
   urlTemplate: string,
-  params?: UrlParamsType,
+  params?: UrlParams,
   options?: QueryWrapperOptions<TResponse, TResult>,
   filtersPaginationAndSort?: FilterPaginationAndSortType,
 ) =>

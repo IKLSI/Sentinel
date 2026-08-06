@@ -8,7 +8,7 @@ export interface TicketFiltersState {
   type: string;
 }
 
-export interface TicketFilterGroup {
+interface TicketFilterGroup {
   key: keyof TicketFiltersState;
   label: string;
   tone: string;

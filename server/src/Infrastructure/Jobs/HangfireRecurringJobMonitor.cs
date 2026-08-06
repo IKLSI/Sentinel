@@ -14,7 +14,6 @@ public sealed class HangfireRecurringJobMonitor : IRecurringJobMonitor
         return connection.GetRecurringJobs()
             .Select(job => new RecurringJobSnapshot(
                 job.Id,
-                job.Cron,
                 job.LastJobState,
                 job.LastExecution,
                 job.NextExecution,

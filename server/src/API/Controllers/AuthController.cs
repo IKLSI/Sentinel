@@ -1,5 +1,4 @@
 using Sentinel.API.Constants;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -19,7 +18,6 @@ using Sentinel.Application.Common.Contracts;
 namespace Sentinel.API.Controllers;
 
 [ApiController]
-[ApiVersion("1.0")]
 [Route("api/auth")]
 public class AuthController : BaseController
 {

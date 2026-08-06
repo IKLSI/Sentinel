@@ -58,7 +58,7 @@ export const getGrade = (grade: string | null | undefined): HealthGrade => {
   return HealthGrade.F;
 };
 
-export interface ProjectSortState {
+interface ProjectSortState {
   col: string;
   dir: "asc" | "desc";
 }

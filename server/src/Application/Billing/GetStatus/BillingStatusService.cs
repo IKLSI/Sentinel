@@ -36,8 +36,6 @@ public class BillingStatusService(
         return new BillingStatusDto
         {
             PlanTier = organization.PlanTier.ToString(),
-            EffectivePlanTier = effectiveTier.ToString(),
-            SubscriptionStatus = organization.SubscriptionStatus.ToString(),
             Projects = new PlanQuotaDto { Used = projects, Limit = limits.MaxProjects },
             Members = new PlanQuotaDto { Used = members, Limit = limits.MaxMembers },
             Scans = new PlanQuotaDto { Used = organization.MonthlyScanCount, Limit = limits.MaxScansPerMonth }

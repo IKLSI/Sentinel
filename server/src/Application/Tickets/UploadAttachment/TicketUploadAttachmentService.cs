@@ -74,7 +74,6 @@ public class TicketUploadAttachmentService(
             Id = attachment.Id,
             TicketId = attachment.TicketId,
             FileName = attachment.FileName,
-            ContentType = attachment.ContentType,
             CreatedAt = attachment.CreatedAt
         };
     }

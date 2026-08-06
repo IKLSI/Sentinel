@@ -3,7 +3,7 @@ import type { RouterContext } from "@/routerContext";
 
 type AuthState = RouterContext["auth"];
 
-export type GuardResult<TRedirect extends string> =
+type GuardResult<TRedirect extends string> =
   | { status: "loading" }
   | { status: "redirect"; to: TRedirect }
   | { status: "ok" };

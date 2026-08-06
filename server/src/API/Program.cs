@@ -40,7 +40,6 @@ public static class Program
             .AddApplicationServices()
             .AddInfrastructureServices()
             .AddUseCases()
-            .AddApiVersioningPolicy()
             .AddSwaggerWithJwt()
             .AddControllersWithJsonOptions()
             .AddForwardedHeadersPolicy(builder.Configuration, builder.Environment)

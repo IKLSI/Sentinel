@@ -24,36 +24,10 @@ public class ProjectMapperTests
         var dto = ProjectMapper.ToDto(project);
 
         dto.TotalDependencies.Should().Be(0);
-        dto.VulnerableDependencies.Should().Be(0);
         dto.CriticalVulnerabilities.Should().Be(0);
         dto.TotalVulnerabilities.Should().Be(0);
         dto.Dependencies.Should().BeEmpty();
         dto.Runtimes.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void ToDto_CountsVulnerableDependencies()
-    {
-        Project project = new Project
-        {
-            Id = Guid.NewGuid(),
-            Name = "P",
-            HealthGrade = "B",
-            RepositoryType = RepositoryType.GitHub,
-            ScanFrequency = ScanFrequency.Daily,
-            Dependencies = new List<Dependency>
-            {
-                new() { Name = "lib1", CurrentVersion = "1.0", Status = DependencyStatus.Vulnerable, Vulnerabilities = new List<Vulnerability>() },
-                new() { Name = "lib2", CurrentVersion = "2.0", Status = DependencyStatus.Vulnerable, Vulnerabilities = new List<Vulnerability>() },
-                new() { Name = "lib3", CurrentVersion = "3.0", Status = DependencyStatus.UpToDate, Vulnerabilities = new List<Vulnerability>() },
-            },
-            Runtimes = new List<Runtime>(),
-        };
-
-        var dto = ProjectMapper.ToDto(project);
-
-        dto.TotalDependencies.Should().Be(3);
-        dto.VulnerableDependencies.Should().Be(2);
     }
 
     [Fact]

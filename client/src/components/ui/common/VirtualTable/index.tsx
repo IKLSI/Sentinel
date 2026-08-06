@@ -14,7 +14,7 @@ export interface VirtualTableColumn {
   align?: CellAlign;
 }
 
-export interface VirtualTableProps<T> {
+interface VirtualTableProps<T> {
   rows: T[];
   getRowId: (row: T, index: number) => string | number;
   columns: VirtualTableColumn[];

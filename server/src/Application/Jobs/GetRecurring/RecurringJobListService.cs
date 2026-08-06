@@ -14,7 +14,6 @@ public class RecurringJobListService(IRecurringJobMonitor recurringJobs) : IServ
         List<RecurringJobStatusDto> jobs = recurringJobs.List()
             .Select(job => new RecurringJobStatusDto(
                 job.Id,
-                job.Cron,
                 job.LastJobState,
                 job.LastExecution,
                 job.NextExecution,

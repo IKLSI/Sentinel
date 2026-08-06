@@ -500,7 +500,6 @@ export const Sidebar: React.FC = () => {
                               />
                               <Box
                                 component="span"
-                                className="nav-label"
                                 sx={{
                                   flex: 1,
                                   fontSize: "10.5px",
@@ -751,7 +750,6 @@ export const Sidebar: React.FC = () => {
                     {user?.firstName} {user?.lastName?.[0]}.
                   </Box>
                   <Box
-                    className="profile-label"
                     sx={{
                       fontSize: "10px",
                       fontWeight: 500,

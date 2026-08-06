@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-export interface LocalSortState {
+interface LocalSortState {
   col: string;
   dir: "asc" | "desc";
 }

@@ -1,11 +1,9 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Application.Locales.Get;
 
 namespace Sentinel.API.Controllers;
 
 [ApiController]
-[ApiVersion("1.0")]
 [Route("api/locales")]
 public class LocalesController : BaseController
 {

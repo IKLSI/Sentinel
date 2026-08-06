@@ -3,7 +3,6 @@ using Sentinel.API.Constants;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi;
@@ -95,26 +94,6 @@ public static partial class ServiceCollectionExtensions
             source.AsSpan().CopyTo(span);
             span[0] = char.ToLowerInvariant(span[0]);
         });
-    }
-
-    public static IServiceCollection AddApiVersioningPolicy(this IServiceCollection services)
-    {
-        services.AddApiVersioning(options =>
-        {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.AssumeDefaultVersionWhenUnspecified = true;
-            options.ReportApiVersions = true;
-            options.ApiVersionReader = ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),
-                new HeaderApiVersionReader(CustomHeaderNames.ApiVersion),
-                new QueryStringApiVersionReader(CustomHeaderNames.ApiVersionQuery));
-        }).AddApiExplorer(options =>
-        {
-            options.GroupNameFormat = "'v'VVV";
-            options.SubstituteApiVersionInUrl = true;
-        });
-
-        return services;
     }
 
     public static IServiceCollection AddResponseCompressionPolicy(this IServiceCollection services)

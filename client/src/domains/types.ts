@@ -12,8 +12,6 @@ export type MutationFunctionVariables = {
   [key: string]: unknown;
 };
 
-export type UrlParamsType = Record<string, unknown>;
-
 export type FilterPaginationAndSortType = Record<string, unknown>;
 
 export type QueryWrapperOptions<TResponse, TResult> = Omit<

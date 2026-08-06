@@ -17,8 +17,6 @@ public static class ProjectMapper
         Coverage = project.Coverage.ToString(),
         ScanFrequency = project.ScanFrequency.ToString(),
         TotalDependencies = project.Dependencies?.Count ?? 0,
-        VulnerableDependencies = project.Dependencies?
-            .Count(dependency => dependency.Status == DependencyStatus.Vulnerable) ?? 0,
         CriticalVulnerabilities = project.Dependencies?
             .SelectMany(dependency => dependency.Vulnerabilities)
             .Count(vulnerability => vulnerability.Severity == VulnerabilitySeverity.Critical) ?? 0,

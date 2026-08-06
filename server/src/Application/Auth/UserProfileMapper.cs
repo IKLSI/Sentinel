@@ -11,7 +11,6 @@ public static class UserProfileMapper
         FirstName = user.FirstName,
         LastName = user.LastName,
         Role = user.Role.ToString(),
-        OrganizationId = user.OrganizationId,
         Theme = user.Theme.ToString().ToLowerInvariant(),
         Language = user.Language
     };

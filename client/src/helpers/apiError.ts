@@ -1,4 +1,4 @@
-export type ApiErrorTranslation = {
+type ApiErrorTranslation = {
   code: string;
   params?: Record<string, string>;
 };
