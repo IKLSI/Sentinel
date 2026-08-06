@@ -87,18 +87,18 @@ export const ProjectDetailPage: React.FC = () => {
 
   const tabDefs: TabDef[] = [
     {
-      icon: <GppBadOutlined sx={{ fontSize: 14 }} />,
+      icon: <GppBadOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.vulnerabilities"),
       count: allVulns.length,
       accentColor: vulnAccent,
     },
     {
-      icon: <InventoryOutlined sx={{ fontSize: 14 }} />,
+      icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.dependencies"),
       count: project.dependencies.length,
     },
     {
-      icon: <StorageOutlined sx={{ fontSize: 14 }} />,
+      icon: <StorageOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.runtimes"),
       count: project.runtimes.length,
       accentColor: runtimeAccent,
@@ -115,62 +115,36 @@ export const ProjectDetailPage: React.FC = () => {
         }
       />
 
+      <TabBar
+        tabs={tabDefs}
+        active={activeTab}
+        onChange={(i) => {
+          startTransition(() => {
+            setActiveTab(i);
+            setDepSearch("");
+          });
+        }}
+      />
+
       <Box
         sx={{
           flex: "1 1 auto",
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
-          background: "var(--s1)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r)",
-          overflow: "hidden",
+          pt: "20px",
         }}
       >
-        <Box
-          sx={{
-            flexShrink: 0,
-            height: "44px",
-            display: "flex",
-            alignItems: "stretch",
-            justifyContent: "space-between",
-            borderBottom: "1px solid var(--border)",
-            background: "var(--s2)",
-            px: "4px",
-          }}
-        >
-          <TabBar
-            tabs={tabDefs}
-            active={activeTab}
-            onChange={(i) => {
-              startTransition(() => {
-                setActiveTab(i);
-                setDepSearch("");
-              });
-            }}
+        {activeTab === 0 && <VulnerabilitiesTab vulns={sortedVulns} />}
+        {activeTab === 1 && (
+          <DependenciesTab
+            dependencies={project.dependencies}
+            filteredDeps={filteredDeps}
+            search={depSearch}
+            onSearchChange={setDepSearch}
           />
-        </Box>
-
-        <Box
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-            p: "20px",
-          }}
-        >
-          {activeTab === 0 && <VulnerabilitiesTab vulns={sortedVulns} />}
-          {activeTab === 1 && (
-            <DependenciesTab
-              dependencies={project.dependencies}
-              filteredDeps={filteredDeps}
-              search={depSearch}
-              onSearchChange={setDepSearch}
-            />
-          )}
-          {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
-        </Box>
+        )}
+        {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
       </Box>
     </PageContainer>
   );

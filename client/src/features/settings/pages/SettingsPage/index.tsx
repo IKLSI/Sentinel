@@ -74,11 +74,14 @@ export const SettingsPage: React.FC = () => {
                   px: "14px",
                   pb: "11px",
                   pt: "2px",
-                  fontSize: "13px",
-                  fontWeight: active ? 600 : 450,
-                  color: active ? "var(--text)" : "var(--muted)",
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  letterSpacing: "0.07em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  color: active ? "var(--accent)" : "var(--muted2)",
                   position: "relative",
-                  transition: "color 0.12s",
+                  transition: "color 0.15s",
                   "&:hover": !active ? { color: "var(--text-secondary)" } : {},
                   "&::after": {
                     content: '""',
@@ -95,8 +98,8 @@ export const SettingsPage: React.FC = () => {
               >
                 <Icon
                   sx={{
-                    fontSize: 14,
-                    color: active ? "var(--accent)" : "inherit",
+                    fontSize: 16,
+                    color: active ? "var(--accent)" : "var(--muted)",
                     transition: "color 0.12s",
                   }}
                 />

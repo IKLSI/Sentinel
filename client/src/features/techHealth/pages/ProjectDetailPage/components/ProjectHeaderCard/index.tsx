@@ -13,11 +13,7 @@ import {
   UNTRACKED_SECTION,
   getGrade,
 } from "@/features/projects/pages/ProjectsPage/helpers";
-import {
-  GRADE_NOT_AVAILABLE,
-  coverageReasonKey,
-  isCovered,
-} from "@/formatters/coverage";
+import { GRADE_NOT_AVAILABLE, isCovered } from "@/formatters/coverage";
 import { formatShortDateTime } from "@/formatters/date";
 
 interface Props {
@@ -140,27 +136,6 @@ export const ProjectHeaderCard: React.FC<Props> = ({
                 <OpenInNewOutlined sx={{ fontSize: 15 }} />
               </Box>
             )}
-            {!covered && (
-              <Box
-                component="span"
-                sx={{
-                  px: "8px",
-                  py: "2px",
-                  borderRadius: "var(--r-xs)",
-                  background: "var(--s3)",
-                  color: "var(--muted2)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {t("tech_health.coverage.badge")} ·{" "}
-                {t(coverageReasonKey(project))}
-              </Box>
-            )}
           </Box>
           <Box
             sx={{
@@ -281,11 +256,12 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               <Box
                 sx={{
                   fontSize: "28px",
-                  fontWeight: 800,
+                  fontWeight: s.dash ? 400 : 800,
                   letterSpacing: "-0.03em",
                   lineHeight: 1,
-                  color:
-                    s.alert === "red"
+                  color: s.dash
+                    ? "var(--muted)"
+                    : s.alert === "red"
                       ? "var(--red)"
                       : s.alert === "orange"
                         ? "var(--orange)"

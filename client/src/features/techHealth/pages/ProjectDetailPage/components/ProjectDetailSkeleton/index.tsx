@@ -33,6 +33,19 @@ export const ProjectDetailSkeleton: React.FC = () => (
     </Box>
     <Box
       sx={{
+        display: "flex",
+        gap: "20px",
+        borderBottom: "1px solid var(--border)",
+        pb: "11px",
+        mb: "20px",
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} variant="text" width={110} height={16} />
+      ))}
+    </Box>
+    <Box
+      sx={{
         background: "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",

@@ -43,6 +43,7 @@ export function VirtualTable<T>({
 }: VirtualTableProps<T>) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const columnCount = columns.length;
+  const showNoResults = rows.length === 0 && Boolean(noResultsContent);
 
   const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
     count: rows.length,
@@ -56,6 +57,7 @@ export function VirtualTable<T>({
       sx={{
         flex: 1,
         minHeight: 0,
+        background: "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r)",
         overflow: "hidden",
@@ -107,6 +109,7 @@ export function VirtualTable<T>({
           component="table"
           sx={{
             width: "100%",
+            height: showNoResults ? "100%" : undefined,
             borderCollapse: "collapse",
             tableLayout: "fixed",
           }}
@@ -117,7 +120,7 @@ export function VirtualTable<T>({
             ))}
           </Box>
           <Box component="tbody">
-            {rows.length === 0 && noResultsContent ? (
+            {showNoResults ? (
               noResultsContent
             ) : (
               <>

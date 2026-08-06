@@ -12,7 +12,10 @@ import {
 import { useT } from "@/contexts/I18nContext";
 import type { Vulnerability } from "@/domains/projects/types";
 import type { VulnerabilitySeverity } from "@/enums";
-import { SEV_CONFIG } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+import {
+  EMPTY_STATE_SX,
+  SEV_CONFIG,
+} from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
 type VulnWithDep = Vulnerability & { dependencyName: string };
 
@@ -115,6 +118,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
         title={t("tech_health.empty.no_vulns_title")}
         subtitle={t("tech_health.empty.no_vulns_subtitle")}
         iconSize={40}
+        sx={EMPTY_STATE_SX}
       />
     );
   }

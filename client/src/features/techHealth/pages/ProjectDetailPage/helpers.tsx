@@ -13,6 +13,14 @@ export interface TabDef {
   accentColor?: string;
 }
 
+export const EMPTY_STATE_SX = {
+  flex: 1,
+  justifyContent: "center",
+  background: "var(--s1)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--r)",
+} as const;
+
 export const DEP_STATUS: Record<
   DependencyStatus,
   { labelKey: string; variant: "green" | "blue" | "orange" | "red" | "gray" }
