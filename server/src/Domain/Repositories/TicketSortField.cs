@@ -5,5 +5,6 @@ public enum TicketSortField
     Title,
     Priority,
     Status,
-    Assignee
+    Assignee,
+    Comments
 }

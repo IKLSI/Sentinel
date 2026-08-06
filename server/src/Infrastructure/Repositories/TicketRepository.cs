@@ -85,6 +85,9 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
                 : query.OrderBy(t => t.AssignedTo == null)
                     .ThenBy(t => t.AssignedTo!.FirstName)
                     .ThenBy(t => t.AssignedTo!.LastName),
+            TicketSortField.Comments => descending
+                ? query.OrderByDescending(t => t.Comments.Count)
+                : query.OrderBy(t => t.Comments.Count),
             _ => descending
                 ? query.OrderByDescending(PriorityRank)
                 : query.OrderBy(PriorityRank)

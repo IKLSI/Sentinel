@@ -55,6 +55,7 @@ const CHIP_SX = {
     borderColor: "var(--accent-border)",
     background: "var(--accent-subtle)",
     color: "var(--accent)",
+    textDecoration: "none !important",
   },
 } as const;
 

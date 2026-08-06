@@ -1330,7 +1330,7 @@ export interface components {
     /** @enum {string} */
     TicketPriority: "Low" | "Medium" | "High" | "Critical";
     /** @enum {string} */
-    TicketSortField: "Title" | "Priority" | "Status" | "Assignee";
+    TicketSortField: "Title" | "Priority" | "Status" | "Assignee" | "Comments";
     /** @enum {string} */
     TicketType:
       | "Bug"

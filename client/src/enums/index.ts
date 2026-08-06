@@ -134,6 +134,7 @@ export const TicketSortField = {
   Priority: "Priority",
   Status: "Status",
   Assignee: "Assignee",
+  Comments: "Comments",
 } as const;
 export type TicketSortField =
   (typeof TicketSortField)[keyof typeof TicketSortField];

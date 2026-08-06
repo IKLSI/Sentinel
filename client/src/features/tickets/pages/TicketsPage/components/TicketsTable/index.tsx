@@ -14,7 +14,7 @@ export interface SortState {
 }
 
 interface TicketColumn {
-  col: TicketSortField | typeof COMMENTS_COLUMN_KEY | typeof ACTIONS_COLUMN_KEY;
+  col: TicketSortField | typeof ACTIONS_COLUMN_KEY;
   label: string;
 }
 
@@ -28,11 +28,10 @@ interface Props {
 }
 
 const COLS = ["auto", "110px", "130px", "170px", "100px", "120px"] as const;
-const COMMENTS_COLUMN_KEY = "comments";
 const ACTIONS_COLUMN_KEY = "actions";
 
 const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
-  col !== COMMENTS_COLUMN_KEY && col !== ACTIONS_COLUMN_KEY;
+  col !== ACTIONS_COLUMN_KEY;
 
 const TicketsTableComponent: React.FC<Props> = ({
   tickets,
@@ -49,7 +48,7 @@ const TicketsTableComponent: React.FC<Props> = ({
     { col: TicketSortField.Priority, label: t("tickets.list.col_priority") },
     { col: TicketSortField.Status, label: t("tickets.list.col_status") },
     { col: TicketSortField.Assignee, label: t("tickets.list.col_assignee") },
-    { col: COMMENTS_COLUMN_KEY, label: t("tickets.list.col_comments") },
+    { col: TicketSortField.Comments, label: t("tickets.list.col_comments") },
     { col: ACTIONS_COLUMN_KEY, label: "" },
   ];
 
@@ -117,7 +116,7 @@ const TicketsTableComponent: React.FC<Props> = ({
                   <SortableTh
                     key={col}
                     mono
-                    align={col === COMMENTS_COLUMN_KEY ? "center" : "left"}
+                    align={col === TicketSortField.Comments ? "center" : "left"}
                     sortable={sortable}
                     active={sortable && sort.col === col}
                     ascending={sort.dir === SortDirection.Asc}
