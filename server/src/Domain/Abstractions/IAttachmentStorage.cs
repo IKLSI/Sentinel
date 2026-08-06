@@ -2,7 +2,7 @@ using Sentinel.Domain.Entities;
 
 namespace Sentinel.Domain.Abstractions;
 
-public sealed record AttachmentLocation(byte[]? InlineContent, string? StorageKey);
+public sealed record AttachmentLocation(byte[]? InlineContent);
 
 public interface IAttachmentStorage
 {

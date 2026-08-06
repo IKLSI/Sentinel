@@ -7,7 +7,6 @@ public class TicketAttachment : IEntityWithId
     public Guid TicketId { get; set; }
     public Guid UploadedById { get; set; }
     public string FileName { get; set; } = string.Empty;
-    public string? StoragePath { get; set; }
     public byte[]? Content { get; set; }
     public string ContentType { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

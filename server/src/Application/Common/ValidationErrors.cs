@@ -49,21 +49,6 @@ public sealed partial class ValidationErrors
         where TEnum : struct, Enum =>
         !Enum.IsDefined(value) ? Add(identifier, code) : this;
 
-    public ValidationErrors InRange(string identifier, decimal? value, decimal min, decimal max,
-        string minCode, string maxCode)
-    {
-        if (value is not decimal actual) return this;
-        if (actual < min) return Add(identifier, minCode);
-        if (actual > max) return Add(identifier, maxCode);
-
-        return this;
-    }
-
-    public ValidationErrors MaxCount<T>(string identifier, IReadOnlyCollection<T>? values, int maxCount, string code) =>
-        values != null && values.Count > maxCount
-            ? Add(identifier, code, new Dictionary<string, string> { ["maxCount"] = maxCount.ToString() })
-            : this;
-
     public ValidationErrors HttpUrl(string identifier, string? value, string code)
     {
         if (string.IsNullOrWhiteSpace(value)) return this;

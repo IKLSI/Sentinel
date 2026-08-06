@@ -408,7 +408,6 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.StoragePath).HasMaxLength(500);
             entity.Property(e => e.Content).HasColumnType("bytea");
             entity.Property(e => e.ContentType).HasMaxLength(150).IsRequired();
             entity.HasIndex(e => e.TicketId);

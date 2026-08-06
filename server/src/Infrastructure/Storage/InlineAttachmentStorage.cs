@@ -15,13 +15,13 @@ public class InlineAttachmentStorage : IAttachmentStorage
             byte[] exact = new byte[content.Length];
             await content.ReadExactlyAsync(exact, cancellationToken);
 
-            return new AttachmentLocation(exact, null);
+            return new AttachmentLocation(exact);
         }
 
         using MemoryStream buffer = new MemoryStream();
         await content.CopyToAsync(buffer, cancellationToken);
 
-        return new AttachmentLocation(buffer.ToArray(), null);
+        return new AttachmentLocation(buffer.ToArray());
     }
 
     public Task<Stream?> OpenReadAsync(TicketAttachment attachment, CancellationToken cancellationToken)
