@@ -7,7 +7,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/config")]
-[Route("api/v{version:apiVersion}/config")]
 public class ConfigController : BaseController
 {
     [HttpGet]

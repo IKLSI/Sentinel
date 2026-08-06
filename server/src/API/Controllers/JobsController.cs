@@ -14,7 +14,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/jobs")]
-[Route("api/v{version:apiVersion}/jobs")]
 [Authorize]
 [AuthorizeRoles(UserRole.Admin)]
 public class JobsController : BaseController

@@ -14,7 +14,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/settings/api-keys")]
-[Route("api/v{version:apiVersion}/settings/api-keys")]
 [Authorize]
 [AuthorizeRoles(UserRole.Admin)]
 public class ApiKeysController : BaseController

@@ -24,7 +24,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/tech-health")]
-[Route("api/v{version:apiVersion}/tech-health")]
 [Authorize]
 public class TechHealthController : BaseController
 {

@@ -17,7 +17,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/billing")]
-[Route("api/v{version:apiVersion}/billing")]
 [Authorize]
 public class BillingController : BaseController
 {

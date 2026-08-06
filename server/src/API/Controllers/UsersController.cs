@@ -22,7 +22,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/users")]
-[Route("api/v{version:apiVersion}/users")]
 [Authorize]
 public class UsersController : BaseController
 {

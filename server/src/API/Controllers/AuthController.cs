@@ -21,7 +21,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/auth")]
-[Route("api/v{version:apiVersion}/auth")]
 public class AuthController : BaseController
 {
     [HttpPost("login")]

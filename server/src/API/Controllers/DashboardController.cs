@@ -9,7 +9,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/dashboard")]
-[Route("api/v{version:apiVersion}/dashboard")]
 [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
 public class DashboardController : BaseController
 {

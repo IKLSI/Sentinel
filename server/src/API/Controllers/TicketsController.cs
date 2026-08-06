@@ -27,7 +27,6 @@ namespace Sentinel.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/tickets")]
-[Route("api/v{version:apiVersion}/tickets")]
 [Authorize]
 public class TicketsController : BaseController
 {
