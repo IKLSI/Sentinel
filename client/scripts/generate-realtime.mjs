@@ -8,12 +8,12 @@ const REPOSITORY_ROOT = path.resolve(scriptDir, "..", "..");
 
 const RESOURCES_SOURCE = path.join(
   REPOSITORY_ROOT,
-  "backend/src/Domain/Constants/RealtimeResources.cs",
+  "server/src/Domain/Constants/RealtimeResources.cs",
 );
 
 const CONSTANTS_SOURCE = path.join(
   REPOSITORY_ROOT,
-  "backend/src/Domain/Constants/RealtimeConstants.cs",
+  "server/src/Domain/Constants/RealtimeConstants.cs",
 );
 
 const OUTPUT = path.join(
@@ -31,7 +31,7 @@ const SHARED_CONSTANTS = [
 
 const GENERATED_HEADER = `/**
  * Fichier généré automatiquement par "pnpm generate:realtime".
- * Source : backend/src/Domain/Constants/Realtime{Constants,Resources}.cs
+ * Source : server/src/Domain/Constants/Realtime{Constants,Resources}.cs
  * Ne pas modifier à la main.
  */`;
 

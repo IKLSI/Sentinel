@@ -1,6 +1,6 @@
 /**
  * Fichier généré automatiquement par "pnpm generate:realtime".
- * Source : backend/src/Domain/Constants/Realtime{Constants,Resources}.cs
+ * Source : server/src/Domain/Constants/Realtime{Constants,Resources}.cs
  * Ne pas modifier à la main.
  */
 

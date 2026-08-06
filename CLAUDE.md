@@ -18,14 +18,14 @@ SaaS multi-tenant de tech health : branche des dépôts GitHub/GitLab, parse leu
 pnpm dev                                          # API + front (racine)
 
 dotnet build Sentinel.slnx -c Release                                     # gate
-dotnet run --project backend/tests/Sentinel.Tests/Sentinel.Tests.csproj   # gate
-pnpm --prefix frontend check && pnpm --prefix frontend lint:dead          # gate — Biome, knip
-pnpm --prefix frontend build && pnpm --prefix frontend test               # gate
+dotnet run --project server/tests/Sentinel.Tests/Sentinel.Tests.csproj   # gate
+pnpm --prefix client check && pnpm --prefix client lint:dead          # gate — Biome, knip
+pnpm --prefix client build && pnpm --prefix client test               # gate
 
-pnpm --prefix frontend generate:api               # OpenAPI → types + routes ; backend démarré requis
-pnpm --prefix frontend generate:realtime          # contrat SignalR depuis le C# ; aucun backend requis
+pnpm --prefix client generate:api               # OpenAPI → types + routes ; backend démarré requis
+pnpm --prefix client generate:realtime          # contrat SignalR depuis le C# ; aucun backend requis
 
-dotnet ef migrations add <Nom> --project backend/src/Infrastructure --startup-project backend/src/API
+dotnet ef migrations add <Nom> --project server/src/Infrastructure --startup-project server/src/API
 ```
 
 - **Avant de rendre une tâche** : faire passer les `gate` concernés par la modification
@@ -61,7 +61,7 @@ dotnet ef migrations add <Nom> --project backend/src/Infrastructure --startup-pr
 
 ### Temps réel (SignalR)
 
-Hub `API/Realtime/SentinelHub.cs` sur `/hubs/sync`, un groupe par organisation. Les services mutants diffusent un `RealtimeEvent` via `IRealtimeNotifier` **après commit** ; le front invalide les query keys mappées (`frontend/src/domains/realtime/constants.ts`).
+Hub `API/Realtime/SentinelHub.cs` sur `/hubs/sync`, un groupe par organisation. Les services mutants diffusent un `RealtimeEvent` via `IRealtimeNotifier` **après commit** ; le front invalide les query keys mappées (`client/src/domains/realtime/constants.ts`).
 
 - Contrat **généré** depuis `Domain/Constants/Realtime{Constants,Resources}.cs` → `contract.gen.ts`. Le C# est la source de vérité ; ajouter une ressource sans mapper ses query keys casse `tsc` sur le `switch` exhaustif de `resolveInvalidatedKeys`. La CI échoue si désynchronisé
 - JWT en query string au handshake (`?access_token=`) : masquer ce paramètre dans les logs du reverse-proxy en prod
@@ -87,8 +87,8 @@ Transverse : `configs/apiClient.ts` (axios, intercepteur 401 → refresh unique 
 
 ## Tests
 
-- Backend `backend/tests/Sentinel.Tests` : xunit.v3 + FluentAssertions + Testcontainers + EFCore.InMemory. `Helpers/PostgresFixture.cs` lance `postgres:17-alpine` (ou `SENTINEL_TEST_POSTGRES`), migre, crée le rôle restreint `sentinel_app` pour tester la RLS ; `EnsureAvailable()` skippe en local si Postgres manque, échoue si `CI` est défini
-- Frontend `frontend/src/tests` : Vitest + Testing Library, setup `tests/setup.ts`, helpers `tests/test-utils.tsx`. `vitest.config.ts` limite `include` à `src/tests/**` — un test posé à côté du composant **n'est jamais exécuté**
+- Backend `server/tests/Sentinel.Tests` : xunit.v3 + FluentAssertions + Testcontainers + EFCore.InMemory. `Helpers/PostgresFixture.cs` lance `postgres:17-alpine` (ou `SENTINEL_TEST_POSTGRES`), migre, crée le rôle restreint `sentinel_app` pour tester la RLS ; `EnsureAvailable()` skippe en local si Postgres manque, échoue si `CI` est défini
+- Frontend `client/src/tests` : Vitest + Testing Library, setup `tests/setup.ts`, helpers `tests/test-utils.tsx`. `vitest.config.ts` limite `include` à `src/tests/**` — un test posé à côté du composant **n'est jamais exécuté**
 
 ## Conventions
 

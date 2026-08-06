@@ -20,13 +20,13 @@ env:
   CI: true
 
 jobs:
-  frontend:
-    name: Frontend — lint & build
+  client:
+    name: Client — lint & build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
       run:
-        working-directory: frontend
+        working-directory: client
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: client/pnpm-lock.yaml
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
@@ -64,15 +64,15 @@ jobs:
       - name: Test + coverage
         run: pnpm test:coverage
 
-      - name: Upload frontend coverage
+      - name: Upload client coverage
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: frontend-coverage
-          path: frontend/coverage
+          name: client-coverage
+          path: client/coverage
 
-  backend:
-    name: Backend — build
+  server:
+    name: Server — build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -97,18 +97,18 @@ jobs:
 
       - name: Test + Coverage
         run: >
-          dotnet run --project backend/tests/Sentinel.Tests/Sentinel.Tests.csproj
+          dotnet run --project server/tests/Sentinel.Tests/Sentinel.Tests.csproj
           --no-build --configuration Release
           --
           --results-directory ./coverage
           --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
           --report-trx --report-trx-filename test-results.trx
 
-      - name: Upload backend coverage
+      - name: Upload server coverage
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: backend-coverage
+          name: server-coverage
           path: ./coverage
 
       - name: Audit NuGet dependencies (gated)

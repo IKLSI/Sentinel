@@ -8,7 +8,7 @@ namespace Sentinel.Tests.Configuration;
 
 public class RealtimeEmissionTests
 {
-    private const string ApplicationSourceDirectory = "backend/src/Application";
+    private const string ApplicationSourceDirectory = "server/src/Application";
 
     private static readonly string[] MutationUseCaseVerbs =
         ["Create", "Update", "Delete", "Revoke", "Invite", "Accept", "Connect", "Add", "Upload"];
