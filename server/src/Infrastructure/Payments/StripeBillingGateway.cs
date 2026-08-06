@@ -74,6 +74,28 @@ public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBill
         }
     }
 
+    public async Task<string> CreatePortalSessionAsync(string customerId, string returnUrl,
+        CancellationToken cancellationToken)
+    {
+        Stripe.BillingPortal.SessionCreateOptions options = new()
+        {
+            Customer = customerId,
+            ReturnUrl = returnUrl
+        };
+
+        try
+        {
+            Stripe.BillingPortal.Session session = await new Stripe.BillingPortal.SessionService(stripeClient)
+                .CreateAsync(options, cancellationToken: cancellationToken);
+
+            return session.Url;
+        }
+        catch (StripeException exception)
+        {
+            throw new BillingProviderException("Unable to create the billing portal session", exception);
+        }
+    }
+
     public async Task<decimal?> GetPriceAmountOrDefaultAsync(string priceId, CancellationToken cancellationToken)
     {
         try

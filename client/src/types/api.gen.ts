@@ -208,6 +208,20 @@ export interface paths {
       };
     };
   };
+  "/api/billing/portal": {
+    post: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["PortalSessionDto"];
+            "text/json": components["schemas"]["PortalSessionDto"];
+            "text/plain": components["schemas"]["PortalSessionDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/billing/status": {
     get: {
       responses: {
@@ -1182,6 +1196,9 @@ export interface components {
       limit: number;
       /** Format: int32 */
       used: number;
+    };
+    PortalSessionDto: {
+      url: string;
     };
     ProjectDto: {
       coverage: string;

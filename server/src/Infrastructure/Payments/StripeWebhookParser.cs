@@ -17,6 +17,8 @@ public class StripeWebhookParser(
     private const string SubscriptionCreatedType = "customer.subscription.created";
     private const string SubscriptionUpdatedType = "customer.subscription.updated";
     private const string SubscriptionDeletedType = "customer.subscription.deleted";
+    private const string InvoicePaymentFailedType = "invoice.payment_failed";
+    private const string InvoicePaidType = "invoice.paid";
 
     private readonly StripeSettings _stripe = stripeOptions.Value;
 
@@ -42,10 +44,12 @@ public class StripeWebhookParser(
         return new BillingWebhookEvent
         {
             Id = stripeEvent.Id,
+            RawType = stripeEvent.Type,
             CreatedAt = stripeEvent.Created,
             Type = ResolveType(stripeEvent),
             Checkout = stripeEvent.Data.Object is CheckoutSession session ? ToCheckout(session) : null,
-            Subscription = stripeEvent.Data.Object is Subscription subscription ? ToSnapshot(subscription) : null
+            Subscription = stripeEvent.Data.Object is Subscription subscription ? ToSnapshot(subscription) : null,
+            Invoice = stripeEvent.Data.Object is Invoice invoice ? ToInvoice(invoice) : null
         };
     }
 
@@ -54,6 +58,8 @@ public class StripeWebhookParser(
         CheckoutCompletedType => BillingWebhookEventType.CheckoutCompleted,
         SubscriptionCreatedType or SubscriptionUpdatedType => BillingWebhookEventType.SubscriptionChanged,
         SubscriptionDeletedType => BillingWebhookEventType.SubscriptionCanceled,
+        InvoicePaymentFailedType => BillingWebhookEventType.InvoicePaymentFailed,
+        InvoicePaidType => BillingWebhookEventType.InvoicePaid,
         _ => BillingWebhookEventType.Unhandled
     };
 
@@ -69,6 +75,14 @@ public class StripeWebhookParser(
         && Enum.TryParse(tierValue, out PlanTier tier)
             ? tier
             : null;
+
+    private static BillingInvoiceEvent ToInvoice(Invoice invoice) => new(
+        invoice.CustomerId,
+        invoice.Parent?.SubscriptionDetails?.SubscriptionId,
+        invoice.AmountDue / 100m,
+        invoice.AmountPaid / 100m,
+        invoice.Currency,
+        invoice.HostedInvoiceUrl);
 
     private static BillingSubscriptionSnapshot ToSnapshot(Subscription subscription) => new(
         subscription.Id,

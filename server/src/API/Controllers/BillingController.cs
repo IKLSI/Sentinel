@@ -6,6 +6,7 @@ using Sentinel.API.Attributes;
 using Sentinel.Application.Billing.Checkout;
 using Sentinel.Application.Billing.GetPlans;
 using Sentinel.Application.Billing.GetStatus;
+using Sentinel.Application.Billing.Portal;
 using Sentinel.Application.Billing.Webhook;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
@@ -41,6 +42,13 @@ public class BillingController : BaseController
         [FromServices] BillingCheckoutService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(request, cancellationToken));
+
+    [HttpPost("portal")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<ActionResult<PortalSessionDto>> Portal(
+        [FromServices] BillingPortalService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpPost("webhook")]
     [AllowAnonymous]

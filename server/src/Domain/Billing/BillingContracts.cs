@@ -17,7 +17,9 @@ public enum BillingWebhookEventType
     Unhandled,
     CheckoutCompleted,
     SubscriptionChanged,
-    SubscriptionCanceled
+    SubscriptionCanceled,
+    InvoicePaymentFailed,
+    InvoicePaid
 }
 
 public sealed record BillingCheckoutCompleted(
@@ -32,11 +34,21 @@ public sealed record BillingSubscriptionSnapshot(
     SubscriptionStatus Status,
     string? PriceId);
 
+public sealed record BillingInvoiceEvent(
+    string? CustomerId,
+    string? SubscriptionId,
+    decimal? AmountDue,
+    decimal? AmountPaid,
+    string? Currency,
+    string? HostedInvoiceUrl);
+
 public sealed class BillingWebhookEvent
 {
     public required string Id { get; init; }
+    public required string RawType { get; init; }
     public required BillingWebhookEventType Type { get; init; }
     public required DateTime CreatedAt { get; init; }
     public BillingCheckoutCompleted? Checkout { get; init; }
     public BillingSubscriptionSnapshot? Subscription { get; init; }
+    public BillingInvoiceEvent? Invoice { get; init; }
 }

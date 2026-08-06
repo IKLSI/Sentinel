@@ -489,6 +489,38 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Runtimes");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Entities.StripeWebhookEventLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StripeEventId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceivedAt");
+
+                    b.HasIndex("StripeEventId");
+
+                    b.ToTable("StripeWebhookEventLogs");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Entities.Ticket", b =>
                 {
                     b.Property<Guid>("Id")

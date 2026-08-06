@@ -41,6 +41,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
     public DbSet<ProcessedStripeEvent> ProcessedStripeEvents => Set<ProcessedStripeEvent>();
+    public DbSet<StripeWebhookEventLog> StripeWebhookEventLogs => Set<StripeWebhookEventLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +64,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureApiKey(modelBuilder);
         ConfigureRevokedToken(modelBuilder);
         ConfigureProcessedStripeEvent(modelBuilder);
+        ConfigureStripeWebhookEventLog(modelBuilder);
 
         ApplyTenantQueryFilters(modelBuilder);
     }
@@ -469,6 +471,18 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.StripeEventId).IsUnique();
             entity.HasIndex(e => e.ProcessedAt);
             entity.HasIndex(e => e.CompletedAt).HasFilter("\"CompletedAt\" IS NULL");
+        });
+    }
+
+    private static void ConfigureStripeWebhookEventLog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<StripeWebhookEventLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StripeEventId).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.EventType).HasMaxLength(255).IsRequired();
+            entity.HasIndex(e => e.StripeEventId);
+            entity.HasIndex(e => e.ReceivedAt);
         });
     }
 }

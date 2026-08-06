@@ -44,6 +44,9 @@ export const ROUTES_API = {
       plans: {
         __path: "/api/billing/plans",
       },
+      portal: {
+        __path: "/api/billing/portal",
+      },
       status: {
         __path: "/api/billing/status",
       },

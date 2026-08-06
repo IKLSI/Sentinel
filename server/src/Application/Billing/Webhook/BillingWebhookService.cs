@@ -21,6 +21,7 @@ public class BillingWebhookService : IService
     private readonly IProjectRepository _projectRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProcessedStripeEventRepository _processedStripeEventRepository;
+    private readonly IStripeWebhookEventLogRepository _webhookEventLogRepository;
     private readonly ICommitScopeFactory _commitScopeFactory;
     private readonly BillingPriceCatalog _priceCatalog;
     private readonly IBillingWebhookParser _webhookParser;
@@ -35,6 +36,7 @@ public class BillingWebhookService : IService
         IProjectRepository projectRepository,
         IUserRepository userRepository,
         IProcessedStripeEventRepository processedStripeEventRepository,
+        IStripeWebhookEventLogRepository webhookEventLogRepository,
         ICommitScopeFactory commitScopeFactory,
         BillingPriceCatalog priceCatalog,
         IBillingWebhookParser webhookParser,
@@ -48,6 +50,7 @@ public class BillingWebhookService : IService
         _projectRepository = projectRepository;
         _userRepository = userRepository;
         _processedStripeEventRepository = processedStripeEventRepository;
+        _webhookEventLogRepository = webhookEventLogRepository;
         _commitScopeFactory = commitScopeFactory;
         _priceCatalog = priceCatalog;
         _webhookParser = webhookParser;
@@ -70,6 +73,8 @@ public class BillingWebhookService : IService
             return Result.Error();
 
         using IDisposable elevation = _systemScope.Enter();
+
+        await LogWebhookEventAsync(billingEvent, model.Payload, cancellationToken);
 
         bool claimed = await _processedStripeEventRepository
             .TryClaimAsync(billingEvent.Id, DateTime.UtcNow - StaleClaimDelay, cancellationToken);
@@ -114,7 +119,33 @@ public class BillingWebhookService : IService
                 if (billingEvent.Subscription is { } canceled)
                     await ApplySubscriptionCanceledAsync(canceled, billingEvent.CreatedAt, cancellationToken);
                 break;
+
+            case BillingWebhookEventType.InvoicePaymentFailed:
+                if (billingEvent.Invoice is { } failedInvoice)
+                    await ApplyInvoicePaymentFailedAsync(failedInvoice, cancellationToken);
+                break;
+
+            case BillingWebhookEventType.InvoicePaid:
+                if (billingEvent.Invoice is { } paidInvoice)
+                    await ApplyInvoicePaidAsync(paidInvoice, cancellationToken);
+                break;
         }
+    }
+
+    private async Task LogWebhookEventAsync(BillingWebhookEvent billingEvent, string payload,
+        CancellationToken cancellationToken)
+    {
+        using ICommitScope commitScope = _commitScopeFactory.Begin();
+
+        await _webhookEventLogRepository.AddAsync(new StripeWebhookEventLog
+        {
+            StripeEventId = billingEvent.Id,
+            EventType = billingEvent.RawType,
+            Payload = payload,
+            ReceivedAt = DateTime.UtcNow
+        }, cancellationToken);
+
+        await commitScope.CommitAsync(cancellationToken);
     }
 
     private async Task TryReleaseClaimAsync(string billingEventId)
@@ -307,6 +338,49 @@ public class BillingWebhookService : IService
         _backgroundJobs.Enqueue<IEmailService>(s => s.SendSubscriptionUpdatedAsync(
             adminRecipients, organizationName, oldPlanName, newPlanName, statusKey, statusValue, billingUrl));
     }
+
+    private async Task ApplyInvoicePaymentFailedAsync(BillingInvoiceEvent invoice, CancellationToken cancellationToken)
+    {
+        Organization? organization = await _organizationRepository.GetOrDefaultByStripeReferenceAsync(
+            invoice.SubscriptionId ?? string.Empty, invoice.CustomerId, cancellationToken);
+
+        if (organization == null) return;
+
+        List<EmailRecipient> adminRecipients = await _userRepository
+            .GetActiveAdminRecipientsAsync(organization.Id, cancellationToken);
+
+        if (adminRecipients.Count == 0) return;
+
+        string organizationName = organization.Name;
+        string amount = FormatAmount(invoice.AmountDue, invoice.Currency);
+        string billingUrl = BillingUrl;
+
+        _backgroundJobs.Enqueue<IEmailService>(s =>
+            s.SendInvoicePaymentFailedAsync(adminRecipients, organizationName, amount, billingUrl));
+    }
+
+    private async Task ApplyInvoicePaidAsync(BillingInvoiceEvent invoice, CancellationToken cancellationToken)
+    {
+        Organization? organization = await _organizationRepository.GetOrDefaultByStripeReferenceAsync(
+            invoice.SubscriptionId ?? string.Empty, invoice.CustomerId, cancellationToken);
+
+        if (organization == null) return;
+
+        List<EmailRecipient> adminRecipients = await _userRepository
+            .GetActiveAdminRecipientsAsync(organization.Id, cancellationToken);
+
+        if (adminRecipients.Count == 0) return;
+
+        string organizationName = organization.Name;
+        string amount = FormatAmount(invoice.AmountPaid, invoice.Currency);
+        string billingUrl = BillingUrl;
+
+        _backgroundJobs.Enqueue<IEmailService>(s =>
+            s.SendInvoicePaidAsync(adminRecipients, organizationName, amount, billingUrl));
+    }
+
+    private static string FormatAmount(decimal? amount, string? currency) =>
+        $"{amount ?? 0:0.00} {(currency ?? string.Empty).ToUpperInvariant()}";
 
     private string BillingUrl => $"{_frontend.BaseUrl}/settings";
 }

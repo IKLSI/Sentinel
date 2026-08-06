@@ -32,4 +32,10 @@ public interface IEmailService
 
     Task SendSubscriptionUpdatedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
         string oldPlan, string newPlan, string statusKey, string statusValue, string billingUrl);
+
+    Task SendInvoicePaymentFailedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
+        string amount, string billingUrl);
+
+    Task SendInvoicePaidAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
+        string amount, string billingUrl);
 }

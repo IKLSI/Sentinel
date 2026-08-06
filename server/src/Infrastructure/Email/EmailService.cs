@@ -302,6 +302,54 @@ public partial class EmailService : IEmailService
         }
     }
 
+    public async Task SendInvoicePaymentFailedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName, string amount, string billingUrl)
+    {
+        foreach (EmailRecipient recipient in recipients)
+        {
+            string html = RenderTemplate("invoice-payment-failed.html", recipient.Culture, new Dictionary<string, string>
+            {
+                ["{{ORGANIZATION}}"] = organizationName,
+                ["{{AMOUNT}}"]       = amount,
+                ["{{BILLING_URL}}"]  = billingUrl
+            });
+
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
+            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
+            message.Subject = Text(recipient.Culture, "emails.invoice_payment_failed.subject",
+                new Dictionary<string, string> { ["organization"] = organizationName });
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            await SendAsync(message);
+
+            _logger.LogInformation("Invoice payment failed notification sent to {Email}", recipient.Email);
+        }
+    }
+
+    public async Task SendInvoicePaidAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName, string amount, string billingUrl)
+    {
+        foreach (EmailRecipient recipient in recipients)
+        {
+            string html = RenderTemplate("invoice-paid.html", recipient.Culture, new Dictionary<string, string>
+            {
+                ["{{ORGANIZATION}}"] = organizationName,
+                ["{{AMOUNT}}"]       = amount,
+                ["{{BILLING_URL}}"]  = billingUrl
+            });
+
+            MimeMessage message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
+            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
+            message.Subject = Text(recipient.Culture, "emails.invoice_paid.subject",
+                new Dictionary<string, string> { ["organization"] = organizationName });
+            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
+
+            await SendAsync(message);
+
+            _logger.LogInformation("Invoice paid notification sent to {Email}", recipient.Email);
+        }
+    }
+
     private string BuildVulnerabilityRows(IReadOnlyList<VulnerabilityAlertEntry> newVulns, string culture)
     {
         string rows = string.Join("\n", newVulns.Take(15).Select(v =>

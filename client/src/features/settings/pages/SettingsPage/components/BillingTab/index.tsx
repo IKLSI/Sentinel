@@ -2,13 +2,15 @@ import type React from "react";
 import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
-import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import StarOutlined from "@mui/icons-material/StarOutlined";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { useT } from "@/contexts/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { useStartCheckoutMutation } from "@/domains/billing/mutations";
+import {
+  useOpenPortalMutation,
+  useStartCheckoutMutation,
+} from "@/domains/billing/mutations";
 import {
   useBillingPlansQuery,
   useBillingStatusQuery,
@@ -35,10 +37,12 @@ const BILLING_RESULT = {
 export const BillingTab: React.FC = () => {
   const t = useT();
   const onCheckoutError = useApiErrorToast("settings.billing.error_generic");
+  const onPortalError = useApiErrorToast("settings.billing.error_generic");
   const { showToast } = useToast();
   const billingStatusQuery = useBillingStatusQuery();
   const billingPlansQuery = useBillingPlansQuery();
   const startCheckoutMutation = useStartCheckoutMutation();
+  const openPortalMutation = useOpenPortalMutation();
   const status = billingStatusQuery.data ?? null;
   const rawPlans = billingPlansQuery.data ?? [];
   const loading = billingStatusQuery.isLoading || billingPlansQuery.isLoading;
@@ -66,6 +70,18 @@ export const BillingTab: React.FC = () => {
           if (session.url) window.location.href = session.url;
         },
         onError: onCheckoutError,
+      },
+    );
+  };
+
+  const handleOpenPortal = () => {
+    openPortalMutation.mutate(
+      {},
+      {
+        onSuccess: (session) => {
+          if (session.url) window.location.href = session.url;
+        },
+        onError: onPortalError,
       },
     );
   };
@@ -416,7 +432,6 @@ export const BillingTab: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: "6px",
                         borderRadius: "var(--r-sm)",
                         fontSize: "12.5px",
                         fontWeight: 700,
@@ -427,11 +442,9 @@ export const BillingTab: React.FC = () => {
                           "0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent)",
                         transition:
                           "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
-                        "& .arrow": { transition: "transform 0.15s" },
                         "&:hover": {
                           boxShadow:
                             "0 6px 20px color-mix(in srgb, var(--accent) 42%, transparent)",
-                          "& .arrow": { transform: "translateX(3px)" },
                         },
                         "&:active": { transform: "scale(0.98)" },
                         "&:disabled": {
@@ -442,10 +455,47 @@ export const BillingTab: React.FC = () => {
                       }}
                     >
                       {t("settings.billing.upgrade_to")} {plan.tier}
-                      <ArrowForwardOutlined
-                        className="arrow"
-                        sx={{ fontSize: 15 }}
-                      />
+                    </Box>
+                  )}
+
+                  {plan.isCurrent && plan.tier !== "Free" && (
+                    <Box
+                      component="button"
+                      onClick={handleOpenPortal}
+                      disabled={openPortalMutation.isPending}
+                      sx={{
+                        all: "unset",
+                        cursor: "pointer",
+                        boxSizing: "border-box",
+                        width: "100%",
+                        mt: "auto",
+                        height: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "var(--r-sm)",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        color: "var(--s1)",
+                        background:
+                          "linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent))",
+                        boxShadow:
+                          "0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent)",
+                        transition:
+                          "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
+                        "&:hover": {
+                          boxShadow:
+                            "0 6px 20px color-mix(in srgb, var(--accent) 42%, transparent)",
+                        },
+                        "&:active": { transform: "scale(0.98)" },
+                        "&:disabled": {
+                          opacity: 0.5,
+                          cursor: "not-allowed",
+                          boxShadow: "none",
+                        },
+                      }}
+                    >
+                      {t("settings.billing.manage_subscription")}
                     </Box>
                   )}
                 </Box>

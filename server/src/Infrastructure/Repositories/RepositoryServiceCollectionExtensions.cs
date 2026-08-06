@@ -32,6 +32,7 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IRevokedTokenRepository, RevokedTokenRepository>();
         services.AddScoped<IProcessedStripeEventRepository, ProcessedStripeEventRepository>();
+        services.AddScoped<IStripeWebhookEventLogRepository, StripeWebhookEventLogRepository>();
 
         return services;
     }

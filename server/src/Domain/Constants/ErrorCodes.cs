@@ -34,6 +34,7 @@ public static class ErrorCodes
     public const string BillingInvalidPlan = "errors.billing.invalid_plan";
     public const string BillingProviderUnavailable = "errors.billing.provider_unavailable";
     public const string BillingPriceNotConfigured = "errors.billing.price_not_configured";
+    public const string BillingCustomerNotFound = "errors.billing.customer_not_found";
 
     public const string QuotaProjectsExceeded = "errors.quota.projects_exceeded";
     public const string QuotaMembersExceeded = "errors.quota.members_exceeded";

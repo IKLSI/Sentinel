@@ -8,5 +8,7 @@ public interface IBillingGateway
 
     Task<string> CreateCheckoutSessionAsync(BillingCheckoutRequest request, CancellationToken cancellationToken);
 
+    Task<string> CreatePortalSessionAsync(string customerId, string returnUrl, CancellationToken cancellationToken);
+
     Task<decimal?> GetPriceAmountOrDefaultAsync(string priceId, CancellationToken cancellationToken);
 }

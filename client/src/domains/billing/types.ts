@@ -7,3 +7,5 @@ export type PlanOption = components["schemas"]["PlanOptionDto"];
 export type CheckoutRequest = components["schemas"]["CheckoutRequest"];
 
 export type CheckoutSession = components["schemas"]["CheckoutSessionDto"];
+
+export type PortalSession = components["schemas"]["PortalSessionDto"];
