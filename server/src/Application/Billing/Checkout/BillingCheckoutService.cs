@@ -60,8 +60,7 @@ public class BillingCheckoutService : IService
 
         try
         {
-            Result<string> sessionResult = await CreateSessionAsync(organizationId, tier, model.BillingInterval,
-                cancellationToken);
+            Result<string> sessionResult = await CreateSessionAsync(organizationId, tier, cancellationToken);
 
             if (!sessionResult.IsSuccess)
                 return Result<CheckoutSessionDto>.From(sessionResult);
@@ -83,10 +82,10 @@ public class BillingCheckoutService : IService
         }
     }
 
-    private async Task<Result<string>> CreateSessionAsync(Guid organizationId, PlanTier tier, string billingInterval,
+    private async Task<Result<string>> CreateSessionAsync(Guid organizationId, PlanTier tier,
         CancellationToken cancellationToken)
     {
-        Result<string> priceResult = _priceCatalog.PriceIdFor(tier, billingInterval);
+        Result<string> priceResult = _priceCatalog.PriceIdFor(tier);
 
         if (!priceResult.IsSuccess)
             return priceResult;
@@ -105,7 +104,6 @@ public class BillingCheckoutService : IService
             customerId,
             priceResult.Value!,
             tier,
-            billingInterval,
             $"{baseUrl}/settings?billing=success",
             $"{baseUrl}/settings?billing=cancel");
 

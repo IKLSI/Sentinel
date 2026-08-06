@@ -8,31 +8,22 @@ namespace Sentinel.Application.Billing;
 
 public class BillingPriceCatalog(IOptions<StripePrices> priceOptions)
 {
-    private const string AnnualInterval = "annual";
-
     private readonly StripePrices _prices = priceOptions.Value;
 
-    public (PlanTier Tier, string? MonthlyId, string? AnnualId)[] PaidTiers =>
+    public (PlanTier Tier, string? MonthlyId)[] PaidTiers =>
     [
-        (PlanTier.Pro, _prices.Pro, _prices.ProAnnual),
-        (PlanTier.Business, _prices.Business, _prices.BusinessAnnual)
+        (PlanTier.Pro, _prices.Pro),
+        (PlanTier.Business, _prices.Business)
     ];
 
-    public Result<string> PriceIdFor(PlanTier tier, string billingInterval)
+    public Result<string> PriceIdFor(PlanTier tier)
     {
-        string? priceId = billingInterval == AnnualInterval
-            ? tier switch
-            {
-                PlanTier.Pro => _prices.ProAnnual,
-                PlanTier.Business => _prices.BusinessAnnual,
-                _ => null
-            }
-            : tier switch
-            {
-                PlanTier.Pro => _prices.Pro,
-                PlanTier.Business => _prices.Business,
-                _ => null
-            };
+        string? priceId = tier switch
+        {
+            PlanTier.Pro => _prices.Pro,
+            PlanTier.Business => _prices.Business,
+            _ => null
+        };
 
         if (string.IsNullOrEmpty(priceId))
         {
@@ -46,8 +37,8 @@ public class BillingPriceCatalog(IOptions<StripePrices> priceOptions)
     public PlanTier? TierFor(string? priceId)
     {
         if (string.IsNullOrEmpty(priceId)) return null;
-        if (priceId == _prices.Pro || priceId == _prices.ProAnnual) return PlanTier.Pro;
-        if (priceId == _prices.Business || priceId == _prices.BusinessAnnual) return PlanTier.Business;
+        if (priceId == _prices.Pro) return PlanTier.Pro;
+        if (priceId == _prices.Business) return PlanTier.Business;
 
         return null;
     }

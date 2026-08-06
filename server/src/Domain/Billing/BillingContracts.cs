@@ -9,7 +9,6 @@ public sealed record BillingCheckoutRequest(
     string CustomerId,
     string PriceId,
     PlanTier Tier,
-    string BillingInterval,
     string SuccessUrl,
     string CancelUrl);
 

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
@@ -8,10 +8,6 @@ import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { useT } from "@/contexts/I18nContext";
 import { useToast } from "@/hooks/useToast";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import {
-  BILLING_INTERVAL,
-  type BillingInterval,
-} from "@/domains/billing/constants";
 import { useStartCheckoutMutation } from "@/domains/billing/mutations";
 import {
   useBillingPlansQuery,
@@ -47,9 +43,6 @@ export const BillingTab: React.FC = () => {
   const rawPlans = billingPlansQuery.data ?? [];
   const loading = billingStatusQuery.isLoading || billingPlansQuery.isLoading;
   const actionLoading = startCheckoutMutation.isPending;
-  const [interval, setInterval] = useState<BillingInterval>(
-    BILLING_INTERVAL.Monthly,
-  );
 
   const plans = [...rawPlans].sort(
     (a, b) => PLAN_ORDER.indexOf(a.tier) - PLAN_ORDER.indexOf(b.tier),
@@ -67,7 +60,7 @@ export const BillingTab: React.FC = () => {
 
   const handleCheckout = (tier: string) => {
     startCheckoutMutation.mutate(
-      { data: { planTier: tier, billingInterval: interval } },
+      { data: { planTier: tier } },
       {
         onSuccess: (session) => {
           if (session.url) window.location.href = session.url;
@@ -220,68 +213,6 @@ export const BillingTab: React.FC = () => {
             >
               {t("settings.billing.available_plans")}
             </Box>
-            <Box
-              sx={{
-                display: "flex",
-                gap: "3px",
-                background: "var(--s1)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-sm)",
-                p: "3px",
-              }}
-            >
-              {Object.values(BILLING_INTERVAL).map((iv) => (
-                <Box
-                  key={iv}
-                  component="button"
-                  onClick={() => setInterval(iv)}
-                  sx={{
-                    all: "unset",
-                    cursor: "pointer",
-                    px: "11px",
-                    height: "26px",
-                    borderRadius: "calc(var(--r-sm) - 2px)",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    color: interval === iv ? "var(--s1)" : "var(--muted)",
-                    background:
-                      interval === iv ? "var(--accent)" : "transparent",
-                    transition: "all 0.15s",
-                    "&:hover": interval === iv ? {} : { color: "var(--text)" },
-                  }}
-                >
-                  {iv === BILLING_INTERVAL.Monthly
-                    ? t("settings.billing.interval_monthly")
-                    : t("settings.billing.interval_annual")}
-                  {iv === BILLING_INTERVAL.Annual && (
-                    <Box
-                      sx={{
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        color:
-                          interval === BILLING_INTERVAL.Annual
-                            ? "var(--s1)"
-                            : "var(--green)",
-                        background:
-                          interval === BILLING_INTERVAL.Annual
-                            ? "color-mix(in srgb, var(--s1) 22%, transparent)"
-                            : "var(--green-subtle)",
-                        px: "5px",
-                        height: "16px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        borderRadius: "8px",
-                      }}
-                    >
-                      {t("settings.billing.annual_save")}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
           </Box>
           <Box
             sx={{
@@ -380,35 +311,6 @@ export const BillingTab: React.FC = () => {
                         }}
                       >
                         {t("settings.billing.plan_free")}
-                      </Box>
-                    ) : interval === BILLING_INTERVAL.Annual &&
-                      plan.priceAnnual > 0 ? (
-                      <Box>
-                        <Box
-                          sx={{
-                            fontSize: "26px",
-                            fontWeight: 800,
-                            letterSpacing: "-0.02em",
-                            color: plan.isCurrent
-                              ? "var(--accent)"
-                              : "var(--text)",
-                          }}
-                        >
-                          {t("settings.billing.plan_price_annual_monthly", {
-                            price: Math.round(plan.priceAnnual / 12),
-                          })}
-                        </Box>
-                        <Box
-                          sx={{
-                            fontSize: "11px",
-                            color: "var(--muted)",
-                            mt: "3px",
-                          }}
-                        >
-                          {t("settings.billing.plan_price_annual_total", {
-                            total: plan.priceAnnual,
-                          })}
-                        </Box>
                       </Box>
                     ) : (
                       <Box

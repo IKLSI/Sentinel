@@ -1077,7 +1077,6 @@ export interface components {
       scans: components["schemas"]["PlanQuotaDto"];
     };
     CheckoutRequest: {
-      billingInterval: string;
       planTier: string;
     };
     CheckoutSessionDto: {
@@ -1174,8 +1173,6 @@ export interface components {
       maxProjects: number;
       /** Format: int32 */
       maxScansPerMonth: number;
-      /** Format: double */
-      priceAnnual: number;
       /** Format: double */
       priceMonthly: number;
       tier: string;

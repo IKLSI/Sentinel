@@ -57,8 +57,7 @@ public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBill
             Metadata = new Dictionary<string, string>
             {
                 [StripeMetadataKeys.OrganizationId] = request.OrganizationId.ToString(),
-                [StripeMetadataKeys.PlanTier] = request.Tier.ToString(),
-                [StripeMetadataKeys.BillingInterval] = request.BillingInterval
+                [StripeMetadataKeys.PlanTier] = request.Tier.ToString()
             }
         };
 

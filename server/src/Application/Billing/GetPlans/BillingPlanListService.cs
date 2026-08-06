@@ -25,11 +25,11 @@ public class BillingPlanListService(
         PlanTier currentTier = await organizationRepository
             .GetEffectivePlanTierOrDefaultAsync(organizationId, cancellationToken);
 
-        Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = await GetPricesAsync(cancellationToken);
+        Dictionary<PlanTier, decimal> prices = await GetPricesAsync(cancellationToken);
 
         return PlanLimits.ByTier.Select(entry =>
         {
-            (decimal monthly, decimal annual) = prices.GetValueOrDefault(entry.Key, (0m, 0m));
+            decimal monthly = prices.GetValueOrDefault(entry.Key, 0m);
 
             return new PlanOptionDto
             {
@@ -38,13 +38,12 @@ public class BillingPlanListService(
                 MaxMembers = entry.Value.MaxMembers,
                 MaxScansPerMonth = entry.Value.MaxScansPerMonth,
                 PriceMonthly = monthly,
-                PriceAnnual = annual,
                 IsCurrent = entry.Key == currentTier
             };
         }).ToList();
     }
 
-    private async Task<Dictionary<PlanTier, (decimal Monthly, decimal Annual)>> GetPricesAsync(
+    private async Task<Dictionary<PlanTier, decimal>> GetPricesAsync(
         CancellationToken cancellationToken)
     {
         return await cache.GetOrCreateAsync(PriceCacheKey, async entry =>
@@ -52,13 +51,11 @@ public class BillingPlanListService(
             entry.AbsoluteExpirationRelativeToNow = PriceCacheDuration;
             entry.Size = 1;
 
-            Dictionary<PlanTier, (decimal Monthly, decimal Annual)> prices = [];
+            Dictionary<PlanTier, decimal> prices = [];
 
-            foreach ((PlanTier tier, string? monthlyId, string? annualId) in priceCatalog.PaidTiers)
+            foreach ((PlanTier tier, string? monthlyId) in priceCatalog.PaidTiers)
             {
-                prices[tier] = (
-                    await ReadAmountAsync(monthlyId, cancellationToken),
-                    await ReadAmountAsync(annualId, cancellationToken));
+                prices[tier] = await ReadAmountAsync(monthlyId, cancellationToken);
             }
 
             return prices;
