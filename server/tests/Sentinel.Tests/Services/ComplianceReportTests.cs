@@ -72,7 +72,8 @@ public class ComplianceReportTests
 
         await scope.SeedAsync(project);
 
-        ComplianceReportService sut = new(scope.Projects, scope.Organizations, scope.Users, BuildLocalizer());
+        ComplianceReportService sut = new(scope.Projects, scope.Organizations, scope.Users, scope.AuditLogs,
+            BuildLocalizer());
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, scope.UserId,
             CancellationToken.None);
@@ -90,7 +91,8 @@ public class ComplianceReportTests
         await scope.SeedAsync(scope.NewOrganization());
         await scope.SeedAsync(NewUser(scope.OrganizationId, scope.UserId, LanguageValues.Fr));
 
-        ComplianceReportService sut = new(scope.Projects, scope.Organizations, scope.Users, BuildLocalizer());
+        ComplianceReportService sut = new(scope.Projects, scope.Organizations, scope.Users, scope.AuditLogs,
+            BuildLocalizer());
 
         ExportResult? result = await sut.GenerateAsync(Guid.NewGuid(), scope.OrganizationId, scope.UserId,
             CancellationToken.None);

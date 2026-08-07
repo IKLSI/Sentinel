@@ -49,7 +49,7 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
     public string ControlEolRequirement => Text("exports.compliance.control.eol.requirement");
     public string ControlEolDetailOk => Text("exports.compliance.control.eol.detail_ok");
     public string ControlTraceabilityRequirement => Text("exports.compliance.control.traceability.requirement");
-    public string ControlTraceabilityDetail => Text("exports.compliance.control.traceability.detail");
+    public string ControlTraceabilityDetailNone => Text("exports.compliance.control.traceability.detail_none");
     public string ControlPatchingRequirement => Text("exports.compliance.control.patching.requirement");
     public string ControlPatchingDetailOk => Text("exports.compliance.control.patching.detail_ok");
     public string ControlPatchingDetailWarn => Text("exports.compliance.control.patching.detail_warn");
@@ -61,8 +61,16 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
     public string AttestationDisclaimer => Text("exports.compliance.attestation.disclaimer");
     public string FooterConfidential => Text("exports.compliance.footer.confidential");
 
+    public string HeaderEventDate => Text("exports.compliance.header.event_date");
+    public string HeaderEventAction => Text("exports.compliance.header.event_action");
+    public string HeaderEventUser => Text("exports.compliance.header.event_user");
+    public string EventSystemUser => Text("exports.compliance.event.system_user");
+
     public string ControlEolDetailWarn(int count) =>
         Count("exports.compliance.control.eol.detail_warn", count);
+
+    public string ControlTraceabilityDetailCovered(int count) =>
+        Count("exports.compliance.control.traceability.detail_covered", count);
 
     public string SectionVulnerabilities(int count) =>
         Count("exports.compliance.section.vulnerabilities", count);
@@ -70,12 +78,33 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
     public string SectionEolRuntimes(int count) =>
         Count("exports.compliance.section.eol_runtimes", count);
 
+    public string SectionAuditTrail(int count) =>
+        Count("exports.compliance.section.audit_trail", count);
+
     public string VulnerabilitiesHidden(int count) =>
         Count("exports.compliance.vulnerabilities.hidden", count);
 
     public string AttestationWithScan(string date) =>
         localizer.Get(culture, "exports.compliance.attestation.with_scan",
             new Dictionary<string, string> { ["date"] = date });
+
+    public string GeneratedBy(string name) =>
+        localizer.Get(culture, "exports.compliance.attestation.generated_by",
+            new Dictionary<string, string> { ["name"] = name });
+
+    public string ReportId(string id) =>
+        localizer.Get(culture, "exports.compliance.footer.report_id",
+            new Dictionary<string, string> { ["id"] = id });
+
+    public string AuditActionLabel(string action) => action switch
+    {
+        "ProjectCreated" => Text("exports.compliance.audit_action.project_created"),
+        "ProjectUpdated" => Text("exports.compliance.audit_action.project_updated"),
+        "ProjectDeleted" => Text("exports.compliance.audit_action.project_deleted"),
+        "ScanTriggered" => Text("exports.compliance.audit_action.scan_triggered"),
+        "ScanCompleted" => Text("exports.compliance.audit_action.scan_completed"),
+        _ => action
+    };
 
     public static string ResolveCulture(string? language) =>
         language != null && LanguageValues.All.Contains(language) ? language : LanguageValues.Fr;

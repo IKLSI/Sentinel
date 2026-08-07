@@ -9,4 +9,6 @@ public static class ExportLimits
     public const long MaxUserExportInFlightBytes = 16L * 1024 * 1024;
     public const int MaxUserExportAttachmentBatch = 25;
     public const int MaxArchiveFileNameLength = 120;
+    public const int MaxComplianceVulnerabilityRows = 200;
+    public const int MaxComplianceAuditLogRows = 25;
 }

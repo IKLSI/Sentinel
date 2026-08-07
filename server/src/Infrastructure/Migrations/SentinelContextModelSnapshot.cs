@@ -159,6 +159,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("License")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -168,8 +171,7 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Publisher")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()

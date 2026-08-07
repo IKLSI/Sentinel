@@ -176,6 +176,52 @@ public class SbomServiceTests
             .Should().Be("pkg:npm/sans-version");
     }
 
+    [Fact]
+    public async Task GenerateAsync_QuandLaDependanceAUneLicence_LaReporteEnCycloneDxEtEnSpdx()
+    {
+        using TestScope scope = new TestScope();
+
+        await scope.SeedAsync(scope.NewOrganization());
+
+        Project project = NewProject(scope.OrganizationId);
+        project.Dependencies.Add(new Dependency
+        {
+            Name = "left-pad",
+            CurrentVersion = "1.3.0",
+            Ecosystem = DependencyEcosystem.Npm,
+            License = "MIT"
+        });
+        project.Dependencies.Add(new Dependency
+        {
+            Name = "obscure-lib",
+            CurrentVersion = "0.1.0",
+            Ecosystem = DependencyEcosystem.Npm,
+            License = "Some Custom License"
+        });
+
+        await scope.SeedAsync(project);
+
+        SbomService sut = new(scope.Projects, scope.Organizations);
+
+        ExportResult? cyclone = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.CycloneDx,
+            CancellationToken.None);
+        ExportResult? spdx = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.Spdx,
+            CancellationToken.None);
+
+        JsonElement components = Parse(cyclone!.Content).GetProperty("components");
+        JsonElement mit = components.EnumerateArray().Single(c => c.GetProperty("name").GetString() == "left-pad");
+        mit.GetProperty("licenses")[0].GetProperty("license").GetProperty("id").GetString().Should().Be("MIT");
+
+        JsonElement custom = components.EnumerateArray().Single(c => c.GetProperty("name").GetString() == "obscure-lib");
+        custom.GetProperty("licenses")[0].GetProperty("license").GetProperty("name").GetString()
+            .Should().Be("Some Custom License");
+
+        JsonElement packages = Parse(spdx!.Content).GetProperty("packages");
+        Package(packages, "left-pad").GetProperty("licenseDeclared").GetString().Should().Be("MIT");
+        Package(packages, "left-pad").GetProperty("licenseConcluded").GetString().Should().Be(NoAssertion);
+        Package(packages, "Mon Projet").GetProperty("licenseDeclared").GetString().Should().Be(NoAssertion);
+    }
+
     private static async Task<Project> SeedProjectAsync(TestScope scope)
     {
         await scope.SeedAsync(scope.NewOrganization());

@@ -9,9 +9,9 @@ using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Infrastructure.Http;
 
-public sealed record RegistryPackage(string? LatestVersion, string? Publisher)
+public sealed record RegistryPackage(string? LatestVersion, string? Publisher, string? License = null)
 {
-    public static readonly RegistryPackage Unresolved = new(null, null);
+    public static readonly RegistryPackage Unresolved = new(null, null, null);
 }
 
 public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMemoryCache cache) : IDependencyRegistryClient
@@ -70,6 +70,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
     {
         dep.LatestVersion = package.LatestVersion;
         dep.Publisher = package.Publisher ?? NamespacePublisher(dep);
+        dep.License = package.License;
     }
 
     private static string? NamespacePublisher(Dependency dep) => dep.Ecosystem switch
@@ -126,8 +127,9 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         string? publisher = PersonName(root, "author")
             ?? FirstPersonName(root, "maintainers")
             ?? PersonName(root, "_npmUser");
+        string? license = Text(root, "license");
 
-        return new RegistryPackage(version, publisher);
+        return new RegistryPackage(version, publisher, license);
     }
 
     private static async Task<RegistryPackage> FetchNuGetAsync(HttpClient client, string package)
@@ -150,7 +152,25 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("info", out JsonElement info)) return RegistryPackage.Unresolved;
 
-        return new RegistryPackage(Text(info, "version"), Text(info, "author") ?? Text(info, "maintainer"));
+        string? license = Text(info, "license") ?? ClassifierLicense(info);
+
+        return new RegistryPackage(Text(info, "version"), Text(info, "author") ?? Text(info, "maintainer"), license);
+    }
+
+    private static string? ClassifierLicense(JsonElement info)
+    {
+        if (!info.TryGetProperty("classifiers", out JsonElement classifiers) || classifiers.ValueKind != JsonValueKind.Array)
+            return null;
+
+        foreach (JsonElement classifier in classifiers.EnumerateArray())
+        {
+            string? value = classifier.ValueKind == JsonValueKind.String ? classifier.GetString() : null;
+            if (value == null || !value.StartsWith("License :: OSI Approved :: ", StringComparison.Ordinal)) continue;
+
+            return Trim(value["License :: OSI Approved :: ".Length..]);
+        }
+
+        return null;
     }
 
     private static async Task<RegistryPackage> FetchMavenAsync(HttpClient client, string package)
@@ -195,7 +215,7 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
             .ToList();
         string? version = stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
 
-        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"));
+        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"), StringOrFirst(pkg, "license"));
     }
 
     private static async Task<RegistryPackage> FetchRubyGemsAsync(HttpClient client, string gem)
@@ -204,7 +224,8 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
-        return new RegistryPackage(Text(doc.RootElement, "version"), Text(doc.RootElement, "authors"));
+        return new RegistryPackage(Text(doc.RootElement, "version"), Text(doc.RootElement, "authors"),
+            StringOrFirst(doc.RootElement, "licenses"));
     }
 
     private static async Task<RegistryPackage> FetchCratesAsync(HttpClient client, string crate)
@@ -214,7 +235,22 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return RegistryPackage.Unresolved;
 
-        return new RegistryPackage(Text(crateObj, "newest_version"), null);
+        string? newestVersion = Text(crateObj, "newest_version");
+        string? license = CrateVersionLicense(doc.RootElement, newestVersion);
+
+        return new RegistryPackage(newestVersion, null, license);
+    }
+
+    private static string? CrateVersionLicense(JsonElement root, string? newestVersion)
+    {
+        if (!root.TryGetProperty("versions", out JsonElement versions) || versions.ValueKind != JsonValueKind.Array)
+            return null;
+
+        List<JsonElement> entries = versions.EnumerateArray().ToList();
+        if (entries.Count == 0) return null;
+
+        JsonElement target = entries.FirstOrDefault(v => Text(v, "num") == newestVersion, entries[0]);
+        return Text(target, "license");
     }
 
     private static async Task<RegistryPackage> FetchHexAsync(HttpClient client, string package)
@@ -223,11 +259,13 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
         if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         JsonElement root = doc.RootElement;
+        bool hasMeta = root.TryGetProperty("meta", out JsonElement meta);
 
         string? publisher = FirstPersonName(root, "owners")
-            ?? (root.TryGetProperty("meta", out JsonElement meta) ? StringOrFirst(meta, "maintainers") : null);
+            ?? (hasMeta ? StringOrFirst(meta, "maintainers") : null);
+        string? license = hasMeta ? StringOrFirst(meta, "licenses") : null;
 
-        return new RegistryPackage(Text(root, "latest_stable_version"), publisher);
+        return new RegistryPackage(Text(root, "latest_stable_version"), publisher, license);
     }
 
     private static async Task<RegistryPackage> FetchPubAsync(HttpClient client, string package)

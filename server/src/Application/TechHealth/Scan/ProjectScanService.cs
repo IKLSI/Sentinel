@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.Extensions.Logging;
+using Sentinel.Application.Audit;
 using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
@@ -28,6 +29,7 @@ public class ProjectScanService(
     DashboardCache dashboardCache,
     IRealtimeNotifier realtimeNotifier,
     ISystemScope systemScope,
+    IAuditLogService auditLog,
     ILogger<ProjectScanService> logger)
 {
     public async Task ScanProjectAsync(Guid projectId)
@@ -174,6 +176,13 @@ public class ProjectScanService(
             logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
 
         await inventoryWriter.SaveAsync(CancellationToken.None);
+
+        await auditLog.LogAsync(
+            AuditAction.ScanCompleted,
+            entityType: AuditEntityTypes.Project,
+            organizationId: project.OrganizationId,
+            userId: null,
+            entityId: project.Id);
 
         dashboardCache.Invalidate(project.OrganizationId);
 

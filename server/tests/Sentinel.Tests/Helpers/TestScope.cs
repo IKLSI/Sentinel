@@ -20,6 +20,7 @@ public sealed class TestScope : IDisposable
         Users = new UserRepository(Context);
         Organizations = new OrganizationRepository(Context);
         Invitations = new UserInvitationRepository(Context);
+        AuditLogs = new AuditLogRepository(Context);
     }
 
     public Guid OrganizationId { get; }
@@ -34,6 +35,7 @@ public sealed class TestScope : IDisposable
     public UserRepository Users { get; }
     public OrganizationRepository Organizations { get; }
     public UserInvitationRepository Invitations { get; }
+    public AuditLogRepository AuditLogs { get; }
 
     public async Task SeedAsync(params object[] entities)
     {

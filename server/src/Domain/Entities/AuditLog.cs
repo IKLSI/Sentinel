@@ -31,6 +31,7 @@ public enum AuditAction
     ProjectUpdated,
     ProjectDeleted,
     ScanTriggered,
+    ScanCompleted,
 
     OrganizationUpdated,
     GithubIntegrationSaved,

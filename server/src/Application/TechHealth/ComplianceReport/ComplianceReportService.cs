@@ -1,9 +1,11 @@
+using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
@@ -13,6 +15,7 @@ public class ComplianceReportService(
     IProjectRepository projectRepository,
     IOrganizationRepository organizationRepository,
     IUserRepository userRepository,
+    IAuditLogRepository auditLogRepository,
     ILocalizer localizer)
 {
     private const string Navy = "#1C2B40";
@@ -36,20 +39,29 @@ public class ComplianceReportService(
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.NoTracking, cancellationToken);
 
-        string? language = await userRepository.GetLanguageOrDefaultAsync(currentUserId, cancellationToken);
-        ComplianceReportLabels labels = new(localizer, ComplianceReportLabels.ResolveCulture(language));
+        User? currentUser = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
+            QueryTracking.NoTracking, cancellationToken);
 
-        ReportData data = BuildData(project, organization?.Name ?? labels.OrganizationFallback, labels);
+        ComplianceReportLabels labels = new(localizer, ComplianceReportLabels.ResolveCulture(currentUser?.Language));
+
+        IReadOnlyList<ComplianceAuditLogRow> auditTrail = await auditLogRepository.ListForProjectAsync(projectId,
+            organizationId, ExportLimits.MaxComplianceAuditLogRows + 1, cancellationToken);
+
+        ReportData data = BuildData(project, organization?.Name ?? labels.OrganizationFallback, currentUser,
+            auditTrail, labels);
         byte[] pdf = Compose(data).GeneratePdf();
         string slug = ExportFileName.Slugify(project.Name);
 
         return new ExportResult(pdf, $"{labels.Slug}-{slug}.pdf");
     }
 
-    private static ReportData BuildData(Project project, string organizationName, ComplianceReportLabels labels)
+    private static ReportData BuildData(Project project, string organizationName, User? currentUser,
+        IReadOnlyList<ComplianceAuditLogRow> auditTrail, ComplianceReportLabels labels)
     {
         List<Vulnerability> vulnerabilities = project.Dependencies
             .SelectMany(d => d.Vulnerabilities)
+            .GroupBy(v => (v.CveId, PackageName: v.PackageName.ToLowerInvariant()))
+            .Select(g => g.OrderBy(v => v.Severity).ThenByDescending(v => v.CvssScore).First())
             .OrderBy(v => v.Severity)
             .ThenByDescending(v => v.CvssScore)
             .ToList();
@@ -59,13 +71,29 @@ public class ComplianceReportService(
             .OrderBy(r => r.Name)
             .ToList();
 
+        bool vulnerabilitiesTruncated = vulnerabilities.Count > ExportLimits.MaxComplianceVulnerabilityRows;
+        List<Vulnerability> renderedVulnerabilities = vulnerabilities
+            .Take(ExportLimits.MaxComplianceVulnerabilityRows)
+            .ToList();
+
+        bool auditTrailTruncated = auditTrail.Count > ExportLimits.MaxComplianceAuditLogRows;
+        List<ComplianceAuditLogRow> renderedAuditTrail = auditTrail
+            .Take(ExportLimits.MaxComplianceAuditLogRows)
+            .ToList();
+
+        Guid reportId = Guid.CreateVersion7();
+        DateTime generatedAt = DateTime.UtcNow;
+        string fingerprintSource = string.Join('|', project.OrganizationId, project.Id, generatedAt.ToString("O"),
+            project.HealthScore, vulnerabilities.Count, eolRuntimes.Count, reportId);
+        string fingerprint = SecureToken.Hash(fingerprintSource)[..16];
+
         return new ReportData
         {
             Labels = labels,
             ProjectName = project.Name,
             OrganizationName = organizationName,
             RepositoryUrl = project.RepositoryUrl,
-            GeneratedAt = DateTime.UtcNow,
+            GeneratedAt = generatedAt,
             LastScanAt = project.LastScanAt,
             HealthScore = project.HealthScore,
             HealthGrade = project.HealthGrade,
@@ -74,14 +102,21 @@ public class ComplianceReportService(
             HighCount = vulnerabilities.Count(v => v.Severity == VulnerabilitySeverity.High),
             TotalVulnerabilities = vulnerabilities.Count,
             EolRuntimeCount = eolRuntimes.Count,
-            Vulnerabilities = vulnerabilities,
+            Vulnerabilities = renderedVulnerabilities,
+            VulnerabilitiesTruncated = vulnerabilitiesTruncated,
             EolRuntimes = eolRuntimes,
-            Controls = BuildControls(vulnerabilities, eolRuntimes, labels)
+            AuditTrail = renderedAuditTrail,
+            AuditTrailTruncated = auditTrailTruncated,
+            ReportId = reportId,
+            ReportFingerprint = fingerprint,
+            GeneratedByName = currentUser?.FullName,
+            GeneratedByEmail = currentUser?.Email,
+            Controls = BuildControls(vulnerabilities, eolRuntimes, renderedAuditTrail, labels)
         };
     }
 
     private static List<ControlRow> BuildControls(List<Vulnerability> vulnerabilities, List<Runtime> eolRuntimes,
-        ComplianceReportLabels labels)
+        List<ComplianceAuditLogRow> auditTrail, ComplianceReportLabels labels)
     {
         bool hasUnfixableVulnerabilities = vulnerabilities.Any(v => string.IsNullOrWhiteSpace(v.FixedVersion));
 
@@ -93,8 +128,11 @@ public class ComplianceReportService(
                 labels.ControlCveDetail),
             new(labels.ControlEolRequirement, "CRA", eolRuntimes.Count == 0 ? ControlStatus.Covered : ControlStatus.Attention,
                 eolRuntimes.Count == 0 ? labels.ControlEolDetailOk : labels.ControlEolDetailWarn(eolRuntimes.Count)),
-            new(labels.ControlTraceabilityRequirement, "DORA", ControlStatus.Covered,
-                labels.ControlTraceabilityDetail),
+            new(labels.ControlTraceabilityRequirement, "DORA",
+                auditTrail.Count == 0 ? ControlStatus.Attention : ControlStatus.Covered,
+                auditTrail.Count == 0
+                    ? labels.ControlTraceabilityDetailNone
+                    : labels.ControlTraceabilityDetailCovered(auditTrail.Count)),
             new(labels.ControlPatchingRequirement, "NIS2", hasUnfixableVulnerabilities ? ControlStatus.Partial : ControlStatus.Covered,
                 hasUnfixableVulnerabilities ? labels.ControlPatchingDetailWarn : labels.ControlPatchingDetailOk)
         };
@@ -131,6 +169,9 @@ public class ComplianceReportService(
 
             if (data.EolRuntimes.Count > 0)
                 column.Item().Element(eol => ComposeEolRuntimes(eol, data));
+
+            if (data.AuditTrail.Count > 0)
+                column.Item().Element(audit => ComposeAuditTrail(audit, data));
 
             column.Item().Element(attestation => ComposeAttestation(attestation, data));
         });
@@ -241,6 +282,11 @@ public class ComplianceReportService(
                     table.Cell().Padding(6).Text(vulnerability.FixedVersion ?? "—").FontSize(8).FontColor(Muted);
                 }
             });
+
+            if (data.VulnerabilitiesTruncated)
+                column.Item().PaddingTop(4)
+                    .Text(data.Labels.VulnerabilitiesHidden(data.TotalVulnerabilities - data.Vulnerabilities.Count))
+                    .FontSize(7.5f).FontColor(Muted);
         });
     }
 
@@ -279,6 +325,47 @@ public class ComplianceReportService(
         });
     }
 
+    private static void ComposeAuditTrail(IContainer container, ReportData data)
+    {
+        container.Column(column =>
+        {
+            column.Item().Element(SectionTitle(data.Labels.SectionAuditTrail(data.AuditTrail.Count)));
+
+            column.Item().PaddingTop(8).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(90);
+                    columns.RelativeColumn(1.6f);
+                    columns.RelativeColumn(1.4f);
+                });
+
+                table.Header(header =>
+                {
+                    HeaderCell(header, data.Labels.HeaderEventDate);
+                    HeaderCell(header, data.Labels.HeaderEventAction);
+                    HeaderCell(header, data.Labels.HeaderEventUser);
+                });
+
+                foreach (ComplianceAuditLogRow entry in data.AuditTrail)
+                {
+                    string user = entry.UserEmail != null
+                        ? ($"{entry.UserFirstName} {entry.UserLastName}".Trim() is { Length: > 0 } name
+                            ? name
+                            : entry.UserEmail)
+                        : data.Labels.EventSystemUser;
+
+                    table.Cell().Padding(6)
+                        .Text($"{entry.CreatedAt.ToString(data.Labels.DateFormat)} {entry.CreatedAt:HH:mm}")
+                        .FontSize(8).FontColor(Muted);
+                    table.Cell().Padding(6).Text(data.Labels.AuditActionLabel(entry.Action))
+                        .FontSize(8.5f).FontColor(Ink);
+                    table.Cell().Padding(6).Text(user).FontSize(8).FontColor(Muted);
+                }
+            });
+        });
+    }
+
     private static void ComposeAttestation(IContainer container, ReportData data)
     {
         container.Background(Panel).Padding(14).Column(column =>
@@ -293,6 +380,17 @@ public class ComplianceReportService(
                     : data.Labels.AttestationWithoutScan);
                 text.Span(data.Labels.AttestationDisclaimer);
                 text.DefaultTextStyle(style => style.FontSize(8).FontColor(Muted));
+            });
+            column.Item().PaddingTop(6).Text(text =>
+            {
+                string generatedByName = data.GeneratedByName?.Trim() is { Length: > 0 } name
+                    ? name
+                    : data.GeneratedByEmail ?? data.OrganizationName;
+
+                text.Span(data.Labels.GeneratedBy(generatedByName));
+                text.Span(" ");
+                text.Span(data.Labels.ReportId($"{data.ReportId} · {data.ReportFingerprint}"));
+                text.DefaultTextStyle(style => style.FontSize(7.5f).FontColor(Muted));
             });
         });
     }
@@ -377,7 +475,14 @@ public class ComplianceReportService(
         public int TotalVulnerabilities { get; init; }
         public int EolRuntimeCount { get; init; }
         public List<Vulnerability> Vulnerabilities { get; init; } = new();
+        public bool VulnerabilitiesTruncated { get; init; }
         public List<Runtime> EolRuntimes { get; init; } = new();
+        public List<ComplianceAuditLogRow> AuditTrail { get; init; } = new();
+        public bool AuditTrailTruncated { get; init; }
+        public Guid ReportId { get; init; }
+        public string ReportFingerprint { get; init; } = string.Empty;
+        public string? GeneratedByName { get; init; }
+        public string? GeneratedByEmail { get; init; }
         public List<ControlRow> Controls { get; init; } = new();
     }
 }

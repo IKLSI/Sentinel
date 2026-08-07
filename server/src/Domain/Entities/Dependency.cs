@@ -40,6 +40,7 @@ public class Dependency : IEntityWithId
     public string CurrentVersion { get; set; } = string.Empty;
     public string? LatestVersion { get; set; }
     public string? Publisher { get; set; }
+    public string? License { get; set; }
     public DependencyType Type { get; set; } = DependencyType.Prod;
     public DependencyEcosystem Ecosystem { get; set; } = DependencyEcosystem.Npm;
     public DependencyStatus Status { get; set; } = DependencyStatus.UpToDate;

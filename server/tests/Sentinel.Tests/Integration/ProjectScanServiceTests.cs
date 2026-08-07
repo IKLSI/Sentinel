@@ -141,6 +141,7 @@ public class ProjectScanServiceTests
                 new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
                 new NoopNotifier(),
                 scope.SystemScope,
+                new FakeAuditLogService(),
                 NullLogger<ProjectScanService>.Instance);
         }
 

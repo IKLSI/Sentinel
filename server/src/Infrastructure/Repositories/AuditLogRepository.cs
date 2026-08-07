@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -22,6 +23,22 @@ public class AuditLogRepository : CrudEntityWithIdRepository<AuditLog>, IAuditLo
                 al.EntityType,
                 al.EntityId,
                 al.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ComplianceAuditLogRow>> ListForProjectAsync(Guid projectId, Guid organizationId,
+        int take, CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(a => a.EntityType == AuditEntityTypes.Project && a.EntityId == projectId
+                && a.OrganizationId == organizationId)
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(take)
+            .GroupJoin(Context.Set<User>(), a => a.UserId, u => (Guid?)u.Id, (a, users) => new { a, users })
+            .SelectMany(x => x.users.DefaultIfEmpty(), (x, u) => new ComplianceAuditLogRow(
+                x.a.Action.ToString(),
+                x.a.CreatedAt,
+                u == null ? null : u.FirstName,
+                u == null ? null : u.LastName,
+                u == null ? null : u.Email))
             .ToListAsync(cancellationToken);
 
     public Task<int> DetachUserAsync(Guid userId, CancellationToken cancellationToken) =>

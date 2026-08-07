@@ -126,6 +126,14 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
         return new ExportResult(Encoding.UTF8.GetBytes(json), $"sbom-{slug}-cyclonedx.json");
     }
 
+    private static readonly HashSet<string> KnownSpdxLicenseIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0",
+        "LGPL-2.1", "LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0", "LGPL-3.0-only", "LGPL-3.0-or-later",
+        "GPL-2.0", "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0", "GPL-3.0-only", "GPL-3.0-or-later",
+        "Unlicense", "0BSD", "CC0-1.0", "WTFPL", "Zlib"
+    };
+
     private static Component ToCycloneComponent(Dependency dependency)
     {
         string? purl = BuildPurl(dependency);
@@ -139,9 +147,16 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
             Publisher = publisher,
             Supplier = new OrganizationalEntity { Name = publisher },
             Purl = purl,
-            BomRef = purl ?? $"sentinel:dependency:{dependency.Id}"
+            BomRef = purl ?? $"sentinel:dependency:{dependency.Id}",
+            Licenses = string.IsNullOrWhiteSpace(dependency.License)
+                ? null
+                : new List<LicenseChoice> { BuildLicenseChoice(dependency.License) }
         };
     }
+
+    private static LicenseChoice BuildLicenseChoice(string license) => KnownSpdxLicenseIds.Contains(license)
+        ? new LicenseChoice { License = new License { Id = license } }
+        : new LicenseChoice { License = new License { Name = license } };
 
     private static string PublisherOrNoAssertion(Dependency dependency) =>
         string.IsNullOrWhiteSpace(dependency.Publisher) ? SpdxNoAssertion : dependency.Publisher;
@@ -193,7 +208,7 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
                     ? SpdxNoAssertion
                     : SpdxOrganization(dependency.Publisher),
                 LicenseConcluded = SpdxNoAssertion,
-                LicenseDeclared = SpdxNoAssertion,
+                LicenseDeclared = string.IsNullOrWhiteSpace(dependency.License) ? SpdxNoAssertion : dependency.License,
                 CopyrightText = SpdxNoAssertion,
                 ExternalRefs = purl == null
                     ? null

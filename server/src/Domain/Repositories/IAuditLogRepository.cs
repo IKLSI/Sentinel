@@ -8,5 +8,8 @@ public interface IAuditLogRepository : ICrudEntityWithIdRepository<AuditLog>
     Task<IReadOnlyList<UserExportAuditLogRow>> ListForUserExportAsync(Guid userId, int take,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<ComplianceAuditLogRow>> ListForProjectAsync(Guid projectId, Guid organizationId, int take,
+        CancellationToken cancellationToken);
+
     Task<int> DetachUserAsync(Guid userId, CancellationToken cancellationToken);
 }
