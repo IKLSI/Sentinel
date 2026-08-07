@@ -1550,18 +1550,18 @@ a:hover {
 }
 
 @media print {
-  .legal-no-print {
-    display: none !important;
+  html body .legal-no-print {
+    display: none;
   }
-  .legal-doc,
-  .legal-doc * {
-    background: transparent !important;
-    color: #111111 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
+  html body .legal-doc,
+  html body .legal-doc * {
+    background: transparent;
+    color: #111111;
+    box-shadow: none;
+    backdrop-filter: none;
   }
-  .legal-doc::before {
-    display: none !important;
+  html body .legal-doc::before {
+    display: none;
   }
   .legal-doc section {
     break-inside: avoid;

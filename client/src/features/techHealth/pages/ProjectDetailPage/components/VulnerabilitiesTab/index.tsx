@@ -83,8 +83,8 @@ const VulnRow = memo<{ vuln: VulnerabilityRow; index: number }>(
     const config = configOf(vuln);
 
     return (
-      <TR accent={config.color} index={index}>
-        <TD align="right">
+      <TR index={index}>
+        <TD>
           <Box component="span" sx={{ ...scoreSx, color: config.color }}>
             {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : NO_VALUE}
           </Box>
@@ -159,7 +159,6 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
       key: COLUMN_KEYS.score,
       label: t("tech_health.table.vuln.score"),
       width: "8%",
-      align: "right",
       sortable: true,
     },
     {

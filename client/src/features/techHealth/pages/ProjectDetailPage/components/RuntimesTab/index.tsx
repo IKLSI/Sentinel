@@ -97,7 +97,7 @@ const RuntimeRow = memo<{ runtime: Runtime; index: number; locale: string }>(
     );
 
     return (
-      <TR accent={colors.stripe} index={index}>
+      <TR index={index}>
         <TD>
           <TruncatedText mono strong text={runtime.name} />
         </TD>

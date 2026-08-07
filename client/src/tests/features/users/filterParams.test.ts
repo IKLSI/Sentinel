@@ -21,10 +21,12 @@ describe("criterionFromSearch", () => {
   });
 
   it("déduplique et retire les espaces superflus", () => {
-    expect(criterionFromSearch({ role: " Admin , Developer , Admin" })).toEqual({
-      field: "role",
-      values: ["Admin", "Developer"],
-    });
+    expect(criterionFromSearch({ role: " Admin , Developer , Admin" })).toEqual(
+      {
+        field: "role",
+        values: ["Admin", "Developer"],
+      },
+    );
   });
 
   it("ne retient aucun critère sans valeur", () => {

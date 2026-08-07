@@ -51,7 +51,8 @@ const comparators = {
   [COLUMN_KEYS.status]: (a: Dependency, b: Dependency) =>
     statusOf(a).weight - statusOf(b).weight,
   [COLUMN_KEYS.vulns]: (a: Dependency, b: Dependency) =>
-    a.vulnerabilities.length - b.vulnerabilities.length,
+    a.vulnerabilities.length - b.vulnerabilities.length ||
+    statusOf(a).weight - statusOf(b).weight,
 };
 
 const searchableValues = (dependency: Dependency) => [dependency.name];
@@ -99,7 +100,7 @@ const DependencyRow = memo<RowProps>(
     const vulnCount = dependency.vulnerabilities.length;
 
     return (
-      <TR accent={status.color} index={index}>
+      <TR index={index}>
         <TD>
           <TruncatedText mono strong text={dependency.name} />
         </TD>
@@ -211,12 +212,12 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
     {
       key: COLUMN_KEYS.version,
       label: t("tech_health.table.dep.version"),
-      width: "22%",
+      width: "20%",
     },
     {
       key: COLUMN_KEYS.status,
       label: t("tech_health.table.dep.status"),
-      width: "16%",
+      width: "18%",
       sortable: true,
     },
     {
