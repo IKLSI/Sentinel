@@ -97,9 +97,7 @@ export const ProjectDetailPage: React.FC = () => {
       <ProjectHeaderCard
         project={project}
         eolRuntimes={eolRuntimes}
-        action={
-          <ExportActions projectId={project.id} />
-        }
+        action={<ExportActions projectId={project.id} />}
       />
 
       <TabBar
