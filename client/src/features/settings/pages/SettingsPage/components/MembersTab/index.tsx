@@ -19,22 +19,25 @@ import { useUpdateUserMutation } from "@/domains/users/mutations";
 import { useUsersQuery } from "@/domains/users/queries";
 import { Pagination } from "@/components/ui/common/Pagination";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
+import { FilterBuilder } from "@/components/ui/forms/FilterBuilder";
+import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
+import { queryFromCriterion } from "@/features/users/pages/UsersPage/filterParams";
+import {
+  buildUserFilterFields,
+  buildUserFilterLabels,
+} from "@/features/users/pages/UsersPage/filters";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSortState } from "@/hooks/useSortState";
-import {
-  SortDirection,
-  UserAccessStatus,
-  UserRole,
-  UserSortField,
-} from "@/enums";
+import { SortDirection, UserAccessStatus, UserSortField } from "@/enums";
 
-const ALL_ROLES_FILTER = "all";
 const ACTIONS_COLUMN_KEY = "actions";
 const DEFAULT_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 
 interface Props {
+  criterion: FilterCriterion | null;
+  onCriterionChange: (criterion: FilterCriterion | null) => void;
   onInviteClick: () => void;
 }
 
@@ -44,7 +47,11 @@ interface MemberColumn {
   width: string;
 }
 
-export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
+export const MembersTab: React.FC<Props> = ({
+  criterion,
+  onCriterionChange,
+  onInviteClick,
+}) => {
   const { user } = useAuth();
   const { t, culture } = useI18n();
   const onToggleError = useApiErrorToast("settings.toast.toggle_error");
@@ -60,8 +67,6 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
   const updateAccessStatus = useUpdateUserMutation();
   const [memberSearch, setMemberSearch] = useState("");
   const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
-  const [memberRoleFilter, setMemberRoleFilter] =
-    useState<string>(ALL_ROLES_FILTER);
   const [page, setPage] = useState(1);
   const [sort, toggleSort] = useSortState<UserSortField>(
     { col: UserSortField.Member, dir: SortDirection.Asc },
@@ -73,15 +78,21 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
     setPage(1);
   }, []);
 
+  const handleCriterionChange = useCallback(
+    (next: FilterCriterion | null) => {
+      setPage(1);
+      onCriterionChange(next);
+    },
+    [onCriterionChange],
+  );
+
   const usersQuery = useUsersQuery({
     page,
     pageSize: DEFAULT_PAGE_SIZE,
     sortBy: sort.col,
     sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...(memberRoleFilter === ALL_ROLES_FILTER
-      ? {}
-      : { role: memberRoleFilter as UserRole }),
+    ...queryFromCriterion(criterion),
   });
   const members = usersQuery.data?.items ?? [];
   const totalMembers = usersQuery.data?.total ?? 0;
@@ -139,6 +150,8 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           gap: "8px",
           mb: "12px",
           flexShrink: 0,
+          position: "relative",
+          zIndex: 2,
         }}
       >
         <SearchInput
@@ -148,39 +161,12 @@ export const MembersTab: React.FC<Props> = ({ onInviteClick }) => {
           width="240px"
           sx={{ flex: "0 0 240px" }}
         />
-        <Box
-          component="select"
-          sx={{
-            appearance: "none",
-            WebkitAppearance: "none",
-            background:
-              "var(--s1) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\") no-repeat right 12px center",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            px: "12px",
-            height: "32px",
-            pr: "36px",
-            boxSizing: "border-box",
-            fontSize: "13px",
-            color: "var(--text)",
-            outline: "none",
-            fontFamily: "inherit",
-            cursor: "pointer",
-          }}
-          value={memberRoleFilter}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-            setMemberRoleFilter(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value={ALL_ROLES_FILTER}>
-            {t("settings.members.filter_all_roles")}
-          </option>
-          <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
-          <option value={UserRole.Developer}>
-            {t("settings.role.developer")}
-          </option>
-        </Box>
+        <FilterBuilder
+          fields={buildUserFilterFields(t)}
+          value={criterion}
+          onChange={handleCriterionChange}
+          labels={buildUserFilterLabels(t)}
+        />
         <Box sx={{ flex: 1 }} />
         <Button
           variant="contained"

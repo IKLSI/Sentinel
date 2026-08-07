@@ -4,18 +4,23 @@ import Button from "@mui/material/Button";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
-import { SelectField } from "@/components/ui/forms/SelectField";
+import { FilterBuilder } from "@/components/ui/forms/FilterBuilder";
+import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import { ExportButton } from "@/components/ui/common/ExportButton";
+import type { Project } from "@/domains/projects/types";
+import type { User } from "@/domains/users/types";
 import {
-  buildTicketFilterGroups,
-  type TicketFiltersState,
+  buildTicketFilterFields,
+  buildTicketFilterLabels,
 } from "@/features/tickets/pages/TicketsPage/filters";
 
 interface Props {
   search: string;
   onSearchChange: (v: string) => void;
-  filters: TicketFiltersState;
-  onFiltersChange: (f: TicketFiltersState) => void;
+  criterion: FilterCriterion | null;
+  onCriterionChange: (criterion: FilterCriterion | null) => void;
+  users: User[];
+  projects: Project[];
   onCreate: () => void;
   onExport: () => void;
   exporting: boolean;
@@ -24,14 +29,15 @@ interface Props {
 export const TicketsToolbar: React.FC<Props> = ({
   search,
   onSearchChange,
-  filters,
-  onFiltersChange,
+  criterion,
+  onCriterionChange,
+  users,
+  projects,
   onCreate,
   onExport,
   exporting,
 }) => {
   const t = useT();
-  const groups = buildTicketFilterGroups(t);
 
   return (
     <Box
@@ -52,19 +58,12 @@ export const TicketsToolbar: React.FC<Props> = ({
         placeholder={t("tickets.list.search_placeholder")}
       />
 
-      {groups.map(({ key, label, tone, options }) => (
-        <SelectField
-          key={key}
-          variant="pill"
-          tone={tone}
-          value={filters[key]}
-          options={options}
-          ariaLabel={label}
-          placeholder={label}
-          clearLabel={t("tickets.list.filter_remove", { label })}
-          onChange={(value) => onFiltersChange({ ...filters, [key]: value })}
-        />
-      ))}
+      <FilterBuilder
+        fields={buildTicketFilterFields(t, users, projects)}
+        value={criterion}
+        onChange={onCriterionChange}
+        labels={buildTicketFilterLabels(t)}
+      />
 
       <Box sx={{ flex: 1 }} />
 

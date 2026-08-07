@@ -165,17 +165,41 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
     private static IQueryable<Ticket> ApplyFilter(IQueryable<Ticket> query, TicketFilter filter)
     {
-        if (filter.Priority is TicketPriority priority)
-            query = query.Where(t => t.Priority == priority);
+        if (!filter.Priority.IsEmpty)
+        {
+            List<TicketPriority> priorities = [.. filter.Priority.Values];
+            query = query.Where(t => priorities.Contains(t.Priority));
+        }
 
-        if (filter.Status is TicketStatus status)
-            query = query.Where(t => t.Status == status);
+        if (!filter.Status.IsEmpty)
+        {
+            List<TicketStatus> statuses = [.. filter.Status.Values];
+            query = query.Where(t => statuses.Contains(t.Status));
+        }
 
-        if (filter.AssignedToId is Guid assignedToId)
-            query = query.Where(t => t.AssignedToId == assignedToId);
+        if (!filter.Type.IsEmpty)
+        {
+            List<TicketType> types = [.. filter.Type.Values];
+            query = query.Where(t => types.Contains(t.Type));
+        }
 
-        if (filter.Type is TicketType type)
-            query = query.Where(t => t.Type == type);
+        if (!filter.AssignedTo.IsEmpty)
+        {
+            List<Guid> assigneeIds = [.. filter.AssignedTo.Ids];
+            bool includeUnassigned = filter.AssignedTo.IncludeUnset;
+
+            query = query.Where(t => (t.AssignedToId != null && assigneeIds.Contains(t.AssignedToId.Value))
+                || (includeUnassigned && t.AssignedToId == null));
+        }
+
+        if (!filter.Project.IsEmpty)
+        {
+            List<Guid> projectIds = [.. filter.Project.Ids];
+            bool includeWithoutProject = filter.Project.IncludeUnset;
+
+            query = query.Where(t => (t.ProjectId != null && projectIds.Contains(t.ProjectId.Value))
+                || (includeWithoutProject && t.ProjectId == null));
+        }
 
         return query;
     }

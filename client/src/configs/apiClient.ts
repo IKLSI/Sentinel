@@ -13,6 +13,7 @@ const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: { [HTTP_HEADERS.CONTENT_TYPE]: CONTENT_TYPES.JSON },
   withCredentials: true,
+  paramsSerializer: { indexes: null },
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {

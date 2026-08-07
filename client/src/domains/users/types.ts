@@ -1,5 +1,5 @@
 import type { components } from "@/types/api.gen";
-import type { SortDirection, UserRole, UserSortField } from "@/enums";
+import type { SortDirection, UserSortField } from "@/enums";
 
 export type User = components["schemas"]["UserDto"];
 
@@ -19,11 +19,15 @@ export type DeleteAccount = components["schemas"]["DeleteAccountDto"];
 
 export type UserDataExport = components["schemas"]["UserDataExportDto"];
 
-export type UsersFilters = {
+export type UserCriteriaFilters = {
+  role?: string[];
+  status?: string[];
+  search?: string;
+};
+
+export type UsersFilters = UserCriteriaFilters & {
   page?: number;
   pageSize?: number;
-  search?: string;
-  role?: UserRole;
   sortBy?: UserSortField;
   sortDirection?: SortDirection;
 };

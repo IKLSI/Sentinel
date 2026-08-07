@@ -1,11 +1,5 @@
 import type { components } from "@/types/api.gen";
-import type {
-  SortDirection,
-  TicketPriority,
-  TicketSortField,
-  TicketStatus,
-  TicketType,
-} from "@/enums";
+import type { SortDirection, TicketSortField } from "@/enums";
 
 export type Ticket = components["schemas"]["TicketDto"];
 
@@ -23,19 +17,20 @@ export type UpdateTicket = components["schemas"]["UpdateTicketDto"];
 
 export type CreateComment = components["schemas"]["CreateCommentDto"];
 
-export type TicketFilters = {
-  priority?: TicketPriority;
-  status?: TicketStatus | string;
-  assignedTo?: string;
-  type?: TicketType;
+export type TicketCriteriaFilters = {
+  priority?: string[];
+  status?: string[];
+  type?: string[];
+  assignedTo?: string[];
+  project?: string[];
   search?: string;
+};
+
+export type TicketFilters = TicketCriteriaFilters & {
   page?: number;
   pageSize?: number;
   sortBy?: TicketSortField;
   sortDirection?: SortDirection;
 };
 
-export type TicketExportFilters = Omit<
-  TicketFilters,
-  "page" | "pageSize" | "sortBy" | "sortDirection"
->;
+export type TicketExportFilters = TicketCriteriaFilters;

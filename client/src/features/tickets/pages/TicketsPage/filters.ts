@@ -1,63 +1,81 @@
-import type { SelectFieldOption } from "@/components/ui/forms/SelectField";
-import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
+import type {
+  FilterBuilderLabels,
+  FilterFieldDefinition,
+} from "@/components/ui/forms/FilterBuilder/types";
+import type { Project } from "@/domains/projects/types";
+import type { User } from "@/domains/users/types";
 import { TicketPriority, TicketType } from "@/enums";
-
-export interface TicketFiltersState {
-  priority: string;
-  status: string;
-  type: string;
-}
-
-interface TicketFilterGroup {
-  key: keyof TicketFiltersState;
-  label: string;
-  tone: string;
-  options: SelectFieldOption[];
-}
+import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
+import {
+  TICKET_FILTER_FIELDS,
+  UNSET_FILTER_VALUE,
+} from "@/features/tickets/pages/TicketsPage/filterParams";
 
 type Translate = (
   key: string,
   vars?: Record<string, string | number>,
 ) => string;
 
-const TICKET_PRIORITIES = Object.values(TicketPriority);
-const TICKET_TYPES = Object.values(TicketType);
-
-export const buildTicketFilterGroups = (t: Translate): TicketFilterGroup[] => [
+export const buildTicketFilterFields = (
+  t: Translate,
+  users: User[],
+  projects: Project[],
+): FilterFieldDefinition[] => [
   {
-    key: "priority",
+    key: TICKET_FILTER_FIELDS.priority,
     label: t("tickets.list.filter_priority"),
-    tone: "var(--sky)",
-    options: [
-      { value: "", label: t("tickets.list.filter_all_feminine") },
-      ...TICKET_PRIORITIES.map((priority) => ({
-        value: priority,
-        label: t(`tickets.list.priority_${priority}`),
-      })),
-    ],
+    options: Object.values(TicketPriority).map((priority) => ({
+      value: priority,
+      label: t(`tickets.list.priority_${priority}`),
+    })),
   },
   {
-    key: "status",
+    key: TICKET_FILTER_FIELDS.status,
     label: t("tickets.list.filter_status"),
-    tone: "var(--cyan)",
+    options: TICKET_STATUSES.map((status) => ({
+      value: status,
+      label: t(statusLabelKeys[status]),
+    })),
+  },
+  {
+    key: TICKET_FILTER_FIELDS.type,
+    label: t("tickets.list.filter_type"),
+    options: Object.values(TicketType).map((type) => ({
+      value: type,
+      label: t(`tickets.list.type_${type}`),
+    })),
+  },
+  {
+    key: TICKET_FILTER_FIELDS.assignedTo,
+    label: t("tickets.list.filter_assignee"),
     options: [
-      { value: "", label: t("tickets.list.filter_all_masculine") },
-      ...TICKET_STATUSES.map((status) => ({
-        value: status,
-        label: t(statusLabelKeys[status]),
+      { value: UNSET_FILTER_VALUE, label: t("tickets.list.unassigned") },
+      ...users.map((user) => ({
+        value: user.id,
+        label: `${user.firstName} ${user.lastName}`,
       })),
     ],
   },
   {
-    key: "type",
-    label: t("tickets.list.filter_type"),
-    tone: "var(--purple)",
+    key: TICKET_FILTER_FIELDS.project,
+    label: t("tickets.list.filter_project"),
     options: [
-      { value: "", label: t("tickets.list.filter_all_masculine") },
-      ...TICKET_TYPES.map((type) => ({
-        value: type,
-        label: t(`tickets.list.type_${type}`),
+      { value: UNSET_FILTER_VALUE, label: t("tickets.list.no_project") },
+      ...projects.map((project) => ({
+        value: project.id,
+        label: project.name,
       })),
     ],
   },
 ];
+
+export const buildTicketFilterLabels = (t: Translate): FilterBuilderLabels => ({
+  empty: t("tickets.list.filter_empty"),
+  fieldPlaceholder: t("tickets.list.filter_field_placeholder"),
+  title: t("tickets.list.filter_add"),
+  noField: t("tickets.list.filter_no_field"),
+  noValue: t("tickets.list.filter_no_value"),
+  valuePlaceholder: t("tickets.list.filter_value_placeholder"),
+  edit: (label: string) => t("tickets.list.filter_edit", { label }),
+  remove: (label: string) => t("tickets.list.filter_remove", { label }),
+});

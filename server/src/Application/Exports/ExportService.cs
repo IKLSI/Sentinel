@@ -32,24 +32,8 @@ public partial class ExportService(
     }
 
     public async Task<ExportResult> ExportTicketsExcelAsync(
-        Guid organizationId, string? status, string? priority, Guid? assignedTo, string? type, string? search,
-        Guid currentUserId, CancellationToken cancellationToken)
+        Guid organizationId, TicketFilter filter, Guid currentUserId, CancellationToken cancellationToken)
     {
-        TicketFilter filter = new()
-        {
-            Priority = !string.IsNullOrEmpty(priority)
-                && Enum.TryParse(priority, true, out TicketPriority parsedPriority) ? parsedPriority : null,
-            Status = !string.IsNullOrEmpty(status)
-                && Enum.TryParse(status, true, out TicketStatus parsedStatus)
-                ? parsedStatus
-                : null,
-            AssignedToId = assignedTo,
-            Type = !string.IsNullOrEmpty(type) && Enum.TryParse(type, true, out TicketType parsedType)
-                ? parsedType
-                : null,
-            Search = !string.IsNullOrWhiteSpace(search) && search.Length <= 100 ? search : null
-        };
-
         List<TicketGridRow> tickets = (await ticketRepository.ListForExportAsync(
             organizationId, filter, ExportLimits.MaxTicketRows + 1, cancellationToken)).ToList();
 

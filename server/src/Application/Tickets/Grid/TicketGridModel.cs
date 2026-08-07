@@ -3,17 +3,11 @@ using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.Grid;
 
-public class TicketGridModel
+public class TicketGridModel : TicketFilterRequest
 {
-    public const int SearchMaxLength = 100;
     public const int MaxPageSize = 100;
     public const int DefaultPageSize = 25;
 
-    public string? Priority { get; set; }
-    public string? Status { get; set; }
-    public Guid? AssignedTo { get; set; }
-    public string? Type { get; set; }
-    public string? Search { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;
     public TicketSortField SortBy { get; set; } = TicketSortField.Priority;

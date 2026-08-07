@@ -60,19 +60,28 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Where(u => u.Email == email.ToLowerInvariant() && u.AccessStatus == UserAccessStatus.Active)
             .ToListAsync(cancellationToken);
 
-    public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, string? search,
-        UserRole? role, UserSortField sortBy, SortDirection sortDirection, int page, int pageSize,
+    public async Task<PagedList<UserGridRow>> SearchInOrganizationAsync(Guid organizationId, UserFilter filter,
+        UserSortField sortBy, SortDirection sortDirection, int page, int pageSize,
         CancellationToken cancellationToken)
     {
         IQueryable<User> query = Query(QueryTracking.NoTracking)
             .Where(u => u.OrganizationId == organizationId);
 
-        if (role is UserRole roleFilter)
-            query = query.Where(u => u.Role == roleFilter);
-
-        if (!string.IsNullOrWhiteSpace(search))
+        if (filter.Roles.Count > 0)
         {
-            string pattern = SearchPattern.Like(search);
+            List<UserRole> roles = [.. filter.Roles];
+            query = query.Where(u => roles.Contains(u.Role));
+        }
+
+        if (filter.Statuses.Count > 0)
+        {
+            List<UserAccessStatus> statuses = [.. filter.Statuses];
+            query = query.Where(u => statuses.Contains(u.AccessStatus));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            string pattern = SearchPattern.Like(filter.Search);
 
             query = query.Where(u =>
                 EF.Functions.ILike(u.FirstName, pattern) ||

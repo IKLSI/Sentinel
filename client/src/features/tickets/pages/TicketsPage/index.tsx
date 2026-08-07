@@ -24,9 +24,13 @@ import type {
   UpdateTicket,
 } from "@/domains/tickets/types";
 import { useUsersQuery } from "@/domains/users/queries";
-import type { TicketPriority, TicketStatus, TicketType } from "@/enums";
+import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
-import type { TicketFiltersState } from "@/features/tickets/pages/TicketsPage/filters";
+import {
+  criterionFromSearch,
+  queryFromCriterion,
+  searchFromCriterion,
+} from "@/features/tickets/pages/TicketsPage/filterParams";
 import {
   createTicketSchema,
   type CreateTicketFormValues,
@@ -47,6 +51,7 @@ import { useSortState } from "@/hooks/useSortState";
 import { SortDirection, TicketSortField } from "@/enums";
 
 const SEARCH_DEBOUNCE_MS = 300;
+const FILTERABLE_USERS_PAGE_SIZE = 100;
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -56,29 +61,21 @@ export const TicketsPage: React.FC = () => {
   const onEditError = useApiErrorToast("tickets.list.edit_error");
   const onDeleteError = useApiErrorToast("tickets.list.delete_error");
   const navigate = routeApi.useNavigate();
-  const { openCreate, priority, status, type } = routeApi.useSearch();
+  const searchParams = routeApi.useSearch();
+  const { openCreate } = searchParams;
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
-  const filters = useMemo<TicketFiltersState>(
-    () => ({
-      priority: priority ?? "",
-      status: status ?? "",
-      type: type ?? "",
-    }),
-    [priority, status, type],
+  const criterion = useMemo(
+    () => criterionFromSearch(searchParams),
+    [searchParams],
   );
   const [page, setPage] = useState(1);
-  const handleFiltersChange = useCallback(
-    (next: TicketFiltersState) => {
+  const handleCriterionChange = useCallback(
+    (next: FilterCriterion | null) => {
       setPage(1);
       navigate({
-        search: (previous) => ({
-          ...previous,
-          priority: (next.priority as TicketPriority) || undefined,
-          status: (next.status as TicketStatus) || undefined,
-          type: (next.type as TicketType) || undefined,
-        }),
+        search: (previous) => ({ ...previous, ...searchFromCriterion(next) }),
         replace: true,
       });
     },
@@ -103,9 +100,9 @@ export const TicketsPage: React.FC = () => {
   });
   const [createAnother, setCreateAnother] = useState(false);
   const { data: projectsData } = useProjectsQuery();
-  const modalProjects = projectsData ?? [];
-  const usersQuery = useUsersQuery();
-  const modalUsers = usersQuery.data?.items ?? [];
+  const projects = projectsData ?? [];
+  const usersQuery = useUsersQuery({ pageSize: FILTERABLE_USERS_PAGE_SIZE });
+  const users = usersQuery.data?.items ?? [];
   const [editTarget, setEditTarget] = useState<Ticket | null>(null);
   const {
     register: editRegister,
@@ -143,9 +140,7 @@ export const TicketsPage: React.FC = () => {
   const handleExport = () => {
     exportTicketsMutation.mutate(
       {
-        priority: (filters.priority as TicketPriority) || undefined,
-        status: filters.status || undefined,
-        type: (filters.type as TicketType) || undefined,
+        ...queryFromCriterion(criterion),
         search: debouncedSearch || undefined,
       },
       {
@@ -254,11 +249,7 @@ export const TicketsPage: React.FC = () => {
     sortBy: sort.col,
     sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...(filters.priority
-      ? { priority: filters.priority as TicketPriority }
-      : {}),
-    ...(filters.status ? { status: filters.status } : {}),
-    ...(filters.type ? { type: filters.type as TicketType } : {}),
+    ...queryFromCriterion(criterion),
   };
 
   const ticketsQuery = useTicketsQuery(ticketsFilters);
@@ -276,12 +267,7 @@ export const TicketsPage: React.FC = () => {
 
   const filtered = tickets?.items ?? [];
 
-  const hasFiltersApplied = !!(
-    debouncedSearch ||
-    filters.priority ||
-    filters.status ||
-    filters.type
-  );
+  const hasFiltersApplied = !!debouncedSearch || !!criterion;
 
   return (
     <>
@@ -289,8 +275,10 @@ export const TicketsPage: React.FC = () => {
         <TicketsToolbar
           search={search}
           onSearchChange={handleSearchChange}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
+          criterion={criterion}
+          onCriterionChange={handleCriterionChange}
+          users={users}
+          projects={projects}
           onCreate={openCreateModal}
           onExport={handleExport}
           exporting={exporting}
@@ -342,8 +330,8 @@ export const TicketsPage: React.FC = () => {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         register={createRegister}
-        projects={modalProjects}
-        users={modalUsers}
+        projects={projects}
+        users={users}
         submitting={createSubmitting}
         onSubmit={handleCreate}
         createAnother={createAnother}
@@ -354,8 +342,8 @@ export const TicketsPage: React.FC = () => {
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
         register={editRegister}
-        projects={modalProjects}
-        users={modalUsers}
+        projects={projects}
+        users={users}
         saving={editSaving}
         onSubmit={handleEdit}
       />

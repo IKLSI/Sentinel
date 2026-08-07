@@ -23,6 +23,9 @@ public static class ErrorCodes
     public const string UserInvitationAlreadyPending = "errors.users.invitation_already_pending";
     public const string UserInvitationInvalid = "errors.users.invitation_invalid";
     public const string UserInvalidRole = "errors.users.invalid_role";
+    public const string UserSearchTooLong = "errors.users.search_too_long";
+    public const string UserFilterValueInvalid = "errors.users.filter_value_invalid";
+    public const string UserFilterTooManyValues = "errors.users.filter_too_many_values";
     public const string UserInvalidAccessStatus = "errors.users.invalid_access_status";
     public const string UserLastAdminRequired = "errors.users.last_admin_required";
     public const string UserCannotDeleteLastAdmin = "errors.users.cannot_delete_last_admin";
@@ -51,6 +54,8 @@ public static class ErrorCodes
 
     public const string TicketNotFound = "errors.tickets.not_found";
     public const string TicketSearchTooLong = "errors.tickets.search_too_long";
+    public const string TicketFilterValueInvalid = "errors.tickets.filter_value_invalid";
+    public const string TicketFilterTooManyValues = "errors.tickets.filter_too_many_values";
     public const string TicketCommentNotFound = "errors.tickets.comment_not_found";
     public const string TicketInvalidStatus = "errors.tickets.invalid_status";
     public const string TicketAttachmentNotFound = "errors.tickets.attachment_not_found";

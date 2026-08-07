@@ -2,7 +2,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Application.Common.Contracts;
 
@@ -24,8 +23,9 @@ public class TicketGridService(
         if (!validationResult.IsSuccess)
             return Result<PagedResult<TicketDto>>.From(validationResult);
 
-        PagedList<TicketGridRow> page = await ticketRepository.SearchAsync(organizationId, BuildFilter(model),
-            model.SortBy, model.SortDirection, model.NormalizedPage, model.NormalizedPageSize, cancellationToken);
+        PagedList<TicketGridRow> page = await ticketRepository.SearchAsync(organizationId,
+            TicketFilterParser.Build(model), model.SortBy, model.SortDirection, model.NormalizedPage,
+            model.NormalizedPageSize, cancellationToken);
 
         return new PagedResult<TicketDto>
         {
@@ -35,21 +35,4 @@ public class TicketGridService(
             PageSize = model.NormalizedPageSize
         };
     }
-
-    private static TicketFilter BuildFilter(TicketGridModel model) => new()
-    {
-        Priority = !string.IsNullOrEmpty(model.Priority)
-            && Enum.TryParse(model.Priority, true, out TicketPriority priority)
-            ? priority
-            : null,
-        Status = !string.IsNullOrEmpty(model.Status)
-            && Enum.TryParse(model.Status, true, out TicketStatus status)
-            ? status
-            : null,
-        AssignedToId = model.AssignedTo,
-        Type = !string.IsNullOrEmpty(model.Type) && Enum.TryParse(model.Type, true, out TicketType type)
-            ? type
-            : null,
-        Search = model.Search
-    };
 }
