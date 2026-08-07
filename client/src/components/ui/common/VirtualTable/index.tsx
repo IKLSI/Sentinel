@@ -1,17 +1,25 @@
 import type React from "react";
 import { Fragment, useRef } from "react";
 import Box from "@mui/material/Box";
-import {
-  type CellAlign,
-  TH,
+import type {
+  CellAlign,
+  SortDirection,
 } from "@/components/ui/common/VirtualTable/TableCells";
+import { SortableTh } from "@/components/ui/common/SortableTh";
 import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
 
 export interface VirtualTableColumn {
+  key: string;
   label: string;
   width: string;
   align?: CellAlign;
+  sortable?: boolean;
+}
+
+export interface VirtualTableSort {
+  key: string;
+  direction: SortDirection;
 }
 
 interface VirtualTableProps<T> {
@@ -19,16 +27,28 @@ interface VirtualTableProps<T> {
   getRowId: (row: T, index: number) => string | number;
   columns: VirtualTableColumn[];
   estimateRowHeight: number;
-  renderRow: (
-    row: T,
-    index: number,
-    measureRef?: (el: HTMLElement | null) => void,
-  ) => React.ReactNode;
-  measureRows?: boolean;
+  renderRow: (row: T, index: number) => React.ReactNode;
   overscan?: number;
-  toolbar?: React.ReactNode;
-  noResultsContent?: React.ReactNode;
+  sort?: VirtualTableSort;
+  onSortChange?: (key: string) => void;
+  noResultsLabel?: string;
+  footer?: React.ReactNode;
 }
+
+const tableSx = {
+  width: "100%",
+  borderCollapse: "collapse",
+  tableLayout: "fixed",
+} as const;
+
+const noResultsSx = {
+  padding: "48px 16px",
+  textAlign: "center",
+  verticalAlign: "middle",
+  color: "var(--muted)",
+  fontSize: "13px",
+  borderBottom: "none",
+} as const;
 
 export function VirtualTable<T>({
   rows,
@@ -36,21 +56,30 @@ export function VirtualTable<T>({
   columns,
   estimateRowHeight,
   renderRow,
-  measureRows = false,
   overscan = 10,
-  toolbar,
-  noResultsContent,
+  sort,
+  onSortChange,
+  noResultsLabel,
+  footer,
 }: VirtualTableProps<T>) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const columnCount = columns.length;
-  const showNoResults = rows.length === 0 && Boolean(noResultsContent);
+  const showNoResults = rows.length === 0 && Boolean(noResultsLabel);
 
-  const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
+  const { items, paddingTop, paddingBottom } = useVirtualRows({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: estimateRowHeight,
     overscan,
   });
+
+  const columnGroup = (
+    <Box component="colgroup">
+      {columns.map((column) => (
+        <Box key={column.key} component="col" sx={{ width: column.width }} />
+      ))}
+    </Box>
+  );
 
   return (
     <Box
@@ -65,8 +94,6 @@ export function VirtualTable<T>({
         flexDirection: "column",
       }}
     >
-      {toolbar && <Box sx={{ flexShrink: 0 }}>{toolbar}</Box>}
-
       <Box
         sx={{
           flexShrink: 0,
@@ -76,25 +103,21 @@ export function VirtualTable<T>({
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
-          <Box component="colgroup">
-            {columns.map((c) => (
-              <Box key={c.label} component="col" sx={{ width: c.width }} />
-            ))}
-          </Box>
+        <Box component="table" sx={tableSx}>
+          {columnGroup}
           <Box component="thead">
             <Box component="tr">
-              {columns.map((c) => (
-                <TH key={c.label} align={c.align}>
-                  {c.label}
-                </TH>
+              {columns.map((column) => (
+                <SortableTh
+                  key={column.key}
+                  align={column.align}
+                  sortable={column.sortable}
+                  active={sort?.key === column.key}
+                  ascending={sort?.direction === "asc"}
+                  onSort={() => onSortChange?.(column.key)}
+                >
+                  {column.label}
+                </SortableTh>
               ))}
             </Box>
           </Box>
@@ -107,21 +130,16 @@ export function VirtualTable<T>({
       >
         <Box
           component="table"
-          sx={{
-            width: "100%",
-            height: showNoResults ? "100%" : undefined,
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
+          sx={{ ...tableSx, height: showNoResults ? "100%" : undefined }}
         >
-          <Box component="colgroup">
-            {columns.map((c) => (
-              <Box key={c.label} component="col" sx={{ width: c.width }} />
-            ))}
-          </Box>
+          {columnGroup}
           <Box component="tbody">
             {showNoResults ? (
-              noResultsContent
+              <Box component="tr">
+                <Box component="td" colSpan={columnCount} sx={noResultsSx}>
+                  {noResultsLabel}
+                </Box>
+              </Box>
             ) : (
               <>
                 <VirtualRowSpacer
@@ -132,11 +150,7 @@ export function VirtualTable<T>({
                   const row = rows[item.index];
                   return (
                     <Fragment key={getRowId(row, item.index)}>
-                      {renderRow(
-                        row,
-                        item.index,
-                        measureRows ? virtualizer.measureElement : undefined,
-                      )}
+                      {renderRow(row, item.index)}
                     </Fragment>
                   );
                 })}
@@ -149,6 +163,8 @@ export function VirtualTable<T>({
           </Box>
         </Box>
       </Box>
+
+      {footer}
     </Box>
   );
 }

@@ -115,7 +115,6 @@ const TicketsTableComponent: React.FC<Props> = ({
                 return (
                   <SortableTh
                     key={col}
-                    mono
                     align={col === TicketSortField.Comments ? "center" : "left"}
                     sortable={sortable}
                     active={sortable && sort.col === col}

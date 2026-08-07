@@ -1,12 +1,12 @@
 import type React from "react";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
+import { GridFooter } from "@/components/ui/common/GridFooter";
 import { StatusChip } from "@/components/ui/common/StatusChip";
-import { TD } from "@/components/ui/common/VirtualTable/TableCells";
+import { TruncatedText } from "@/components/ui/common/TruncatedText";
+import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
 import {
   VirtualTable,
   type VirtualTableColumn,
@@ -14,157 +14,168 @@ import {
 import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
 import type { DependencyStatus } from "@/enums";
+import { useGridControls } from "@/hooks/useGridControls";
 import {
   DEP_STATUS,
   EMPTY_STATE_SX,
+  GRID_ROW_HEIGHT,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
-import { useIsTextTruncated } from "@/hooks/useIsTextTruncated";
+import {
+  DEPENDENCY_TYPE_PROD,
+  buildDependencyFilterFields,
+  buildGridFilterLabels,
+} from "@/features/techHealth/pages/ProjectDetailPage/filters";
+import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
 
-const ESTIMATED_ROW_HEIGHT = 45;
-const COLUMN_COUNT = 6;
-
-const nameSx = {
-  display: "block",
-  fontFamily: "var(--font-mono)",
-  fontSize: "11px",
-  fontWeight: 600,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
+const COLUMN_KEYS = {
+  library: "library",
+  ecosystem: "ecosystem",
+  type: "type",
+  version: "version",
+  status: "status",
+  vulns: "vulns",
 } as const;
-const ecoSx = {
+
+const DEFAULT_SORT = { key: COLUMN_KEYS.vulns, direction: "desc" } as const;
+
+const statusOf = (dependency: Dependency) =>
+  DEP_STATUS[dependency.status as DependencyStatus] ?? DEP_STATUS.UpToDate;
+
+const comparators = {
+  [COLUMN_KEYS.library]: (a: Dependency, b: Dependency) =>
+    a.name.localeCompare(b.name),
+  [COLUMN_KEYS.ecosystem]: (a: Dependency, b: Dependency) =>
+    a.ecosystem.localeCompare(b.ecosystem),
+  [COLUMN_KEYS.type]: (a: Dependency, b: Dependency) =>
+    a.type.localeCompare(b.type),
+  [COLUMN_KEYS.status]: (a: Dependency, b: Dependency) =>
+    statusOf(a).weight - statusOf(b).weight,
+  [COLUMN_KEYS.vulns]: (a: Dependency, b: Dependency) =>
+    a.vulnerabilities.length - b.vulnerabilities.length,
+};
+
+const searchableValues = (dependency: Dependency) => [dependency.name];
+
+const ecosystemSx = {
   fontFamily: "var(--font-mono)",
   fontSize: "11px",
-  color: "var(--muted)",
+  color: "var(--muted2)",
   background: "var(--s3)",
   px: "7px",
   py: "2px",
   borderRadius: "var(--r-xs)",
 } as const;
-const chipWrapSx = {
-  "& .MuiChip-root": { fontSize: "11px" },
-} as const;
-const versionWrapSx = {
+
+const versionSx = {
   display: "flex",
   alignItems: "center",
   gap: "6px",
+  fontFamily: "var(--font-mono)",
   fontSize: "11px",
 } as const;
-const arrowSx = {
-  color: "var(--muted)",
+
+const latestVersionSx = { color: "var(--orange)", fontWeight: 600 } as const;
+
+const vulnCountSx = {
   fontFamily: "var(--font-mono)",
-} as const;
-const latestSx = {
-  color: "var(--orange)",
-  fontWeight: 600,
-  fontFamily: "var(--font-mono)",
-} as const;
-const noVulnSx = { color: "var(--muted)", fontSize: "11px" } as const;
-const rowSx = { "& td": { borderBottom: "1px solid var(--border)" } } as const;
-const noResultsSx = {
-  padding: "32px",
-  textAlign: "center",
-  verticalAlign: "middle",
-  color: "var(--muted)",
-  fontSize: "13px",
-  borderBottom: "none",
+  fontSize: "11px",
+  fontWeight: 700,
+  color: "var(--red)",
 } as const;
 
-const DependencyName: React.FC<{ name: string }> = ({ name }) => {
-  const { ref, truncated } = useIsTextTruncated<HTMLSpanElement>();
-  return (
-    <AppTooltip title={name} disableHoverListener={!truncated}>
-      <Box component="span" ref={ref} sx={nameSx}>
-        {name}
-      </Box>
-    </AppTooltip>
-  );
-};
+const NO_VALUE = "—";
 
 interface RowProps {
-  d: Dependency;
+  dependency: Dependency;
   typeProd: string;
   typeDev: string;
   index: number;
 }
 
-const DependencyRow = memo<RowProps>(({ d, typeProd, typeDev, index }) => {
-  const s = DEP_STATUS[d.status as DependencyStatus] ?? {
-    labelKey: "",
-    variant: "gray" as const,
-  };
-  const t = useT();
-  return (
-    <Box component="tr" data-index={index} sx={rowSx}>
-      <TD>
-        <DependencyName name={d.name} />
-      </TD>
-      <TD>
-        <Box component="span" sx={ecoSx}>
-          {d.ecosystem}
-        </Box>
-      </TD>
-      <TD>
-        <Box sx={chipWrapSx}>
+const DependencyRow = memo<RowProps>(
+  ({ dependency, typeProd, typeDev, index }) => {
+    const t = useT();
+    const status = statusOf(dependency);
+    const vulnCount = dependency.vulnerabilities.length;
+
+    return (
+      <TR accent={status.color} index={index}>
+        <TD>
+          <TruncatedText mono strong text={dependency.name} />
+        </TD>
+        <TD>
+          <Box component="span" sx={ecosystemSx}>
+            {dependency.ecosystem}
+          </Box>
+        </TD>
+        <TD>
           <StatusChip variant="gray">
-            {d.type === "Prod" ? typeProd : typeDev}
+            {dependency.type === DEPENDENCY_TYPE_PROD ? typeProd : typeDev}
           </StatusChip>
-        </Box>
-      </TD>
-      <TD mono muted>
-        <Box sx={versionWrapSx}>
-          <span>{d.currentVersion}</span>
-          {d.latestVersion && d.latestVersion !== d.currentVersion && (
-            <>
-              <Box component="span" sx={arrowSx}>
-                →
-              </Box>
-              <Box component="span" sx={latestSx}>
-                {d.latestVersion}
-              </Box>
-            </>
+        </TD>
+        <TD muted>
+          <Box sx={versionSx}>
+            <span>{dependency.currentVersion}</span>
+            {dependency.latestVersion &&
+              dependency.latestVersion !== dependency.currentVersion && (
+                <>
+                  <Box component="span" sx={{ color: "var(--muted)" }}>
+                    →
+                  </Box>
+                  <Box component="span" sx={latestVersionSx}>
+                    {dependency.latestVersion}
+                  </Box>
+                </>
+              )}
+          </Box>
+        </TD>
+        <TD>
+          <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
+        </TD>
+        <TD align="center">
+          {vulnCount > 0 ? (
+            <Box component="span" sx={vulnCountSx}>
+              {vulnCount}
+            </Box>
+          ) : (
+            <Box component="span" sx={{ color: "var(--muted)" }}>
+              {NO_VALUE}
+            </Box>
           )}
-        </Box>
-      </TD>
-      <TD>
-        <Box sx={chipWrapSx}>
-          <StatusChip variant={s.variant}>
-            {s.labelKey ? t(s.labelKey) : d.status}
-          </StatusChip>
-        </Box>
-      </TD>
-      <TD align="center">
-        {d.vulnerabilities.length > 0 ? (
-          <Box sx={chipWrapSx}>
-            <StatusChip variant="red">{d.vulnerabilities.length}</StatusChip>
-          </Box>
-        ) : (
-          <Box component="span" sx={noVulnSx}>
-            —
-          </Box>
-        )}
-      </TD>
-    </Box>
-  );
-});
+        </TD>
+      </TR>
+    );
+  },
+);
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
   dependencies: Dependency[];
-  filteredDeps: Dependency[];
-  search: string;
-  onSearchChange: (v: string) => void;
 }
 
-export const DependenciesTab: React.FC<Props> = ({
-  dependencies,
-  filteredDeps,
-  search,
-  onSearchChange,
-}) => {
+export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
   const t = useT();
-  const typeProd = t("tech_health.dep.type_prod");
-  const typeDev = t("tech_health.dep.type_dev");
+
+  const fields = useMemo(
+    () => buildDependencyFilterFields(t, dependencies),
+    [t, dependencies],
+  );
+
+  const {
+    search,
+    setSearch,
+    criterion,
+    setCriterion,
+    sort,
+    toggleSort,
+    visibleRows,
+  } = useGridControls<Dependency>({
+    rows: dependencies,
+    searchableValues,
+    fields,
+    comparators,
+    defaultSort: DEFAULT_SORT,
+  });
 
   if (dependencies.length === 0) {
     return (
@@ -179,102 +190,83 @@ export const DependenciesTab: React.FC<Props> = ({
   }
 
   const columns: VirtualTableColumn[] = [
-    { label: t("tech_health.table.dep.library"), width: "30%" },
-    { label: t("tech_health.table.dep.ecosystem"), width: "12%" },
-    { label: t("tech_health.table.dep.type"), width: "6%" },
-    { label: t("tech_health.table.dep.version"), width: "17%" },
-    { label: t("tech_health.table.dep.status"), width: "10%" },
-    { label: t("tech_health.table.dep.vulns"), width: "12%", align: "center" },
+    {
+      key: COLUMN_KEYS.library,
+      label: t("tech_health.table.dep.library"),
+      width: "28%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.ecosystem,
+      label: t("tech_health.table.dep.ecosystem"),
+      width: "12%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.type,
+      label: t("tech_health.table.dep.type"),
+      width: "10%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.version,
+      label: t("tech_health.table.dep.version"),
+      width: "22%",
+    },
+    {
+      key: COLUMN_KEYS.status,
+      label: t("tech_health.table.dep.status"),
+      width: "16%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.vulns,
+      label: t("tech_health.table.dep.vulns"),
+      width: "12%",
+      align: "center",
+      sortable: true,
+    },
   ];
 
-  const toolbar = (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        px: "16px",
-        py: "14px",
-        borderBottom: "1px solid var(--border)",
-        background: "var(--s2)",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "7px",
-          background: "var(--s1)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-sm)",
-          px: "9px",
-          height: "28px",
-          width: "calc(30% + 10px)",
-          transition: "border-color 0.15s",
-          "&:focus-within": {
-            borderColor: "var(--accent-border)",
-            boxShadow: "0 0 0 3px var(--accent-subtle)",
-          },
-        }}
-      >
-        <SearchOutlined
-          sx={{ color: "var(--muted)", fontSize: "13px", flexShrink: 0 }}
-        />
-        <Box
-          component="input"
-          placeholder={t("tech_health.search_placeholder")}
-          value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onSearchChange(e.target.value)
-          }
-          sx={{
-            all: "unset",
-            flex: 1,
-            fontSize: "12px",
-            color: "var(--text)",
-            "&::placeholder": { color: "var(--muted)" },
-            "&:focus": { outline: "none", boxShadow: "none !important" },
-          }}
-        />
-      </Box>
-      {search && (
-        <Box
-          component="span"
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            color: "var(--muted)",
-          }}
-        >
-          {filteredDeps.length} / {dependencies.length}
-        </Box>
-      )}
-    </Box>
-  );
-
   return (
-    <VirtualTable<Dependency>
-      rows={filteredDeps}
-      getRowId={(d) => d.id}
-      columns={columns}
-      estimateRowHeight={ESTIMATED_ROW_HEIGHT}
-      toolbar={toolbar}
-      noResultsContent={
-        <Box component="tr">
-          <Box component="td" colSpan={COLUMN_COUNT} sx={noResultsSx}>
-            {t("tech_health.no_results")}
-          </Box>
-        </Box>
-      }
-      renderRow={(d, index) => (
-        <DependencyRow
-          key={d.id}
-          d={d}
-          typeProd={typeProd}
-          typeDev={typeDev}
-          index={index}
-        />
-      )}
-    />
+    <>
+      <GridToolbar
+        search={search}
+        onSearchChange={setSearch}
+        criterion={criterion}
+        onCriterionChange={setCriterion}
+        fields={fields}
+        labels={buildGridFilterLabels(t)}
+      />
+
+      <VirtualTable<Dependency>
+        rows={visibleRows}
+        getRowId={(dependency) => dependency.id}
+        columns={columns}
+        estimateRowHeight={GRID_ROW_HEIGHT}
+        sort={sort}
+        onSortChange={toggleSort}
+        noResultsLabel={t("tech_health.no_results")}
+        footer={
+          <GridFooter
+            total={visibleRows.length}
+            label={t(
+              visibleRows.length > 1
+                ? "tech_health.count.deps_plural"
+                : "tech_health.count.deps_singular",
+            )}
+          />
+        }
+        renderRow={(dependency, index) => (
+          <DependencyRow
+            key={dependency.id}
+            dependency={dependency}
+            typeProd={t("tech_health.dep.type_prod")}
+            typeDev={t("tech_health.dep.type_dev")}
+            index={index}
+          />
+        )}
+      />
+    </>
   );
 };

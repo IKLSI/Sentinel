@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import { useProjectQuery } from "@/domains/projects/queries";
+import { VulnerabilitySeverity } from "@/enums";
 import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
@@ -21,14 +22,15 @@ import { RuntimesTab } from "@/features/techHealth/pages/ProjectDetailPage/compo
 
 const routeApi = getRouteApi("/_authenticated/projects/$id");
 
+const TAB_INDEX = { vulnerabilities: 0, dependencies: 1, runtimes: 2 } as const;
+
 export const ProjectDetailPage: React.FC = () => {
   const { id } = routeApi.useParams();
   const navigate = routeApi.useNavigate();
   const { showToast } = useToast();
   const t = useT();
 
-  const [activeTab, setActiveTab] = useState(0);
-  const [depSearch, setDepSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<number>(TAB_INDEX.vulnerabilities);
   const [, startTransition] = useTransition();
 
   const projectQuery = useProjectQuery(id);
@@ -50,23 +52,6 @@ export const ProjectDetailPage: React.FC = () => {
     [project],
   );
 
-  const sortedVulns = useMemo(
-    () => allVulns.slice().sort((a, b) => b.cvssScore - a.cvssScore),
-    [allVulns],
-  );
-
-  const filteredDeps = useMemo(() => {
-    if (!project) return [];
-    const deps = depSearch
-      ? project.dependencies.filter((d) =>
-          d.name.toLowerCase().includes(depSearch.toLowerCase()),
-        )
-      : [...project.dependencies];
-    return deps.sort(
-      (a, b) => b.vulnerabilities.length - a.vulnerabilities.length,
-    );
-  }, [project, depSearch]);
-
   const eolRuntimes = useMemo(
     () => project?.runtimes.filter((r) => r.isEol).length ?? 0,
     [project],
@@ -75,9 +60,11 @@ export const ProjectDetailPage: React.FC = () => {
   if (loading) return <ProjectDetailSkeleton />;
   if (!project) return null;
 
-  const vulnAccent = allVulns.some((v) => v.severity === "Critical")
+  const vulnAccent = allVulns.some(
+    (v) => v.severity === VulnerabilitySeverity.Critical,
+  )
     ? "var(--red)"
-    : allVulns.some((v) => v.severity === "High")
+    : allVulns.some((v) => v.severity === VulnerabilitySeverity.High)
       ? "var(--orange)"
       : undefined;
 
@@ -119,10 +106,7 @@ export const ProjectDetailPage: React.FC = () => {
         tabs={tabDefs}
         active={activeTab}
         onChange={(i) => {
-          startTransition(() => {
-            setActiveTab(i);
-            setDepSearch("");
-          });
+          startTransition(() => setActiveTab(i));
         }}
       />
 
@@ -135,16 +119,15 @@ export const ProjectDetailPage: React.FC = () => {
           pt: "20px",
         }}
       >
-        {activeTab === 0 && <VulnerabilitiesTab vulns={sortedVulns} />}
-        {activeTab === 1 && (
-          <DependenciesTab
-            dependencies={project.dependencies}
-            filteredDeps={filteredDeps}
-            search={depSearch}
-            onSearchChange={setDepSearch}
-          />
+        {activeTab === TAB_INDEX.vulnerabilities && (
+          <VulnerabilitiesTab vulns={allVulns} />
         )}
-        {activeTab === 2 && <RuntimesTab runtimes={project.runtimes} />}
+        {activeTab === TAB_INDEX.dependencies && (
+          <DependenciesTab dependencies={project.dependencies} />
+        )}
+        {activeTab === TAB_INDEX.runtimes && (
+          <RuntimesTab runtimes={project.runtimes} />
+        )}
       </Box>
     </PageContainer>
   );

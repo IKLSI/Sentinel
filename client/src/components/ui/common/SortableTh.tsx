@@ -1,16 +1,26 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ArrowDownwardOutlined from "@mui/icons-material/ArrowDownwardOutlined";
+import type { CellAlign } from "@/components/ui/common/VirtualTable/TableCells";
 
 interface SortableThProps {
   children?: React.ReactNode;
-  align?: "left" | "center" | "right";
+  align?: CellAlign;
   sortable?: boolean;
   active?: boolean;
   ascending?: boolean;
   onSort?: () => void;
   width?: string;
-  mono?: boolean;
 }
+
+const JUSTIFY_BY_ALIGN: Record<CellAlign, string> = {
+  left: "flex-start",
+  center: "center",
+  right: "flex-end",
+};
+
+const IDLE_ARROW_OPACITY = 0.45;
+const ARROW_CLASS = "SortableTh-arrow";
 
 export const SortableTh: React.FC<SortableThProps> = ({
   children,
@@ -20,58 +30,73 @@ export const SortableTh: React.FC<SortableThProps> = ({
   ascending = true,
   onSort,
   width,
-  mono = false,
-}) => (
-  <Box
-    component="th"
-    onClick={() => sortable && onSort?.()}
-    sx={{
-      px: "16px",
-      py: "10px",
-      width,
-      borderBottom: "1px solid var(--border)",
-      background: "var(--s2)",
-      fontFamily: mono ? "var(--font-mono)" : undefined,
-      fontSize: "10px",
-      fontWeight: 700,
-      letterSpacing: "0.08em",
-      textTransform: "uppercase",
-      color: active ? "var(--accent)" : "var(--muted)",
-      textAlign: align,
-      whiteSpace: "nowrap",
-      cursor: sortable ? "pointer" : "default",
-      userSelect: "none",
-      transition: "color 0.12s",
-      "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
-    }}
-  >
+}) => {
+  const sorted = sortable && active;
+
+  return (
     <Box
+      component="th"
+      scope="col"
+      aria-sort={
+        sorted
+          ? ascending
+            ? "ascending"
+            : "descending"
+          : sortable
+            ? "none"
+            : undefined
+      }
       sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent:
-          align === "center"
-            ? "center"
-            : align === "right"
-              ? "flex-end"
-              : "flex-start",
-        gap: "5px",
+        padding: 0,
+        width,
+        whiteSpace: "nowrap",
+        background: "var(--s2)",
+        borderBottom: "1px solid var(--border)",
+        [`&:hover .${ARROW_CLASS}`]: {
+          opacity: sorted ? 1 : IDLE_ARROW_OPACITY,
+        },
       }}
     >
-      {children}
-      {sortable && active && (
-        <Box
-          sx={{
-            fontSize: "12px",
-            color: "var(--accent)",
-            lineHeight: 1,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          {ascending ? "↑" : "↓"}
-        </Box>
-      )}
+      <Box
+        component={sortable ? "button" : "div"}
+        type={sortable ? "button" : undefined}
+        onClick={sortable ? onSort : undefined}
+        sx={{
+          all: "unset",
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: JUSTIFY_BY_ALIGN[align],
+          gap: "5px",
+          width: "100%",
+          padding: "10px 16px",
+          fontFamily: "var(--font-mono)",
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: sorted ? "var(--accent)" : "var(--muted)",
+          cursor: sortable ? "pointer" : "default",
+          userSelect: "none",
+          transition: "color 0.12s",
+          "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
+          "&:focus-visible": { color: "var(--accent)" },
+        }}
+      >
+        {children}
+        {sortable && (
+          <ArrowDownwardOutlined
+            className={ARROW_CLASS}
+            sx={{
+              fontSize: 12,
+              flexShrink: 0,
+              opacity: sorted ? 1 : 0,
+              transform: sorted && ascending ? "rotate(180deg)" : "none",
+              transition: "opacity 0.12s, transform 0.12s",
+            }}
+          />
+        )}
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
