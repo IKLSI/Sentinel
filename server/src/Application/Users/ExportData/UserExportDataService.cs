@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -16,19 +17,23 @@ public class UserExportDataService(
     ITicketAttachmentRepository ticketAttachmentRepository,
     ITenantContext tenant) : IService
 {
-    public async Task<Result<FileDownload>> ExecuteAsync(CancellationToken cancellationToken)
+    public async Task<Result<StreamedFileDownload>> ExecuteAsync(CancellationToken cancellationToken)
     {
+        if (tenant.UserId is not Guid currentUserId)
+            return Result<StreamedFileDownload>.Unauthorized();
+
         Result<UserDataExportDto> export = await BuildExportAsync(cancellationToken);
 
         if (!export.IsSuccess)
-            return Result<FileDownload>.From(export);
+            return Result<StreamedFileDownload>.From(export);
 
         UserDataExportDto data = export.Value!;
+        AttachmentPlan plan = PlanAttachments(data.Attachments);
 
-        IReadOnlyList<UserDataArchiveFile> files = await LoadAttachmentFilesAsync(data, cancellationToken);
-        byte[] archive = UserDataArchive.Build(data, files);
-
-        return FileDownload.FromBytes(archive, ContentTypes.Zip, UserDataArchive.FileName(data.ExportedAt));
+        return new StreamedFileDownload(
+            (destination, token) => WriteArchiveAsync(destination, data, plan, currentUserId, token),
+            ContentTypes.Zip,
+            UserDataArchive.FileName(data.ExportedAt));
     }
 
     private async Task<Result<UserDataExportDto>> BuildExportAsync(CancellationToken cancellationToken)
@@ -101,6 +106,7 @@ public class UserExportDataService(
                 TicketNumber = row.TicketNumber,
                 FileName = row.FileName,
                 ContentType = row.ContentType,
+                SizeBytes = row.ContentLength,
                 CreatedAt = row.CreatedAt
             }).ToList(),
             AuditLogs = Page(auditLogRows).Select(row => new UserExportAuditLogDto
@@ -123,35 +129,86 @@ public class UserExportDataService(
         };
     }
 
-    private async Task<IReadOnlyList<UserDataArchiveFile>> LoadAttachmentFilesAsync(UserDataExportDto export,
-        CancellationToken cancellationToken)
+    private async Task WriteArchiveAsync(Stream destination, UserDataExportDto data, AttachmentPlan plan,
+        Guid currentUserId, CancellationToken cancellationToken)
     {
-        if (tenant.UserId is not Guid currentUserId) return [];
+        await using ZipArchive archive = await ZipArchive.CreateAsync(destination, ZipArchiveMode.Create,
+            leaveOpen: true, entryNameEncoding: null, cancellationToken);
 
-        List<UserDataArchiveFile> files = [];
-        long budget = ExportLimits.MaxUserExportAttachmentBytes;
+        Dictionary<Guid, string> archivePaths = [];
 
-        foreach (UserExportAttachmentDto attachment in export.Attachments)
+        foreach (IReadOnlyList<UserExportAttachmentDto> batch in Batch(plan.Included))
         {
-            byte[]? content = await ticketAttachmentRepository
-                .GetContentForUserOrDefaultAsync(attachment.Id, currentUserId, cancellationToken);
+            IReadOnlyList<UserExportAttachmentContentRow> contents = await ticketAttachmentRepository
+                .ListContentsForUserAsync([.. batch.Select(attachment => attachment.Id)], currentUserId,
+                    cancellationToken);
 
-            if (content == null || content.Length == 0) continue;
+            Dictionary<Guid, byte[]> contentsById = contents.ToDictionary(row => row.Id, row => row.Content);
 
-            if (content.Length > budget)
+            foreach (UserExportAttachmentDto attachment in batch)
             {
-                export.Truncated.AttachmentFiles = true;
+                if (!contentsById.TryGetValue(attachment.Id, out byte[]? content) || content.Length == 0) continue;
+
+                string entryName = UserDataArchive.EntryName(attachment);
+                archivePaths[attachment.Id] = entryName;
+
+                await UserDataArchive.WriteFileAsync(archive, entryName, content, cancellationToken);
+            }
+        }
+
+        await UserDataArchive.WriteManifestAsync(archive, data, archivePaths, plan.SkippedOverBudget,
+            cancellationToken);
+    }
+
+    private static AttachmentPlan PlanAttachments(IReadOnlyList<UserExportAttachmentDto> attachments)
+    {
+        List<UserExportAttachmentDto> included = [];
+        long budget = ExportLimits.MaxUserExportAttachmentBytes;
+        bool skipped = false;
+
+        foreach (UserExportAttachmentDto attachment in attachments.Where(a => a.SizeBytes > 0))
+        {
+            if (attachment.SizeBytes > budget)
+            {
+                skipped = true;
                 continue;
             }
 
-            budget -= content.Length;
-            files.Add(new UserDataArchiveFile(attachment.Id, attachment.TicketNumber, attachment.FileName, content));
+            budget -= attachment.SizeBytes;
+            included.Add(attachment);
         }
 
-        return files;
+        return new AttachmentPlan(included, skipped);
+    }
+
+    private static IEnumerable<IReadOnlyList<UserExportAttachmentDto>> Batch(
+        IReadOnlyList<UserExportAttachmentDto> attachments)
+    {
+        List<UserExportAttachmentDto> batch = [];
+        long batchBytes = 0;
+
+        foreach (UserExportAttachmentDto attachment in attachments)
+        {
+            bool full = batch.Count >= ExportLimits.MaxUserExportAttachmentBatch
+                || batchBytes + attachment.SizeBytes > ExportLimits.MaxUserExportInFlightBytes;
+
+            if (full && batch.Count > 0)
+            {
+                yield return batch;
+                batch = [];
+                batchBytes = 0;
+            }
+
+            batch.Add(attachment);
+            batchBytes += attachment.SizeBytes;
+        }
+
+        if (batch.Count > 0) yield return batch;
     }
 
     private static IEnumerable<T> Page<T>(IReadOnlyList<T> rows) => rows.Take(ExportLimits.MaxUserExportRows);
 
     private static bool IsTruncated<T>(IReadOnlyList<T> rows) => rows.Count > ExportLimits.MaxUserExportRows;
+
+    private sealed record AttachmentPlan(IReadOnlyList<UserExportAttachmentDto> Included, bool SkippedOverBudget);
 }

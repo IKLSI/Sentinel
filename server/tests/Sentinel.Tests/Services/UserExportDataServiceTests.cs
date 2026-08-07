@@ -26,13 +26,13 @@ public class UserExportDataServiceTests
 
         UserExportDataService sut = BuildService(scope);
 
-        Result<FileDownload> result = await sut.ExecuteAsync(CancellationToken.None);
+        Result<StreamedFileDownload> result = await sut.ExecuteAsync(CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.ContentType.Should().Be(ContentTypes.Zip);
         result.Value.FileName.Should().StartWith("sentinel-export-").And.EndWith(".zip");
 
-        UserDataExportDto export = ReadManifest(result.Value);
+        UserDataExportDto export = await ReadManifestAsync(result.Value);
         export.Profile.Email.Should().Be("membre@test.fr");
 
         export.Tickets.Should().HaveCount(2);
@@ -63,7 +63,7 @@ public class UserExportDataServiceTests
 
         UserExportDataService sut = BuildService(scope);
 
-        UserDataExportDto export = ReadManifest((await sut.ExecuteAsync(CancellationToken.None)).Value!);
+        UserDataExportDto export = await ReadManifestAsync((await sut.ExecuteAsync(CancellationToken.None)).Value!);
 
         export.Tickets.Should().HaveCount(2);
         export.Tickets.Should().NotContain(ticket => ticket.Number == 3);
@@ -77,8 +77,8 @@ public class UserExportDataServiceTests
 
         UserExportDataService sut = BuildService(scope);
 
-        FileDownload download = (await sut.ExecuteAsync(CancellationToken.None)).Value!;
-        using ZipArchive archive = OpenArchive(download);
+        StreamedFileDownload download = (await sut.ExecuteAsync(CancellationToken.None)).Value!;
+        using ZipArchive archive = await OpenArchiveAsync(download);
 
         UserDataExportDto export = ReadManifest(archive);
         string archivePath = export.Attachments.Should().ContainSingle().Subject.ArchivePath!;
@@ -107,12 +107,13 @@ public class UserExportDataServiceTests
             UploadedById = otherUserId,
             FileName = "prive.log",
             ContentType = "text/plain",
-            Content = "secret"u8.ToArray()
+            Content = "secret"u8.ToArray(),
+            ContentLength = "secret"u8.Length
         });
 
         UserExportDataService sut = BuildService(scope);
 
-        using ZipArchive archive = OpenArchive((await sut.ExecuteAsync(CancellationToken.None)).Value!);
+        using ZipArchive archive = await OpenArchiveAsync((await sut.ExecuteAsync(CancellationToken.None)).Value!);
 
         archive.Entries.Should().NotContain(entry => entry.Name.Contains("prive"));
         ReadManifest(archive).Attachments.Should().ContainSingle();
@@ -127,13 +128,72 @@ public class UserExportDataServiceTests
         UserExportDataService sut = BuildService(scope);
 
         UserExportTruncationDto truncated =
-            ReadManifest((await sut.ExecuteAsync(CancellationToken.None)).Value!).Truncated;
+            (await ReadManifestAsync((await sut.ExecuteAsync(CancellationToken.None)).Value!)).Truncated;
 
         truncated.MaxRowsPerCollection.Should().Be(ExportLimits.MaxUserExportRows);
         truncated.Tickets.Should().BeFalse();
         truncated.Comments.Should().BeFalse();
         truncated.Attachments.Should().BeFalse();
         truncated.AuditLogs.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_QuandUnFichierDepasseLeBudget_NeLeJointPasEtLeSignale()
+    {
+        using TestScope scope = new TestScope();
+        await SeedUserDataAsync(scope);
+
+        Ticket ticket = NewTicket(scope.OrganizationId, 4, scope.UserId, assignedToId: null);
+        await scope.SeedAsync(ticket);
+        await scope.SeedAsync(new TicketAttachment
+        {
+            TicketId = ticket.Id,
+            UploadedById = scope.UserId,
+            FileName = "enorme.bin",
+            ContentType = "application/octet-stream",
+            Content = "peu importe"u8.ToArray(),
+            ContentLength = ExportLimits.MaxUserExportAttachmentBytes + 1
+        });
+
+        UserExportDataService sut = BuildService(scope);
+
+        using ZipArchive archive = await OpenArchiveAsync((await sut.ExecuteAsync(CancellationToken.None)).Value!);
+        UserDataExportDto export = ReadManifest(archive);
+
+        export.Truncated.AttachmentFiles.Should().BeTrue();
+        archive.Entries.Should().NotContain(entry => entry.Name.Contains("enorme"));
+
+        export.Attachments.Should().ContainSingle(attachment => attachment.FileName == "enorme.bin")
+            .Which.ArchivePath.Should().BeNull();
+
+        export.Attachments.Should().ContainSingle(attachment => attachment.FileName == "trace.log")
+            .Which.ArchivePath.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_QuandLeNomDeFichierEstTropLong_ConserveLExtension()
+    {
+        using TestScope scope = new TestScope();
+        await SeedUserDataAsync(scope);
+
+        Ticket ticket = NewTicket(scope.OrganizationId, 5, scope.UserId, assignedToId: null);
+        await scope.SeedAsync(ticket);
+        await scope.SeedAsync(new TicketAttachment
+        {
+            TicketId = ticket.Id,
+            UploadedById = scope.UserId,
+            FileName = $"{new string('a', ExportLimits.MaxArchiveFileNameLength + 50)}.log",
+            ContentType = "text/plain",
+            Content = "contenu"u8.ToArray(),
+            ContentLength = "contenu"u8.Length
+        });
+
+        UserExportDataService sut = BuildService(scope);
+
+        UserDataExportDto export = await ReadManifestAsync((await sut.ExecuteAsync(CancellationToken.None)).Value!);
+
+        export.Attachments.Should().Contain(attachment => attachment.TicketNumber == 5)
+            .Which.ArchivePath.Should().EndWith(".log");
     }
 
     [Fact]
@@ -148,15 +208,18 @@ public class UserExportDataServiceTests
         rows.Should().ContainSingle();
     }
 
-    private static ZipArchive OpenArchive(FileDownload download)
+    private static async Task<ZipArchive> OpenArchiveAsync(StreamedFileDownload download)
     {
-        download.Content.Position = 0;
-        return new ZipArchive(download.Content, ZipArchiveMode.Read);
+        MemoryStream buffer = new();
+        await download.WriteAsync(buffer, CancellationToken.None);
+        buffer.Position = 0;
+
+        return new ZipArchive(buffer, ZipArchiveMode.Read);
     }
 
-    private static UserDataExportDto ReadManifest(FileDownload download)
+    private static async Task<UserDataExportDto> ReadManifestAsync(StreamedFileDownload download)
     {
-        using ZipArchive archive = OpenArchive(download);
+        using ZipArchive archive = await OpenArchiveAsync(download);
         return ReadManifest(archive);
     }
 
@@ -197,7 +260,8 @@ public class UserExportDataServiceTests
             UploadedById = scope.UserId,
             FileName = "trace.log",
             ContentType = "text/plain",
-            Content = "contenu de la trace"u8.ToArray()
+            Content = "contenu de la trace"u8.ToArray(),
+            ContentLength = "contenu de la trace"u8.Length
         });
 
         await scope.SeedAsync(new AuditLog

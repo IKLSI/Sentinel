@@ -136,7 +136,7 @@ public partial class ExportService(
         ApplyDocumentProperties(workbook, L.SubjectTechHealth);
         WriteRecapSheet(workbook, projects, L, truncated);
         Dictionary<string, int> usedNames = [];
-        foreach (Project project in projects)
+        foreach (Project project in projects.Where(HasInventory))
         {
             string baseName = SafeSheetName(project.Name);
             if (!usedNames.TryAdd(baseName, 1))
@@ -152,5 +152,8 @@ public partial class ExportService(
         }
         return SaveWorkbook(workbook);
     }
+
+    private static bool HasInventory(Project project) =>
+        project.Dependencies.Count > 0 || project.Runtimes.Count > 0;
 
 }

@@ -1,4 +1,5 @@
 using Sentinel.API.Contracts;
+using Sentinel.API.Results;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
@@ -26,6 +27,10 @@ public abstract class BaseController : ControllerBase
 
     protected ActionResult ToFileResult(Result<FileDownload> result) => result.IsSuccess
         ? File(result.Value!.Content, result.Value.ContentType, result.Value.FileName)
+        : ToErrorResult(result);
+
+    protected ActionResult ToFileResult(Result<StreamedFileDownload> result) => result.IsSuccess
+        ? new StreamedFileResult(result.Value!)
         : ToErrorResult(result);
 
     private ActionResult ToErrorResult(Result result) => result.Status switch

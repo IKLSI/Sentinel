@@ -37,4 +37,7 @@ public sealed record UserExportTicketAttachmentRow(
     int TicketNumber,
     string FileName,
     string ContentType,
+    long ContentLength,
     DateTime CreatedAt);
+
+public sealed record UserExportAttachmentContentRow(Guid Id, byte[] Content);

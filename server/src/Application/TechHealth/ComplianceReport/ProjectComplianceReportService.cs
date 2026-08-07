@@ -4,11 +4,13 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.ComplianceReport;
 
 public class ProjectComplianceReportService(
     ComplianceReportService complianceReportService,
+    IProjectRepository projectRepository,
     QuotaGuard quotaGuard,
     ITenantContext tenant) : IService
 {
@@ -16,6 +18,12 @@ public class ProjectComplianceReportService(
     {
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
             return Result<FileDownload>.Unauthorized();
+
+        bool projectExists = await projectRepository.ExistsInOrganizationAsync(projectId, organizationId,
+            cancellationToken);
+
+        if (!projectExists)
+            return Result<FileDownload>.NotFound(ErrorCodes.ProjectNotFound);
 
         Result planResult = await quotaGuard.EnsureComplianceExportsAllowedAsync(organizationId, cancellationToken);
 

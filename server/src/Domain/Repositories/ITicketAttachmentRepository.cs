@@ -11,6 +11,6 @@ public interface ITicketAttachmentRepository : ICrudEntityWithIdRepository<Ticke
     Task<IReadOnlyList<UserExportTicketAttachmentRow>> ListForUserDataExportAsync(Guid userId, int take,
         CancellationToken cancellationToken);
 
-    Task<byte[]?> GetContentForUserOrDefaultAsync(Guid attachmentId, Guid userId,
-        CancellationToken cancellationToken);
+    Task<IReadOnlyList<UserExportAttachmentContentRow>> ListContentsForUserAsync(
+        IReadOnlyCollection<Guid> attachmentIds, Guid userId, CancellationToken cancellationToken);
 }

@@ -106,7 +106,7 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
                     BomRef = $"sentinel:project:{project.Id}"
                 }
             },
-            Components = dependencies.Select(ToCycloneComponent).ToList()
+            Components = dependencies.Select(ToCycloneComponent).DistinctBy(component => component.BomRef).ToList()
         };
 
         string rootRef = bom.Metadata.Component.BomRef;

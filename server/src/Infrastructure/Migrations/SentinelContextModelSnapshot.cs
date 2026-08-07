@@ -626,6 +626,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<byte[]>("Content")
                         .HasColumnType("bytea");
 
+                    b.Property<long>("ContentLength")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(150)

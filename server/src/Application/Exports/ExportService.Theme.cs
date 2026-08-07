@@ -49,7 +49,7 @@ public partial class ExportService
     {
         if (r.IsEol == true)
             return (L.RuntimeEol, RedFg);
-        if (r.EolDate.HasValue && r.EolDate.Value < DateTime.Now.AddMonths(6))
+        if (r.EolDate.HasValue && r.EolDate.Value < DateTime.UtcNow.AddMonths(6))
             return (L.RuntimeSoonEol, OrangeFg);
         if (r.IsEol == null)
             return (L.RuntimeUnknown, GrayFg);

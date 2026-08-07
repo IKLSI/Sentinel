@@ -5,12 +5,13 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.Application.Users.ExportData;
 
-public sealed record UserDataArchiveFile(Guid AttachmentId, int TicketNumber, string FileName, byte[] Content);
-
 public static class UserDataArchive
 {
     public const string ManifestEntryName = "export.json";
     public const string AttachmentsDirectory = "attachments";
+
+    private const string FallbackFileName = "fichier";
+    private const int MaxExtensionLength = 16;
 
     private static readonly JsonSerializerOptions ManifestOptions = new()
     {
@@ -18,37 +19,39 @@ public static class UserDataArchive
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public static byte[] Build(UserDataExportDto export, IReadOnlyList<UserDataArchiveFile> files)
-    {
-        using MemoryStream buffer = new();
-
-        using (ZipArchive archive = new(buffer, ZipArchiveMode.Create, leaveOpen: true))
-        {
-            foreach (UserDataArchiveFile file in files)
-            {
-                string entryName = EntryName(file);
-
-                UserExportAttachmentDto? attachment = export.Attachments
-                    .FirstOrDefault(candidate => candidate.Id == file.AttachmentId);
-
-                if (attachment != null)
-                    attachment.ArchivePath = entryName;
-
-                using Stream entry = archive.CreateEntry(entryName, CompressionLevel.Optimal).Open();
-                entry.Write(file.Content);
-            }
-
-            using Stream manifest = archive.CreateEntry(ManifestEntryName, CompressionLevel.Optimal).Open();
-            manifest.Write(JsonSerializer.SerializeToUtf8Bytes(export, ManifestOptions));
-        }
-
-        return buffer.ToArray();
-    }
-
     public static string FileName(DateTime exportedAt) => $"sentinel-export-{exportedAt:yyyy-MM-dd}.zip";
 
-    private static string EntryName(UserDataArchiveFile file) =>
-        $"{AttachmentsDirectory}/{file.TicketNumber}-{file.AttachmentId:N}-{SafeFileName(file.FileName)}";
+    public static string EntryName(UserExportAttachmentDto attachment) =>
+        $"{AttachmentsDirectory}/{attachment.TicketNumber}-{attachment.Id:N}-{SafeFileName(attachment.FileName)}";
+
+    public static async Task WriteFileAsync(ZipArchive archive, string entryName, byte[] content,
+        CancellationToken cancellationToken)
+    {
+        await using Stream entry = await archive.CreateEntry(entryName, CompressionLevel.Optimal)
+            .OpenAsync(cancellationToken);
+
+        await entry.WriteAsync(content, cancellationToken);
+    }
+
+    public static async Task WriteManifestAsync(ZipArchive archive, UserDataExportDto export,
+        IReadOnlyDictionary<Guid, string> archivePaths, bool filesTruncated, CancellationToken cancellationToken)
+    {
+        await using Stream manifest = await archive.CreateEntry(ManifestEntryName, CompressionLevel.Optimal)
+            .OpenAsync(cancellationToken);
+
+        await JsonSerializer.SerializeAsync(manifest, Describe(export, archivePaths, filesTruncated), ManifestOptions,
+            cancellationToken);
+    }
+
+    private static UserDataExportDto Describe(UserDataExportDto export,
+        IReadOnlyDictionary<Guid, string> archivePaths, bool filesTruncated) => export with
+    {
+        Attachments = [.. export.Attachments.Select(attachment => attachment with
+        {
+            ArchivePath = archivePaths.GetValueOrDefault(attachment.Id)
+        })],
+        Truncated = export.Truncated with { AttachmentFiles = filesTruncated }
+    };
 
     private static string SafeFileName(string fileName)
     {
@@ -58,9 +61,17 @@ public static class UserDataArchive
             builder.Append(char.IsLetterOrDigit(character) || character is '.' or '-' or '_' ? character : '-');
 
         string safe = builder.ToString().Trim('-', '.');
-        return string.IsNullOrEmpty(safe) ? "fichier" : Truncate(safe);
+        return string.IsNullOrEmpty(safe) ? FallbackFileName : Truncate(safe);
     }
 
-    private static string Truncate(string value) =>
-        value.Length <= ExportLimits.MaxArchiveFileNameLength ? value : value[..ExportLimits.MaxArchiveFileNameLength];
+    private static string Truncate(string value)
+    {
+        if (value.Length <= ExportLimits.MaxArchiveFileNameLength) return value;
+
+        string extension = Path.GetExtension(value);
+
+        return extension.Length is 0 or > MaxExtensionLength
+            ? value[..ExportLimits.MaxArchiveFileNameLength]
+            : value[..(ExportLimits.MaxArchiveFileNameLength - extension.Length)] + extension;
+    }
 }

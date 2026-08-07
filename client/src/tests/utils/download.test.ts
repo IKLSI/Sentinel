@@ -84,6 +84,17 @@ describe("downloadExcel", () => {
     expect(anchor.download).toBe("santé-technique.xlsx");
   });
 
+  it("falls back when the encoded filename is malformed", async () => {
+    respondWith({
+      "content-disposition": "attachment; filename*=UTF-8''sant%E9.xlsx",
+    });
+    const anchor = stubAnchor();
+
+    await downloadExcel("/api/export", "fallback.xlsx");
+
+    expect(anchor.download).toBe("fallback.xlsx");
+  });
+
   it("falls back when the header is missing", async () => {
     const anchor = stubAnchor();
 

@@ -13,11 +13,19 @@ const CONTENT_DISPOSITION_HEADER = "content-disposition";
 const ENCODED_FILENAME_PATTERN = /filename\*=UTF-8''([^;]+)/i;
 const PLAIN_FILENAME_PATTERN = /filename="?([^";]+)"?/i;
 
+function decodeOrNull(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 function resolveFileName(header: unknown, fallback: string): string {
   if (typeof header !== "string") return fallback;
 
   const encoded = header.match(ENCODED_FILENAME_PATTERN)?.[1];
-  if (encoded) return decodeURIComponent(encoded);
+  if (encoded) return decodeOrNull(encoded) ?? fallback;
 
   return header.match(PLAIN_FILENAME_PATTERN)?.[1]?.trim() || fallback;
 }

@@ -502,7 +502,7 @@
   "profile.gdpr.delete_label": "Delete my account",
   "profile.gdpr.delete_password_label": "Password",
   "profile.gdpr.deleting": "Deleting…",
-  "profile.gdpr.export_button": "Export",
+  "profile.gdpr.export_button": "Export my data",
   "profile.gdpr.export_error": "Error during export",
   "profile.gdpr.export_help": "Download a ZIP archive containing all your personal data and attachments.",
   "profile.gdpr.export_label": "Export my data",

@@ -4,10 +4,15 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.ExportSbom;
 
-public class ProjectSbomExportService(SbomService sbomService, QuotaGuard quotaGuard, ITenantContext tenant) : IService
+public class ProjectSbomExportService(
+    SbomService sbomService,
+    IProjectRepository projectRepository,
+    QuotaGuard quotaGuard,
+    ITenantContext tenant) : IService
 {
     private const string SpdxFormat = "spdx";
 
@@ -15,6 +20,12 @@ public class ProjectSbomExportService(SbomService sbomService, QuotaGuard quotaG
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<FileDownload>.Unauthorized();
+
+        bool projectExists = await projectRepository.ExistsInOrganizationAsync(projectId, organizationId,
+            cancellationToken);
+
+        if (!projectExists)
+            return Result<FileDownload>.NotFound(ErrorCodes.ProjectNotFound);
 
         Result planResult = await quotaGuard.EnsureComplianceExportsAllowedAsync(organizationId, cancellationToken);
 

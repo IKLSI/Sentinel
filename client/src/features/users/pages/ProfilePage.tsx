@@ -50,6 +50,8 @@ const inp = {
 
 const inpRo = { ...inp, color: "var(--muted2)", cursor: "default" } as const;
 
+const GDPR_ACTION_SX = { minWidth: "160px" } as const;
+
 const CARD_SX = {
   ...BASE_CARD_SX,
   display: "flex",
@@ -630,6 +632,8 @@ export const ProfilePage: React.FC = () => {
               onClick={handleExportGdpr}
               exporting={exportingGdpr}
               label={t("profile.gdpr.export_button")}
+              showIcon={false}
+              sx={GDPR_ACTION_SX}
             />
           </Box>
 
@@ -663,6 +667,7 @@ export const ProfilePage: React.FC = () => {
               variant="contained"
               color="error"
               size="small"
+              sx={GDPR_ACTION_SX}
               onClick={() => setDeleteDialogOpen(true)}
             >
               {t("profile.gdpr.delete_button")}

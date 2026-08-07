@@ -47,6 +47,7 @@ public class TicketUploadAttachmentService(
             UploadedById = userId,
             FileName = Path.GetFileName(model.FileName),
             Content = location.InlineContent,
+            ContentLength = location.InlineContent?.LongLength ?? 0,
             ContentType = model.ContentType,
             CreatedAt = DateTime.UtcNow
         };

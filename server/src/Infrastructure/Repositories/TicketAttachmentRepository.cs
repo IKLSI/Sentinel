@@ -16,12 +16,12 @@ public class TicketAttachmentRepository : CrudEntityWithIdRepository<TicketAttac
             .Include(a => a.Ticket)
             .FirstOrDefaultAsync(a => a.Id == attachmentId && a.TicketId == ticketId, cancellationToken);
 
-    public Task<byte[]?> GetContentForUserOrDefaultAsync(Guid attachmentId, Guid userId,
-        CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .Where(a => a.Id == attachmentId && a.UploadedById == userId)
-            .Select(a => a.Content)
-            .FirstOrDefaultAsync(cancellationToken);
+    public async Task<IReadOnlyList<UserExportAttachmentContentRow>> ListContentsForUserAsync(
+        IReadOnlyCollection<Guid> attachmentIds, Guid userId, CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(a => attachmentIds.Contains(a.Id) && a.UploadedById == userId && a.Content != null)
+            .Select(a => new UserExportAttachmentContentRow(a.Id, a.Content!))
+            .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<UserExportTicketAttachmentRow>> ListForUserDataExportAsync(Guid userId, int take,
         CancellationToken cancellationToken) =>
@@ -35,6 +35,7 @@ public class TicketAttachmentRepository : CrudEntityWithIdRepository<TicketAttac
                 a.Ticket.Number,
                 a.FileName,
                 a.ContentType,
+                a.ContentLength,
                 a.CreatedAt))
             .ToListAsync(cancellationToken);
 }
