@@ -25,8 +25,6 @@ public class ComplianceReportService(
     private const string Panel = "#F1F4F7";
     private const string White = "#FFFFFF";
 
-    private const int MaxVulnerabilityRows = 30;
-
     public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, Guid currentUserId,
         CancellationToken cancellationToken)
     {
@@ -110,26 +108,10 @@ public class ComplianceReportService(
             page.Margin(40);
             page.DefaultTextStyle(x => x.FontSize(9).FontColor(Ink).LineHeight(1.35f));
 
-            page.Header().Element(header => ComposeHeader(header, data.Labels));
             page.Content().PaddingVertical(18).Element(content => ComposeContent(content, data));
             page.Footer().Element(footer => ComposeFooter(footer, data));
         });
     });
-
-    private static void ComposeHeader(IContainer container, ComplianceReportLabels labels)
-    {
-        container.BorderBottom(1).BorderColor(Line).PaddingBottom(8).Row(row =>
-        {
-            row.RelativeItem().Text(text =>
-            {
-                text.Span("SENTINEL").FontSize(11).Bold().FontColor(Navy).LetterSpacing(0.15f);
-                text.Span($"  ·  {labels.Title}").FontSize(9).FontColor(Muted);
-            });
-
-            row.ConstantItem(160).AlignRight().Text(labels.Tagline)
-                .FontSize(8).FontColor(Muted);
-        });
-    }
 
     private static void ComposeContent(IContainer container, ReportData data)
     {
@@ -142,7 +124,10 @@ public class ComplianceReportService(
             column.Item().Element(controls => ComposeControls(controls, data));
 
             if (data.Vulnerabilities.Count > 0)
+            {
+                column.Item().PageBreak();
                 column.Item().Element(vulns => ComposeVulnerabilities(vulns, data));
+            }
 
             if (data.EolRuntimes.Count > 0)
                 column.Item().Element(eol => ComposeEolRuntimes(eol, data));
@@ -153,24 +138,12 @@ public class ComplianceReportService(
 
     private static void ComposeTitleBlock(IContainer container, ReportData data)
     {
-        container.Row(row =>
+        container.Column(column =>
         {
-            row.RelativeItem().Column(column =>
-            {
-                column.Item().Text(data.Labels.Title).FontSize(22).Bold().FontColor(Navy);
-                column.Item().PaddingTop(4).Text(data.ProjectName).FontSize(13).FontColor(Ink);
-                column.Item().PaddingTop(2).Text(data.OrganizationName).FontSize(9).FontColor(Muted);
-                if (!string.IsNullOrWhiteSpace(data.RepositoryUrl))
-                    column.Item().Text(data.RepositoryUrl).FontSize(8).FontColor(Muted);
-            });
-
-            row.ConstantItem(96).AlignRight().Column(column =>
-            {
-                column.Item().AlignRight().Text(data.HealthGrade ?? "—")
-                    .FontSize(34).Bold().FontColor(GradeColor(data.HealthScore));
-                column.Item().AlignRight().Text(data.HealthScore is { } score ? $"{score} / 100" : data.Labels.GradeNotCovered)
-                    .FontSize(8).FontColor(Muted);
-            });
+            column.Item().Text(data.Labels.Title).FontSize(22).Bold().FontColor(Navy);
+            column.Item().PaddingTop(4).Text(data.ProjectName).FontSize(13).FontColor(Ink);
+            if (!string.IsNullOrWhiteSpace(data.RepositoryUrl))
+                column.Item().Text(data.RepositoryUrl).FontSize(8).FontColor(Muted);
         });
     }
 
@@ -187,13 +160,14 @@ public class ComplianceReportService(
 
     private static void SummaryCell(RowDescriptor row, string label, string value, string valueColor, bool withBorder)
     {
-        IContainer cell = row.RelativeItem().Padding(12);
+        IContainer cell = row.RelativeItem().Background(Panel).BorderTop(3).BorderColor(valueColor)
+            .PaddingVertical(14).PaddingHorizontal(8);
         if (withBorder) cell = cell.BorderRight(1).BorderColor(Line);
 
         cell.Column(column =>
         {
-            column.Item().Text(label.ToUpperInvariant()).FontSize(7).FontColor(Muted).LetterSpacing(0.08f);
-            column.Item().PaddingTop(4).Text(value).FontSize(22).Bold().FontColor(valueColor);
+            column.Item().Text(label.ToUpperInvariant()).FontSize(6.5f).FontColor(Muted).LetterSpacing(0.02f);
+            column.Item().PaddingTop(5).Text(value).FontSize(24).Bold().FontColor(valueColor);
         });
     }
 
@@ -236,9 +210,6 @@ public class ComplianceReportService(
 
     private static void ComposeVulnerabilities(IContainer container, ReportData data)
     {
-        List<Vulnerability> rows = data.Vulnerabilities.Take(MaxVulnerabilityRows).ToList();
-        int hidden = data.Vulnerabilities.Count - rows.Count;
-
         container.Column(column =>
         {
             column.Item().Element(SectionTitle(data.Labels.SectionVulnerabilities(data.TotalVulnerabilities)));
@@ -261,7 +232,7 @@ public class ComplianceReportService(
                     HeaderCell(header, data.Labels.HeaderFix);
                 });
 
-                foreach (Vulnerability vulnerability in rows)
+                foreach (Vulnerability vulnerability in data.Vulnerabilities)
                 {
                     table.Cell().Padding(6).Text(vulnerability.PackageName).FontSize(8.5f).FontColor(Ink);
                     table.Cell().Padding(6).Text(vulnerability.CveId).FontSize(8).FontColor(Muted);
@@ -270,10 +241,6 @@ public class ComplianceReportService(
                     table.Cell().Padding(6).Text(vulnerability.FixedVersion ?? "—").FontSize(8).FontColor(Muted);
                 }
             });
-
-            if (hidden > 0)
-                column.Item().PaddingTop(6).Text(data.Labels.VulnerabilitiesHidden(hidden))
-                    .FontSize(7.5f).Italic().FontColor(Muted);
         });
     }
 
@@ -334,7 +301,7 @@ public class ComplianceReportService(
     {
         container.BorderTop(1).BorderColor(Line).PaddingTop(6).Row(row =>
         {
-            row.RelativeItem().Text($"SENTINEL · {data.OrganizationName} · {data.Labels.FooterConfidential}")
+            row.RelativeItem().Text($"SENTINEL · {data.Labels.FooterConfidential}")
                 .FontSize(7.5f).FontColor(Muted);
 
             row.ConstantItem(80).AlignRight().Text(text =>
@@ -354,14 +321,6 @@ public class ComplianceReportService(
     private static void HeaderCell(TableCellDescriptor header, string label) =>
         header.Cell().Background(Navy).Padding(7).Text(label)
             .FontSize(7.5f).Bold().FontColor(White).LetterSpacing(0.06f);
-
-    private static string GradeColor(int? score) => score switch
-    {
-        >= 75 => Teal,
-        >= 45 => Amber,
-        null => Muted,
-        _ => Brick
-    };
 
     private static string StatusLabel(ControlStatus status, ComplianceReportLabels labels) => status switch
     {

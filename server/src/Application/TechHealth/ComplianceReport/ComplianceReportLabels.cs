@@ -28,7 +28,7 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
     public string HeaderComponent => Text("exports.compliance.header.component");
     public string HeaderReference => Text("exports.compliance.header.reference");
     public string HeaderSeverity => Text("exports.header.vulnerability.severity");
-    public string HeaderFix => Text("exports.header.vulnerability.fix");
+    public string HeaderFix => Text("exports.compliance.header.fix");
     public string HeaderRuntime => Text("exports.header.runtime.runtime");
     public string HeaderVersion => Text("exports.header.runtime.version");
     public string HeaderSupportEnds => Text("exports.header.runtime.support_ends");
