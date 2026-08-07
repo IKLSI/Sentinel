@@ -131,7 +131,7 @@ const DependencyRow = memo<RowProps>(
           </Box>
         </TD>
         <TD>
-          <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
+          <StatusChip variant="gray">{t(status.labelKey)}</StatusChip>
         </TD>
         <TD align="center">
           {vulnCount > 0 ? (

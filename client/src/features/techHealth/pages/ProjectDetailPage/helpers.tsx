@@ -27,36 +27,26 @@ export const EMPTY_STATE_SX = {
 
 export const DEP_STATUS: Record<
   DependencyStatus,
-  { labelKey: string; variant: StatusVariant; color: string; weight: number }
+  { labelKey: string; weight: number }
 > = {
   Vulnerable: {
     labelKey: "tech_health.dep_status.vulnerable",
-    variant: "red",
-    color: "var(--red)",
     weight: 5,
   },
   EOL: {
     labelKey: "tech_health.dep_status.eol",
-    variant: "red",
-    color: "var(--red)",
     weight: 4,
   },
   MajorUpdate: {
     labelKey: "tech_health.dep_status.major_update",
-    variant: "orange",
-    color: "var(--orange)",
     weight: 3,
   },
   MinorUpdate: {
     labelKey: "tech_health.dep_status.minor_update",
-    variant: "blue",
-    color: "var(--accent)",
     weight: 2,
   },
   UpToDate: {
     labelKey: "tech_health.dep_status.up_to_date",
-    variant: "green",
-    color: "var(--green)",
     weight: 1,
   },
 };

@@ -762,7 +762,7 @@
   "tech_health.runtime.expired_since": "Expiré depuis {days}j",
   "tech_health.runtime.not_assessed": "Non évalué",
   "tech_health.runtime.supported": "Supporté",
-  "tech_health.runtime_status.eol": "EOL",
+  "tech_health.runtime_status.eol": "FIN DE SUPPORT",
   "tech_health.runtime_status.imminent": "IMMINENT",
   "tech_health.runtime_status.soon": "BIENTÔT",
   "tech_health.runtime_status.supported": "SUPPORTÉ",
