@@ -7,8 +7,7 @@ import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import GroupOutlined from "@mui/icons-material/GroupOutlined";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
-import { formatDistanceToNow } from "date-fns";
-import { getDateFnsLocale } from "@/configs/locales";
+import { formatRelativeToNow } from "@/formatters/date";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { RowActions } from "@/components/ui/common/RowActions";
@@ -103,24 +102,24 @@ export const MembersTab: React.FC<Props> = ({
     {
       key: UserSortField.Member,
       label: t("settings.members.col_member"),
-      width: "auto",
+      width: "50%",
     },
     {
       key: UserSortField.Role,
       label: t("settings.members.col_role"),
-      width: "90px",
+      width: "13%",
     },
     {
       key: UserSortField.Status,
       label: t("settings.members.col_status"),
-      width: "110px",
+      width: "14%",
     },
     {
       key: UserSortField.LastLogin,
       label: t("settings.members.col_last_login"),
-      width: "220px",
+      width: "15%",
     },
-    { key: ACTIONS_COLUMN_KEY, label: "", width: "48px" },
+    { key: ACTIONS_COLUMN_KEY, label: "", width: "8%" },
   ];
 
   const handleToggleAccessStatus = (
@@ -216,6 +215,7 @@ export const MembersTab: React.FC<Props> = ({
                 sx={{
                   width: "100%",
                   borderCollapse: "collapse",
+                  tableLayout: "fixed",
                   fontSize: "12px",
                 }}
               >
@@ -261,18 +261,27 @@ export const MembersTab: React.FC<Props> = ({
                             gap: "10px",
                           }}
                         >
-                          <Box>
+                          <Box sx={{ minWidth: 0 }}>
                             <Box
                               sx={{
                                 fontWeight: 600,
                                 color: "var(--text)",
                                 lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               {m.firstName} {m.lastName}
                             </Box>
                             <Box
-                              sx={{ color: "var(--muted2)", fontSize: "11px" }}
+                              sx={{
+                                color: "var(--muted2)",
+                                fontSize: "11px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
                             >
                               {m.email}
                             </Box>
@@ -313,15 +322,12 @@ export const MembersTab: React.FC<Props> = ({
                         }}
                       >
                         {m.lastLoginAt
-                          ? formatDistanceToNow(new Date(m.lastLoginAt), {
-                              addSuffix: true,
-                              locale: getDateFnsLocale(culture),
-                            })
+                          ? formatRelativeToNow(m.lastLoginAt, culture)
                           : "—"}
                       </Box>
                       <Box
                         component="td"
-                        sx={{ px: "16px", py: "10px", textAlign: "right" }}
+                        sx={{ px: "16px", py: "10px", textAlign: "center" }}
                       >
                         {m.id !== user?.id &&
                           (updateAccessStatus.isPending &&

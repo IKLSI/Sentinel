@@ -1,3 +1,16 @@
+import { formatDistanceToNow } from "date-fns";
+import { getDateFnsLocale } from "@/configs/locales";
+import type { Language } from "@/enums";
+
+export function formatRelativeToNow(iso: string, culture: Language): string {
+  const relative = formatDistanceToNow(new Date(iso), {
+    addSuffix: true,
+    locale: getDateFnsLocale(culture),
+  });
+
+  return relative.charAt(0).toUpperCase() + relative.slice(1);
+}
+
 export function formatDate(iso: string | null, locale: string): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(locale, {
