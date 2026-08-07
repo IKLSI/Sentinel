@@ -337,6 +337,7 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.CurrentVersion).HasMaxLength(100).IsRequired();
             entity.Property(e => e.LatestVersion).HasMaxLength(100);
+            entity.Property(e => e.Publisher).HasMaxLength(200);
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Ecosystem).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();

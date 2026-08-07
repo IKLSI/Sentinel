@@ -13,8 +13,6 @@ import {
   useUpdateMyProfileMutation,
   useUpdatePreferencesMutation,
 } from "@/domains/users/mutations";
-import { toIsoDate } from "@/formatters/fileName";
-import { MIME_TYPES } from "@/helpers/download";
 import { CARD_SX as BASE_CARD_SX } from "@/helpers/cardSx";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
@@ -22,15 +20,13 @@ import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ExportButton } from "@/components/ui/common/ExportButton";
 import { LanguageFlag } from "@/components/ui/common/LanguageFlag";
 import { useT, useI18n } from "@/contexts/I18nContext";
 import { Theme, Language, UserRole } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
 import { ROUTES } from "@/constants/routes";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
-
-const JSON_INDENT = 2;
-const GDPR_EXPORT_FILE_PREFIX = "sentinel-export";
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   [UserRole.Admin]: "profile.role.admin",
@@ -158,23 +154,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleExportGdpr = () => {
-    exportGdpr.mutate(
-      {},
-      {
-        onSuccess: (data) => {
-          const blob = new Blob([JSON.stringify(data, null, JSON_INDENT)], {
-            type: MIME_TYPES.JSON,
-          });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${GDPR_EXPORT_FILE_PREFIX}-${toIsoDate()}.json`;
-          a.click();
-          URL.revokeObjectURL(url);
-        },
-        onError: onExportError,
-      },
-    );
+    exportGdpr.mutate(undefined, { onError: onExportError });
   };
 
   const handleDeleteAccount = () => {
@@ -646,16 +626,11 @@ export const ProfilePage: React.FC = () => {
                 {t("profile.gdpr.export_help")}
               </Box>
             </Box>
-            <Button
-              variant="contained"
-              size="small"
+            <ExportButton
               onClick={handleExportGdpr}
-              disabled={exportingGdpr}
-            >
-              {exportingGdpr
-                ? t("profile.gdpr.exporting")
-                : t("profile.gdpr.export_button")}
-            </Button>
+              exporting={exportingGdpr}
+              label={t("profile.gdpr.export_button")}
+            />
           </Box>
 
           {/* Danger zone */}

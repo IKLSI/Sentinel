@@ -17,18 +17,19 @@ public enum SubscriptionStatus
     Incomplete
 }
 
-public record PlanLimits(int MaxProjects, int MaxMembers, int MaxScansPerMonth, ScanFrequency MaxScanFrequency)
+public record PlanLimits(int MaxProjects, int MaxMembers, int MaxScansPerMonth, ScanFrequency MaxScanFrequency,
+    bool AllowsComplianceExports)
 {
     public const int Unlimited = -1;
 
     public static readonly IReadOnlyDictionary<PlanTier, PlanLimits> ByTier = new Dictionary<PlanTier, PlanLimits>
     {
         [PlanTier.Free] = new PlanLimits(MaxProjects: 3, MaxMembers: 2, MaxScansPerMonth: 10,
-            MaxScanFrequency: ScanFrequency.Monthly),
+            MaxScanFrequency: ScanFrequency.Monthly, AllowsComplianceExports: false),
         [PlanTier.Pro] = new PlanLimits(MaxProjects: 20, MaxMembers: 10, MaxScansPerMonth: 200,
-            MaxScanFrequency: ScanFrequency.Weekly),
+            MaxScanFrequency: ScanFrequency.Weekly, AllowsComplianceExports: true),
         [PlanTier.Business] = new PlanLimits(MaxProjects: Unlimited, MaxMembers: Unlimited, MaxScansPerMonth: 2000,
-            MaxScanFrequency: ScanFrequency.Daily)
+            MaxScanFrequency: ScanFrequency.Daily, AllowsComplianceExports: true)
     };
 
     public static PlanLimits For(PlanTier tier) => ByTier[tier];

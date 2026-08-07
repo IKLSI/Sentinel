@@ -98,7 +98,7 @@ export const ProjectDetailPage: React.FC = () => {
         project={project}
         eolRuntimes={eolRuntimes}
         action={
-          <ExportActions projectId={project.id} projectName={project.name} />
+          <ExportActions projectId={project.id} />
         }
       />
 

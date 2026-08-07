@@ -17,8 +17,6 @@ export type AcceptInvitation = components["schemas"]["AcceptInvitationDto"];
 
 export type DeleteAccount = components["schemas"]["DeleteAccountDto"];
 
-export type UserDataExport = components["schemas"]["UserDataExportDto"];
-
 export type UserCriteriaFilters = {
   role?: string[];
   status?: string[];

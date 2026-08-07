@@ -10,4 +10,7 @@ public interface ITicketCommentRepository : ICrudEntityWithIdRepository<TicketCo
 
     Task<TicketComment?> GetOrDefaultInTicketWithAuthorAsync(Guid commentId, Guid ticketId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<UserExportTicketCommentRow>> ListForUserDataExportAsync(Guid userId, int take,
+        CancellationToken cancellationToken);
 }

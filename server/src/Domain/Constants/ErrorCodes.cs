@@ -42,6 +42,7 @@ public static class ErrorCodes
     public const string QuotaProjectsExceeded = "errors.quota.projects_exceeded";
     public const string QuotaMembersExceeded = "errors.quota.members_exceeded";
     public const string QuotaScansExceeded = "errors.quota.scans_exceeded";
+    public const string ComplianceExportsAbovePlan = "errors.quota.compliance_exports_above_plan";
 
     public const string ProjectNotFound = "errors.projects.not_found";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";

@@ -20,7 +20,7 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<IReadOnlyList<Project>> ListWithHealthDetailsByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId,
+    Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId, CancellationToken cancellationToken);

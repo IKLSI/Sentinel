@@ -71,10 +71,11 @@ public class UsersController : BaseController
         ToActionResult(await service.ExecuteAsync(dto, cancellationToken));
 
     [HttpGet("me/export")]
-    public async Task<ActionResult<UserDataExportDto>> ExportMyData(
+    [EnableRateLimiting(RateLimitPolicies.Export)]
+    public async Task<IActionResult> ExportMyData(
         [FromServices] UserExportDataService service,
         CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(cancellationToken));
+        ToFileResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpDelete("me")]
     public async Task<IActionResult> DeleteMyAccount(

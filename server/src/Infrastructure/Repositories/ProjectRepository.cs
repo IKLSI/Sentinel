@@ -46,11 +46,12 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .ThenBy(p => p.Name)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId,
+    public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken) =>
         await WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
             .Where(p => p.OrganizationId == organizationId)
             .OrderBy(p => p.Name)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId,

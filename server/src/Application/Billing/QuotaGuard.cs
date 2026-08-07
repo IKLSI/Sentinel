@@ -52,6 +52,17 @@ public class QuotaGuard(
             new Dictionary<string, string> { ["maxFrequency"] = limits.MaxScanFrequency.ToString() });
     }
 
+    public async Task<Result> EnsureComplianceExportsAllowedAsync(Guid organizationId,
+        CancellationToken cancellationToken)
+    {
+        PlanLimits limits = await GetLimitsAsync(organizationId, cancellationToken);
+
+        if (limits.AllowsComplianceExports)
+            return Result.Success();
+
+        return Result.PaymentRequired(ErrorCodes.ComplianceExportsAbovePlan);
+    }
+
     public async Task<Result> TryConsumeScanAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         using IDisposable elevation = systemScope.Enter();

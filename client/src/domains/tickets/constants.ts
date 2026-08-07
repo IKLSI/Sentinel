@@ -9,4 +9,4 @@ export const ticketsQueryKey = (filters: TicketFilters) =>
 
 export const ticketQueryKey = (id: string) => [TICKET_QUERY_KEY, id] as const;
 
-export const TICKETS_EXPORT_FILE_PREFIX = "tickets";
+export const TICKETS_EXPORT_FALLBACK_FILE = "tickets.xlsx";

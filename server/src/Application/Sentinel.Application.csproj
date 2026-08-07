@@ -18,4 +18,8 @@
     <ProjectReference Include="../Domain/Sentinel.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sentinel.Tests" />
+  </ItemGroup>
+
 </Project>

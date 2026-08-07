@@ -4,11 +4,11 @@ export const AVAILABLE_REPOS_QUERY_KEY = ["available-repos"] as const;
 
 export const projectQueryKey = (id: string) => ["project", id] as const;
 
-export const PROJECTS_EXPORT_FILE_PREFIX = "techhealth";
+export const PROJECTS_EXPORT_FALLBACK_FILE = "techhealth.xlsx";
 
-export const SBOM_FILE_PREFIX = "sbom";
+export const SBOM_FALLBACK_FILE = "sbom.json";
 
-export const COMPLIANCE_REPORT_FILE_PREFIX = "rapport-conformite";
+export const COMPLIANCE_REPORT_FALLBACK_FILE = "compliance-report.pdf";
 
 export const SBOM_FORMAT = {
   CycloneDx: "cyclonedx",

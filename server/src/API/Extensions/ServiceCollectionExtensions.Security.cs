@@ -162,6 +162,7 @@ public static partial class ServiceCollectionExtensions
                     .WithOrigins(origins)
                     .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With",
                         RealtimeConstants.UserAgentHeader)
+                    .WithExposedHeaders("Content-Disposition")
                     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                     .AllowCredentials();
             });

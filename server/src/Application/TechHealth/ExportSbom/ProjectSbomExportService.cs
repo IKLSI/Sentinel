@@ -1,4 +1,5 @@
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
@@ -6,7 +7,7 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.Application.TechHealth.ExportSbom;
 
-public class ProjectSbomExportService(SbomService sbomService, ITenantContext tenant) : IService
+public class ProjectSbomExportService(SbomService sbomService, QuotaGuard quotaGuard, ITenantContext tenant) : IService
 {
     private const string SpdxFormat = "spdx";
 
@@ -14,6 +15,11 @@ public class ProjectSbomExportService(SbomService sbomService, ITenantContext te
     {
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<FileDownload>.Unauthorized();
+
+        Result planResult = await quotaGuard.EnsureComplianceExportsAllowedAsync(organizationId, cancellationToken);
+
+        if (!planResult.IsSuccess)
+            return Result<FileDownload>.From(planResult);
 
         SbomFormat sbomFormat = string.Equals(format, SpdxFormat, StringComparison.OrdinalIgnoreCase)
             ? SbomFormat.Spdx

@@ -2,6 +2,7 @@ using Sentinel.Application.Exports;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -10,7 +11,9 @@ namespace Sentinel.Application.TechHealth.ComplianceReport;
 
 public class ComplianceReportService(
     IProjectRepository projectRepository,
-    IOrganizationRepository organizationRepository)
+    IOrganizationRepository organizationRepository,
+    IUserRepository userRepository,
+    ILocalizer localizer)
 {
     private const string Navy = "#1C2B40";
     private const string Ink = "#16202E";
@@ -24,7 +27,8 @@ public class ComplianceReportService(
 
     private const int MaxVulnerabilityRows = 30;
 
-    public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, CancellationToken cancellationToken)
+    public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, Guid currentUserId,
+        CancellationToken cancellationToken)
     {
         Project? project = await projectRepository
             .GetOrDefaultInOrganizationWithHealthDetailsAsync(projectId, organizationId, cancellationToken);
@@ -34,14 +38,17 @@ public class ComplianceReportService(
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.NoTracking, cancellationToken);
 
-        ReportData data = BuildData(project, organization?.Name ?? "Organisation");
-        byte[] pdf = Compose(data).GeneratePdf();
-        string slug = Slugify(project.Name);
+        string? language = await userRepository.GetLanguageOrDefaultAsync(currentUserId, cancellationToken);
+        ComplianceReportLabels labels = new(localizer, ComplianceReportLabels.ResolveCulture(language));
 
-        return new ExportResult(pdf, $"rapport-conformite-{slug}.pdf");
+        ReportData data = BuildData(project, organization?.Name ?? labels.OrganizationFallback, labels);
+        byte[] pdf = Compose(data).GeneratePdf();
+        string slug = ExportFileName.Slugify(project.Name);
+
+        return new ExportResult(pdf, $"{labels.Slug}-{slug}.pdf");
     }
 
-    private static ReportData BuildData(Project project, string organizationName)
+    private static ReportData BuildData(Project project, string organizationName, ComplianceReportLabels labels)
     {
         List<Vulnerability> vulnerabilities = project.Dependencies
             .SelectMany(d => d.Vulnerabilities)
@@ -56,6 +63,7 @@ public class ComplianceReportService(
 
         return new ReportData
         {
+            Labels = labels,
             ProjectName = project.Name,
             OrganizationName = organizationName,
             RepositoryUrl = project.RepositoryUrl,
@@ -70,26 +78,27 @@ public class ComplianceReportService(
             EolRuntimeCount = eolRuntimes.Count,
             Vulnerabilities = vulnerabilities,
             EolRuntimes = eolRuntimes,
-            Controls = BuildControls(vulnerabilities, eolRuntimes)
+            Controls = BuildControls(vulnerabilities, eolRuntimes, labels)
         };
     }
 
-    private static List<ControlRow> BuildControls(List<Vulnerability> vulnerabilities, List<Runtime> eolRuntimes)
+    private static List<ControlRow> BuildControls(List<Vulnerability> vulnerabilities, List<Runtime> eolRuntimes,
+        ComplianceReportLabels labels)
     {
         bool hasUnfixableVulnerabilities = vulnerabilities.Any(v => string.IsNullOrWhiteSpace(v.FixedVersion));
 
         return new List<ControlRow>
         {
-            new("Inventaire des composants logiciels (SBOM)", "NIS2 · CRA · DORA", ControlStatus.Covered,
-                "SBOM exportable aux formats CycloneDX et SPDX."),
-            new("Suivi des vulnérabilités connues (CVE)", "NIS2 · DORA", ControlStatus.Covered,
-                "Corrélation continue avec la base OSV.dev."),
-            new("Détection des composants en fin de vie", "CRA", eolRuntimes.Count == 0 ? ControlStatus.Covered : ControlStatus.Attention,
-                eolRuntimes.Count == 0 ? "Aucun environnement en fin de support." : $"{eolRuntimes.Count} environnement(s) en fin de support."),
-            new("Traçabilité et horodatage des analyses", "DORA", ControlStatus.Covered,
-                "Rapport horodaté et opposable."),
-            new("Gestion des correctifs", "NIS2", hasUnfixableVulnerabilities ? ControlStatus.Partial : ControlStatus.Covered,
-                hasUnfixableVulnerabilities ? "Certaines vulnérabilités sans correctif publié." : "Correctifs disponibles pour les vulnérabilités détectées.")
+            new(labels.ControlSbomRequirement, "NIS2 · CRA · DORA", ControlStatus.Covered,
+                labels.ControlSbomDetail),
+            new(labels.ControlCveRequirement, "NIS2 · DORA", ControlStatus.Covered,
+                labels.ControlCveDetail),
+            new(labels.ControlEolRequirement, "CRA", eolRuntimes.Count == 0 ? ControlStatus.Covered : ControlStatus.Attention,
+                eolRuntimes.Count == 0 ? labels.ControlEolDetailOk : labels.ControlEolDetailWarn(eolRuntimes.Count)),
+            new(labels.ControlTraceabilityRequirement, "DORA", ControlStatus.Covered,
+                labels.ControlTraceabilityDetail),
+            new(labels.ControlPatchingRequirement, "NIS2", hasUnfixableVulnerabilities ? ControlStatus.Partial : ControlStatus.Covered,
+                hasUnfixableVulnerabilities ? labels.ControlPatchingDetailWarn : labels.ControlPatchingDetailOk)
         };
     }
 
@@ -101,23 +110,23 @@ public class ComplianceReportService(
             page.Margin(40);
             page.DefaultTextStyle(x => x.FontSize(9).FontColor(Ink).LineHeight(1.35f));
 
-            page.Header().Element(header => ComposeHeader(header));
+            page.Header().Element(header => ComposeHeader(header, data.Labels));
             page.Content().PaddingVertical(18).Element(content => ComposeContent(content, data));
             page.Footer().Element(footer => ComposeFooter(footer, data));
         });
     });
 
-    private static void ComposeHeader(IContainer container)
+    private static void ComposeHeader(IContainer container, ComplianceReportLabels labels)
     {
         container.BorderBottom(1).BorderColor(Line).PaddingBottom(8).Row(row =>
         {
             row.RelativeItem().Text(text =>
             {
                 text.Span("SENTINEL").FontSize(11).Bold().FontColor(Navy).LetterSpacing(0.15f);
-                text.Span("  ·  Rapport de conformité").FontSize(9).FontColor(Muted);
+                text.Span($"  ·  {labels.Title}").FontSize(9).FontColor(Muted);
             });
 
-            row.ConstantItem(160).AlignRight().Text("Gouvernance des dépendances")
+            row.ConstantItem(160).AlignRight().Text(labels.Tagline)
                 .FontSize(8).FontColor(Muted);
         });
     }
@@ -148,7 +157,7 @@ public class ComplianceReportService(
         {
             row.RelativeItem().Column(column =>
             {
-                column.Item().Text("Rapport de conformité").FontSize(22).Bold().FontColor(Navy);
+                column.Item().Text(data.Labels.Title).FontSize(22).Bold().FontColor(Navy);
                 column.Item().PaddingTop(4).Text(data.ProjectName).FontSize(13).FontColor(Ink);
                 column.Item().PaddingTop(2).Text(data.OrganizationName).FontSize(9).FontColor(Muted);
                 if (!string.IsNullOrWhiteSpace(data.RepositoryUrl))
@@ -159,7 +168,7 @@ public class ComplianceReportService(
             {
                 column.Item().AlignRight().Text(data.HealthGrade ?? "—")
                     .FontSize(34).Bold().FontColor(GradeColor(data.HealthScore));
-                column.Item().AlignRight().Text(data.HealthScore is { } score ? $"{score} / 100" : "Non couvert")
+                column.Item().AlignRight().Text(data.HealthScore is { } score ? $"{score} / 100" : data.Labels.GradeNotCovered)
                     .FontSize(8).FontColor(Muted);
             });
         });
@@ -169,10 +178,10 @@ public class ComplianceReportService(
     {
         container.Border(1).BorderColor(Line).Row(row =>
         {
-            SummaryCell(row, "Dépendances", data.TotalDependencies.ToString(), Ink, true);
-            SummaryCell(row, "Vulnérabilités critiques", data.CriticalCount.ToString(), data.CriticalCount > 0 ? Brick : Ink, true);
-            SummaryCell(row, "Vulnérabilités totales", data.TotalVulnerabilities.ToString(), data.TotalVulnerabilities > 0 ? Amber : Ink, true);
-            SummaryCell(row, "Environnements EOL", data.EolRuntimeCount.ToString(), data.EolRuntimeCount > 0 ? Brick : Ink, false);
+            SummaryCell(row, data.Labels.SummaryDependencies, data.TotalDependencies.ToString(), Ink, true);
+            SummaryCell(row, data.Labels.SummaryCritical, data.CriticalCount.ToString(), data.CriticalCount > 0 ? Brick : Ink, true);
+            SummaryCell(row, data.Labels.SummaryVulnerabilities, data.TotalVulnerabilities.ToString(), data.TotalVulnerabilities > 0 ? Amber : Ink, true);
+            SummaryCell(row, data.Labels.SummaryEolRuntimes, data.EolRuntimeCount.ToString(), data.EolRuntimeCount > 0 ? Brick : Ink, false);
         });
     }
 
@@ -192,7 +201,7 @@ public class ComplianceReportService(
     {
         container.Column(column =>
         {
-            column.Item().Element(SectionTitle("Cartographie réglementaire"));
+            column.Item().Element(SectionTitle(data.Labels.SectionControls));
 
             column.Item().PaddingTop(8).Table(table =>
             {
@@ -205,9 +214,9 @@ public class ComplianceReportService(
 
                 table.Header(header =>
                 {
-                    HeaderCell(header, "Exigence");
-                    HeaderCell(header, "Cadre");
-                    HeaderCell(header, "Statut");
+                    HeaderCell(header, data.Labels.HeaderRequirement);
+                    HeaderCell(header, data.Labels.HeaderFramework);
+                    HeaderCell(header, data.Labels.HeaderStatus);
                 });
 
                 foreach (ControlRow control in data.Controls)
@@ -218,7 +227,7 @@ public class ComplianceReportService(
                         cell.Item().Text(control.Detail).FontSize(7.5f).FontColor(Muted);
                     });
                     table.Cell().Padding(7).AlignMiddle().Text(control.Framework).FontSize(8).FontColor(Muted);
-                    table.Cell().Padding(7).AlignMiddle().Text(StatusLabel(control.Status))
+                    table.Cell().Padding(7).AlignMiddle().Text(StatusLabel(control.Status, data.Labels))
                         .FontSize(8).Bold().FontColor(StatusColor(control.Status));
                 }
             });
@@ -232,7 +241,7 @@ public class ComplianceReportService(
 
         container.Column(column =>
         {
-            column.Item().Element(SectionTitle($"Vulnérabilités détectées ({data.TotalVulnerabilities})"));
+            column.Item().Element(SectionTitle(data.Labels.SectionVulnerabilities(data.TotalVulnerabilities)));
 
             column.Item().PaddingTop(8).Table(table =>
             {
@@ -246,24 +255,24 @@ public class ComplianceReportService(
 
                 table.Header(header =>
                 {
-                    HeaderCell(header, "Composant");
-                    HeaderCell(header, "Référence");
-                    HeaderCell(header, "Sévérité");
-                    HeaderCell(header, "Correctif");
+                    HeaderCell(header, data.Labels.HeaderComponent);
+                    HeaderCell(header, data.Labels.HeaderReference);
+                    HeaderCell(header, data.Labels.HeaderSeverity);
+                    HeaderCell(header, data.Labels.HeaderFix);
                 });
 
                 foreach (Vulnerability vulnerability in rows)
                 {
                     table.Cell().Padding(6).Text(vulnerability.PackageName).FontSize(8.5f).FontColor(Ink);
                     table.Cell().Padding(6).Text(vulnerability.CveId).FontSize(8).FontColor(Muted);
-                    table.Cell().Padding(6).Text(SeverityLabel(vulnerability.Severity))
+                    table.Cell().Padding(6).Text(SeverityLabel(vulnerability.Severity, data.Labels))
                         .FontSize(8).Bold().FontColor(SeverityColor(vulnerability.Severity));
                     table.Cell().Padding(6).Text(vulnerability.FixedVersion ?? "—").FontSize(8).FontColor(Muted);
                 }
             });
 
             if (hidden > 0)
-                column.Item().PaddingTop(6).Text($"+ {hidden} vulnérabilité(s) supplémentaire(s) non listée(s).")
+                column.Item().PaddingTop(6).Text(data.Labels.VulnerabilitiesHidden(hidden))
                     .FontSize(7.5f).Italic().FontColor(Muted);
         });
     }
@@ -272,7 +281,7 @@ public class ComplianceReportService(
     {
         container.Column(column =>
         {
-            column.Item().Element(SectionTitle($"Environnements en fin de vie ({data.EolRuntimeCount})"));
+            column.Item().Element(SectionTitle(data.Labels.SectionEolRuntimes(data.EolRuntimeCount)));
 
             column.Item().PaddingTop(8).Table(table =>
             {
@@ -285,16 +294,18 @@ public class ComplianceReportService(
 
                 table.Header(header =>
                 {
-                    HeaderCell(header, "Environnement");
-                    HeaderCell(header, "Version");
-                    HeaderCell(header, "Fin de support");
+                    HeaderCell(header, data.Labels.HeaderRuntime);
+                    HeaderCell(header, data.Labels.HeaderVersion);
+                    HeaderCell(header, data.Labels.HeaderSupportEnds);
                 });
 
                 foreach (Runtime runtime in data.EolRuntimes)
                 {
                     table.Cell().Padding(6).Text(runtime.Name).FontSize(8.5f).FontColor(Ink);
                     table.Cell().Padding(6).Text(runtime.Version).FontSize(8).FontColor(Muted);
-                    table.Cell().Padding(6).Text(runtime.EolDate is { } date ? date.ToString("dd/MM/yyyy") : "Atteinte")
+                    table.Cell().Padding(6).Text(runtime.EolDate is { } date
+                            ? date.ToString(data.Labels.DateFormat)
+                            : data.Labels.EolReached)
                         .FontSize(8).Bold().FontColor(Brick);
                 }
             });
@@ -305,15 +316,15 @@ public class ComplianceReportService(
     {
         container.Background(Panel).Padding(14).Column(column =>
         {
-            column.Item().Text("Attestation").FontSize(8).Bold().FontColor(Teal).LetterSpacing(0.1f);
+            column.Item().Text(data.Labels.AttestationTitle).FontSize(8).Bold().FontColor(Teal).LetterSpacing(0.1f);
             column.Item().PaddingTop(4).Text(text =>
             {
-                text.Span("Ce rapport a été généré automatiquement par Sentinel le ");
-                text.Span($"{data.GeneratedAt:dd/MM/yyyy} à {data.GeneratedAt:HH:mm} UTC").Bold();
+                text.Span(data.Labels.AttestationIntro);
+                text.Span($"{data.GeneratedAt.ToString(data.Labels.DateFormat)} {data.Labels.At} {data.GeneratedAt:HH:mm} UTC").Bold();
                 text.Span(data.LastScanAt is { } scan
-                    ? $", à partir de la dernière analyse du {scan:dd/MM/yyyy}. "
-                    : ". ");
-                text.Span("Il reflète l'état des dépendances au moment de l'analyse et constitue une pièce de traçabilité pour les obligations NIS2, DORA et Cyber Resilience Act.");
+                    ? data.Labels.AttestationWithScan(scan.ToString(data.Labels.DateFormat))
+                    : data.Labels.AttestationWithoutScan);
+                text.Span(data.Labels.AttestationDisclaimer);
                 text.DefaultTextStyle(style => style.FontSize(8).FontColor(Muted));
             });
         });
@@ -323,7 +334,7 @@ public class ComplianceReportService(
     {
         container.BorderTop(1).BorderColor(Line).PaddingTop(6).Row(row =>
         {
-            row.RelativeItem().Text($"SENTINEL · {data.OrganizationName} · Confidentiel")
+            row.RelativeItem().Text($"SENTINEL · {data.OrganizationName} · {data.Labels.FooterConfidential}")
                 .FontSize(7.5f).FontColor(Muted);
 
             row.ConstantItem(80).AlignRight().Text(text =>
@@ -352,11 +363,11 @@ public class ComplianceReportService(
         _ => Brick
     };
 
-    private static string StatusLabel(ControlStatus status) => status switch
+    private static string StatusLabel(ControlStatus status, ComplianceReportLabels labels) => status switch
     {
-        ControlStatus.Covered => "Couvert",
-        ControlStatus.Partial => "Partiel",
-        _ => "À traiter"
+        ControlStatus.Covered => labels.StatusCovered,
+        ControlStatus.Partial => labels.StatusPartial,
+        _ => labels.StatusAttention
     };
 
     private static string StatusColor(ControlStatus status) => status switch
@@ -366,12 +377,12 @@ public class ComplianceReportService(
         _ => Brick
     };
 
-    private static string SeverityLabel(VulnerabilitySeverity severity) => severity switch
+    private static string SeverityLabel(VulnerabilitySeverity severity, ComplianceReportLabels labels) => severity switch
     {
-        VulnerabilitySeverity.Critical => "Critique",
-        VulnerabilitySeverity.High => "Élevée",
-        VulnerabilitySeverity.Medium => "Moyenne",
-        _ => "Faible"
+        VulnerabilitySeverity.Critical => labels.SeverityCritical,
+        VulnerabilitySeverity.High => labels.SeverityHigh,
+        VulnerabilitySeverity.Medium => labels.SeverityMedium,
+        _ => labels.SeverityLow
     };
 
     private static string SeverityColor(VulnerabilitySeverity severity) => severity switch
@@ -381,20 +392,6 @@ public class ComplianceReportService(
         VulnerabilitySeverity.Medium => Muted,
         _ => Muted
     };
-
-    private static string Slugify(string value)
-    {
-        System.Text.StringBuilder builder = new(value.Length);
-
-        foreach (char c in value.ToLowerInvariant())
-        {
-            if (char.IsLetterOrDigit(c)) builder.Append(c);
-            else if (c is ' ' or '-' or '_' or '.') builder.Append('-');
-        }
-
-        string slug = builder.ToString().Trim('-');
-        return string.IsNullOrEmpty(slug) ? "projet" : slug;
-    }
 
     private enum ControlStatus
     {
@@ -407,6 +404,7 @@ public class ComplianceReportService(
 
     private sealed class ReportData
     {
+        public required ComplianceReportLabels Labels { get; init; }
         public string ProjectName { get; init; } = string.Empty;
         public string OrganizationName { get; init; } = string.Empty;
         public string? RepositoryUrl { get; init; }

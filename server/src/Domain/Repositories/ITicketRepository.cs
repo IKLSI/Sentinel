@@ -13,6 +13,9 @@ public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
     Task<IReadOnlyList<TicketGridRow>> ListForExportAsync(Guid organizationId, TicketFilter filter, int maxRows,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<UserExportTicketRow>> ListForUserDataExportAsync(Guid userId, int take,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
         CancellationToken cancellationToken);
 

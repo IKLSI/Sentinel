@@ -17,13 +17,15 @@ public enum SbomFormat
     Spdx
 }
 
-public class SbomService(IProjectRepository projectRepository)
+public class SbomService(IProjectRepository projectRepository, IOrganizationRepository organizationRepository)
 {
     private const string ToolVendor = "Sentinel";
     private const string ToolName = "Sentinel Tech-Health";
     private const string SpdxVersion = "SPDX-2.3";
     private const string SpdxDataLicense = "CC0-1.0";
     private const string SpdxNoAssertion = "NOASSERTION";
+    private const string DocumentSpdxId = "SPDXRef-DOCUMENT";
+    private const string RootPackageSpdxId = "SPDXRef-RootPackage";
 
     private static readonly Dictionary<DependencyEcosystem, string> PurlTypes = new()
     {
@@ -58,15 +60,20 @@ public class SbomService(IProjectRepository projectRepository)
             .OrderBy(d => d.Name)
             .ToList();
 
+        Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
+            QueryTracking.NoTracking, cancellationToken);
+
+        string supplier = organization?.Name ?? ToolVendor;
         DateTime timestamp = DateTime.UtcNow;
-        string slug = Slugify(project.Name);
+        string slug = ExportFileName.Slugify(project.Name);
 
         return format == SbomFormat.CycloneDx
-            ? BuildCycloneDx(project, dependencies, timestamp, slug)
-            : BuildSpdx(project, dependencies, timestamp, slug);
+            ? BuildCycloneDx(project, dependencies, supplier, timestamp, slug)
+            : BuildSpdx(project, dependencies, supplier, timestamp, slug);
     }
 
-    private static ExportResult BuildCycloneDx(Project project, List<Dependency> dependencies, DateTime timestamp, string slug)
+    private static ExportResult BuildCycloneDx(Project project, List<Dependency> dependencies, string supplier,
+        DateTime timestamp, string slug)
     {
         Bom bom = new()
         {
@@ -75,15 +82,45 @@ public class SbomService(IProjectRepository projectRepository)
             Metadata = new Metadata
             {
                 Timestamp = timestamp,
+                Supplier = new OrganizationalEntity { Name = supplier },
+                Authors = [new OrganizationalContact { Name = supplier }],
+                Tools = new ToolChoices
+                {
+                    Components =
+                    [
+                        new Component
+                        {
+                            Type = Component.Classification.Application,
+                            Name = ToolName,
+                            Publisher = ToolVendor,
+                            Supplier = new OrganizationalEntity { Name = ToolVendor }
+                        }
+                    ]
+                },
                 Component = new Component
                 {
                     Type = Component.Classification.Application,
                     Name = project.Name,
+                    Publisher = supplier,
+                    Supplier = new OrganizationalEntity { Name = supplier },
                     BomRef = $"sentinel:project:{project.Id}"
                 }
             },
             Components = dependencies.Select(ToCycloneComponent).ToList()
         };
+
+        string rootRef = bom.Metadata.Component.BomRef;
+
+        bom.Dependencies =
+        [
+            new CycloneDX.Models.Dependency
+            {
+                Ref = rootRef,
+                Dependencies = bom.Components
+                    .Select(component => new CycloneDX.Models.Dependency { Ref = component.BomRef })
+                    .ToList()
+            }
+        ];
 
         string json = Serializer.Serialize(bom);
         return new ExportResult(Encoding.UTF8.GetBytes(json), $"sbom-{slug}-cyclonedx.json");
@@ -92,21 +129,52 @@ public class SbomService(IProjectRepository projectRepository)
     private static Component ToCycloneComponent(Dependency dependency)
     {
         string? purl = BuildPurl(dependency);
+        string publisher = PublisherOrNoAssertion(dependency);
 
         return new Component
         {
             Type = Component.Classification.Library,
             Name = dependency.Name,
             Version = dependency.CurrentVersion,
+            Publisher = publisher,
+            Supplier = new OrganizationalEntity { Name = publisher },
             Purl = purl,
             BomRef = purl ?? $"sentinel:dependency:{dependency.Id}"
         };
     }
 
-    private static ExportResult BuildSpdx(Project project, List<Dependency> dependencies, DateTime timestamp, string slug)
+    private static string PublisherOrNoAssertion(Dependency dependency) =>
+        string.IsNullOrWhiteSpace(dependency.Publisher) ? SpdxNoAssertion : dependency.Publisher;
+
+    private static ExportResult BuildSpdx(Project project, List<Dependency> dependencies, string supplier,
+        DateTime timestamp, string slug)
     {
-        List<SpdxPackage> packages = new();
-        List<SpdxRelationship> relationships = new();
+        List<SpdxPackage> packages =
+        [
+            new()
+            {
+                Name = project.Name,
+                SpdxId = RootPackageSpdxId,
+                DownloadLocation = string.IsNullOrWhiteSpace(project.RepositoryUrl)
+                    ? SpdxNoAssertion
+                    : project.RepositoryUrl,
+                FilesAnalyzed = false,
+                Supplier = SpdxOrganization(supplier),
+                LicenseConcluded = SpdxNoAssertion,
+                LicenseDeclared = SpdxNoAssertion,
+                CopyrightText = SpdxNoAssertion
+            }
+        ];
+
+        List<SpdxRelationship> relationships =
+        [
+            new()
+            {
+                SpdxElementId = DocumentSpdxId,
+                RelationshipType = "DESCRIBES",
+                RelatedSpdxElement = RootPackageSpdxId
+            }
+        ];
 
         for (int i = 0; i < dependencies.Count; i++)
         {
@@ -118,9 +186,15 @@ public class SbomService(IProjectRepository projectRepository)
             {
                 Name = dependency.Name,
                 SpdxId = spdxId,
-                VersionInfo = dependency.CurrentVersion,
+                VersionInfo = string.IsNullOrWhiteSpace(dependency.CurrentVersion) ? null : dependency.CurrentVersion,
                 DownloadLocation = SpdxNoAssertion,
                 FilesAnalyzed = false,
+                Supplier = string.IsNullOrWhiteSpace(dependency.Publisher)
+                    ? SpdxNoAssertion
+                    : SpdxOrganization(dependency.Publisher),
+                LicenseConcluded = SpdxNoAssertion,
+                LicenseDeclared = SpdxNoAssertion,
+                CopyrightText = SpdxNoAssertion,
                 ExternalRefs = purl == null
                     ? null
                     : new List<SpdxExternalRef>
@@ -136,8 +210,8 @@ public class SbomService(IProjectRepository projectRepository)
 
             relationships.Add(new SpdxRelationship
             {
-                SpdxElementId = "SPDXRef-DOCUMENT",
-                RelationshipType = "DESCRIBES",
+                SpdxElementId = RootPackageSpdxId,
+                RelationshipType = "DEPENDS_ON",
                 RelatedSpdxElement = spdxId
             });
         }
@@ -146,7 +220,7 @@ public class SbomService(IProjectRepository projectRepository)
         {
             SpdxVersion = SpdxVersion,
             DataLicense = SpdxDataLicense,
-            SpdxId = "SPDXRef-DOCUMENT",
+            SpdxId = DocumentSpdxId,
             Name = $"sentinel-{slug}-sbom",
             DocumentNamespace = $"https://sentinel.app/spdx/{project.Id}/{Guid.NewGuid()}",
             CreationInfo = new SpdxCreationInfo
@@ -154,6 +228,7 @@ public class SbomService(IProjectRepository projectRepository)
                 Created = timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Creators = new List<string> { $"Tool: {ToolName}", $"Organization: {ToolVendor}" }
             },
+            DocumentDescribes = [RootPackageSpdxId],
             Packages = packages,
             Relationships = relationships
         };
@@ -161,6 +236,8 @@ public class SbomService(IProjectRepository projectRepository)
         string json = JsonSerializer.Serialize(document, SpdxJsonOptions);
         return new ExportResult(Encoding.UTF8.GetBytes(json), $"sbom-{slug}-spdx.json");
     }
+
+    private static string SpdxOrganization(string name) => $"Organization: {name}";
 
     private static string? BuildPurl(Dependency dependency)
     {
@@ -173,20 +250,6 @@ public class SbomService(IProjectRepository projectRepository)
             : $"pkg:{type}/{name}@{Uri.EscapeDataString(dependency.CurrentVersion)}";
     }
 
-    private static string Slugify(string value)
-    {
-        StringBuilder builder = new(value.Length);
-
-        foreach (char c in value.ToLowerInvariant())
-        {
-            if (char.IsLetterOrDigit(c)) builder.Append(c);
-            else if (c is ' ' or '-' or '_' or '.') builder.Append('-');
-        }
-
-        string slug = builder.ToString().Trim('-');
-        return string.IsNullOrEmpty(slug) ? "projet" : slug;
-    }
-
     private sealed class SpdxDocument
     {
         [JsonPropertyName("spdxVersion")] public string SpdxVersion { get; set; } = string.Empty;
@@ -195,6 +258,7 @@ public class SbomService(IProjectRepository projectRepository)
         [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
         [JsonPropertyName("documentNamespace")] public string DocumentNamespace { get; set; } = string.Empty;
         [JsonPropertyName("creationInfo")] public SpdxCreationInfo CreationInfo { get; set; } = new();
+        [JsonPropertyName("documentDescribes")] public List<string> DocumentDescribes { get; set; } = new();
         [JsonPropertyName("packages")] public List<SpdxPackage> Packages { get; set; } = new();
         [JsonPropertyName("relationships")] public List<SpdxRelationship> Relationships { get; set; } = new();
     }
@@ -209,9 +273,13 @@ public class SbomService(IProjectRepository projectRepository)
     {
         [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
         [JsonPropertyName("SPDXID")] public string SpdxId { get; set; } = string.Empty;
-        [JsonPropertyName("versionInfo")] public string VersionInfo { get; set; } = string.Empty;
+        [JsonPropertyName("versionInfo")] public string? VersionInfo { get; set; }
         [JsonPropertyName("downloadLocation")] public string DownloadLocation { get; set; } = string.Empty;
         [JsonPropertyName("filesAnalyzed")] public bool FilesAnalyzed { get; set; }
+        [JsonPropertyName("supplier")] public string Supplier { get; set; } = string.Empty;
+        [JsonPropertyName("licenseConcluded")] public string LicenseConcluded { get; set; } = string.Empty;
+        [JsonPropertyName("licenseDeclared")] public string LicenseDeclared { get; set; } = string.Empty;
+        [JsonPropertyName("copyrightText")] public string CopyrightText { get; set; } = string.Empty;
         [JsonPropertyName("externalRefs")] public List<SpdxExternalRef>? ExternalRefs { get; set; }
     }
 

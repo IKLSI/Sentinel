@@ -56,13 +56,23 @@ public partial class ExportService(
     public async Task<ExportResult> ExportTechHealthExcelAsync(Guid organizationId, Guid currentUserId,
         CancellationToken cancellationToken)
     {
-        List<Project> projects =
-            (await projectRepository.ListWithHealthDetailsByNameAsync(organizationId, cancellationToken)).ToList();
+        List<Project> projects = (await projectRepository.ListWithHealthDetailsByNameAsync(
+            organizationId, ExportLimits.MaxProjectSheets + 1, cancellationToken)).ToList();
+
+        bool truncated = projects.Count > ExportLimits.MaxProjectSheets;
+
+        if (truncated)
+        {
+            projects.RemoveRange(ExportLimits.MaxProjectSheets, projects.Count - ExportLimits.MaxProjectSheets);
+
+            logger.LogWarning("Tech health export for {OrganizationId} truncated at {MaxProjects} projects",
+                organizationId, ExportLimits.MaxProjectSheets);
+        }
 
         ExportLabels labels = await GetLabelsAsync(currentUserId, cancellationToken);
 
-        byte[] bytes = WriteTechHealthExcel(projects, labels);
-        return new ExportResult(bytes, $"{labels.TechHealthSlug}-{DateTime.Now:yyyy-MM-dd}.xlsx");
+        byte[] bytes = WriteTechHealthExcel(projects, labels, truncated);
+        return new ExportResult(bytes, $"{labels.TechHealthSlug}-{DateTime.UtcNow:yyyy-MM-dd}.xlsx");
     }
 
     private static string ComposeName(string? firstName, string? lastName) =>
@@ -120,11 +130,11 @@ public partial class ExportService(
         return SaveWorkbook(workbook);
     }
 
-    private byte[] WriteTechHealthExcel(List<Project> projects, ExportLabels L)
+    private byte[] WriteTechHealthExcel(List<Project> projects, ExportLabels L, bool truncated)
     {
         using XLWorkbook workbook = new();
         ApplyDocumentProperties(workbook, L.SubjectTechHealth);
-        WriteRecapSheet(workbook, projects, L);
+        WriteRecapSheet(workbook, projects, L, truncated);
         Dictionary<string, int> usedNames = [];
         foreach (Project project in projects)
         {

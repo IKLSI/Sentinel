@@ -167,6 +167,10 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Publisher")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");

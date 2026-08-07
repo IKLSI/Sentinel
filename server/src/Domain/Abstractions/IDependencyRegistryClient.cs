@@ -4,5 +4,5 @@ namespace Sentinel.Domain.Abstractions;
 
 public interface IDependencyRegistryClient
 {
-    Task FetchLatestVersionsAsync(List<Dependency> dependencies);
+    Task FetchRegistryMetadataAsync(List<Dependency> dependencies);
 }

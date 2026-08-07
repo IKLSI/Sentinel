@@ -7,4 +7,10 @@ public interface ITicketAttachmentRepository : ICrudEntityWithIdRepository<Ticke
 {
     Task<TicketAttachment?> GetOrDefaultInTicketWithTicketAsync(Guid attachmentId, Guid ticketId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<UserExportTicketAttachmentRow>> ListForUserDataExportAsync(Guid userId, int take,
+        CancellationToken cancellationToken);
+
+    Task<byte[]?> GetContentForUserOrDefaultAsync(Guid attachmentId, Guid userId,
+        CancellationToken cancellationToken);
 }

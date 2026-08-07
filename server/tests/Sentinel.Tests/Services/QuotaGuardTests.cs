@@ -62,6 +62,35 @@ public class QuotaGuardTests
         result.Code.Should().Be(ErrorCodes.QuotaMembersExceeded);
     }
 
+    [Fact]
+    public async Task EnsureComplianceExportsAllowedAsync_EnPlanFree_ReturnsPaymentRequired()
+    {
+        using TestScope scope = new TestScope();
+        await scope.SeedAsync(scope.NewOrganization(PlanTier.Free));
+
+        QuotaGuard sut = BuildGuard(scope);
+
+        Result result = await sut.EnsureComplianceExportsAllowedAsync(scope.OrganizationId, CancellationToken.None);
+
+        result.Status.Should().Be(ResultStatus.PaymentRequired);
+        result.Code.Should().Be(ErrorCodes.ComplianceExportsAbovePlan);
+    }
+
+    [Theory]
+    [InlineData(PlanTier.Pro)]
+    [InlineData(PlanTier.Business)]
+    public async Task EnsureComplianceExportsAllowedAsync_EnPlanPayant_ReturnsSuccess(PlanTier tier)
+    {
+        using TestScope scope = new TestScope();
+        await scope.SeedAsync(scope.NewOrganization(tier));
+
+        QuotaGuard sut = BuildGuard(scope);
+
+        Result result = await sut.EnsureComplianceExportsAllowedAsync(scope.OrganizationId, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
     private static QuotaGuard BuildGuard(TestScope scope) => new(
         scope.Organizations,
         scope.Projects,

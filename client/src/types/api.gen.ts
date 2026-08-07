@@ -623,17 +623,18 @@ export interface paths {
     get: {
       parameters: {
         query?: {
-          Priority?: string;
-          Status?: string;
-          AssignedTo?: string;
-          Type?: string;
-          Search?: string;
           Page?: number;
           PageSize?: number;
           SortBy?: components["schemas"]["TicketSortField"];
           SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
+          Priority?: string[];
+          Status?: string[];
+          Type?: string[];
+          AssignedTo?: string[];
+          Project?: string[];
+          Search?: string;
         };
       };
       responses: {
@@ -837,10 +838,11 @@ export interface paths {
     get: {
       parameters: {
         query?: {
-          Priority?: string;
-          Status?: string;
-          AssignedTo?: string;
-          Type?: string;
+          Priority?: string[];
+          Status?: string[];
+          Type?: string[];
+          AssignedTo?: string[];
+          Project?: string[];
           Search?: string;
         };
       };
@@ -858,12 +860,13 @@ export interface paths {
         query?: {
           Page?: number;
           PageSize?: number;
-          Search?: string;
-          Role?: components["schemas"]["UserRole"];
           SortBy?: components["schemas"]["UserSortField"];
           SortDirection?: components["schemas"]["SortDirection"];
           NormalizedPage?: number;
           NormalizedPageSize?: number;
+          Role?: string[];
+          Status?: string[];
+          Search?: string;
         };
       };
       responses: {
@@ -1384,10 +1387,14 @@ export interface components {
       type: string;
     };
     UserDataExportDto: {
+      attachments: components["schemas"]["UserExportAttachmentDto"][];
       auditLogs: components["schemas"]["UserExportAuditLogDto"][];
+      comments: components["schemas"]["UserExportCommentDto"][];
       /** Format: date-time */
       exportedAt: string;
       profile: components["schemas"]["UserExportProfileDto"];
+      tickets: components["schemas"]["UserExportTicketDto"][];
+      truncated: components["schemas"]["UserExportTruncationDto"];
     };
     UserDto: {
       accessStatus: string;
@@ -1404,6 +1411,18 @@ export interface components {
       role: string;
       theme: string;
     };
+    UserExportAttachmentDto: {
+      contentType: string;
+      /** Format: date-time */
+      createdAt: string;
+      fileName: string;
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      ticketId: string;
+      /** Format: int32 */
+      ticketNumber: number;
+    };
     UserExportAuditLogDto: {
       action: string;
       /** Format: date-time */
@@ -1413,6 +1432,19 @@ export interface components {
       entityType: string;
       /** Format: uuid */
       id: string;
+    };
+    UserExportCommentDto: {
+      content: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      ticketId: string;
+      /** Format: int32 */
+      ticketNumber: number;
+      /** Format: date-time */
+      updatedAt: string;
     };
     UserExportProfileDto: {
       /** Format: date-time */
@@ -1426,6 +1458,32 @@ export interface components {
       lastLoginAt: string | null;
       lastName: string;
       role: string;
+    };
+    UserExportTicketDto: {
+      /** Format: date-time */
+      createdAt: string;
+      description: string;
+      /** Format: uuid */
+      id: string;
+      isAssignee: boolean;
+      isCreator: boolean;
+      /** Format: int32 */
+      number: number;
+      priority: string;
+      projectName: string | null;
+      status: string;
+      title: string;
+      type: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    UserExportTruncationDto: {
+      attachments: boolean;
+      auditLogs: boolean;
+      comments: boolean;
+      /** Format: int32 */
+      maxRowsPerCollection: number;
+      tickets: boolean;
     };
     UserListDto: {
       items: components["schemas"]["UserDto"][];
@@ -1448,8 +1506,6 @@ export interface components {
       role: string;
       theme: string;
     };
-    /** @enum {string} */
-    UserRole: "Admin" | "Developer";
     /** @enum {string} */
     UserSortField: "Member" | "Role" | "Status" | "LastLogin";
     VerifyEmailRequest: {

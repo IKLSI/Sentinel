@@ -39,7 +39,7 @@ public class RepositoryScannerServiceTests
 
     private sealed class NoopRegistry : IDependencyRegistryClient
     {
-        public Task FetchLatestVersionsAsync(List<Dependency> dependencies) => Task.CompletedTask;
+        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies) => Task.CompletedTask;
     }
 
     private static Task<ScanOutcome> ScanAsync(Dictionary<string, string> filesByUrl)
@@ -302,7 +302,7 @@ public class RepositoryScannerServiceTests
 
     private sealed class StubRegistry(string latestVersion) : IDependencyRegistryClient
     {
-        public Task FetchLatestVersionsAsync(List<Dependency> dependencies)
+        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies)
         {
             foreach (Dependency dependency in dependencies) dependency.LatestVersion = latestVersion;
 

@@ -54,7 +54,7 @@ public class RepositoryScannerService(
     {
         if (dependencies.Count == 0) return;
 
-        await registry.FetchLatestVersionsAsync(dependencies);
+        await registry.FetchRegistryMetadataAsync(dependencies);
 
         foreach (Dependency dependency in dependencies)
             dependency.Status = DependencyStatusCalculator.Compute(dependency.CurrentVersion,
@@ -163,7 +163,7 @@ public class RepositoryScannerService(
                 .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            await registry.FetchLatestVersionsAsync(dedupedDeps);
+            await registry.FetchRegistryMetadataAsync(dedupedDeps);
 
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion);

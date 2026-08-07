@@ -9,9 +9,32 @@ vi.mock("@/configs/apiClient", () => ({
 import apiClient from "@/configs/apiClient";
 import { downloadExcel } from "@/helpers/download";
 
+type AnchorStub = {
+  click: ReturnType<typeof vi.fn>;
+  href: string;
+  download: string;
+};
+
+function stubAnchor(): AnchorStub {
+  const anchor: AnchorStub = { click: vi.fn(), href: "", download: "" };
+  vi.spyOn(document, "createElement").mockReturnValue(
+    anchor as unknown as HTMLAnchorElement,
+  );
+  return anchor;
+}
+
+function respondWith(headers?: Record<string, string>): void {
+  vi.mocked(apiClient.get).mockResolvedValue({
+    data: new Blob(["fake"]),
+    headers,
+  });
+}
+
 describe("downloadExcel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.restoreAllMocks();
+    respondWith();
     URL.createObjectURL = vi.fn(() => "blob:fake-url");
     URL.revokeObjectURL = vi.fn();
   });
@@ -30,16 +53,42 @@ describe("downloadExcel", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:fake-url");
   });
 
-  it("triggers download click with correct filename", async () => {
-    const clickSpy = vi.fn();
-    vi.spyOn(document, "createElement").mockReturnValue({
-      click: clickSpy,
-      href: "",
-      download: "",
-    } as unknown as HTMLAnchorElement);
+  it("triggers download click", async () => {
+    const anchor = stubAnchor();
 
     await downloadExcel("/api/export", "rapport.xlsx");
 
-    expect(clickSpy).toHaveBeenCalledOnce();
+    expect(anchor.click).toHaveBeenCalledOnce();
+  });
+
+  it("uses the server filename from content-disposition", async () => {
+    respondWith({
+      "content-disposition": 'attachment; filename="tickets-2026-08-07.xlsx"',
+    });
+    const anchor = stubAnchor();
+
+    await downloadExcel("/api/export", "fallback.xlsx");
+
+    expect(anchor.download).toBe("tickets-2026-08-07.xlsx");
+  });
+
+  it("decodes the rfc 5987 filename", async () => {
+    respondWith({
+      "content-disposition":
+        "attachment; filename=\"sante-technique.xlsx\"; filename*=UTF-8''sant%C3%A9-technique.xlsx",
+    });
+    const anchor = stubAnchor();
+
+    await downloadExcel("/api/export", "fallback.xlsx");
+
+    expect(anchor.download).toBe("santé-technique.xlsx");
+  });
+
+  it("falls back when the header is missing", async () => {
+    const anchor = stubAnchor();
+
+    await downloadExcel("/api/export", "fallback.xlsx");
+
+    expect(anchor.download).toBe("fallback.xlsx");
   });
 });

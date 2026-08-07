@@ -136,6 +136,27 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<UserExportTicketRow>> ListForUserDataExportAsync(Guid userId, int take,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(t => t.CreatedById == userId || t.AssignedToId == userId)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(take)
+            .Select(t => new UserExportTicketRow(
+                t.Id,
+                t.Number,
+                t.Title,
+                t.Description,
+                t.Status,
+                t.Priority,
+                t.Type,
+                t.Project != null ? t.Project.Name : null,
+                t.CreatedById == userId,
+                t.AssignedToId == userId,
+                t.CreatedAt,
+                t.UpdatedAt))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
         CancellationToken cancellationToken)
     {

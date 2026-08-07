@@ -20,4 +20,19 @@ public class TicketCommentRepository : CrudEntityWithIdRepository<TicketComment>
         Query(QueryTracking.Tracked)
             .Include(c => c.Author)
             .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == ticketId, cancellationToken);
+
+    public async Task<IReadOnlyList<UserExportTicketCommentRow>> ListForUserDataExportAsync(Guid userId, int take,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(c => c.AuthorId == userId)
+            .OrderByDescending(c => c.CreatedAt)
+            .Take(take)
+            .Select(c => new UserExportTicketCommentRow(
+                c.Id,
+                c.TicketId,
+                c.Ticket.Number,
+                c.Content,
+                c.CreatedAt,
+                c.UpdatedAt))
+            .ToListAsync(cancellationToken);
 }

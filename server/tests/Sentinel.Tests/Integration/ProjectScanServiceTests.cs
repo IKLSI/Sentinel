@@ -69,7 +69,7 @@ public class ProjectScanServiceTests
         public int Calls { get; private set; }
         public string? LatestVersion { get; set; } = "1.6.0";
 
-        public Task FetchLatestVersionsAsync(List<Dependency> dependencies)
+        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies)
         {
             Calls++;
             foreach (Dependency dependency in dependencies) dependency.LatestVersion = LatestVersion;

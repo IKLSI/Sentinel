@@ -10,11 +10,12 @@ public class AuditLogRepository : CrudEntityWithIdRepository<AuditLog>, IAuditLo
 {
     public AuditLogRepository(SentinelContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<UserExportAuditLogRow>> ListForUserExportAsync(Guid userId,
+    public async Task<IReadOnlyList<UserExportAuditLogRow>> ListForUserExportAsync(Guid userId, int take,
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
             .Where(a => a.UserId == userId)
             .OrderByDescending(al => al.CreatedAt)
+            .Take(take)
             .Select(al => new UserExportAuditLogRow(
                 al.Id,
                 al.Action.ToString(),

@@ -9,11 +9,16 @@ using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Infrastructure.Http;
 
+public sealed record RegistryPackage(string? LatestVersion, string? Publisher)
+{
+    public static readonly RegistryPackage Unresolved = new(null, null);
+}
+
 public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMemoryCache cache) : IDependencyRegistryClient
 {
     private const int MaxConcurrentRegistryRequests = 10;
 
-    public async Task FetchLatestVersionsAsync(List<Dependency> deps)
+    public async Task FetchRegistryMetadataAsync(List<Dependency> deps)
     {
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
         using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentRegistryRequests);
@@ -33,155 +38,263 @@ public class DependencyRegistryClient(IHttpClientFactory httpClientFactory, IMem
             .Select(async dep =>
             {
                 await throttle.WaitAsync();
-                try { await ResolveLatestVersionAsync(client, dep); }
+                try { await ResolvePackageAsync(client, dep); }
                 finally { throttle.Release(); }
             });
         await Task.WhenAll(tasks);
     }
 
-    private async Task ResolveLatestVersionAsync(HttpClient client, Dependency dep)
+    private async Task ResolvePackageAsync(HttpClient client, Dependency dep)
     {
         string cacheKey = CacheKeys.LatestVersion(dep.Ecosystem, dep.Name);
 
-        if (cache.TryGetValue(cacheKey, out string? cachedVersion))
+        if (cache.TryGetValue(cacheKey, out RegistryPackage? cached) && cached != null)
         {
-            dep.LatestVersion = cachedVersion;
+            Apply(dep, cached);
             return;
         }
 
-        string? version = await FetchLatestVersionAsync(client, dep);
+        RegistryPackage package = await FetchPackageAsync(client, dep);
 
-        dep.LatestVersion = version;
-        cache.Set(cacheKey, version, new MemoryCacheEntryOptions
+        Apply(dep, package);
+        cache.Set(cacheKey, package, new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow =
-                version == null ? CacheKeys.LatestVersionUnresolvedTtl : CacheKeys.LatestVersionTtl,
+            AbsoluteExpirationRelativeToNow = package.LatestVersion == null
+                ? CacheKeys.LatestVersionUnresolvedTtl
+                : CacheKeys.LatestVersionTtl,
             Size = 1
         });
     }
 
-    private static async Task<string?> FetchLatestVersionAsync(HttpClient client, Dependency dep)
+    private static void Apply(Dependency dep, RegistryPackage package)
+    {
+        dep.LatestVersion = package.LatestVersion;
+        dep.Publisher = package.Publisher ?? NamespacePublisher(dep);
+    }
+
+    private static string? NamespacePublisher(Dependency dep) => dep.Ecosystem switch
+    {
+        DependencyEcosystem.Maven or DependencyEcosystem.Gradle => SegmentBefore(dep.Name, ':'),
+        DependencyEcosystem.Composer => SegmentBefore(dep.Name, '/'),
+        DependencyEcosystem.Npm when dep.Name.StartsWith('@') => SegmentBefore(dep.Name, '/')?.TrimStart('@'),
+        DependencyEcosystem.Go => GoNamespace(dep.Name),
+        _ => null,
+    };
+
+    private static string? SegmentBefore(string value, char separator)
+    {
+        int index = value.IndexOf(separator);
+        return index > 0 ? value[..index] : null;
+    }
+
+    private static string? GoNamespace(string module)
+    {
+        string[] segments = module.Split('/');
+        return segments.Length >= 2 ? segments[1] : null;
+    }
+
+    private static async Task<RegistryPackage> FetchPackageAsync(HttpClient client, Dependency dep)
     {
         try
         {
             return dep.Ecosystem switch
             {
-                DependencyEcosystem.Npm => await FetchNpmLatestAsync(client, dep.Name),
-                DependencyEcosystem.NuGet => await FetchNuGetLatestAsync(client, dep.Name),
-                DependencyEcosystem.PyPI => await FetchPyPILatestAsync(client, dep.Name),
-                DependencyEcosystem.Maven => await FetchMavenLatestAsync(client, dep.Name),
-                DependencyEcosystem.Go => await FetchGoLatestAsync(client, dep.Name),
-                DependencyEcosystem.Composer => await FetchPackagistLatestAsync(client, dep.Name),
-                DependencyEcosystem.Gem => await FetchRubyGemsLatestAsync(client, dep.Name),
-                DependencyEcosystem.Cargo => await FetchCratesLatestAsync(client, dep.Name),
-                DependencyEcosystem.Hex => await FetchHexLatestAsync(client, dep.Name),
-                DependencyEcosystem.Pub => await FetchPubLatestAsync(client, dep.Name),
-                _ => null,
+                DependencyEcosystem.Npm => await FetchNpmAsync(client, dep.Name),
+                DependencyEcosystem.NuGet => await FetchNuGetAsync(client, dep.Name),
+                DependencyEcosystem.PyPI => await FetchPyPIAsync(client, dep.Name),
+                DependencyEcosystem.Maven => await FetchMavenAsync(client, dep.Name),
+                DependencyEcosystem.Go => await FetchGoAsync(client, dep.Name),
+                DependencyEcosystem.Composer => await FetchPackagistAsync(client, dep.Name),
+                DependencyEcosystem.Gem => await FetchRubyGemsAsync(client, dep.Name),
+                DependencyEcosystem.Cargo => await FetchCratesAsync(client, dep.Name),
+                DependencyEcosystem.Hex => await FetchHexAsync(client, dep.Name),
+                DependencyEcosystem.Pub => await FetchPubAsync(client, dep.Name),
+                _ => RegistryPackage.Unresolved,
             };
         }
-        catch { return null; }
+        catch { return RegistryPackage.Unresolved; }
     }
 
-    private static async Task<string?> FetchNpmLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchNpmAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.TryGetProperty("version", out JsonElement v) ? v.GetString() : null;
+        JsonElement root = doc.RootElement;
+
+        string? version = Text(root, "version");
+        string? publisher = PersonName(root, "author")
+            ?? FirstPersonName(root, "maintainers")
+            ?? PersonName(root, "_npmUser");
+
+        return new RegistryPackage(version, publisher);
     }
 
-    private static async Task<string?> FetchNuGetLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchNuGetAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync(
             $"https://azuresearch-usnc.nuget.org/query?q=packageid:{Uri.EscapeDataString(package)}&prerelease=false&take=1");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        if (!doc.RootElement.TryGetProperty("data", out JsonElement data)) return null;
+        if (!doc.RootElement.TryGetProperty("data", out JsonElement data)) return RegistryPackage.Unresolved;
         List<JsonElement> items = data.EnumerateArray().ToList();
-        if (items.Count == 0) return null;
-        return items[0].TryGetProperty("version", out JsonElement v) ? v.GetString() : null;
+        if (items.Count == 0) return RegistryPackage.Unresolved;
+
+        return new RegistryPackage(Text(items[0], "version"), StringOrFirst(items[0], "authors"));
     }
 
-    private static async Task<string?> FetchPyPILatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchPyPIAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://pypi.org/pypi/{Uri.EscapeDataString(package)}/json");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.TryGetProperty("info", out JsonElement info) && info.TryGetProperty("version", out JsonElement v)
-            ? v.GetString() : null;
+        if (!doc.RootElement.TryGetProperty("info", out JsonElement info)) return RegistryPackage.Unresolved;
+
+        return new RegistryPackage(Text(info, "version"), Text(info, "author") ?? Text(info, "maintainer"));
     }
 
-    private static async Task<string?> FetchMavenLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchMavenAsync(HttpClient client, string package)
     {
         string[] parts = package.Split(':');
-        if (parts.Length < 2) return null;
+        if (parts.Length < 2) return RegistryPackage.Unresolved;
         string groupPath = parts[0].Replace('.', '/');
         using HttpResponseMessage response = await client.GetAsync(
             $"https://repo1.maven.org/maven2/{Uri.EscapeDataString(groupPath).Replace("%2F", "/")}/{Uri.EscapeDataString(parts[1])}/maven-metadata.xml");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         XDocument doc = XDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.Root?.Element("versioning")?.Element("release")?.Value
+        string? version = doc.Root?.Element("versioning")?.Element("release")?.Value
             ?? doc.Root?.Element("versioning")?.Element("latest")?.Value;
+
+        return new RegistryPackage(version, doc.Root?.Element("groupId")?.Value ?? parts[0]);
     }
 
-    private static async Task<string?> FetchGoLatestAsync(HttpClient client, string module)
+    private static async Task<RegistryPackage> FetchGoAsync(HttpClient client, string module)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(module)}/@latest");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        string? version = doc.RootElement.TryGetProperty("Version", out JsonElement v) ? v.GetString() : null;
-        return version?.TrimStart('v');
+        string? version = Text(doc.RootElement, "Version");
+
+        return new RegistryPackage(version?.TrimStart('v'), null);
     }
 
     private static readonly Regex PackagistPrereleaseTag =
         new(@"-(dev|alpha|beta|rc)(\.|\d|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private static async Task<string?> FetchPackagistLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchPackagistAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{Uri.EscapeDataString(package)}.json");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        if (!doc.RootElement.TryGetProperty("package", out JsonElement pkg)) return null;
-        if (!pkg.TryGetProperty("versions", out JsonElement versions)) return null;
+        if (!doc.RootElement.TryGetProperty("package", out JsonElement pkg)) return RegistryPackage.Unresolved;
+        if (!pkg.TryGetProperty("versions", out JsonElement versions)) return RegistryPackage.Unresolved;
         List<string> stableVersions = versions.EnumerateObject()
             .Select(p => p.Name)
             .Where(v => !PackagistPrereleaseTag.IsMatch(v))
             .OrderByDescending(VersionText.Clean, VersionComparer.Instance)
             .ToList();
-        return stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
+        string? version = stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
+
+        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"));
     }
 
-    private static async Task<string?> FetchRubyGemsLatestAsync(HttpClient client, string gem)
+    private static async Task<RegistryPackage> FetchRubyGemsAsync(HttpClient client, string gem)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://rubygems.org/api/v1/gems/{Uri.EscapeDataString(gem)}.json");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.TryGetProperty("version", out JsonElement v) ? v.GetString() : null;
+
+        return new RegistryPackage(Text(doc.RootElement, "version"), Text(doc.RootElement, "authors"));
     }
 
-    private static async Task<string?> FetchCratesLatestAsync(HttpClient client, string crate)
+    private static async Task<RegistryPackage> FetchCratesAsync(HttpClient client, string crate)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return null;
-        return crateObj.TryGetProperty("newest_version", out JsonElement v) ? v.GetString() : null;
+        if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return RegistryPackage.Unresolved;
+
+        return new RegistryPackage(Text(crateObj, "newest_version"), null);
     }
 
-    private static async Task<string?> FetchHexLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchHexAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.TryGetProperty("latest_stable_version", out JsonElement v) ? v.GetString() : null;
+        JsonElement root = doc.RootElement;
+
+        string? publisher = FirstPersonName(root, "owners")
+            ?? (root.TryGetProperty("meta", out JsonElement meta) ? StringOrFirst(meta, "maintainers") : null);
+
+        return new RegistryPackage(Text(root, "latest_stable_version"), publisher);
     }
 
-    private static async Task<string?> FetchPubLatestAsync(HttpClient client, string package)
+    private static async Task<RegistryPackage> FetchPubAsync(HttpClient client, string package)
     {
         using HttpResponseMessage response = await client.GetAsync($"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}");
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return RegistryPackage.Unresolved;
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.TryGetProperty("latest", out JsonElement latest) && latest.TryGetProperty("version", out JsonElement v)
-            ? v.GetString() : null;
+        if (!doc.RootElement.TryGetProperty("latest", out JsonElement latest)) return RegistryPackage.Unresolved;
+
+        string? publisher = latest.TryGetProperty("pubspec", out JsonElement pubspec)
+            ? Text(pubspec, "publisher") ?? StringOrFirst(pubspec, "authors")
+            : null;
+
+        return new RegistryPackage(Text(latest, "version"), publisher);
     }
+
+    private static string? Text(JsonElement element, string property) =>
+        element.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? Trim(value.GetString())
+            : null;
+
+    private static string? StringOrFirst(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement value)) return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => Trim(value.GetString()),
+            JsonValueKind.Array => value.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String)
+                .Select(item => Trim(item.GetString()))
+                .FirstOrDefault(item => item != null),
+            _ => null,
+        };
+    }
+
+    private static string? PersonName(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement person)) return null;
+
+        return person.ValueKind switch
+        {
+            JsonValueKind.String => Trim(person.GetString()),
+            JsonValueKind.Object => Text(person, "name"),
+            _ => null,
+        };
+    }
+
+    private static string? FirstPersonName(JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out JsonElement people) || people.ValueKind != JsonValueKind.Array)
+            return null;
+
+        foreach (JsonElement person in people.EnumerateArray())
+        {
+            string? name = person.ValueKind switch
+            {
+                JsonValueKind.String => Trim(person.GetString()),
+                JsonValueKind.Object => Text(person, "name") ?? Text(person, "username"),
+                _ => null,
+            };
+
+            if (name != null) return name;
+        }
+
+        return null;
+    }
+
+    private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

@@ -1,18 +1,20 @@
 using ClosedXML.Excel;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Exports;
 public partial class ExportService
 {
-    private void WriteRecapSheet(XLWorkbook wb, List<Project> projects, ExportLabels L)
+    private void WriteRecapSheet(XLWorkbook wb, List<Project> projects, ExportLabels L, bool truncated)
     {
         string[] headers = L.RecapHeaders;
         IXLWorksheet ws = wb.Worksheets.Add(L.SheetRecap);
 
         ApplyTitle(ws, L.TitleTechHealth, headers.Length);
-        ApplyMetaRow(ws, headers.Length, BuildMeta(L, $"{projects.Count} {L.UnitProjects}", null));
+        ApplyMetaRow(ws, headers.Length, BuildMeta(L, $"{projects.Count} {L.UnitProjects}",
+            truncated ? $"{L.ExportTruncated} {ExportLimits.MaxProjectSheets}" : null));
         ApplyHeadersAtRow(ws, headers, HeaderRow);
 
         int sumDeps = 0, sumUpdate = 0, sumVuln = 0, sumCrit = 0, sumEol = 0;

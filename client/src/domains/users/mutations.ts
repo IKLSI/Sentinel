@@ -1,13 +1,17 @@
+import { useMutation } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
+import { MIME_TYPES, downloadFile } from "@/helpers/download";
 import {
   invalidateKeys,
   useDeleteMutation,
-  useMutationWrapper,
   usePatchMutation,
   usePostMutation,
   usePutMutation,
 } from "@/domains/helpers";
-import { USERS_QUERY_KEY } from "@/domains/users/constants";
+import {
+  GDPR_EXPORT_FALLBACK_FILE,
+  USERS_QUERY_KEY,
+} from "@/domains/users/constants";
 import type {
   AcceptInvitation,
   CreateUser,
@@ -16,7 +20,6 @@ import type {
   UpdatePreferences,
   UpdateUser,
   User,
-  UserDataExport,
 } from "@/domains/users/types";
 import type { ApiMessageResponse } from "@/domains/auth/types";
 
@@ -58,7 +61,11 @@ export const useDeleteMyAccountMutation = () =>
   );
 
 export const useExportMyDataMutation = () =>
-  useMutationWrapper<UserDataExport, UserDataExport, Record<string, never>>(
-    "GET",
-    ROUTES_API.api.users.me.export.__path,
-  );
+  useMutation({
+    mutationFn: () =>
+      downloadFile(
+        ROUTES_API.api.users.me.export.__path,
+        GDPR_EXPORT_FALLBACK_FILE,
+        MIME_TYPES.ZIP,
+      ),
+  });

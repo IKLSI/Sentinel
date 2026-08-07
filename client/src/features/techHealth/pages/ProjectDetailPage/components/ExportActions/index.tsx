@@ -10,7 +10,7 @@ import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
 import PictureAsPdfOutlined from "@mui/icons-material/PictureAsPdfOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
-import { useToast } from "@/hooks/useToast";
+import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { SBOM_FORMAT, type SbomFormat } from "@/domains/projects/constants";
 import {
@@ -20,12 +20,11 @@ import {
 
 interface Props {
   projectId: string;
-  projectName: string;
 }
 
-export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
+export const ExportActions: React.FC<Props> = ({ projectId }) => {
   const t = useT();
-  const { showToast } = useToast();
+  const onExportError = useApiErrorToast("tech_health.export.error");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const downloadSbomMutation = useDownloadSbomMutation();
   const downloadReportMutation = useDownloadComplianceReportMutation();
@@ -37,17 +36,14 @@ export const ExportActions: React.FC<Props> = ({ projectId, projectName }) => {
   const handleSbom = (format: SbomFormat) => {
     setAnchorEl(null);
     downloadSbomMutation.mutate(
-      { projectId, projectName, format },
-      { onError: () => showToast(t("tech_health.export.error"), "error") },
+      { projectId, format },
+      { onError: onExportError },
     );
   };
 
   const handleReport = () => {
     setAnchorEl(null);
-    downloadReportMutation.mutate(
-      { projectId, projectName },
-      { onError: () => showToast(t("tech_health.export.error"), "error") },
-    );
+    downloadReportMutation.mutate({ projectId }, { onError: onExportError });
   };
 
   return (

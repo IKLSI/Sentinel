@@ -42,6 +42,7 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}/sbom")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportSbom(
         Guid id,
         [FromQuery] string? format,
