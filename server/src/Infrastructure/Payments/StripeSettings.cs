@@ -9,4 +9,6 @@ public class StripeSettings
 
     [Required(ErrorMessage = "Stripe:WebhookSecret is required in the configuration")]
     public string WebhookSecret { get; set; } = string.Empty;
+
+    public bool EnableAutomaticTax { get; set; } = true;
 }

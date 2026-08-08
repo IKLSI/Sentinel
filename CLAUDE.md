@@ -103,3 +103,4 @@ Transverse : `configs/apiClient.ts` (axios, intercepteur 401 → refresh unique 
 - `openapi-typescript` est figé en v6 : les versions suivantes exigent une API compilateur absente de TypeScript 7
 - Sans Docker ni `SENTINEL_TEST_POSTGRES`, les tests d'intégration sont skippés en local : InMemory ne couvre ni la RLS ni le relationnel
 - `dotnet ef` sans `ConnectionStrings__DefaultConnection` retombe sur `localhost` alors que la base de dev est distante
+- `StripeBillingGateway.CreateCheckoutSessionAsync` ne pose plus `ConsentCollection.TermsOfService` : Stripe exige une URL de CGU renseignée dans le Dashboard (`Settings → Public`) avant d'accepter ce champ, bloquant tant que l'entreprise n'est pas activée (infos légales + IBAN). À réintroduire une fois les CGU (`legal_notice.publisher.*`, `fr-FR.json`/`en-US.json`) et le compte Stripe pleinement activés

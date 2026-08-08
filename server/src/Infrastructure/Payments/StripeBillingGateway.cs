@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Billing;
 using Stripe;
@@ -8,10 +9,13 @@ using CheckoutSessionService = Stripe.Checkout.SessionService;
 
 namespace Sentinel.Infrastructure.Payments;
 
-public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBillingGateway> logger) : IBillingGateway
+public class StripeBillingGateway(
+    IStripeClient stripeClient,
+    IOptions<StripeSettings> stripeSettings,
+    ILogger<StripeBillingGateway> logger) : IBillingGateway
 {
     private const string SubscriptionMode = "subscription";
-    private const string TermsOfServiceRequired = "required";
+    // private const string TermsOfServiceRequired = "required";
 
     public async Task<string> CreateCustomerAsync(BillingCustomerRequest request,
         CancellationToken cancellationToken)
@@ -50,9 +54,23 @@ public class StripeBillingGateway(IStripeClient stripeClient, ILogger<StripeBill
             LineItems = [new Stripe.Checkout.SessionLineItemOptions { Price = request.PriceId, Quantity = 1 }],
             SuccessUrl = request.SuccessUrl,
             CancelUrl = request.CancelUrl,
-            ConsentCollection = new Stripe.Checkout.SessionConsentCollectionOptions
+            /* ConsentCollection = new Stripe.Checkout.SessionConsentCollectionOptions
             {
                 TermsOfService = TermsOfServiceRequired
+            }, */
+            BillingAddressCollection = "required",
+            CustomerUpdate = new Stripe.Checkout.SessionCustomerUpdateOptions
+            {
+                Address = "auto",
+                Name = "auto"
+            },
+            AutomaticTax = new Stripe.Checkout.SessionAutomaticTaxOptions
+            {
+                Enabled = stripeSettings.Value.EnableAutomaticTax
+            },
+            TaxIdCollection = new Stripe.Checkout.SessionTaxIdCollectionOptions
+            {
+                Enabled = stripeSettings.Value.EnableAutomaticTax
             },
             Metadata = new Dictionary<string, string>
             {
