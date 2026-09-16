@@ -88,7 +88,7 @@ public class UserExportDataServiceTests
         ZipArchiveEntry entry = archive.GetEntry(archivePath).Should().NotBeNull().And.Subject.As<ZipArchiveEntry>();
         using StreamReader reader = new(entry.Open());
 
-        (await reader.ReadToEndAsync()).Should().Be("contenu de la trace");
+        (await reader.ReadToEndAsync(TestContext.Current.CancellationToken)).Should().Be("contenu de la trace");
         export.Truncated.AttachmentFiles.Should().BeFalse();
     }
 
