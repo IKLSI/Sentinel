@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as LegalNoticeRouteImport } from './routes/legal-notice'
@@ -18,8 +19,8 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StyleGuideRouteImport } from './routes/style-guide'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedAdminOrganisationRouteImport } from './routes/_authenticated/_admin/organisation'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/_admin/settings'
@@ -29,6 +30,11 @@ import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedTicketsIndexRouteImport } from './routes/_authenticated/tickets/index'
 import { Route as AuthenticatedTicketsIdRouteImport } from './routes/_authenticated/tickets/$id'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -73,13 +79,13 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   id: '/_admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -128,7 +134,7 @@ const AuthenticatedTicketsIdRoute = AuthenticatedTicketsIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/legal-notice': typeof LegalNoticeRoute
   '/login': typeof LoginRoute
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/style-guide': typeof StyleGuideRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/organisation': typeof AuthenticatedAdminOrganisationRoute
   '/settings': typeof AuthenticatedAdminSettingsRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/tickets/': typeof AuthenticatedTicketsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/legal-notice': typeof LegalNoticeRoute
   '/login': typeof LoginRoute
@@ -155,7 +163,7 @@ export interface FileRoutesByTo {
   '/style-guide': typeof StyleGuideRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/organisation': typeof AuthenticatedAdminOrganisationRoute
   '/settings': typeof AuthenticatedAdminSettingsRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invitation': typeof AcceptInvitationRoute
   '/legal-notice': typeof LegalNoticeRoute
@@ -177,8 +186,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/_admin/organisation': typeof AuthenticatedAdminOrganisationRoute
   '/_authenticated/_admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/_admin/users': typeof AuthenticatedAdminUsersRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/style-guide'
     | '/terms'
     | '/verify-email'
+    | '/dashboard'
     | '/profile'
     | '/organisation'
     | '/settings'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/accept-invitation'
     | '/legal-notice'
     | '/login'
@@ -217,7 +228,7 @@ export interface FileRouteTypes {
     | '/style-guide'
     | '/terms'
     | '/verify-email'
-    | '/'
+    | '/dashboard'
     | '/profile'
     | '/organisation'
     | '/settings'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/tickets'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/accept-invitation'
     | '/legal-notice'
@@ -238,8 +250,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/_authenticated/_admin'
+    | '/_authenticated/dashboard'
     | '/_authenticated/profile'
-    | '/_authenticated/'
     | '/_authenticated/_admin/organisation'
     | '/_authenticated/_admin/settings'
     | '/_authenticated/_admin/users'
@@ -250,6 +262,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInvitationRoute: typeof AcceptInvitationRoute
   LegalNoticeRoute: typeof LegalNoticeRoute
@@ -263,6 +276,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -326,18 +346,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/_admin': {
       id: '/_authenticated/_admin'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -419,8 +439,8 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
   AuthenticatedTicketsIdRoute: typeof AuthenticatedTicketsIdRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
@@ -429,8 +449,8 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
   AuthenticatedTicketsIdRoute: AuthenticatedTicketsIdRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
@@ -441,6 +461,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInvitationRoute: AcceptInvitationRoute,
   LegalNoticeRoute: LegalNoticeRoute,

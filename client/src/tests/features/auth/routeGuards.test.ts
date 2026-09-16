@@ -33,10 +33,10 @@ describe("evaluateAdminGuard", () => {
     });
   });
 
-  it("redirects to / when role is not Admin", () => {
+  it("redirects to /dashboard when role is not Admin", () => {
     expect(
       evaluateAdminGuard({ loading: false, role: UserRole.Developer }),
-    ).toEqual({ status: "redirect", to: "/" });
+    ).toEqual({ status: "redirect", to: "/dashboard" });
   });
 
   it("returns ok when role is Admin", () => {
@@ -53,10 +53,10 @@ describe("evaluateGuestGuard", () => {
     ).toEqual({ status: "loading" });
   });
 
-  it("redirects to / when already authenticated", () => {
+  it("redirects to /dashboard when already authenticated", () => {
     expect(
       evaluateGuestGuard({ isAuthenticated: true, loading: false }),
-    ).toEqual({ status: "redirect", to: "/" });
+    ).toEqual({ status: "redirect", to: "/dashboard" });
   });
 
   it("returns ok when not authenticated", () => {

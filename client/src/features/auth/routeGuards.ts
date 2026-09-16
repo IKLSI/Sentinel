@@ -18,16 +18,17 @@ export function evaluateAuthGuard(
 
 export function evaluateAdminGuard(
   auth: Pick<AuthState, "loading" | "role">,
-): GuardResult<"/"> {
+): GuardResult<"/dashboard"> {
   if (auth.loading) return { status: "loading" };
-  if (auth.role !== UserRole.Admin) return { status: "redirect", to: "/" };
+  if (auth.role !== UserRole.Admin)
+    return { status: "redirect", to: "/dashboard" };
   return { status: "ok" };
 }
 
 export function evaluateGuestGuard(
   auth: Pick<AuthState, "isAuthenticated" | "loading">,
-): GuardResult<"/"> {
+): GuardResult<"/dashboard"> {
   if (auth.loading) return { status: "loading" };
-  if (auth.isAuthenticated) return { status: "redirect", to: "/" };
+  if (auth.isAuthenticated) return { status: "redirect", to: "/dashboard" };
   return { status: "ok" };
 }

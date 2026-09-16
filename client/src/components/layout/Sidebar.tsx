@@ -44,7 +44,7 @@ const navSections: NavSection[] = [
     icon: DashboardOutlined,
     items: [
       {
-        to: "/",
+        to: ROUTES.DASHBOARD,
         icon: DashboardOutlined,
         labelKey: "sidebar.item.dashboard",
         end: true,

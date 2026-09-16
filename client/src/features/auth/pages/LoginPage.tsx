@@ -62,7 +62,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(data.email, data.password);
-      navigate({ to: ROUTES.HOME });
+      navigate({ to: ROUTES.DASHBOARD });
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
         ?.status;
