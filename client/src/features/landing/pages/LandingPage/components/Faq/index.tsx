@@ -76,7 +76,7 @@ export const Faq = () => (
           >
             <AccordionSummary
               expandIcon={<ExpandMoreOutlined sx={{ color: "var(--text)" }} />}
-              sx={{ px: "28px", py: "6px" }}
+              sx={{ px: { xs: "18px", md: "28px" }, py: "6px" }}
             >
               <Box
                 sx={{ fontWeight: 600, fontSize: "16px", color: "var(--text)" }}
@@ -84,7 +84,9 @@ export const Faq = () => (
                 {item.question}
               </Box>
             </AccordionSummary>
-            <AccordionDetails sx={{ px: "28px", pb: "26px" }}>
+            <AccordionDetails
+              sx={{ px: { xs: "18px", md: "28px" }, pb: "26px" }}
+            >
               <Box
                 sx={{
                   color: "var(--text-secondary)",

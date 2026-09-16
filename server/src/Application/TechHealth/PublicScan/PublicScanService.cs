@@ -1,0 +1,68 @@
+using Sentinel.Application.Abstractions;
+using Sentinel.Application.Common;
+using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
+
+namespace Sentinel.Application.TechHealth.PublicScan;
+
+public class PublicScanService(
+    RepositoryScannerService scanner,
+    VulnerabilityScanService vulnerabilityScan,
+    RuntimeEolScanService runtimeEol,
+    PublicScanValidator validator) : IService
+{
+    public async Task<Result<PublicScanResponse>> ExecuteAsync(
+        PublicScanRequest request,
+        CancellationToken cancellationToken)
+    {
+        Result validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsSuccess)
+            return Result<PublicScanResponse>.From(validationResult);
+
+        Guid ephemeralId = Guid.NewGuid();
+
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(ephemeralId, request.RepositoryUrl!);
+
+        if (outcome.Error != null)
+            return Result<PublicScanResponse>.Error(outcome.Error);
+
+        VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScan.ScanAsync(
+            outcome.Dependencies, new Dictionary<string, DateTime>());
+
+        foreach (VulnerabilityScanResult result in vulnerabilityOutcome.Results)
+        {
+            foreach (Vulnerability vulnerability in result.NewVulnerabilities)
+                result.Dependency.Vulnerabilities.Add(vulnerability);
+        }
+
+        IReadOnlyList<RuntimeEolResult> eolResults = await runtimeEol.ScanAsync(outcome.Runtimes);
+
+        foreach (RuntimeEolResult result in eolResults)
+            result.Runtime.IsEol = result.IsEol;
+
+        Project project = new() { Dependencies = outcome.Dependencies, Runtimes = outcome.Runtimes };
+
+        int score = HealthScoreCalculator.Calculate(project);
+        string grade = HealthScoreCalculator.ToGrade(score);
+
+        int vulnerableDependencyCount = outcome.Dependencies.Count(d => d.Vulnerabilities.Count > 0);
+        int criticalCount = outcome.Dependencies
+            .SelectMany(d => d.Vulnerabilities)
+            .Count(v => v.Severity == VulnerabilitySeverity.Critical);
+        int highCount = outcome.Dependencies
+            .SelectMany(d => d.Vulnerabilities)
+            .Count(v => v.Severity == VulnerabilitySeverity.High);
+        int eolRuntimeCount = outcome.Runtimes.Count(r => r.IsEol == true);
+
+        return Result<PublicScanResponse>.Success(new PublicScanResponse(
+            grade,
+            score,
+            outcome.Dependencies.Count,
+            vulnerableDependencyCount,
+            criticalCount,
+            highCount,
+            eolRuntimeCount));
+    }
+}

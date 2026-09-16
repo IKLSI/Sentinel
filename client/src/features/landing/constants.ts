@@ -133,7 +133,6 @@ interface PricingPlan {
   price: number;
   billing: string;
   cta: string;
-  badge?: string;
   featured?: boolean;
   features: string[];
 }
@@ -141,7 +140,7 @@ interface PricingPlan {
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "free",
-    name: "Free",
+    name: "Gratuit",
     desc: "Pour auditer vos premiers projets.",
     price: 0,
     billing: "Sans engagement",
@@ -156,12 +155,11 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "pro",
-    name: "Pro",
+    name: "Professionnel",
     desc: "Pour les équipes produit et les agences.",
     price: 35,
     billing: "Facturation mensuelle",
     cta: "Démarrer l'essai",
-    badge: "Populaire",
     featured: true,
     features: [
       "20 projets",
@@ -184,7 +182,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Membres illimités",
       "2 000 scans par mois",
       "Multi-organisations",
-      "Tout le plan Pro inclus",
+      "Tout le plan Professionnel inclus",
     ],
   },
 ];

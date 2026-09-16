@@ -26,6 +26,92 @@ export const CompareTable = () => (
 
       <Box
         sx={{
+          display: { xs: "flex", md: "none" },
+          flexDirection: "column",
+          gap: "14px",
+        }}
+      >
+        {COMPARE_FEATURES.map((row) => (
+          <Box
+            key={row.feature}
+            sx={{
+              background: "var(--s1)",
+              border: "1px solid var(--border)",
+              borderRadius: "16px",
+              p: "18px",
+            }}
+          >
+            <Box
+              sx={{
+                fontWeight: 700,
+                fontSize: "14.5px",
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+                mb: "12px",
+              }}
+            >
+              {row.feature}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                mb: "8px",
+                fontSize: "13px",
+                color: "var(--muted)",
+              }}
+            >
+              <Box
+                sx={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: "var(--muted)",
+                  flexShrink: 0,
+                  minWidth: "88px",
+                }}
+              >
+                Autres outils
+              </Box>
+              <Box>{row.competitor}</Box>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "13.5px",
+                fontWeight: 600,
+                color: "var(--text)",
+              }}
+            >
+              <Box
+                sx={{
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: "var(--text)",
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  minWidth: "88px",
+                }}
+              >
+                Sentinel
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <CheckOutlined sx={{ fontSize: 15, color: "var(--green)" }} />
+                {row.sentinel}
+              </Box>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+
+      <Box
+        sx={{
+          display: { xs: "none", md: "block" },
           background: "var(--s1)",
           border: "1px solid var(--border)",
           borderRadius: "20px",

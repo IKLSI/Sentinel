@@ -7,14 +7,6 @@ namespace Sentinel.Application.TechHealth.CreateProject;
 
 public class ProjectCreateValidator : IValidator
 {
-    private static readonly HashSet<string> AllowedHosts = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "github.com",
-        "www.github.com",
-        "gitlab.com",
-        "www.gitlab.com",
-    };
-
     public Task<Result> ValidateAsync(CreateProjectDto model, CancellationToken cancellationToken)
     {
         ValidationErrors errors = new ValidationErrors()
@@ -47,6 +39,6 @@ public class ProjectCreateValidator : IValidator
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)) return false;
         if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
 
-        return AllowedHosts.Contains(uri.Host);
+        return RepositoryHosts.AllowedPublicHosts.Contains(uri.Host);
     }
 }

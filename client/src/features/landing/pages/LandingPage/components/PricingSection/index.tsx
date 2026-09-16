@@ -34,7 +34,8 @@ export const PricingSection = () => (
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
           gap: "32px",
-          mt: "40px",
+          mt: "48px",
+          alignItems: "start",
         }}
       >
         {PRICING_PLANS.map((plan) => (
@@ -42,68 +43,86 @@ export const PricingSection = () => (
             key={plan.id}
             sx={{
               position: "relative",
-              background: "var(--s1)",
+              background: plan.featured
+                ? "linear-gradient(165deg, var(--s2) 0%, var(--s1) 55%)"
+                : "var(--s1)",
               border: plan.featured
-                ? "2px solid var(--accent)"
+                ? "1px solid var(--accent-border)"
                 : "1px solid var(--border)",
               borderRadius: "22px",
-              p: "36px 32px 32px",
+              p: { xs: "28px 22px 22px", md: "36px 32px 32px" },
               display: "flex",
               flexDirection: "column",
+              overflow: "hidden",
               boxShadow: plan.featured ? "var(--sh-3)" : "none",
+              transform: { md: plan.featured ? "translateY(-12px)" : "none" },
             }}
           >
-            {plan.badge && (
+            {plan.featured && (
               <Box
                 sx={{
                   position: "absolute",
-                  top: -16,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  px: "16px",
-                  py: "7px",
-                  borderRadius: "999px",
-                  background: "var(--accent)",
-                  color: "var(--bg)",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
+                  inset: 0,
+                  background:
+                    "radial-gradient(ellipse 420px 220px at 50% 0%, var(--accent-subtle) 0%, transparent 70%)",
+                  pointerEvents: "none",
                 }}
-              >
-                {plan.badge}
-              </Box>
+              />
             )}
 
             <Box
               sx={{
-                fontSize: "16px",
-                fontWeight: 700,
-                color: "var(--text)",
+                position: "relative",
                 mb: "14px",
               }}
             >
-              {plan.name}
+              <Box
+                sx={{
+                  fontSize: "24px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  backgroundImage: plan.featured
+                    ? "linear-gradient(135deg, var(--text) 0%, var(--accent) 130%)"
+                    : "none",
+                  backgroundClip: plan.featured ? "text" : "unset",
+                  WebkitBackgroundClip: plan.featured ? "text" : "unset",
+                  color: plan.featured ? "transparent" : "var(--text)",
+                }}
+              >
+                {plan.name}
+              </Box>
             </Box>
             <Box
               sx={{
+                position: "relative",
                 fontSize: "14px",
                 color: "var(--text-secondary)",
-                mb: "12px",
+                mb: "8px",
                 lineHeight: 1.55,
               }}
             >
               {plan.desc}
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+            <Box
+              sx={{
+                position: "relative",
+                display: "flex",
+                alignItems: "baseline",
+                gap: "8px",
+              }}
+            >
               <Box
                 sx={{
                   fontSize: "52px",
-                  fontWeight: 700,
+                  fontWeight: 800,
                   letterSpacing: "-0.045em",
-                  color: "var(--text)",
+                  backgroundImage: plan.featured
+                    ? "linear-gradient(135deg, var(--text) 0%, var(--accent) 120%)"
+                    : "none",
+                  backgroundClip: plan.featured ? "text" : "unset",
+                  WebkitBackgroundClip: plan.featured ? "text" : "unset",
+                  color: plan.featured ? "transparent" : "var(--text)",
                 }}
               >
                 {plan.price}€
@@ -120,13 +139,21 @@ export const PricingSection = () => (
                 </Box>
               )}
             </Box>
-            <Box sx={{ fontSize: "13px", color: "var(--muted)", mt: "10px" }}>
+            <Box
+              sx={{
+                position: "relative",
+                fontSize: "13px",
+                color: "var(--muted)",
+                mt: "10px",
+              }}
+            >
               {plan.billing}
             </Box>
 
             <Box
               component="ul"
               sx={{
+                position: "relative",
                 listStyle: "none",
                 m: "28px 0",
                 p: 0,
@@ -135,7 +162,7 @@ export const PricingSection = () => (
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
-                gap: "12px",
+                gap: "13px",
               }}
             >
               {plan.features.map((feature) => (
@@ -155,7 +182,9 @@ export const PricingSection = () => (
                     sx={{
                       fontSize: 18,
                       color: plan.featured ? "var(--bg)" : "var(--text)",
-                      background: plan.featured ? "var(--accent)" : "var(--s3)",
+                      background: plan.featured
+                        ? "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, var(--purple)) 100%)"
+                        : "var(--s3)",
                       borderRadius: "50%",
                       p: "3px",
                       flexShrink: 0,
@@ -172,6 +201,15 @@ export const PricingSection = () => (
               variant={plan.featured ? "contained" : "outlined"}
               size="large"
               fullWidth
+              sx={{
+                position: "relative",
+                py: "13px",
+                fontSize: "15px",
+                borderRadius: "var(--r-lg)",
+                boxShadow: plan.featured
+                  ? "0 12px 32px -8px var(--accent-border)"
+                  : "none",
+              }}
             >
               {plan.cta}
             </Button>

@@ -201,6 +201,7 @@ export const Hero = () => (
                   mt: "3px",
                   display: "flex",
                   alignItems: "center",
+                  flexWrap: "wrap",
                   gap: "6px",
                 }}
               >

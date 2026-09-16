@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { ROUTES } from "@/constants/routes";
 
@@ -79,11 +80,12 @@ export const LandingNav = () => {
                 letterSpacing: "0.03em",
                 textTransform: "uppercase",
                 color: "var(--text-secondary)",
+                textDecoration: "none",
                 px: "14px",
                 py: "8px",
                 borderRadius: "var(--r-sm)",
                 transition: "color 0.15s",
-                "&:hover": { color: "var(--text)" },
+                "&:hover": { color: "var(--text)", textDecoration: "none" },
               }}
             >
               {link.label}
@@ -101,16 +103,14 @@ export const LandingNav = () => {
           <Button
             component={Link}
             to={ROUTES.LOGIN}
-            variant="text"
-            size="small"
-          >
-            Connexion
-          </Button>
-          <Button
-            component={Link}
-            to={ROUTES.LOGIN}
             variant="contained"
             size="small"
+            endIcon={<ArrowForwardOutlined sx={{ fontSize: 15 }} />}
+            sx={{
+              px: "18px",
+              borderRadius: "999px",
+              boxShadow: "0 8px 20px -8px var(--accent-border)",
+            }}
           >
             Essai gratuit
           </Button>
@@ -151,31 +151,39 @@ export const LandingNav = () => {
                 fontSize: "14px",
                 fontWeight: 600,
                 color: "var(--text-secondary)",
+                textDecoration: "none",
                 p: "12px 14px",
                 borderRadius: "12px",
-                "&:hover": { color: "var(--text)" },
+                "&:hover": { color: "var(--text)", textDecoration: "none" },
               }}
             >
               {link.label}
             </Box>
           ))}
-          <Button
-            component={Link}
-            to={ROUTES.LOGIN}
-            variant="outlined"
-            fullWidth
-            sx={{ mt: "6px" }}
+          <Box
+            sx={{
+              mt: "8px",
+              pt: "10px",
+              borderTop: "1px solid var(--border)",
+            }}
           >
-            Connexion
-          </Button>
-          <Button
-            component={Link}
-            to={ROUTES.LOGIN}
-            variant="contained"
-            fullWidth
-          >
-            Essai gratuit
-          </Button>
+            <Button
+              component={Link}
+              to={ROUTES.LOGIN}
+              variant="contained"
+              size="large"
+              fullWidth
+              endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
+              sx={{
+                py: "12px",
+                fontSize: "15px",
+                borderRadius: "var(--r-lg)",
+                boxShadow: "0 12px 28px -10px var(--accent-border)",
+              }}
+            >
+              Essai gratuit
+            </Button>
+          </Box>
         </Box>
       )}
     </Box>

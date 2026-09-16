@@ -37,8 +37,9 @@ export const LandingFooter = () => (
             sx={{
               fontSize: "13px",
               color: "var(--text-secondary)",
+              textDecoration: "none",
               transition: "color 0.15s",
-              "&:hover": { color: "var(--text)" },
+              "&:hover": { color: "var(--text)", textDecoration: "none" },
             }}
           >
             {link.label}

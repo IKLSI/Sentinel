@@ -253,6 +253,7 @@ public static partial class ServiceCollectionExtensions
                 .AddFixedWindowPolicy(RateLimitPolicies.Invitation, 10, TimeSpan.FromMinutes(15))
                 .AddFixedWindowPolicy(RateLimitPolicies.Register, 5, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Scan, 10, TimeSpan.FromMinutes(1), ResolveUserOrClientKey)
+                .AddFixedWindowPolicy(RateLimitPolicies.PublicScan, 5, TimeSpan.FromMinutes(10))
                 .AddFixedWindowPolicy(RateLimitPolicies.Webhook, 300, TimeSpan.FromMinutes(1))
                 .AddFixedWindowPolicy(RateLimitPolicies.Export, 5, TimeSpan.FromMinutes(1), ResolveUserOrClientKey);
 
