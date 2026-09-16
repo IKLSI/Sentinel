@@ -57,6 +57,7 @@ export const Hero = () => (
       justifyContent: "center",
       py: { xs: "48px", md: "88px" },
       borderBottom: "1px solid var(--border)",
+      background: "#eef2ff",
     }}
   >
     <Box

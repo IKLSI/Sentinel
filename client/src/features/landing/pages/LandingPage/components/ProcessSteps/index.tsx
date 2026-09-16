@@ -1,17 +1,9 @@
-import type React from "react";
 import Box from "@mui/material/Box";
-import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
-import LinkOutlined from "@mui/icons-material/LinkOutlined";
-import AutorenewOutlined from "@mui/icons-material/AutorenewOutlined";
-import NotificationsActiveOutlined from "@mui/icons-material/NotificationsActiveOutlined";
 import { PROCESS_STEPS } from "@/features/landing/constants";
 import { SectionHeading } from "@/features/landing/pages/LandingPage/components/SectionHeading";
 
-const ICONS: Record<(typeof PROCESS_STEPS)[number]["id"], React.ElementType> = {
-  connect: LinkOutlined,
-  scan: AutorenewOutlined,
-  act: NotificationsActiveOutlined,
-};
+const FOLDER_PATH =
+  "M0,0 L0.29,0 L0.318,0.14 L0.955,0.14 Q1,0.14 1,0.19 L1,0.935 Q1,0.98 0.955,0.98 L0.045,0.98 Q0,0.98 0,0.935 L0,0 Z";
 
 export const ProcessSteps = () => (
   <Box
@@ -24,7 +16,8 @@ export const ProcessSteps = () => (
       flexDirection: "column",
       justifyContent: "center",
       py: { xs: "64px", md: "96px" },
-      borderBottom: "1px solid var(--border)",
+      borderBottom: "2px solid var(--border)",
+      background: "#eef2ff",
     }}
   >
     <Box sx={{ maxWidth: 1160, mx: "auto", px: { xs: "20px", md: "32px" } }}>
@@ -35,85 +28,113 @@ export const ProcessSteps = () => (
       />
 
       <Box
+        component="svg"
+        aria-hidden
+        sx={{ position: "absolute", width: 0, height: 0 }}
+      >
+        <defs>
+          <clipPath id="steps-folder-clip" clipPathUnits="objectBoundingBox">
+            <path d={FOLDER_PATH} />
+          </clipPath>
+        </defs>
+      </Box>
+
+      <Box
         sx={{
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
           gap: { xs: "16px", md: "32px" },
         }}
       >
-        {PROCESS_STEPS.map((step, index) => {
-          const Icon = ICONS[step.id];
-          return (
+        {PROCESS_STEPS.map((step, index) => (
+          <Box key={step.id} sx={{ position: "relative" }}>
             <Box
-              key={step.id}
+              aria-hidden
               sx={{
-                position: "relative",
-                background: "var(--s1)",
-                border: "1px solid var(--border)",
-                borderRadius: "22px",
-                p: "32px 30px 34px",
+                position: "absolute",
+                inset: 0,
+                background: `linear-gradient(160deg, color-mix(in srgb, ${step.color} 8%, transparent), transparent 55%), var(--s1)`,
+                clipPath: "url(#steps-folder-clip)",
+              }}
+            />
+            <Box
+              component="svg"
+              aria-hidden
+              viewBox="0 0 1 1"
+              preserveAspectRatio="none"
+              sx={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                overflow: "visible",
               }}
             >
-              {index < PROCESS_STEPS.length - 1 && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    right: -29,
-                    transform: "translateY(-50%)",
-                    width: 26,
-                    height: 26,
-                    borderRadius: "50%",
-                    background: "var(--s1)",
-                    border: "1px solid var(--border2)",
-                    display: { xs: "none", md: "flex" },
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--muted)",
-                    zIndex: 2,
-                  }}
-                >
-                  <ChevronRightOutlined sx={{ fontSize: 15 }} />
-                </Box>
-              )}
+              <path
+                d={FOLDER_PATH}
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            </Box>
+            <Box
+              sx={{
+                position: "relative",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                gap: "7px",
+                pl: "16px",
+                color: "var(--muted)",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.07em",
+              }}
+            >
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  mb: "22px",
+                  width: "5px",
+                  height: "5px",
+                  borderRadius: "50%",
+                  background: step.color,
+                  flexShrink: 0,
+                }}
+              />
+              {`ÉTAPE 0${index + 1}`}
+            </Box>
+            <Box sx={{ position: "relative", p: "6px 28px 32px" }}>
+              <Box
+                aria-hidden
+                sx={{
+                  position: "absolute",
+                  top: "0px",
+                  right: "18px",
+                  fontSize: "56px",
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  letterSpacing: "-0.04em",
+                  color: "var(--text)",
+                  opacity: 0.045,
+                  userSelect: "none",
+                  pointerEvents: "none",
                 }}
               >
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "14px",
-                    background: step.color,
-                    color: "var(--bg)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon sx={{ fontSize: 22 }} />
-                </Box>
-                <Box
-                  sx={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: step.color,
-                  }}
-                >
-                  {`Étape 0${index + 1}`}
-                </Box>
+                {index + 1}
               </Box>
+              <Box
+                sx={{
+                  width: "26px",
+                  height: "3px",
+                  borderRadius: "2px",
+                  background: step.color,
+                  mb: "18px",
+                }}
+              />
               <Box
                 component="h3"
                 sx={{
+                  position: "relative",
                   m: 0,
                   fontSize: "21px",
                   fontWeight: 800,
@@ -127,6 +148,7 @@ export const ProcessSteps = () => (
               <Box
                 component="p"
                 sx={{
+                  position: "relative",
                   m: 0,
                   fontSize: "14.5px",
                   color: "var(--text-secondary)",
@@ -136,8 +158,8 @@ export const ProcessSteps = () => (
                 {step.desc}
               </Box>
             </Box>
-          );
-        })}
+          </Box>
+        ))}
       </Box>
     </Box>
   </Box>

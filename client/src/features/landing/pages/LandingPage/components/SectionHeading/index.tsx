@@ -29,7 +29,7 @@ export const SectionHeading = ({
     </Box>
     <Box
       sx={{
-        width: 56,
+        width: 80,
         height: 4,
         borderRadius: "2px",
         background: accent,

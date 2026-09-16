@@ -14,7 +14,7 @@ export const LandingPage = () => (
   <Box
     sx={{
       minHeight: "100dvh",
-      background: "#ffffff",
+      background: "#eef2ff",
       color: "var(--text)",
       "--bg": "#ffffff",
       "--s1": "#ffffff",

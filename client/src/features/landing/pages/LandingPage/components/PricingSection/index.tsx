@@ -19,6 +19,7 @@ export const PricingSection = () => (
       justifyContent: "center",
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
+      background: "var(--s1)",
     }}
   >
     <Box sx={{ maxWidth: 1160, mx: "auto", px: { xs: "20px", md: "32px" } }}>

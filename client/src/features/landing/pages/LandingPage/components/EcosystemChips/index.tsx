@@ -4,12 +4,18 @@ import { ECOSYSTEM_LOGOS } from "@/features/landing/ecosystemLogos";
 import { SectionHeading } from "@/features/landing/pages/LandingPage/components/SectionHeading";
 
 const CHIP_COLORS = [
-  "var(--blue)",
-  "var(--purple)",
-  "var(--cyan)",
-  "var(--green)",
-  "var(--yellow)",
-  "var(--orange)",
+  "#818cf8",
+  "#c084fc",
+  "#22d3ee",
+  "#4ade80",
+  "#fbbf24",
+  "#fb923c",
+  "#f87171",
+  "#38bdf8",
+  "#a3e635",
+  "#f472b6",
+  "#2dd4bf",
+  "#facc15",
 ];
 
 export const EcosystemChips = () => {
@@ -25,12 +31,13 @@ export const EcosystemChips = () => {
         justifyContent: "center",
         py: { xs: "64px", md: "96px" },
         borderBottom: "1px solid var(--border)",
+        background: "#eef2ff",
       }}
     >
       <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: "20px", md: "32px" } }}>
         <SectionHeading
-          title="Aucun langage oublié."
-          subtitle="12 écosystèmes majeurs reconnus dès la première connexion, quel que soit le langage utilisé par vos équipes ou l'âge de vos projets."
+          title="12 écosystèmes majeurs couverts."
+          subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, quel que soit l'écosystème utilisé par vos équipes, la taille du projet ou son ancienneté."
           accent="var(--cyan)"
         />
 

@@ -46,11 +46,6 @@ export const CtaDark = () => {
     );
   };
 
-  const reset = () => {
-    setResult(null);
-    setRepositoryUrl("");
-  };
-
   const resultGrade =
     result && GRADES.find((grade) => grade.letter === result.grade);
 
@@ -246,14 +241,6 @@ export const CtaDark = () => {
                 }}
               >
                 Créer un compte pour le suivi continu
-              </Button>
-              <Button
-                variant="text"
-                size="large"
-                onClick={reset}
-                sx={{ px: "16px" }}
-              >
-                Scanner un autre dépôt
               </Button>
             </Box>
           </Box>
