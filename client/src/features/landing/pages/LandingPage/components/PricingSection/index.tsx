@@ -27,7 +27,6 @@ export const PricingSection = () => (
         title="Une tarification transparente."
         subtitle="Commencez gratuitement, évoluez au rythme de vos projets."
         emphasis="Aucune carte bancaire requise pour démarrer."
-        accent="var(--green)"
       />
 
       <Box

@@ -105,14 +105,14 @@ export const LandingNav = () => {
             to={ROUTES.LOGIN}
             variant="contained"
             size="small"
-            endIcon={<ArrowForwardOutlined sx={{ fontSize: 15 }} />}
             sx={{
               px: "18px",
               borderRadius: "999px",
               boxShadow: "0 8px 20px -8px var(--accent-border)",
+              textTransform: "uppercase",
             }}
           >
-            Essai gratuit
+            Commencer
           </Button>
         </Box>
 

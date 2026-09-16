@@ -38,7 +38,6 @@ export const EcosystemChips = () => {
         <SectionHeading
           title="12 écosystèmes majeurs couverts."
           subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, quel que soit l'écosystème utilisé par vos équipes, la taille du projet ou son ancienneté."
-          accent="var(--cyan)"
         />
 
         <Box

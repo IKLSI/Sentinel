@@ -23,7 +23,6 @@ export const CompareTable = () => (
       <SectionHeading
         title="Moins d'outils, plus de clarté."
         subtitle="Snyk, Dependabot ou Renovate surveillent chacun un signal isolé. Sentinel les croise pour donner un score de santé unique par projet, sans jongler entre plusieurs outils."
-        accent="var(--purple)"
       />
 
       <Box

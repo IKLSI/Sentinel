@@ -4,15 +4,9 @@ interface Props {
   title: string;
   subtitle: string;
   emphasis?: string;
-  accent?: string;
 }
 
-export const SectionHeading = ({
-  title,
-  subtitle,
-  emphasis,
-  accent = "var(--accent)",
-}: Props) => (
+export const SectionHeading = ({ title, subtitle, emphasis }: Props) => (
   <Box sx={{ textAlign: "center", maxWidth: 860, mx: "auto", mb: "48px" }}>
     <Box
       component="h2"
@@ -29,10 +23,10 @@ export const SectionHeading = ({
     </Box>
     <Box
       sx={{
-        width: 80,
+        width: 120,
         height: 4,
         borderRadius: "2px",
-        background: accent,
+        background: "var(--accent)",
         mx: "auto",
         mt: "20px",
         mb: "22px",

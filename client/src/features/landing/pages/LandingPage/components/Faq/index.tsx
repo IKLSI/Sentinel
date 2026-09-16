@@ -45,10 +45,10 @@ export const Faq = () => (
         </Box>
         <Box
           sx={{
-            width: 56,
+            width: 120,
             height: 4,
             borderRadius: "2px",
-            background: "var(--cyan)",
+            background: "var(--accent)",
             mx: "auto",
             mt: "20px",
           }}

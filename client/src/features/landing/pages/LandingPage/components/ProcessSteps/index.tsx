@@ -24,7 +24,6 @@ export const ProcessSteps = () => (
       <SectionHeading
         title="Trois étapes vous séparent de la première alerte."
         subtitle="Pas d'intégration lourde, pas d'agent à installer. Sentinel se branche sur vos dépôts, croise vos dépendances avec les bases de vulnérabilités et calcule votre score de santé en continu."
-        accent="var(--blue)"
       />
 
       <Box

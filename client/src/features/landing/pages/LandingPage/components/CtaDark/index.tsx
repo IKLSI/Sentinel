@@ -52,6 +52,7 @@ export const CtaDark = () => {
   return (
     <Box
       component="section"
+      id="essai"
       sx={{
         minHeight: "100dvh",
         scrollMarginTop: "88px",
@@ -61,6 +62,7 @@ export const CtaDark = () => {
         justifyContent: "center",
         py: { xs: "64px", md: "96px" },
         px: { xs: "16px", md: "32px" },
+        background: "var(--s1)",
       }}
     >
       <Box
