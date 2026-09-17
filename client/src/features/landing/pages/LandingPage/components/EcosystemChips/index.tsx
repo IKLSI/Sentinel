@@ -32,7 +32,7 @@ export const EcosystemChips = () => {
         justifyContent: "center",
         py: { xs: "64px", md: "96px" },
         borderBottom: "1px solid var(--border)",
-        background: "#eef2ff",
+        background: "#f0f9ff",
         overflow: "hidden",
       }}
     >
@@ -75,7 +75,7 @@ export const EcosystemChips = () => {
       >
         <SectionHeading
           title="12 écosystèmes majeurs couverts."
-          subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, quel que soit l'écosystème utilisé par vos équipes, la taille du projet ou son ancienneté."
+          subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, langages compris, quels que soient les outils utilisés par vos équipes, la taille du projet ou son ancienneté."
         />
 
         <Box

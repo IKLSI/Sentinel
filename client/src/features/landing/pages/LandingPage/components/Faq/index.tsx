@@ -19,7 +19,7 @@ export const Faq = () => (
       justifyContent: "center",
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
-      background: "#eef2ff",
+      background: "#f0f9ff",
       overflow: "hidden",
     }}
   >

@@ -53,7 +53,7 @@ export const CompareTable = () => (
       sx={{
         position: "relative",
         zIndex: 1,
-        maxWidth: 1160,
+        maxWidth: 1000,
         mx: "auto",
         px: { xs: "20px", md: "32px" },
       }}
@@ -65,126 +65,165 @@ export const CompareTable = () => (
 
       <Box
         sx={{
-          border: "1px solid var(--border)",
-          borderRadius: "20px",
-          overflow: "hidden",
-          background: "var(--s1)",
-          boxShadow: "var(--sh-2)",
+          position: "relative",
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: { xs: "12px", md: "28px" },
         }}
       >
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "0.9fr 1fr 1fr" },
+            border: "1px solid var(--border)",
+            borderRadius: "14px",
+            overflow: "hidden",
+            background: "var(--s1)",
           }}
         >
           <Box
             sx={{
-              display: { xs: "none", md: "block" },
-              p: "18px 26px",
+              p: "16px 24px",
               borderBottom: "1px solid var(--border)",
-            }}
-          />
-          <Box
-            sx={{
-              p: "18px 26px",
-              borderBottom: "1px solid var(--border)",
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
+              fontSize: "13px",
+              fontWeight: 800,
+              letterSpacing: "0.06em",
               textTransform: "uppercase",
-              color: "var(--muted)",
+              color: "var(--text)",
             }}
           >
             Outils spécialisés
           </Box>
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              p: "18px 26px",
-              borderBottom: "2px solid var(--purple)",
-              background: "var(--purple-subtle)",
-              fontSize: "12px",
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--purple)",
+              p: { xs: "16px 20px 8px", md: "18px 28px 10px" },
             }}
           >
-            Sentinel
+            {COMPARE_FEATURES.map((row) => (
+              <Box
+                key={row.feature}
+                sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  minHeight: { md: "40px" },
+                  "&:not(:last-of-type)": {
+                    mb: "8px",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "9px",
+                    flexShrink: 0,
+                    mt: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "var(--red)",
+                  }}
+                >
+                  <CloseOutlined sx={{ fontSize: 13, color: "#fff" }} />
+                </Box>
+                <Box sx={{ fontSize: "13.5px", color: "var(--muted)" }}>
+                  {row.competitor}
+                </Box>
+              </Box>
+            ))}
           </Box>
         </Box>
 
-        {COMPARE_FEATURES.map((row, index) => (
+        <Box
+          sx={{
+            position: "relative",
+            border: "1px solid var(--purple)",
+            borderRadius: "14px",
+            overflow: "hidden",
+            background: "var(--s1)",
+            boxShadow: "var(--sh-2)",
+          }}
+        >
           <Box
-            key={row.feature}
             sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "0.9fr 1fr 1fr" },
-              background: index % 2 === 1 ? "var(--s2)" : "transparent",
-              "&:not(:last-of-type)": {
-                borderBottom: "1px solid var(--border)",
-              },
+              p: "16px 24px",
+              background: "var(--purple)",
+              fontSize: "13px",
+              fontWeight: 800,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "#fff",
             }}
           >
-            <Box
-              sx={{
-                p: { xs: "18px 20px 6px", md: "20px 26px" },
-                display: "flex",
-                alignItems: "center",
-                fontWeight: 700,
-                fontSize: "15px",
-                color: "var(--text)",
-              }}
-            >
-              {row.feature}
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                p: { xs: "8px 20px", md: "20px 26px" },
-              }}
-            >
-              <CloseOutlined
-                sx={{ fontSize: 15, color: "var(--red)", flexShrink: 0 }}
-              />
-              <Box
-                sx={{
-                  fontSize: "13.5px",
-                  color: "var(--muted)",
-                }}
-              >
-                {row.competitor}
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                p: { xs: "8px 20px 18px", md: "20px 26px" },
-                background: "var(--purple-subtle)",
-              }}
-            >
-              <CheckOutlined
-                sx={{ fontSize: 16, color: "var(--purple)", flexShrink: 0 }}
-              />
-              <Box
-                sx={{
-                  fontSize: "14px",
-                  color: "var(--text)",
-                  fontWeight: 500,
-                }}
-              >
-                {row.sentinel}
-              </Box>
-            </Box>
+            Avec Sentinel
           </Box>
-        ))}
+          <Box
+            sx={{
+              p: { xs: "16px 20px 8px", md: "18px 28px 10px" },
+              background: "var(--purple-subtle)",
+            }}
+          >
+            {COMPARE_FEATURES.map((row) => (
+              <Box
+                key={row.feature}
+                sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  minHeight: { md: "40px" },
+                  "&:not(:last-of-type)": {
+                    mb: "8px",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "9px",
+                    flexShrink: 0,
+                    mt: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "var(--purple)",
+                  }}
+                >
+                  <CheckOutlined sx={{ fontSize: 11, color: "#fff" }} />
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "6px",
+                    fontSize: "13.5px",
+                    fontWeight: 500,
+                    color: "var(--text)",
+                  }}
+                >
+                  {row.sentinel}
+                  {row.badge && (
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: "9.5px",
+                        fontWeight: 800,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: "var(--accent)",
+                        background: "var(--s1)",
+                        borderRadius: "999px",
+                        p: "2px 6px",
+                      }}
+                    >
+                      {row.badge}
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Box>
       </Box>
     </Box>
   </Box>

@@ -16,7 +16,8 @@ export const GradeScale = () => (
       justifyContent: "center",
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
-      background: "var(--s1)",
+      background:
+        "radial-gradient(120% 60% at 15% 75%, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 60%), var(--s1)",
       overflow: "hidden",
     }}
   >
@@ -31,20 +32,6 @@ export const GradeScale = () => (
         borderRadius: "50%",
         background:
           "radial-gradient(circle, color-mix(in srgb, var(--green) 12%, transparent) 0%, transparent 70%)",
-        filter: "blur(20px)",
-      }}
-    />
-    <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        bottom: "-160px",
-        right: "-40px",
-        width: "380px",
-        height: "380px",
-        borderRadius: "50%",
-        background:
-          "radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)",
         filter: "blur(20px)",
       }}
     />

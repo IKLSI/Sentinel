@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
-import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
 import TrendingUpOutlined from "@mui/icons-material/TrendingUpOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 
 const fadeUp = {
   "@keyframes heroFadeUp": {
@@ -216,24 +216,24 @@ export const Hero = () => (
               width: 34,
               height: 34,
               borderRadius: "10px",
-              background: "var(--green-subtle)",
-              color: "var(--green)",
+              background: "var(--red-subtle)",
+              color: "var(--red)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            <ShieldOutlined sx={{ fontSize: 18 }} />
+            <WarningAmberOutlined sx={{ fontSize: 18 }} />
           </Box>
           <Box>
             <Box
               sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
             >
-              Score 94/100
+              Score 42/100
             </Box>
             <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
-              0 vulnérabilité critique
+              2 vulnérabilités critiques
             </Box>
           </Box>
         </Box>
@@ -241,8 +241,8 @@ export const Hero = () => (
         <Box
           sx={{
             position: "absolute",
-            bottom: "6%",
-            right: { xs: "-6px", md: "-28px" },
+            bottom: "20%",
+            right: { xs: "-6px", md: "-80px" },
             display: "flex",
             alignItems: "center",
             gap: "10px",
@@ -272,10 +272,10 @@ export const Hero = () => (
             <Box
               sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
             >
-              +12 dépôts suivis
+              Détecté en 2 min
             </Box>
             <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
-              cette semaine
+              après connexion du dépôt
             </Box>
           </Box>
         </Box>

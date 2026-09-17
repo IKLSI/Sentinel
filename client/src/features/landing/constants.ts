@@ -98,33 +98,35 @@ export const PROCESS_STEPS = [
   },
 ] as const;
 
-export const COMPARE_FEATURES = [
+interface CompareFeature {
+  feature: string;
+  badge?: string;
+  competitor: string;
+  sentinel: string;
+}
+
+export const COMPARE_FEATURES: CompareFeature[] = [
   {
-    feature: "CVE & vulnérabilités",
-    competitor: "Un outil isolé, dédié aux CVE",
-    sentinel: "Détectées automatiquement à chaque scan",
-  },
-  {
-    feature: "Mises à jour de dépendances",
-    competitor: "Un autre outil, un signal de plus",
-    sentinel: "Vérifiées à chaque scan",
+    feature: "CVE & dépendances obsolètes",
+    competitor: "Snyk et Dependabot, deux outils séparés",
+    sentinel: "Croisés en un seul scan, dans un seul outil",
   },
   {
     feature: "Fin de vie des runtimes",
-    competitor: "Non couvert",
-    sentinel: "Repérée automatiquement à chaque scan",
+    competitor: "Non couvert par Snyk, Dependabot ni Renovate",
+    sentinel: "Runtimes obsolètes repérés à chaque scan",
   },
   {
     feature: "Score de santé",
-    competitor: "Aucun score consolidé",
-    sentinel: "Un score clair par projet, toujours à jour",
+    competitor: "Aucune vue d'ensemble consolidée",
+    sentinel: "Un score clair par projet",
   },
   {
-    feature: "Remédiation",
-    competitor: "Renvoyée vers un tracker externe",
-    sentinel: "Un ticket créé directement dans l'outil",
+    feature: "Remédiation & conformité",
+    competitor: "Tracker externe type Jira, sans SBOM ni rapport",
+    sentinel: "Ticket, SBOM et rapport générés dans l'outil",
   },
-] as const;
+];
 
 interface PricingPlan {
   id: "free" | "pro" | "business";
@@ -212,5 +214,10 @@ export const FAQ_ITEMS = [
     question: "Comment Sentinel protège-t-il mes tokens et mes données ?",
     answer:
       "Les tokens d'accès sont chiffrés au repos et utilisés uniquement en lecture seule. Aucun code source n'est dupliqué sur nos serveurs : seuls les manifestes de dépendances sont analysés. L'ensemble des communications transite en HTTPS et un audit log conserve la trace de chaque accès sensible.",
+  },
+  {
+    question: "Puis-je déclencher un scan depuis GitHub Actions ou GitLab CI ?",
+    answer:
+      "Oui. Une clé API par organisation permet de déclencher un scan à la demande depuis n'importe quelle pipeline CI/CD, GitHub Actions ou GitLab CI compris, en plus des scans planifiés (quotidiens, hebdomadaires ou mensuels).",
   },
 ] as const;
