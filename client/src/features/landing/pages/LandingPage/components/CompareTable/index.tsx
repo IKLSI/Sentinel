@@ -8,6 +8,7 @@ export const CompareTable = () => (
   <Box
     component="section"
     sx={{
+      position: "relative",
       minHeight: "100dvh",
       scrollMarginTop: "88px",
       boxSizing: "border-box",
@@ -17,9 +18,46 @@ export const CompareTable = () => (
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
       background: "var(--s1)",
+      overflow: "hidden",
     }}
   >
-    <Box sx={{ maxWidth: 1160, mx: "auto", px: { xs: "20px", md: "32px" } }}>
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        top: "10%",
+        left: "-120px",
+        width: "400px",
+        height: "400px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--red) 10%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        bottom: "-100px",
+        right: "5%",
+        width: "460px",
+        height: "460px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--purple) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      sx={{
+        position: "relative",
+        zIndex: 1,
+        maxWidth: 1160,
+        mx: "auto",
+        px: { xs: "20px", md: "32px" },
+      }}
+    >
       <SectionHeading
         title="Moins d'outils, plus de clarté."
         subtitle="Snyk, Dependabot ou Renovate surveillent chacun un signal isolé. Sentinel les croise pour donner un score de santé unique par projet, sans jongler entre plusieurs outils."
@@ -27,153 +65,126 @@ export const CompareTable = () => (
 
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          gap: { xs: "20px", md: "28px" },
-          alignItems: "stretch",
+          border: "1px solid var(--border)",
+          borderRadius: "20px",
+          overflow: "hidden",
+          background: "var(--s1)",
+          boxShadow: "var(--sh-2)",
         }}
       >
         <Box
           sx={{
-            border: "1px solid var(--border)",
-            borderRadius: "20px",
-            overflow: "hidden",
-            background: "var(--s1)",
-            boxShadow: "var(--sh-2)",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "0.9fr 1fr 1fr" },
           }}
         >
           <Box
             sx={{
-              p: "16px 22px",
+              display: { xs: "none", md: "block" },
+              p: "18px 26px",
+              borderBottom: "1px solid var(--border)",
+            }}
+          />
+          <Box
+            sx={{
+              p: "18px 26px",
               borderBottom: "1px solid var(--border)",
               fontSize: "12px",
               fontWeight: 700,
-              letterSpacing: "0.06em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
               color: "var(--muted)",
             }}
           >
             Outils spécialisés
           </Box>
-          <Box sx={{ display: "flex", flexDirection: "column" }}>
-            {COMPARE_FEATURES.map((row) => (
-              <Box
-                key={row.feature}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  p: "13px 22px",
-                  borderBottom: "1px solid var(--border)",
-                  "&:last-of-type": { borderBottom: "none" },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    background: "var(--red)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <CloseOutlined sx={{ fontSize: 11, color: "#fff" }} />
-                </Box>
-                <Box>
-                  <Box
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: "13.5px",
-                      color: "#71717a",
-                    }}
-                  >
-                    {row.feature}
-                  </Box>
-                  <Box sx={{ fontSize: "13px", color: "var(--muted)" }}>
-                    {row.competitor}
-                  </Box>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            border: "1px solid var(--purple)",
-            borderRadius: "20px",
-            overflow: "hidden",
-            background: "var(--s1)",
-            boxShadow: `0 20px 48px -20px color-mix(in srgb, var(--purple) 45%, transparent)`,
-          }}
-        >
           <Box
             sx={{
-              p: "16px 22px",
-              background: "var(--purple)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              p: "18px 26px",
+              borderBottom: "2px solid var(--purple)",
+              background: "var(--purple-subtle)",
               fontSize: "12px",
               fontWeight: 800,
-              letterSpacing: "0.06em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#fff",
+              color: "var(--purple)",
             }}
           >
             Sentinel
           </Box>
-          <Box sx={{ display: "flex", flexDirection: "column" }}>
-            {COMPARE_FEATURES.map((row) => (
+        </Box>
+
+        {COMPARE_FEATURES.map((row, index) => (
+          <Box
+            key={row.feature}
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "0.9fr 1fr 1fr" },
+              background: index % 2 === 1 ? "var(--s2)" : "transparent",
+              "&:not(:last-of-type)": {
+                borderBottom: "1px solid var(--border)",
+              },
+            }}
+          >
+            <Box
+              sx={{
+                p: { xs: "18px 20px 6px", md: "20px 26px" },
+                display: "flex",
+                alignItems: "center",
+                fontWeight: 700,
+                fontSize: "15px",
+                color: "var(--text)",
+              }}
+            >
+              {row.feature}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                p: { xs: "8px 20px", md: "20px 26px" },
+              }}
+            >
+              <CloseOutlined
+                sx={{ fontSize: 15, color: "var(--red)", flexShrink: 0 }}
+              />
               <Box
-                key={row.feature}
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  p: "13px 22px",
-                  borderBottom: "1px solid var(--border)",
-                  "&:last-of-type": { borderBottom: "none" },
+                  fontSize: "13.5px",
+                  color: "var(--muted)",
                 }}
               >
-                <Box
-                  sx={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    background: "var(--purple)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <CheckOutlined sx={{ fontSize: 11, color: "#fff" }} />
-                </Box>
-                <Box>
-                  <Box
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "13.5px",
-                      color: "var(--text)",
-                    }}
-                  >
-                    {row.feature}
-                  </Box>
-                  <Box
-                    sx={{
-                      fontSize: "13px",
-                      color: "var(--text-secondary)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {row.sentinel}
-                  </Box>
-                </Box>
+                {row.competitor}
               </Box>
-            ))}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                p: { xs: "8px 20px 18px", md: "20px 26px" },
+                background: "var(--purple-subtle)",
+              }}
+            >
+              <CheckOutlined
+                sx={{ fontSize: 16, color: "var(--purple)", flexShrink: 0 }}
+              />
+              <Box
+                sx={{
+                  fontSize: "14px",
+                  color: "var(--text)",
+                  fontWeight: 500,
+                }}
+              >
+                {row.sentinel}
+              </Box>
+            </Box>
           </Box>
-        </Box>
+        ))}
       </Box>
     </Box>
   </Box>

@@ -37,7 +37,7 @@ export const Hero = () => (
         height: "420px",
         borderRadius: "50%",
         background:
-          "radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 70%)",
+          "radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%)",
         filter: "blur(20px)",
       }}
     />

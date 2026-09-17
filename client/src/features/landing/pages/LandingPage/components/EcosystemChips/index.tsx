@@ -23,6 +23,7 @@ export const EcosystemChips = () => {
     <Box
       component="section"
       sx={{
+        position: "relative",
         minHeight: "100dvh",
         scrollMarginTop: "88px",
         boxSizing: "border-box",
@@ -32,9 +33,46 @@ export const EcosystemChips = () => {
         py: { xs: "64px", md: "96px" },
         borderBottom: "1px solid var(--border)",
         background: "#eef2ff",
+        overflow: "hidden",
       }}
     >
-      <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: "20px", md: "32px" } }}>
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          top: "-140px",
+          right: "22%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--blue) 12%, transparent) 0%, transparent 70%)",
+          filter: "blur(20px)",
+        }}
+      />
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          bottom: "-90px",
+          left: "-110px",
+          width: "440px",
+          height: "440px",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--yellow) 12%, transparent) 0%, transparent 70%)",
+          filter: "blur(20px)",
+        }}
+      />
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1080,
+          mx: "auto",
+          px: { xs: "20px", md: "32px" },
+        }}
+      >
         <SectionHeading
           title="12 écosystèmes majeurs couverts."
           subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, quel que soit l'écosystème utilisé par vos équipes, la taille du projet ou son ancienneté."

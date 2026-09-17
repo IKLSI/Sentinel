@@ -9,6 +9,7 @@ export const ProcessSteps = () => (
   <Box
     component="section"
     sx={{
+      position: "relative",
       minHeight: "100dvh",
       scrollMarginTop: "88px",
       boxSizing: "border-box",
@@ -18,9 +19,46 @@ export const ProcessSteps = () => (
       py: { xs: "64px", md: "96px" },
       borderBottom: "2px solid var(--border)",
       background: "#eef2ff",
+      overflow: "hidden",
     }}
   >
-    <Box sx={{ maxWidth: 1160, mx: "auto", px: { xs: "20px", md: "32px" } }}>
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        top: "-60px",
+        right: "8%",
+        width: "400px",
+        height: "400px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--purple) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        bottom: "-110px",
+        left: "-60px",
+        width: "460px",
+        height: "460px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--orange) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      sx={{
+        position: "relative",
+        zIndex: 1,
+        maxWidth: 1160,
+        mx: "auto",
+        px: { xs: "20px", md: "32px" },
+      }}
+    >
       <SectionHeading
         title="Trois étapes vous séparent de la première alerte."
         subtitle="Pas d'intégration lourde, pas d'agent à installer. Sentinel se branche sur vos dépôts, croise vos dépendances avec les bases de vulnérabilités et calcule votre score de santé en continu."

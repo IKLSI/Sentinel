@@ -11,6 +11,7 @@ export const PricingSection = () => (
     component="section"
     id="pricing"
     sx={{
+      position: "relative",
       minHeight: "100dvh",
       scrollMarginTop: "88px",
       boxSizing: "border-box",
@@ -20,9 +21,46 @@ export const PricingSection = () => (
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
       background: "var(--s1)",
+      overflow: "hidden",
     }}
   >
-    <Box sx={{ maxWidth: 1160, mx: "auto", px: { xs: "20px", md: "32px" } }}>
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        top: "6%",
+        left: "-100px",
+        width: "400px",
+        height: "400px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        bottom: "-120px",
+        right: "-60px",
+        width: "460px",
+        height: "460px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--green) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      sx={{
+        position: "relative",
+        zIndex: 1,
+        maxWidth: 1160,
+        mx: "auto",
+        px: { xs: "20px", md: "32px" },
+      }}
+    >
       <SectionHeading
         title="Une tarification transparente."
         subtitle="Commencez gratuitement, évoluez au rythme de vos projets."

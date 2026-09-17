@@ -10,6 +10,7 @@ export const Faq = () => (
     component="section"
     id="faq"
     sx={{
+      position: "relative",
       minHeight: "100dvh",
       scrollMarginTop: "88px",
       boxSizing: "border-box",
@@ -19,10 +20,41 @@ export const Faq = () => (
       py: { xs: "64px", md: "96px" },
       borderBottom: "1px solid var(--border)",
       background: "#eef2ff",
+      overflow: "hidden",
     }}
   >
     <Box
+      aria-hidden
       sx={{
+        position: "absolute",
+        top: "-130px",
+        right: "12%",
+        width: "420px",
+        height: "420px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--purple) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        bottom: "-90px",
+        left: "-70px",
+        width: "400px",
+        height: "400px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)",
+        filter: "blur(20px)",
+      }}
+    />
+    <Box
+      sx={{
+        position: "relative",
+        zIndex: 1,
         width: "100%",
         maxWidth: 820,
         mx: "auto",

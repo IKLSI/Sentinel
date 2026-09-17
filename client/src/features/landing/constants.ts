@@ -102,27 +102,27 @@ export const COMPARE_FEATURES = [
   {
     feature: "CVE & vulnérabilités",
     competitor: "Un outil isolé, dédié aux CVE",
-    sentinel: "Vulnérabilités OSV consolidées",
+    sentinel: "Détectées automatiquement à chaque scan",
   },
   {
     feature: "Mises à jour de dépendances",
     competitor: "Un autre outil, un signal de plus",
-    sentinel: "Obsolescence suivie en continu",
+    sentinel: "Vérifiées à chaque scan",
   },
   {
     feature: "Fin de vie des runtimes",
     competitor: "Non couvert",
-    sentinel: "Anticipée avant l'échéance",
+    sentinel: "Repérée automatiquement à chaque scan",
   },
   {
     feature: "Score de santé",
     competitor: "Aucun score consolidé",
-    sentinel: "Un score unique par projet, historisé",
+    sentinel: "Un score clair par projet, toujours à jour",
   },
   {
     feature: "Remédiation",
     competitor: "Renvoyée vers un tracker externe",
-    sentinel: "Ticket généré directement dans l'outil",
+    sentinel: "Un ticket créé directement dans l'outil",
   },
 ] as const;
 
