@@ -145,41 +145,6 @@ export const PricingSection = () => (
             <Box
               sx={{
                 position: "relative",
-                display: "flex",
-                alignItems: "baseline",
-                gap: "8px",
-              }}
-            >
-              <Box
-                sx={{
-                  fontSize: "52px",
-                  fontWeight: 800,
-                  letterSpacing: "-0.045em",
-                  backgroundImage: plan.featured
-                    ? "linear-gradient(135deg, var(--text) 0%, var(--accent) 120%)"
-                    : "none",
-                  backgroundClip: plan.featured ? "text" : "unset",
-                  WebkitBackgroundClip: plan.featured ? "text" : "unset",
-                  color: plan.featured ? "transparent" : "var(--text)",
-                }}
-              >
-                {plan.price}€
-              </Box>
-              {plan.price > 0 && (
-                <Box
-                  sx={{
-                    fontSize: "14px",
-                    color: "var(--muted)",
-                    fontWeight: 500,
-                  }}
-                >
-                  / mois
-                </Box>
-              )}
-            </Box>
-            <Box
-              sx={{
-                position: "relative",
                 fontSize: "13px",
                 color: "var(--muted)",
                 mt: "10px",

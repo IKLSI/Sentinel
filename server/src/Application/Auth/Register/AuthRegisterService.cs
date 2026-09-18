@@ -55,7 +55,7 @@ public class AuthRegisterService(
             {
                 Name = model.OrganizationName.Trim(),
                 Slug = await OrganizationSlug.GenerateUniqueAsync(model.OrganizationName, organizationRepository, cancellationToken),
-                PlanTier = PlanTier.Free,
+                PlanTier = PlanTier.Pro,
                 SubscriptionStatus = SubscriptionStatus.None,
                 ScanCountPeriodStart = now,
                 CreatedAt = now,

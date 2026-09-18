@@ -46,7 +46,7 @@ public static class Program
             .AddLoginRateLimiting()
             .AddMemoryCache(options => options.SizeLimit = 50_000)
             .AddResponseCompressionPolicy()
-            .AddStripe(builder.Configuration)
+            // .AddStripe(builder.Configuration) // Stripe désactivé temporairement
             .AddDataProtectionPolicy(builder.Configuration);
 
         WebApplication app = builder.Build();
