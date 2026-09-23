@@ -80,11 +80,14 @@ export const I18nProvider: React.FC<{
   );
 
   const value = useMemo(
-    () => ({ t, ready: true, culture: language, setLanguage }),
-    [t, language, setLanguage],
+    () => ({
+      t,
+      ready: translations !== null,
+      culture: language,
+      setLanguage,
+    }),
+    [t, translations, language, setLanguage],
   );
-
-  if (translations === null) return null;
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };

@@ -1,7 +1,14 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import type { RouterContext } from "@/routerContext";
 import { ErrorPage } from "@/pages/ErrorPage";
+import { useI18n } from "@/contexts/I18nContext";
+import { ROUTES } from "@/constants/routes";
+import { FullScreenLoader } from "@/components/ui/common/FullScreenLoader";
 
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -11,8 +18,13 @@ const ReactQueryDevtools = import.meta.env.DEV
     )
   : () => null;
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-  component: () => (
+const RootComponent = () => {
+  const { ready } = useI18n();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  if (!ready && pathname !== ROUTES.HOME) return <FullScreenLoader />;
+
+  return (
     <>
       <Outlet />
       {import.meta.env.DEV && (
@@ -21,6 +33,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         </Suspense>
       )}
     </>
-  ),
+  );
+};
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootComponent,
   notFoundComponent: () => <ErrorPage status={404} />,
 });
