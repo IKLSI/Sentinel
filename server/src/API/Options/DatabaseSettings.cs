@@ -5,7 +5,7 @@ namespace Sentinel.API.Options;
 public class DatabaseSettings
 {
     [Range(1, 500, ErrorMessage = "Database:MaxPoolSize must be between 1 and 500")]
-    public int MaxPoolSize { get; set; } = 50;
+    public int MaxPoolSize { get; set; } = 10;
 
     [Range(1, 300, ErrorMessage = "Database:CommandTimeoutSeconds must be between 1 and 300")]
     public int CommandTimeoutSeconds { get; set; } = 30;

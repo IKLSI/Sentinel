@@ -60,7 +60,7 @@ public static partial class ServiceCollectionExtensions
     }
 
     private const string HangfireApplicationName = "sentinel-hangfire";
-    private const int HangfireMaxPoolSize = 8;
+    private const int HangfireMaxPoolSize = 5;
     private const int HangfireKeepAliveSeconds = 30;
     private const int HangfireConnectionIdleLifetimeSeconds = 60;
     private const int HangfireWorkerCount = 2;
