@@ -11,7 +11,6 @@ import { ROUTES } from "@/constants/routes";
 
 const LINKS = [
   { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#pricing", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 

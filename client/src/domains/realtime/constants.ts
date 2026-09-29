@@ -1,6 +1,5 @@
 import type { QueryKey } from "@tanstack/react-query";
 import { API_KEYS_QUERY_KEY } from "@/domains/apiKeys/constants";
-import { BILLING_STATUS_QUERY_KEY } from "@/domains/billing/constants";
 import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
 import { JOBS_QUERY_KEY } from "@/domains/jobs/constants";
 import {
@@ -51,12 +50,6 @@ export const resolveInvalidatedKeys = ({
       return [JOBS_QUERY_KEY];
     case REALTIME_RESOURCES.Users:
       return [[USERS_QUERY_KEY]];
-    case REALTIME_RESOURCES.Billing:
-      return [
-        BILLING_STATUS_QUERY_KEY,
-        DASHBOARD_QUERY_KEY,
-        PROJECTS_QUERY_KEY,
-      ];
     case REALTIME_RESOURCES.ApiKeys:
       return [API_KEYS_QUERY_KEY];
     case REALTIME_RESOURCES.Organization:

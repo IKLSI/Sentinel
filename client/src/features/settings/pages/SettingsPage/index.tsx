@@ -3,7 +3,6 @@ import { useContext, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import { PageContainer } from "@/components/layout/PageContainer";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
-import CreditCardOutlined from "@mui/icons-material/CreditCardOutlined";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { AuthContext } from "@/contexts/AuthContext";
@@ -13,7 +12,6 @@ import {
   SettingsTab,
 } from "@/features/settings/pages/SettingsPage/helpers";
 import { JobsTab } from "@/features/settings/pages/SettingsPage/components/JobsTab";
-import { BillingTab } from "@/features/settings/pages/SettingsPage/components/BillingTab";
 import { ApiKeysTab } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab";
 
 export const SettingsPage: React.FC = () => {
@@ -34,11 +32,6 @@ export const SettingsPage: React.FC = () => {
               id: SettingsTab.ApiKeys,
               label: t("settings.tab.api_keys"),
               icon: KeyOutlined,
-            },
-            {
-              id: SettingsTab.Billing,
-              label: t("settings.tab.billing"),
-              icon: CreditCardOutlined,
             },
           ]
         : [],
@@ -120,7 +113,6 @@ export const SettingsPage: React.FC = () => {
         }}
       >
         {activeTab === SettingsTab.Jobs && <JobsTab />}
-        {activeTab === SettingsTab.Billing && <BillingTab />}
         {activeTab === SettingsTab.ApiKeys && <ApiKeysTab />}
       </Box>
     </PageContainer>

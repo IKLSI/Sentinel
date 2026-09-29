@@ -128,67 +128,6 @@ export const COMPARE_FEATURES: CompareFeature[] = [
   },
 ];
 
-interface PricingPlan {
-  id: "free" | "pro" | "business";
-  name: string;
-  desc: string;
-  price: number;
-  billing: string;
-  cta: string;
-  featured?: boolean;
-  features: string[];
-}
-
-export const PRICING_PLANS: PricingPlan[] = [
-  {
-    id: "free",
-    name: "Gratuit",
-    desc: "Pour auditer vos premiers projets.",
-    price: 0,
-    billing: "Sans engagement",
-    cta: "Créer un compte",
-    features: [
-      "3 projets",
-      "2 membres",
-      "10 scans par mois",
-      "12 écosystèmes, CVE et EOL",
-      "Alertes email de sécurité",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Professionnel",
-    desc: "Pour les équipes produit et les agences.",
-    price: 35,
-    billing: "Facturation mensuelle",
-    cta: "Démarrer l'essai",
-    featured: true,
-    features: [
-      "20 projets",
-      "10 membres",
-      "200 scans par mois",
-      "Clés API pour la CI/CD",
-      "Scans quotidiens automatiques",
-      "Exports et journal d'audit",
-    ],
-  },
-  {
-    id: "business",
-    name: "Business",
-    desc: "Pour les portefeuilles à grande échelle.",
-    price: 70,
-    billing: "Facturation mensuelle",
-    cta: "Démarrer l'essai",
-    features: [
-      "Projets illimités",
-      "Membres illimités",
-      "2 000 scans par mois",
-      "Multi-organisations",
-      "Tout le plan Professionnel inclus",
-    ],
-  },
-];
-
 export const FAQ_ITEMS = [
   {
     question: "Sentinel accède-t-il à mon code source ?",
@@ -204,11 +143,6 @@ export const FAQ_ITEMS = [
     question: "Quels langages et écosystèmes sont couverts ?",
     answer:
       "12 écosystèmes : npm, PyPI, NuGet, Maven, Gradle, Composer, RubyGems, Go, Cargo, Hex, Pub et Swift. Soit 26 formats de manifestes et lockfiles reconnus, du package-lock.json au Cargo.lock.",
-  },
-  {
-    question: "Puis-je changer de plan ou annuler à tout moment ?",
-    answer:
-      "Oui, à tout moment. La facturation passe par Stripe : changement de plan, passage à l'annuel ou annulation se font en deux clics depuis votre portail de facturation, sans avoir à nous contacter.",
   },
   {
     question: "Comment Sentinel protège-t-il mes tokens et mes données ?",

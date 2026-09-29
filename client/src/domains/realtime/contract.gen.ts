@@ -15,7 +15,6 @@ export const REALTIME_RESOURCES = {
   Ticket: "ticket",
   Jobs: "jobs",
   Users: "users",
-  Billing: "billing",
   ApiKeys: "apiKeys",
   Organization: "organization",
   Integrations: "integrations",

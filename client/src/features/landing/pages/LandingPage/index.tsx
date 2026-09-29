@@ -5,7 +5,6 @@ import { GradeScale } from "@/features/landing/pages/LandingPage/components/Grad
 import { ProcessSteps } from "@/features/landing/pages/LandingPage/components/ProcessSteps";
 import { CompareTable } from "@/features/landing/pages/LandingPage/components/CompareTable";
 import { EcosystemChips } from "@/features/landing/pages/LandingPage/components/EcosystemChips";
-import { PricingSection } from "@/features/landing/pages/LandingPage/components/PricingSection";
 import { Faq } from "@/features/landing/pages/LandingPage/components/Faq";
 import { CtaDark } from "@/features/landing/pages/LandingPage/components/CtaDark";
 import { LandingFooter } from "@/features/landing/pages/LandingPage/components/LandingFooter";
@@ -34,7 +33,6 @@ export const LandingPage = () => (
     <ProcessSteps />
     <CompareTable />
     <EcosystemChips />
-    <PricingSection />
     <Faq />
     <CtaDark />
     <LandingFooter />

@@ -98,8 +98,6 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<QuotaGuard>();
-        services.AddScoped<BillingPriceCatalog>();
-        services.AddScoped<BillingCustomerProvisioner>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<PurgeExpiredRevokedTokensJob>();

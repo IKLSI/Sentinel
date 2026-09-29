@@ -160,7 +160,6 @@ export type ApiKeySortField =
 
 export const SettingsTab = {
   Jobs: "jobs",
-  Billing: "billing",
   ApiKeys: "api-keys",
 } as const;
 export type SettingsTab = (typeof SettingsTab)[keyof typeof SettingsTab];
