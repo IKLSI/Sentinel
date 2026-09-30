@@ -11,7 +11,7 @@ overrides:
   '@codemirror/state': ^6.7.1
   '@codemirror/view': ^6.43.7
   '@codemirror/language': ^6.12.4
-  undici: '>=6.27.0'
+  undici: '>=8.10.2'
   openapi-typescript>js-yaml: '>=4.3.2'
   nanoid: '>=3.3.17'
 
@@ -2275,8 +2275,8 @@ packages:
     resolution: {integrity: sha512-FoSOKV7NEofQSkAefMVHam4ZPKYMxjAydxiV72UFEDNV/YofxjGfiZ2A9pZjdL/lRJzTjcu4PABo1JYJX8N5iQ==}
     engines: {node: '>=14'}
 
-  undici@8.9.0:
-    resolution: {integrity: sha512-aWZpUj7XoGonMClx4gdDRfgBjqeA+F473aDmROQQbM9n6PRfK/u1q/a0X4wMTgcHfT8H6fpbt98PFuDUwFg2YA==}
+  undici@8.11.2:
+    resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
     engines: {node: '>=22.19.0'}
 
   universalify@0.2.0:
@@ -3886,7 +3886,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.2
-      undici: 8.9.0
+      undici: 8.11.2
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -4035,7 +4035,7 @@ snapshots:
       fast-glob: 3.3.3
       js-yaml: 5.4.2
       supports-color: 9.4.0
-      undici: 8.9.0
+      undici: 8.11.2
       yargs-parser: 21.1.1
 
   oxc-parser@0.148.0:
@@ -4379,7 +4379,7 @@ snapshots:
 
   unbash@4.0.11: {}
 
-  undici@8.9.0: {}
+  undici@8.11.2: {}
 
   universalify@0.2.0: {}
 
