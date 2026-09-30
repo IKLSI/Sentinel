@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Buffers;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -9,7 +10,10 @@ using Sentinel.Domain.Constants;
 
 namespace Sentinel.Infrastructure.Http;
 
-public partial class RepositoryHostClient(IHttpClientFactory httpClientFactory, ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
+public partial class RepositoryHostClient(
+    IHttpClientFactory httpClientFactory,
+    IOptions<RepositoryHostSettings> settings,
+    ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
 {
     private const long MaxFileBytes = 5 * 1024 * 1024;
     private const int RepositoryPageSize = 100;

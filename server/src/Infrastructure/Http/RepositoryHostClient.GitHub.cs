@@ -74,11 +74,12 @@ public partial class RepositoryHostClient
         return new RepositoryListing(true, null, result, truncated);
     }
 
-    private static HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)
+    private HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(method, url);
-        if (!string.IsNullOrEmpty(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        string? effectiveToken = string.IsNullOrEmpty(token) ? settings.Value.GitHubToken : token;
+        if (!string.IsNullOrEmpty(effectiveToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", effectiveToken);
         return request;
     }
 

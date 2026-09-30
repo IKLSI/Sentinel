@@ -16,5 +16,6 @@ public static class ConfigurationKeys
         public const string Cookie = "Cookie";
         public const string ForwardedHeaders = "ForwardedHeaders";
         public const string Database = "Database";
+        public const string RepositoryHosts = "RepositoryHosts";
     }
 }

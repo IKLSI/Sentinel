@@ -4,6 +4,7 @@ using Sentinel.Domain.Constants;
 using Sentinel.API.Options;
 using Sentinel.Application.Options;
 using Sentinel.Infrastructure.Email;
+using Sentinel.Infrastructure.Http;
 using Sentinel.Infrastructure.Payments;
 
 namespace Sentinel.API.Extensions;
@@ -23,6 +24,7 @@ public static partial class ServiceCollectionExtensions
         services.BindSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection, false);
         services.BindSettings<CookieSettings>(configuration, ConfigurationKeys.Sections.Cookie, false);
         services.BindSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database, true);
+        services.BindSettings<RepositoryHostSettings>(configuration, ConfigurationKeys.Sections.RepositoryHosts, false);
 
         services.AddOptions<SupportSettings>()
             .Validate(settings => string.IsNullOrWhiteSpace(settings.Email) || new EmailAddressAttribute().IsValid(settings.Email),
