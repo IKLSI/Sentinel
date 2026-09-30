@@ -61,7 +61,16 @@ public class SettingsValidationTests
         IReadOnlyList<string> failures = ValidationFailures(Environments.Production, []);
 
         failures.Should().Contain(failure => failure.Contains("Email:Host is required in the configuration"));
-        failures.Should().Contain(failure => failure.Contains("Stripe:SecretKey is required in the configuration"));
+    }
+
+    [Fact]
+    public void Production_WithoutStripeSecrets_DoesNotBlockStartup()
+    {
+        Dictionary<string, string?> values = CompleteConfiguration();
+        values.Remove("Stripe:SecretKey");
+        values.Remove("Stripe:WebhookSecret");
+
+        ValidationFailures(Environments.Production, values).Should().BeEmpty();
     }
 
     [Fact]

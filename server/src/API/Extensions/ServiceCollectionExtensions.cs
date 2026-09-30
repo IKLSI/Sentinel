@@ -18,7 +18,7 @@ public static partial class ServiceCollectionExtensions
         services.BindSettings<JwtSettings>(configuration, ConfigurationKeys.Sections.Jwt, true);
         services.BindSettings<EmailSettings>(configuration, ConfigurationKeys.Sections.Email, validateDeploymentSettings);
         services.BindSettings<FrontendSettings>(configuration, ConfigurationKeys.Sections.Frontend, validateDeploymentSettings);
-        services.BindSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe, validateDeploymentSettings);
+        services.BindSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe, false);
         services.BindSettings<SupportSettings>(configuration, ConfigurationKeys.Sections.Support, false);
         services.BindSettings<CorsSettings>(configuration, ConfigurationKeys.Sections.Cors, false);
         services.BindSettings<DataProtectionSettings>(configuration, ConfigurationKeys.Sections.DataProtection, false);
