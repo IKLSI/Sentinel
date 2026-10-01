@@ -47,7 +47,11 @@ export const ProjectDetailPage: React.FC = () => {
   const allVulns = useMemo(
     () =>
       project?.dependencies.flatMap((d) =>
-        d.vulnerabilities.map((v) => ({ ...v, dependencyName: d.name })),
+        d.vulnerabilities.map((v) => ({
+          ...v,
+          dependencyName: d.name,
+          dependencyType: d.type,
+        })),
       ) ?? [],
     [project],
   );

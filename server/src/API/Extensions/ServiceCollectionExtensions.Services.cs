@@ -55,6 +55,15 @@ public static partial class ServiceCollectionExtensions
         services.AddResilientHttpClient(HttpClientNames.EolDate, 45, client =>
             client.DefaultRequestHeaders.Add("Accept", "application/json"));
 
+        services.AddResilientHttpClient(HttpClientNames.Epss, 45, client =>
+        {
+            client.BaseAddress = new Uri("https://api.first.org");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
+        services.AddResilientHttpClient(HttpClientNames.Kev, 60, client =>
+            client.DefaultRequestHeaders.Add("Accept", "application/json"));
+
         return services;
     }
 
@@ -91,6 +100,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<VulnerabilityScanService>();
         services.AddScoped<RuntimeEolScanService>();
+        services.AddScoped<ExploitSignalEnricher>();
         services.AddScoped<VulnerabilityAlertService>();
         services.AddScoped<FindingTicketSyncService>();
         services.AddScoped<CriticalVulnerabilityTicketService>();
@@ -117,6 +127,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
         services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
         services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
+        services.AddScoped<IExploitIntelligenceClient, ExploitIntelligenceClient>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
         services.AddSingleton<IScopedServiceRunner, ScopedServiceRunner>();

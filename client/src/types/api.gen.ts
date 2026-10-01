@@ -1162,6 +1162,8 @@ export interface components {
       healthScore: number | null;
       /** Format: uuid */
       id: string;
+      /** Format: int32 */
+      knownExploitedVulnerabilities: number;
       /** Format: date-time */
       lastScanAt: string | null;
       name: string;
@@ -1409,11 +1411,18 @@ export interface components {
       /** Format: double */
       cvssScore: number;
       description: string;
+      /** Format: double */
+      epssPercentile: number | null;
+      /** Format: double */
+      epssScore: number | null;
       findingKey: string;
       fixedVersion: string | null;
       /** Format: uuid */
       id: string;
+      isKnownExploited: boolean;
+      isMaliciousPackage: boolean;
       linkedTicket: components["schemas"]["FindingTicketDto"];
+      priority: string;
       severity: string;
     };
     /** @enum {string} */

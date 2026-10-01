@@ -22,6 +22,7 @@ public class ProjectScanService(
     RepositoryScannerService repositoryScanner,
     VulnerabilityScanService vulnerabilityScanner,
     RuntimeEolScanService runtimeEolScanner,
+    ExploitSignalEnricher exploitSignalEnricher,
     VulnerabilityAlertService vulnerabilityAlerts,
     FindingTicketSyncService findingTicketSync,
     CriticalVulnerabilityTicketService criticalVulnerabilityTickets,
@@ -166,6 +167,7 @@ public class ProjectScanService(
 
         await inventoryWriter.StageVulnerabilityChangesAsync(vulnerabilityOutcome.Results, CancellationToken.None);
         ProjectInventoryWriter.StageRuntimeChanges(runtimeResults);
+        await exploitSignalEnricher.EnrichAsync(project.Dependencies.ToList());
 
         project.Coverage = ScanCoverageResolver.Resolve(project, scanRan, scanError, manifestsRead);
         project.HealthScore = project.Coverage == ScanCoverage.Covered ? HealthScoreCalculator.Calculate(project) : null;

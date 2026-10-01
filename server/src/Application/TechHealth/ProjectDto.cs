@@ -14,6 +14,7 @@ public class ProjectDto
     public int TotalDependencies { get; set; }
     public int CriticalVulnerabilities { get; set; }
     public int TotalVulnerabilities { get; set; }
+    public int KnownExploitedVulnerabilities { get; set; }
     public int TotalTickets { get; set; }
     public List<DependencyDto> Dependencies { get; set; } = new();
     public List<RuntimeDto> Runtimes { get; set; } = new();
@@ -43,6 +44,11 @@ public class VulnerabilityDto
     public string Description { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;
     public string? FixedVersion { get; set; }
+    public decimal? EpssScore { get; set; }
+    public decimal? EpssPercentile { get; set; }
+    public bool IsKnownExploited { get; set; }
+    public bool IsMaliciousPackage { get; set; }
+    public string Priority { get; set; } = string.Empty;
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
 }

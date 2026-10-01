@@ -2,6 +2,7 @@ import type React from "react";
 import type { Runtime } from "@/domains/projects/types";
 import {
   type DependencyStatus,
+  type RiskPriority,
   type VulnerabilitySeverity,
   RuntimeEolStatus,
 } from "@/enums";
@@ -80,6 +81,36 @@ export const SEV_CONFIG: Record<
     weight: 1,
   },
 };
+
+export const RISK_CONFIG: Record<
+  RiskPriority,
+  { labelKey: string; color: string; weight: number }
+> = {
+  Urgent: {
+    labelKey: "tech_health.risk.urgent",
+    color: "var(--red)",
+    weight: 4,
+  },
+  High: {
+    labelKey: "tech_health.risk.high",
+    color: "var(--orange)",
+    weight: 3,
+  },
+  Moderate: {
+    labelKey: "tech_health.risk.moderate",
+    color: "var(--accent)",
+    weight: 2,
+  },
+  Low: { labelKey: "tech_health.risk.low", color: "var(--muted2)", weight: 1 },
+};
+
+export const SEVERITY_REASON_LABEL_KEYS: Record<VulnerabilitySeverity, string> =
+  {
+    Critical: "tech_health.risk.reason.severity_critical",
+    High: "tech_health.risk.reason.severity_high",
+    Medium: "tech_health.risk.reason.severity_medium",
+    Low: "tech_health.risk.reason.severity_low",
+  };
 
 export const EOL_COLOR: Record<
   RuntimeEolStatus,

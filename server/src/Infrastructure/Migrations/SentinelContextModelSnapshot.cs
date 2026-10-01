@@ -910,8 +910,19 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("DetectedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal?>("EpssPercentile")
+                        .HasPrecision(6, 5)
+                        .HasColumnType("numeric(6,5)");
+
+                    b.Property<decimal?>("EpssScore")
+                        .HasPrecision(6, 5)
+                        .HasColumnType("numeric(6,5)");
+
                     b.Property<string>("FixedVersion")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsKnownExploited")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PackageName")
                         .IsRequired()

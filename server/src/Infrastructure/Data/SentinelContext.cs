@@ -365,6 +365,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.CveId).HasMaxLength(50).IsRequired();
             entity.Property(e => e.CveAlias).HasMaxLength(50);
             entity.Property(e => e.CvssScore).HasPrecision(4, 1);
+            entity.Property(e => e.EpssScore).HasPrecision(6, 5);
+            entity.Property(e => e.EpssPercentile).HasPrecision(6, 5);
             entity.Property(e => e.Severity).HasConversion<string>();
             entity.HasIndex(e => e.DependencyId);
             entity.HasIndex(e => e.Severity);

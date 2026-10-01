@@ -7,11 +7,13 @@ import type {
 } from "@/domains/projects/types";
 import {
   DependencyStatus,
+  RiskPriority,
   RuntimeEolStatus,
   VulnerabilitySeverity,
 } from "@/enums";
 import {
   DEP_STATUS,
+  RISK_CONFIG,
   RUNTIME_STATUS,
   SEV_CONFIG,
   getRuntimeUrgency,
@@ -22,9 +24,14 @@ type Translate = (
   vars?: Record<string, string | number>,
 ) => string;
 
-export type VulnerabilityRow = Vulnerability & { dependencyName: string };
+export type VulnerabilityRow = Vulnerability & {
+  dependencyName: string;
+  dependencyType: string;
+};
 
 const GRID_FILTER_FIELDS = {
+  risk: "risk",
+  knownExploited: "knownExploited",
   severity: "severity",
   library: "library",
   fix: "fix",
@@ -47,6 +54,27 @@ export const buildVulnerabilityFilterFields = (
   t: Translate,
   vulns: VulnerabilityRow[],
 ): GridFilterField<VulnerabilityRow>[] => [
+  {
+    key: GRID_FILTER_FIELDS.risk,
+    label: t("tech_health.filter.risk"),
+    options: Object.values(RiskPriority).map((priority) => ({
+      value: priority,
+      label: t(RISK_CONFIG[priority].labelKey),
+    })),
+    valueOf: (vuln) => vuln.priority,
+  },
+  {
+    key: GRID_FILTER_FIELDS.knownExploited,
+    label: t("tech_health.filter.known_exploited"),
+    options: [
+      { value: BOOLEAN_FILTER_VALUES.yes, label: t("tech_health.filter.yes") },
+      { value: BOOLEAN_FILTER_VALUES.no, label: t("tech_health.filter.no") },
+    ],
+    valueOf: (vuln) =>
+      vuln.isKnownExploited
+        ? BOOLEAN_FILTER_VALUES.yes
+        : BOOLEAN_FILTER_VALUES.no,
+  },
   {
     key: GRID_FILTER_FIELDS.severity,
     label: t("tech_health.filter.severity"),

@@ -28,7 +28,8 @@ public static class HealthScoreCalculator
 
             if (dependency.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty * weight;
 
-            penalty += dependency.Vulnerabilities.Sum(vulnerability => SeverityPenalty(vulnerability.Severity))
+            penalty += dependency.Vulnerabilities.Sum(vulnerability =>
+                    SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability))
                 * weight;
         }
 

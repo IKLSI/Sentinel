@@ -10,6 +10,7 @@ public class PublicScanService(
     RepositoryScannerService scanner,
     VulnerabilityScanService vulnerabilityScan,
     RuntimeEolScanService runtimeEol,
+    ExploitSignalEnricher exploitSignalEnricher,
     PublicScanValidator validator) : IService
 {
     public async Task<Result<PublicScanResponse>> ExecuteAsync(
@@ -41,6 +42,8 @@ public class PublicScanService(
 
         foreach (RuntimeEolResult result in eolResults)
             result.Runtime.IsEol = result.IsEol;
+
+        await exploitSignalEnricher.EnrichAsync(outcome.Dependencies);
 
         Project project = new() { Dependencies = outcome.Dependencies, Runtimes = outcome.Runtimes };
 

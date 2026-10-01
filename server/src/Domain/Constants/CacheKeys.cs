@@ -11,6 +11,10 @@ public static class CacheKeys
     private const string LocalePrefix = "locale";
     private const string AdvisoryPrefix = "osv:advisory";
     private const string RuntimeLifecyclePrefix = "eol:product";
+    private const string EpssPrefix = "epss:cve";
+
+    public const string KnownExploitedCatalog = "kev:catalog";
+    public const string KnownExploitedCatalogUnavailable = "kev:unavailable";
 
     public static readonly TimeSpan AuthAccountTtl = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan RevokedTokenTtl = TimeSpan.FromMinutes(5);
@@ -21,6 +25,8 @@ public static class CacheKeys
     public static readonly TimeSpan AdvisoryTtl = TimeSpan.FromHours(24);
     public static readonly TimeSpan RuntimeLifecycleTtl = TimeSpan.FromHours(12);
     public static readonly TimeSpan RuntimeLifecycleUnresolvedTtl = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan ExploitSignalTtl = TimeSpan.FromHours(24);
+    public static readonly TimeSpan ExploitSignalUnavailableTtl = TimeSpan.FromMinutes(15);
 
     public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
 
@@ -36,4 +42,6 @@ public static class CacheKeys
     public static string Advisory(string advisoryId) => $"{AdvisoryPrefix}:{advisoryId}";
 
     public static string RuntimeLifecycle(string product) => $"{RuntimeLifecyclePrefix}:{product}";
+
+    public static string Epss(string cveId) => $"{EpssPrefix}:{cveId.ToUpperInvariant()}";
 }

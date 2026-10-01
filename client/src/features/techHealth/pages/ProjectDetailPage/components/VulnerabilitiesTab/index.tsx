@@ -5,7 +5,6 @@ import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { GridFooter } from "@/components/ui/common/GridFooter";
-import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
 import {
@@ -13,14 +12,20 @@ import {
   type VirtualTableColumn,
 } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
-import { FindingKind, type VulnerabilitySeverity } from "@/enums";
+import {
+  FindingKind,
+  type RiskPriority,
+  type VulnerabilitySeverity,
+} from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
 import {
   EMPTY_STATE_SX,
   GRID_ROW_HEIGHT,
-  SEV_CONFIG,
+  RISK_CONFIG,
+  SEVERITY_REASON_LABEL_KEYS,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 import {
+  DEPENDENCY_TYPE_PROD,
   type VulnerabilityRow,
   buildGridFilterLabels,
   buildVulnerabilityFilterFields,
@@ -29,8 +34,7 @@ import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/compo
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 
 const COLUMN_KEYS = {
-  score: "score",
-  severity: "severity",
+  risk: "risk",
   library: "library",
   description: "description",
   reference: "reference",
@@ -38,16 +42,16 @@ const COLUMN_KEYS = {
   ticket: "ticket",
 } as const;
 
-const DEFAULT_SORT = { key: COLUMN_KEYS.score, direction: "desc" } as const;
+const DEFAULT_SORT = { key: COLUMN_KEYS.risk, direction: "desc" } as const;
 
-const configOf = (vuln: VulnerabilityRow) =>
-  SEV_CONFIG[vuln.severity as VulnerabilitySeverity] ?? SEV_CONFIG.Low;
+const riskConfigOf = (vuln: VulnerabilityRow) =>
+  RISK_CONFIG[vuln.priority as RiskPriority] ?? RISK_CONFIG.Low;
 
 const comparators = {
-  [COLUMN_KEYS.score]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
+  [COLUMN_KEYS.risk]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
+    riskConfigOf(a).weight - riskConfigOf(b).weight ||
+    (a.epssScore ?? 0) - (b.epssScore ?? 0) ||
     a.cvssScore - b.cvssScore,
-  [COLUMN_KEYS.severity]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
-    configOf(a).weight - configOf(b).weight,
   [COLUMN_KEYS.library]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
     a.dependencyName.localeCompare(b.dependencyName),
   [COLUMN_KEYS.description]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
@@ -61,12 +65,6 @@ const searchableValues = (vuln: VulnerabilityRow) => [
   vuln.cveAlias,
 ];
 
-const scoreSx = {
-  fontFamily: "var(--font-mono)",
-  fontSize: "13px",
-  fontWeight: 700,
-} as const;
-
 const referenceSx = {
   fontFamily: "var(--font-mono)",
   fontSize: "10px",
@@ -77,7 +75,44 @@ const referenceSx = {
   borderRadius: "var(--r-xs)",
 } as const;
 
+const riskLabelSx = { whiteSpace: "nowrap" } as const;
+
 const NO_VALUE = "—";
+
+const DETAIL_SEPARATOR = " · ";
+
+type Translate = (
+  key: string,
+  vars?: Record<string, string | number>,
+) => string;
+
+const formatPercent = (value: number) => `${Math.round(value * 100)} %`;
+
+const severityReason = (vuln: VulnerabilityRow, t: Translate) =>
+  t(
+    SEVERITY_REASON_LABEL_KEYS[vuln.severity as VulnerabilitySeverity] ??
+      SEVERITY_REASON_LABEL_KEYS.Low,
+  );
+
+const riskDetails = (vuln: VulnerabilityRow, t: Translate) =>
+  [
+    vuln.isMaliciousPackage && t("tech_health.risk.malicious_package"),
+    vuln.isKnownExploited && t("tech_health.risk.known_exploited"),
+    !vuln.isMaliciousPackage &&
+      `${severityReason(vuln, t)}${
+        vuln.cvssScore > 0
+          ? ` (${t("tech_health.risk.cvss", { score: vuln.cvssScore.toFixed(1) })})`
+          : ""
+      }`,
+    vuln.epssScore != null &&
+      t("tech_health.risk.exploitation_probability", {
+        value: formatPercent(vuln.epssScore),
+      }),
+    vuln.dependencyType !== DEPENDENCY_TYPE_PROD &&
+      t("tech_health.risk.dev_dependency"),
+  ]
+    .filter(Boolean)
+    .join(DETAIL_SEPARATOR);
 
 const VulnRow = memo<{
   vuln: VulnerabilityRow;
@@ -85,17 +120,19 @@ const VulnRow = memo<{
   index: number;
 }>(({ vuln, projectId, index }) => {
   const t = useT();
-  const config = configOf(vuln);
+  const riskConfig = riskConfigOf(vuln);
 
   return (
     <TR index={index}>
       <TD>
-        <Box component="span" sx={{ ...scoreSx, color: config.color }}>
-          {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : NO_VALUE}
-        </Box>
-      </TD>
-      <TD>
-        <StatusChip variant={config.variant}>{t(config.labelKey)}</StatusChip>
+        <AppTooltip title={riskDetails(vuln, t)}>
+          <Box
+            component="span"
+            sx={{ ...riskLabelSx, color: riskConfig.color }}
+          >
+            {t(riskConfig.labelKey)}
+          </Box>
+        </AppTooltip>
       </TD>
       <TD>
         <TruncatedText mono strong text={vuln.dependencyName} />
@@ -170,43 +207,37 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
 
   const columns: VirtualTableColumn[] = [
     {
-      key: COLUMN_KEYS.score,
-      label: t("tech_health.table.vuln.score"),
-      width: "7%",
-      sortable: true,
-    },
-    {
-      key: COLUMN_KEYS.severity,
-      label: t("tech_health.filter.severity"),
-      width: "12%",
+      key: COLUMN_KEYS.risk,
+      label: t("tech_health.table.vuln.risk"),
+      width: "14%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.library,
       label: t("tech_health.table.dep.library"),
-      width: "17%",
+      width: "16%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.description,
       label: t("tech_health.table.vuln.vulnerability"),
-      width: "30%",
+      width: "39%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.reference,
       label: t("tech_health.table.vuln.cve_ref"),
-      width: "13%",
+      width: "12%",
     },
     {
       key: COLUMN_KEYS.fixedVersion,
       label: t("tech_health.table.vuln.fixed_version"),
-      width: "11%",
+      width: "10%",
     },
     {
       key: COLUMN_KEYS.ticket,
       label: t("tech_health.table.ticket"),
-      width: "10%",
+      width: "9%",
       align: "center",
     },
   ];

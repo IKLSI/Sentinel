@@ -31,6 +31,9 @@ public static class ProjectMapper
             TotalVulnerabilities = project.Dependencies?
                 .SelectMany(dependency => dependency.Vulnerabilities)
                 .Count() ?? 0,
+            KnownExploitedVulnerabilities = project.Dependencies?
+                .SelectMany(dependency => dependency.Vulnerabilities)
+                .Count(vulnerability => vulnerability.IsKnownExploited) ?? 0,
             Dependencies = project.Dependencies?.Select(dependency => ToDto(dependency, links)).ToList() ?? [],
             Runtimes = project.Runtimes == null
                 ? []
@@ -97,6 +100,11 @@ public static class ProjectMapper
             Description = vulnerability.Description,
             Severity = vulnerability.Severity.ToString(),
             FixedVersion = vulnerability.FixedVersion,
+            EpssScore = vulnerability.EpssScore,
+            EpssPercentile = vulnerability.EpssPercentile,
+            IsKnownExploited = vulnerability.IsKnownExploited,
+            IsMaliciousPackage = VulnerabilityRiskCalculator.IsMaliciousPackage(vulnerability),
+            Priority = VulnerabilityRiskCalculator.Prioritize(vulnerability, dependency.Type).ToString(),
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.Vulnerability, findingKey)
         };

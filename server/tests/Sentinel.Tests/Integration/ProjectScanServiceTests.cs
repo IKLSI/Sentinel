@@ -99,6 +99,12 @@ public class ProjectScanServiceTests
             Task.FromResult<RuntimeLifecycle?>(null);
     }
 
+    private sealed class NoopExploitIntelligence : IExploitIntelligenceClient
+    {
+        public Task<IReadOnlyDictionary<string, ExploitSignal>> GetSignalsAsync(IReadOnlyCollection<string> cveIds) =>
+            Task.FromResult<IReadOnlyDictionary<string, ExploitSignal>>(new Dictionary<string, ExploitSignal>());
+    }
+
     private sealed class NoopJobScheduler : IJobScheduler
     {
         public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) { }
@@ -131,6 +137,7 @@ public class ProjectScanServiceTests
                     NullLogger<RepositoryScannerService>.Instance),
                 new VulnerabilityScanService(Feed),
                 new RuntimeEolScanService(new NoopLifecycle()),
+                new ExploitSignalEnricher(new NoopExploitIntelligence()),
                 new VulnerabilityAlertService(scope.Organizations, scope.Users, new NoopJobScheduler(),
                     Options.Create(new FrontendSettings()), NullLogger<VulnerabilityAlertService>.Instance),
                 new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),

@@ -96,6 +96,14 @@ export const VulnerabilitySeverity = {
 export type VulnerabilitySeverity =
   (typeof VulnerabilitySeverity)[keyof typeof VulnerabilitySeverity];
 
+export const RiskPriority = {
+  Urgent: "Urgent",
+  High: "High",
+  Moderate: "Moderate",
+  Low: "Low",
+} as const;
+export type RiskPriority = (typeof RiskPriority)[keyof typeof RiskPriority];
+
 export const RuntimeEolStatus = {
   Eol: "eol",
   Danger: "danger",

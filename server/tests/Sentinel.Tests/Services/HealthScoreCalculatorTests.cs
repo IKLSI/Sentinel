@@ -233,4 +233,33 @@ public class HealthScoreCalculatorTests
         HealthScoreCalculator.Calculate(worse)
             .Should().BeLessThan(HealthScoreCalculator.Calculate(bad));
     }
+
+    [Fact]
+    public void Calculate_KnownExploitedVulnerability_WeighsMoreThanAnUnexploitedOne()
+    {
+        Project unexploited = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        AddVulnerability(unexploited.Dependencies.First(), VulnerabilitySeverity.High);
+
+        Project exploited = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        AddVulnerability(exploited.Dependencies.First(), VulnerabilitySeverity.High);
+        exploited.Dependencies.First().Vulnerabilities.First().IsKnownExploited = true;
+
+        HealthScoreCalculator.Calculate(exploited)
+            .Should().BeLessThan(HealthScoreCalculator.Calculate(unexploited));
+    }
+
+    [Fact]
+    public void Calculate_LikelyExploitedVulnerability_WeighsMoreThanAnUnlikelyOne()
+    {
+        Project unlikely = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        AddVulnerability(unlikely.Dependencies.First(), VulnerabilitySeverity.High);
+        unlikely.Dependencies.First().Vulnerabilities.First().EpssScore = 0.001m;
+
+        Project likely = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        AddVulnerability(likely.Dependencies.First(), VulnerabilitySeverity.High);
+        likely.Dependencies.First().Vulnerabilities.First().EpssScore = 0.3m;
+
+        HealthScoreCalculator.Calculate(likely)
+            .Should().BeLessThan(HealthScoreCalculator.Calculate(unlikely));
+    }
 }
