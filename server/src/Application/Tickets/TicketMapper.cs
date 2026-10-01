@@ -21,6 +21,8 @@ public static class TicketMapper
         CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
         CommentCount = ticket.Comments?.Count ?? 0,
+        FindingKind = ticket.FindingKind?.ToString(),
+        FindingKey = ticket.FindingKey,
         Comments = ticket.Comments?.Select(ToDto).OrderBy(c => c.CreatedAt).ToList() ?? [],
         History = ticket.History?.Select(ToDto).OrderByDescending(h => h.CreatedAt).ToList() ?? []
     };

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
-import type { DependencyStatus } from "@/enums";
+import { type DependencyStatus, FindingKind } from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
 import {
   DEP_STATUS,
@@ -26,6 +26,7 @@ import {
   buildGridFilterLabels,
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 
 const COLUMN_KEYS = {
   library: "library",
@@ -34,6 +35,7 @@ const COLUMN_KEYS = {
   version: "version",
   status: "status",
   vulns: "vulns",
+  ticket: "ticket",
 } as const;
 
 const DEFAULT_SORT = { key: COLUMN_KEYS.vulns, direction: "desc" } as const;
@@ -88,13 +90,14 @@ const NO_VALUE = "—";
 
 interface RowProps {
   dependency: Dependency;
+  projectId: string;
   typeProd: string;
   typeDev: string;
   index: number;
 }
 
 const DependencyRow = memo<RowProps>(
-  ({ dependency, typeProd, typeDev, index }) => {
+  ({ dependency, projectId, typeProd, typeDev, index }) => {
     const t = useT();
     const status = statusOf(dependency);
     const vulnCount = dependency.vulnerabilities.length;
@@ -144,6 +147,15 @@ const DependencyRow = memo<RowProps>(
             </Box>
           )}
         </TD>
+        <TD align="center">
+          <FindingTicketCell
+            projectId={projectId}
+            kind={FindingKind.OutdatedDependency}
+            findingKey={dependency.findingKey}
+            linkedTicket={dependency.linkedTicket}
+            actionable={dependency.isOutdated}
+          />
+        </TD>
       </TR>
     );
   },
@@ -151,10 +163,14 @@ const DependencyRow = memo<RowProps>(
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
+  projectId: string;
   dependencies: Dependency[];
 }
 
-export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
+export const DependenciesTab: React.FC<Props> = ({
+  projectId,
+  dependencies,
+}) => {
   const t = useT();
 
   const fields = useMemo(
@@ -194,38 +210,44 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
     {
       key: COLUMN_KEYS.library,
       label: t("tech_health.table.dep.library"),
-      width: "28%",
+      width: "24%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.ecosystem,
       label: t("tech_health.table.dep.ecosystem"),
-      width: "12%",
+      width: "11%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.type,
       label: t("tech_health.table.dep.type"),
-      width: "10%",
+      width: "9%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.version,
       label: t("tech_health.table.dep.version"),
-      width: "20%",
+      width: "19%",
     },
     {
       key: COLUMN_KEYS.status,
       label: t("tech_health.table.dep.status"),
-      width: "18%",
+      width: "16%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.vulns,
       label: t("tech_health.table.dep.vulns"),
-      width: "12%",
+      width: "10%",
       align: "center",
       sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.ticket,
+      label: t("tech_health.table.ticket"),
+      width: "11%",
+      align: "center",
     },
   ];
 
@@ -262,6 +284,7 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
           <DependencyRow
             key={dependency.id}
             dependency={dependency}
+            projectId={projectId}
             typeProd={t("tech_health.dep.type_prod")}
             typeDev={t("tech_health.dep.type_dev")}
             index={index}

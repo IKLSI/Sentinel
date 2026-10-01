@@ -126,7 +126,7 @@ export const HistoryCard: React.FC<Props> = ({
                       t,
                       getDateFnsLocale(culture),
                     )}{" "}
-                    · {h.userName}
+                    · {h.userName || t("tickets.history.system")}
                   </Box>
                 </Box>
               </Box>

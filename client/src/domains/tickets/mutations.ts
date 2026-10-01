@@ -2,7 +2,10 @@ import { ROUTES_API } from "@/configs/api-routes.gen";
 import { queryClient } from "@/configs/queryClient";
 import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
 import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
-import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
+import {
+  PROJECTS_QUERY_KEY,
+  projectQueryKey,
+} from "@/domains/projects/constants";
 import {
   invalidateKeys,
   useDeleteMutation,
@@ -13,6 +16,7 @@ import { TICKETS_QUERY_KEY, ticketQueryKey } from "@/domains/tickets/constants";
 import type {
   CreateComment,
   CreateTicket,
+  CreateTicketFromFinding,
   Ticket,
   TicketAttachment,
   TicketComment,
@@ -41,6 +45,18 @@ export const useCreateTicketMutation = () =>
       onSuccess: () => {
         invalidateTickets();
         invalidateTicketCounters();
+      },
+    },
+  );
+
+export const useCreateTicketFromFindingMutation = () =>
+  usePostMutation<Ticket, Ticket, { data: CreateTicketFromFinding }>(
+    ROUTES_API.api.tickets.fromFinding.__path,
+    {
+      onSuccess: (_created, { data }) => {
+        invalidateTickets();
+        invalidateTicketCounters();
+        invalidateKeys([projectQueryKey(data.projectId)]);
       },
     },
   );

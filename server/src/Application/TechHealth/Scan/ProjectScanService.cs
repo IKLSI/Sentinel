@@ -23,6 +23,7 @@ public class ProjectScanService(
     VulnerabilityScanService vulnerabilityScanner,
     RuntimeEolScanService runtimeEolScanner,
     VulnerabilityAlertService vulnerabilityAlerts,
+    FindingTicketSyncService findingTicketSync,
     ProjectInventoryWriter inventoryWriter,
     QuotaGuard quotaGuard,
     TokenProtector tokenProtector,
@@ -176,6 +177,9 @@ public class ProjectScanService(
             logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
 
         await inventoryWriter.SaveAsync(CancellationToken.None);
+
+        if (project.Coverage == ScanCoverage.Covered && vulnerabilityOutcome.IsComplete)
+            await findingTicketSync.SyncAsync(project);
 
         await auditLog.LogAsync(
             AuditAction.ScanCompleted,

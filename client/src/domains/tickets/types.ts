@@ -15,6 +15,9 @@ export type CreateTicket = components["schemas"]["CreateTicketDto"];
 
 export type UpdateTicket = components["schemas"]["UpdateTicketDto"];
 
+export type CreateTicketFromFinding =
+  components["schemas"]["CreateTicketFromFindingRequest"];
+
 export type CreateComment = components["schemas"]["CreateCommentDto"];
 
 export type TicketCriteriaFilters = {

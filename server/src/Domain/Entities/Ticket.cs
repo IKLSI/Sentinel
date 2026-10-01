@@ -28,6 +28,13 @@ public enum TicketStatus
     Closed
 }
 
+public enum FindingKind
+{
+    Vulnerability,
+    OutdatedDependency,
+    EolRuntime
+}
+
 public static class TicketStatusRules
 {
     public static IReadOnlyList<TicketStatus> Open { get; } =
@@ -51,6 +58,9 @@ public class Ticket : IEntityWithId
     public TicketStatus Status { get; set; } = TicketStatus.New;
     public Guid? AssignedToId { get; set; }
     public Guid CreatedById { get; set; }
+    public FindingKind? FindingKind { get; set; }
+    public string? FindingKey { get; set; }
+    public DateTime? AutoResolvedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public Organization Organization { get; set; } = null!;

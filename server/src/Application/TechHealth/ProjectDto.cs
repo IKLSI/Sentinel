@@ -28,6 +28,9 @@ public class DependencyDto
     public string Type { get; set; } = string.Empty;
     public string Ecosystem { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public bool IsOutdated { get; set; }
+    public string FindingKey { get; set; } = string.Empty;
+    public FindingTicketDto? LinkedTicket { get; set; }
     public List<VulnerabilityDto> Vulnerabilities { get; set; } = new();
 }
 
@@ -40,6 +43,8 @@ public class VulnerabilityDto
     public string Description { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;
     public string? FixedVersion { get; set; }
+    public string FindingKey { get; set; } = string.Empty;
+    public FindingTicketDto? LinkedTicket { get; set; }
 }
 
 public class RuntimeDto
@@ -50,4 +55,13 @@ public class RuntimeDto
     public List<string> Versions { get; set; } = [];
     public DateTime? EolDate { get; set; }
     public bool? IsEol { get; set; }
+    public string FindingKey { get; set; } = string.Empty;
+    public FindingTicketDto? LinkedTicket { get; set; }
+}
+
+public class FindingTicketDto
+{
+    public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
 }

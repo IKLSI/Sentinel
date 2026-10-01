@@ -36,24 +36,6 @@ export const ROUTES_API = {
         __path: "/api/auth/verify-email",
       },
     },
-    billing: {
-      __path: "/api/billing",
-      checkout: {
-        __path: "/api/billing/checkout",
-      },
-      plans: {
-        __path: "/api/billing/plans",
-      },
-      portal: {
-        __path: "/api/billing/portal",
-      },
-      status: {
-        __path: "/api/billing/status",
-      },
-      webhook: {
-        __path: "/api/billing/webhook",
-      },
-    },
     config: {
       __path: "/api/config",
     },
@@ -76,6 +58,12 @@ export const ROUTES_API = {
       __path: "/api/locales",
       ":culture": {
         __path: "/api/locales/:culture",
+      },
+    },
+    public: {
+      __path: "/api/public",
+      scan: {
+        __path: "/api/public/scan",
       },
     },
     settings: {
@@ -133,6 +121,9 @@ export const ROUTES_API = {
         excel: {
           __path: "/api/tickets/export/excel",
         },
+      },
+      fromFinding: {
+        __path: "/api/tickets/from-finding",
       },
       ":id": {
         __path: "/api/tickets/:id",

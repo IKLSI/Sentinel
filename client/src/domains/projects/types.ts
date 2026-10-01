@@ -8,6 +8,8 @@ export type Runtime = components["schemas"]["RuntimeDto"];
 
 export type Vulnerability = components["schemas"]["VulnerabilityDto"];
 
+export type FindingTicket = components["schemas"]["FindingTicketDto"];
+
 export type AvailableRepos = components["schemas"]["AvailableReposResponse"];
 
 export type CreateProject = components["schemas"]["CreateProjectDto"];

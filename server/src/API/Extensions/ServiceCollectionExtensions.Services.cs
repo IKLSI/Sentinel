@@ -92,6 +92,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<VulnerabilityScanService>();
         services.AddScoped<RuntimeEolScanService>();
         services.AddScoped<VulnerabilityAlertService>();
+        services.AddScoped<FindingTicketSyncService>();
         services.AddScoped<ProjectInventoryWriter>();
         services.AddScoped<ProjectScanService>();
         services.AddScoped<DueProjectScanService>();

@@ -118,13 +118,16 @@ export const ProjectDetailPage: React.FC = () => {
         }}
       >
         {activeTab === TAB_INDEX.vulnerabilities && (
-          <VulnerabilitiesTab vulns={allVulns} />
+          <VulnerabilitiesTab projectId={project.id} vulns={allVulns} />
         )}
         {activeTab === TAB_INDEX.dependencies && (
-          <DependenciesTab dependencies={project.dependencies} />
+          <DependenciesTab
+            projectId={project.id}
+            dependencies={project.dependencies}
+          />
         )}
         {activeTab === TAB_INDEX.runtimes && (
-          <RuntimesTab runtimes={project.runtimes} />
+          <RuntimesTab projectId={project.id} runtimes={project.runtimes} />
         )}
       </Box>
     </PageContainer>

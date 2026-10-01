@@ -230,6 +230,8 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
                 .HasComputedColumnSql(TicketPriorityRankSql, stored: true);
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(e => e.FindingKind).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.FindingKey).HasMaxLength(500);
 
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => new { e.OrganizationId, e.Number }).IsUnique();
@@ -243,6 +245,9 @@ public class SentinelContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.Priority, e.Status });
             entity.HasIndex(e => new { e.OrganizationId, e.Status, e.PriorityRank, e.CreatedAt });
+            entity.HasIndex(e => new { e.ProjectId, e.FindingKind, e.FindingKey })
+                .IsUnique()
+                .HasFilter("\"FindingKey\" IS NOT NULL AND \"Status\" IN ('New', 'InProgress', 'Testing')");
 
             entity.HasOne(e => e.Organization)
                 .WithMany()

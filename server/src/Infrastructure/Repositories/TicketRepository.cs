@@ -180,6 +180,32 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .Where(t => t.Id == ticketId && t.OrganizationId == organizationId)
             .ExecuteDeleteAsync(cancellationToken);
 
+    public Task<Ticket?> GetOpenForFindingAsync(Guid projectId, FindingKind kind, string findingKey,
+        CancellationToken cancellationToken)
+    {
+        List<TicketStatus> openStatuses = [.. TicketStatusRules.Open];
+
+        return Query(QueryTracking.NoTracking)
+            .FirstOrDefaultAsync(t => t.ProjectId == projectId
+                && t.FindingKind == kind
+                && t.FindingKey == findingKey
+                && openStatuses.Contains(t.Status), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FindingTicketRow>> ListFindingLinksByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(t => t.ProjectId == projectId && t.FindingKind != null && t.FindingKey != null)
+            .Select(t => new FindingTicketRow(t.FindingKind!.Value, t.FindingKey!, t.Id, t.Number, t.Status,
+                t.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Ticket>> ListFindingLinkedByProjectAsync(Guid projectId, QueryTracking tracking,
+        CancellationToken cancellationToken) =>
+        await Query(tracking)
+            .Where(t => t.ProjectId == projectId && t.FindingKind != null && t.FindingKey != null)
+            .ToListAsync(cancellationToken);
+
     private IQueryable<Ticket> FilteredQuery(Guid organizationId) =>
         Query(QueryTracking.NoTracking)
             .Where(t => t.OrganizationId == organizationId);

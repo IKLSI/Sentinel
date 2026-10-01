@@ -2,12 +2,19 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
+import { FindingKind } from "@/enums";
 import {
   type DetailPalette,
   type buildPriorityConfig,
   typeLabelKeys,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { statusLabel } from "@/features/tickets/constants";
+
+const findingKindLabelKeys: Record<string, string> = {
+  [FindingKind.Vulnerability]: "tickets.finding_kind.vulnerability",
+  [FindingKind.OutdatedDependency]: "tickets.finding_kind.outdated_dependency",
+  [FindingKind.EolRuntime]: "tickets.finding_kind.eol_runtime",
+};
 
 interface Props {
   ticket: Ticket;
@@ -70,6 +77,19 @@ export const PropertiesCard: React.FC<Props> = ({
         <Box sx={emptyValueSx}>{t("tickets.detail.unassigned")}</Box>
       ),
     },
+    ...(ticket.findingKind && findingKindLabelKeys[ticket.findingKind]
+      ? [
+          {
+            key: "finding",
+            label: t("tickets.detail.field_finding"),
+            value: (
+              <Box sx={valueSx}>
+                {t(findingKindLabelKeys[ticket.findingKind])}
+              </Box>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

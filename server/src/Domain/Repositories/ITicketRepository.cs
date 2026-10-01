@@ -22,4 +22,13 @@ public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
     Task<bool> ExistsInOrganizationAsync(Guid ticketId, Guid organizationId, CancellationToken cancellationToken);
 
     Task<int> DeleteInOrganizationAsync(Guid ticketId, Guid organizationId, CancellationToken cancellationToken);
+
+    Task<Ticket?> GetOpenForFindingAsync(Guid projectId, FindingKind kind, string findingKey,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<FindingTicketRow>> ListFindingLinksByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Ticket>> ListFindingLinkedByProjectAsync(Guid projectId, QueryTracking tracking,
+        CancellationToken cancellationToken);
 }

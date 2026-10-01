@@ -7,6 +7,7 @@ using Sentinel.API.Extensions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets.AddComment;
 using Sentinel.Application.Tickets.Create;
+using Sentinel.Application.Tickets.CreateFromFinding;
 using Sentinel.Application.Tickets.Delete;
 using Sentinel.Application.Tickets.DeleteComment;
 using Sentinel.Application.Tickets.DownloadAttachment;
@@ -57,6 +58,13 @@ public class TicketsController : BaseController
             ? CreatedAtAction(nameof(GetTicket), new { id = result.Value!.Id }, result.Value)
             : ToActionResult(result);
     }
+
+    [HttpPost("from-finding")]
+    public async Task<ActionResult<TicketDto>> CreateTicketFromFinding(
+        [FromBody] CreateTicketFromFindingRequest request,
+        [FromServices] TicketCreateFromFindingService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(request, cancellationToken));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<TicketDto>> GetTicket(

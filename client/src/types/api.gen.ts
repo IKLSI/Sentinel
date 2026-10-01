@@ -173,79 +173,6 @@ export interface paths {
       };
     };
   };
-  "/api/billing/checkout": {
-    post: {
-      requestBody?: {
-        content: {
-          "application/*+json": components["schemas"]["CheckoutRequest"];
-          "application/json": components["schemas"]["CheckoutRequest"];
-          "text/json": components["schemas"]["CheckoutRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CheckoutSessionDto"];
-            "text/json": components["schemas"]["CheckoutSessionDto"];
-            "text/plain": components["schemas"]["CheckoutSessionDto"];
-          };
-        };
-      };
-    };
-  };
-  "/api/billing/plans": {
-    get: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["PlanOptionDto"][];
-            "text/json": components["schemas"]["PlanOptionDto"][];
-            "text/plain": components["schemas"]["PlanOptionDto"][];
-          };
-        };
-      };
-    };
-  };
-  "/api/billing/portal": {
-    post: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["PortalSessionDto"];
-            "text/json": components["schemas"]["PortalSessionDto"];
-            "text/plain": components["schemas"]["PortalSessionDto"];
-          };
-        };
-      };
-    };
-  };
-  "/api/billing/status": {
-    get: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: {
-            "application/json": components["schemas"]["BillingStatusDto"];
-            "text/json": components["schemas"]["BillingStatusDto"];
-            "text/plain": components["schemas"]["BillingStatusDto"];
-          };
-        };
-      };
-    };
-  };
-  "/api/billing/webhook": {
-    post: {
-      responses: {
-        /** @description OK */
-        200: {
-          content: never;
-        };
-      };
-    };
-  };
   "/api/config": {
     get: {
       responses: {
@@ -319,6 +246,27 @@ export interface paths {
         /** @description OK */
         200: {
           content: never;
+        };
+      };
+    };
+  };
+  "/api/public/scan": {
+    post: {
+      requestBody?: {
+        content: {
+          "application/*+json": components["schemas"]["PublicScanRequest"];
+          "application/json": components["schemas"]["PublicScanRequest"];
+          "text/json": components["schemas"]["PublicScanRequest"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["PublicScanResponse"];
+            "text/json": components["schemas"]["PublicScanResponse"];
+            "text/plain": components["schemas"]["PublicScanResponse"];
+          };
         };
       };
     };
@@ -854,6 +802,27 @@ export interface paths {
       };
     };
   };
+  "/api/tickets/from-finding": {
+    post: {
+      requestBody?: {
+        content: {
+          "application/*+json": components["schemas"]["CreateTicketFromFindingRequest"];
+          "application/json": components["schemas"]["CreateTicketFromFindingRequest"];
+          "text/json": components["schemas"]["CreateTicketFromFindingRequest"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["TicketDto"];
+            "text/json": components["schemas"]["TicketDto"];
+            "text/plain": components["schemas"]["TicketDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/users": {
     get: {
       parameters: {
@@ -988,11 +957,7 @@ export interface paths {
       responses: {
         /** @description OK */
         200: {
-          content: {
-            "application/json": components["schemas"]["UserDataExportDto"];
-            "text/json": components["schemas"]["UserDataExportDto"];
-            "text/plain": components["schemas"]["UserDataExportDto"];
-          };
+          content: never;
         };
       };
     };
@@ -1087,18 +1052,6 @@ export interface components {
       repos: components["schemas"]["AvailableRepoDto"][];
       truncated: boolean;
     };
-    BillingStatusDto: {
-      members: components["schemas"]["PlanQuotaDto"];
-      planTier: string;
-      projects: components["schemas"]["PlanQuotaDto"];
-      scans: components["schemas"]["PlanQuotaDto"];
-    };
-    CheckoutRequest: {
-      planTier: string;
-    };
-    CheckoutSessionDto: {
-      url: string;
-    };
     ConnectIntegrationDto: {
       token: string;
     };
@@ -1137,6 +1090,12 @@ export interface components {
       title: string;
       type: components["schemas"]["TicketType"];
     };
+    CreateTicketFromFindingRequest: {
+      findingKey: string;
+      kind: components["schemas"]["FindingKind"];
+      /** Format: uuid */
+      projectId: string;
+    };
     CreateUserDto: {
       email: string;
       role: string;
@@ -1152,13 +1111,24 @@ export interface components {
     DependencyDto: {
       currentVersion: string;
       ecosystem: string;
+      findingKey: string;
       /** Format: uuid */
       id: string;
+      isOutdated: boolean;
       latestVersion: string | null;
+      linkedTicket: components["schemas"]["FindingTicketDto"];
       name: string;
       status: string;
       type: string;
       vulnerabilities: components["schemas"]["VulnerabilityDto"][];
+    };
+    /** @enum {string} */
+    FindingKind: "Vulnerability" | "OutdatedDependency" | "EolRuntime";
+    FindingTicketDto: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      status: string;
     };
     ForgotPasswordRequest: {
       email: string;
@@ -1181,27 +1151,6 @@ export interface components {
       alertMinSeverity: components["schemas"]["VulnerabilitySeverity"];
       name: string;
       securityAlertsEnabled: boolean;
-    };
-    PlanOptionDto: {
-      isCurrent: boolean;
-      /** Format: int32 */
-      maxMembers: number;
-      /** Format: int32 */
-      maxProjects: number;
-      /** Format: int32 */
-      maxScansPerMonth: number;
-      /** Format: double */
-      priceMonthly: number;
-      tier: string;
-    };
-    PlanQuotaDto: {
-      /** Format: int32 */
-      limit: number;
-      /** Format: int32 */
-      used: number;
-    };
-    PortalSessionDto: {
-      url: string;
     };
     ProjectDto: {
       coverage: string;
@@ -1230,6 +1179,24 @@ export interface components {
     ProjectScanFrequencyDto: {
       scanFrequency: string;
     };
+    PublicScanRequest: {
+      repositoryUrl?: string | null;
+    };
+    PublicScanResponse: {
+      /** Format: int32 */
+      criticalCount: number;
+      /** Format: int32 */
+      dependencyCount: number;
+      /** Format: int32 */
+      eolRuntimeCount: number;
+      grade: string;
+      /** Format: int32 */
+      highCount: number;
+      /** Format: int32 */
+      score: number;
+      /** Format: int32 */
+      vulnerableDependencyCount: number;
+    };
     RecurringJobStatusDto: {
       error: string | null;
       id: string;
@@ -1256,9 +1223,11 @@ export interface components {
     RuntimeDto: {
       /** Format: date-time */
       eolDate: string | null;
+      findingKey: string;
       /** Format: uuid */
       id: string;
       isEol: boolean | null;
+      linkedTicket: components["schemas"]["FindingTicketDto"];
       name: string;
       version: string;
       versions: string[];
@@ -1295,6 +1264,8 @@ export interface components {
       createdAt: string;
       createdByName: string;
       description: string;
+      findingKey: string | null;
+      findingKind: string | null;
       history: components["schemas"]["TicketHistoryDto"][];
       /** Format: uuid */
       id: string;
@@ -1386,16 +1357,6 @@ export interface components {
       title: string;
       type: string;
     };
-    UserDataExportDto: {
-      attachments: components["schemas"]["UserExportAttachmentDto"][];
-      auditLogs: components["schemas"]["UserExportAuditLogDto"][];
-      comments: components["schemas"]["UserExportCommentDto"][];
-      /** Format: date-time */
-      exportedAt: string;
-      profile: components["schemas"]["UserExportProfileDto"];
-      tickets: components["schemas"]["UserExportTicketDto"][];
-      truncated: components["schemas"]["UserExportTruncationDto"];
-    };
     UserDto: {
       accessStatus: string;
       /** Format: date-time */
@@ -1410,80 +1371,6 @@ export interface components {
       lastName: string;
       role: string;
       theme: string;
-    };
-    UserExportAttachmentDto: {
-      contentType: string;
-      /** Format: date-time */
-      createdAt: string;
-      fileName: string;
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      ticketId: string;
-      /** Format: int32 */
-      ticketNumber: number;
-    };
-    UserExportAuditLogDto: {
-      action: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: uuid */
-      entityId: string | null;
-      entityType: string;
-      /** Format: uuid */
-      id: string;
-    };
-    UserExportCommentDto: {
-      content: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      ticketId: string;
-      /** Format: int32 */
-      ticketNumber: number;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    UserExportProfileDto: {
-      /** Format: date-time */
-      createdAt: string;
-      email: string;
-      firstName: string;
-      /** Format: uuid */
-      id: string;
-      language: string;
-      /** Format: date-time */
-      lastLoginAt: string | null;
-      lastName: string;
-      role: string;
-    };
-    UserExportTicketDto: {
-      /** Format: date-time */
-      createdAt: string;
-      description: string;
-      /** Format: uuid */
-      id: string;
-      isAssignee: boolean;
-      isCreator: boolean;
-      /** Format: int32 */
-      number: number;
-      priority: string;
-      projectName: string | null;
-      status: string;
-      title: string;
-      type: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    UserExportTruncationDto: {
-      attachments: boolean;
-      auditLogs: boolean;
-      comments: boolean;
-      /** Format: int32 */
-      maxRowsPerCollection: number;
-      tickets: boolean;
     };
     UserListDto: {
       items: components["schemas"]["UserDto"][];
@@ -1522,9 +1409,11 @@ export interface components {
       /** Format: double */
       cvssScore: number;
       description: string;
+      findingKey: string;
       fixedVersion: string | null;
       /** Format: uuid */
       id: string;
+      linkedTicket: components["schemas"]["FindingTicketDto"];
       severity: string;
     };
     /** @enum {string} */

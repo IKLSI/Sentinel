@@ -13,7 +13,7 @@ import {
   type VirtualTableColumn,
 } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
-import type { VulnerabilitySeverity } from "@/enums";
+import { FindingKind, type VulnerabilitySeverity } from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
 import {
   EMPTY_STATE_SX,
@@ -26,6 +26,7 @@ import {
   buildVulnerabilityFilterFields,
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 
 const COLUMN_KEYS = {
   score: "score",
@@ -34,6 +35,7 @@ const COLUMN_KEYS = {
   description: "description",
   reference: "reference",
   fixedVersion: "fixedVersion",
+  ticket: "ticket",
 } as const;
 
 const DEFAULT_SORT = { key: COLUMN_KEYS.score, direction: "desc" } as const;
@@ -77,48 +79,60 @@ const referenceSx = {
 
 const NO_VALUE = "—";
 
-const VulnRow = memo<{ vuln: VulnerabilityRow; index: number }>(
-  ({ vuln, index }) => {
-    const t = useT();
-    const config = configOf(vuln);
+const VulnRow = memo<{
+  vuln: VulnerabilityRow;
+  projectId: string;
+  index: number;
+}>(({ vuln, projectId, index }) => {
+  const t = useT();
+  const config = configOf(vuln);
 
-    return (
-      <TR index={index}>
-        <TD>
-          <Box component="span" sx={{ ...scoreSx, color: config.color }}>
-            {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : NO_VALUE}
+  return (
+    <TR index={index}>
+      <TD>
+        <Box component="span" sx={{ ...scoreSx, color: config.color }}>
+          {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : NO_VALUE}
+        </Box>
+      </TD>
+      <TD>
+        <StatusChip variant={config.variant}>{t(config.labelKey)}</StatusChip>
+      </TD>
+      <TD>
+        <TruncatedText mono strong text={vuln.dependencyName} />
+      </TD>
+      <TD>
+        <TruncatedText text={vuln.description} />
+      </TD>
+      <TD>
+        <AppTooltip title={vuln.cveAlias ? vuln.cveId : ""}>
+          <Box component="span" sx={referenceSx}>
+            {vuln.cveAlias ?? vuln.cveId}
           </Box>
-        </TD>
-        <TD>
-          <StatusChip variant={config.variant}>{t(config.labelKey)}</StatusChip>
-        </TD>
-        <TD>
-          <TruncatedText mono strong text={vuln.dependencyName} />
-        </TD>
-        <TD>
-          <TruncatedText text={vuln.description} />
-        </TD>
-        <TD>
-          <AppTooltip title={vuln.cveAlias ? vuln.cveId : ""}>
-            <Box component="span" sx={referenceSx}>
-              {vuln.cveAlias ?? vuln.cveId}
-            </Box>
-          </AppTooltip>
-        </TD>
-        <TD mono muted>
-          {vuln.fixedVersion ?? NO_VALUE}
-        </TD>
-      </TR>
-    );
-  },
-);
+        </AppTooltip>
+      </TD>
+      <TD mono muted>
+        {vuln.fixedVersion ?? NO_VALUE}
+      </TD>
+      <TD align="center">
+        <FindingTicketCell
+          projectId={projectId}
+          kind={FindingKind.Vulnerability}
+          findingKey={vuln.findingKey}
+          linkedTicket={vuln.linkedTicket}
+          actionable
+        />
+      </TD>
+    </TR>
+  );
+});
 VulnRow.displayName = "VulnRow";
 
 interface Props {
+  projectId: string;
   vulns: VulnerabilityRow[];
 }
 
-export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
+export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
   const t = useT();
 
   const fields = useMemo(
@@ -158,36 +172,42 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
     {
       key: COLUMN_KEYS.score,
       label: t("tech_health.table.vuln.score"),
-      width: "8%",
+      width: "7%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.severity,
       label: t("tech_health.filter.severity"),
-      width: "13%",
+      width: "12%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.library,
       label: t("tech_health.table.dep.library"),
-      width: "19%",
+      width: "17%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.description,
       label: t("tech_health.table.vuln.vulnerability"),
-      width: "34%",
+      width: "30%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.reference,
       label: t("tech_health.table.vuln.cve_ref"),
-      width: "14%",
+      width: "13%",
     },
     {
       key: COLUMN_KEYS.fixedVersion,
       label: t("tech_health.table.vuln.fixed_version"),
-      width: "12%",
+      width: "11%",
+    },
+    {
+      key: COLUMN_KEYS.ticket,
+      label: t("tech_health.table.ticket"),
+      width: "10%",
+      align: "center",
     },
   ];
 
@@ -221,7 +241,12 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ vulns }) => {
           />
         }
         renderRow={(vuln, index) => (
-          <VulnRow key={vuln.id} vuln={vuln} index={index} />
+          <VulnRow
+            key={vuln.id}
+            vuln={vuln}
+            projectId={projectId}
+            index={index}
+          />
         )}
       />
     </>

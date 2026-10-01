@@ -17,7 +17,7 @@ namespace Sentinel.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -536,6 +536,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedToId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("AutoResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -545,6 +548,14 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("FindingKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("FindingKind")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<int>("Number")
                         .HasColumnType("integer");
@@ -613,6 +624,10 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasIndex("OrganizationId", "UpdatedAt");
 
                     b.HasIndex("OrganizationId", "Priority", "Status");
+
+                    b.HasIndex("ProjectId", "FindingKind", "FindingKey")
+                        .IsUnique()
+                        .HasFilter("\"FindingKey\" IS NOT NULL AND \"Status\" IN ('New', 'InProgress', 'Testing')");
 
                     b.HasIndex("OrganizationId", "Status", "PriorityRank", "CreatedAt");
 
@@ -717,7 +732,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -1051,8 +1066,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasOne("Sentinel.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Ticket");
 

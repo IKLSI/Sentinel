@@ -51,6 +51,13 @@ export const TicketType = {
 } as const;
 export type TicketType = (typeof TicketType)[keyof typeof TicketType];
 
+export const FindingKind = {
+  Vulnerability: "Vulnerability",
+  OutdatedDependency: "OutdatedDependency",
+  EolRuntime: "EolRuntime",
+} as const;
+export type FindingKind = (typeof FindingKind)[keyof typeof FindingKind];
+
 export const HealthGrade = {
   A: "A",
   B: "B",

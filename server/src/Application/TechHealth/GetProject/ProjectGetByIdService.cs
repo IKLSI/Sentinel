@@ -10,6 +10,7 @@ namespace Sentinel.Application.TechHealth.GetProject;
 
 public class ProjectGetByIdService(
     IProjectRepository projectRepository,
+    ITicketRepository ticketRepository,
     ITenantContext tenant) : IService
 {
     public async Task<Result<ProjectDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
@@ -29,6 +30,9 @@ public class ProjectGetByIdService(
         if (!belongs)
             return Result<ProjectDto>.Forbidden();
 
-        return ProjectMapper.ToDto(project);
+        IReadOnlyList<FindingTicketRow> findingTickets =
+            await ticketRepository.ListFindingLinksByProjectAsync(projectId, cancellationToken);
+
+        return ProjectMapper.ToDto(project, findingTickets);
     }
 }

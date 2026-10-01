@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Sentinel.Application.TechHealth;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Tests.Services;
 
@@ -117,5 +119,44 @@ public class ProjectMapperTests
         runtime.Version.Should().Be("18.20.4");
         runtime.IsEol.Should().BeTrue();
         runtime.Versions.Should().ContainInOrder("18.20.4", "20.11.0");
+    }
+
+    [Fact]
+    public void ToDto_LieLeTicketOuvertEnPrioriteAuFinding()
+    {
+        Dependency dependency = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = "lodash",
+            CurrentVersion = "1.0.0",
+            Ecosystem = DependencyEcosystem.Npm,
+            Vulnerabilities = new List<Vulnerability>
+            {
+                new() { Id = Guid.NewGuid(), CveId = "GHSA-1", PackageName = "lodash" }
+            }
+        };
+        Project project = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = "P",
+            Dependencies = new List<Dependency> { dependency },
+            Runtimes = new List<Runtime>()
+        };
+        string findingKey = FindingKeys.ForVulnerability(DependencyEcosystem.Npm, "lodash", "GHSA-1");
+        Guid openTicketId = Guid.NewGuid();
+
+        ProjectDto dto = ProjectMapper.ToDto(project,
+        [
+            new FindingTicketRow(FindingKind.Vulnerability, findingKey, Guid.NewGuid(), 1, TicketStatus.Resolved,
+                DateTime.UtcNow),
+            new FindingTicketRow(FindingKind.Vulnerability, findingKey, openTicketId, 2, TicketStatus.InProgress,
+                DateTime.UtcNow.AddDays(-1))
+        ]);
+
+        VulnerabilityDto vulnerability = dto.Dependencies.Single().Vulnerabilities.Single();
+        vulnerability.FindingKey.Should().Be(findingKey);
+        vulnerability.LinkedTicket!.Id.Should().Be(openTicketId);
+        vulnerability.LinkedTicket.Status.Should().Be("inprogress");
+        dto.Dependencies.Single().LinkedTicket.Should().BeNull();
     }
 }

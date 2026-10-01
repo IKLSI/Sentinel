@@ -132,6 +132,7 @@ public class TicketUpdateService(
             changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "Status",
                 ticket.Status.ToString().ToLower(), newStatus.Value.ToString().ToLower()));
             ticket.Status = newStatus.Value;
+            ticket.AutoResolvedAt = null;
         }
 
         ticket.UpdatedAt = DateTime.UtcNow;

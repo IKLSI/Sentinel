@@ -3,7 +3,6 @@ using Sentinel.Application.Exports;
 using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Entities;
-using Sentinel.Infrastructure.Localization;
 using Sentinel.Infrastructure.Repositories;
 using Sentinel.Tests.Helpers;
 
@@ -100,7 +99,7 @@ public class ComplianceReportTests
         result.Should().BeNull();
     }
 
-    private static ILocalizer BuildLocalizer() => new JsonLocalizer(new TestContentPathProvider());
+    private static ILocalizer BuildLocalizer() => TestLocalizer.Create();
 
     private static User NewUser(Guid organizationId, Guid userId, string language) => new()
     {
@@ -114,18 +113,4 @@ public class ComplianceReportTests
         AccessStatus = UserAccessStatus.Active,
         Language = language
     };
-
-    private sealed class TestContentPathProvider : IContentPathProvider
-    {
-        public string ContentRootPath { get; } = LocateApiContentRoot();
-
-        private static string LocateApiContentRoot()
-        {
-            string? locale = RepositoryFiles.FindByNameOrDefault("server/src/API/Resources/Locales", "fr-FR.json");
-
-            locale.Should().NotBeNull("les catalogues de traduction sont requis par ces tests");
-
-            return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(locale)!, "..", ".."));
-        }
-    }
 }

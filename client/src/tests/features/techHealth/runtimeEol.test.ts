@@ -16,6 +16,8 @@ const runtime = (overrides: Partial<Runtime>): Runtime => ({
   versions: ["20.11.0"],
   eolDate: null,
   isEol: null,
+  findingKey: "node.js",
+  linkedTicket: null as unknown as Runtime["linkedTicket"],
   ...overrides,
 });
 

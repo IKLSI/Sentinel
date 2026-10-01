@@ -54,6 +54,7 @@ public static class ErrorCodes
     public const string SettingsInvalidGitlabToken = "errors.settings.invalid_gitlab_token";
 
     public const string TicketNotFound = "errors.tickets.not_found";
+    public const string TicketFindingNotFound = "errors.tickets.finding_not_found";
     public const string TicketSearchTooLong = "errors.tickets.search_too_long";
     public const string TicketFilterValueInvalid = "errors.tickets.filter_value_invalid";
     public const string TicketFilterTooManyValues = "errors.tickets.filter_too_many_values";

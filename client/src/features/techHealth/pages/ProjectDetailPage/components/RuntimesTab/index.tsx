@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/common/VirtualTable";
 import { useI18n, useT } from "@/contexts/I18nContext";
 import type { Runtime } from "@/domains/projects/types";
+import { FindingKind } from "@/enums";
 import { formatDate } from "@/formatters/date";
 import { useGridControls } from "@/hooks/useGridControls";
 import {
@@ -30,6 +31,7 @@ import {
   buildRuntimeFilterFields,
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 
 const COLUMN_KEYS = {
   runtime: "runtime",
@@ -37,6 +39,7 @@ const COLUMN_KEYS = {
   status: "status",
   deadline: "deadline",
   eolDate: "eolDate",
+  ticket: "ticket",
 } as const;
 
 const DEFAULT_SORT = { key: COLUMN_KEYS.deadline, direction: "asc" } as const;
@@ -86,74 +89,87 @@ const meterSx = {
   overflow: "hidden",
 } as const;
 
-const RuntimeRow = memo<{ runtime: Runtime; index: number; locale: string }>(
-  ({ runtime, index, locale }) => {
-    const t = useT();
-    const urgency = getRuntimeUrgency(runtime);
-    const colors = EOL_COLOR[urgency];
-    const status = RUNTIME_STATUS[urgency];
-    const otherVersions = runtime.versions.filter(
-      (version) => version !== runtime.version,
-    );
+const RuntimeRow = memo<{
+  runtime: Runtime;
+  projectId: string;
+  index: number;
+  locale: string;
+}>(({ runtime, projectId, index, locale }) => {
+  const t = useT();
+  const urgency = getRuntimeUrgency(runtime);
+  const colors = EOL_COLOR[urgency];
+  const status = RUNTIME_STATUS[urgency];
+  const otherVersions = runtime.versions.filter(
+    (version) => version !== runtime.version,
+  );
 
-    return (
-      <TR index={index}>
-        <TD>
-          <TruncatedText mono strong text={runtime.name} />
-        </TD>
-        <TD muted>
-          <Box component="span" sx={versionSx}>
-            {runtime.version}
+  return (
+    <TR index={index}>
+      <TD>
+        <TruncatedText mono strong text={runtime.name} />
+      </TD>
+      <TD muted>
+        <Box component="span" sx={versionSx}>
+          {runtime.version}
+        </Box>
+        {otherVersions.length > 0 && (
+          <Box component="span" sx={otherVersionsSx}>
+            {`+ ${otherVersions.join(" · ")}`}
           </Box>
-          {otherVersions.length > 0 && (
-            <Box component="span" sx={otherVersionsSx}>
-              {`+ ${otherVersions.join(" · ")}`}
-            </Box>
-          )}
-        </TD>
-        <TD>
-          <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
-        </TD>
-        <TD>
-          <Box sx={deadlineSx}>
-            <Box sx={meterSx}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: "0 auto 0 0",
-                  width: `${getRuntimeProgress(runtime)}%`,
-                  borderRadius: "2px",
-                  background: colors.stripe,
-                }}
-              />
-            </Box>
+        )}
+      </TD>
+      <TD>
+        <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
+      </TD>
+      <TD>
+        <Box sx={deadlineSx}>
+          <Box sx={meterSx}>
             <Box
-              component="span"
               sx={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                color: colors.text,
-                whiteSpace: "nowrap",
+                position: "absolute",
+                inset: "0 auto 0 0",
+                width: `${getRuntimeProgress(runtime)}%`,
+                borderRadius: "2px",
+                background: colors.stripe,
               }}
-            >
-              {getDaysLabel(runtime, t)}
-            </Box>
+            />
           </Box>
-        </TD>
-        <TD mono muted align="right">
-          {formatDate(runtime.eolDate, locale)}
-        </TD>
-      </TR>
-    );
-  },
-);
+          <Box
+            component="span"
+            sx={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: colors.text,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {getDaysLabel(runtime, t)}
+          </Box>
+        </Box>
+      </TD>
+      <TD mono muted align="right">
+        {formatDate(runtime.eolDate, locale)}
+      </TD>
+      <TD align="center">
+        <FindingTicketCell
+          projectId={projectId}
+          kind={FindingKind.EolRuntime}
+          findingKey={runtime.findingKey}
+          linkedTicket={runtime.linkedTicket}
+          actionable={runtime.isEol === true}
+        />
+      </TD>
+    </TR>
+  );
+});
 RuntimeRow.displayName = "RuntimeRow";
 
 interface Props {
+  projectId: string;
   runtimes: Runtime[];
 }
 
-export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
+export const RuntimesTab: React.FC<Props> = ({ projectId, runtimes }) => {
   const t = useT();
   const { culture } = useI18n();
 
@@ -191,13 +207,13 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
     {
       key: COLUMN_KEYS.runtime,
       label: t("tech_health.table.runtime.runtime"),
-      width: "24%",
+      width: "22%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.version,
       label: t("tech_health.table.runtime.version"),
-      width: "24%",
+      width: "20%",
     },
     {
       key: COLUMN_KEYS.status,
@@ -208,14 +224,20 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
     {
       key: COLUMN_KEYS.deadline,
       label: t("tech_health.table.runtime.deadline"),
-      width: "22%",
+      width: "20%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.eolDate,
       label: t("tech_health.table.runtime.eol"),
-      width: "16%",
+      width: "14%",
       align: "right",
+    },
+    {
+      key: COLUMN_KEYS.ticket,
+      label: t("tech_health.table.ticket"),
+      width: "10%",
+      align: "center",
     },
   ];
 
@@ -252,6 +274,7 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
           <RuntimeRow
             key={runtime.id}
             runtime={runtime}
+            projectId={projectId}
             index={index}
             locale={culture}
           />
