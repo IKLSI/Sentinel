@@ -3,7 +3,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.TechHealth;
 
-namespace Sentinel.Application.Tickets.CreateFromFinding;
+namespace Sentinel.Application.Tickets;
 
 public sealed class FindingTicketDraftBuilder(ILocalizer localizer, string culture)
 {

@@ -1,6 +1,6 @@
 using Sentinel.Domain.Entities;
 
-namespace Sentinel.Application.Tickets.CreateFromFinding;
+namespace Sentinel.Application.Tickets;
 
 public sealed record FindingTicketDraft(
     string Title,

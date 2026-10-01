@@ -24,6 +24,7 @@ public class ProjectScanService(
     RuntimeEolScanService runtimeEolScanner,
     VulnerabilityAlertService vulnerabilityAlerts,
     FindingTicketSyncService findingTicketSync,
+    CriticalVulnerabilityTicketService criticalVulnerabilityTickets,
     ProjectInventoryWriter inventoryWriter,
     QuotaGuard quotaGuard,
     TokenProtector tokenProtector,
@@ -179,7 +180,10 @@ public class ProjectScanService(
         await inventoryWriter.SaveAsync(CancellationToken.None);
 
         if (project.Coverage == ScanCoverage.Covered && vulnerabilityOutcome.IsComplete)
+        {
             await findingTicketSync.SyncAsync(project);
+            await criticalVulnerabilityTickets.CreateMissingAsync(project);
+        }
 
         await auditLog.LogAsync(
             AuditAction.ScanCompleted,

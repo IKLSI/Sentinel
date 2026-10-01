@@ -542,7 +542,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("CreatedById")
+                    b.Property<Guid?>("CreatedById")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -994,8 +994,7 @@ namespace Sentinel.Infrastructure.Migrations
                     b.HasOne("Sentinel.Domain.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Sentinel.Domain.Entities.Organization", "Organization")
                         .WithMany()

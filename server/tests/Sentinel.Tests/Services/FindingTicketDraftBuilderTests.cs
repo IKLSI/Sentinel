@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Sentinel.Application.Tickets.CreateFromFinding;
+using Sentinel.Application.Tickets;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.TechHealth;
 using Sentinel.Tests.Helpers;

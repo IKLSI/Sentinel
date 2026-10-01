@@ -57,7 +57,7 @@ public class Ticket : IEntityWithId
     public TicketType Type { get; set; } = TicketType.Bug;
     public TicketStatus Status { get; set; } = TicketStatus.New;
     public Guid? AssignedToId { get; set; }
-    public Guid CreatedById { get; set; }
+    public Guid? CreatedById { get; set; }
     public FindingKind? FindingKind { get; set; }
     public string? FindingKey { get; set; }
     public DateTime? AutoResolvedAt { get; set; }
@@ -66,7 +66,7 @@ public class Ticket : IEntityWithId
     public Organization Organization { get; set; } = null!;
     public Project? Project { get; set; }
     public User? AssignedTo { get; set; }
-    public User CreatedBy { get; set; } = null!;
+    public User? CreatedBy { get; set; }
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     public ICollection<TicketHistory> History { get; set; } = new List<TicketHistory>();
     public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
