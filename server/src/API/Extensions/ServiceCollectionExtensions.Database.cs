@@ -87,7 +87,7 @@ public static partial class ServiceCollectionExtensions
                     TcpKeepAlive = true
                 };
                 options.UseNpgsqlConnection(builder.ToString());
-            });
+            }, new PostgreSqlStorageOptions { PrepareSchemaIfNecessary = false });
         });
 
         services.AddHangfireServer(options =>

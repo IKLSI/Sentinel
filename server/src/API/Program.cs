@@ -96,7 +96,7 @@ public static class Program
 
             using (systemScope.Enter())
             {
-                await context.Database.MigrateAsync();
+                await DatabaseSchemaMigrator.MigrateAsync(context, app.Configuration);
 
                 if (!app.Environment.IsDevelopment())
                 {
