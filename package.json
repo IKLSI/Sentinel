@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "concurrently --names \"api,web\" --prefix-colors \"cyan,green\" \"dotnet run --project server/src/API/Sentinel.API.csproj\" \"pnpm --prefix client dev\"",
-    "install-deps": "pnpm --prefix client install"
+    "install-deps": "pnpm --prefix client install",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
