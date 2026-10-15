@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { LanguageSwitch } from "@/features/landing/pages/LandingPage/components/LanguageSwitch";
 import { LandingNav } from "@/features/landing/pages/LandingPage/components/LandingNav";
 import { Hero } from "@/features/landing/pages/LandingPage/components/Hero";
 import { GradeScale } from "@/features/landing/pages/LandingPage/components/GradeScale";
@@ -27,6 +28,7 @@ export const LandingPage = () => (
       "--muted2": "#5c6f90",
     }}
   >
+    <LanguageSwitch />
     <LandingNav />
     <Hero />
     <GradeScale />

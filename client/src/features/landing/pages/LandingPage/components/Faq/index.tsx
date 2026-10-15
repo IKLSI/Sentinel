@@ -3,136 +3,147 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
-import { FAQ_ITEMS } from "@/features/landing/constants";
+import { FAQ_ITEM_IDS } from "@/features/landing/constants";
+import { useT } from "@/contexts/I18nContext";
 
-export const Faq = () => (
-  <Box
-    component="section"
-    id="faq"
-    sx={{
-      position: "relative",
-      minHeight: "100dvh",
-      scrollMarginTop: "88px",
-      boxSizing: "border-box",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      py: { xs: "64px", md: "96px" },
-      borderBottom: "1px solid var(--border)",
-      background: "#f0f9ff",
-      overflow: "hidden",
-    }}
-  >
+export const Faq = () => {
+  const t = useT();
+
+  return (
     <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        top: "-130px",
-        right: "12%",
-        width: "420px",
-        height: "420px",
-        borderRadius: "50%",
-        background:
-          "radial-gradient(circle, color-mix(in srgb, var(--purple) 12%, transparent) 0%, transparent 70%)",
-        filter: "blur(20px)",
-      }}
-    />
-    <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        bottom: "-90px",
-        left: "-70px",
-        width: "400px",
-        height: "400px",
-        borderRadius: "50%",
-        background:
-          "radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)",
-        filter: "blur(20px)",
-      }}
-    />
-    <Box
+      component="section"
+      id="faq"
       sx={{
         position: "relative",
-        zIndex: 1,
-        width: "100%",
-        maxWidth: 820,
-        mx: "auto",
-        px: { xs: "20px", md: "32px" },
+        minHeight: "100dvh",
+        scrollMarginTop: "88px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        py: { xs: "64px", md: "96px" },
+        borderBottom: "1px solid var(--border)",
+        background: "var(--s1)",
+        overflow: "hidden",
       }}
     >
-      <Box sx={{ textAlign: "center", mb: "48px" }}>
-        <Box
-          component="h2"
-          sx={{
-            m: 0,
-            fontSize: { xs: "36px", md: "60px" },
-            fontWeight: 900,
-            letterSpacing: "-0.045em",
-            lineHeight: 0.98,
-            color: "var(--text)",
-          }}
-        >
-          Questions fréquentes.
-        </Box>
-        <Box
-          sx={{
-            width: 120,
-            height: 4,
-            borderRadius: "2px",
-            background: "var(--accent)",
-            mx: "auto",
-            mt: "20px",
-          }}
-        />
-      </Box>
-
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {FAQ_ITEMS.map((item) => (
-          <Accordion
-            key={item.question}
-            disableGutters
-            elevation={0}
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          top: "-130px",
+          right: "12%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--purple) 12%, transparent) 0%, transparent 70%)",
+          filter: "blur(20px)",
+        }}
+      />
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          bottom: "-90px",
+          left: "-70px",
+          width: "400px",
+          height: "400px",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)",
+          filter: "blur(20px)",
+        }}
+      />
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          maxWidth: 820,
+          mx: "auto",
+          px: { xs: "20px", md: "32px" },
+        }}
+      >
+        <Box sx={{ textAlign: "center", mb: "48px" }}>
+          <Box
+            component="h2"
             sx={{
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "16px !important",
-              overflow: "hidden",
-              transition: "border-color 0.2s, box-shadow 0.2s",
-              "&::before": { display: "none" },
-              "&.Mui-expanded": {
-                margin: 0,
-                borderColor: "var(--text)",
-                boxShadow: "var(--sh-2)",
-              },
+              m: 0,
+              fontSize: { xs: "36px", md: "60px" },
+              fontWeight: 900,
+              letterSpacing: "-0.045em",
+              lineHeight: 0.98,
+              color: "var(--text)",
             }}
           >
-            <AccordionSummary
-              expandIcon={<ExpandMoreOutlined sx={{ color: "var(--text)" }} />}
-              sx={{ px: { xs: "18px", md: "28px" }, py: "6px" }}
+            {t("landing.faq.title")}
+          </Box>
+          <Box
+            sx={{
+              width: 120,
+              height: 4,
+              borderRadius: "2px",
+              background: "var(--accent)",
+              mx: "auto",
+              mt: "20px",
+            }}
+          />
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {FAQ_ITEM_IDS.map((id) => (
+            <Accordion
+              key={id}
+              disableGutters
+              elevation={0}
+              sx={{
+                background: "var(--s1)",
+                border: "1px solid var(--border)",
+                borderRadius: "16px !important",
+                overflow: "hidden",
+                transition: "border-color 0.2s, box-shadow 0.2s",
+                "&::before": { display: "none" },
+                "&.Mui-expanded": {
+                  margin: 0,
+                  borderColor: "var(--text)",
+                  boxShadow: "var(--sh-2)",
+                },
+              }}
             >
-              <Box
-                sx={{ fontWeight: 600, fontSize: "16px", color: "var(--text)" }}
+              <AccordionSummary
+                expandIcon={
+                  <ExpandMoreOutlined sx={{ color: "var(--text)" }} />
+                }
+                sx={{ px: { xs: "18px", md: "28px" }, py: "6px" }}
               >
-                {item.question}
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails
-              sx={{ px: { xs: "18px", md: "28px" }, pb: "26px" }}
-            >
-              <Box
-                sx={{
-                  color: "var(--text-secondary)",
-                  fontSize: "15px",
-                  lineHeight: 1.65,
-                }}
+                <Box
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "16px",
+                    color: "var(--text)",
+                  }}
+                >
+                  {t(`landing.faq.${id}.question`)}
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails
+                sx={{ px: { xs: "18px", md: "28px" }, pb: "26px" }}
               >
-                {item.answer}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        ))}
+                <Box
+                  sx={{
+                    color: "var(--text-secondary)",
+                    fontSize: "15px",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {t(`landing.faq.${id}.answer`)}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
       </Box>
     </Box>
-  </Box>
-);
+  );
+};

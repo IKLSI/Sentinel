@@ -8,14 +8,16 @@ import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { ROUTES } from "@/constants/routes";
+import { useI18n } from "@/contexts/I18nContext";
 
 const LINKS = [
-  { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#fonctionnalites", labelKey: "landing.nav.features" },
+  { href: "#faq", labelKey: "landing.nav.faq" },
 ] as const;
 
 export const LandingNav = () => {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <Box
@@ -25,14 +27,16 @@ export const LandingNav = () => {
         top: 0,
         zIndex: 100,
         pt: { xs: "16px", md: "20px" },
-        px: { xs: "16px", md: "24px" },
+        pl: { xs: "16px", md: "168px" },
+        pr: { xs: "142px", md: "168px" },
       }}
     >
       <Box
         sx={{
           maxWidth: 980,
           mx: "auto",
-          display: "flex",
+          display: { xs: "flex", md: "grid" },
+          gridTemplateColumns: { md: "1fr auto 1fr" },
           alignItems: "center",
           justifyContent: "space-between",
           gap: "16px",
@@ -87,7 +91,7 @@ export const LandingNav = () => {
                 "&:hover": { color: "var(--text)", textDecoration: "none" },
               }}
             >
-              {link.label}
+              {t(link.labelKey)}
             </Box>
           ))}
         </Box>
@@ -96,6 +100,7 @@ export const LandingNav = () => {
           sx={{
             display: { xs: "none", md: "flex" },
             alignItems: "center",
+            justifyContent: "flex-end",
             gap: "8px",
           }}
         >
@@ -111,12 +116,12 @@ export const LandingNav = () => {
               textTransform: "uppercase",
             }}
           >
-            Commencer
+            {t("landing.nav.start")}
           </Button>
         </Box>
 
         <IconButton
-          aria-label="Fonctionnalités"
+          aria-label={t("landing.nav.menu_label")}
           sx={{ display: { xs: "inline-flex", md: "none" } }}
           onClick={() => setOpen((v) => !v)}
         >
@@ -156,7 +161,7 @@ export const LandingNav = () => {
                 "&:hover": { color: "var(--text)", textDecoration: "none" },
               }}
             >
-              {link.label}
+              {t(link.labelKey)}
             </Box>
           ))}
           <Box
@@ -164,6 +169,9 @@ export const LandingNav = () => {
               mt: "8px",
               pt: "10px",
               borderTop: "1px solid var(--border)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
             }}
           >
             <Button
@@ -180,7 +188,7 @@ export const LandingNav = () => {
                 boxShadow: "0 12px 28px -10px var(--accent-border)",
               }}
             >
-              Essai gratuit
+              {t("landing.nav.free_trial")}
             </Button>
           </Box>
         </Box>

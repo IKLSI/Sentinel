@@ -12,24 +12,24 @@ import { usePublicScanMutation } from "@/domains/publicScan/mutations";
 import type { PublicScanResponse } from "@/domains/publicScan/types";
 import { useToast } from "@/hooks/useToast";
 import { extractApiErrorCode } from "@/helpers/apiError";
+import { useT } from "@/contexts/I18nContext";
 
-const ERROR_MESSAGES: Record<string, string> = {
+const ERROR_KEYS: Record<string, string> = {
   "errors.scan.invalid_repository_url":
-    "URL invalide. Seuls les dépôts GitHub et GitLab publics sont acceptés.",
-  "errors.scan.no_accessible_files":
-    "Ce dépôt est introuvable, privé, ou ne contient aucun fichier analysable.",
-  "errors.scan.failed": "Le scan a échoué. Réessayez dans quelques instants.",
-  "errors.common.too_many_requests":
-    "Trop de scans depuis cette connexion. Réessayez dans quelques minutes.",
+    "landing.cta.error.invalid_repository_url",
+  "errors.scan.no_accessible_files": "landing.cta.error.no_accessible_files",
+  "errors.scan.failed": "landing.cta.error.scan_failed",
+  "errors.common.too_many_requests": "landing.cta.error.too_many_requests",
 };
 
-const DEFAULT_ERROR = "Impossible de scanner ce dépôt pour le moment.";
+const DEFAULT_ERROR_KEY = "landing.cta.error.default";
 
 export const CtaDark = () => {
   const [repositoryUrl, setRepositoryUrl] = useState("");
   const [result, setResult] = useState<PublicScanResponse | null>(null);
   const scanMutation = usePublicScanMutation();
   const { showToast } = useToast();
+  const t = useT();
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,7 +40,10 @@ export const CtaDark = () => {
         onSuccess: (response) => setResult(response),
         onError: (err) => {
           const code = extractApiErrorCode(err)?.code;
-          showToast((code && ERROR_MESSAGES[code]) || DEFAULT_ERROR, "error");
+          showToast(
+            t((code && ERROR_KEYS[code]) || DEFAULT_ERROR_KEY),
+            "error",
+          );
         },
       },
     );
@@ -62,7 +65,7 @@ export const CtaDark = () => {
         justifyContent: "center",
         py: { xs: "64px", md: "96px" },
         px: { xs: "16px", md: "32px" },
-        background: "var(--s1)",
+        background: "#f0f9ff",
       }}
     >
       <Box
@@ -150,7 +153,7 @@ export const CtaDark = () => {
             color: "var(--text)",
           }}
         >
-          Votre note tient en une lettre.
+          {t("landing.cta.title")}
         </Box>
         <Box
           component="p"
@@ -163,8 +166,7 @@ export const CtaDark = () => {
             lineHeight: 1.55,
           }}
         >
-          Collez l'URL d'un dépôt GitHub ou GitLab public et découvrez sa santé
-          réelle en quelques secondes, sans créer de compte.
+          {t("landing.cta.subtitle")}
         </Box>
 
         {result ? (
@@ -204,17 +206,27 @@ export const CtaDark = () => {
                     color: "var(--text)",
                   }}
                 >
-                  Score {result.score}/100
+                  {t("landing.cta.score", { score: result.score })}
                 </Box>
                 <Box
                   sx={{ fontSize: "13.5px", color: "var(--text-secondary)" }}
                 >
-                  {result.vulnerableDependencyCount} dépendance
-                  {result.vulnerableDependencyCount > 1 ? "s" : ""} vulnérable
-                  {result.vulnerableDependencyCount > 1 ? "s" : ""} sur{" "}
-                  {result.dependencyCount}
+                  {t(
+                    result.vulnerableDependencyCount === 1
+                      ? "landing.cta.vulnerable_one"
+                      : "landing.cta.vulnerable_other",
+                    {
+                      count: result.vulnerableDependencyCount,
+                      total: result.dependencyCount,
+                    },
+                  )}
                   {result.eolRuntimeCount > 0 &&
-                    ` · ${result.eolRuntimeCount} runtime${result.eolRuntimeCount > 1 ? "s" : ""} en fin de vie`}
+                    t(
+                      result.eolRuntimeCount === 1
+                        ? "landing.cta.eol_one"
+                        : "landing.cta.eol_other",
+                      { count: result.eolRuntimeCount },
+                    )}
                 </Box>
               </Box>
             </Box>
@@ -242,7 +254,7 @@ export const CtaDark = () => {
                   width: { xs: "100%", sm: "auto" },
                 }}
               >
-                Créer un compte pour le suivi continu
+                {t("landing.cta.create_account")}
               </Button>
             </Box>
           </Box>
@@ -313,7 +325,7 @@ export const CtaDark = () => {
                   width: { xs: "100%", sm: "auto" },
                 }}
               >
-                Scanner
+                {t("landing.cta.scan_button")}
               </Button>
             </Box>
           </Box>

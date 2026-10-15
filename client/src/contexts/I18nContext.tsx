@@ -42,14 +42,26 @@ function interpolate(
   });
 }
 
+function detectBrowserLanguage(): Language {
+  const preferred = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+  for (const tag of preferred) {
+    const base = tag.toLowerCase().split("-")[0];
+    if (base === "fr") return Language.Fr;
+    if (base === "en") return Language.En;
+  }
+  return Language.Fr;
+}
+
 export const I18nProvider: React.FC<{
   children: React.ReactNode;
   initialLanguage?: Language;
 }> = ({ children, initialLanguage }) => {
   const [language, setLanguageState] = useState<Language>(
     initialLanguage ??
-      (localStorage.getItem(STORAGE_KEY) as Language) ??
-      Language.Fr,
+      (localStorage.getItem(STORAGE_KEY) as Language | null) ??
+      detectBrowserLanguage(),
   );
   const [translations, setTranslations] = useState<Translations | null>(null);
 

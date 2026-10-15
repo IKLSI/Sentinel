@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { ECOSYSTEMS } from "@/features/landing/constants";
 import { ECOSYSTEM_LOGOS } from "@/features/landing/ecosystemLogos";
 import { SectionHeading } from "@/features/landing/pages/LandingPage/components/SectionHeading";
+import { useT } from "@/contexts/I18nContext";
 
 const CHIP_COLORS = [
   "#818cf8",
@@ -19,6 +20,8 @@ const CHIP_COLORS = [
 ];
 
 export const EcosystemChips = () => {
+  const t = useT();
+
   return (
     <Box
       component="section"
@@ -74,8 +77,8 @@ export const EcosystemChips = () => {
         }}
       >
         <SectionHeading
-          title="12 écosystèmes majeurs couverts."
-          subtitle="Reconnus automatiquement dès la première connexion de votre dépôt, langages compris, quels que soient les outils utilisés par vos équipes, la taille du projet ou son ancienneté."
+          title={t("landing.ecosystems.title")}
+          subtitle={t("landing.ecosystems.subtitle")}
         />
 
         <Box
