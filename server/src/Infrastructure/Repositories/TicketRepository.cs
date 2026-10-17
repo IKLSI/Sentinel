@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
@@ -52,12 +51,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         return new PagedList<TicketGridRow>(items, totalCount);
     }
 
-    private static readonly Expression<Func<Ticket, int>> PriorityRank = t =>
-        t.Priority == TicketPriority.Low ? 0
-        : t.Priority == TicketPriority.Medium ? 1
-        : t.Priority == TicketPriority.High ? 2
-        : 3;
-
     private static readonly Expression<Func<Ticket, int>> StatusRank = t =>
         t.Status == TicketStatus.New ? 0
         : t.Status == TicketStatus.InProgress ? 1
@@ -89,8 +82,8 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
                 ? query.OrderByDescending(t => t.Comments.Count)
                 : query.OrderBy(t => t.Comments.Count),
             _ => descending
-                ? query.OrderByDescending(PriorityRank)
-                : query.OrderBy(PriorityRank)
+                ? query.OrderByDescending(t => t.PriorityRank)
+                : query.OrderBy(t => t.PriorityRank)
         };
     }
 
@@ -156,18 +149,6 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
                 t.CreatedAt,
                 t.UpdatedAt))
             .ToListAsync(cancellationToken);
-
-    public async Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
-        CancellationToken cancellationToken)
-    {
-        List<Guid> ids = projectIds.ToList();
-
-        return await Query(QueryTracking.NoTracking)
-            .Where(t => t.ProjectId != null && ids.Contains(t.ProjectId.Value))
-            .GroupBy(t => t.ProjectId!.Value)
-            .Select(g => new { ProjectId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.ProjectId, x => x.Count, cancellationToken);
-    }
 
     public Task<bool> ExistsInOrganizationAsync(Guid ticketId, Guid organizationId,
         CancellationToken cancellationToken) =>

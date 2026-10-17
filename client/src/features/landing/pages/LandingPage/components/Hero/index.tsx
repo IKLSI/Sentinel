@@ -5,6 +5,12 @@ import TrendingUpOutlined from "@mui/icons-material/TrendingUpOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { useT } from "@/contexts/I18nContext";
 
+const DASHBOARD_PREVIEW = {
+  src: "/landing/dashboard-preview.png",
+  width: 2000,
+  height: 1148,
+} as const;
+
 const fadeUp = {
   "@keyframes heroFadeUp": {
     from: { opacity: 0, transform: "translateY(16px)" },
@@ -190,11 +196,13 @@ export const Hero = () => {
                 "40px 55px 70px -30px rgba(15, 23, 42, 0.45), 90px 70px 90px -50px rgba(15, 23, 42, 0.3)",
             }}
           >
-            <Box
-              component="img"
-              src="/landing/dashboard-preview.png"
+            <img
+              src={DASHBOARD_PREVIEW.src}
+              width={DASHBOARD_PREVIEW.width}
+              height={DASHBOARD_PREVIEW.height}
+              fetchPriority="high"
               alt={t("landing.hero.image_alt")}
-              sx={{ display: "block", width: "100%", height: "auto" }}
+              style={{ display: "block", width: "100%", height: "auto" }}
             />
           </Box>
 

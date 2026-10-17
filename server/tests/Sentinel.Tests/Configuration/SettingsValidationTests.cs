@@ -24,8 +24,6 @@ public class SettingsValidationTests
         ["Email:Host"] = "smtp.example.fr",
         ["Email:FromAddress"] = "no-reply@example.fr",
         ["Frontend:BaseUrl"] = "https://sentinel.example.fr",
-        ["Stripe:SecretKey"] = "sk_test_x",
-        ["Stripe:WebhookSecret"] = "whsec_x",
         ["Support:Email"] = "support@example.fr"
     };
 
@@ -61,16 +59,6 @@ public class SettingsValidationTests
         IReadOnlyList<string> failures = ValidationFailures(Environments.Production, []);
 
         failures.Should().Contain(failure => failure.Contains("Email:Host is required in the configuration"));
-    }
-
-    [Fact]
-    public void Production_WithoutStripeSecrets_DoesNotBlockStartup()
-    {
-        Dictionary<string, string?> values = CompleteConfiguration();
-        values.Remove("Stripe:SecretKey");
-        values.Remove("Stripe:WebhookSecret");
-
-        ValidationFailures(Environments.Production, values).Should().BeEmpty();
     }
 
     [Fact]

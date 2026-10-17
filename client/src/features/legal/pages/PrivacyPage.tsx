@@ -8,23 +8,6 @@ const SECTIONS: LegalSection[] = [
     id: "roles",
     titleKey: "privacy.roles.title",
     bodyKey: "privacy.roles.body",
-    bulletKeys: [
-      "privacy.roles.item.controller",
-      "privacy.roles.item.processor",
-      "privacy.roles.item.own",
-    ],
-  },
-  {
-    id: "data",
-    titleKey: "privacy.data.title",
-    bodyKey: "privacy.data.body",
-    bulletKeys: [
-      "privacy.data.item.identity",
-      "privacy.data.item.activity",
-      "privacy.data.item.technical",
-      "privacy.data.item.billing",
-      "privacy.data.item.repositories",
-    ],
   },
   {
     id: "purposes",
@@ -33,9 +16,7 @@ const SECTIONS: LegalSection[] = [
     bulletKeys: [
       "privacy.purposes.item.service",
       "privacy.purposes.item.account",
-      "privacy.purposes.item.billing",
       "privacy.purposes.item.security",
-      "privacy.purposes.item.support",
       "privacy.purposes.item.no_profiling",
     ],
   },
@@ -45,20 +26,9 @@ const SECTIONS: LegalSection[] = [
     bodyKey: "privacy.recipients.body",
     bulletKeys: [
       "privacy.recipients.item.hosting",
-      "privacy.recipients.item.payment",
       "privacy.recipients.item.email",
       "privacy.recipients.item.repos",
-      "privacy.recipients.item.feeds",
       "privacy.recipients.item.transfers",
-    ],
-  },
-  {
-    id: "cookies",
-    titleKey: "privacy.cookies.title",
-    bodyKey: "privacy.cookies.body",
-    bulletKeys: [
-      "privacy.cookies.item.refresh",
-      "privacy.cookies.item.storage",
     ],
   },
   {
@@ -69,7 +39,6 @@ const SECTIONS: LegalSection[] = [
       "privacy.retention.account",
       "privacy.retention.activity",
       "privacy.retention.audit",
-      "privacy.retention.billing",
       "privacy.retention.tokens",
     ],
   },
@@ -84,18 +53,6 @@ const SECTIONS: LegalSection[] = [
     ],
     linkKey: "privacy.rights.profile_link",
     linkTo: ROUTES.PROFILE,
-  },
-  {
-    id: "security",
-    titleKey: "privacy.security.title",
-    bodyKey: "privacy.security.body",
-    bulletKeys: [
-      "privacy.security.item.transport",
-      "privacy.security.item.auth",
-      "privacy.security.item.isolation",
-      "privacy.security.item.secrets",
-      "privacy.security.item.audit",
-    ],
   },
   {
     id: "contact",

@@ -8,15 +8,15 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import { useUpdateProjectFrequencyMutation } from "@/domains/projects/mutations";
 import type { ScanFrequency } from "@/enums";
 import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 interface Props {
-  project: Project;
-  onDelete: (project: Project) => void;
+  project: ProjectSummary;
+  onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
   isScanning: boolean;
 }
@@ -25,7 +25,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
   ({ project, onDelete, onScan, isScanning }) => {
     const navigate = useNavigate();
     const t = useT();
-    const ticketCount = 0;
+    const ticketCount = project.totalTickets;
     const [modalOpen, setModalOpen] = useState(false);
     const [selected, setSelected] = useState<ScanFrequency>(
       project.scanFrequency as ScanFrequency,

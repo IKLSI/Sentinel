@@ -7,21 +7,7 @@ public interface IOrganizationRepository : ICrudEntityWithIdRepository<Organizat
 {
     Task<bool> ExistsBySlugAsync(string slug, CancellationToken cancellationToken);
 
-    Task<Organization?> GetOrDefaultByStripeReferenceAsync(string subscriptionId, string? customerId,
-        CancellationToken cancellationToken);
-
-    Task<PlanTier> GetEffectivePlanTierOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task<bool> TryConsumeScanQuotaAsync(Guid organizationId, int maxScansPerMonth,
-        CancellationToken cancellationToken);
-
-    Task RefundScanQuotaAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task ResetScanPeriodIfElapsedAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task<DateTime> GetScanPeriodStartOrDefaultAsync(Guid organizationId, CancellationToken cancellationToken);
-
     Task LockForUpdateAsync(Guid organizationId, CancellationToken cancellationToken);
 
-    Task<int> AllocateTicketNumberAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<int> AllocateTicketNumbersAsync(Guid organizationId, int count, CancellationToken cancellationToken);
 }

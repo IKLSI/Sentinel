@@ -1,35 +1,41 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.Projects;
 
 public class ProjectListService(
     IProjectRepository projectRepository,
-    ITicketRepository ticketRepository,
     ITenantContext tenant) : IService
 {
-    public async Task<Result<List<ProjectDto>>> ExecuteAsync(CancellationToken cancellationToken)
+    public async Task<Result<List<ProjectSummaryDto>>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId)
-            return Result<List<ProjectDto>>.Unauthorized();
+            return Result<List<ProjectSummaryDto>>.Unauthorized();
 
-        IReadOnlyList<Project> projects =
-            await projectRepository.ListWithHealthDetailsByHealthRankAsync(organizationId, cancellationToken);
+        IReadOnlyList<ProjectSummaryRow> projects =
+            await projectRepository.ListSummariesByHealthRankAsync(organizationId, cancellationToken);
 
-        List<Guid> projectIds = projects.Select(p => p.Id).ToList();
-
-        IReadOnlyDictionary<Guid, int> ticketCounts =
-            await ticketRepository.CountByProjectsAsync(projectIds, cancellationToken);
-
-        return projects.Select(project =>
-        {
-            ProjectDto dto = ProjectMapper.ToDto(project);
-            dto.TotalTickets = ticketCounts.GetValueOrDefault(project.Id);
-            return dto;
-        }).ToList();
+        return projects.Select(ToDto).ToList();
     }
+
+    private static ProjectSummaryDto ToDto(ProjectSummaryRow project) => new()
+    {
+        Id = project.Id,
+        Name = project.Name,
+        RepositoryUrl = project.RepositoryUrl,
+        RepositoryType = project.RepositoryType.ToString(),
+        LastScanAt = project.LastScanAt,
+        LastScanError = project.LastScanError,
+        HealthScore = project.HealthScore,
+        HealthGrade = project.HealthGrade,
+        Coverage = project.Coverage.ToString(),
+        ScanFrequency = project.ScanFrequency.ToString(),
+        TotalDependencies = project.TotalDependencies,
+        CriticalVulnerabilities = project.CriticalVulnerabilities,
+        TotalVulnerabilities = project.TotalVulnerabilities,
+        KnownExploitedVulnerabilities = project.KnownExploitedVulnerabilities,
+        TotalTickets = project.TotalTickets
+    };
 }

@@ -7,7 +7,7 @@ import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import {
   type DashPalette,
   HEALTH_CRITICAL_THRESHOLD,
@@ -20,7 +20,7 @@ import { HealthGauge } from "@/features/dashboard/pages/DashboardPage/components
 import { ProjectRankRow } from "@/features/dashboard/pages/DashboardPage/components/ProjectRankRow";
 
 interface Props {
-  projects: Project[];
+  projects: ProjectSummary[];
   palette: DashPalette;
 }
 

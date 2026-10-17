@@ -16,21 +16,17 @@ public class TechHealthScanJob(
     {
         using IDisposable elevation = systemScope.Enter();
 
-        logger.LogInformation("Tech health scan started");
-
         try
         {
-            await dueProjectScanService.ScanAllDueAsync(cancellationToken);
-            logger.LogInformation("Tech health scan completed");
+            await dueProjectScanService.ScheduleAllDueAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Tech health scan failed");
+            logger.LogError(ex, "Tech health scan scheduling failed");
         }
         finally
         {
-            await realtimeNotifier.NotifyAllAsync(new RealtimeEvent(RealtimeResources.Jobs),
-                CancellationToken.None);
+            await realtimeNotifier.NotifyAllAsync(new RealtimeEvent(RealtimeResources.Jobs));
         }
     }
 }

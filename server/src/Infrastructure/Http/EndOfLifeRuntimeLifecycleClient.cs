@@ -10,6 +10,7 @@ namespace Sentinel.Infrastructure.Http;
 public class EndOfLifeRuntimeLifecycleClient(
     IHttpClientFactory httpClientFactory,
     IMemoryCache cache,
+    InFlightRequestCoalescer coalescer,
     ILogger<EndOfLifeRuntimeLifecycleClient> logger) : IRuntimeLifecycleClient
 {
     public async Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version)
@@ -41,6 +42,14 @@ public class EndOfLifeRuntimeLifecycleClient(
         if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
             return cached;
 
+        return await coalescer.RunAsync(cacheKey, () => LoadCyclesAsync(product, cacheKey));
+    }
+
+    private async Task<IReadOnlyCollection<EndOfLifeCycle>> LoadCyclesAsync(string product, string cacheKey)
+    {
+        if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
+            return cached;
+
         IReadOnlyCollection<EndOfLifeCycle> cycles = await FetchCyclesAsync(product);
 
         cache.Set(cacheKey, cycles, new MemoryCacheEntryOptions
@@ -48,7 +57,7 @@ public class EndOfLifeRuntimeLifecycleClient(
             AbsoluteExpirationRelativeToNow = cycles.Count == 0
                 ? CacheKeys.RuntimeLifecycleUnresolvedTtl
                 : CacheKeys.RuntimeLifecycleTtl,
-            Size = 1
+            Size = Math.Max(1, cycles.Count)
         });
 
         return cycles;
@@ -70,7 +79,8 @@ public class EndOfLifeRuntimeLifecycleClient(
                 return [];
             }
 
-            using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            await using Stream stream = await response.Content.ReadAsStreamAsync();
+            using JsonDocument document = await JsonDocument.ParseAsync(stream);
 
             if (document.RootElement.ValueKind != JsonValueKind.Array) return [];
 

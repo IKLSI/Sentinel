@@ -101,7 +101,6 @@ bin/
 obj/
 [Oo]bj/
 out/
-server/src/API/wwwroot/
 
 # User-specific files
 

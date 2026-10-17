@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Sentinel.Infrastructure.Data;
@@ -18,7 +19,7 @@ public class DatabaseConnectionScopeMiddleware
 
     public async Task InvokeAsync(HttpContext context, SentinelContext dbContext)
     {
-        if (!_enabled)
+        if (!_enabled || !IsControllerEndpoint(context))
         {
             await _next(context);
             return;
@@ -35,4 +36,7 @@ public class DatabaseConnectionScopeMiddleware
             await dbContext.Database.CloseConnectionAsync();
         }
     }
+
+    private static bool IsControllerEndpoint(HttpContext context) =>
+        context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>() is not null;
 }

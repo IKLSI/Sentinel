@@ -5,10 +5,9 @@ import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
 import { formatDistanceToNow } from "date-fns";
-import { fr, enUS, type Locale } from "date-fns/locale";
+import { getDateFnsLocale } from "@/configs/locales";
 import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/contexts/I18nContext";
-import { Language } from "@/enums";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import type { ActivityItem } from "@/domains/dashboard/types";
 import {
@@ -35,15 +34,10 @@ const activityIcon = (type?: string) => {
   return HistoryOutlined;
 };
 
-const DATE_FNS_LOCALE: Record<string, Locale> = {
-  [Language.Fr]: fr,
-  [Language.En]: enUS,
-};
-
 export const ActivityPanel: React.FC<Props> = ({ activity, palette }) => {
   const { t, culture } = useI18n();
   const navigate = useNavigate();
-  const dateFnsLocale = DATE_FNS_LOCALE[culture] ?? fr;
+  const dateFnsLocale = getDateFnsLocale(culture);
 
   return (
     <Box

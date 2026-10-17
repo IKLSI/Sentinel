@@ -1,3 +1,5 @@
+using Sentinel.Domain.Entities;
+
 namespace Sentinel.Domain.Repositories;
 
 public sealed record ApiKeyListRow(
@@ -8,3 +10,13 @@ public sealed record ApiKeyListRow(
     DateTime? LastUsedAt,
     DateTime CreatedAt,
     string CreatedByName);
+
+public sealed record ApiKeyAuthenticationRow(
+    Guid ApiKeyId,
+    DateTime? ExpiresAt,
+    DateTime? LastUsedAt,
+    Guid UserId,
+    string Email,
+    UserRole Role,
+    UserAccessStatus AccessStatus,
+    Guid OrganizationId);

@@ -1,5 +1,4 @@
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
 using Sentinel.Application.TechHealth.Scan;
@@ -13,7 +12,6 @@ namespace Sentinel.Application.TechHealth.TriggerScan;
 public class ProjectScanTriggerService(
     IProjectRepository projectRepository,
     IJobScheduler backgroundJobs,
-    QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
@@ -28,13 +26,7 @@ public class ProjectScanTriggerService(
         if (!belongs)
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
-        Result quotaResult = await quotaGuard.TryConsumeScanAsync(organizationId, cancellationToken);
-
-        if (!quotaResult.IsSuccess)
-            return quotaResult;
-
-        backgroundJobs.Enqueue<ProjectScanService>(service =>
-            service.ScanProjectWithReservedQuotaAsync(projectId, organizationId));
+        backgroundJobs.Enqueue<ProjectScanService>(service => service.ScanProjectAsync(projectId));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

@@ -46,7 +46,7 @@ public class OrganizationSettingsUpdateService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Organization), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Organization));
 
         await auditLog.LogAsync(
             AuditAction.OrganizationUpdated,

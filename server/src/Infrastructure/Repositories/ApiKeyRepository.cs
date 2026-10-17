@@ -68,12 +68,36 @@ public class ApiKeyRepository : CrudEntityWithIdRepository<ApiKey>, IApiKeyRepos
         Query(tracking)
             .FirstOrDefaultAsync(k => k.Id == apiKeyId && k.OrganizationId == organizationId, cancellationToken);
 
-    public Task<ApiKey?> GetOrDefaultActiveByHashAcrossTenantsAsync(string keyHash,
+    public Task<ApiKeyAuthenticationRow?> GetOrDefaultActiveAuthenticationByHashAcrossTenantsAsync(string keyHash,
         CancellationToken cancellationToken) =>
         Context.ApiKeys
             .IgnoreQueryFilters()
-            .Include(k => k.CreatedBy)
-            .FirstOrDefaultAsync(k => k.KeyHash == keyHash && !k.IsRevoked, cancellationToken);
+            .AsNoTracking()
+            .Where(k => k.KeyHash == keyHash && !k.IsRevoked)
+            .Select(k => new ApiKeyAuthenticationRow(
+                k.Id,
+                k.ExpiresAt,
+                k.LastUsedAt,
+                k.CreatedBy.Id,
+                k.CreatedBy.Email,
+                k.CreatedBy.Role,
+                k.CreatedBy.AccessStatus,
+                k.CreatedBy.OrganizationId))
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task<int> UpdateLastUsedAtAcrossTenantsAsync(Guid apiKeyId, DateTime usedAt, DateTime staleBefore,
+        CancellationToken cancellationToken) =>
+        Context.ApiKeys
+            .IgnoreQueryFilters()
+            .Where(k => k.Id == apiKeyId && (k.LastUsedAt == null || k.LastUsedAt < staleBefore))
+            .ExecuteUpdateAsync(s => s.SetProperty(k => k.LastUsedAt, usedAt), cancellationToken);
+
+    public async Task<IReadOnlyList<string>> ListKeyHashesForUserAsync(Guid userId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(k => k.CreatedById == userId)
+            .Select(k => k.KeyHash)
+            .ToListAsync(cancellationToken);
 
     public Task<int> RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken) =>
         Query(QueryTracking.Tracked)

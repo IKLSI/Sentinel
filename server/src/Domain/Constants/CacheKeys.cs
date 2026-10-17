@@ -7,18 +7,19 @@ public static class CacheKeys
     private const string DashboardPrefix = "dashboard";
     private const string AuthAccountPrefix = "auth:account";
     private const string LatestVersionPrefix = "registry:latest";
-    private const string RevokedTokenPrefix = "auth:revoked";
+    private const string ApiKeyPrincipalPrefix = "auth:apikey";
     private const string LocalePrefix = "locale";
     private const string AdvisoryPrefix = "osv:advisory";
     private const string RuntimeLifecyclePrefix = "eol:product";
     private const string EpssPrefix = "epss:cve";
+    private const string PublicScanPrefix = "public-scan";
+    private const string AvailableReposPrefix = "available-repos";
 
     public const string KnownExploitedCatalog = "kev:catalog";
     public const string KnownExploitedCatalogUnavailable = "kev:unavailable";
 
     public static readonly TimeSpan AuthAccountTtl = TimeSpan.FromSeconds(30);
-    public static readonly TimeSpan RevokedTokenTtl = TimeSpan.FromMinutes(5);
-    public static readonly TimeSpan RevokedTokenNegativeTtl = TimeSpan.FromSeconds(15);
+    public static readonly TimeSpan ApiKeyPrincipalTtl = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan LatestVersionTtl = TimeSpan.FromHours(12);
     public static readonly TimeSpan LatestVersionUnresolvedTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan LocaleTtl = TimeSpan.FromHours(1);
@@ -27,12 +28,15 @@ public static class CacheKeys
     public static readonly TimeSpan RuntimeLifecycleUnresolvedTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan ExploitSignalTtl = TimeSpan.FromHours(24);
     public static readonly TimeSpan ExploitSignalUnavailableTtl = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan PublicScanTtl = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan PublicScanUnpinnedTtl = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
 
     public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
 
     public static string AuthAccount(Guid userId) => $"{AuthAccountPrefix}:{userId}";
 
-    public static string RevokedToken(string jti) => $"{RevokedTokenPrefix}:{jti}";
+    public static string ApiKeyPrincipal(string keyHash) => $"{ApiKeyPrincipalPrefix}:{keyHash}";
 
     public static string Locale(string culture) => $"{LocalePrefix}:{culture}";
 
@@ -44,4 +48,10 @@ public static class CacheKeys
     public static string RuntimeLifecycle(string product) => $"{RuntimeLifecyclePrefix}:{product}";
 
     public static string Epss(string cveId) => $"{EpssPrefix}:{cveId.ToUpperInvariant()}";
+
+    public static string PublicScan(string host, string owner, string repository, string? commitSha) =>
+        $"{PublicScanPrefix}:{host}/{owner}/{repository}:{commitSha}".ToLowerInvariant();
+
+    public static string AvailableRepos(Guid organizationId, RepositoryType platform, string tokenFingerprint) =>
+        $"{AvailableReposPrefix}:{organizationId}:{platform}:{tokenFingerprint}";
 }

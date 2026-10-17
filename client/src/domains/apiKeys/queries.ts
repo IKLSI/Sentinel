@@ -7,6 +7,9 @@ export const useApiKeysQuery = (filters: ApiKeysFilters = {}) =>
   useGetQuery<ApiKey[]>(
     ROUTES_API.api.settings.apiKeys.__path,
     {},
-    { queryKey: apiKeysQueryKey(filters) },
+    {
+      queryKey: apiKeysQueryKey(filters),
+      placeholderData: (previous) => previous,
+    },
     filters,
   );

@@ -27,6 +27,7 @@ public class DependencyDto
     public string CurrentVersion { get; set; } = string.Empty;
     public string? LatestVersion { get; set; }
     public string Type { get; set; } = string.Empty;
+    public bool IsDirect { get; set; }
     public string Ecosystem { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public bool IsOutdated { get; set; }

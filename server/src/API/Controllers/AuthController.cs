@@ -11,7 +11,6 @@ using Sentinel.Application.Auth.Register;
 using Sentinel.Application.Auth.ResendVerification;
 using Sentinel.Application.Auth.ResetPassword;
 using Sentinel.Application.Auth.VerifyEmail;
-using Sentinel.Domain.Constants;
 using Sentinel.Application.Auth;
 using Sentinel.Application.Common.Contracts;
 

@@ -67,6 +67,17 @@ export const TicketDetailPage: React.FC = () => {
     value: string;
     attachments: CommentAttachment[];
   } | null>(null);
+  const composerRef = useRef({
+    value: composerValue,
+    attachments: composerAttachments,
+  });
+
+  useEffect(() => {
+    composerRef.current = {
+      value: composerValue,
+      attachments: composerAttachments,
+    };
+  }, [composerValue, composerAttachments]);
   const submitting = editingCommentId
     ? updateCommentMutation.isPending
     : addCommentMutation.isPending;
@@ -95,23 +106,15 @@ export const TicketDetailPage: React.FC = () => {
     return title;
   }, [ticket, endpointMatch]);
 
-  const startEditComment = useCallback(
-    (commentId: string, content: string) => {
-      const { text, attachments } = parseCommentContent(content);
-      setEditingCommentId((current) => {
-        if (!current) {
-          draftRef.current = {
-            value: composerValue,
-            attachments: composerAttachments,
-          };
-        }
-        return commentId;
-      });
-      setComposerValue(text);
-      setComposerAttachments(attachments);
-    },
-    [composerValue, composerAttachments],
-  );
+  const startEditComment = useCallback((commentId: string, content: string) => {
+    const { text, attachments } = parseCommentContent(content);
+    setEditingCommentId((current) => {
+      if (!current) draftRef.current = composerRef.current;
+      return commentId;
+    });
+    setComposerValue(text);
+    setComposerAttachments(attachments);
+  }, []);
 
   const cancelEditComment = useCallback(() => {
     setEditingCommentId(null);

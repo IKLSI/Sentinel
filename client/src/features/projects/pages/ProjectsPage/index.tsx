@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/ui/common/EmptyState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import {
   SECTION_ORDER,
   type SectionKey,
@@ -42,12 +42,12 @@ export const ProjectsPage: React.FC = () => {
   const { openImport } = routeApi.useSearch();
   const { data: projects = [], isLoading: loading } = useProjectsQuery();
   const deleteProjectMutation = useDeleteProjectMutation();
-  const scanProjectMutation = useScanProjectMutation();
+  const { mutate: scanProject } = useScanProjectMutation();
   const exportProjectsMutation = useExportProjectsExcelMutation();
   const deleting = deleteProjectMutation.isPending;
   const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
   const [collapsedSections, setCollapsedSections] = useState<
@@ -63,6 +63,7 @@ export const ProjectsPage: React.FC = () => {
   });
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanBaselineRef = useRef<string | null>(null);
+  const scanningIdRef = useRef<string | null>(null);
 
   useEffect(
     () => () => {
@@ -98,19 +99,21 @@ export const ProjectsPage: React.FC = () => {
   const stopScanFeedback = useCallback(() => {
     if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     scanTimeoutRef.current = null;
+    scanningIdRef.current = null;
     setScanningId(null);
   }, []);
 
   const handleScan = useCallback(
     (id: string) => {
-      if (scanningId) return;
+      if (scanningIdRef.current) return;
       scanBaselineRef.current =
         queryClient
-          .getQueryData<Project[]>(PROJECTS_QUERY_KEY)
+          .getQueryData<ProjectSummary[]>(PROJECTS_QUERY_KEY)
           ?.find((p) => p.id === id)?.lastScanAt ?? null;
+      scanningIdRef.current = id;
       setScanningId(id);
 
-      scanProjectMutation.mutate(
+      scanProject(
         { id },
         {
           onSuccess: () => {
@@ -127,15 +130,7 @@ export const ProjectsPage: React.FC = () => {
         },
       );
     },
-    [
-      scanningId,
-      queryClient,
-      showToast,
-      t,
-      scanProjectMutation,
-      onScanError,
-      stopScanFeedback,
-    ],
+    [queryClient, showToast, t, scanProject, onScanError, stopScanFeedback],
   );
 
   useEffect(() => {
@@ -145,7 +140,9 @@ export const ProjectsPage: React.FC = () => {
       return;
 
     stopScanFeedback();
-    showToast(t("projects.toast.scan_done"), "success");
+    if (scanned.lastScanError)
+      showToast(t("projects.toast.scan_done_with_errors"), "warning");
+    else showToast(t("projects.toast.scan_done"), "success");
   }, [projects, scanningId, stopScanFeedback, showToast, t]);
 
   const filtered = useMemo(
@@ -157,7 +154,7 @@ export const ProjectsPage: React.FC = () => {
   );
 
   const grouped = useMemo(() => {
-    const map: Record<SectionKey, Project[]> = {
+    const map: Record<SectionKey, ProjectSummary[]> = {
       F: [],
       E: [],
       D: [],

@@ -17,7 +17,7 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<Project?> GetOrDefaultInOrganizationWithDependenciesAsync(Guid projectId, Guid organizationId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Project>> ListWithHealthDetailsByHealthRankAsync(Guid organizationId,
+    Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
@@ -30,8 +30,9 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
 
     Task<bool> ExistsInOrganizationAsync(Guid projectId, Guid organizationId, CancellationToken cancellationToken);
 
-    Task<int> CountByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<int> MarkScanFailedAsync(Guid projectId, string errorCode, DateTime scannedAt,
+        CancellationToken cancellationToken);
 
-    Task<int> ClampScanFrequencyAsync(Guid organizationId, IReadOnlyCollection<ScanFrequency> tooFrequent,
-        ScanFrequency maxFrequency, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ProjectOptionRow>> ListOptionsByNameAsync(Guid organizationId,
+        CancellationToken cancellationToken);
 }

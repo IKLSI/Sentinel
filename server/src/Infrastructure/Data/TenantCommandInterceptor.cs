@@ -101,14 +101,14 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (_sessionState.IsApplied(value)) return;
+        if (_sessionState.IsApplied(value, command.Transaction)) return;
 
         using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             setCommand.ExecuteNonQuery();
         }
 
-        _sessionState.MarkApplied(value);
+        _sessionState.MarkApplied(value, command.Transaction);
     }
 
     private async Task SetTenantConfigAsync(DbCommand command, CancellationToken cancellationToken)
@@ -117,13 +117,13 @@ public class TenantCommandInterceptor : DbCommandInterceptor
 
         string value = ResolveOrgValue();
 
-        if (_sessionState.IsApplied(value)) return;
+        if (_sessionState.IsApplied(value, command.Transaction)) return;
 
         await using (DbCommand setCommand = BuildSetTenantCommand(command, value))
         {
             await setCommand.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        _sessionState.MarkApplied(value);
+        _sessionState.MarkApplied(value, command.Transaction);
     }
 }

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Audit;
@@ -23,7 +22,6 @@ public class UserInviteService(
     IJobScheduler jobs,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    QuotaGuard quotaGuard,
     ISystemScope systemScope,
     IOptions<FrontendSettings> frontendOptions,
     ITenantContext tenant,
@@ -41,11 +39,6 @@ public class UserInviteService(
 
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
-
-        Result quotaResult = await quotaGuard.EnsureCanInviteMemberAsync(organizationId, cancellationToken);
-
-        if (!quotaResult.IsSuccess)
-            return Result<ApiMessageResponse>.From(quotaResult);
 
         Result roleResult = validator.ValidateRole(model, out UserRole role);
 
@@ -100,7 +93,7 @@ public class UserInviteService(
         jobs.Enqueue<SendInvitationEmailJob>(j => j.ExecuteAsync(invitation.Id, protectedToken));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Users));
 
         await auditLog.LogAsync(
             AuditAction.UserInvited,

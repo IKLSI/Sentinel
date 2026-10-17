@@ -19,10 +19,14 @@ import { UrgentTicketsPanel } from "@/features/dashboard/pages/DashboardPage/com
 import { ActivityPanel } from "@/features/dashboard/pages/DashboardPage/components/ActivityPanel";
 import { ProjectsPanel } from "@/features/dashboard/pages/DashboardPage/components/ProjectsPanel";
 
+const vulnerabilityDiscoveryPanelModule = import(
+  "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel"
+);
+
 const VulnerabilityDiscoveryPanel = lazy(() =>
-  import(
-    "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel"
-  ).then((m) => ({ default: m.VulnerabilityDiscoveryPanel })),
+  vulnerabilityDiscoveryPanelModule.then((m) => ({
+    default: m.VulnerabilityDiscoveryPanel,
+  })),
 );
 
 export const DashboardPage: React.FC = () => {

@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { ToastSeverity } from "@/enums";
 
 type Severity = ToastSeverity;
@@ -10,13 +16,11 @@ interface ToastState {
 }
 
 interface ToastContextValue {
-  toast: ToastState;
   showToast: (message: string, severity?: Severity) => void;
   closeToast: () => void;
 }
 
 export const ToastContext = createContext<ToastContextValue>({
-  toast: { open: false, message: "", severity: ToastSeverity.Info },
   showToast: () => {},
   closeToast: () => {},
 });
@@ -25,7 +29,10 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-export function useToastState(): ToastContextValue {
+export function useToastState(): {
+  toast: ToastState;
+  actions: ToastContextValue;
+} {
   const [toast, setToast] = useState<ToastState>({
     open: false,
     message: "",
@@ -43,5 +50,10 @@ export function useToastState(): ToastContextValue {
     setToast((prev) => ({ ...prev, open: false }));
   }, []);
 
-  return { toast, showToast, closeToast };
+  const actions = useMemo(
+    () => ({ showToast, closeToast }),
+    [showToast, closeToast],
+  );
+
+  return { toast, actions };
 }

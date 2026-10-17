@@ -1,15 +1,15 @@
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Constants;
 
 namespace Sentinel.Infrastructure.Http;
 
 public partial class RepositoryHostClient
 {
+    private const string GitHubShaMediaType = "application/vnd.github.sha";
+
     private async Task<RepositoryListing> ListGitHubUserRepositoriesAsync(string token)
     {
         List<(string, string)> result = new();
@@ -90,13 +90,14 @@ public partial class RepositoryHostClient
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                 $"https://api.github.com/repos/{owner}/{repo}/commits/HEAD", token);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(GitHubShaMediaType));
 
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
 
-            JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+            string sha = (await response.Content.ReadAsStringAsync()).Trim();
 
-            return payload.TryGetProperty("sha", out JsonElement sha) ? sha.GetString() : null;
+            return string.IsNullOrEmpty(sha) ? null : sha;
         }
         catch (Exception ex)
         {

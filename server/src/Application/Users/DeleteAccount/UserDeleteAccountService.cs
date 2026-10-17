@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Common;
+using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -21,7 +23,9 @@ public class UserDeleteAccountService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
+    DashboardCache dashboardCache,
     IMemoryCache cache,
+    ApiKeyPrincipalCache apiKeyPrincipalCache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(DeleteAccountDto model, CancellationToken cancellationToken)
@@ -72,9 +76,12 @@ public class UserDeleteAccountService(
             return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
 
         cache.Remove(CacheKeys.AuthAccount(currentUserId));
+        await apiKeyPrincipalCache.InvalidateForUserAsync(currentUserId, cancellationToken);
+
+        dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Users));
 
         await auditLog.LogAsync(
             AuditAction.AccountDeleted,

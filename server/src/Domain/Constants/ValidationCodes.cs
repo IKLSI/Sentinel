@@ -29,6 +29,8 @@ public static class ValidationCodes
     public const string OrganizationAlertSeverityInvalid = "validation.organization.alert_severity_invalid";
     public const string OrganizationTokenRequired = "validation.organization.token_required";
     public const string OrganizationTokenMaxLength = "validation.organization.token_max_length";
+    public const string OrganizationGitlabUrlInvalid = "validation.organization.gitlab_url_invalid";
+    public const string OrganizationGitlabUrlMaxLength = "validation.organization.gitlab_url_max_length";
 
     public const string ProjectNameRequired = "validation.project.name_required";
     public const string ProjectNameMaxLength = "validation.project.name_max_length";

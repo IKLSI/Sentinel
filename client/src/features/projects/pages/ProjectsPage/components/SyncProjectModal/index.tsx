@@ -1,18 +1,24 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import FolderOutlined from "@mui/icons-material/FolderOutlined";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import { useT } from "@/contexts/I18nContext";
-import { useCreateProjectMutation } from "@/domains/projects/mutations";
+import { useImportProjectsMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
-import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { RepoSearchInput } from "@/features/projects/pages/ProjectsPage/components/RepoSearchInput";
+import { RepoListHeader } from "@/features/projects/pages/ProjectsPage/components/RepoListHeader";
+import { RepoList } from "@/features/projects/pages/ProjectsPage/components/RepoList";
+import { ImportFrequencyBar } from "@/features/projects/pages/ProjectsPage/components/ImportFrequencyBar";
+import { ImportModalActions } from "@/features/projects/pages/ProjectsPage/components/ImportModalActions";
 
 interface Props {
   open: boolean;
@@ -31,21 +37,25 @@ export const SyncProjectModal: React.FC<Props> = ({
   const t = useT();
   const onImportError = useApiErrorToast("projects.toast.import_error");
   const availableReposQuery = useAvailableReposQuery(open);
-  const repos = availableReposQuery.data?.repos ?? [];
+  const repos = useMemo(
+    () => availableReposQuery.data?.repos ?? [],
+    [availableReposQuery.data],
+  );
   const hasToken = availableReposQuery.data?.hasToken ?? true;
   const fetchFailed = availableReposQuery.data?.fetchFailed ?? false;
   const fetchFailedStatusCode =
     availableReposQuery.data?.fetchFailedStatusCode ?? null;
   const loading = availableReposQuery.isLoading;
   const error = availableReposQuery.isError;
-  const createProjectMutation = useCreateProjectMutation();
-  const importing = createProjectMutation.isPending;
+  const importProjectsMutation = useImportProjectsMutation();
+  const importing = importProjectsMutation.isPending;
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [scanFrequency, setScanFrequency] = useState<ScanFrequency>(
     ScanFrequency.Weekly,
   );
   const inputRef = useRef<HTMLInputElement>(null);
+  const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     if (!open) return;
@@ -55,17 +65,21 @@ export const SyncProjectModal: React.FC<Props> = ({
     setTimeout(() => inputRef.current?.focus(), 80);
   }, [open]);
 
-  const visible = repos.filter((r) =>
-    r.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const visible = useMemo(() => {
+    const needle = deferredSearch.toLowerCase();
+    return repos.filter((r) => r.name.toLowerCase().includes(needle));
+  }, [repos, deferredSearch]);
 
-  const toggle = (url: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(url)) next.delete(url);
-      else next.add(url);
-      return next;
-    });
+  const toggle = useCallback(
+    (url: string) =>
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(url)) next.delete(url);
+        else next.add(url);
+        return next;
+      }),
+    [],
+  );
 
   const selectAll = () => {
     const urls = visible.map((r) => r.url);
@@ -81,17 +95,13 @@ export const SyncProjectModal: React.FC<Props> = ({
     if (selected.size === 0) return;
     const toImport = repos.filter((r) => selected.has(r.url));
     try {
-      await Promise.all(
-        toImport.map((r) =>
-          createProjectMutation.mutateAsync({
-            data: {
-              name: r.name,
-              repositoryUrl: r.url,
-              repositoryType: r.platform,
-              scanFrequency,
-            },
-          }),
-        ),
+      await importProjectsMutation.mutateAsync(
+        toImport.map((r) => ({
+          name: r.name,
+          repositoryUrl: r.url,
+          repositoryType: r.platform,
+          scanFrequency,
+        })),
       );
       showToast(
         t("projects.toast.import_success", { count: toImport.length }),
@@ -160,288 +170,44 @@ export const SyncProjectModal: React.FC<Props> = ({
         {t("projects.import_modal.title")}
       </Box>
 
-      <Box sx={{ px: "20px", pt: "16px", pb: "0", flexShrink: 0 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r)",
-            px: "10px",
-            height: "32px",
-            transition: "border-color 0.15s, box-shadow 0.15s",
-            "&:focus-within": {
-              borderColor: "var(--accent-border)",
-              boxShadow: "0 0 0 3px var(--accent-subtle)",
-            },
-          }}
-        >
-          <SearchOutlined
-            sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
-          />
-          <Box
-            component="input"
-            ref={inputRef}
-            placeholder={t("projects.search_placeholder")}
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setSearch(e.target.value)
-            }
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === "Escape") onClose();
-            }}
-            sx={{
-              all: "unset",
-              flex: 1,
-              fontSize: "12.5px",
-              color: "var(--text)",
-              "&::placeholder": { color: "var(--muted)" },
-              "&:focus": { outline: "none", boxShadow: "none !important" },
-            }}
-          />
-        </Box>
-      </Box>
+      <RepoSearchInput
+        inputRef={inputRef}
+        value={search}
+        onChange={setSearch}
+        onEscape={onClose}
+      />
 
-      <Box
-        sx={{
-          px: "20px",
-          pt: "14px",
-          pb: "6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexShrink: 0,
-        }}
-      >
-        <Box
-          sx={{
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "var(--text)",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-          }}
-        >
-          {t("projects.sync_modal.projects_label")}
-        </Box>
-        {!loading && !error && repos.length > 0 && (
-          <Box
-            component="button"
-            onClick={selectAll}
-            sx={{
-              border: "none",
-              background: "transparent",
-              color: "var(--accent)",
-              fontSize: "12px",
-              fontWeight: 600,
-              cursor: "pointer",
-              outline: "none",
-              transition: "color 0.12s",
-              "&:hover": { color: "var(--accent2)" },
-            }}
-          >
-            {t("projects.import_modal.select_all")}
-          </Box>
-        )}
-      </Box>
+      <RepoListHeader
+        showSelectAll={!loading && !error && repos.length > 0}
+        onSelectAll={selectAll}
+      />
 
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          px: "12px",
-          pb: "8px",
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
-        }}
-      >
-        {loading ? (
-          <Box sx={{ py: "40px", display: "flex", justifyContent: "center" }}>
-            <CircularProgress size={24} />
-          </Box>
-        ) : error ? (
-          <Box
-            sx={{
-              py: "40px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Box
-              sx={{
-                fontSize: "13px",
-                color: "var(--red)",
-                fontWeight: 500,
-                textAlign: "center",
-              }}
-            >
-              {t("projects.import_modal.error")}
-            </Box>
-          </Box>
-        ) : visible.length === 0 ? (
-          <Box className="empty-state">
-            <FolderOutlined
-              className="empty-state-icon"
-              sx={{ fontSize: 40 }}
-            />
-            <Box className="empty-state-title">
-              {repos.length === 0
-                ? emptyTitle
-                : t("projects.sync_modal.no_results")}
-            </Box>
-            {repos.length === 0 && emptySubtitle && (
-              <Box className="empty-state-subtitle">{emptySubtitle}</Box>
-            )}
-          </Box>
-        ) : (
-          visible.map((repo) => {
-            const isSelected = selected.has(repo.url);
-            return (
-              <Box
-                key={repo.url}
-                onClick={() => toggle(repo.url)}
-                onMouseDown={(e) => e.preventDefault()}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "11px",
-                  px: "10px",
-                  py: "9px",
-                  borderRadius: "var(--r)",
-                  mb: "2px",
-                  background: isSelected
-                    ? "var(--accent-subtle)"
-                    : "transparent",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  "&:hover": {
-                    background: isSelected
-                      ? "color-mix(in srgb, var(--accent) 11%, transparent)"
-                      : "var(--s2)",
-                  },
-                  transition: "background 0.1s",
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Box
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: isSelected ? 600 : 500,
-                      color: "var(--text)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {repo.name}
-                  </Box>
-                  <Box
-                    sx={{
-                      mt: "2px",
-                      fontSize: "11.5px",
-                      color: "var(--muted2)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {repo.url}
-                  </Box>
-                </Box>
-
-                <Box
-                  sx={{
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "var(--r-xs)",
-                    flexShrink: 0,
-                    border: isSelected ? "none" : "1.5px solid var(--border2)",
-                    background: isSelected ? "var(--accent)" : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {isSelected && (
-                    <CheckOutlined
-                      sx={{ fontSize: "11px", color: "var(--s1)" }}
-                    />
-                  )}
-                </Box>
-              </Box>
-            );
-          })
-        )}
-      </Box>
+      <RepoList
+        loading={loading}
+        error={error}
+        hasRepos={repos.length > 0}
+        visible={visible}
+        selected={selected}
+        onToggle={toggle}
+        emptyTitle={emptyTitle}
+        emptySubtitle={emptySubtitle}
+      />
 
       {selected.size > 0 && (
-        <Box
-          sx={{
-            px: "20px",
-            py: "12px",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "12px",
-            flexShrink: 0,
-          }}
-        >
-          <Box
-            sx={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "var(--text)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            {t("projects.modal.frequency_label")}
-          </Box>
-          <ScanFrequencyPicker
-            value={scanFrequency}
-            onChange={setScanFrequency}
-            disabled={importing}
-          />
-        </Box>
+        <ImportFrequencyBar
+          value={scanFrequency}
+          onChange={setScanFrequency}
+          disabled={importing}
+        />
       )}
 
-      <Box
-        sx={{
-          p: "14px 20px",
-          borderTop: "1px solid var(--border)",
-          background: "var(--s2)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          flexShrink: 0,
-          gap: "8px",
-        }}
-      >
-        <Button
-          variant="contained"
-          size="small"
-          className="btn-cancel"
-          onClick={onClose}
-          disabled={importing}
-        >
-          {t("projects.import_modal.cancel")}
-        </Button>
-        <Button
-          variant="contained"
-          size="small"
-          disabled={selected.size === 0 || importing}
-          onClick={handleImport}
-        >
-          {importLabel}
-        </Button>
-      </Box>
+      <ImportModalActions
+        importLabel={importLabel}
+        importing={importing}
+        importDisabled={selected.size === 0 || importing}
+        onCancel={onClose}
+        onImport={handleImport}
+      />
     </Dialog>
   );
 };

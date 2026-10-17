@@ -25,6 +25,7 @@ import {
   inp,
 } from "@/features/settings/pages/SettingsPage/helpers";
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
+import { GitlabInstanceFields } from "@/features/settings/pages/SettingsPage/components/GitlabInstanceFields";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 export const OrganisationTab: React.FC = () => {
@@ -63,6 +64,12 @@ export const OrganisationTab: React.FC = () => {
   });
   const [githubToken, setGithubToken] = useState("");
   const [gitlabToken, setGitlabToken] = useState("");
+  const [gitlabBaseUrl, setGitlabBaseUrl] = useState("");
+
+  useEffect(() => {
+    if (!integrationsQuery.data) return;
+    setGitlabBaseUrl(integrationsQuery.data.gitlabBaseUrl);
+  }, [integrationsQuery.data]);
 
   useEffect(() => {
     if (!org) return;
@@ -116,7 +123,12 @@ export const OrganisationTab: React.FC = () => {
       return;
     }
     connectGitlabMutation.mutate(
-      { data: { token: gitlabToken.trim() } },
+      {
+        data: {
+          token: gitlabToken.trim(),
+          baseUrl: gitlabBaseUrl.trim() || null,
+        },
+      },
       {
         onSuccess: () => {
           setGitlabToken("");
@@ -317,11 +329,17 @@ export const OrganisationTab: React.FC = () => {
               )}
               helpScopes={["read_api", "read_repository"]}
               placeholder={t("settings.integrations.gitlab_placeholder")}
+              tokenLabel={t("settings.integrations.gitlab_token_label")}
               token={gitlabToken}
               onTokenChange={setGitlabToken}
               onConnect={handleConnectGitlab}
               connecting={connectingGitlab}
-            />
+            >
+              <GitlabInstanceFields
+                baseUrl={gitlabBaseUrl}
+                onBaseUrlChange={setGitlabBaseUrl}
+              />
+            </IntegrationRow>
           </Box>
         </Box>
       </Box>

@@ -1,5 +1,4 @@
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
@@ -11,7 +10,6 @@ namespace Sentinel.Application.TechHealth.ComplianceReport;
 public class ProjectComplianceReportService(
     ComplianceReportService complianceReportService,
     IProjectRepository projectRepository,
-    QuotaGuard quotaGuard,
     ITenantContext tenant) : IService
 {
     public async Task<Result<FileDownload>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
@@ -24,11 +22,6 @@ public class ProjectComplianceReportService(
 
         if (!projectExists)
             return Result<FileDownload>.NotFound(ErrorCodes.ProjectNotFound);
-
-        Result planResult = await quotaGuard.EnsureComplianceExportsAllowedAsync(organizationId, cancellationToken);
-
-        if (!planResult.IsSuccess)
-            return Result<FileDownload>.From(planResult);
 
         ExportResult? export = await complianceReportService.GenerateAsync(projectId, organizationId, userId,
             cancellationToken);

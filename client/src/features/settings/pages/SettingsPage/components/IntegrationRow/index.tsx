@@ -4,7 +4,10 @@ import Button from "@mui/material/Button";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { useT } from "@/contexts/I18nContext";
-import { inp } from "@/features/settings/pages/SettingsPage/helpers";
+import {
+  FieldLabel,
+  inp,
+} from "@/features/settings/pages/SettingsPage/helpers";
 
 interface Props {
   iconBackground: string;
@@ -16,10 +19,12 @@ interface Props {
   helpInstructions: string;
   helpScopes: string[];
   placeholder: string;
+  tokenLabel?: string;
   token: string;
   onTokenChange: (value: string) => void;
   onConnect: () => void;
   connecting: boolean;
+  children?: React.ReactNode;
 }
 
 export const IntegrationRow: React.FC<Props> = ({
@@ -32,10 +37,12 @@ export const IntegrationRow: React.FC<Props> = ({
   helpInstructions,
   helpScopes,
   placeholder,
+  tokenLabel,
   token,
   onTokenChange,
   onConnect,
   connecting,
+  children,
 }) => {
   const t = useT();
   return (
@@ -154,32 +161,39 @@ export const IntegrationRow: React.FC<Props> = ({
           pt: "12px",
           pb: "14px",
           display: "flex",
-          flexDirection: "column",
+          flexWrap: "wrap",
+          alignItems: "flex-end",
           gap: "12px",
         }}
       >
-        <Box sx={{ display: "flex", gap: "8px" }}>
-          <Box
-            component="input"
-            type="password"
-            placeholder={placeholder}
-            sx={{ ...inp, flex: 1, minWidth: 0 }}
-            value={token}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onTokenChange(e.target.value)
-            }
-          />
-          <Button
-            variant="contained"
-            size="small"
-            onClick={onConnect}
-            disabled={connecting || !token.trim()}
-            sx={{ flexShrink: 0, minWidth: "110px" }}
-          >
-            {connecting
-              ? t("settings.integrations.importing")
-              : t("settings.integrations.connect")}
-          </Button>
+        {children && (
+          <Box sx={{ flex: "1 1 240px", minWidth: 0 }}>{children}</Box>
+        )}
+        <Box sx={{ flex: "1 1 320px", minWidth: 0 }}>
+          {tokenLabel && <FieldLabel>{tokenLabel}</FieldLabel>}
+          <Box sx={{ display: "flex", gap: "8px" }}>
+            <Box
+              component="input"
+              type="password"
+              placeholder={placeholder}
+              sx={{ ...inp, flex: 1, minWidth: 0 }}
+              value={token}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onTokenChange(e.target.value)
+              }
+            />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={onConnect}
+              disabled={connecting || !token.trim()}
+              sx={{ flexShrink: 0, minWidth: "110px" }}
+            >
+              {connecting
+                ? t("settings.integrations.importing")
+                : t("settings.integrations.connect")}
+            </Button>
+          </Box>
         </Box>
       </Box>
     </Box>

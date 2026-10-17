@@ -2,12 +2,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Sentinel.Domain.Entities;
-using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
 public partial class ManifestParserService
 {
+    private const string NuGetDirectDependencyType = "Direct";
+
     private static void ParseCsproj(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
         try
@@ -355,6 +356,7 @@ public partial class ManifestParserService
                         Name = pkg.Name,
                         CurrentVersion = version,
                         Type = DependencyType.Prod,
+                        IsDirect = type.Equals(NuGetDirectDependencyType, StringComparison.OrdinalIgnoreCase),
                         Ecosystem = DependencyEcosystem.NuGet,
                         Status = DependencyStatus.UpToDate,
                     });

@@ -30,7 +30,7 @@ public class TicketDeleteService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId));
 
         await auditLog.LogAsync(
             AuditAction.TicketDeleted,

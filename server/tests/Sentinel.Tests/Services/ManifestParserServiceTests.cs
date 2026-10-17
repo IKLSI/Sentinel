@@ -468,6 +468,27 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParseNuGetLockJson_FlagsTransitivePackages()
+    {
+        const string content = """
+        {
+          "version": 1,
+          "dependencies": {
+            "net10.0": {
+              "Serilog": { "type": "Direct", "resolved": "4.2.0" },
+              "System.Text.Json": { "type": "Transitive", "resolved": "10.0.0" }
+            }
+          }
+        }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("packages.lock.json", content);
+
+        SingleDependency(dependencies, "Serilog").IsDirect.Should().BeTrue();
+        SingleDependency(dependencies, "System.Text.Json").IsDirect.Should().BeFalse();
+    }
+
+    [Fact]
     public void ParseGradleLockfile_ReadsCoordinatesAndConfigurations()
     {
         const string content = """
@@ -485,7 +506,7 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
-    public void ParseGoMod_SkipsIndirectAndReadsGoRuntime()
+    public void ParseGoMod_FlagsIndirectAsTransitiveAndReadsGoRuntime()
     {
         const string content = """
         module example.com/app
@@ -500,8 +521,10 @@ public class ManifestParserServiceTests
 
         (List<Dependency> dependencies, List<Runtime> runtimes) = Parse("go.mod", content);
 
-        dependencies.Should().ContainSingle();
+        dependencies.Should().HaveCount(2);
         SingleDependency(dependencies, "github.com/gin-gonic/gin").CurrentVersion.Should().Be("1.9.1");
+        SingleDependency(dependencies, "github.com/gin-gonic/gin").IsDirect.Should().BeTrue();
+        SingleDependency(dependencies, "golang.org/x/sys").IsDirect.Should().BeFalse();
         SingleRuntime(runtimes, "Go").Version.Should().Be("1.22");
     }
 

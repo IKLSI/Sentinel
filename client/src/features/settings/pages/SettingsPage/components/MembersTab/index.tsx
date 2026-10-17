@@ -2,16 +2,12 @@ import type React from "react";
 import { useCallback, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import GroupOutlined from "@mui/icons-material/GroupOutlined";
-import BlockOutlined from "@mui/icons-material/BlockOutlined";
-import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
-import { formatRelativeToNow } from "@/formatters/date";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { RowActions } from "@/components/ui/common/RowActions";
 import { SortableTh } from "@/components/ui/common/SortableTh";
+import { MemberRow } from "@/features/settings/pages/SettingsPage/components/MemberRow";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/contexts/I18nContext";
 import { useUpdateUserMutation } from "@/domains/users/mutations";
@@ -52,7 +48,7 @@ export const MembersTab: React.FC<Props> = ({
   onInviteClick,
 }) => {
   const { user } = useAuth();
-  const { t, culture } = useI18n();
+  const { t } = useI18n();
   const onToggleError = useApiErrorToast("settings.toast.toggle_error");
 
   const ROLE_LABELS: Record<string, string> = useMemo(
@@ -242,129 +238,17 @@ export const MembersTab: React.FC<Props> = ({
                 </Box>
                 <Box component="tbody">
                   {members.map((m) => (
-                    <Box
-                      component="tr"
+                    <MemberRow
                       key={m.id}
-                      sx={{
-                        borderBottom: "1px solid var(--border)",
-                        "&:last-child": { borderBottom: "none" },
-                        "&:hover": { background: "var(--s2)" },
-                        "&:hover .row-actions": { opacity: "1 !important" },
-                        transition: "background 0.1s",
-                      }}
-                    >
-                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          <Box sx={{ minWidth: 0 }}>
-                            <Box
-                              sx={{
-                                fontWeight: 600,
-                                color: "var(--text)",
-                                lineHeight: 1.3,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {m.firstName} {m.lastName}
-                            </Box>
-                            <Box
-                              sx={{
-                                color: "var(--muted2)",
-                                fontSize: "11px",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {m.email}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
-                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
-                        <Box
-                          sx={{
-                            fontWeight: 400,
-                            color: "var(--text)",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {ROLE_LABELS[m.role] ?? m.role}
-                        </Box>
-                      </Box>
-                      <Box component="td" sx={{ px: "16px", py: "10px" }}>
-                        <Box
-                          sx={{
-                            fontWeight: 400,
-                            color: "var(--text)",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {m.accessStatus === UserAccessStatus.Active
-                            ? t("settings.members.status_active")
-                            : t("settings.members.status_suspended")}
-                        </Box>
-                      </Box>
-                      <Box
-                        component="td"
-                        sx={{
-                          px: "16px",
-                          py: "10px",
-                          color: "var(--muted2)",
-                          fontSize: "11px",
-                        }}
-                      >
-                        {m.lastLoginAt
-                          ? formatRelativeToNow(m.lastLoginAt, culture)
-                          : "—"}
-                      </Box>
-                      <Box
-                        component="td"
-                        sx={{ px: "16px", py: "10px", textAlign: "center" }}
-                      >
-                        {m.id !== user?.id &&
-                          (updateAccessStatus.isPending &&
-                          updateAccessStatus.variables?.id === m.id ? (
-                            <CircularProgress size={13} />
-                          ) : (
-                            <RowActions
-                              actions={[
-                                {
-                                  icon:
-                                    m.accessStatus ===
-                                    UserAccessStatus.Active ? (
-                                      <BlockOutlined sx={{ fontSize: 13 }} />
-                                    ) : (
-                                      <CheckCircleOutlineOutlined
-                                        sx={{ fontSize: 13 }}
-                                      />
-                                    ),
-                                  label:
-                                    m.accessStatus === UserAccessStatus.Active
-                                      ? t("settings.members.suspend")
-                                      : t("settings.members.reactivate"),
-                                  onClick: () =>
-                                    handleToggleAccessStatus(
-                                      m.id,
-                                      m.accessStatus,
-                                    ),
-                                  color:
-                                    m.accessStatus === UserAccessStatus.Active
-                                      ? "red"
-                                      : "green",
-                                },
-                              ]}
-                            />
-                          ))}
-                      </Box>
-                    </Box>
+                      member={m}
+                      roleLabel={ROLE_LABELS[m.role] ?? m.role}
+                      isCurrentUser={m.id === user?.id}
+                      toggling={
+                        updateAccessStatus.isPending &&
+                        updateAccessStatus.variables?.id === m.id
+                      }
+                      onToggleAccessStatus={handleToggleAccessStatus}
+                    />
                   ))}
                 </Box>
               </Box>

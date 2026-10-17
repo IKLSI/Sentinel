@@ -2,7 +2,6 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Constants;
 
 namespace Sentinel.Application.Tickets.ExportExcel;
 

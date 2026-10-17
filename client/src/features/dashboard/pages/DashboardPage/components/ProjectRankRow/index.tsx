@@ -7,7 +7,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { getDateFnsLocale } from "@/configs/locales";
 import { useI18n } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import {
   GRADE_NOT_AVAILABLE,
   coverageReasonKey,
@@ -19,7 +19,7 @@ import {
 } from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
-  project: Project;
+  project: ProjectSummary;
   palette: DashPalette;
 }
 

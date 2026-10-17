@@ -100,6 +100,9 @@ export const ROUTES_API = {
             __path: "/api/tech-health/projects/export/excel",
           },
         },
+        options: {
+          __path: "/api/tech-health/projects/options",
+        },
         ":id": {
           __path: "/api/tech-health/projects/:id",
           complianceReport: {

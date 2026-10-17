@@ -1,5 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -17,6 +18,7 @@ public class TicketAddCommentService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
+    DashboardCache dashboardCache,
     ITenantContext tenant,
     TicketAddCommentValidator validator) : IService
 {
@@ -54,8 +56,10 @@ public class TicketAddCommentService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
+        dashboardCache.Invalidate(organizationId);
+
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
+            new RealtimeEvent(RealtimeResources.TicketActivity, ticketId));
 
         await auditLog.LogAsync(
             AuditAction.CommentAdded,

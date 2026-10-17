@@ -59,7 +59,7 @@ public class TicketUploadAttachmentService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
+            new RealtimeEvent(RealtimeResources.TicketActivity, ticketId));
 
         await auditLog.LogAsync(
             AuditAction.AttachmentUploaded,

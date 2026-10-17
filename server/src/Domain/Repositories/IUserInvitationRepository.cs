@@ -11,6 +11,4 @@ public interface IUserInvitationRepository : ICrudEntityWithIdRepository<UserInv
     Task<UserInvitation?> GetOrDefaultPendingByTokenHashAsync(string tokenHash, CancellationToken cancellationToken);
 
     Task<bool> ExistsPendingAsync(string email, Guid organizationId, CancellationToken cancellationToken);
-
-    Task<int> CountPendingAsync(Guid organizationId, CancellationToken cancellationToken);
 }

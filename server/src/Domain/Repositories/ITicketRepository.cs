@@ -16,9 +16,6 @@ public interface ITicketRepository : ICrudEntityWithIdRepository<Ticket>
     Task<IReadOnlyList<UserExportTicketRow>> ListForUserDataExportAsync(Guid userId, int take,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyDictionary<Guid, int>> CountByProjectsAsync(IReadOnlyCollection<Guid> projectIds,
-        CancellationToken cancellationToken);
-
     Task<bool> ExistsInOrganizationAsync(Guid ticketId, Guid organizationId, CancellationToken cancellationToken);
 
     Task<int> DeleteInOrganizationAsync(Guid ticketId, Guid organizationId, CancellationToken cancellationToken);

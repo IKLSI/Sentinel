@@ -38,6 +38,7 @@ const GRID_FILTER_FIELDS = {
   status: "status",
   ecosystem: "ecosystem",
   type: "type",
+  relation: "relation",
   vulnerable: "vulnerable",
   support: "support",
 } as const;
@@ -46,6 +47,11 @@ const BOOLEAN_FILTER_VALUES = { yes: "yes", no: "no" } as const;
 
 export const DEPENDENCY_TYPE_PROD = "Prod";
 const DEPENDENCY_TYPE_DEV = "Dev";
+
+const DEPENDENCY_RELATION = {
+  direct: "direct",
+  transitive: "transitive",
+} as const;
 
 const sortedUnique = (values: string[]) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b));
@@ -139,6 +145,24 @@ export const buildDependencyFilterFields = (
       { value: DEPENDENCY_TYPE_DEV, label: t("tech_health.dep.type_dev") },
     ],
     valueOf: (dependency) => dependency.type,
+  },
+  {
+    key: GRID_FILTER_FIELDS.relation,
+    label: t("tech_health.table.dep.relation"),
+    options: [
+      {
+        value: DEPENDENCY_RELATION.direct,
+        label: t("tech_health.dep.relation_direct"),
+      },
+      {
+        value: DEPENDENCY_RELATION.transitive,
+        label: t("tech_health.dep.relation_transitive"),
+      },
+    ],
+    valueOf: (dependency) =>
+      dependency.isDirect
+        ? DEPENDENCY_RELATION.direct
+        : DEPENDENCY_RELATION.transitive,
   },
   {
     key: GRID_FILTER_FIELDS.vulnerable,

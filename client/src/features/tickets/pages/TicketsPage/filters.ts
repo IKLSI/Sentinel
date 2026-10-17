@@ -2,7 +2,7 @@ import type {
   FilterBuilderLabels,
   FilterFieldDefinition,
 } from "@/components/ui/forms/FilterBuilder/types";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectOption } from "@/domains/projects/types";
 import type { User } from "@/domains/users/types";
 import { TicketPriority, TicketType } from "@/enums";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
@@ -19,7 +19,7 @@ type Translate = (
 export const buildTicketFilterFields = (
   t: Translate,
   users: User[],
-  projects: Project[],
+  projects: ProjectOption[],
 ): FilterFieldDefinition[] => [
   {
     key: TICKET_FILTER_FIELDS.priority,

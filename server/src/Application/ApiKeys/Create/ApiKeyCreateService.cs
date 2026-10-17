@@ -49,7 +49,7 @@ public class ApiKeyCreateService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.ApiKeys), cancellationToken);
+            new RealtimeEvent(RealtimeResources.ApiKeys));
 
         await auditLog.LogAsync(
             AuditAction.ApiKeyCreated,

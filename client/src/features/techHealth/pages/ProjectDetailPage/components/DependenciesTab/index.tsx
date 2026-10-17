@@ -32,6 +32,7 @@ const COLUMN_KEYS = {
   library: "library",
   ecosystem: "ecosystem",
   type: "type",
+  relation: "relation",
   version: "version",
   status: "status",
   vulns: "vulns",
@@ -50,6 +51,8 @@ const comparators = {
     a.ecosystem.localeCompare(b.ecosystem),
   [COLUMN_KEYS.type]: (a: Dependency, b: Dependency) =>
     a.type.localeCompare(b.type),
+  [COLUMN_KEYS.relation]: (a: Dependency, b: Dependency) =>
+    Number(b.isDirect) - Number(a.isDirect),
   [COLUMN_KEYS.status]: (a: Dependency, b: Dependency) =>
     statusOf(a).weight - statusOf(b).weight,
   [COLUMN_KEYS.vulns]: (a: Dependency, b: Dependency) =>
@@ -93,11 +96,21 @@ interface RowProps {
   projectId: string;
   typeProd: string;
   typeDev: string;
+  relationDirect: string;
+  relationTransitive: string;
   index: number;
 }
 
 const DependencyRow = memo<RowProps>(
-  ({ dependency, projectId, typeProd, typeDev, index }) => {
+  ({
+    dependency,
+    projectId,
+    typeProd,
+    typeDev,
+    relationDirect,
+    relationTransitive,
+    index,
+  }) => {
     const t = useT();
     const status = statusOf(dependency);
     const vulnCount = dependency.vulnerabilities.length;
@@ -115,6 +128,11 @@ const DependencyRow = memo<RowProps>(
         <TD>
           <StatusChip variant="gray">
             {dependency.type === DEPENDENCY_TYPE_PROD ? typeProd : typeDev}
+          </StatusChip>
+        </TD>
+        <TD>
+          <StatusChip variant="gray">
+            {dependency.isDirect ? relationDirect : relationTransitive}
           </StatusChip>
         </TD>
         <TD muted>
@@ -210,36 +228,42 @@ export const DependenciesTab: React.FC<Props> = ({
     {
       key: COLUMN_KEYS.library,
       label: t("tech_health.table.dep.library"),
-      width: "24%",
+      width: "21%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.ecosystem,
       label: t("tech_health.table.dep.ecosystem"),
-      width: "11%",
+      width: "10%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.type,
       label: t("tech_health.table.dep.type"),
-      width: "9%",
+      width: "8%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.relation,
+      label: t("tech_health.table.dep.relation"),
+      width: "10%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.version,
       label: t("tech_health.table.dep.version"),
-      width: "19%",
+      width: "17%",
     },
     {
       key: COLUMN_KEYS.status,
       label: t("tech_health.table.dep.status"),
-      width: "16%",
+      width: "14%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.vulns,
       label: t("tech_health.table.dep.vulns"),
-      width: "10%",
+      width: "9%",
       align: "center",
       sortable: true,
     },
@@ -287,6 +311,8 @@ export const DependenciesTab: React.FC<Props> = ({
             projectId={projectId}
             typeProd={t("tech_health.dep.type_prod")}
             typeDev={t("tech_health.dep.type_dev")}
+            relationDirect={t("tech_health.dep.relation_direct")}
+            relationTransitive={t("tech_health.dep.relation_transitive")}
             index={index}
           />
         )}

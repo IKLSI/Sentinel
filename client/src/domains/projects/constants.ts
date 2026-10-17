@@ -2,7 +2,12 @@ export const PROJECTS_QUERY_KEY = ["projects"] as const;
 
 export const AVAILABLE_REPOS_QUERY_KEY = ["available-repos"] as const;
 
-export const projectQueryKey = (id: string) => ["project", id] as const;
+export const PROJECT_OPTIONS_QUERY_KEY = ["project-options"] as const;
+
+export const PROJECT_DETAIL_QUERY_KEY = ["project"] as const;
+
+export const projectQueryKey = (id: string) =>
+  [...PROJECT_DETAIL_QUERY_KEY, id] as const;
 
 export const PROJECTS_EXPORT_FALLBACK_FILE = "techhealth.xlsx";
 

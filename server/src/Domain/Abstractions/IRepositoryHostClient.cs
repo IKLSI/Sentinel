@@ -1,3 +1,5 @@
+using Sentinel.Domain.Git;
+
 namespace Sentinel.Domain.Abstractions;
 
 public sealed record RepositoryListing(
@@ -10,14 +12,15 @@ public sealed record RepositoryFileListing(List<(string Name, string Url)> Files
 
 public interface IRepositoryHostClient
 {
-    Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform);
+    Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform, GitLabInstance gitLab);
 
-    Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform);
+    Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
+        GitLabInstance gitLab);
 
-    Task<string?> GetHeadCommitAsync(string host, string owner, string repo, string? tokenOverride = null);
+    Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null);
 
     Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-        string? tokenOverride = null, string? commitSha = null);
+        RepositoryAccess? access = null, string? commitSha = null);
 
-    Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null);
+    Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null);
 }

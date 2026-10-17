@@ -35,16 +35,65 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .Include(p => p.Dependencies)
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
 
-    public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByHealthRankAsync(Guid organizationId,
+    public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
-        await WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
-            .Where(p => p.OrganizationId == organizationId)
-            .OrderByDescending(p => p.Dependencies.Any(d =>
-                d.Vulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical)))
-            .ThenBy(p => p.Coverage == ScanCoverage.Covered ? 0 : 1)
-            .ThenBy(p => p.HealthScore)
-            .ThenBy(p => p.Name)
-            .ToListAsync(cancellationToken);
+        await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);
+
+    internal IQueryable<ProjectSummaryRow> SummariesByHealthRank(Guid organizationId)
+    {
+        IQueryable<ProjectVulnerabilityStats> vulnerabilityStats =
+            from vulnerability in Context.Vulnerabilities
+            join dependency in Context.Dependencies on vulnerability.DependencyId equals dependency.Id
+            group vulnerability by dependency.ProjectId into perProject
+            select new ProjectVulnerabilityStats
+            {
+                ProjectId = perProject.Key,
+                Critical = perProject.Count(v => v.Severity == VulnerabilitySeverity.Critical),
+                Total = perProject.Count(),
+                KnownExploited = perProject.Count(v => v.IsKnownExploited)
+            };
+
+        IQueryable<ProjectCount> dependencyCounts =
+            from dependency in Context.Dependencies
+            group dependency by dependency.ProjectId into perProject
+            select new ProjectCount { ProjectId = perProject.Key, Total = perProject.Count() };
+
+        IQueryable<ProjectCount> ticketCounts =
+            from ticket in Context.Tickets
+            where ticket.ProjectId != null
+            group ticket by ticket.ProjectId!.Value into perProject
+            select new ProjectCount { ProjectId = perProject.Key, Total = perProject.Count() };
+
+        return
+            from project in Query(QueryTracking.NoTracking)
+            where project.OrganizationId == organizationId
+            join stats in vulnerabilityStats on project.Id equals stats.ProjectId into statsGroup
+            from stats in statsGroup.DefaultIfEmpty()
+            join dependencies in dependencyCounts on project.Id equals dependencies.ProjectId into dependencyGroup
+            from dependencies in dependencyGroup.DefaultIfEmpty()
+            join tickets in ticketCounts on project.Id equals tickets.ProjectId into ticketGroup
+            from tickets in ticketGroup.DefaultIfEmpty()
+            orderby ((int?)stats.Critical ?? 0) > 0 descending,
+                project.Coverage == ScanCoverage.Covered ? 0 : 1,
+                project.HealthScore,
+                project.Name
+            select new ProjectSummaryRow(
+                project.Id,
+                project.Name,
+                project.RepositoryUrl,
+                project.RepositoryType,
+                project.LastScanAt,
+                project.LastScanError,
+                project.HealthScore,
+                project.HealthGrade,
+                project.Coverage,
+                project.ScanFrequency,
+                (int?)dependencies.Total ?? 0,
+                (int?)stats.Critical ?? 0,
+                (int?)stats.Total ?? 0,
+                (int?)stats.KnownExploited ?? 0,
+                (int?)tickets.Total ?? 0);
+    }
 
     public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken) =>
@@ -73,17 +122,37 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
         Query(QueryTracking.NoTracking)
             .AnyAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
 
-    public Task<int> CountByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking).CountAsync(p => p.OrganizationId == organizationId, cancellationToken);
-
-    public Task<int> ClampScanFrequencyAsync(Guid organizationId, IReadOnlyCollection<ScanFrequency> tooFrequent,
-        ScanFrequency maxFrequency, CancellationToken cancellationToken) =>
+    public Task<int> MarkScanFailedAsync(Guid projectId, string errorCode, DateTime scannedAt,
+        CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
-            .Where(p => p.OrganizationId == organizationId && tooFrequent.Contains(p.ScanFrequency))
-            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.ScanFrequency, maxFrequency),
-                cancellationToken);
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.LastScanAt, scannedAt)
+                .SetProperty(p => p.LastScanError, errorCode), cancellationToken);
+
+    public async Task<IReadOnlyList<ProjectOptionRow>> ListOptionsByNameAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId)
+            .OrderBy(p => p.Name)
+            .Select(p => new ProjectOptionRow(p.Id, p.Name))
+            .ToListAsync(cancellationToken);
 
     private static IQueryable<Project> WithHealthDetails(IQueryable<Project> query) => query
         .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
         .Include(p => p.Runtimes);
+
+    private sealed class ProjectVulnerabilityStats
+    {
+        public Guid ProjectId { get; init; }
+        public int Critical { get; init; }
+        public int Total { get; init; }
+        public int KnownExploited { get; init; }
+    }
+
+    private sealed class ProjectCount
+    {
+        public Guid ProjectId { get; init; }
+        public int Total { get; init; }
+    }
 }

@@ -16,7 +16,6 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Options;
-using Sentinel.Application.Common.Contracts;
 using Sentinel.Application.Options;
 
 namespace Sentinel.API.Extensions;
@@ -75,24 +74,6 @@ public static partial class ServiceCollectionExtensions
     private static async Task ValidateAccountStateAsync(TokenValidatedContext context)
     {
         IServiceProvider sp = context.HttpContext.RequestServices;
-
-        ITokenBlacklistService? blacklist = sp.GetService<ITokenBlacklistService>();
-        string? jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-
-        try
-        {
-            if (blacklist != null && !string.IsNullOrEmpty(jti)
-                && await blacklist.IsRevokedAsync(jti, context.HttpContext.RequestAborted))
-            {
-                context.Fail("Revoked token");
-                return;
-            }
-        }
-        catch (OperationCanceledException) when (context.HttpContext.RequestAborted.IsCancellationRequested)
-        {
-            context.Fail("Request cancelled");
-            return;
-        }
 
         string? userIdClaim = context.Principal?.FindFirst(ClaimNames.UserId)?.Value;
         string? versionClaim = context.Principal?.FindFirst(ClaimNames.TokenVersion)?.Value;

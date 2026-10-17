@@ -4,31 +4,30 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup Label="ASP.NET Core / Microsoft.Extensions">
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
   </ItemGroup>
   <ItemGroup Label="Entity Framework Core">
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.13" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup Label="API / Documentation">
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.3" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.18.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.0" />
   </ItemGroup>
   <ItemGroup Label="Journalisation">
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
-    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup Label="Traitements en arriere-plan">
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.25" />
@@ -37,25 +36,25 @@
   </ItemGroup>
   <ItemGroup Label="Securite / Cryptographie">
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
-    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
-    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
   </ItemGroup>
   <ItemGroup Label="Metier">
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="CycloneDX.Core" Version="12.1.2" />
-    <PackageVersion Include="MailKit" Version="4.18.0" />
-    <PackageVersion Include="QuestPDF" Version="2026.8.0" />
-    <PackageVersion Include="Stripe.net" Version="52.4.2" />
+    <PackageVersion Include="MailKit" Version="4.18.1" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
   </ItemGroup>
   <ItemGroup Label="Epinglage transitif">
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
   <ItemGroup Label="Tests">
-    <PackageVersion Include="FluentAssertions" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.0" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <PackageVersion Include="FluentAssertions" Version="7.2.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
 </Project>

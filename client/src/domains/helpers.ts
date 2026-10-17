@@ -1,5 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import {
+  queryOptions,
   useMutation,
   useQuery,
   type QueryKey,
@@ -41,6 +42,19 @@ async function apiRequest<TResponse>(
 export function invalidateKeys(keys: QueryKey[] = []): void {
   for (const queryKey of keys) queryClient.invalidateQueries({ queryKey });
 }
+
+export const getQueryOptions = <TResponse>(
+  urlTemplate: string,
+  queryKey: QueryKey,
+  params: UrlParams = {},
+) =>
+  queryOptions<TResponse, Error, TResponse, QueryKey>({
+    queryKey,
+    queryFn: ({ signal }) =>
+      apiRequest<TResponse>(HTTP_METHODS.GET, buildUrl(urlTemplate, params), {
+        signal,
+      }),
+  });
 
 function useQueryWrapper<TResponse, TResult = TResponse>(
   method: HttpMethod,

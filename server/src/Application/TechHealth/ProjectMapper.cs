@@ -74,6 +74,7 @@ public static class ProjectMapper
             CurrentVersion = dependency.CurrentVersion,
             LatestVersion = dependency.LatestVersion,
             Type = dependency.Type.ToString(),
+            IsDirect = dependency.IsDirect,
             Ecosystem = dependency.Ecosystem.ToString(),
             Status = dependency.Status.ToString(),
             IsOutdated = FindingRules.IsOutdated(dependency),

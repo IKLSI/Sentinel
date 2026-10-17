@@ -1,0 +1,119 @@
+import type React from "react";
+import { useRef } from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import { useT } from "@/contexts/I18nContext";
+import type { AvailableRepo } from "@/domains/projects/types";
+import { useVirtualRows } from "@/hooks/useVirtualRows";
+import { RepoRow } from "@/features/projects/pages/ProjectsPage/components/RepoRow";
+
+const REPO_ROW_ESTIMATED_HEIGHT_PX = 56;
+
+interface Props {
+  loading: boolean;
+  error: boolean;
+  hasRepos: boolean;
+  visible: AvailableRepo[];
+  selected: Set<string>;
+  onToggle: (url: string) => void;
+  emptyTitle: string;
+  emptySubtitle: string | undefined;
+}
+
+export const RepoList: React.FC<Props> = ({
+  loading,
+  error,
+  hasRepos,
+  visible,
+  selected,
+  onToggle,
+  emptyTitle,
+  emptySubtitle,
+}) => {
+  const t = useT();
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const virtualRows = useVirtualRows({
+    count: visible.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: REPO_ROW_ESTIMATED_HEIGHT_PX,
+  });
+
+  return (
+    <Box
+      ref={listRef}
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        px: "12px",
+        pb: "8px",
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": { display: "none" },
+      }}
+    >
+      {loading ? (
+        <Box sx={{ py: "40px", display: "flex", justifyContent: "center" }}>
+          <CircularProgress size={24} />
+        </Box>
+      ) : error ? (
+        <Box
+          sx={{
+            py: "40px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Box
+            sx={{
+              fontSize: "13px",
+              color: "var(--red)",
+              fontWeight: 500,
+              textAlign: "center",
+            }}
+          >
+            {t("projects.import_modal.error")}
+          </Box>
+        </Box>
+      ) : visible.length === 0 ? (
+        <Box className="empty-state">
+          <FolderOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
+          <Box className="empty-state-title">
+            {hasRepos ? t("projects.sync_modal.no_results") : emptyTitle}
+          </Box>
+          {!hasRepos && emptySubtitle && (
+            <Box className="empty-state-subtitle">{emptySubtitle}</Box>
+          )}
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            paddingTop: `${virtualRows.paddingTop}px`,
+            paddingBottom: `${virtualRows.paddingBottom}px`,
+          }}
+        >
+          {virtualRows.items.map((item) => {
+            const repo = visible[item.index];
+            return (
+              <Box
+                key={repo.url}
+                data-index={item.index}
+                ref={virtualRows.virtualizer.measureElement}
+                sx={{ pb: "2px" }}
+              >
+                <RepoRow
+                  repo={repo}
+                  isSelected={selected.has(repo.url)}
+                  onToggle={onToggle}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+    </Box>
+  );
+};

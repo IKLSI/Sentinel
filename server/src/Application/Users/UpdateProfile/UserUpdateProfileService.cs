@@ -1,5 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
+using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
@@ -15,6 +16,7 @@ public class UserUpdateProfileService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
+    DashboardCache dashboardCache,
     ITenantContext tenant,
     UserUpdateProfileValidator validator) : IService
 {
@@ -42,8 +44,10 @@ public class UserUpdateProfileService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
+        dashboardCache.Invalidate(organizationId);
+
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Users));
 
         await auditLog.LogAsync(
             AuditAction.ProfileUpdated,

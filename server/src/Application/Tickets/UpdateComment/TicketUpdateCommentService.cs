@@ -49,7 +49,7 @@ public class TicketUpdateCommentService(
 
         if (tenant.OrganizationId is Guid organizationId)
             await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-                new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
+                new RealtimeEvent(RealtimeResources.TicketActivity, ticketId));
 
         await auditLog.LogAsync(
             AuditAction.CommentUpdated,

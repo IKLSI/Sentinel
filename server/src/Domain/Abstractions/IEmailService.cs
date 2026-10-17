@@ -26,16 +26,4 @@ public interface IEmailService
 
     Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName,
         string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
-
-    Task SendSubscriptionCanceledAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
-        string billingUrl);
-
-    Task SendSubscriptionUpdatedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
-        string oldPlan, string newPlan, string statusKey, string statusValue, string billingUrl);
-
-    Task SendInvoicePaymentFailedAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
-        string amount, string billingUrl);
-
-    Task SendInvoicePaidAsync(IReadOnlyList<EmailRecipient> recipients, string organizationName,
-        string amount, string billingUrl);
 }

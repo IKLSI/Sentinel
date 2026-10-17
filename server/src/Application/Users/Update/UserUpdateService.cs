@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Common;
+using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Application.Jobs;
 using Sentinel.Domain.Abstractions;
@@ -20,8 +22,10 @@ public class UserUpdateService(
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
+    DashboardCache dashboardCache,
     IJobScheduler jobs,
     IMemoryCache cache,
+    ApiKeyPrincipalCache apiKeyPrincipalCache,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
 {
@@ -119,13 +123,18 @@ public class UserUpdateService(
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
 
         if (invalidatesSessions)
+        {
             cache.Remove(CacheKeys.AuthAccount(userId));
+            await apiKeyPrincipalCache.InvalidateForUserAsync(userId, cancellationToken);
+        }
 
         if (suspensionTransition)
             jobs.Enqueue<SendAccountSuspendedEmailJob>(j => j.ExecuteAsync(userId));
 
+        dashboardCache.Invalidate(organizationId);
+
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Users));
 
         await auditLog.LogAsync(
             AuditAction.UserUpdated,

@@ -59,14 +59,14 @@ public class TicketCreateService(
 
         await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            ticket.Number = await organizationRepository.AllocateTicketNumberAsync(organizationId, token);
+            ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
             await ticketRepository.AddAsync(ticket, token);
         }, cancellationToken);
 
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Tickets));
 
         await auditLog.LogAsync(
             AuditAction.TicketCreated,

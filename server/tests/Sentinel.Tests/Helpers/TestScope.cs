@@ -44,13 +44,11 @@ public sealed class TestScope : IDisposable
         Context.ChangeTracker.Clear();
     }
 
-    public Organization NewOrganization(PlanTier tier = PlanTier.Free, Guid? id = null) => new()
+    public Organization NewOrganization(Guid? id = null) => new()
     {
         Id = id ?? OrganizationId,
         Name = "Organisation de test",
-        Slug = $"org-{Guid.NewGuid():N}",
-        PlanTier = tier,
-        SubscriptionStatus = SubscriptionStatus.Active
+        Slug = $"org-{Guid.NewGuid():N}"
     };
 
     public void Dispose() => Context.Dispose();

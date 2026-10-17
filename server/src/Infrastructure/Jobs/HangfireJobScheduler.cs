@@ -11,6 +11,9 @@ public sealed class HangfireJobScheduler(
     public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) =>
         backgroundJobs.Enqueue(methodCall);
 
+    public void Schedule<TJob>(Expression<Func<TJob, Task>> methodCall, TimeSpan delay) =>
+        backgroundJobs.Schedule(methodCall, delay);
+
     public void TriggerRecurring(string recurringJobId) =>
         recurringJobs.Trigger(recurringJobId);
 }

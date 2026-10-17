@@ -11,10 +11,10 @@ using Sentinel.Application.TechHealth.DeleteProject;
 using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
+using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.Projects;
 using Sentinel.Application.TechHealth.TriggerScan;
 using Sentinel.Application.TechHealth.UpdateProject;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Application.TechHealth;
 
@@ -61,8 +61,15 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
-    public async Task<ActionResult<List<ProjectDto>>> GetProjects(
+    public async Task<ActionResult<List<ProjectSummaryDto>>> GetProjects(
         [FromServices] ProjectListService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
+
+    [HttpGet("projects/options")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<List<ProjectOptionDto>>> GetProjectOptions(
+        [FromServices] ProjectOptionListService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 

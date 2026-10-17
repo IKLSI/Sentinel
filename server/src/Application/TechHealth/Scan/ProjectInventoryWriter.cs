@@ -14,7 +14,6 @@ public class ProjectInventoryWriter(
         IReadOnlyList<Runtime> runtimes, CancellationToken cancellationToken) =>
         commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            await vulnerabilityRepository.DeleteByProjectAsync(projectId, token);
             await dependencyRepository.DeleteByProjectAsync(projectId, token);
             await runtimeRepository.DeleteByProjectAsync(projectId, token);
             await dependencyRepository.AddRangeAsync(dependencies, token);

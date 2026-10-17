@@ -7,7 +7,7 @@ import ThumbUpAltOutlined from "@mui/icons-material/ThumbUpAltOutlined";
 import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import RemoveCircleOutlineOutlined from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import type { SvgIconComponent } from "@mui/icons-material";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import { isCovered } from "@/formatters/coverage";
 
 export const UNTRACKED_SECTION = "NONE" as const;
@@ -43,7 +43,8 @@ export const GRADE_VISUAL: Record<
   },
 };
 
-export const isUntracked = (project: Project): boolean => !isCovered(project);
+export const isUntracked = (project: ProjectSummary): boolean =>
+  !isCovered(project);
 
 export const getGrade = (grade: string | null | undefined): HealthGrade => {
   if (
@@ -64,9 +65,9 @@ interface ProjectSortState {
 }
 
 export const sortProjects = (
-  items: Project[],
+  items: ProjectSummary[],
   sort: ProjectSortState | null,
-): Project[] => {
+): ProjectSummary[] => {
   if (!sort) return items;
   const mul = sort.dir === "asc" ? 1 : -1;
   return items.slice().sort((a, b) => {

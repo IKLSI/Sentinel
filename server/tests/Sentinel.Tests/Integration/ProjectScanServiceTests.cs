@@ -5,16 +5,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Options;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Git;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.TechHealth;
+using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
 using Sentinel.Tests.Helpers;
 
@@ -40,17 +41,19 @@ public class ProjectScanServiceTests
         public int ListFilesCalls { get; private set; }
         public string? LastRequestedSha { get; private set; }
 
-        public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform) =>
+        public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform,
+            GitLabInstance gitLab) =>
             throw new NotSupportedException();
 
-        public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform) =>
+        public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
+            GitLabInstance gitLab) =>
             throw new NotSupportedException();
 
-        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, string? token = null) =>
+        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null) =>
             Task.FromResult<string?>(HeadCommitSha);
 
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-            string? token = null, string? commitSha = null)
+            RepositoryAccess? access = null, string? commitSha = null)
         {
             ListFilesCalls++;
             LastRequestedSha = commitSha;
@@ -60,7 +63,7 @@ public class ProjectScanServiceTests
                 : new RepositoryFileListing([("package.json", "https://host/package.json")], false));
         }
 
-        public Task<string?> FetchTextAsync(string host, string url, string? token = null) =>
+        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
             Task.FromResult<string?>(ManifestContent);
     }
 
@@ -109,16 +112,17 @@ public class ProjectScanServiceTests
     {
         public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) { }
 
+        public void Schedule<TJob>(Expression<Func<TJob, Task>> methodCall, TimeSpan delay) { }
+
         public void TriggerRecurring(string recurringJobId) { }
     }
 
     private sealed class NoopNotifier : IRealtimeNotifier
     {
-        public Task NotifyOrganizationAsync(Guid organizationId, RealtimeEvent notification,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        public Task NotifyAllAsync(RealtimeEvent notification, CancellationToken cancellationToken) =>
+        public Task NotifyOrganizationAsync(Guid organizationId, RealtimeEvent notification) =>
             Task.CompletedTask;
+
+        public Task NotifyAllAsync(RealtimeEvent notification) => Task.CompletedTask;
     }
 
     private sealed class Harness : IAsyncDisposable
@@ -141,19 +145,18 @@ public class ProjectScanServiceTests
                 new VulnerabilityAlertService(scope.Organizations, scope.Users, new NoopJobScheduler(),
                     Options.Create(new FrontendSettings()), NullLogger<VulnerabilityAlertService>.Instance),
                 new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),
-                    scope.CommitScopeFactory, new NoopNotifier(), new FakeAuditLogService(),
+                    scope.CommitScopeFactory, new FakeAuditLogService(),
                     NullLogger<FindingTicketSyncService>.Instance),
                 new CriticalVulnerabilityTicketService(scope.Tickets, scope.Organizations, scope.Users,
-                    scope.CommitScopeFactory, TestLocalizer.Create(), new NoopNotifier(), new FakeAuditLogService(),
+                    scope.CommitScopeFactory, TestLocalizer.Create(), new FakeAuditLogService(),
                     NullLogger<CriticalVulnerabilityTicketService>.Instance),
                 new ProjectInventoryWriter(new DependencyRepository(scope.Context), vulnerabilities,
                     new RuntimeRepository(scope.Context), scope.CommitScopeFactory),
-                new QuotaGuard(scope.Organizations, scope.Projects, scope.Users,
-                    new UserInvitationRepository(scope.Context), scope.SystemScope),
                 new TokenProtector(new EphemeralDataProtectionProvider(), NullLogger<TokenProtector>.Instance),
                 new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
                 new NoopNotifier(),
                 scope.SystemScope,
+                new DatabaseConnectionHolder(scope.Context),
                 new FakeAuditLogService(),
                 NullLogger<ProjectScanService>.Instance);
         }
@@ -182,7 +185,7 @@ public class ProjectScanServiceTests
         }
 
         public Task ScanAsync() =>
-            Service.ScanProjectWithReservedQuotaAsync(Project.Id, Project.OrganizationId);
+            Service.ScanProjectAsync(Project.Id);
 
         public async Task<Project> ReloadAsync()
         {

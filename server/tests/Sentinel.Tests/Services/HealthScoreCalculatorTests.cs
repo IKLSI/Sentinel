@@ -17,7 +17,7 @@ public class HealthScoreCalculatorTests
     };
 
     private static Project ProjectWithDependencies(int count, DependencyStatus status,
-        DependencyType type = DependencyType.Prod)
+        DependencyType type = DependencyType.Prod, bool isDirect = true)
     {
         (string current, string latest) = status switch
         {
@@ -35,6 +35,7 @@ public class HealthScoreCalculatorTests
                 CurrentVersion = current,
                 LatestVersion = latest,
                 Type = type,
+                IsDirect = isDirect,
                 Status = status,
             });
         }
@@ -110,6 +111,37 @@ public class HealthScoreCalculatorTests
 
         HealthScoreCalculator.Calculate(small)
             .Should().Be(HealthScoreCalculator.Calculate(large));
+    }
+
+    [Fact]
+    public void Calculate_OutdatedTransitiveDependencies_DoNotPenalizeTheScore()
+    {
+        Project project = ProjectWithDependencies(50, DependencyStatus.MajorUpdate, isDirect: false);
+
+        HealthScoreCalculator.Calculate(project).Should().Be(100);
+    }
+
+    [Fact]
+    public void Calculate_OutdatedTransitiveDependencies_DoNotDiluteTheDirectOnes()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.MajorUpdate);
+        Project withTransitives = ProjectWithDependencies(10, DependencyStatus.MajorUpdate);
+        foreach (Dependency transitive in ProjectWithDependencies(500, DependencyStatus.UpToDate, isDirect: false)
+                     .Dependencies)
+            withTransitives.Dependencies.Add(transitive);
+
+        HealthScoreCalculator.Calculate(withTransitives).Should().Be(HealthScoreCalculator.Calculate(project));
+    }
+
+    [Fact]
+    public void Calculate_VulnerableTransitiveDependency_IsPenalizedLikeADirectOne()
+    {
+        Project direct = ProjectWithDependencies(1, DependencyStatus.UpToDate);
+        Project transitive = ProjectWithDependencies(1, DependencyStatus.UpToDate, isDirect: false);
+        AddVulnerabilities(direct, VulnerabilitySeverity.Critical, 1);
+        AddVulnerabilities(transitive, VulnerabilitySeverity.Critical, 1);
+
+        HealthScoreCalculator.Calculate(transitive).Should().Be(HealthScoreCalculator.Calculate(direct));
     }
 
     [Fact]

@@ -15,14 +15,14 @@ describe("extractApiErrorCode", () => {
     const err = {
       response: {
         data: {
-          code: "errors.quota.projects_exceeded",
-          params: { limit: "3" },
+          code: "errors.projects.invalid_scan_frequency",
+          params: { values: "Daily, Weekly" },
         },
       },
     };
     expect(extractApiErrorCode(err)).toEqual({
-      code: "errors.quota.projects_exceeded",
-      params: { limit: "3" },
+      code: "errors.projects.invalid_scan_frequency",
+      params: { values: "Daily, Weekly" },
     });
   });
 

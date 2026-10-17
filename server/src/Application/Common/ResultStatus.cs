@@ -9,7 +9,6 @@ public enum ResultStatus
     NotFound,
     Unauthorized,
     Forbidden,
-    PaymentRequired,
     Conflict,
     Error
 }

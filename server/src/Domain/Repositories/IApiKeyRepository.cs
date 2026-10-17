@@ -14,7 +14,13 @@ public interface IApiKeyRepository : ICrudEntityWithIdRepository<ApiKey>
     Task<ApiKey?> GetOrDefaultInOrganizationAsync(Guid apiKeyId, Guid organizationId, QueryTracking tracking,
         CancellationToken cancellationToken);
 
-    Task<ApiKey?> GetOrDefaultActiveByHashAcrossTenantsAsync(string keyHash, CancellationToken cancellationToken);
+    Task<ApiKeyAuthenticationRow?> GetOrDefaultActiveAuthenticationByHashAcrossTenantsAsync(string keyHash,
+        CancellationToken cancellationToken);
+
+    Task<int> UpdateLastUsedAtAcrossTenantsAsync(Guid apiKeyId, DateTime usedAt, DateTime staleBefore,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<string>> ListKeyHashesForUserAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<int> RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken);
 }

@@ -17,7 +17,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StyleGuideRouteImport } from './routes/style-guide'
-import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -67,11 +66,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const StyleGuideRoute = StyleGuideRouteImport.update({
   id: '/style-guide',
   path: '/style-guide',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -141,7 +135,6 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
-  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -161,7 +154,6 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
-  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -183,7 +175,6 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/style-guide': typeof StyleGuideRoute
-  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -206,7 +197,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
-    | '/terms'
     | '/verify-email'
     | '/dashboard'
     | '/profile'
@@ -226,7 +216,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
-    | '/terms'
     | '/verify-email'
     | '/dashboard'
     | '/profile'
@@ -247,7 +236,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/style-guide'
-    | '/terms'
     | '/verify-email'
     | '/_authenticated/_admin'
     | '/_authenticated/dashboard'
@@ -270,7 +258,6 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StyleGuideRoute: typeof StyleGuideRoute
-  TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
@@ -330,13 +317,6 @@ declare module '@tanstack/react-router' {
       path: '/style-guide'
       fullPath: '/style-guide'
       preLoaderRoute: typeof StyleGuideRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -469,7 +449,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StyleGuideRoute: StyleGuideRoute,
-  TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport

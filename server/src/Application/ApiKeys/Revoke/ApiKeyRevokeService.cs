@@ -12,6 +12,7 @@ namespace Sentinel.Application.ApiKeys.Revoke;
 
 public class ApiKeyRevokeService(
     IApiKeyRepository apiKeyRepository,
+    ApiKeyPrincipalCache principalCache,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
@@ -34,8 +35,10 @@ public class ApiKeyRevokeService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
+        principalCache.Invalidate(apiKey.KeyHash);
+
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.ApiKeys), cancellationToken);
+            new RealtimeEvent(RealtimeResources.ApiKeys));
 
         await auditLog.LogAsync(
             AuditAction.ApiKeyRevoked,

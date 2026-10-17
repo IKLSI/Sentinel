@@ -1,7 +1,10 @@
+using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Git;
 using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.PublicScan;
@@ -11,6 +14,7 @@ public class PublicScanService(
     VulnerabilityScanService vulnerabilityScan,
     RuntimeEolScanService runtimeEol,
     ExploitSignalEnricher exploitSignalEnricher,
+    IMemoryCache cache,
     PublicScanValidator validator) : IService
 {
     public async Task<Result<PublicScanResponse>> ExecuteAsync(
@@ -22,9 +26,36 @@ public class PublicScanService(
         if (!validationResult.IsSuccess)
             return Result<PublicScanResponse>.From(validationResult);
 
+        if (!RepositoryLocation.TryParse(request.RepositoryUrl, out RepositoryLocation location))
+            return Result<PublicScanResponse>.Error(ErrorCodes.ScanInvalidRepositoryUrl);
+
+        string? headCommitSha = await scanner.GetHeadCommitAsync(request.RepositoryUrl!);
+        string cacheKey = CacheKeys.PublicScan(location.Host, location.Owner, location.Repository, headCommitSha);
+
+        if (cache.TryGetValue(cacheKey, out PublicScanResponse? cached) && cached != null)
+            return Result<PublicScanResponse>.Success(cached);
+
+        Result<PublicScanResponse> result = await ScanAsync(request.RepositoryUrl!, headCommitSha);
+
+        if (result.IsSuccess && result.Value is { } response)
+        {
+            cache.Set(cacheKey, response, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = headCommitSha == null
+                    ? CacheKeys.PublicScanUnpinnedTtl
+                    : CacheKeys.PublicScanTtl,
+                Size = 1
+            });
+        }
+
+        return result;
+    }
+
+    private async Task<Result<PublicScanResponse>> ScanAsync(string repositoryUrl, string? headCommitSha)
+    {
         Guid ephemeralId = Guid.NewGuid();
 
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(ephemeralId, request.RepositoryUrl!);
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(ephemeralId, repositoryUrl, commitSha: headCommitSha);
 
         if (outcome.Error != null)
             return Result<PublicScanResponse>.Error(outcome.Error);

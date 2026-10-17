@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectOption } from "@/domains/projects/types";
 import type { User } from "@/domains/users/types";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import {
@@ -19,7 +19,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<EditTicketFormValues>;
-  projects: Project[];
+  projects: ProjectOption[];
   users: User[];
   saving: boolean;
   onSubmit: () => void;

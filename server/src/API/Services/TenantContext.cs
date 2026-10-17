@@ -14,7 +14,6 @@ public class TenantContext : ITenantContext
     private Guid? _organizationId;
     private Guid? _userId;
     private string? _jti;
-    private DateTime? _tokenExpiresAtUtc;
 
     public TenantContext(IHttpContextAccessor httpContextAccessor)
     {
@@ -48,15 +47,6 @@ public class TenantContext : ITenantContext
         }
     }
 
-    public DateTime? TokenExpiresAtUtc
-    {
-        get
-        {
-            ResolveIfAuthenticated();
-            return _tokenExpiresAtUtc;
-        }
-    }
-
     public bool IsSet => OrganizationId.HasValue;
 
     public void Reset()
@@ -66,7 +56,6 @@ public class TenantContext : ITenantContext
             _organizationId = null;
             _userId = null;
             _jti = null;
-            _tokenExpiresAtUtc = null;
             _resolved = false;
         }
     }
@@ -90,9 +79,6 @@ public class TenantContext : ITenantContext
                 _userId = userId;
 
             _jti = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-
-            if (long.TryParse(user.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
-                _tokenExpiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
 
             _resolved = true;
         }

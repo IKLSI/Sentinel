@@ -3,6 +3,9 @@ import { API_KEYS_QUERY_KEY } from "@/domains/apiKeys/constants";
 import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
 import { JOBS_QUERY_KEY } from "@/domains/jobs/constants";
 import {
+  AVAILABLE_REPOS_QUERY_KEY,
+  PROJECT_DETAIL_QUERY_KEY,
+  PROJECT_OPTIONS_QUERY_KEY,
   PROJECTS_QUERY_KEY,
   projectQueryKey,
 } from "@/domains/projects/constants";
@@ -19,6 +22,8 @@ export const REALTIME_RETRY_BASE_DELAY_MS = 5_000;
 
 export const REALTIME_RETRY_MAX_DELAY_MS = 60_000;
 
+export const REALTIME_INVALIDATION_BATCH_MS = 300;
+
 const reportUnhandledResource = (resource: never): QueryKey[] => {
   console.warn("Unhandled realtime resource:", resource);
   return [];
@@ -30,32 +35,50 @@ export const resolveInvalidatedKeys = ({
 }: RealtimeEvent): QueryKey[] => {
   switch (resource) {
     case REALTIME_RESOURCES.Projects:
-      return [PROJECTS_QUERY_KEY, DASHBOARD_QUERY_KEY];
+      return [
+        PROJECTS_QUERY_KEY,
+        DASHBOARD_QUERY_KEY,
+        AVAILABLE_REPOS_QUERY_KEY,
+        PROJECT_OPTIONS_QUERY_KEY,
+      ];
     case REALTIME_RESOURCES.Project:
       return [
         PROJECTS_QUERY_KEY,
         DASHBOARD_QUERY_KEY,
+        PROJECT_OPTIONS_QUERY_KEY,
         ...(id ? [projectQueryKey(id)] : []),
       ];
     case REALTIME_RESOURCES.Tickets:
-      return [[TICKETS_QUERY_KEY], DASHBOARD_QUERY_KEY, PROJECTS_QUERY_KEY];
+      return [
+        [TICKETS_QUERY_KEY],
+        DASHBOARD_QUERY_KEY,
+        PROJECTS_QUERY_KEY,
+        PROJECT_DETAIL_QUERY_KEY,
+      ];
     case REALTIME_RESOURCES.Ticket:
       return [
         [TICKETS_QUERY_KEY],
         DASHBOARD_QUERY_KEY,
         PROJECTS_QUERY_KEY,
+        PROJECT_DETAIL_QUERY_KEY,
+        ...(id ? [ticketQueryKey(id)] : []),
+      ];
+    case REALTIME_RESOURCES.TicketActivity:
+      return [
+        [TICKETS_QUERY_KEY],
+        DASHBOARD_QUERY_KEY,
         ...(id ? [ticketQueryKey(id)] : []),
       ];
     case REALTIME_RESOURCES.Jobs:
       return [JOBS_QUERY_KEY];
     case REALTIME_RESOURCES.Users:
-      return [[USERS_QUERY_KEY]];
+      return [[USERS_QUERY_KEY], [TICKETS_QUERY_KEY], DASHBOARD_QUERY_KEY];
     case REALTIME_RESOURCES.ApiKeys:
       return [API_KEYS_QUERY_KEY];
     case REALTIME_RESOURCES.Organization:
       return [ORGANIZATION_QUERY_KEY];
     case REALTIME_RESOURCES.Integrations:
-      return [INTEGRATIONS_QUERY_KEY];
+      return [INTEGRATIONS_QUERY_KEY, AVAILABLE_REPOS_QUERY_KEY];
     default:
       return reportUnhandledResource(resource);
   }

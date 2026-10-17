@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Application.Options;

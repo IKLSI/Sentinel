@@ -29,8 +29,6 @@ public class DataSeeder
             Id = Guid.NewGuid(),
             Name = "Sentinel",
             Slug = "sentinel",
-            PlanTier = PlanTier.Business,
-            ScanCountPeriodStart = now,
             CreatedAt = now
         };
 

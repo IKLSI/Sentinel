@@ -23,15 +23,49 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-let isRefreshing = false;
-let pendingRequests: Array<(token: string) => void> = [];
+const TOKEN_REFRESH_LOCK = "sentinel:access-token-refresh";
 
-const processQueue = (token: string) => {
-  pendingRequests.forEach((resolve) => {
-    resolve(token);
-  });
-  pendingRequests = [];
+let refreshInFlight: Promise<string> | null = null;
+
+const requestNewAccessToken = async (): Promise<string> => {
+  const response = await axios.post(
+    `${API_BASE_URL}${ROUTES_API.api.auth.refresh.__path}`,
+    {},
+    { withCredentials: true },
+  );
+  const { accessToken } = response.data;
+  localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+  return accessToken;
 };
+
+const refreshUnlessAlreadyRenewed = (
+  staleToken: string | null,
+): Promise<string> => {
+  const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  return current && current !== staleToken
+    ? Promise.resolve(current)
+    : requestNewAccessToken();
+};
+
+export const refreshAccessToken = (
+  staleToken: string | null,
+): Promise<string> => {
+  refreshInFlight ??= (
+    navigator.locks
+      ? navigator.locks.request(TOKEN_REFRESH_LOCK, () =>
+          refreshUnlessAlreadyRenewed(staleToken),
+        )
+      : refreshUnlessAlreadyRenewed(staleToken)
+  ).finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+};
+
+const tokenOf = (authorization: unknown): string | null =>
+  typeof authorization === "string"
+    ? authorization.replace(/^Bearer /, "")
+    : null;
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -43,36 +77,19 @@ apiClient.interceptors.response.use(
       !originalRequest._retry &&
       !originalRequest.url?.includes(ROUTES_API.api.auth.login.__path)
     ) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          pendingRequests.push((token: string) => {
-            originalRequest.headers.Authorization = bearerToken(token);
-            resolve(apiClient(originalRequest));
-          });
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const response = await axios.post(
-          `${API_BASE_URL}${ROUTES_API.api.auth.refresh.__path}`,
-          {},
-          { withCredentials: true },
+        const accessToken = await refreshAccessToken(
+          tokenOf(originalRequest.headers?.Authorization),
         );
-        const { accessToken } = response.data;
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-        processQueue(accessToken);
-        isRefreshing = false;
         originalRequest.headers.Authorization = bearerToken(accessToken);
         return apiClient(originalRequest);
-      } catch (error) {
-        console.error("Token refresh failed:", error);
-        isRefreshing = false;
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
         window.location.href = ROUTES.LOGIN;
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
       }
     }
 

@@ -1,5 +1,4 @@
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Exports;
 using Sentinel.Domain.Abstractions;
@@ -11,7 +10,6 @@ namespace Sentinel.Application.TechHealth.ExportSbom;
 public class ProjectSbomExportService(
     SbomService sbomService,
     IProjectRepository projectRepository,
-    QuotaGuard quotaGuard,
     ITenantContext tenant) : IService
 {
     private const string SpdxFormat = "spdx";
@@ -26,11 +24,6 @@ public class ProjectSbomExportService(
 
         if (!projectExists)
             return Result<FileDownload>.NotFound(ErrorCodes.ProjectNotFound);
-
-        Result planResult = await quotaGuard.EnsureComplianceExportsAllowedAsync(organizationId, cancellationToken);
-
-        if (!planResult.IsSuccess)
-            return Result<FileDownload>.From(planResult);
 
         SbomFormat sbomFormat = string.Equals(format, SpdxFormat, StringComparison.OrdinalIgnoreCase)
             ? SbomFormat.Spdx

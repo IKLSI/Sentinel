@@ -5,7 +5,6 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
-using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 using Sentinel.Domain.TechHealth;
 
@@ -15,20 +14,19 @@ public class FindingTicketSyncService(
     ITicketRepository ticketRepository,
     ITicketHistoryRepository ticketHistoryRepository,
     ICommitScopeFactory commitScopeFactory,
-    IRealtimeNotifier realtimeNotifier,
     IAuditLogService auditLog,
     ILogger<FindingTicketSyncService> logger)
 {
     private const string StatusField = "Status";
 
-    public async Task SyncAsync(Project project)
+    public async Task<FindingTicketSyncResult?> SyncAsync(Project project)
     {
         try
         {
             IReadOnlyList<Ticket> tickets = await ticketRepository.ListFindingLinkedByProjectAsync(project.Id,
                 QueryTracking.Tracked, CancellationToken.None);
 
-            if (tickets.Count == 0) return;
+            if (tickets.Count == 0) return new FindingTicketSyncResult(tickets, TicketsChanged: false);
 
             HashSet<(FindingKind, string)> presentFindings = PresentFindings(project);
             HashSet<(FindingKind, string)> openFindings = tickets
@@ -57,16 +55,13 @@ public class FindingTicketSyncService(
                 }
             }
 
-            if (changes.Count == 0) return;
+            if (changes.Count == 0) return new FindingTicketSyncResult(tickets, TicketsChanged: false);
 
             using (ICommitScope commitScope = commitScopeFactory.Begin())
             {
                 await ticketHistoryRepository.AddRangeAsync(changes, CancellationToken.None);
                 await commitScope.CommitAsync(CancellationToken.None);
             }
-
-            await realtimeNotifier.NotifyOrganizationAsync(project.OrganizationId,
-                new RealtimeEvent(RealtimeResources.Tickets), CancellationToken.None);
 
             foreach (TicketHistory change in changes)
             {
@@ -77,10 +72,14 @@ public class FindingTicketSyncService(
                     userId: null,
                     entityId: change.TicketId);
             }
+
+            return new FindingTicketSyncResult(tickets, TicketsChanged: true);
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Unable to synchronize finding tickets for project {ProjectId}", project.Id);
+
+            return null;
         }
     }
 

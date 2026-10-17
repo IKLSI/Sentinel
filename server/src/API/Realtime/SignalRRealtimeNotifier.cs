@@ -9,20 +9,18 @@ public class SignalRRealtimeNotifier(
     IHubContext<SentinelHub> hubContext,
     ILogger<SignalRRealtimeNotifier> logger) : IRealtimeNotifier
 {
-    public Task NotifyOrganizationAsync(Guid organizationId, RealtimeEvent notification,
-        CancellationToken cancellationToken) =>
+    public Task NotifyOrganizationAsync(Guid organizationId, RealtimeEvent notification) =>
         SendAsync(hubContext.Clients.Group(RealtimeConstants.OrganizationGroup(organizationId)),
-            notification, organizationId, cancellationToken);
+            notification, organizationId);
 
-    public Task NotifyAllAsync(RealtimeEvent notification, CancellationToken cancellationToken) =>
-        SendAsync(hubContext.Clients.All, notification, organizationId: null, cancellationToken);
+    public Task NotifyAllAsync(RealtimeEvent notification) =>
+        SendAsync(hubContext.Clients.All, notification, organizationId: null);
 
-    private async Task SendAsync(IClientProxy clients, RealtimeEvent notification, Guid? organizationId,
-        CancellationToken cancellationToken)
+    private async Task SendAsync(IClientProxy clients, RealtimeEvent notification, Guid? organizationId)
     {
         try
         {
-            await clients.SendAsync(RealtimeConstants.InvalidateMethod, notification, cancellationToken);
+            await clients.SendAsync(RealtimeConstants.InvalidateMethod, notification, CancellationToken.None);
         }
         catch (Exception exception)
         {

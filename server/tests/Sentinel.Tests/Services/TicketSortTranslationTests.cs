@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
@@ -19,7 +18,6 @@ public class TicketSortTranslationTests
         public Guid? OrganizationId => null;
         public Guid? UserId => null;
         public string? Jti => null;
-        public DateTime? TokenExpiresAtUtc => null;
         public bool IsSet => false;
         public void Reset() { }
     }
@@ -58,7 +56,6 @@ public class TicketSortTranslationTests
     }
 
     [Theory]
-    [InlineData(TicketSortField.Priority, "'Low' THEN 0", "'High' THEN 2")]
     [InlineData(TicketSortField.Status, "'New' THEN 0", "'Resolved' THEN 3")]
     public void TriParEnum_UtiliseUnRangExpliciteEtPasLOrdreAlphabetiqueDeLaColonneTexte(
         TicketSortField sortBy, string firstRank, string laterRank)
@@ -75,7 +72,17 @@ public class TicketSortTranslationTests
     {
         string orderBy = OrderByClauseFor(TicketSortField.Priority, SortDirection.Desc);
 
-        orderBy.IndexOf("END DESC", StringComparison.Ordinal)
-            .Should().BeLessThan(orderBy.IndexOf("CreatedAt", StringComparison.Ordinal));
+        orderBy.IndexOf("\"PriorityRank\" DESC", StringComparison.Ordinal)
+            .Should().BeGreaterThan(-1)
+            .And.BeLessThan(orderBy.IndexOf("CreatedAt", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void TriParPriorite_UtiliseLaColonneCalculeeStockeeSansCase()
+    {
+        string orderBy = OrderByClauseFor(TicketSortField.Priority, SortDirection.Asc);
+
+        orderBy.Should().Contain("\"PriorityRank\"");
+        orderBy.Should().NotContain("CASE");
     }
 }

@@ -13,6 +13,7 @@ export const REALTIME_RESOURCES = {
   Project: "project",
   Tickets: "tickets",
   Ticket: "ticket",
+  TicketActivity: "ticketActivity",
   Jobs: "jobs",
   Users: "users",
   ApiKeys: "apiKeys",

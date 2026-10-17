@@ -1,24 +1,23 @@
+using System.Net;
+using Sentinel.API.HealthChecks;
 using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
+using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Security;
-using Sentinel.Application.TechHealth;
 using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Constants;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
 using Sentinel.Infrastructure.Hosting;
 using Sentinel.Infrastructure.Http;
 using Sentinel.Infrastructure.Jobs;
 using Sentinel.Infrastructure.Localization;
-using Sentinel.Infrastructure.Payments;
 using Sentinel.Infrastructure.Storage;
 
 namespace Sentinel.API.Extensions;
@@ -37,9 +36,17 @@ public static partial class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddHealthCheckServices(this IServiceCollection services)
+    {
+        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
+
+        return services;
+    }
+
     public static IServiceCollection AddHttpRegistryClients(this IServiceCollection services)
     {
         services.AddSingleton<HostConcurrencyLimiter>();
+        services.AddSingleton<InFlightRequestCoalescer>();
         services.AddTransient<ResilientHttpHandler>();
         services.AddTransient<HostConcurrencyHandler>();
 
@@ -50,6 +57,9 @@ public static partial class ServiceCollectionExtensions
         });
 
         services.AddResilientHttpClient(HttpClientNames.Registry, 90, client =>
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
+
+        services.AddResilientHttpClient(HttpClientNames.GitLab, 90, client =>
             client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
 
         services.AddResilientHttpClient(HttpClientNames.EolDate, 45, client =>
@@ -78,6 +88,12 @@ public static partial class ServiceCollectionExtensions
             configure(client);
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+        })
+        .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
         .AddHttpMessageHandler<ResilientHttpHandler>()
         .AddHttpMessageHandler<HostConcurrencyHandler>();
 
@@ -90,12 +106,12 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<AuditLogBatchWriter>();
         services.AddHostedService<AuditLogBackgroundWriter>();
-        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
         services.AddScoped<TokenService>();
         services.AddScoped<TokenProtector>();
         services.AddScoped<QueuedTokenProtector>();
         services.AddScoped<ExportService>();
         services.AddScoped<DashboardCache>();
+        services.AddScoped<ApiKeyPrincipalCache>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<VulnerabilityScanService>();
@@ -109,10 +125,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<DueProjectScanService>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
-        services.AddScoped<QuotaGuard>();
 
         services.AddTransient<TechHealthScanJob>();
-        services.AddTransient<PurgeExpiredRevokedTokensJob>();
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();
@@ -149,19 +163,6 @@ public static partial class ServiceCollectionExtensions
         {
             services.AddScoped(useCaseType);
         }
-
-        return services;
-    }
-
-    public static IServiceCollection AddStripe(this IServiceCollection services, IConfiguration configuration)
-    {
-        StripeSettings stripe = ReadSettings<StripeSettings>(configuration, ConfigurationKeys.Sections.Stripe);
-
-        string apiKey = string.IsNullOrEmpty(stripe.SecretKey) ? "sk_test_placeholder" : stripe.SecretKey;
-
-        services.AddSingleton<Stripe.IStripeClient>(new Stripe.StripeClient(apiKey));
-        services.AddScoped<IBillingGateway, StripeBillingGateway>();
-        services.AddScoped<IBillingWebhookParser, StripeWebhookParser>();
 
         return services;
     }

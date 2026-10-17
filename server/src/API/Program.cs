@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
 using Sentinel.Infrastructure.Data;
@@ -37,6 +37,7 @@ public static class Program
             .AddHangfireServices(builder.Configuration)
             .AddHttpRegistryClients()
             .AddRealtimeServices()
+            .AddHealthCheckServices()
             .AddApplicationServices()
             .AddInfrastructureServices()
             .AddUseCases()
@@ -46,7 +47,6 @@ public static class Program
             .AddLoginRateLimiting()
             .AddMemoryCache(options => options.SizeLimit = 50_000)
             .AddResponseCompressionPolicy()
-            // .AddStripe(builder.Configuration) // Stripe désactivé temporairement
             .AddDataProtectionPolicy(builder.Configuration);
 
         WebApplication app = builder.Build();
@@ -122,7 +122,6 @@ public static class Program
             });
         }
 
-        app.UseStaticFiles();
         app.UseCors();
         app.UseAuthentication();
         app.UseRateLimiter();
@@ -132,6 +131,14 @@ public static class Program
         app.ConfigureHangfire();
 
         app.MapControllers();
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = (context, report) =>
+            {
+                context.Response.ContentType = "text/plain";
+                return context.Response.WriteAsync(report.Status.ToString());
+            }
+        }).AllowAnonymous();
         app.MapHub<SentinelHub>(RealtimeConstants.HubPath,
             options => options.CloseOnAuthenticationExpiration = true);
 

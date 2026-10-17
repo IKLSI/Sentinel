@@ -1,5 +1,4 @@
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Billing;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
@@ -13,8 +12,8 @@ namespace Sentinel.Application.TechHealth.CreateProject;
 
 public class ProjectCreateService(
     IProjectRepository projectRepository,
+    IOrganizationRepository organizationRepository,
     ICommitScopeFactory commitScopeFactory,
-    QuotaGuard quotaGuard,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
@@ -25,27 +24,23 @@ public class ProjectCreateService(
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<ProjectDto>.Unauthorized();
 
-        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
+        Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
+            QueryTracking.NoTracking, cancellationToken);
+
+        if (organization == null)
+            return Result<ProjectDto>.NotFound();
+
+        Result validationResult = await validator.ValidateAsync(model, organization.ToGitLabInstance().Host,
+            cancellationToken);
 
         if (!validationResult.IsSuccess)
             return Result<ProjectDto>.From(validationResult);
-
-        Result quotaResult = await quotaGuard.EnsureCanAddProjectAsync(organizationId, cancellationToken);
-
-        if (!quotaResult.IsSuccess)
-            return Result<ProjectDto>.From(quotaResult);
 
         if (!Enum.TryParse(model.RepositoryType, true, out RepositoryType repositoryType))
             repositoryType = RepositoryType.GitHub;
 
         if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
             scanFrequency = ScanFrequency.Weekly;
-
-        Result frequencyResult = await quotaGuard
-            .EnsureScanFrequencyAllowedAsync(organizationId, scanFrequency, cancellationToken);
-
-        if (!frequencyResult.IsSuccess)
-            return Result<ProjectDto>.From(frequencyResult);
 
         Project project = new Project
         {
@@ -63,7 +58,7 @@ public class ProjectCreateService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Projects), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Projects));
 
         await auditLog.LogAsync(
             AuditAction.ProjectCreated,
@@ -73,9 +68,6 @@ public class ProjectCreateService(
             entityId: project.Id,
             jti: tenant.Jti);
 
-        Project? created = await projectRepository
-            .GetOrDefaultWithHealthDetailsAsync(project.Id, QueryTracking.NoTracking, cancellationToken);
-
-        return Result<ProjectDto>.Success(ProjectMapper.ToDto(created!));
+        return Result<ProjectDto>.Success(ProjectMapper.ToDto(project));
     }
 }

@@ -1,4 +1,6 @@
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
+using Sentinel.Domain.Git;
 namespace Sentinel.Domain.Entities;
 
 public class Organization : IEntityWithId
@@ -10,18 +12,15 @@ public class Organization : IEntityWithId
     public VulnerabilitySeverity AlertMinSeverity { get; set; } = VulnerabilitySeverity.High;
     public string? GithubToken { get; set; }
     public string? GitlabToken { get; set; }
+    public string? GitlabBaseUrl { get; set; }
 
-    public PlanTier PlanTier { get; set; } = PlanTier.Free;
-    public SubscriptionStatus SubscriptionStatus { get; set; } = SubscriptionStatus.None;
-    public string? StripeCustomerId { get; set; }
-    public string? StripeSubscriptionId { get; set; }
-    public DateTime? LastBillingEventAt { get; set; }
-    public int MonthlyScanCount { get; set; }
-    public DateTime ScanCountPeriodStart { get; set; } = DateTime.UtcNow;
     public int TicketCounter { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<User> Users { get; set; } = new List<User>();
+
+    public GitLabInstance ToGitLabInstance() =>
+        new(GitlabBaseUrl ?? RepositoryHosts.PublicGitLabBaseUrl);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import type {
   FilterCriterion,
   FilterFieldDefinition,
@@ -38,13 +38,23 @@ export function useGridControls<T>({
     );
   }, []);
 
+  const deferredSearch = useDeferredValue(search);
+
+  const sortedRows = useMemo(() => {
+    const comparator = comparators[sort.key];
+    if (!comparator) return rows;
+
+    const direction = sort.direction === "asc" ? 1 : DESCENDING;
+    return [...rows].sort((a, b) => comparator(a, b) * direction);
+  }, [rows, comparators, sort]);
+
   const visibleRows = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = deferredSearch.trim().toLowerCase();
     const field = criterion
       ? fields.find((candidate) => candidate.key === criterion.field)
       : null;
 
-    const filtered = rows.filter((row) => {
+    return sortedRows.filter((row) => {
       if (
         term &&
         !searchableValues(row).some((value) =>
@@ -58,13 +68,7 @@ export function useGridControls<T>({
 
       return true;
     });
-
-    const comparator = comparators[sort.key];
-    if (!comparator) return filtered;
-
-    const direction = sort.direction === "asc" ? 1 : DESCENDING;
-    return [...filtered].sort((a, b) => comparator(a, b) * direction);
-  }, [rows, search, criterion, fields, comparators, sort, searchableValues]);
+  }, [sortedRows, deferredSearch, criterion, fields, searchableValues]);
 
   return {
     search,

@@ -14,10 +14,7 @@ public static class WebApplicationExtensions
             job => job.ExecuteAsync(CancellationToken.None),
             Cron.Daily(2));
 
-        recurringJobs.AddOrUpdate<PurgeExpiredRevokedTokensJob>(
-            RecurringJobIds.PurgeExpiredRevokedTokens,
-            job => job.ExecuteAsync(CancellationToken.None),
-            Cron.Hourly());
+        recurringJobs.RemoveIfExists(RecurringJobIds.PurgeExpiredRevokedTokens);
 
         return app;
     }

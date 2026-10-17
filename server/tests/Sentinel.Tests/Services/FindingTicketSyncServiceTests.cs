@@ -46,6 +46,19 @@ public class FindingTicketSyncServiceTests
     }
 
     [Fact]
+    public async Task SyncAsync_RetourneLesTicketsLiesAuxFindingsDuProjet()
+    {
+        using TestScope scope = new TestScope();
+        Ticket ticket = NewTicket(scope, TicketStatus.InProgress);
+        await scope.SeedAsync(ticket);
+
+        FindingTicketSyncResult? result = await BuildSut(scope).SyncAsync(NewProject(scope, withCve: false));
+
+        result!.LinkedTickets.Should().ContainSingle().Which.Id.Should().Be(ticket.Id);
+        result.TicketsChanged.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task SyncAsync_QuandLeFindingRevientApresUneResolutionAutomatique_RouvreLeTicket()
     {
         using TestScope scope = new TestScope();
@@ -103,7 +116,6 @@ public class FindingTicketSyncServiceTests
         scope.Tickets,
         new TicketHistoryRepository(scope.Context),
         scope.CommitScopeFactory,
-        new NoopRealtimeNotifier(),
         new FakeAuditLogService(),
         NullLogger<FindingTicketSyncService>.Instance);
 

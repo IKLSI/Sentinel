@@ -42,6 +42,7 @@ public class Dependency : IEntityWithId
     public string? Publisher { get; set; }
     public string? License { get; set; }
     public DependencyType Type { get; set; } = DependencyType.Prod;
+    public bool IsDirect { get; set; } = true;
     public DependencyEcosystem Ecosystem { get; set; } = DependencyEcosystem.Npm;
     public DependencyStatus Status { get; set; } = DependencyStatus.UpToDate;
 

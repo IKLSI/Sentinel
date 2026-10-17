@@ -110,13 +110,14 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {AppRole};";
 
         return new SentinelContext(
             BuildOptions(new TenantCommandInterceptor(tenant, systemScope, sessionState),
-                new TenantConnectionInterceptor(sessionState)),
+                new TenantConnectionInterceptor(sessionState), new TenantTransactionInterceptor(sessionState)),
             tenant,
             systemScope);
     }
 
     private DbContextOptions<SentinelContext> BuildOptions(TenantCommandInterceptor? commandInterceptor,
-        TenantConnectionInterceptor? connectionInterceptor = null)
+        TenantConnectionInterceptor? connectionInterceptor = null,
+        TenantTransactionInterceptor? transactionInterceptor = null)
     {
         DbContextOptionsBuilder<SentinelContext> builder = new DbContextOptionsBuilder<SentinelContext>()
             .UseNpgsql(ConnectionString, npgsql => npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(1), null));
@@ -126,6 +127,9 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {AppRole};";
 
         if (connectionInterceptor != null)
             builder.AddInterceptors(connectionInterceptor);
+
+        if (transactionInterceptor != null)
+            builder.AddInterceptors(transactionInterceptor);
 
         return builder.Options;
     }

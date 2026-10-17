@@ -11,7 +11,6 @@ public static class ConfigurationKeys
         public const string Email = "Email";
         public const string Frontend = "Frontend";
         public const string Cors = "Cors";
-        public const string Stripe = "Stripe";
         public const string Support = "Support";
         public const string DataProtection = "DataProtection";
         public const string Cookie = "Cookie";

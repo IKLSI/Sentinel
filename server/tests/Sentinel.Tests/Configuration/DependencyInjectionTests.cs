@@ -2,7 +2,6 @@ using FluentAssertions;
 using Hangfire;
 using Hangfire.Common;
 using Hangfire.States;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -133,8 +132,7 @@ public class DependencyInjectionTests
             .AddApplicationServices()
             .AddInfrastructureServices()
             .AddUseCases()
-            .AddMemoryCache()
-            .AddStripe(configuration);
+            .AddMemoryCache();
 
         return services;
     }

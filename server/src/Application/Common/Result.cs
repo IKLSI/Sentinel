@@ -39,9 +39,6 @@ public class Result
 
     public static Result Forbidden(string? code = null) => new(ResultStatus.Forbidden, code);
 
-    public static Result PaymentRequired(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        new(ResultStatus.PaymentRequired, code, parameters);
-
     public static Result Conflict(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
         new(ResultStatus.Conflict, code, parameters);
 
@@ -81,9 +78,6 @@ public sealed class Result<T> : Result
 
     public new static Result<T> Forbidden(string? code = null) =>
         new(default, ResultStatus.Forbidden, code);
-
-    public new static Result<T> PaymentRequired(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
-        new(default, ResultStatus.PaymentRequired, code, parameters);
 
     public new static Result<T> Conflict(string code, IReadOnlyDictionary<string, string>? parameters = null) =>
         new(default, ResultStatus.Conflict, code, parameters);

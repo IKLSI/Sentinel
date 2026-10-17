@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectOption } from "@/domains/projects/types";
 import type { User } from "@/domains/users/types";
 import {
   modalInputSx,
@@ -18,7 +18,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<CreateTicketFormValues>;
-  projects: Project[];
+  projects: ProjectOption[];
   users: User[];
   submitting: boolean;
   onSubmit: () => void;

@@ -9,6 +9,9 @@ public class RepositoryLocationTests
     [InlineData("https://github.com/Owner/Repo", "github.com", "Owner", "Repo")]
     [InlineData("https://github.com/Owner/Repo.git", "github.com", "Owner", "Repo")]
     [InlineData("https://GitLab.com/groupe/projet/", "gitlab.com", "groupe", "projet")]
+    [InlineData("https://github.com/Owner/Repo/tree/main", "github.com", "Owner", "Repo")]
+    [InlineData("https://git.entreprise.fr/groupe/sous-groupe/projet.git", "git.entreprise.fr", "groupe/sous-groupe", "projet")]
+    [InlineData("https://git.entreprise.fr/groupe/sous-groupe/projet/-/tree/main", "git.entreprise.fr", "groupe/sous-groupe", "projet")]
     public void TryParse_WhenUrlIsValid_ExtractsHostOwnerAndRepository(
         string url, string host, string owner, string repository)
     {

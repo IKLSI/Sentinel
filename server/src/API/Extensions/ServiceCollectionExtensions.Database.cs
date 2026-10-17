@@ -21,6 +21,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<TenantSessionState>();
         services.AddScoped<TenantCommandInterceptor>();
         services.AddScoped<TenantConnectionInterceptor>();
+        services.AddScoped<TenantTransactionInterceptor>();
 
         DatabaseSettings database = ReadSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database);
 
@@ -40,7 +41,8 @@ public static partial class ServiceCollectionExtensions
             });
             options.AddInterceptors(
                 sp.GetRequiredService<TenantCommandInterceptor>(),
-                sp.GetRequiredService<TenantConnectionInterceptor>());
+                sp.GetRequiredService<TenantConnectionInterceptor>(),
+                sp.GetRequiredService<TenantTransactionInterceptor>());
         });
 
         return services;

@@ -43,10 +43,4 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<int> CountActiveAdminsExcludingAsync(Guid organizationId, Guid excludedUserId,
         CancellationToken cancellationToken);
-
-    Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task<List<EmailRecipient>> GetActiveAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken);
-
-    Task<string?> GetOldestActiveAdminEmailAsync(Guid organizationId, CancellationToken cancellationToken);
 }

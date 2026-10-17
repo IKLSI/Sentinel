@@ -1,21 +1,12 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { queryClient } from "@/configs/queryClient";
-import {
-  invalidateKeys,
-  usePostMutation,
-  usePutMutation,
-} from "@/domains/helpers";
-import {
-  INTEGRATIONS_QUERY_KEY,
-  ORGANIZATION_QUERY_KEY,
-} from "@/domains/settings/constants";
+import { usePostMutation, usePutMutation } from "@/domains/helpers";
+import { ORGANIZATION_QUERY_KEY } from "@/domains/settings/constants";
 import type {
   ConnectIntegration,
   OrganizationSettings,
   UpdateOrganizationSettings,
 } from "@/domains/settings/types";
-
-const invalidateIntegrations = () => invalidateKeys([INTEGRATIONS_QUERY_KEY]);
 
 export const useUpdateOrganizationSettingsMutation = () =>
   usePutMutation<
@@ -30,11 +21,9 @@ export const useUpdateOrganizationSettingsMutation = () =>
 export const useConnectGithubMutation = () =>
   usePostMutation<void, void, { data: ConnectIntegration }>(
     ROUTES_API.api.settings.integrations.github.__path,
-    { onSuccess: invalidateIntegrations },
   );
 
 export const useConnectGitlabMutation = () =>
   usePostMutation<void, void, { data: ConnectIntegration }>(
     ROUTES_API.api.settings.integrations.gitlab.__path,
-    { onSuccess: invalidateIntegrations },
   );

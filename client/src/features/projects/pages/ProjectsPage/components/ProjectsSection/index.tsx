@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/contexts/I18nContext";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import {
   GRADE_VISUAL,
@@ -25,11 +25,11 @@ const COLUMN_WIDTHS = [
 
 interface Props {
   grade: SectionKey;
-  items: Project[];
+  items: ProjectSummary[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
   scanningId: string | null;
-  onDelete: (project: Project) => void;
+  onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
 }
 

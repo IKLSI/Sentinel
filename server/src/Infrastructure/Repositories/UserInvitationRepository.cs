@@ -24,12 +24,6 @@ public class UserInvitationRepository : CrudEntityWithIdRepository<UserInvitatio
                 && i.AcceptedAt == null
                 && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
-    public Task<int> CountPendingAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .CountAsync(i => i.OrganizationId == organizationId
-                && i.AcceptedAt == null
-                && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
-
     public Task<bool> ExistsPendingAsync(string email, Guid organizationId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .AnyAsync(i => i.Email == email.ToLowerInvariant()

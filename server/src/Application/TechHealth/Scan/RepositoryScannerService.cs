@@ -4,6 +4,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
@@ -42,12 +43,31 @@ public class RepositoryScannerService(
         }
     }
 
-    public Task<string?> GetHeadCommitAsync(string repoUrl, string? tokenOverride = null)
+    private static void ApplyDirectness(List<Dependency> lockDeps, List<Dependency> manifestDeps)
+    {
+        Dictionary<DependencyEcosystem, HashSet<string>> directNamesByEcosystem = manifestDeps
+            .Where(d => d.IsDirect)
+            .GroupBy(d => d.Ecosystem)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(DirectnessKey).ToHashSet());
+
+        foreach (Dependency dependency in lockDeps)
+        {
+            if (directNamesByEcosystem.TryGetValue(dependency.Ecosystem, out HashSet<string>? directNames))
+                dependency.IsDirect = directNames.Contains(DirectnessKey(dependency));
+        }
+    }
+
+    private static string DirectnessKey(Dependency dependency) =>
+        PackageNameNormalizer.ForVulnerabilityFeed(dependency.Ecosystem, dependency.Name).ToLowerInvariant();
+
+    public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access = null)
     {
         if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
             return Task.FromResult<string?>(null);
 
-        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, tokenOverride);
+        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, access);
     }
 
     public async Task RefreshVersionsAsync(List<Dependency> dependencies)
@@ -61,7 +81,7 @@ public class RepositoryScannerService(
                 dependency.LatestVersion);
     }
 
-    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, string? tokenOverride = null,
+    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access = null,
         string? commitSha = null)
     {
         try
@@ -73,7 +93,7 @@ public class RepositoryScannerService(
             }
 
             (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
-            RepositoryFileListing listing = await hostClient.ListFilesAsync(host, owner, repo, tokenOverride,
+            RepositoryFileListing listing = await hostClient.ListFilesAsync(host, owner, repo, access,
                 commitSha);
 
             if (listing.Files.Count == 0)
@@ -105,7 +125,7 @@ public class RepositoryScannerService(
                 string? content;
 
                 await throttle.WaitAsync();
-                try { content = await hostClient.FetchTextAsync(host, file.Url, tokenOverride); }
+                try { content = await hostClient.FetchTextAsync(host, file.Url, access); }
                 finally { throttle.Release(); }
 
                 if (content == null) return null;
@@ -144,6 +164,7 @@ public class RepositoryScannerService(
             }
 
             ApplyDeclaredTypes(lockDeps, manifestDeps);
+            ApplyDirectness(lockDeps, manifestDeps);
 
             HashSet<(DependencyEcosystem Ecosystem, string Name)> lockedPackages = lockDeps
                 .Select(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
@@ -152,7 +173,7 @@ public class RepositoryScannerService(
             List<Dependency> dedupedDeps = lockDeps
                 .Concat(manifestDeps.Where(d => !lockedPackages.Contains((d.Ecosystem, d.Name.ToLowerInvariant()))))
                 .GroupBy(d => (d.Ecosystem, Name: d.Name.ToLowerInvariant(), d.CurrentVersion))
-                .Select(g => g.OrderBy(d => d.Type).First())
+                .Select(g => g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First())
                 .ToList();
 
             List<Runtime> dedupedRuntimes = allRuntimes

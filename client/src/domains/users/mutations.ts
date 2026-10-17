@@ -2,16 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { MIME_TYPES, downloadFile } from "@/helpers/download";
 import {
-  invalidateKeys,
   useDeleteMutation,
   usePatchMutation,
   usePostMutation,
   usePutMutation,
 } from "@/domains/helpers";
-import {
-  GDPR_EXPORT_FALLBACK_FILE,
-  USERS_QUERY_KEY,
-} from "@/domains/users/constants";
+import { GDPR_EXPORT_FALLBACK_FILE } from "@/domains/users/constants";
 import type {
   AcceptInvitation,
   CreateUser,
@@ -23,12 +19,9 @@ import type {
 } from "@/domains/users/types";
 import type { ApiMessageResponse } from "@/domains/auth/types";
 
-const invalidateUsers = () => invalidateKeys([[USERS_QUERY_KEY]]);
-
 export const useInviteUserMutation = () =>
   usePostMutation<ApiMessageResponse, ApiMessageResponse, { data: CreateUser }>(
     ROUTES_API.api.users.__path,
-    { onSuccess: invalidateUsers },
   );
 
 export const useAcceptInvitationMutation = () =>
@@ -41,13 +34,11 @@ export const useAcceptInvitationMutation = () =>
 export const useUpdateUserMutation = () =>
   usePutMutation<User, User, { id: string; data: UpdateUser }>(
     ROUTES_API.api.users[":id"].__path,
-    { onSuccess: invalidateUsers },
   );
 
 export const useUpdateMyProfileMutation = () =>
   usePatchMutation<User, User, { data: UpdateMyProfile }>(
     ROUTES_API.api.users.me.__path,
-    { onSuccess: invalidateUsers },
   );
 
 export const useUpdatePreferencesMutation = () =>

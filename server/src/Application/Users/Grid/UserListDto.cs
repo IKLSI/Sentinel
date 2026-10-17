@@ -1,5 +1,3 @@
-using Sentinel.Application.Users;
-
 namespace Sentinel.Application.Users.Grid;
 
 public class UserListDto

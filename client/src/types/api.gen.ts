@@ -412,9 +412,9 @@ export interface paths {
         /** @description OK */
         200: {
           content: {
-            "application/json": components["schemas"]["ProjectDto"][];
-            "text/json": components["schemas"]["ProjectDto"][];
-            "text/plain": components["schemas"]["ProjectDto"][];
+            "application/json": components["schemas"]["ProjectSummaryDto"][];
+            "text/json": components["schemas"]["ProjectSummaryDto"][];
+            "text/plain": components["schemas"]["ProjectSummaryDto"][];
           };
         };
       };
@@ -563,6 +563,20 @@ export interface paths {
         /** @description OK */
         200: {
           content: never;
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/options": {
+    get: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectOptionDto"][];
+            "text/json": components["schemas"]["ProjectOptionDto"][];
+            "text/plain": components["schemas"]["ProjectOptionDto"][];
+          };
         };
       };
     };
@@ -1053,6 +1067,7 @@ export interface components {
       truncated: boolean;
     };
     ConnectIntegrationDto: {
+      baseUrl?: string | null;
       token: string;
     };
     CreateApiKeyDto: {
@@ -1114,6 +1129,7 @@ export interface components {
       findingKey: string;
       /** Format: uuid */
       id: string;
+      isDirect: boolean;
       isOutdated: boolean;
       latestVersion: string | null;
       linkedTicket: components["schemas"]["FindingTicketDto"];
@@ -1134,6 +1150,7 @@ export interface components {
       email: string;
     };
     IntegrationSettingsDto: {
+      gitlabBaseUrl: string;
       hasGithubToken: boolean;
       hasGitlabToken: boolean;
     };
@@ -1178,8 +1195,38 @@ export interface components {
       /** Format: int32 */
       totalVulnerabilities: number;
     };
+    ProjectOptionDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
     ProjectScanFrequencyDto: {
       scanFrequency: string;
+    };
+    ProjectSummaryDto: {
+      coverage: string;
+      /** Format: int32 */
+      criticalVulnerabilities: number;
+      healthGrade: string | null;
+      /** Format: int32 */
+      healthScore: number | null;
+      /** Format: uuid */
+      id: string;
+      /** Format: int32 */
+      knownExploitedVulnerabilities: number;
+      /** Format: date-time */
+      lastScanAt: string | null;
+      lastScanError: string | null;
+      name: string;
+      repositoryType: string;
+      repositoryUrl: string | null;
+      scanFrequency: string;
+      /** Format: int32 */
+      totalDependencies: number;
+      /** Format: int32 */
+      totalTickets: number;
+      /** Format: int32 */
+      totalVulnerabilities: number;
     };
     PublicScanRequest: {
       repositoryUrl?: string | null;

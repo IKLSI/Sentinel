@@ -6,7 +6,6 @@ import { useT } from "@/contexts/I18nContext";
 const LINKS = [
   { to: ROUTES.LEGAL_NOTICE, labelKey: "landing.footer.legal_notice" },
   { to: ROUTES.PRIVACY, labelKey: "landing.footer.privacy" },
-  { to: ROUTES.TERMS, labelKey: "landing.footer.terms" },
 ] as const;
 
 export const LandingFooter = () => {

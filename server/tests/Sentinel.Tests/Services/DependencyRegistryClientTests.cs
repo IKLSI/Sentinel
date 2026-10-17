@@ -90,6 +90,34 @@ public class DependencyRegistryClientTests
         dependency.Publisher.Should().BeNull();
     }
 
+    [Fact]
+    public async Task FetchRegistryMetadataAsync_QuandLeRegistreEstEnPanne_ConserveLesValeursPrecedentes()
+    {
+        Dependency dependency = New("left-pad", DependencyEcosystem.Npm);
+        dependency.LatestVersion = "1.3.0";
+        dependency.Publisher = "npm, Inc.";
+        dependency.License = "MIT";
+
+        await Fetch(dependency, string.Empty, HttpStatusCode.ServiceUnavailable);
+
+        dependency.LatestVersion.Should().Be("1.3.0");
+        dependency.Publisher.Should().Be("npm, Inc.");
+        dependency.License.Should().Be("MIT");
+    }
+
+    [Fact]
+    public async Task FetchRegistryMetadataAsync_QuandLeRegistreEstEnPanne_NeMetPasLEchecEnCache()
+    {
+        MemoryCache cache = new(new MemoryCacheOptions { SizeLimit = 100 });
+        Dependency failed = New("left-pad", DependencyEcosystem.Npm);
+        Dependency recovered = New("left-pad", DependencyEcosystem.Npm);
+
+        await Fetch(failed, string.Empty, HttpStatusCode.ServiceUnavailable, cache);
+        await Fetch(recovered, """{ "version": "1.3.0" }""", HttpStatusCode.OK, cache);
+
+        recovered.LatestVersion.Should().Be("1.3.0");
+    }
+
     private static Dependency New(string name, DependencyEcosystem ecosystem) => new()
     {
         Name = name,
@@ -98,11 +126,12 @@ public class DependencyRegistryClientTests
     };
 
     private static async Task Fetch(Dependency dependency, string payload,
-        HttpStatusCode status = HttpStatusCode.OK)
+        HttpStatusCode status = HttpStatusCode.OK, IMemoryCache? cache = null)
     {
         DependencyRegistryClient client = new(
             new StubHttpClientFactory(new StubHandler(payload, status)),
-            new MemoryCache(new MemoryCacheOptions { SizeLimit = 100 }));
+            cache ?? new MemoryCache(new MemoryCacheOptions { SizeLimit = 100 }),
+            new InFlightRequestCoalescer());
 
         await client.FetchRegistryMetadataAsync([dependency]);
     }

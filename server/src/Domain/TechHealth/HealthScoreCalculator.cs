@@ -62,12 +62,14 @@ public static class HealthScoreCalculator
 
     private static double OutdatedPenalty(Project project)
     {
-        if (project.Dependencies.Count == 0) return 0;
+        List<Dependency> directDependencies = project.Dependencies.Where(dependency => dependency.IsDirect).ToList();
 
-        double outdatedWeight = project.Dependencies
+        if (directDependencies.Count == 0) return 0;
+
+        double outdatedWeight = directDependencies
             .Sum(dependency => UpdateWeight(dependency) * WeightOf(dependency));
 
-        double maxWeight = project.Dependencies.Count * MajorUpdateWeight;
+        double maxWeight = directDependencies.Count * MajorUpdateWeight;
 
         return outdatedWeight / maxWeight * MaxOutdatedPenalty;
     }

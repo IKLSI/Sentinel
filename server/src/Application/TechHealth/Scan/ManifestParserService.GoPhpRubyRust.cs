@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Versioning;
 
@@ -45,7 +44,7 @@ public partial class ManifestParserService
                 if (parts.Length >= 2) { module = parts[0]; version = parts[1].TrimStart('v'); }
             }
 
-            if (module == null || version == null || line.Contains("// indirect")) continue;
+            if (module == null || version == null) continue;
 
             deps.Add(new Dependency
             {
@@ -53,6 +52,7 @@ public partial class ManifestParserService
                 Name = module,
                 CurrentVersion = version,
                 Type = DependencyType.Prod,
+                IsDirect = !line.Contains("// indirect"),
                 Ecosystem = DependencyEcosystem.Go,
                 Status = DependencyStatus.UpToDate,
             });

@@ -10,5 +10,4 @@ export const ROUTES = {
   PROFILE: "/profile",
   PRIVACY: "/privacy",
   LEGAL_NOTICE: "/legal-notice",
-  TERMS: "/terms",
 } as const;

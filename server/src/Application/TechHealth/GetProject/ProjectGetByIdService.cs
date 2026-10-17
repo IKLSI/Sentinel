@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -19,16 +18,10 @@ public class ProjectGetByIdService(
             return Result<ProjectDto>.Unauthorized();
 
         Project? project = await projectRepository
-            .GetOrDefaultWithHealthDetailsAsync(projectId, QueryTracking.NoTracking, cancellationToken);
+            .GetOrDefaultInOrganizationWithHealthDetailsAsync(projectId, organizationId, cancellationToken);
 
         if (project == null)
             return Result<ProjectDto>.NotFound(ErrorCodes.ProjectNotFound);
-
-        bool belongs = await projectRepository
-            .ExistsInOrganizationAsync(projectId, organizationId, cancellationToken);
-
-        if (!belongs)
-            return Result<ProjectDto>.Forbidden();
 
         IReadOnlyList<FindingTicketRow> findingTickets =
             await ticketRepository.ListFindingLinksByProjectAsync(projectId, cancellationToken);

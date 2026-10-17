@@ -2,7 +2,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -14,7 +13,6 @@ namespace Sentinel.Application.Auth.Logout;
 public class AuthLogoutService(
     IUserRepository userRepository,
     ICommitScopeFactory commitScopeFactory,
-    ITokenBlacklistService blacklist,
     IAuditLogService auditLog,
     IRefreshTokenStore refreshTokenStore,
     IMemoryCache cache,
@@ -24,9 +22,6 @@ public class AuthLogoutService(
     {
         if (tenant.UserId is not Guid userId || userId == Guid.Empty)
             return Result.Unauthorized();
-
-        if (!string.IsNullOrEmpty(tenant.Jti) && tenant.TokenExpiresAtUtc is DateTime expiresAtUtc)
-            await blacklist.RevokeAsync(tenant.Jti, expiresAtUtc, cancellationToken);
 
         User? user = await userRepository.GetOrDefaultAsync(userId,
             QueryTracking.Tracked, cancellationToken);

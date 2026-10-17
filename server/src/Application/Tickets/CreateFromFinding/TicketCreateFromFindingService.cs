@@ -36,19 +36,22 @@ public class TicketCreateFromFindingService(
         if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid userId)
             return Result<TicketDto>.Unauthorized();
 
+        if (!await projectRepository.ExistsInOrganizationAsync(model.ProjectId, organizationId, cancellationToken))
+            return Result<TicketDto>.NotFound(ErrorCodes.ProjectNotFound);
+
+        string findingKey = model.FindingKey.Trim().ToLowerInvariant();
+
+        Ticket? existing = await ticketRepository.GetOpenForFindingAsync(model.ProjectId, model.Kind, findingKey,
+            cancellationToken);
+
+        if (existing != null)
+            return await LoadDtoAsync(existing.Id, cancellationToken);
+
         Project? project = await projectRepository.GetOrDefaultInOrganizationWithHealthDetailsAsync(model.ProjectId,
             organizationId, cancellationToken);
 
         if (project == null)
             return Result<TicketDto>.NotFound(ErrorCodes.ProjectNotFound);
-
-        string findingKey = model.FindingKey.Trim().ToLowerInvariant();
-
-        Ticket? existing = await ticketRepository.GetOpenForFindingAsync(project.Id, model.Kind, findingKey,
-            cancellationToken);
-
-        if (existing != null)
-            return await LoadDtoAsync(existing.Id, cancellationToken);
 
         string culture = await userRepository.GetLanguageOrDefaultAsync(userId, cancellationToken)
             ?? LanguageValues.Fr;
@@ -77,17 +80,14 @@ public class TicketCreateFromFindingService(
 
         await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            ticket.Number = await organizationRepository.AllocateTicketNumberAsync(organizationId, token);
+            ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
             await ticketRepository.AddAsync(ticket, token);
         }, cancellationToken);
 
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets), cancellationToken);
-
-        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Project, project.Id), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Tickets));
 
         await auditLog.LogAsync(
             AuditAction.TicketCreated,

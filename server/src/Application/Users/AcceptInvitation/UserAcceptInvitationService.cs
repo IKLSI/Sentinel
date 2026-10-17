@@ -70,7 +70,7 @@ public class UserAcceptInvitationService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Users), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Users));
 
         await auditLog.LogAsync(
             AuditAction.InvitationAccepted,

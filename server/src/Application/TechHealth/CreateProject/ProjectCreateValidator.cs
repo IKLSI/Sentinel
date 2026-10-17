@@ -7,7 +7,7 @@ namespace Sentinel.Application.TechHealth.CreateProject;
 
 public class ProjectCreateValidator : IValidator
 {
-    public Task<Result> ValidateAsync(CreateProjectDto model, CancellationToken cancellationToken)
+    public Task<Result> ValidateAsync(CreateProjectDto model, string gitLabHost, CancellationToken cancellationToken)
     {
         ValidationErrors errors = new ValidationErrors()
             .Required(nameof(model.Name), model.Name, ValidationCodes.ProjectNameRequired)
@@ -27,18 +27,18 @@ public class ProjectCreateValidator : IValidator
         if (errors.HasErrors)
             return Task.FromResult(errors.ToResult());
 
-        if (!IsRepositoryUrlAllowed(model.RepositoryUrl))
+        if (!IsRepositoryUrlAllowed(model.RepositoryUrl, gitLabHost))
             return Task.FromResult(Result.Error(ErrorCodes.ProjectInvalidRepositoryUrl));
 
         return Task.FromResult(Result.Success());
     }
 
-    private static bool IsRepositoryUrlAllowed(string? url)
+    private static bool IsRepositoryUrlAllowed(string? url, string gitLabHost)
     {
         if (string.IsNullOrWhiteSpace(url)) return true;
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)) return false;
         if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
 
-        return RepositoryHosts.AllowedPublicHosts.Contains(uri.Host);
+        return RepositoryHosts.IsSupported(uri.Host, gitLabHost);
     }
 }

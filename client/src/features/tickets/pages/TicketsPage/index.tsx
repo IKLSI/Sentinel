@@ -1,7 +1,5 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
@@ -9,34 +7,22 @@ import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
-import { useProjectsQuery } from "@/domains/projects/queries";
+import { useProjectOptionsQuery } from "@/domains/projects/queries";
 import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
-import {
-  useCreateTicketMutation,
-  useDeleteTicketMutation,
-  useUpdateTicketMutation,
-} from "@/domains/tickets/mutations";
 import { useTicketsQuery } from "@/domains/tickets/queries";
-import type {
-  CreateTicket,
-  Ticket,
-  TicketFilters,
-  UpdateTicket,
-} from "@/domains/tickets/types";
+import type { Ticket, TicketFilters } from "@/domains/tickets/types";
 import { useUsersQuery } from "@/domains/users/queries";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
-import { EMPTY_CREATE_TICKET_FORM } from "@/features/tickets/pages/TicketsPage/helpers";
 import {
   criterionFromSearch,
   queryFromCriterion,
   searchFromCriterion,
 } from "@/features/tickets/pages/TicketsPage/filterParams";
 import {
-  createTicketSchema,
-  type CreateTicketFormValues,
-  editTicketSchema,
-  type EditTicketFormValues,
-} from "@/features/tickets/pages/TicketsPage/schemas";
+  useCreateTicketDialog,
+  useDeleteTicketDialog,
+  useEditTicketDialog,
+} from "@/features/tickets/pages/TicketsPage/hooks";
 import { TicketsToolbar } from "@/features/tickets/pages/TicketsPage/components/TicketsToolbar";
 import {
   TicketsTable,
@@ -45,7 +31,6 @@ import {
 import { Pagination } from "@/components/ui/common/Pagination";
 import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/components/CreateTicketModal";
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSortState } from "@/hooks/useSortState";
 import { SortDirection, TicketSortField } from "@/enums";
@@ -57,9 +42,6 @@ const routeApi = getRouteApi("/_authenticated/tickets/");
 
 export const TicketsPage: React.FC = () => {
   const t = useT();
-  const onCreateError = useApiErrorToast("tickets.list.create_error");
-  const onEditError = useApiErrorToast("tickets.list.edit_error");
-  const onDeleteError = useApiErrorToast("tickets.list.delete_error");
   const navigate = routeApi.useNavigate();
   const searchParams = routeApi.useSearch();
   const { openCreate } = searchParams;
@@ -85,41 +67,10 @@ export const TicketsPage: React.FC = () => {
     setSearch(v);
     setPage(1);
   }, []);
-  const [deleteTarget, setDeleteTarget] = useState<{
-    id: string;
-    reference: string;
-  } | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const {
-    register: createRegister,
-    handleSubmit: handleCreateSubmit,
-    reset: resetCreateForm,
-  } = useForm<CreateTicketFormValues>({
-    resolver: zodResolver(createTicketSchema),
-    defaultValues: EMPTY_CREATE_TICKET_FORM,
-  });
-  const [createAnother, setCreateAnother] = useState(false);
-  const { data: projectsData } = useProjectsQuery();
-  const projects = projectsData ?? [];
+  const { data: projectsData } = useProjectOptionsQuery();
+  const projects = useMemo(() => projectsData ?? [], [projectsData]);
   const usersQuery = useUsersQuery({ pageSize: FILTERABLE_USERS_PAGE_SIZE });
-  const users = usersQuery.data?.items ?? [];
-  const [editTarget, setEditTarget] = useState<Ticket | null>(null);
-  const {
-    register: editRegister,
-    handleSubmit: handleEditSubmit,
-    reset: resetEditForm,
-  } = useForm<EditTicketFormValues>({
-    resolver: zodResolver(editTicketSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "medium",
-      type: "bug",
-      status: "",
-      projectId: "",
-      assignedToId: "",
-    },
-  });
+  const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data]);
   const [sort, toggleSort] = useSortState<SortState["col"]>(
     { col: TicketSortField.Priority, dir: SortDirection.Desc },
     () => setPage(1),
@@ -127,15 +78,14 @@ export const TicketsPage: React.FC = () => {
 
   const pageSize = 25;
 
-  const createTicketMutation = useCreateTicketMutation();
-  const updateTicketMutation = useUpdateTicketMutation();
-  const deleteTicketMutation = useDeleteTicketMutation();
+  const createDialog = useCreateTicketDialog((created: Ticket) =>
+    navigate({ to: "/tickets/$id", params: { id: created.id } }),
+  );
+  const editDialog = useEditTicketDialog();
+  const deleteDialog = useDeleteTicketDialog();
   const exportTicketsMutation = useExportTicketsExcelMutation();
-
-  const createSubmitting = createTicketMutation.isPending;
-  const editSaving = updateTicketMutation.isPending;
-  const deleting = deleteTicketMutation.isPending;
   const exporting = exportTicketsMutation.isPending;
+  const openCreateDialog = createDialog.openDialog;
 
   const handleExport = () => {
     exportTicketsMutation.mutate(
@@ -145,100 +95,6 @@ export const TicketsPage: React.FC = () => {
       },
       {
         onError: () => showToast(t("tickets.list.export_error"), "error"),
-      },
-    );
-  };
-
-  const openCreateModal = useCallback(() => {
-    resetCreateForm(EMPTY_CREATE_TICKET_FORM);
-    setShowCreateModal(true);
-  }, [resetCreateForm]);
-
-  const handleCreate = handleCreateSubmit((data) => {
-    const payload: CreateTicket = {
-      title: data.title,
-      description: data.description,
-      priority: data.priority,
-      type: data.type,
-    };
-    if (data.projectId) payload.projectId = data.projectId;
-    if (data.assignedToId) payload.assignedToId = data.assignedToId;
-    createTicketMutation.mutate(
-      { data: payload },
-      {
-        onSuccess: (created) => {
-          if (createAnother) {
-            resetCreateForm(EMPTY_CREATE_TICKET_FORM);
-            showToast(
-              t("tickets.list.create_success", {
-                reference: created.reference,
-              }),
-              "success",
-            );
-          } else {
-            setShowCreateModal(false);
-            navigate({ to: "/tickets/$id", params: { id: created.id } });
-          }
-        },
-        onError: onCreateError,
-      },
-    );
-  });
-
-  const openEditModal = useCallback(
-    (ticket: Ticket) => {
-      resetEditForm({
-        title: ticket.title,
-        description: ticket.description,
-        priority: ticket.priority,
-        type: ticket.type,
-        status: ticket.status,
-        projectId: ticket.projectId ?? "",
-        assignedToId: ticket.assignedToId ?? "",
-      });
-      setEditTarget(ticket);
-    },
-    [resetEditForm],
-  );
-
-  const onDeleteTarget = useCallback((id: string, reference: string) => {
-    setDeleteTarget({ id, reference });
-  }, []);
-
-  const handleEdit = handleEditSubmit(async (data) => {
-    if (!editTarget) return;
-    const payload: UpdateTicket = {
-      title: data.title,
-      description: data.description,
-      priority: data.priority as UpdateTicket["priority"],
-      type: data.type as UpdateTicket["type"],
-    };
-    if (data.projectId) payload.projectId = data.projectId;
-    if (data.assignedToId) payload.assignedToId = data.assignedToId;
-    if (data.status && data.status !== editTarget.status)
-      payload.status = data.status;
-    try {
-      await updateTicketMutation.mutateAsync({
-        id: editTarget.id,
-        data: payload,
-      });
-      setEditTarget(null);
-    } catch (err) {
-      onEditError(err);
-    }
-  });
-
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    const reference = deleteTarget.reference;
-    deleteTicketMutation.mutate(
-      { id: deleteTarget.id },
-      {
-        onSuccess: () => {
-          setDeleteTarget(null);
-          showToast(t("tickets.list.delete_success", { reference }), "success");
-        },
-        onError: onDeleteError,
       },
     );
   };
@@ -262,8 +118,8 @@ export const TicketsPage: React.FC = () => {
   }, [error, showToast, t]);
 
   useEffect(() => {
-    if (openCreate) openCreateModal();
-  }, [openCreate, openCreateModal]);
+    if (openCreate) openCreateDialog();
+  }, [openCreate, openCreateDialog]);
 
   const filtered = tickets?.items ?? [];
 
@@ -279,7 +135,7 @@ export const TicketsPage: React.FC = () => {
           onCriterionChange={handleCriterionChange}
           users={users}
           projects={projects}
-          onCreate={openCreateModal}
+          onCreate={openCreateDialog}
           onExport={handleExport}
           exporting={exporting}
         />
@@ -304,8 +160,8 @@ export const TicketsPage: React.FC = () => {
               tickets={filtered}
               sort={sort}
               onToggleSort={toggleSort}
-              onEdit={openEditModal}
-              onDelete={onDeleteTarget}
+              onEdit={editDialog.openDialog}
+              onDelete={deleteDialog.openDialog}
               hasFiltersApplied={hasFiltersApplied}
             />
 
@@ -327,36 +183,36 @@ export const TicketsPage: React.FC = () => {
       </PageContainer>
 
       <CreateTicketModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        register={createRegister}
+        open={createDialog.open}
+        onClose={createDialog.closeDialog}
+        register={createDialog.register}
         projects={projects}
         users={users}
-        submitting={createSubmitting}
-        onSubmit={handleCreate}
-        createAnother={createAnother}
-        onCreateAnotherChange={setCreateAnother}
+        submitting={createDialog.submitting}
+        onSubmit={createDialog.submit}
+        createAnother={createDialog.createAnother}
+        onCreateAnotherChange={createDialog.setCreateAnother}
       />
 
       <EditTicketModal
-        open={!!editTarget}
-        onClose={() => setEditTarget(null)}
-        register={editRegister}
+        open={editDialog.open}
+        onClose={editDialog.closeDialog}
+        register={editDialog.register}
         projects={projects}
         users={users}
-        saving={editSaving}
-        onSubmit={handleEdit}
+        saving={editDialog.saving}
+        onSubmit={editDialog.submit}
       />
 
       <DeleteModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
+        open={!!deleteDialog.target}
+        onClose={deleteDialog.closeDialog}
+        onConfirm={deleteDialog.confirm}
+        loading={deleteDialog.deleting}
         title={t("tickets.list.delete_title")}
       >
         {t("tickets.list.delete_prefix")}
-        <strong>{deleteTarget?.reference}</strong>
+        <strong>{deleteDialog.target?.reference}</strong>
         {t("tickets.list.delete_suffix")}
         <br />
         {t("common.action_irreversible_before")}

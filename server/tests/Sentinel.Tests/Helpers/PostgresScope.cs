@@ -53,13 +53,11 @@ public sealed class PostgresScope : IAsyncDisposable
         await SeedAsync(entities);
     }
 
-    public Organization NewOrganization(Guid? id = null, PlanTier tier = PlanTier.Free) => new()
+    public Organization NewOrganization(Guid? id = null) => new()
     {
         Id = id ?? OrganizationId,
         Name = "Organisation de test",
-        Slug = $"org-{Guid.NewGuid():N}",
-        PlanTier = tier,
-        SubscriptionStatus = SubscriptionStatus.Active
+        Slug = $"org-{Guid.NewGuid():N}"
     };
 
     public User NewUser(Guid? id = null, Guid? organizationId = null) => new()

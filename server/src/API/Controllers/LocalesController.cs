@@ -12,5 +12,5 @@ public class LocalesController : BaseController
         string culture,
         [FromServices] LocaleGetService service,
         CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(culture, cancellationToken));
+        ToRevalidatedContentResult(await service.ExecuteAsync(culture, cancellationToken));
 }

@@ -236,10 +236,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             }}
           >
             {t("legal.consent.prefix")}{" "}
-            <Box component="a" href={ROUTES.TERMS} {...LEGAL_LINK_PROPS}>
-              {t("legal.consent.terms")}
-            </Box>{" "}
-            {t("legal.consent.separator")}{" "}
             <Box component="a" href={ROUTES.PRIVACY} {...LEGAL_LINK_PROPS}>
               {t("legal.consent.privacy")}
             </Box>

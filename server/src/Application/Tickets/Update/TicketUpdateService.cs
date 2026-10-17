@@ -75,7 +75,7 @@ public class TicketUpdateService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId));
 
         bool statusChanged = newStatus.HasValue && oldStatusCode != newStatusCode;
 

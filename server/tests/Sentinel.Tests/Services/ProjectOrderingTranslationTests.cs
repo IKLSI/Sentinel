@@ -16,7 +16,6 @@ public class ProjectOrderingTranslationTests
         public Guid? OrganizationId => null;
         public Guid? UserId => null;
         public string? Jti => null;
-        public DateTime? TokenExpiresAtUtc => null;
         public bool IsSet => false;
         public void Reset() { }
     }

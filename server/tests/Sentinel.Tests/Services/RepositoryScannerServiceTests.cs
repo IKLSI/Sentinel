@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Git;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 
@@ -12,20 +13,22 @@ public class RepositoryScannerServiceTests
     private sealed class FakeRepositoryHost(Dictionary<string, string> filesByUrl, string? headCommitSha = null)
         : IRepositoryHostClient
     {
-        public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform) =>
+        public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform,
+            GitLabInstance gitLab) =>
             throw new NotSupportedException();
 
-        public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform) =>
+        public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
+            GitLabInstance gitLab) =>
             throw new NotSupportedException();
 
         public Task<string?> GetHeadCommitAsync(string host, string owner, string repo,
-            string? tokenOverride = null) =>
+            RepositoryAccess? access = null) =>
             Task.FromResult(headCommitSha);
 
         public string? RequestedCommitSha { get; private set; }
 
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-            string? tokenOverride = null, string? commitSha = null)
+            RepositoryAccess? access = null, string? commitSha = null)
         {
             RequestedCommitSha = commitSha;
 
@@ -33,7 +36,7 @@ public class RepositoryScannerServiceTests
                 filesByUrl.Keys.Select(url => (Path.GetFileName(url), url)).ToList(), false));
         }
 
-        public Task<string?> FetchTextAsync(string host, string url, string? tokenOverride = null) =>
+        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
             Task.FromResult(filesByUrl.TryGetValue(url, out string? content) ? content : null);
     }
 
@@ -202,6 +205,66 @@ public class RepositoryScannerServiceTests
         outcome.Dependencies.Single(d => d.Name == "axios").Type.Should().Be(DependencyType.Prod);
         outcome.Dependencies.Single(d => d.Name == "vitest").Type.Should().Be(DependencyType.Dev);
         outcome.Dependencies.Single(d => d.Name == "tinybench").Type.Should().Be(DependencyType.Prod);
+    }
+
+    [Fact]
+    public async Task ScanRepository_LockEntryAbsentFromTheManifest_IsTransitive()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """
+            { "dependencies": { "axios": "^1.6.0" }, "devDependencies": { "vitest": "^3.0.0" } }
+            """,
+            ["https://host/yarn.lock"] = """
+            axios@^1.6.0:
+              version "1.6.8"
+
+            vitest@^3.0.0:
+              version "3.0.1"
+
+            tinybench@^2.0.0:
+              version "2.9.0"
+            """,
+        });
+
+        outcome.Dependencies.Single(d => d.Name == "axios").IsDirect.Should().BeTrue();
+        outcome.Dependencies.Single(d => d.Name == "vitest").IsDirect.Should().BeTrue();
+        outcome.Dependencies.Single(d => d.Name == "tinybench").IsDirect.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ScanRepository_LockFileWithoutManifestOfItsEcosystem_KeepsEntriesDirect()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/yarn.lock"] = """
+            tinybench@^2.0.0:
+              version "2.9.0"
+            """,
+        });
+
+        outcome.Dependencies.Should().ContainSingle().Which.IsDirect.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ScanRepository_PythonLockEntry_MatchesTheManifestDespiteNameSeparators()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/requirements.txt"] = "Typing_Extensions==4.12.0",
+            ["https://host/poetry.lock"] = """
+            [[package]]
+            name = "typing-extensions"
+            version = "4.12.2"
+
+            [[package]]
+            name = "idna"
+            version = "3.7"
+            """,
+        });
+
+        outcome.Dependencies.Single(d => d.Name == "typing-extensions").IsDirect.Should().BeTrue();
+        outcome.Dependencies.Single(d => d.Name == "idna").IsDirect.Should().BeFalse();
     }
 
     [Fact]

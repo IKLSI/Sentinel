@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Repositories;
@@ -19,7 +18,6 @@ public class UserSortTranslationTests
         public Guid? OrganizationId => null;
         public Guid? UserId => null;
         public string? Jti => null;
-        public DateTime? TokenExpiresAtUtc => null;
         public bool IsSet => false;
         public void Reset() { }
     }

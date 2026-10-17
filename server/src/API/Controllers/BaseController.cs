@@ -1,9 +1,9 @@
 using Sentinel.API.Contracts;
 using Sentinel.API.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Constants;
-using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Controllers;
 
@@ -33,6 +33,18 @@ public abstract class BaseController : ControllerBase
         ? new StreamedFileResult(result.Value!)
         : ToErrorResult(result);
 
+    protected ActionResult ToRevalidatedContentResult(Result<VersionedContent> result)
+    {
+        if (!result.IsSuccess) return ToErrorResult(result);
+
+        Response.Headers.CacheControl = RevalidateCacheControl;
+
+        return File(result.Value!.Content, result.Value.ContentType, null,
+            new EntityTagHeaderValue(result.Value.ETag));
+    }
+
+    private const string RevalidateCacheControl = "no-cache";
+
     private ActionResult ToErrorResult(Result result) => result.Status switch
     {
         ResultStatus.Invalid => BadRequest(BuildValidationError(result)),
@@ -45,8 +57,6 @@ public abstract class BaseController : ControllerBase
         ResultStatus.Forbidden => result.Code == null
             ? Forbid()
             : StatusCode(StatusCodes.Status403Forbidden, BuildError(result, StatusCodes.Status403Forbidden)),
-        ResultStatus.PaymentRequired => StatusCode(StatusCodes.Status402PaymentRequired,
-            BuildError(result, StatusCodes.Status402PaymentRequired)),
         ResultStatus.Conflict => Conflict(BuildError(result, StatusCodes.Status409Conflict)),
         _ => result.Code == null
             ? BadRequest()

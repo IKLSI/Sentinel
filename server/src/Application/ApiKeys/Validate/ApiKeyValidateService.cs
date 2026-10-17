@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
@@ -9,44 +8,49 @@ namespace Sentinel.Application.ApiKeys.Validate;
 
 public class ApiKeyValidateService(
     IApiKeyRepository apiKeyRepository,
-    ICommitScopeFactory commitScopeFactory,
+    ApiKeyPrincipalCache principalCache,
     ISystemScope systemScope) : IService
 {
     private static readonly TimeSpan LastUsedAtUpdateThreshold = TimeSpan.FromMinutes(1);
 
     public async Task<Result<ApiKeyPrincipalDto>> ExecuteAsync(string rawKey, CancellationToken cancellationToken)
     {
+        string keyHash = ApiKeyGenerator.Hash(rawKey);
+
         using IDisposable elevation = systemScope.Enter();
 
-        ApiKey? apiKey = await apiKeyRepository
-            .GetOrDefaultActiveByHashAcrossTenantsAsync(ApiKeyGenerator.Hash(rawKey), cancellationToken);
+        CachedApiKeyAuthentication? cached = principalCache.GetOrDefault(keyHash);
 
-        if (apiKey == null)
-            return Result<ApiKeyPrincipalDto>.Unauthorized();
-
-        if (apiKey.ExpiresAt.HasValue && apiKey.ExpiresAt.Value < DateTime.UtcNow)
-            return Result<ApiKeyPrincipalDto>.Unauthorized();
-
-        User user = apiKey.CreatedBy;
-
-        if (user.AccessStatus != UserAccessStatus.Active)
-            return Result<ApiKeyPrincipalDto>.Unauthorized();
-
-        if (apiKey.LastUsedAt is null || DateTime.UtcNow - apiKey.LastUsedAt.Value > LastUsedAtUpdateThreshold)
+        if (cached == null)
         {
-            using ICommitScope commitScope = commitScopeFactory.Begin();
+            ApiKeyAuthenticationRow? row = await apiKeyRepository
+                .GetOrDefaultActiveAuthenticationByHashAcrossTenantsAsync(keyHash, cancellationToken);
 
-            apiKey.LastUsedAt = DateTime.UtcNow;
-            await commitScope.CommitAsync(cancellationToken);
+            if (row == null || row.AccessStatus != UserAccessStatus.Active)
+                return Result<ApiKeyPrincipalDto>.Unauthorized();
+
+            cached = principalCache.Store(keyHash, row);
+        }
+
+        ApiKeyAuthenticationRow apiKey = cached.Row;
+        DateTime now = DateTime.UtcNow;
+
+        if (apiKey.ExpiresAt.HasValue && apiKey.ExpiresAt.Value < now)
+            return Result<ApiKeyPrincipalDto>.Unauthorized();
+
+        if (cached.TryClaimLastUsedAtUpdate(now, LastUsedAtUpdateThreshold))
+        {
+            await apiKeyRepository.UpdateLastUsedAtAcrossTenantsAsync(apiKey.ApiKeyId, now,
+                now - LastUsedAtUpdateThreshold, cancellationToken);
         }
 
         return new ApiKeyPrincipalDto
         {
-            ApiKeyId = apiKey.Id,
-            UserId = user.Id,
-            Email = user.Email,
-            Role = user.Role.ToString(),
-            OrganizationId = user.OrganizationId
+            ApiKeyId = apiKey.ApiKeyId,
+            UserId = apiKey.UserId,
+            Email = apiKey.Email,
+            Role = apiKey.Role.ToString(),
+            OrganizationId = apiKey.OrganizationId
         };
     }
 }

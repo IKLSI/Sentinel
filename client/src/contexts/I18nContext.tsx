@@ -31,6 +31,8 @@ const I18nContext = createContext<I18nContextValue>({
 
 const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
 
+const loadedTranslations = new Map<Language, Translations>();
+
 function interpolate(
   template: string,
   vars?: Record<string, string | number>,
@@ -63,18 +65,33 @@ export const I18nProvider: React.FC<{
       (localStorage.getItem(STORAGE_KEY) as Language | null) ??
       detectBrowserLanguage(),
   );
-  const [translations, setTranslations] = useState<Translations | null>(null);
+  const [translations, setTranslations] = useState<Translations | null>(
+    () => loadedTranslations.get(language) ?? null,
+  );
 
   useEffect(() => {
-    setTranslations(null);
+    const cached = loadedTranslations.get(language);
+    if (cached) {
+      setTranslations(cached);
+      return;
+    }
+    let cancelled = false;
     apiClient
       .get<Translations>(
         buildUrl(ROUTES_API.api.locales[":culture"].__path, {
           culture: language,
         }),
       )
-      .then((response) => setTranslations(response.data))
-      .catch(() => setTranslations({}));
+      .then((response) => {
+        loadedTranslations.set(language, response.data);
+        if (!cancelled) setTranslations(response.data);
+      })
+      .catch(() => {
+        if (!cancelled) setTranslations((previous) => previous ?? {});
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {

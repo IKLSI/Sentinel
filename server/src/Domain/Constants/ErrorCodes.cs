@@ -34,20 +34,9 @@ public static class ErrorCodes
     public const string ApiKeyNameRequired = "errors.api_keys.name_required";
     public const string ApiKeyNameTooLong = "errors.api_keys.name_too_long";
 
-    public const string BillingInvalidPlan = "errors.billing.invalid_plan";
-    public const string BillingProviderUnavailable = "errors.billing.provider_unavailable";
-    public const string BillingPriceNotConfigured = "errors.billing.price_not_configured";
-    public const string BillingCustomerNotFound = "errors.billing.customer_not_found";
-
-    public const string QuotaProjectsExceeded = "errors.quota.projects_exceeded";
-    public const string QuotaMembersExceeded = "errors.quota.members_exceeded";
-    public const string QuotaScansExceeded = "errors.quota.scans_exceeded";
-    public const string ComplianceExportsAbovePlan = "errors.quota.compliance_exports_above_plan";
-
     public const string ProjectNotFound = "errors.projects.not_found";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";
     public const string ProjectInvalidScanFrequency = "errors.projects.invalid_scan_frequency";
-    public const string ProjectScanFrequencyAbovePlan = "errors.projects.scan_frequency_above_plan";
 
     public const string SettingsTokenRequired = "errors.settings.token_required";
     public const string SettingsInvalidGithubToken = "errors.settings.invalid_github_token";

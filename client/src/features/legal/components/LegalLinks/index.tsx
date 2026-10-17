@@ -1,17 +1,14 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
-import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/contexts/I18nContext";
 import { LEGAL_DOCUMENTS } from "@/features/legal/constants";
 
 type Tone = "auth" | "app";
-type Variant = "inline" | "chips";
 
 interface Props {
   tone: Tone;
-  variant?: Variant;
   sx?: SxProps<Theme>;
 }
 
@@ -36,34 +33,7 @@ const BASE_SX = {
   gap: "8px",
 } as const;
 
-const CHIP_SX = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "6px",
-  px: "10px",
-  py: "6px",
-  borderRadius: "var(--r-sm)",
-  border: "1px solid var(--border)",
-  background: "var(--s1)",
-  fontSize: "11.5px",
-  fontWeight: 600,
-  color: "var(--text-secondary)",
-  textDecoration: "none",
-  whiteSpace: "nowrap",
-  transition: "border-color 0.15s, color 0.15s, background 0.15s",
-  "&:hover": {
-    borderColor: "var(--accent-border)",
-    background: "var(--accent-subtle)",
-    color: "var(--accent)",
-    textDecoration: "none !important",
-  },
-} as const;
-
-export const LegalLinks: React.FC<Props> = ({
-  tone,
-  variant = "inline",
-  sx,
-}) => {
+export const LegalLinks: React.FC<Props> = ({ tone, sx }) => {
   const t = useT();
   const palette = TONES[tone];
   const labelSx = {
@@ -77,26 +47,6 @@ export const LegalLinks: React.FC<Props> = ({
     BASE_SX,
     ...(Array.isArray(sx) ? sx : [sx]),
   ] as SxProps<Theme>;
-
-  if (variant === "chips") {
-    return (
-      <Box component="nav" sx={rootSx}>
-        {LEGAL_DOCUMENTS.map((document) => (
-          <Box
-            key={document.id}
-            component="a"
-            href={document.to}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={CHIP_SX}
-          >
-            {t(document.labelKey)}
-            <OpenInNewOutlined sx={{ fontSize: 12, opacity: 0.7 }} />
-          </Box>
-        ))}
-      </Box>
-    );
-  }
 
   return (
     <Box component="nav" sx={rootSx}>

@@ -1,4 +1,5 @@
 import type React from "react";
+import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import AddOutlined from "@mui/icons-material/AddOutlined";
@@ -7,7 +8,7 @@ import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { FilterBuilder } from "@/components/ui/forms/FilterBuilder";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import { ExportButton } from "@/components/ui/common/ExportButton";
-import type { Project } from "@/domains/projects/types";
+import type { ProjectOption } from "@/domains/projects/types";
 import type { User } from "@/domains/users/types";
 import {
   buildTicketFilterFields,
@@ -20,7 +21,7 @@ interface Props {
   criterion: FilterCriterion | null;
   onCriterionChange: (criterion: FilterCriterion | null) => void;
   users: User[];
-  projects: Project[];
+  projects: ProjectOption[];
   onCreate: () => void;
   onExport: () => void;
   exporting: boolean;
@@ -38,6 +39,11 @@ export const TicketsToolbar: React.FC<Props> = ({
   exporting,
 }) => {
   const t = useT();
+  const filterFields = useMemo(
+    () => buildTicketFilterFields(t, users, projects),
+    [t, users, projects],
+  );
+  const filterLabels = useMemo(() => buildTicketFilterLabels(t), [t]);
 
   return (
     <Box
@@ -59,10 +65,10 @@ export const TicketsToolbar: React.FC<Props> = ({
       />
 
       <FilterBuilder
-        fields={buildTicketFilterFields(t, users, projects)}
+        fields={filterFields}
         value={criterion}
         onChange={onCriterionChange}
-        labels={buildTicketFilterLabels(t)}
+        labels={filterLabels}
       />
 
       <Box sx={{ flex: 1 }} />

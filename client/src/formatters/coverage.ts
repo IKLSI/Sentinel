@@ -1,4 +1,4 @@
-import type { Project } from "@/domains/projects/types";
+import type { ProjectSummary } from "@/domains/projects/types";
 import { ScanCoverage } from "@/enums";
 
 export const GRADE_NOT_AVAILABLE = "N/A";
@@ -11,9 +11,11 @@ const COVERAGE_REASON_KEYS: Record<ScanCoverage, string> = {
   [ScanCoverage.Covered]: "",
 };
 
-export const isCovered = (project: Project): boolean =>
+export const isCovered = (project: Pick<ProjectSummary, "coverage">): boolean =>
   project.coverage === ScanCoverage.Covered;
 
-export const coverageReasonKey = (project: Project): string =>
+export const coverageReasonKey = (
+  project: Pick<ProjectSummary, "coverage">,
+): string =>
   COVERAGE_REASON_KEYS[project.coverage as ScanCoverage] ??
   COVERAGE_REASON_KEYS[ScanCoverage.NotScanned];

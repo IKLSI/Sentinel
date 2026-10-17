@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 

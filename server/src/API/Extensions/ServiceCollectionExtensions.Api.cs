@@ -1,5 +1,4 @@
 using Sentinel.API.Contracts;
-using Sentinel.API.Constants;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi;
 using Sentinel.Domain.Constants;
-using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Extensions;
 
@@ -103,13 +101,6 @@ public static partial class ServiceCollectionExtensions
             options.EnableForHttps = true;
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
-            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-            {
-                "application/json",
-                "application/javascript",
-                "text/json",
-                "text/css"
-            });
         });
 
         services.Configure<BrotliCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);

@@ -7,7 +7,6 @@ export const LEGAL_DOCUMENTS = [
     to: ROUTES.LEGAL_NOTICE,
     labelKey: "legal.nav.legal_notice",
   },
-  { id: "terms", to: ROUTES.TERMS, labelKey: "legal.nav.terms" },
 ] as const;
 
 export const LEGAL_HEADER_HEIGHT = 56;

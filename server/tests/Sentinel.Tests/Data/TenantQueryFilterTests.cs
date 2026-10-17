@@ -145,9 +145,7 @@ public class TenantQueryFilterTests
     {
         Id = organizationId,
         Name = "Organisation de test",
-        Slug = $"org-{Guid.NewGuid():N}",
-        PlanTier = PlanTier.Free,
-        SubscriptionStatus = SubscriptionStatus.Active
+        Slug = $"org-{Guid.NewGuid():N}"
     };
 
     private static User NewUser(Guid organizationId) => new()

@@ -168,28 +168,9 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .IgnoreQueryFilters()
             .AnyAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
 
-    public Task<int> CountActiveAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .CountAsync(u => u.OrganizationId == organizationId && u.AccessStatus == UserAccessStatus.Active, cancellationToken);
-
-    public Task<List<EmailRecipient>> GetActiveAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        ActiveAdmins(organizationId)
-            .Select(u => new EmailRecipient(u.Email, u.Language))
-            .ToListAsync(cancellationToken);
-
-    public Task<string?> GetOldestActiveAdminEmailAsync(Guid organizationId, CancellationToken cancellationToken) =>
-        ActiveAdmins(organizationId)
-            .OrderBy(u => u.CreatedAt)
-            .Select(u => u.Email)
-            .FirstOrDefaultAsync(cancellationToken);
-
     public Task<int> CountActiveAdminsExcludingAsync(Guid organizationId, Guid excludedUserId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .CountAsync(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.AccessStatus == UserAccessStatus.Active
                 && u.Id != excludedUserId, cancellationToken);
-
-    private IQueryable<User> ActiveAdmins(Guid organizationId) =>
-        Query(QueryTracking.NoTracking)
-            .Where(u => u.OrganizationId == organizationId && u.Role == UserRole.Admin && u.AccessStatus == UserAccessStatus.Active);
 }

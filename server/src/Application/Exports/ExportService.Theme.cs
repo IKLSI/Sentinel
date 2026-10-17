@@ -1,7 +1,5 @@
 using ClosedXML.Excel;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
-using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Exports;
 public partial class ExportService

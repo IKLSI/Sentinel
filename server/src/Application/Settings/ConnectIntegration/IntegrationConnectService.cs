@@ -6,6 +6,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Git;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 
@@ -24,7 +25,7 @@ public class IntegrationConnectService(
     public async Task<Result> ExecuteAsync(ConnectIntegrationDto model, RepositoryType platform,
         CancellationToken cancellationToken)
     {
-        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
+        Result validationResult = await validator.ValidateAsync(model, platform, cancellationToken);
 
         if (!validationResult.IsSuccess)
             return validationResult;
@@ -41,8 +42,12 @@ public class IntegrationConnectService(
         if (organization == null)
             return Result.NotFound();
 
+        GitLabInstance gitLab = platform == RepositoryType.GitLab
+            ? GitLabInstanceOf(model)
+            : organization.ToGitLabInstance();
+
         (string Id, string Login)? account = await repositoryHostClient
-            .GetAuthenticatedAccountAsync(model.Token, platform.ToString().ToLower());
+            .GetAuthenticatedAccountAsync(model.Token, platform.ToString().ToLower(), gitLab);
 
         if (account == null)
             return Result.Error(InvalidTokenCode(platform));
@@ -54,7 +59,10 @@ public class IntegrationConnectService(
             if (platform == RepositoryType.GitHub)
                 organization.GithubToken = protectedToken;
             else
+            {
                 organization.GitlabToken = protectedToken;
+                organization.GitlabBaseUrl = IsPublicGitLab(gitLab) ? null : gitLab.BaseUrl;
+            }
 
             organization.UpdatedAt = DateTime.UtcNow;
 
@@ -62,7 +70,7 @@ public class IntegrationConnectService(
         }
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Integrations), cancellationToken);
+            new RealtimeEvent(RealtimeResources.Integrations));
 
         await auditLog.LogAsync(
             SavedAction(platform),
@@ -74,6 +82,18 @@ public class IntegrationConnectService(
 
         return Result.NoContent();
     }
+
+    private static GitLabInstance GitLabInstanceOf(ConnectIntegrationDto model)
+    {
+        string baseUrl = string.IsNullOrWhiteSpace(model.BaseUrl)
+            ? RepositoryHosts.PublicGitLabBaseUrl
+            : new Uri(model.BaseUrl.Trim()).GetLeftPart(UriPartial.Authority);
+
+        return new GitLabInstance(baseUrl);
+    }
+
+    private static bool IsPublicGitLab(GitLabInstance gitLab) =>
+        string.Equals(gitLab.BaseUrl, RepositoryHosts.PublicGitLabBaseUrl, StringComparison.OrdinalIgnoreCase);
 
     private static string InvalidTokenCode(RepositoryType platform) => platform == RepositoryType.GitHub
         ? ErrorCodes.SettingsInvalidGithubToken

@@ -7,7 +7,6 @@ public class FakeTenantContext : ITenantContext
     public Guid? OrganizationId { get; set; }
     public Guid? UserId { get; set; }
     public string? Jti { get; set; }
-    public DateTime? TokenExpiresAtUtc { get; set; }
     public bool IsSet => OrganizationId.HasValue;
 
     public void Reset() { }

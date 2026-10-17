@@ -7,41 +7,39 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public class DueProjectScanService(
     IProjectRepository projectRepository,
-    IScopedServiceRunner scopeRunner,
+    IJobScheduler jobs,
     ILogger<DueProjectScanService> logger)
 {
-    private const int MaxConcurrentScans = 5;
+    private static readonly TimeSpan DueMargin = TimeSpan.FromHours(6);
+    private static readonly TimeSpan ScanSpacing = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan ScanWindow = TimeSpan.FromHours(2);
 
-    public async Task ScanAllDueAsync(CancellationToken cancellationToken)
+    public async Task ScheduleAllDueAsync(CancellationToken cancellationToken)
     {
         IReadOnlyList<Guid> daily = await ListDueAsync(ScanFrequency.Daily, 1, cancellationToken);
         IReadOnlyList<Guid> weekly = await ListDueAsync(ScanFrequency.Weekly, 7, cancellationToken);
         IReadOnlyList<Guid> monthly = await ListDueAsync(ScanFrequency.Monthly, 30, cancellationToken);
 
-        using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentScans);
+        List<Guid> dueProjectIds = daily.Concat(weekly).Concat(monthly).ToList();
 
-        await Task.WhenAll(daily.Concat(weekly).Concat(monthly).Select(async projectId =>
+        TimeSpan spacing = SpacingFor(dueProjectIds.Count);
+
+        for (int index = 0; index < dueProjectIds.Count; index++)
         {
-            await throttle.WaitAsync(cancellationToken);
-            try
-            {
-                await scopeRunner.RunAsync<ProjectScanService>(service => service.ScanProjectAsync(projectId));
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "Project {ProjectId} scan failed", projectId);
-            }
-            finally
-            {
-                throttle.Release();
-            }
-        }));
+            Guid projectId = dueProjectIds[index];
+            jobs.Schedule<ProjectScanService>(service => service.ScanProjectAsync(projectId), spacing * index);
+        }
+
+        logger.LogInformation("{Count} due project scans scheduled", dueProjectIds.Count);
     }
+
+    private static TimeSpan SpacingFor(int count) =>
+        count <= 1 ? ScanSpacing : TimeSpan.FromTicks(Math.Min(ScanSpacing.Ticks, ScanWindow.Ticks / (count - 1)));
 
     private Task<IReadOnlyList<Guid>> ListDueAsync(ScanFrequency frequency, int elapsedDays,
         CancellationToken cancellationToken)
     {
-        DateTime threshold = DateTime.UtcNow.AddDays(-elapsedDays);
+        DateTime threshold = DateTime.UtcNow.AddDays(-elapsedDays).Add(DueMargin);
 
         return projectRepository.ListIdsDueForScanAsync(frequency, threshold, cancellationToken);
     }

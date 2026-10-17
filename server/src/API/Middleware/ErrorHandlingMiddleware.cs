@@ -3,7 +3,6 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Constants;
-using Sentinel.Application.Common.Contracts;
 
 namespace Sentinel.API.Middleware;
 

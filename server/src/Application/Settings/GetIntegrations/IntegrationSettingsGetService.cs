@@ -24,6 +24,7 @@ public class IntegrationSettingsGetService(IOrganizationRepository organizationR
         {
             HasGithubToken = !string.IsNullOrEmpty(organization.GithubToken),
             HasGitlabToken = !string.IsNullOrEmpty(organization.GitlabToken),
+            GitlabBaseUrl = organization.ToGitLabInstance().BaseUrl,
         };
     }
 }

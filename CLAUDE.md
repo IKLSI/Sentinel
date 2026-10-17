@@ -2,13 +2,13 @@
 
 ## Projet
 
-SaaS multi-tenant de tech health : branche des dépôts GitHub/GitLab, parse leurs manifestes de dépendances, croise avec OSV (vulnérabilités), les registries publics (versions) et endoflife.date (runtimes EOL), calcule un score de santé par projet. Autour : tickets, conformité, SBOM, audit, facturation Stripe avec quotas par plan.
+SaaS multi-tenant de tech health : branche des dépôts GitHub/GitLab, parse leurs manifestes de dépendances, croise avec OSV (vulnérabilités), les registries publics (versions) et endoflife.date (runtimes EOL), calcule un score de santé par projet. Autour : tickets, conformité, SBOM, audit. SaaS ouvert : inscription publique, landing, scan public anonyme. Aucune facturation, aucun plan ni quota.
 
 `Organization` → `Project` → `Dependency`/`Runtime`/`Vulnerability`, plus `Ticket`. Rôles : `Admin`, `Developer`. Scan et scoring : `Application/TechHealth/`.
 
 ## Stack
 
-- Backend : .NET 10, Clean Architecture, EF Core 10 + Npgsql, Hangfire, Serilog, JWT, SignalR, Stripe.net, QuestPDF/ClosedXML, Scalar
+- Backend : .NET 10, Clean Architecture, EF Core 10 + Npgsql, Hangfire, Serilog, JWT, SignalR, QuestPDF/ClosedXML, Scalar
 - Frontend : React 19, TypeScript 7, Vite 8, TanStack Router/Query, MUI v9, react-hook-form + zod, axios, Biome, Vitest
 - PostgreSQL (isolation par Row Level Security), base de dev distante. Pas de Docker dans le repo — requis uniquement par les tests d'intégration (Testcontainers)
 
@@ -41,16 +41,16 @@ dotnet ef migrations add <Nom> --project server/src/Infrastructure --startup-pro
 
 - **Use-case vertical-slice** : `Application/{Feature}/{UseCase}/{Nom}Service.cs` (`IService`, méthode `ExecuteAsync`, retourne `Result`/`Result<T>`) + `{Nom}Validator.cs` (`IValidator`). Ex : `Application/Auth/Login/`
 - **DTOs d'API dans la slice qui les consomme** (`Application/Auth/Login/LoginRequest.cs`), remontés au niveau `Application/{Feature}/` s'ils servent plusieurs slices, `Application/Common/Contracts/` s'ils sont transverses. **Aucun DTO dans `Domain`** : les repositories retournent des projections `Domain/Repositories/*Rows.cs`, le mapping vers le DTO se fait dans le service
-- **Settings placés dans la couche qui les consomme** : `Application/Options/` (Jwt, Frontend, StripePrices, Support), `API/Options/` (Cookie, Cors, Database, DataProtection, ForwardedHeaders), `Infrastructure/Email/EmailSettings.cs`, `Infrastructure/Payments/StripeSettings.cs` (SecretKey/WebhookSecret). La section `Stripe` d'appsettings est donc liée deux fois : `Stripe` → `Infrastructure`, `Stripe:Prices` → `Application`
+- **Settings placés dans la couche qui les consomme** : `Application/Options/` (Jwt, Frontend, Support), `API/Options/` (Cookie, Cors, Database, DataProtection, ForwardedHeaders), `Infrastructure/Email/EmailSettings.cs`
 - **Validation maison**, ni FluentValidation ni DataAnnotations : `Application/Common/ValidationErrors.cs` (fluent `.Required`, `.EmailAddress`, `.MaxLength`), codes dans `ValidationCodes`
 - **Contrôleurs sans logique** : service injecté **par action** via `[FromServices]`, jamais par le constructeur ; retour via `BaseController.ToActionResult(result)` / `ToFileResult(result)`
 - **Erreurs** : `API/Middleware/ErrorHandlingMiddleware.cs`, exception → `(HttpStatusCode, ErrorCodes)`, écrit `ApiErrorResponse` (`API/Contracts/` — porte un statut HTTP, donc côté présentation) — pas `ProblemDetails`. Traduction via `API/Resources/Locales/{en-US,fr-FR}.json` (`JsonLocalizer`)
 - **Persistance** : repositories par agrégat, écritures via `ICommitScopeFactory`. `ExecuteInTransactionAsync` purge le ChangeTracker — le délégué doit recharger ses entités
-- **Auth** : access token JWT (`Application/Security/TokenService.cs`) ; refresh token = 64 octets + hash SHA256, transporté par cookie HttpOnly (`IRefreshTokenStore` → `API/Services/RefreshTokenCookie.cs`) ; révocation `TokenBlacklistService` + `RevokedToken` ; PAT de dépôt chiffrés par `TokenProtector` (Data Protection) ; accès machine par `API/Middleware/ApiKeyMiddleware.cs`
-- **Billing** : `Application/Billing/*` (checkout, portail, webhook) parle à `IBillingGateway`/`IBillingWebhookParser` (`Domain/Abstractions`), jamais au SDK Stripe ; l'adaptateur vit dans `Infrastructure/Payments/`, traduit ses erreurs en `BillingProviderException` et rend des contrats neutres (`Domain/Billing/`). Webhooks idempotents via `ProcessedStripeEvent`
+- **Auth** : access token JWT (`Application/Security/TokenService.cs`) ; refresh token = 64 octets + hash SHA256, transporté par cookie HttpOnly (`IRefreshTokenStore` → `API/Services/RefreshTokenCookie.cs`) ; révocation par `User.TokenVersion` (incrémenté au logout, vérifié à chaque requête dans `ValidateAccountStateAsync`, état de compte caché 30 s) ; PAT de dépôt chiffrés par `TokenProtector` (Data Protection) ; accès machine par `API/Middleware/ApiKeyMiddleware.cs`
 - **Jobs** : planification via `IJobScheduler`, lecture via `IRecurringJobMonitor` (`Domain/Abstractions`), adaptateurs Hangfire dans `Infrastructure/Jobs/`. `Application` ne référence `Hangfire.Core` que pour `[AutomaticRetry]` — choix assumé, une abstraction maison pour ce seul attribut coûtait plus cher qu'elle ne rapportait. Corps des jobs dans `Application/Jobs/` ; les récurrents se déclarent dans `API/Extensions/WebApplicationExtensions.cs` avec un identifiant de `RecurringJobIds`
 - **Appels sortants** : toujours derrière une abstraction `Domain/Abstractions` implémentée dans `Infrastructure/Http/` — `IDependencyRegistryClient` (registries), `IVulnerabilityFeedClient` (OSV), `IRuntimeLifecycleClient` (endoflife.date), `IRepositoryHostClient`. Aucun `HttpClient` dans `Application`
-- **Quotas et exports** : passer par `Application/Billing/QuotaGuard.cs` avant toute création de projet ou invitation (→ HTTP 402) ; exports via `Application/Exports/ExportService*.cs`, bornés par `ExportLimits` et la politique `RateLimitPolicies.Export`
+- **Exports** : via `Application/Exports/ExportService*.cs`, bornés par `ExportLimits` et la politique `RateLimitPolicies.Export`
+- **GitLab** : instance paramétrée par organisation dans l'UI (Paramètres → Intégrations) : `Organization.GitlabBaseUrl` (null = gitlab.com). Elle voyage avec le token dans `RepositoryAccess` (`Domain/Git`) et sert de base aux requêtes du client HTTP nommé `GitLab`. Pas de CA personnalisée : l'instance doit présenter un certificat reconnu par le magasin système. Hôtes acceptés à la création de projet : `RepositoryHosts.IsSupported` (GitHub + hôte GitLab de l'organisation)
 
 ### Multi-tenant : deux barrières
 
@@ -65,11 +65,11 @@ Hub `API/Realtime/SentinelHub.cs` sur `/hubs/sync`, un groupe par organisation. 
 
 - Contrat **généré** depuis `Domain/Constants/Realtime{Constants,Resources}.cs` → `contract.gen.ts`. Le C# est la source de vérité ; ajouter une ressource sans mapper ses query keys casse `tsc` sur le `switch` exhaustif de `resolveInvalidatedKeys`. La CI échoue si désynchronisé
 - JWT en query string au handshake (`?access_token=`) : masquer ce paramètre dans les logs du reverse-proxy en prod
-- L'émetteur reçoit son propre événement (pas d'exclusion par `ConnectionId`) : ne pas « optimiser », les `onSuccess` locaux n'invalident pas toujours autant que le mapping serveur
+- L'émetteur reçoit son propre événement (pas d'exclusion par `ConnectionId`) et c'est ce qui rafraîchit l'auteur : les `onSuccess` n'invalident pas les clés déjà couvertes par le mapping serveur (`setQueryData` seulement, pour l'affichage immédiat). Ne pas exclure l'émetteur ; si le hub est coupé, la resynchronisation à la reconnexion rattrape
 
 ### Mono-instance assumée
 
-Un seul process en prod. Rate limiting, `IMemoryCache` (état de compte auth, dashboard, blacklist JWT) et diffusion SignalR sont in-process. La persistance en base (key ring Data Protection, storage Hangfire, `RevokedToken`) sert la survie au redémarrage, pas le partage entre nœuds — ne pas la retirer, ne pas introduire de backplane.
+Un seul process en prod. Rate limiting, `IMemoryCache` (état de compte auth, dashboard, clés API, flux externes) et diffusion SignalR sont in-process. La persistance en base (key ring Data Protection, storage Hangfire) sert la survie au redémarrage, pas le partage entre nœuds — ne pas la retirer, ne pas introduire de backplane.
 
 ## Frontend
 
@@ -103,4 +103,3 @@ Transverse : `configs/apiClient.ts` (axios, intercepteur 401 → refresh unique 
 - `openapi-typescript` est figé en v6 : les versions suivantes exigent une API compilateur absente de TypeScript 7
 - Sans Docker ni `SENTINEL_TEST_POSTGRES`, les tests d'intégration sont skippés en local : InMemory ne couvre ni la RLS ni le relationnel
 - `dotnet ef` sans `ConnectionStrings__DefaultConnection` retombe sur `localhost` alors que la base de dev est distante
-- `StripeBillingGateway.CreateCheckoutSessionAsync` ne pose plus `ConsentCollection.TermsOfService` : Stripe exige une URL de CGU renseignée dans le Dashboard (`Settings → Public`) avant d'accepter ce champ, bloquant tant que l'entreprise n'est pas activée (infos légales + IBAN). À réintroduire une fois les CGU (`legal_notice.publisher.*`, `fr-FR.json`/`en-US.json`) et le compte Stripe pleinement activés

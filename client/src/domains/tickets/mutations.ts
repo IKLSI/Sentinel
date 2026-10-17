@@ -1,18 +1,12 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { queryClient } from "@/configs/queryClient";
 import { CONTENT_TYPES, HTTP_HEADERS } from "@/constants/http";
-import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
 import {
-  PROJECTS_QUERY_KEY,
-  projectQueryKey,
-} from "@/domains/projects/constants";
-import {
-  invalidateKeys,
   useDeleteMutation,
   usePostMutation,
   usePutMutation,
 } from "@/domains/helpers";
-import { TICKETS_QUERY_KEY, ticketQueryKey } from "@/domains/tickets/constants";
+import { ticketQueryKey } from "@/domains/tickets/constants";
 import type {
   CreateComment,
   CreateTicket,
@@ -22,11 +16,6 @@ import type {
   TicketComment,
   UpdateTicket,
 } from "@/domains/tickets/types";
-
-const invalidateTickets = () => invalidateKeys([[TICKETS_QUERY_KEY]]);
-
-const invalidateTicketCounters = () =>
-  invalidateKeys([DASHBOARD_QUERY_KEY, PROJECTS_QUERY_KEY]);
 
 const updateCachedComments = (
   ticketId: string,
@@ -41,47 +30,25 @@ const updateCachedComments = (
 export const useCreateTicketMutation = () =>
   usePostMutation<Ticket, Ticket, { data: CreateTicket }>(
     ROUTES_API.api.tickets.__path,
-    {
-      onSuccess: () => {
-        invalidateTickets();
-        invalidateTicketCounters();
-      },
-    },
   );
 
 export const useCreateTicketFromFindingMutation = () =>
   usePostMutation<Ticket, Ticket, { data: CreateTicketFromFinding }>(
     ROUTES_API.api.tickets.fromFinding.__path,
-    {
-      onSuccess: (_created, { data }) => {
-        invalidateTickets();
-        invalidateTicketCounters();
-        invalidateKeys([projectQueryKey(data.projectId)]);
-      },
-    },
   );
 
 export const useUpdateTicketMutation = () =>
   usePutMutation<Ticket, Ticket, { id: string; data: UpdateTicket }>(
     ROUTES_API.api.tickets[":id"].__path,
     {
-      onSuccess: (updated) => {
-        queryClient.setQueryData(ticketQueryKey(updated.id), updated);
-        invalidateTickets();
-        invalidateTicketCounters();
-      },
+      onSuccess: (updated) =>
+        queryClient.setQueryData(ticketQueryKey(updated.id), updated),
     },
   );
 
 export const useDeleteTicketMutation = () =>
   useDeleteMutation<void, void, { id: string }>(
     ROUTES_API.api.tickets[":id"].__path,
-    {
-      onSuccess: () => {
-        invalidateTickets();
-        invalidateTicketCounters();
-      },
-    },
   );
 
 export const useAddCommentMutation = (ticketId: string) =>

@@ -1,7 +1,0 @@
-namespace Sentinel.Infrastructure.Payments;
-
-public static class StripeMetadataKeys
-{
-    public const string OrganizationId = "organizationId";
-    public const string PlanTier = "planTier";
-}

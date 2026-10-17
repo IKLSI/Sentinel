@@ -7,6 +7,9 @@ export const useUsersQuery = (filters: UsersFilters = {}) =>
   useGetQuery<UserList>(
     ROUTES_API.api.users.__path,
     {},
-    { queryKey: usersQueryKey(filters) },
+    {
+      queryKey: usersQueryKey(filters),
+      placeholderData: (previous) => previous,
+    },
     filters,
   );
