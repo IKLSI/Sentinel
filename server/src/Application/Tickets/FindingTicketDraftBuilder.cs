@@ -29,13 +29,15 @@ public sealed class FindingTicketDraftBuilder(ILocalizer localizer, string cultu
         return new FindingTicketDraft(
             Title("tickets.finding_draft.vulnerability_title", parameters),
             localizer.Get(culture, "tickets.finding_draft.vulnerability_description", parameters),
-            PriorityOf(vulnerability.Severity),
+            VulnerabilityRiskCalculator.IsActivelyThreatened(vulnerability)
+                ? TicketPriority.Critical
+                : PriorityOf(vulnerability.Severity),
             TicketType.Security);
     }
 
     public FindingTicketDraft ForDependency(Dependency dependency)
     {
-        bool isEndOfLife = dependency.Status == DependencyStatus.EOL;
+        bool isEndOfLife = dependency.IsDeprecated;
 
         Dictionary<string, string> parameters = new()
         {

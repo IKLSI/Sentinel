@@ -10,8 +10,6 @@ import {
 export interface TabDef {
   icon: React.ReactNode;
   label: string;
-  count: number;
-  accentColor?: string;
 }
 
 export type StatusVariant = "green" | "blue" | "orange" | "red" | "gray";
@@ -28,26 +26,31 @@ export const EMPTY_STATE_SX = {
 
 export const DEP_STATUS: Record<
   DependencyStatus,
-  { labelKey: string; weight: number }
+  { labelKey: string; variant: StatusVariant; weight: number }
 > = {
   Vulnerable: {
     labelKey: "tech_health.dep_status.vulnerable",
+    variant: "red",
     weight: 5,
   },
   EOL: {
     labelKey: "tech_health.dep_status.eol",
+    variant: "orange",
     weight: 4,
   },
   MajorUpdate: {
     labelKey: "tech_health.dep_status.major_update",
+    variant: "blue",
     weight: 3,
   },
   MinorUpdate: {
     labelKey: "tech_health.dep_status.minor_update",
+    variant: "gray",
     weight: 2,
   },
   UpToDate: {
     labelKey: "tech_health.dep_status.up_to_date",
+    variant: "green",
     weight: 1,
   },
 };

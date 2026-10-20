@@ -38,6 +38,11 @@ public partial class ManifestParserService
         "build.gradle",
         "build.gradle.kts",
         "Gemfile",
+        "Gemfile.lock",
+        "uv.lock",
+        "bun.lock",
+        "packages.config",
+        "Podfile.lock",
         "Cargo.toml",
         "pyproject.toml",
         "CMakeLists.txt",
@@ -67,6 +72,7 @@ public partial class ManifestParserService
         ".ruby-version",
         ".java-version",
         ".go-version",
+        "gradle-wrapper.properties",
     };
 
     private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
@@ -83,6 +89,10 @@ public partial class ManifestParserService
         "mix.lock",
         "pubspec.lock",
         "Package.resolved",
+        "Gemfile.lock",
+        "uv.lock",
+        "bun.lock",
+        "Podfile.lock",
     };
 
     private static readonly string[] ProjectFileExtensions = [".csproj", ".fsproj", ".vbproj"];
@@ -100,7 +110,7 @@ public partial class ManifestParserService
     {
         if (IsRuntimeDeclaration(name)) return 0;
 
-        return IsLockFile(name) ? 2 : 1;
+        return IsLockFile(name) ? 1 : 2;
     }
 
     public (List<Dependency>, List<Runtime>) Parse(Guid projectId, string fileName, string content)
@@ -123,6 +133,12 @@ public partial class ManifestParserService
         else if (lower == "composer.lock") ParseComposerLock(projectId, content, deps);
         else if (lower is "build.gradle" or "build.gradle.kts") ParseBuildGradle(projectId, content, deps, runtimes);
         else if (lower == "gemfile") ParseGemfile(projectId, content, deps, runtimes);
+        else if (lower == "gemfile.lock") ParseGemfileLock(projectId, content, deps);
+        else if (lower == "uv.lock") ParseUvLock(projectId, content, deps);
+        else if (lower == "bun.lock") ParseBunLock(projectId, content, deps);
+        else if (lower == "packages.config") ParsePackagesConfig(projectId, content, deps);
+        else if (lower == "podfile.lock") ParsePodfileLock(projectId, content, deps);
+        else if (fileName == WorkflowFileName) ParseWorkflow(projectId, content, deps);
         else if (lower == "cargo.toml") ParseCargoToml(projectId, content, deps, runtimes);
         else if (lower == "cmakelists.txt") ParseCMakeLists(projectId, content, runtimes);
         else if (lower == "cargo.lock") ParseCargoLock(projectId, content, deps);
@@ -143,7 +159,10 @@ public partial class ManifestParserService
         else if (lower == "dockerfile") ParseDockerfile(projectId, content, runtimes);
         else if (lower is "rust-toolchain" or "rust-toolchain.toml") ParseRustToolchain(projectId, content, runtimes);
         else if (lower == ".tool-versions") ParseToolVersions(projectId, content, runtimes);
+        else if (lower == "gradle-wrapper.properties") ParseGradleWrapperProperties(projectId, content, runtimes);
         else if (VersionFileRuntimes.ContainsKey(lower)) ParseVersionFile(projectId, lower, content, runtimes);
+
+        if (!IsLockFile(fileName)) AddDependencyDerivedRuntimes(projectId, deps, runtimes);
 
         return (deps, runtimes);
     }

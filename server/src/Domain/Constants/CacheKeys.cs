@@ -14,6 +14,7 @@ public static class CacheKeys
     private const string EpssPrefix = "epss:cve";
     private const string PublicScanPrefix = "public-scan";
     private const string AvailableReposPrefix = "available-repos";
+    private const string RefreshGracePrefix = "auth:refresh-grace";
 
     public const string KnownExploitedCatalog = "kev:catalog";
     public const string KnownExploitedCatalogUnavailable = "kev:unavailable";
@@ -31,9 +32,9 @@ public static class CacheKeys
     public static readonly TimeSpan PublicScanTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan PublicScanUnpinnedTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
+    public static readonly TimeSpan RefreshGraceTtl = TimeSpan.FromSeconds(30);
 
-    public static string Dashboard(Guid organizationId, int periodDays) =>
-        $"{DashboardPrefix}:{organizationId}:{periodDays}";
+    public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
 
     public static string AuthAccount(Guid userId) => $"{AuthAccountPrefix}:{userId}";
 
@@ -52,6 +53,8 @@ public static class CacheKeys
 
     public static string PublicScan(string host, string owner, string repository, string? commitSha) =>
         $"{PublicScanPrefix}:{host}/{owner}/{repository}:{commitSha}".ToLowerInvariant();
+
+    public static string RefreshGrace(string previousTokenHash) => $"{RefreshGracePrefix}:{previousTokenHash}";
 
     public static string AvailableRepos(Guid organizationId, RepositoryType platform, string tokenFingerprint) =>
         $"{AvailableReposPrefix}:{organizationId}:{platform}:{tokenFingerprint}";

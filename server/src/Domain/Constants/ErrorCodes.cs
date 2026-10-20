@@ -12,6 +12,7 @@ public static class ErrorCodes
     public const string TooManyRequests = "errors.common.too_many_requests";
 
     public const string AuthInvalidCredentials = "errors.auth.invalid_credentials";
+    public const string AuthTooManyAttempts = "errors.auth.too_many_attempts";
     public const string AuthInvalidRefreshToken = "errors.auth.invalid_refresh_token";
     public const string AuthEmailNotVerified = "errors.auth.email_not_verified";
     public const string AuthEmailAlreadyUsed = "errors.auth.email_already_used";
@@ -28,13 +29,19 @@ public static class ErrorCodes
     public const string UserFilterTooManyValues = "errors.users.filter_too_many_values";
     public const string UserInvalidAccessStatus = "errors.users.invalid_access_status";
     public const string UserLastAdminRequired = "errors.users.last_admin_required";
+    public const string UserCannotChangeOwnAccess = "errors.users.cannot_change_own_access";
     public const string UserCannotDeleteLastAdmin = "errors.users.cannot_delete_last_admin";
     public const string UserWrongPassword = "errors.users.wrong_password";
 
     public const string ApiKeyNameRequired = "errors.api_keys.name_required";
     public const string ApiKeyNameTooLong = "errors.api_keys.name_too_long";
+    public const string ApiKeyExpirationRequired = "errors.api_keys.expiration_required";
+    public const string ApiKeyExpirationOutOfRange = "errors.api_keys.expiration_out_of_range";
+    public const string ApiKeyEndpointNotAllowed = "errors.api_keys.endpoint_not_allowed";
 
     public const string ProjectNotFound = "errors.projects.not_found";
+    public const string VulnerabilityNotFound = "errors.projects.vulnerability_not_found";
+    public const string SuppressionNotFound = "errors.projects.suppression_not_found";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";
     public const string ProjectInvalidScanFrequency = "errors.projects.invalid_scan_frequency";
 
@@ -64,4 +71,7 @@ public static class ErrorCodes
     public const string ScanNoAccessibleFiles = "errors.scan.no_accessible_files";
     public const string ScanFailed = "errors.scan.failed";
     public const string ScanVulnerabilityDataIncomplete = "errors.scan.vulnerability_data_incomplete";
+    public const string ScanInventoryIncomplete = "errors.scan.inventory_incomplete";
+    public const string ScanNoDependencies = "errors.scan.no_dependencies";
+    public const string PublicScanBusy = "errors.scan.busy";
 }

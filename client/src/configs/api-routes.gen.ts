@@ -108,11 +108,21 @@ export const ROUTES_API = {
           complianceReport: {
             __path: "/api/tech-health/projects/:id/compliance-report",
           },
+          repositoryOptions: {
+            __path: "/api/tech-health/projects/:id/repository-options",
+          },
           sbom: {
             __path: "/api/tech-health/projects/:id/sbom",
           },
           scan: {
             __path: "/api/tech-health/projects/:id/scan",
+          },
+          suppressions: {
+            __path: "/api/tech-health/projects/:id/suppressions",
+            ":suppressionId": {
+              __path:
+                "/api/tech-health/projects/:id/suppressions/:suppressionId",
+            },
           },
         },
       },

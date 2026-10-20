@@ -124,8 +124,8 @@ public static class Program
 
         app.UseCors();
         app.UseAuthentication();
-        app.UseRateLimiter();
         app.UseMiddleware<ApiKeyMiddleware>();
+        app.UseRateLimiter();
         app.UseMiddleware<DatabaseConnectionScopeMiddleware>();
         app.UseAuthorization();
         app.ConfigureHangfire();
@@ -154,6 +154,13 @@ public static class Program
         }
 
         bool isServerError = exception is not null || httpContext.Response.StatusCode > 499;
-        return isServerError ? Serilog.Events.LogEventLevel.Error : Serilog.Events.LogEventLevel.Information;
+        if (isServerError)
+        {
+            return Serilog.Events.LogEventLevel.Error;
+        }
+
+        return httpContext.Request.Path.StartsWithSegments("/health")
+            ? Serilog.Events.LogEventLevel.Debug
+            : Serilog.Events.LogEventLevel.Information;
     }
 }

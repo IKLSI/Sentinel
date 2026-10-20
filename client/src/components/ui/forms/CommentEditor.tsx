@@ -12,8 +12,6 @@ interface Props {
   onSubmit?: () => void;
   placeholder?: string;
   minHeight?: number;
-  autoFocus?: boolean;
-  background?: string;
   borderColor?: string;
   attachments?: CommentAttachment[];
   onRemoveAttachment?: (index: number) => void;
@@ -29,8 +27,6 @@ export const CommentEditor: React.FC<Props> = ({
   onSubmit,
   placeholder,
   minHeight = DEFAULT_MIN_HEIGHT,
-  autoFocus = false,
-  background = "var(--s1)",
   borderColor = "var(--border)",
   attachments = [],
   onRemoveAttachment,
@@ -46,7 +42,7 @@ export const CommentEditor: React.FC<Props> = ({
         border: `1px solid ${borderColor}`,
         borderRadius: "var(--r-lg)",
         overflow: "hidden",
-        background,
+        background: "var(--s1)",
         cursor: "text",
       }}
       onClick={() => textareaRef.current?.focus()}
@@ -56,7 +52,6 @@ export const CommentEditor: React.FC<Props> = ({
         ref={textareaRef}
         value={value}
         placeholder={placeholder}
-        autoFocus={autoFocus}
         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
           onValueChange(e.target.value)
         }

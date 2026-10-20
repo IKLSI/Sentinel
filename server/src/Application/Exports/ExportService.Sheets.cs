@@ -1,6 +1,7 @@
 using ClosedXML.Excel;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.Exports;
 public partial class ExportService
@@ -47,7 +48,7 @@ public partial class ExportService
             int toUpdate = p.Dependencies.Count(d => d.Status == DependencyStatus.MinorUpdate || d.Status == DependencyStatus.MajorUpdate);
             int vulnerableDeps = p.Dependencies.Count(d => d.Vulnerabilities.Any());
             int criticals = p.Dependencies.SelectMany(d => d.Vulnerabilities).Count(v => v.Severity == VulnerabilitySeverity.Critical);
-            int eolRuntimes = p.Runtimes.Count(r => r.IsEol == true);
+            int eolRuntimes = RuntimeGrouping.ByName(p.Runtimes).Count(FindingRules.IsEol);
 
             sumDeps += p.Dependencies.Count;
             sumUpdate += toUpdate;

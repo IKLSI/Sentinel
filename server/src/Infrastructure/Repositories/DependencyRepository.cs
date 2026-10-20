@@ -14,4 +14,12 @@ public class DependencyRepository : CrudEntityWithIdRepository<Dependency>, IDep
         Query(QueryTracking.Tracked)
             .Where(d => d.ProjectId == projectId)
             .ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PackageMetadataRow>> ListPackageMetadataByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(d => d.ProjectId == projectId)
+            .Select(d => new PackageMetadataRow(d.Ecosystem, d.Name, d.LatestVersion, d.Publisher, d.License,
+                d.IsDeprecated))
+            .ToListAsync(cancellationToken);
 }

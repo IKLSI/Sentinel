@@ -45,6 +45,7 @@ public class AuthRegisterService(
         string passwordHash = passwordHasher.Hash(model.Password);
 
         Organization organization;
+        User admin;
 
         using (systemScope.Enter())
         {
@@ -59,7 +60,7 @@ public class AuthRegisterService(
                 UpdatedAt = now
             };
 
-            User admin = new User
+            admin = new User
             {
                 OrganizationId = organization.Id,
                 Email = email,
@@ -89,13 +90,18 @@ public class AuthRegisterService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        logger.LogInformation("New organization registered {Slug} by {Email}", organization.Slug, email);
+        logger.LogInformation("New organization registered {Slug} by user {UserId}", organization.Slug, admin.Id);
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
 
-        await auditLog.LogAsync(AuditAction.OrganizationRegistered, entityType: AuditEntityTypes.Organization);
+        await auditLog.LogAsync(
+            AuditAction.OrganizationRegistered,
+            entityType: AuditEntityTypes.Organization,
+            organizationId: organization.Id,
+            userId: admin.Id,
+            entityId: organization.Id);
 
         return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }
@@ -107,7 +113,7 @@ public class AuthRegisterService(
         string frontendBaseUrl = frontendOptions.Value.BaseUrl;
         string culture = language ?? LanguageValues.Fr;
 
-        jobs.Enqueue<IEmailService>(s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
+        jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
 
         return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }

@@ -42,6 +42,47 @@ public sealed record ScoreSnapshotRow(
     DateOnly Day,
     int Score);
 
+public sealed record DashboardProjectRow(
+    Guid Id,
+    string Name,
+    RepositoryType RepositoryType,
+    DateTime? LastScanAt,
+    ScanCoverage Coverage,
+    string? LastScanError,
+    int? HealthScore,
+    string? HealthGrade);
+
+public sealed record DashboardRuntimeRow(
+    Guid ProjectId,
+    string Name,
+    string Version,
+    DateTime? EolDate,
+    bool? IsEol,
+    bool IsMinimumConstraint);
+
+public sealed record VulnerabilityTotalsRow(
+    int Total,
+    int Critical,
+    int High,
+    int Medium,
+    int Low,
+    int KnownExploited)
+{
+    public static readonly VulnerabilityTotalsRow Empty = new(0, 0, 0, 0, 0, 0);
+}
+
+public sealed record DependencyTotalsRow(
+    int Total,
+    int UpToDate,
+    int MinorUpdate,
+    int MajorUpdate,
+    int Deprecated,
+    int Vulnerable,
+    int MajorUpdatesInProduction)
+{
+    public static readonly DependencyTotalsRow Empty = new(0, 0, 0, 0, 0, 0, 0);
+}
+
 public sealed record OpenTicketRow(
     Guid Id,
     int Number,

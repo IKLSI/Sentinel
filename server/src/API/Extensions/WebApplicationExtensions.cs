@@ -14,6 +14,11 @@ public static class WebApplicationExtensions
             job => job.ExecuteAsync(CancellationToken.None),
             Cron.Daily(2));
 
+        recurringJobs.AddOrUpdate<DataRetentionJob>(
+            RecurringJobIds.DataRetention,
+            job => job.ExecuteAsync(CancellationToken.None),
+            Cron.Daily(3));
+
         recurringJobs.RemoveIfExists(RecurringJobIds.PurgeExpiredRevokedTokens);
 
         return app;

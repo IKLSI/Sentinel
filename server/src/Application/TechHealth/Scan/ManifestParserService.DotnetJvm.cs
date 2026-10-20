@@ -28,8 +28,11 @@ public partial class ManifestParserService
             foreach (XElement pkgRef in doc.Descendants("PackageReference"))
             {
                 string name = pkgRef.Attribute("Include")?.Value ?? "";
-                string version = pkgRef.Attribute("Version")?.Value ?? pkgRef.Element("Version")?.Value ?? "";
-                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
+                string version = pkgRef.Attribute("VersionOverride")?.Value
+                    ?? pkgRef.Attribute("Version")?.Value
+                    ?? pkgRef.Element("Version")?.Value
+                    ?? "";
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.Contains('$')) continue;
 
                 deps.Add(new Dependency
                 {
@@ -87,7 +90,7 @@ public partial class ManifestParserService
             if (!string.IsNullOrEmpty(springBootVersion))
                 runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootVersion });
 
-            foreach (XElement dep in doc.Descendants(ns + "dependency"))
+            foreach (XElement dep in doc.Descendants(ns + "dependency").Where(IsProjectDependency))
             {
                 string groupId = dep.Element(ns + "groupId")?.Value ?? "";
                 string artifactId = dep.Element(ns + "artifactId")?.Value ?? "";
@@ -110,6 +113,9 @@ public partial class ManifestParserService
         }
         catch { }
     }
+
+    private static bool IsProjectDependency(XElement dependency) =>
+        !dependency.Ancestors().Any(ancestor => ancestor.Name.LocalName is "dependencyManagement" or "plugin");
 
     private static string? ReadSpringBootParentVersion(XDocument doc, XNamespace ns)
     {
@@ -395,4 +401,32 @@ public partial class ManifestParserService
         }
     }
 
+    private static void ParsePackagesConfig(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            XDocument doc = XDocument.Parse(content);
+
+            foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "package"))
+            {
+                string name = package.Attribute("id")?.Value ?? "";
+                string version = package.Attribute("version")?.Value ?? "";
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
+
+                bool isDevelopment = string.Equals(package.Attribute("developmentDependency")?.Value, "true",
+                    StringComparison.OrdinalIgnoreCase);
+
+                deps.Add(new Dependency
+                {
+                    ProjectId = projectId,
+                    Name = name,
+                    CurrentVersion = version,
+                    Type = isDevelopment ? DependencyType.Dev : DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.NuGet,
+                    Status = DependencyStatus.UpToDate,
+                });
+            }
+        }
+        catch { }
+    }
 }

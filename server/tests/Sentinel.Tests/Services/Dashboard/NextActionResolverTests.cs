@@ -71,7 +71,9 @@ public class NextActionResolverTests
             .WithRuntime(".NET", "8", Today.AddDays(22).ToDateTime(TimeOnly.MinValue))
             .Build();
 
-        IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute([project], Today);
+        IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(
+            [.. project.Runtimes.Select(runtime => new DashboardRuntimeRow(project.Id, runtime.Name, runtime.Version,
+                runtime.EolDate, runtime.IsEol, runtime.IsMinimumConstraint))], Today);
 
         NextActionDto? action = NextActionResolver.Resolve(project, [], deadlines);
 

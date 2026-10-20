@@ -8,9 +8,15 @@ using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
-public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0);
+public record ScanOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes, string? Error, int ManifestsRead = 0,
+    bool IsComplete = true);
 
-internal record ParsedManifest(bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
+public sealed record RepositoryScanScope(string? Branch, string? RootPath)
+{
+    public static readonly RepositoryScanScope Default = new(null, null);
+}
+
+internal record ParsedManifest(string Directory, bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
 
 public class RepositoryScannerService(
     IRepositoryHostClient hostClient,
@@ -62,28 +68,30 @@ public class RepositoryScannerService(
     private static string DirectnessKey(Dependency dependency) =>
         PackageNameNormalizer.ForVulnerabilityFeed(dependency.Ecosystem, dependency.Name).ToLowerInvariant();
 
-    public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access = null)
+    public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access = null, string? branch = null)
     {
         if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
             return Task.FromResult<string?>(null);
 
-        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, access);
+        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, access, branch);
     }
 
     public async Task RefreshVersionsAsync(List<Dependency> dependencies)
     {
         if (dependencies.Count == 0) return;
 
-        await registry.FetchRegistryMetadataAsync(dependencies);
+        await registry.FetchRegistryMetadataAsync(RegistryCandidates(dependencies));
 
         foreach (Dependency dependency in dependencies)
-            dependency.Status = DependencyStatusCalculator.Compute(dependency.CurrentVersion,
-                dependency.LatestVersion);
+            dependency.Status = DependencyStatusCalculator.For(dependency);
     }
 
     public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access = null,
-        string? commitSha = null)
+        string? commitSha = null, RepositoryScanScope? scope = null)
     {
+        RepositoryScanScope effectiveScope = scope ?? RepositoryScanScope.Default;
+        string? rootPath = RepositoryScanPaths.NormalizeRootPath(effectiveScope.RootPath);
+
         try
         {
             if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
@@ -102,12 +110,15 @@ public class RepositoryScannerService(
                     ErrorCodes.ScanNoAccessibleFiles);
             }
 
-            List<(string Name, string Url)> discoveredManifests = listing.Files
-                .Where(f => ManifestParserService.IsManifest(f.Name))
+            List<(string Name, string Url, string Path)> discoveredManifests = listing.Files
+                .Where(f => RepositoryScanPaths.IsInScope(f.Path, rootPath)
+                    || (rootPath != null && ManifestParserService.IsWorkflowFile(f.Url)))
+                .Select(f => (Name: ManifestParserService.IsWorkflowFile(f.Url) ? ManifestParserService.WorkflowFileName : f.Name, f.Url, f.Path))
+                .Where(f => f.Name == ManifestParserService.WorkflowFileName || ManifestParserService.IsManifest(f.Name))
                 .OrderBy(f => ManifestParserService.ScanPriority(f.Name))
                 .ToList();
 
-            List<(string Name, string Url)> manifestFiles = discoveredManifests
+            List<(string Name, string Url, string Path)> manifestFiles = discoveredManifests
                 .Take(MaxManifestFiles)
                 .ToList();
 
@@ -119,6 +130,7 @@ public class RepositoryScannerService(
             }
 
             using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
+            int unreadableFiles = 0;
 
             ParsedManifest?[] parsedManifests = await Task.WhenAll(manifestFiles.Select(async file =>
             {
@@ -128,13 +140,20 @@ public class RepositoryScannerService(
                 try { content = await hostClient.FetchTextAsync(host, file.Url, access); }
                 finally { throttle.Release(); }
 
-                if (content == null) return null;
+                if (content == null)
+                {
+                    Interlocked.Increment(ref unreadableFiles);
+                    return null;
+                }
 
                 try
                 {
                     (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
 
-                    return new ParsedManifest(ManifestParserService.IsLockFile(file.Name), deps, rts);
+                    foreach (Dependency dependency in deps) dependency.ManifestPath = file.Path;
+
+                    return new ParsedManifest(RepositoryScanPaths.DirectoryOf(file.Path),
+                        ManifestParserService.IsLockFile(file.Name), deps, rts);
                 }
                 catch (Exception ex)
                 {
@@ -143,53 +162,57 @@ public class RepositoryScannerService(
                 }
             }));
 
-            List<Dependency> manifestDeps = new();
-            List<Dependency> lockDeps = new();
-            List<Runtime> allRuntimes = new();
-            int manifestsRead = 0;
+            bool isComplete = !listing.Truncated
+                && discoveredManifests.Count <= MaxManifestFiles
+                && unreadableFiles == 0;
 
-            foreach (ParsedManifest parsed in parsedManifests.OfType<ParsedManifest>())
+            if (!isComplete)
             {
-                manifestsRead++;
-
-                if (parsed.IsLockFile)
-                {
-                    lockDeps.AddRange(parsed.Dependencies);
-                }
-                else
-                {
-                    manifestDeps.AddRange(parsed.Dependencies);
-                    allRuntimes.AddRange(parsed.Runtimes);
-                }
+                logger.LogWarning(
+                    "Repository {RepoUrl}: inventory incomplete (truncated listing, manifest cap or unreadable files)",
+                    repoUrl);
             }
 
-            ApplyDeclaredTypes(lockDeps, manifestDeps);
-            ApplyDirectness(lockDeps, manifestDeps);
+            List<ParsedManifest> parsed = parsedManifests.OfType<ParsedManifest>().ToList();
+            List<ParsedManifest> lockFiles = parsed.Where(manifest => manifest.IsLockFile).ToList();
+            List<ParsedManifest> manifests = parsed.Where(manifest => !manifest.IsLockFile).ToList();
 
-            HashSet<(DependencyEcosystem Ecosystem, string Name)> lockedPackages = lockDeps
-                .Select(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
-                .ToHashSet();
+            foreach (ParsedManifest lockFile in lockFiles)
+            {
+                List<Dependency> coveredManifestDeps = manifests
+                    .Where(manifest => RepositoryScanPaths.Covers(lockFile.Directory, manifest.Directory))
+                    .SelectMany(manifest => manifest.Dependencies)
+                    .ToList();
 
-            List<Dependency> dedupedDeps = lockDeps
-                .Concat(manifestDeps.Where(d => !lockedPackages.Contains((d.Ecosystem, d.Name.ToLowerInvariant()))))
+                ApplyDeclaredTypes(lockFile.Dependencies, coveredManifestDeps);
+                ApplyDirectness(lockFile.Dependencies, coveredManifestDeps);
+            }
+
+            List<Dependency> unlockedManifestDeps = manifests
+                .SelectMany(manifest => manifest.Dependencies
+                    .Where(dependency => !IsLocked(dependency, manifest.Directory, lockFiles)))
+                .ToList();
+
+            List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
+                .Concat(unlockedManifestDeps)
                 .GroupBy(d => (d.Ecosystem, Name: d.Name.ToLowerInvariant(), d.CurrentVersion))
                 .Select(g => g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First())
                 .ToList();
 
-            List<Runtime> dedupedRuntimes = allRuntimes
+            List<Runtime> dedupedRuntimes = manifests.SelectMany(manifest => manifest.Runtimes)
                 .Where(r => !string.IsNullOrWhiteSpace(r.Version))
                 .GroupBy(r => (Name: r.Name.ToLowerInvariant(), Version: r.Version.Trim()))
-                .Select(g => g.First())
+                .Select(g => g.OrderBy(r => r.IsMinimumConstraint).First())
                 .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            await registry.FetchRegistryMetadataAsync(dedupedDeps);
+            await registry.FetchRegistryMetadataAsync(RegistryCandidates(dedupedDeps));
 
             foreach (Dependency dep in dedupedDeps)
-                dep.Status = DependencyStatusCalculator.Compute(dep.CurrentVersion, dep.LatestVersion);
+                dep.Status = DependencyStatusCalculator.For(dep);
 
-            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, manifestsRead);
+            return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, parsed.Count, isComplete);
         }
         catch (Exception ex)
         {
@@ -199,4 +222,11 @@ public class RepositoryScannerService(
         }
     }
 
+    private static List<Dependency> RegistryCandidates(IEnumerable<Dependency> dependencies) =>
+        dependencies.Where(dependency => dependency.IsDirect).ToList();
+
+    private static bool IsLocked(Dependency dependency, string manifestDirectory, List<ParsedManifest> lockFiles) =>
+        lockFiles.Any(lockFile => RepositoryScanPaths.Covers(lockFile.Directory, manifestDirectory)
+            && lockFile.Dependencies.Any(locked => locked.Ecosystem == dependency.Ecosystem
+                && locked.Name.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase)));
 }

@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
-using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
@@ -229,13 +228,15 @@ public static partial class ServiceCollectionExtensions
         {
             options
                 .AddFixedWindowPolicy(RateLimitPolicies.Login, 5, TimeSpan.FromMinutes(15))
-                .AddFixedWindowPolicy(RateLimitPolicies.Refresh, 30, TimeSpan.FromMinutes(15))
-                .AddFixedWindowPolicy(RateLimitPolicies.PasswordReset, 3, TimeSpan.FromMinutes(60))
+                .AddFixedWindowPolicy(RateLimitPolicies.Refresh, 120, TimeSpan.FromMinutes(15))
+                .AddFixedWindowPolicy(RateLimitPolicies.PasswordReset, 10, TimeSpan.FromMinutes(60))
+                .AddFixedWindowPolicy(RateLimitPolicies.ForgotPassword, 5, TimeSpan.FromMinutes(60))
+                .AddFixedWindowPolicy(RateLimitPolicies.VerifyEmail, 20, TimeSpan.FromMinutes(60))
+                .AddFixedWindowPolicy(RateLimitPolicies.ResendVerification, 5, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Invitation, 10, TimeSpan.FromMinutes(15))
                 .AddFixedWindowPolicy(RateLimitPolicies.Register, 5, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Scan, 10, TimeSpan.FromMinutes(1), ResolveUserOrClientKey)
                 .AddFixedWindowPolicy(RateLimitPolicies.PublicScan, 5, TimeSpan.FromMinutes(10))
-                .AddFixedWindowPolicy(RateLimitPolicies.Webhook, 300, TimeSpan.FromMinutes(1))
                 .AddFixedWindowPolicy(RateLimitPolicies.Export, 5, TimeSpan.FromMinutes(1), ResolveUserOrClientKey);
 
             options.OnRejected = async (context, cancellationToken) =>
@@ -272,5 +273,5 @@ public static partial class ServiceCollectionExtensions
         => httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
     private static string ResolveUserOrClientKey(HttpContext httpContext)
-        => httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? ResolveClientKey(httpContext);
+        => httpContext.User.FindFirst(ClaimNames.UserId)?.Value ?? ResolveClientKey(httpContext);
 }

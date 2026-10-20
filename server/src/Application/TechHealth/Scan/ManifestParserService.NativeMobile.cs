@@ -31,7 +31,15 @@ public partial class ManifestParserService
     {
         Match elixirMatch = Regex.Match(content, @"elixir:\s*[""']([^""']+)[""']");
         if (elixirMatch.Success)
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Elixir", Version = VersionText.Clean(elixirMatch.Groups[1].Value) });
+        {
+            runtimes.Add(new Runtime
+            {
+                ProjectId = projectId,
+                Name = "Elixir",
+                Version = VersionText.Clean(elixirMatch.Groups[1].Value),
+                IsMinimumConstraint = !VersionText.IsExact(elixirMatch.Groups[1].Value)
+            });
+        }
 
         foreach (Match m in Regex.Matches(content, @"\{:(\w+)\s*,\s*[""']([\^~>=<\s]*\d[^""']*)[""']"))
         {
@@ -43,6 +51,7 @@ public partial class ManifestParserService
                 ProjectId = projectId,
                 Name = m.Groups[1].Value,
                 CurrentVersion = version,
+                IsVersionPinned = VersionText.IsExact(m.Groups[2].Value),
                 Type = DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Hex,
                 Status = DependencyStatus.UpToDate,
@@ -72,13 +81,29 @@ public partial class ManifestParserService
         if (envBlock.Success)
         {
             string env = envBlock.Groups[1].Value;
-            Match dartMatch = Regex.Match(env, @"sdk:\s*[""']?[\^~>=<\s]*(\d[\d.]*)");
+            Match dartMatch = Regex.Match(env, @"sdk:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)");
             if (dartMatch.Success)
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Dart", Version = dartMatch.Groups[1].Value });
+            {
+                runtimes.Add(new Runtime
+                {
+                    ProjectId = projectId,
+                    Name = "Dart",
+                    Version = dartMatch.Groups[2].Value,
+                    IsMinimumConstraint = dartMatch.Groups[1].Value.Trim().Length > 0
+                });
+            }
 
-            Match flutterMatch = Regex.Match(env, @"flutter:\s*[""']?[\^~>=<\s]*(\d[\d.]*)");
+            Match flutterMatch = Regex.Match(env, @"flutter:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)");
             if (flutterMatch.Success)
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Flutter", Version = flutterMatch.Groups[1].Value });
+            {
+                runtimes.Add(new Runtime
+                {
+                    ProjectId = projectId,
+                    Name = "Flutter",
+                    Version = flutterMatch.Groups[2].Value,
+                    IsMinimumConstraint = flutterMatch.Groups[1].Value.Trim().Length > 0
+                });
+            }
         }
 
         string? section = null;
@@ -103,7 +128,8 @@ public partial class ManifestParserService
             string rest = m.Groups[2].Value.Trim();
             if (rest.Length == 0) continue;
 
-            string version = VersionText.Clean(rest.Trim('"', '\''));
+            string specification = rest.Trim('"', '\'');
+            string version = VersionText.Clean(specification);
             if (version.Length == 0 || !char.IsDigit(version[0])) continue;
 
             deps.Add(new Dependency
@@ -111,6 +137,7 @@ public partial class ManifestParserService
                 ProjectId = projectId,
                 Name = m.Groups[1].Value,
                 CurrentVersion = version,
+                IsVersionPinned = VersionText.IsExact(specification),
                 Type = section == "dev" ? DependencyType.Dev : DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Pub,
                 Status = DependencyStatus.UpToDate,
@@ -133,6 +160,7 @@ public partial class ManifestParserService
                     ProjectId = projectId,
                     Name = name,
                     CurrentVersion = version,
+                    IsDirect = dependency == null || dependency.StartsWith("direct", StringComparison.Ordinal),
                     Type = isDev ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.Pub,
                     Status = DependencyStatus.UpToDate,
@@ -222,4 +250,48 @@ public partial class ManifestParserService
         return s.TrimEnd('/');
     }
 
+    private static void ParsePodfileLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        HashSet<string> directPods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, string> lockedPods = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        string? section = null;
+
+        foreach (string raw in content.Split('\n'))
+        {
+            string line = raw.TrimEnd('\r');
+
+            if (line.Length > 0 && !line.StartsWith(' '))
+            {
+                section = line.TrimEnd(':');
+                continue;
+            }
+
+            Match pod = PodLineRegex().Match(line);
+            if (!pod.Success) continue;
+
+            string name = pod.Groups[1].Value.Split('/')[0];
+
+            if (section == "PODS" && pod.Groups[2].Success)
+                lockedPods.TryAdd(name, pod.Groups[2].Value);
+            else if (section == "DEPENDENCIES")
+                directPods.Add(name);
+        }
+
+        foreach ((string name, string version) in lockedPods)
+        {
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                IsDirect = directPods.Count == 0 || directPods.Contains(name),
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.CocoaPods,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    [GeneratedRegex(@"^  - ""?([^\s""(]+)""?(?: \(=?\s*([^)]+)\))?:?$")]
+    private static partial Regex PodLineRegex();
 }

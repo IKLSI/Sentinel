@@ -21,7 +21,7 @@ public partial class RepositoryHostClient
         for (int page = 1; page <= RepositoryPageLimit; page++)
         {
             using HttpRequestMessage request = BuildGitLabRequest(
-                $"{gitLab.ApiBaseUrl}/projects?membership=true&per_page={RepositoryPageSize}&page={page}", gitLab, token);
+                $"{gitLab.ApiBaseUrl}/projects?membership=true&per_page={RepositoryPageSize}&page={page}", token);
 
             HttpResponseMessage? response = null;
             List<JsonElement>? projects;
@@ -75,7 +75,8 @@ public partial class RepositoryHostClient
         return new RepositoryListing(true, null, result, truncated);
     }
 
-    private async Task<string?> GetGitLabHeadCommitAsync(string owner, string repo, RepositoryAccess access)
+    private async Task<string?> GetGitLabHeadCommitAsync(string owner, string repo, RepositoryAccess access,
+        string? branch)
     {
         string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
 
@@ -83,8 +84,7 @@ public partial class RepositoryHostClient
         {
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.GitLab);
             using HttpRequestMessage request = BuildGitLabRequest(
-                $"{access.GitLab.ApiBaseUrl}/projects/{encodedPath}/repository/commits?per_page=1", access.GitLab,
-                access.Token);
+                $"{access.GitLab.ApiBaseUrl}/projects/{encodedPath}/repository/commits?per_page=1{BranchFilter(branch)}", access.Token);
 
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
@@ -101,10 +101,53 @@ public partial class RepositoryHostClient
         }
     }
 
+    private async Task<RepositoryBranchListing?> ListGitLabBranchesAsync(string owner, string repo,
+        RepositoryAccess access)
+    {
+        HttpClient client = httpClientFactory.CreateClient(HttpClientNames.GitLab);
+        string projectApiUrl = $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";
+        List<string> branches = [];
+        string? defaultBranch = null;
+
+        try
+        {
+            for (int page = 1; page <= BranchPageLimit; page++)
+            {
+                using HttpRequestMessage request = BuildGitLabRequest(
+                    $"{projectApiUrl}/repository/branches?per_page={RepositoryPageSize}&page={page}", access.Token);
+                using HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                    return page == 1 ? null : new RepositoryBranchListing(defaultBranch, branches, true);
+
+                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+                if (items == null || items.Count == 0) break;
+
+                foreach (JsonElement item in items)
+                {
+                    string? name = item.TryGetProperty("name", out JsonElement n) ? n.GetString() : null;
+                    if (name == null) continue;
+
+                    branches.Add(name);
+                    if (item.TryGetProperty("default", out JsonElement d) && d.ValueKind == JsonValueKind.True)
+                        defaultBranch = name;
+                }
+
+                if (items.Count < RepositoryPageSize) return new RepositoryBranchListing(defaultBranch, branches, false);
+            }
+
+            return new RepositoryBranchListing(defaultBranch, branches, branches.Count >= BranchPageLimit * RepositoryPageSize);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "GitLab branch listing failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
     private async Task<RepositoryFileListing> ListGitLabFilesAsync(HttpClient client, string owner, string repo,
         string reference, RepositoryAccess access)
     {
-        List<(string Name, string Url)> result = new List<(string, string)>();
+        List<(string Name, string Url, string Path)> result = new List<(string, string, string)>();
         string projectApiUrl = $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";
 
         GitLabTreePage? firstPage = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, 1);
@@ -136,11 +179,14 @@ public partial class RepositoryHostClient
             if (IsInSkippedDirectory(path)) continue;
 
             string rawUrl = $"{projectApiUrl}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={reference}";
-            result.Add((name, rawUrl));
+            result.Add((name, rawUrl, path));
         }
 
         return new RepositoryFileListing(result, truncated);
     }
+
+    private static string BranchFilter(string? branch) =>
+        string.IsNullOrWhiteSpace(branch) ? string.Empty : $"&ref_name={Uri.EscapeDataString(branch)}";
 
     private static async Task<bool> AppendKnownGitLabTreePagesAsync(HttpClient client, string projectApiUrl,
         string reference, RepositoryAccess access, int totalPages, List<List<JsonElement>> pages)
@@ -155,7 +201,7 @@ public partial class RepositoryHostClient
 
         foreach (GitLabTreePage? page in fetched)
         {
-            if (page == null) return false;
+            if (page == null) return true;
             pages.Add(page.Items);
         }
 
@@ -168,7 +214,7 @@ public partial class RepositoryHostClient
         for (int page = 2; page <= GitLabTreePageLimit; page++)
         {
             GitLabTreePage? fetched = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, page);
-            if (fetched == null) return false;
+            if (fetched == null) return true;
 
             pages.Add(fetched.Items);
 
@@ -185,12 +231,12 @@ public partial class RepositoryHostClient
         {
             using HttpRequestMessage request = BuildGitLabRequest(
                 $"{projectApiUrl}/repository/tree?recursive=true&per_page={GitLabTreePageSize}&page={page}&ref={reference}",
-                access.GitLab, access.Token);
+                access.Token);
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
 
             List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
-            if (items == null || items.Count == 0) return null;
+            if (items == null) return null;
 
             int? totalPages = response.Headers.TryGetValues("X-Total-Pages", out IEnumerable<string>? values)
                 && int.TryParse(values.FirstOrDefault(), out int parsed)

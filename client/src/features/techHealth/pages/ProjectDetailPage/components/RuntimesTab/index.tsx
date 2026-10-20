@@ -2,6 +2,7 @@ import type React from "react";
 import { memo, useMemo } from "react";
 import Box from "@mui/material/Box";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { GridFooter } from "@/components/ui/common/GridFooter";
 import { StatusChip } from "@/components/ui/common/StatusChip";
@@ -109,9 +110,17 @@ const RuntimeRow = memo<{
         <TruncatedText mono strong text={runtime.name} />
       </TD>
       <TD muted>
-        <Box component="span" sx={versionSx}>
-          {runtime.version}
-        </Box>
+        {runtime.isMinimumConstraint ? (
+          <AppTooltip title={t("tech_health.runtime.minimum_hint")}>
+            <Box component="span" sx={versionSx}>
+              {`≥ ${runtime.version}`}
+            </Box>
+          </AppTooltip>
+        ) : (
+          <Box component="span" sx={versionSx}>
+            {runtime.version}
+          </Box>
+        )}
         {otherVersions.length > 0 && (
           <Box component="span" sx={otherVersionsSx}>
             {`+ ${otherVersions.join(" · ")}`}
@@ -156,7 +165,7 @@ const RuntimeRow = memo<{
           kind={FindingKind.EolRuntime}
           findingKey={runtime.findingKey}
           linkedTicket={runtime.linkedTicket}
-          actionable={runtime.isEol === true}
+          actionable={runtime.isEol === true && !runtime.isMinimumConstraint}
         />
       </TD>
     </TR>

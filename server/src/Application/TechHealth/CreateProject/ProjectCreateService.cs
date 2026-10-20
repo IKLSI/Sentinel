@@ -1,3 +1,5 @@
+using Sentinel.Domain.TechHealth;
+using Sentinel.Domain.Git;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -42,11 +44,15 @@ public class ProjectCreateService(
         if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
             scanFrequency = ScanFrequency.Weekly;
 
+        (string? branch, string? rootPath) = RepositoryLocation.ReadTreeReference(model.RepositoryUrl);
+
         Project project = new Project
         {
             OrganizationId = organizationId,
             Name = model.Name,
             RepositoryUrl = model.RepositoryUrl,
+            Branch = branch,
+            RootPath = RepositoryScanPaths.NormalizeRootPath(rootPath),
             RepositoryType = repositoryType,
             ScanFrequency = scanFrequency
         };

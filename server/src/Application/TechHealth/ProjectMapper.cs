@@ -1,3 +1,4 @@
+using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -9,17 +10,23 @@ public static class ProjectMapper
 {
     public static ProjectDto ToDto(Project project) => ToDto(project, []);
 
-    public static ProjectDto ToDto(Project project, IReadOnlyList<FindingTicketRow> findingTickets)
+    public static ProjectDto ToDto(Project project, IReadOnlyList<FindingTicketRow> findingTickets,
+        IReadOnlyList<VulnerabilitySuppression>? suppressions = null)
     {
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(findingTickets);
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = (suppressions ?? [])
+            .ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto);
 
         return new ProjectDto
         {
             Id = project.Id,
             Name = project.Name,
             RepositoryUrl = project.RepositoryUrl,
+            Branch = project.Branch,
+            RootPath = project.RootPath,
             RepositoryType = project.RepositoryType.ToString(),
             LastScanAt = project.LastScanAt,
+            LastScanError = project.LastScanError,
             HealthScore = project.HealthScore,
             HealthGrade = project.HealthGrade,
             Coverage = project.Coverage.ToString(),
@@ -34,7 +41,9 @@ public static class ProjectMapper
             KnownExploitedVulnerabilities = project.Dependencies?
                 .SelectMany(dependency => dependency.Vulnerabilities)
                 .Count(vulnerability => vulnerability.IsKnownExploited) ?? 0,
-            Dependencies = project.Dependencies?.Select(dependency => ToDto(dependency, links)).ToList() ?? [],
+            Dependencies = project.Dependencies?
+                .Select(dependency => ToDto(dependency, links, suppressionsByKey))
+                .ToList() ?? [],
             Runtimes = project.Runtimes == null
                 ? []
                 : RuntimeGrouping.ByName(project.Runtimes).Select(group => ToDto(group, links)).ToList()
@@ -63,7 +72,8 @@ public static class ProjectMapper
         links.GetValueOrDefault((kind, findingKey));
 
     private static DependencyDto ToDto(Dependency dependency,
-        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links)
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
     {
         string findingKey = FindingKeys.ForDependency(dependency.Ecosystem, dependency.Name);
 
@@ -78,16 +88,19 @@ public static class ProjectMapper
             Ecosystem = dependency.Ecosystem.ToString(),
             Status = dependency.Status.ToString(),
             IsOutdated = FindingRules.IsOutdated(dependency),
+            IsVersionPinned = dependency.IsVersionPinned,
+            ManifestPath = dependency.ManifestPath,
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.OutdatedDependency, findingKey),
             Vulnerabilities = dependency.Vulnerabilities
-                .Select(vulnerability => ToDto(dependency, vulnerability, links))
+                .Select(vulnerability => ToDto(dependency, vulnerability, links, suppressionsByKey))
                 .ToList()
         };
     }
 
     private static VulnerabilityDto ToDto(Dependency dependency, Vulnerability vulnerability,
-        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links)
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
     {
         string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
             vulnerability.CveId);
@@ -107,7 +120,8 @@ public static class ProjectMapper
             IsMaliciousPackage = VulnerabilityRiskCalculator.IsMaliciousPackage(vulnerability),
             Priority = VulnerabilityRiskCalculator.Prioritize(vulnerability, dependency.Type).ToString(),
             FindingKey = findingKey,
-            LinkedTicket = LinkOf(links, FindingKind.Vulnerability, findingKey)
+            LinkedTicket = LinkOf(links, FindingKind.Vulnerability, findingKey),
+            Suppression = suppressionsByKey.GetValueOrDefault(findingKey)
         };
     }
 
@@ -124,6 +138,7 @@ public static class ProjectMapper
             Versions = group.Versions.ToList(),
             EolDate = group.MostAtRisk.EolDate,
             IsEol = group.MostAtRisk.IsEol,
+            IsMinimumConstraint = group.MostAtRisk.IsMinimumConstraint,
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.EolRuntime, findingKey)
         };

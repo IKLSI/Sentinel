@@ -12,6 +12,7 @@ namespace Sentinel.Application.TechHealth.TriggerScan;
 public class ProjectScanTriggerService(
     IProjectRepository projectRepository,
     IJobScheduler backgroundJobs,
+    ProjectScanGate scanGate,
     IAuditLogService auditLog,
     ITenantContext tenant) : IService
 {
@@ -26,7 +27,8 @@ public class ProjectScanTriggerService(
         if (!belongs)
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
-        backgroundJobs.Enqueue<ProjectScanService>(service => service.ScanProjectAsync(projectId));
+        if (scanGate.TryQueue(projectId))
+            backgroundJobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

@@ -6,6 +6,7 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { useT } from "@/contexts/I18nContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import type { Ticket } from "@/domains/tickets/types";
 import { statusLabel } from "@/features/tickets/constants";
 import {
@@ -24,6 +25,7 @@ interface Props {
 const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const t = useT();
+  const isAdmin = useIsAdmin();
 
   return (
     <Box
@@ -213,15 +215,19 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
               },
               color: "accent",
             },
-            {
-              icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />,
-              label: t("common.delete"),
-              onClick: (e) => {
-                e.stopPropagation();
-                onDelete(ticket.id, ticket.reference);
-              },
-              color: "red",
-            },
+            ...(isAdmin
+              ? [
+                  {
+                    icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />,
+                    label: t("common.delete"),
+                    onClick: (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      onDelete(ticket.id, ticket.reference);
+                    },
+                    color: "red" as const,
+                  },
+                ]
+              : []),
           ]}
         />
       </Box>

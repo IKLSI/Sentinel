@@ -39,7 +39,9 @@ public static class CvssVector
         string[] segments = vector.Trim().Split('/', StringSplitOptions.RemoveEmptyEntries);
 
         if (segments.Length == 0) return null;
-        if (!segments[0].StartsWith("CVSS:3.", StringComparison.OrdinalIgnoreCase)) return null;
+
+        bool isVersion4 = segments[0].StartsWith("CVSS:4.", StringComparison.OrdinalIgnoreCase);
+        if (!isVersion4 && !segments[0].StartsWith("CVSS:3.", StringComparison.OrdinalIgnoreCase)) return null;
 
         Dictionary<string, string> metrics = new(StringComparer.OrdinalIgnoreCase);
 
@@ -48,6 +50,8 @@ public static class CvssVector
             string[] pair = segment.Split(':');
             if (pair.Length == 2) metrics[pair[0]] = pair[1].ToUpperInvariant();
         }
+
+        if (isVersion4) metrics = ToVersion3Metrics(metrics);
 
         if (!metrics.TryGetValue("S", out string? scope) || scope is not ("U" or "C")) return null;
 
@@ -81,6 +85,37 @@ public static class CvssVector
 
         return RoundUp(baseScore);
     }
+
+    private static Dictionary<string, string> ToVersion3Metrics(Dictionary<string, string> version4)
+    {
+        string Metric(string key) => version4.TryGetValue(key, out string? value) ? value : string.Empty;
+
+        bool subsequentImpact = new[] { "SC", "SI", "SA" }.Any(key => Metric(key) == "H");
+
+        string Impact(string vulnerableKey, string subsequentKey) =>
+            subsequentImpact && ImpactRank(Metric(subsequentKey)) > ImpactRank(Metric(vulnerableKey))
+                ? Metric(subsequentKey)
+                : Metric(vulnerableKey);
+
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["AV"] = Metric("AV"),
+            ["AC"] = Metric("AC") == "H" || Metric("AT") == "P" ? "H" : Metric("AC"),
+            ["PR"] = Metric("PR"),
+            ["UI"] = Metric("UI") is "P" or "A" ? "R" : Metric("UI"),
+            ["S"] = subsequentImpact ? "C" : "U",
+            ["C"] = Impact("VC", "SC"),
+            ["I"] = Impact("VI", "SI"),
+            ["A"] = Impact("VA", "SA"),
+        };
+    }
+
+    private static int ImpactRank(string value) => value switch
+    {
+        "H" => 2,
+        "L" => 1,
+        _ => 0
+    };
 
     private static bool TryWeight(Dictionary<string, string> metrics, string key,
         Dictionary<string, double> weights, out double weight)

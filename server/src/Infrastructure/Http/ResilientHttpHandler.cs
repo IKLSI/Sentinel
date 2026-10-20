@@ -7,6 +7,8 @@ public sealed class ResilientHttpHandler : DelegatingHandler
 {
     private readonly ILogger<ResilientHttpHandler> _logger;
     private const int MaxRetries = 3;
+    private const string RateLimitRemainingHeader = "x-ratelimit-remaining";
+    private const string RateLimitResetHeader = "x-ratelimit-reset";
     private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(30);
 
@@ -33,9 +35,9 @@ public sealed class ResilientHttpHandler : DelegatingHandler
 
                 TimeSpan? delay = null;
 
-                if (ShouldRetry(response.StatusCode) && attempt < MaxRetries)
+                if (ShouldRetry(response) && attempt < MaxRetries)
                 {
-                    TimeSpan candidate = RetryAfter(response) ?? Backoff(attempt);
+                    TimeSpan candidate = RetryAfter(response) ?? RateLimitReset(response) ?? Backoff(attempt);
 
                     if (candidate <= MaxRetryDelay)
                         delay = candidate;
@@ -43,6 +45,12 @@ public sealed class ResilientHttpHandler : DelegatingHandler
 
                 if (delay is null)
                 {
+                    if (IsRateLimited(response))
+                    {
+                        _logger.LogWarning("Rate limit exhausted on {Host}, reset at {Reset}",
+                            attemptRequest.RequestUri?.Host, HeaderValue(response, RateLimitResetHeader));
+                    }
+
                     attemptCts.CancelAfter(Timeout.InfiniteTimeSpan);
                     response.Content = new AttemptScopedContent(response.Content, attemptRequest, attemptCts);
                     responseOwnsAttempt = true;
@@ -78,10 +86,27 @@ public sealed class ResilientHttpHandler : DelegatingHandler
         }
     }
 
-    private static bool ShouldRetry(HttpStatusCode status) =>
-        status == HttpStatusCode.RequestTimeout
-        || status == HttpStatusCode.TooManyRequests
-        || (int)status >= 500;
+    private static bool ShouldRetry(HttpResponseMessage response) =>
+        response.StatusCode == HttpStatusCode.RequestTimeout
+        || response.StatusCode == HttpStatusCode.TooManyRequests
+        || (int)response.StatusCode >= 500
+        || IsRateLimited(response);
+
+    private static bool IsRateLimited(HttpResponseMessage response) =>
+        response.StatusCode == HttpStatusCode.Forbidden
+        && (response.Headers.RetryAfter != null || HeaderValue(response, RateLimitRemainingHeader) == "0");
+
+    private static TimeSpan? RateLimitReset(HttpResponseMessage response)
+    {
+        if (!long.TryParse(HeaderValue(response, RateLimitResetHeader), out long resetEpochSeconds)) return null;
+
+        TimeSpan wait = DateTimeOffset.FromUnixTimeSeconds(resetEpochSeconds) - DateTimeOffset.UtcNow;
+
+        return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
+    }
+
+    private static string? HeaderValue(HttpResponseMessage response, string name) =>
+        response.Headers.TryGetValues(name, out IEnumerable<string>? values) ? values.FirstOrDefault() : null;
 
     private static TimeSpan Backoff(int attempt)
     {

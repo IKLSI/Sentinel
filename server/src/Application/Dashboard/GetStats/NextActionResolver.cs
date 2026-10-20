@@ -8,9 +8,13 @@ namespace Sentinel.Application.Dashboard.GetStats;
 
 public static class NextActionResolver
 {
-    public static bool HasScanError(Project project) =>
-        project.Coverage == ScanCoverage.Failed
-        || (project.LastScanError != null && project.LastScanError != ErrorCodes.ScanVulnerabilityDataIncomplete);
+    public static bool HasScanError(Project project) => HasScanError(project.Coverage, project.LastScanError);
+
+    public static bool HasScanError(ScanCoverage coverage, string? lastScanError) =>
+        coverage == ScanCoverage.Failed
+        || (lastScanError != null
+            && lastScanError != ErrorCodes.ScanVulnerabilityDataIncomplete
+            && lastScanError != ErrorCodes.ScanInventoryIncomplete);
 
     public static NextActionDto? Resolve(Project project, IReadOnlyList<OpenTicketRow> projectTickets,
         IReadOnlyList<RuntimeDeadline> deadlines)

@@ -104,6 +104,15 @@ export const RiskPriority = {
 } as const;
 export type RiskPriority = (typeof RiskPriority)[keyof typeof RiskPriority];
 
+export const SuppressionReason = {
+  NotAffected: "NotAffected",
+  FalsePositive: "FalsePositive",
+  WillNotFix: "WillNotFix",
+  RiskAccepted: "RiskAccepted",
+} as const;
+export type SuppressionReason =
+  (typeof SuppressionReason)[keyof typeof SuppressionReason];
+
 export const RuntimeEolStatus = {
   Eol: "eol",
   Danger: "danger",

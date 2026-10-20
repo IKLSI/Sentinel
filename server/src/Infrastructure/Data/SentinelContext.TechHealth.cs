@@ -17,6 +17,8 @@ public partial class SentinelContext
             entity.Property(e => e.Coverage).HasConversion<string>();
             entity.Property(e => e.HealthGrade).HasMaxLength(2);
             entity.Property(e => e.LastScannedCommitSha).HasMaxLength(64);
+            entity.Property(e => e.Branch).HasMaxLength(255);
+            entity.Property(e => e.RootPath).HasMaxLength(500);
             entity.HasIndex(e => e.OrganizationId);
 
             entity.HasOne(e => e.Organization)
@@ -34,6 +36,7 @@ public partial class SentinelContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.CurrentVersion).HasMaxLength(100).IsRequired();
             entity.Property(e => e.LatestVersion).HasMaxLength(100);
+            entity.Property(e => e.ManifestPath).HasMaxLength(1000);
             entity.Property(e => e.Publisher);
             entity.Property(e => e.License);
             entity.Property(e => e.Type).HasConversion<string>();
@@ -110,6 +113,24 @@ public partial class SentinelContext
             entity.Property(e => e.CveId).HasMaxLength(50).IsRequired();
             entity.HasIndex(e => new { e.OrganizationId, e.ResolvedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.DetectedAt });
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureVulnerabilitySuppression(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VulnerabilitySuppression>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FindingKey).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Reason).HasConversion<string>().HasMaxLength(30).IsRequired();
+            entity.Property(e => e.Justification).HasMaxLength(1000).IsRequired();
+            entity.HasIndex(e => new { e.ProjectId, e.FindingKey }).IsUnique();
+            entity.HasIndex(e => e.OrganizationId);
 
             entity.HasOne(e => e.Project)
                 .WithMany()

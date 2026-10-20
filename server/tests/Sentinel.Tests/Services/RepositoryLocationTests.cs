@@ -34,4 +34,13 @@ public class RepositoryLocationTests
         parsed.Should().BeFalse();
         location.Should().Be(default(RepositoryLocation));
     }
+
+    [Theory]
+    [InlineData("https://github.com/acme/app/tree/release/services/billing", "release", "services/billing")]
+    [InlineData("https://gitlab.com/group/app/-/tree/develop", "develop", null)]
+    [InlineData("https://github.com/acme/app", null, null)]
+    public void ReadTreeReference_ExtractsTheBranchAndFolder(string url, string? branch, string? path)
+    {
+        RepositoryLocation.ReadTreeReference(url).Should().Be((branch, path));
+    }
 }

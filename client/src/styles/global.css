@@ -175,14 +175,16 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border2);
-  border-radius: 50%;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
 }
 
 ::selection {

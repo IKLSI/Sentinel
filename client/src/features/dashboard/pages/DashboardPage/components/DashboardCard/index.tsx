@@ -5,6 +5,7 @@ interface Props {
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
+  scrollable?: boolean;
   children: React.ReactNode;
 }
 
@@ -12,6 +13,7 @@ export const DashboardCard: React.FC<Props> = ({
   title,
   subtitle,
   action,
+  scrollable = true,
   children,
 }) => (
   <Box
@@ -72,10 +74,17 @@ export const DashboardCard: React.FC<Props> = ({
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        overflowY: "auto",
+        mr: "-14px",
+        pr: "14px",
+        overflowY: scrollable ? "auto" : "hidden",
         overflowX: "hidden",
-        scrollbarWidth: "thin",
-        scrollbarColor: "var(--border2) transparent",
+        "&::-webkit-scrollbar-thumb": { background: "var(--border)" },
+        "&:hover::-webkit-scrollbar-thumb": { background: "var(--border2)" },
+        "@supports not selector(::-webkit-scrollbar)": {
+          scrollbarWidth: "thin",
+          scrollbarColor: "var(--border) transparent",
+          "&:hover": { scrollbarColor: "var(--border2) transparent" },
+        },
       }}
     >
       {children}

@@ -41,6 +41,26 @@ public class DependencyRegistryClientTests
     }
 
     [Fact]
+    public async Task FetchRegistryMetadataAsync_SurNpm_QuandLePaquetEstDeprecie_LeSignale()
+    {
+        Dependency dependency = New("request", DependencyEcosystem.Npm);
+
+        await Fetch(dependency, """{ "version": "2.88.2", "deprecated": "request has been deprecated" }""");
+
+        dependency.IsDeprecated.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FetchRegistryMetadataAsync_SurPackagist_QuandLePaquetEstAbandonne_LeSignale()
+    {
+        Dependency dependency = New("fzaninotto/faker", DependencyEcosystem.Composer);
+
+        await Fetch(dependency, """{ "package": { "abandoned": true, "versions": { "1.9.2": {} } } }""");
+
+        dependency.IsDeprecated.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task FetchRegistryMetadataAsync_SurNuGet_LitLePremierAuteur()
     {
         Dependency dependency = New("Serilog", DependencyEcosystem.NuGet);

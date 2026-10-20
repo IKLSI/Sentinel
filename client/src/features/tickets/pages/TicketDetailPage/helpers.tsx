@@ -59,10 +59,6 @@ export interface DetailPalette {
   chevron: string;
   muted: string;
   title: string;
-  endpointFg: string;
-  endpointBg: string;
-  endpointBorder: string;
-  endpointIcon: string;
   sectionDivider: string;
   sectionLabel: string;
   threadLine: string;
@@ -89,11 +85,6 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   chevron: "var(--muted)",
   muted: "var(--muted2)",
   title: "var(--text)",
-  endpointFg: "var(--purple)",
-  endpointBg:
-    "linear-gradient(180deg, var(--purple-subtle) 0%, color-mix(in srgb, var(--purple) 6%, transparent) 100%)",
-  endpointBorder: "color-mix(in srgb, var(--purple) 35%, transparent)",
-  endpointIcon: "var(--purple)",
   sectionDivider: "var(--border)",
   sectionLabel: "var(--muted2)",
   threadLine: "var(--border)",

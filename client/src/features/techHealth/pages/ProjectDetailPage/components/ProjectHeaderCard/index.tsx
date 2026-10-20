@@ -6,6 +6,7 @@ import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import GppBadOutlined from "@mui/icons-material/GppBadOutlined";
 import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { useI18n } from "@/contexts/I18nContext";
 import type { Project } from "@/domains/projects/types";
 import {
@@ -178,6 +179,32 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           </Box>
         )}
       </Box>
+
+      {project.lastScanError && (
+        <Box
+          role="alert"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            px: "24px",
+            py: "10px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--yellow-subtle)",
+            color: "var(--text)",
+            fontSize: "12px",
+          }}
+        >
+          <WarningAmberOutlined sx={{ fontSize: 16, color: "var(--yellow)" }} />
+          <Box component="span" sx={{ fontWeight: 600 }}>
+            {t("tech_health.last_scan_error")}
+          </Box>
+          <Box component="span" sx={{ color: "var(--muted2)" }}>
+            —
+          </Box>
+          {t(project.lastScanError)}
+        </Box>
+      )}
 
       <Box
         sx={{

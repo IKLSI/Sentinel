@@ -13,6 +13,10 @@ using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
 using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.Projects;
+using Sentinel.Application.TechHealth.RepositoryOptions;
+using Sentinel.Application.TechHealth.Suppressions;
+using Sentinel.Application.TechHealth.Suppressions.RemoveSuppression;
+using Sentinel.Application.TechHealth.Suppressions.SuppressVulnerability;
 using Sentinel.Application.TechHealth.TriggerScan;
 using Sentinel.Application.TechHealth.UpdateProject;
 using Sentinel.Domain.Entities;
@@ -33,6 +37,7 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/export/excel")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportExcel(
@@ -41,6 +46,7 @@ public class TechHealthController : BaseController
         ToFileResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/{id:guid}/sbom")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportSbom(
@@ -51,6 +57,7 @@ public class TechHealthController : BaseController
         ToFileResult(await service.ExecuteAsync(id, format, cancellationToken));
 
     [HttpGet("projects/{id:guid}/compliance-report")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportComplianceReport(
@@ -60,6 +67,7 @@ public class TechHealthController : BaseController
         ToFileResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpGet("projects")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectSummaryDto>>> GetProjects(
         [FromServices] ProjectListService service,
@@ -67,6 +75,7 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/options")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectOptionDto>>> GetProjectOptions(
         [FromServices] ProjectOptionListService service,
@@ -74,6 +83,7 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/{id:guid}")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<ProjectDto>> GetProject(
         Guid id,
@@ -97,12 +107,21 @@ public class TechHealthController : BaseController
 
     [HttpPatch("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
-    public async Task<ActionResult<ProjectScanFrequencyDto>> UpdateProject(
+    public async Task<ActionResult<ProjectScanSettingsDto>> UpdateProject(
         Guid id,
         [FromBody] UpdateProjectDto dto,
         [FromServices] ProjectUpdateService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
+
+    [HttpGet("projects/{id:guid}/repository-options")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<ActionResult<ProjectRepositoryOptionsDto>> GetRepositoryOptions(
+        Guid id,
+        [FromQuery] string? branch,
+        [FromServices] ProjectRepositoryOptionsService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, branch, cancellationToken));
 
     [HttpDelete("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
@@ -113,6 +132,7 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpPost("projects/{id:guid}/scan")]
+    [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Scan)]
     public async Task<IActionResult> TriggerScan(
@@ -120,4 +140,22 @@ public class TechHealthController : BaseController
         [FromServices] ProjectScanTriggerService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
+
+    [HttpPost("projects/{id:guid}/suppressions")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<ActionResult<SuppressionDto>> SuppressVulnerability(
+        Guid id,
+        [FromBody] SuppressVulnerabilityDto dto,
+        [FromServices] SuppressVulnerabilityService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
+
+    [HttpDelete("projects/{id:guid}/suppressions/{suppressionId:guid}")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<IActionResult> RemoveSuppression(
+        Guid id,
+        Guid suppressionId,
+        [FromServices] RemoveSuppressionService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, suppressionId, cancellationToken));
 }

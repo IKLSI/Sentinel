@@ -119,6 +119,12 @@ export const ExportActions: React.FC<Props> = ({ projectId }) => {
           </ListItemIcon>
           {t("tech_health.export.sbom_spdx")}
         </MenuItem>
+        <MenuItem onClick={() => handleSbom(SBOM_FORMAT.Vex)}>
+          <ListItemIcon>
+            <DataObjectOutlined sx={{ fontSize: 17 }} />
+          </ListItemIcon>
+          {t("tech_health.export.sbom_vex")}
+        </MenuItem>
 
         <ListSubheader
           sx={{

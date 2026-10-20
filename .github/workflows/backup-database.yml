@@ -5,9 +5,29 @@ on:
     - cron: "0 3 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-database
+  cancel-in-progress: false
+
 jobs:
   backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      restore-check:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: restore-check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Install PostgreSQL client
         run: |
@@ -22,6 +42,33 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           /usr/lib/postgresql/18/bin/pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges --schema=public --file="sentinel-$(date -u +%Y-%m-%d).dump"
+
+      - name: Verify the backup restores
+        env:
+          PGPASSWORD: restore-check
+        run: |
+          PG_BIN=/usr/lib/postgresql/18/bin
+          RESTORE_URL="postgresql://postgres@localhost:5432/postgres"
+          for dump in sentinel-*.dump; do
+            "$PG_BIN/pg_restore" --list "$dump" > /dev/null
+            "$PG_BIN/psql" "$RESTORE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+            "$PG_BIN/pg_restore" --dbname="$RESTORE_URL" --no-owner --no-privileges --exit-on-error "$dump"
+          done
+          "$PG_BIN/psql" "$RESTORE_URL" -v ON_ERROR_STOP=1 -At <<'SQL'
+          DO $$
+          BEGIN
+            IF (SELECT count(*) FROM "Organizations") = 0 THEN
+              RAISE EXCEPTION 'restored backup has no organization';
+            END IF;
+            IF (SELECT count(*) FROM "DataProtectionKeys") = 0 THEN
+              RAISE EXCEPTION 'restored backup has no Data Protection key: stored tokens could not be decrypted';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_isolation') THEN
+              RAISE EXCEPTION 'restored backup has no row level security policy';
+            END IF;
+          END
+          $$;
+          SQL
 
       - name: Encrypt backup
         env:

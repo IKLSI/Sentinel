@@ -4,6 +4,19 @@ namespace Sentinel.Domain.Versioning;
 
 public static class DependencyStatusCalculator
 {
+    public static DependencyStatus For(Dependency dependency) => dependency.IsDeprecated
+        ? DependencyStatus.EOL
+        : UpdateOf(dependency);
+
+    public static DependencyStatus UpdateOf(Dependency dependency)
+    {
+        DependencyStatus status = Compute(dependency.CurrentVersion, dependency.LatestVersion);
+
+        return !dependency.IsVersionPinned && status == DependencyStatus.MinorUpdate
+            ? DependencyStatus.UpToDate
+            : status;
+    }
+
     public static DependencyStatus Compute(string current, string? latest)
     {
         if (string.IsNullOrEmpty(latest) || string.IsNullOrEmpty(current)) return DependencyStatus.UpToDate;

@@ -34,10 +34,11 @@ public class AuthResendVerificationService(
 
         string email = model.Email.ToLowerInvariant().Trim();
         string rawToken = SecureToken.Generate();
+        User? user;
 
         using (systemScope.Enter())
         {
-            User? user = await userRepository.GetOrDefaultByEmailAsync(email,
+            user = await userRepository.GetOrDefaultByEmailAsync(email,
                 QueryTracking.NoTracking, cancellationToken);
 
             if (user == null || user.IsEmailVerified)
@@ -61,9 +62,14 @@ public class AuthResendVerificationService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendEmailVerificationJob>(j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
 
-        await auditLog.LogAsync(AuditAction.EmailVerificationResent, entityType: AuditEntityTypes.User);
+        await auditLog.LogAsync(
+            AuditAction.EmailVerificationResent,
+            entityType: AuditEntityTypes.User,
+            organizationId: user.OrganizationId,
+            userId: user.Id,
+            entityId: user.Id);
 
         return ApiMessageResponse.Create(SuccessCodes.AuthVerificationResent);
     }

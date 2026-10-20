@@ -1,28 +1,32 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 import BlockOutlined from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import { formatRelativeToNow } from "@/formatters/date";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { useI18n } from "@/contexts/I18nContext";
 import type { User } from "@/domains/users/types";
-import { UserAccessStatus } from "@/enums";
+import { UserAccessStatus, UserRole } from "@/enums";
 
 interface Props {
   member: User;
-  roleLabel: string;
+  roleLabels: Record<string, string>;
   isCurrentUser: boolean;
-  toggling: boolean;
-  onToggleAccessStatus: (memberId: string, currentStatus: string) => void;
+  busy: boolean;
+  onToggleAccessStatus: (member: User) => void;
+  onRoleChange: (member: User, role: string) => void;
 }
 
 export const MemberRow: React.FC<Props> = ({
   member,
-  roleLabel,
+  roleLabels,
   isCurrentUser,
-  toggling,
+  busy,
   onToggleAccessStatus,
+  onRoleChange,
 }) => {
   const { t, culture } = useI18n();
   const isActive = member.accessStatus === UserAccessStatus.Active;
@@ -73,16 +77,31 @@ export const MemberRow: React.FC<Props> = ({
           </Box>
         </Box>
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px" }}>
-        <Box
-          sx={{
-            fontWeight: 400,
-            color: "var(--text)",
-            lineHeight: 1.3,
-          }}
-        >
-          {roleLabel}
-        </Box>
+      <Box component="td" sx={{ px: "16px", py: "6px" }}>
+        {isCurrentUser ? (
+          <Box sx={{ color: "var(--text)", lineHeight: 1.3 }}>
+            {roleLabels[member.role] ?? member.role}
+          </Box>
+        ) : (
+          <TextField
+            select
+            size="small"
+            fullWidth
+            value={member.role}
+            onChange={(e) => onRoleChange(member, e.target.value)}
+            disabled={busy}
+            slotProps={{
+              htmlInput: { "aria-label": t("settings.members.col_role") },
+            }}
+            sx={{ "& .MuiSelect-select": { fontSize: "12px", py: "4px" } }}
+          >
+            {Object.values(UserRole).map((role) => (
+              <MenuItem key={role} value={role} sx={{ fontSize: "12px" }}>
+                {roleLabels[role] ?? role}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
       </Box>
       <Box component="td" sx={{ px: "16px", py: "10px" }}>
         <Box
@@ -112,7 +131,7 @@ export const MemberRow: React.FC<Props> = ({
       </Box>
       <Box component="td" sx={{ px: "16px", py: "10px", textAlign: "center" }}>
         {!isCurrentUser &&
-          (toggling ? (
+          (busy ? (
             <CircularProgress size={13} />
           ) : (
             <RowActions
@@ -126,8 +145,7 @@ export const MemberRow: React.FC<Props> = ({
                   label: isActive
                     ? t("settings.members.suspend")
                     : t("settings.members.reactivate"),
-                  onClick: () =>
-                    onToggleAccessStatus(member.id, member.accessStatus),
+                  onClick: () => onToggleAccessStatus(member),
                   color: isActive ? "red" : "green",
                 },
               ]}

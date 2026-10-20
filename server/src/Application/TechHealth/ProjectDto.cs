@@ -1,3 +1,5 @@
+using Sentinel.Application.TechHealth.Suppressions;
+
 namespace Sentinel.Application.TechHealth;
 
 public class ProjectDto
@@ -5,8 +7,11 @@ public class ProjectDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? RepositoryUrl { get; set; }
+    public string? Branch { get; set; }
+    public string? RootPath { get; set; }
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
+    public string? LastScanError { get; set; }
     public int? HealthScore { get; set; }
     public string? HealthGrade { get; set; }
     public string Coverage { get; set; } = string.Empty;
@@ -31,6 +36,8 @@ public class DependencyDto
     public string Ecosystem { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public bool IsOutdated { get; set; }
+    public bool IsVersionPinned { get; set; }
+    public string? ManifestPath { get; set; }
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
     public List<VulnerabilityDto> Vulnerabilities { get; set; } = new();
@@ -52,6 +59,7 @@ public class VulnerabilityDto
     public string Priority { get; set; } = string.Empty;
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
+    public SuppressionDto? Suppression { get; set; }
 }
 
 public class RuntimeDto
@@ -62,6 +70,7 @@ public class RuntimeDto
     public List<string> Versions { get; set; } = [];
     public DateTime? EolDate { get; set; }
     public bool? IsEol { get; set; }
+    public bool IsMinimumConstraint { get; set; }
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
 }

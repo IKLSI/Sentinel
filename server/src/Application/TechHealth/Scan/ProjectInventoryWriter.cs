@@ -1,6 +1,7 @@
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
@@ -10,15 +11,22 @@ public class ProjectInventoryWriter(
     IRuntimeRepository runtimeRepository,
     ICommitScopeFactory commitScopeFactory)
 {
-    public Task ReplaceInventoryAsync(Guid projectId, IReadOnlyList<Dependency> dependencies,
-        IReadOnlyList<Runtime> runtimes, CancellationToken cancellationToken) =>
-        commitScopeFactory.ExecuteInTransactionAsync(async token =>
+    public async Task ReplaceInventoryAsync(Guid projectId, IReadOnlyList<Dependency> dependencies,
+        IReadOnlyList<Runtime> runtimes, CancellationToken cancellationToken)
+    {
+        InventoryCarryOver.ApplyPackageMetadata(dependencies,
+            await dependencyRepository.ListPackageMetadataByProjectAsync(projectId, cancellationToken));
+        InventoryCarryOver.ApplyRuntimeLifecycle(runtimes,
+            await runtimeRepository.ListLifecycleByProjectAsync(projectId, cancellationToken));
+
+        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
             await dependencyRepository.DeleteByProjectAsync(projectId, token);
             await runtimeRepository.DeleteByProjectAsync(projectId, token);
             await dependencyRepository.AddRangeAsync(dependencies, token);
             await runtimeRepository.AddRangeAsync(runtimes, token);
         }, cancellationToken);
+    }
 
     public async Task StageVulnerabilityChangesAsync(IReadOnlyList<VulnerabilityScanResult> results,
         CancellationToken cancellationToken)

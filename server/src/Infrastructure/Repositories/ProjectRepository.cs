@@ -28,13 +28,6 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
         WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
 
-    public Task<Project?> GetOrDefaultInOrganizationWithDependenciesAsync(Guid projectId, Guid organizationId,
-        CancellationToken cancellationToken) =>
-        Query(QueryTracking.NoTracking)
-            .AsSplitQuery()
-            .Include(p => p.Dependencies)
-            .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
-
     public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);
@@ -81,6 +74,8 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
                 project.Id,
                 project.Name,
                 project.RepositoryUrl,
+                project.Branch,
+                project.RootPath,
                 project.RepositoryType,
                 project.LastScanAt,
                 project.LastScanError,
@@ -103,11 +98,24 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .Take(take)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByIdsAsync(Guid organizationId,
+        IReadOnlyCollection<Guid> projectIds, CancellationToken cancellationToken) =>
+        await WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
+            .Where(p => p.OrganizationId == organizationId && projectIds.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
             .Where(p => p.OrganizationId == organizationId)
             .Select(p => p.RepositoryUrl)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> ListIdsByOrganizationAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(p => p.OrganizationId == organizationId)
+            .Select(p => p.Id)
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Guid>> ListIdsDueForScanAsync(ScanFrequency frequency, DateTime threshold,

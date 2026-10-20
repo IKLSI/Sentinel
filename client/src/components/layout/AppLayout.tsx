@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { MobileMenuButton } from "@/components/layout/MobileMenuButton";
 
 const SIDEBAR_GAP = 12;
 
@@ -22,6 +23,7 @@ const AppContent: React.FC = () => {
         height: "100vh",
         bgcolor: "background.default",
         ml: `${ml}px`,
+        pt: isMobile ? "56px" : 0,
         transition: "margin-left 0.2s cubic-bezier(0.4,0,0.2,1)",
       }}
     >
@@ -46,6 +48,7 @@ export const AppLayout: React.FC = () => {
         }}
       >
         <Sidebar />
+        <MobileMenuButton />
         <AppContent />
       </Box>
     </SidebarProvider>

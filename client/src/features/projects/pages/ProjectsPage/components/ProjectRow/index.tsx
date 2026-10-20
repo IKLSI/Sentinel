@@ -5,14 +5,46 @@ import { useNavigate } from "@tanstack/react-router";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectSummary } from "@/domains/projects/types";
-import { useUpdateProjectFrequencyMutation } from "@/domains/projects/mutations";
+import { useUpdateProjectSettingsMutation } from "@/domains/projects/mutations";
 import type { ScanFrequency } from "@/enums";
 import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { RepositoryScopeFields } from "@/features/projects/pages/ProjectsPage/components/RepositoryScopeFields";
+
+const sectionSx = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+} as const;
+
+const sectionTitleSx = {
+  display: "block",
+  fontSize: "11px",
+  fontWeight: 700,
+  color: "var(--text)",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+} as const;
+
+const rescanNoticeSx = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "8px",
+  px: "10px",
+  py: "8px",
+  fontSize: "12px",
+  lineHeight: 1.5,
+  color: "var(--text)",
+  background: "var(--yellow-subtle)",
+  borderRadius: "var(--r-sm)",
+  "& svg": { color: "var(--yellow)" },
+} as const;
 
 interface Props {
   project: ProjectSummary;
@@ -25,28 +57,46 @@ export const ProjectRow: React.FC<Props> = React.memo(
   ({ project, onDelete, onScan, isScanning }) => {
     const navigate = useNavigate();
     const t = useT();
+    const isAdmin = useIsAdmin();
     const ticketCount = project.totalTickets;
     const [modalOpen, setModalOpen] = useState(false);
     const [selected, setSelected] = useState<ScanFrequency>(
       project.scanFrequency as ScanFrequency,
     );
-    const updateFrequencyMutation = useUpdateProjectFrequencyMutation();
-    const saving = updateFrequencyMutation.isPending;
+    const [branch, setBranch] = useState(project.branch ?? "");
+    const [rootPath, setRootPath] = useState(project.rootPath ?? "");
+    const updateSettingsMutation = useUpdateProjectSettingsMutation();
+    const saving = updateSettingsMutation.isPending;
     const onFrequencyError = useApiErrorToast("projects.modal.frequency_error");
 
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
       setSelected(project.scanFrequency as ScanFrequency);
+      setBranch(project.branch ?? "");
+      setRootPath(project.rootPath ?? "");
       setModalOpen(true);
     };
 
+    const nextBranch = branch.trim() || null;
+    const nextRootPath = rootPath.trim() || null;
+    const scopeChanged =
+      nextBranch !== (project.branch ?? null) ||
+      nextRootPath !== (project.rootPath ?? null);
+
     const handleSave = () => {
-      if (selected === project.scanFrequency) {
+      if (selected === project.scanFrequency && !scopeChanged) {
         setModalOpen(false);
         return;
       }
-      updateFrequencyMutation.mutate(
-        { id: project.id, data: { scanFrequency: selected } },
+      updateSettingsMutation.mutate(
+        {
+          id: project.id,
+          data: {
+            scanFrequency: selected,
+            branch: nextBranch,
+            rootPath: nextRootPath,
+          },
+        },
         { onSuccess: () => setModalOpen(false), onError: onFrequencyError },
       );
     };
@@ -221,12 +271,16 @@ export const ProjectRow: React.FC<Props> = React.memo(
           >
             <RowActions
               actions={[
-                {
-                  icon: <EditOutlined sx={{ fontSize: 12 }} />,
-                  label: t("projects.action.edit"),
-                  onClick: openModal,
-                  color: "accent",
-                },
+                ...(isAdmin
+                  ? [
+                      {
+                        icon: <EditOutlined sx={{ fontSize: 12 }} />,
+                        label: t("projects.action.edit"),
+                        onClick: openModal,
+                        color: "accent" as const,
+                      },
+                    ]
+                  : []),
                 {
                   icon: (
                     <RefreshOutlined
@@ -246,15 +300,19 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   color: "yellow",
                   disabled: isScanning,
                 },
-                {
-                  icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />,
-                  label: t("projects.action.delete"),
-                  onClick: (e) => {
-                    e.stopPropagation();
-                    onDelete(project);
-                  },
-                  color: "red",
-                },
+                ...(isAdmin
+                  ? [
+                      {
+                        icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />,
+                        label: t("projects.action.delete"),
+                        onClick: (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          onDelete(project);
+                        },
+                        color: "red" as const,
+                      },
+                    ]
+                  : []),
               ]}
             />
           </Box>
@@ -287,31 +345,42 @@ export const ProjectRow: React.FC<Props> = React.memo(
             </>
           }
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "8px",
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Box sx={sectionSx}>
+              <Box component="span" sx={sectionTitleSx}>
+                {t("projects.modal.frequency_label")}
+              </Box>
+              <Box>
+                <ScanFrequencyPicker
+                  value={selected}
+                  onChange={setSelected}
+                  disabled={saving}
+                />
+              </Box>
+            </Box>
             <Box
-              component="label"
               sx={{
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "var(--text)",
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
+                ...sectionSx,
+                pt: "20px",
+                borderTop: "1px solid var(--border)",
               }}
             >
-              {t("projects.modal.frequency_label")}
+              <RepositoryScopeFields
+                projectId={project.id}
+                enabled={modalOpen}
+                branch={branch}
+                onBranchChange={setBranch}
+                rootPath={rootPath}
+                onRootPathChange={setRootPath}
+                disabled={saving}
+              />
+              {scopeChanged && (
+                <Box sx={rescanNoticeSx}>
+                  <InfoOutlined sx={{ fontSize: 15, mt: "1px" }} />
+                  <span>{t("projects.modal.scope_help")}</span>
+                </Box>
+              )}
             </Box>
-            <ScanFrequencyPicker
-              value={selected}
-              onChange={setSelected}
-              disabled={saving}
-            />
           </Box>
         </AppModal>
       </>

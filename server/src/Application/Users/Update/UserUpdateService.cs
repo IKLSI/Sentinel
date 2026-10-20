@@ -67,6 +67,12 @@ public class UserUpdateService(
             newAccessStatus = parsedAccessStatus;
         }
 
+        bool changesAccess = (newRole.HasValue && newRole.Value != originalRole)
+            || (newAccessStatus.HasValue && newAccessStatus.Value != user.AccessStatus);
+
+        if (userId == currentUserId && changesAccess)
+            return Result<UserDto>.Error(ErrorCodes.UserCannotChangeOwnAccess);
+
         bool willSuspend = newAccessStatus == UserAccessStatus.Suspended;
 
         bool suspensionTransition = willSuspend && user.AccessStatus == UserAccessStatus.Active;
@@ -129,7 +135,7 @@ public class UserUpdateService(
         }
 
         if (suspensionTransition)
-            jobs.Enqueue<SendAccountSuspendedEmailJob>(j => j.ExecuteAsync(userId));
+            jobs.Enqueue<SendAccountSuspendedEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(userId));
 
         dashboardCache.Invalidate(organizationId);
 

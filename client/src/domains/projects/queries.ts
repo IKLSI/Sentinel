@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { getQueryOptions, useGetQuery } from "@/domains/helpers";
 import {
@@ -5,11 +6,13 @@ import {
   PROJECT_OPTIONS_QUERY_KEY,
   PROJECTS_QUERY_KEY,
   projectQueryKey,
+  projectRepositoryOptionsQueryKey,
 } from "@/domains/projects/constants";
 import type {
   AvailableRepos,
   Project,
   ProjectOption,
+  ProjectRepositoryOptions,
   ProjectSummary,
 } from "@/domains/projects/types";
 
@@ -57,4 +60,19 @@ export const useAvailableReposQuery = (enabled: boolean) =>
     ROUTES_API.api.techHealth.projects.availableRepos.__path,
     {},
     { queryKey: AVAILABLE_REPOS_QUERY_KEY, enabled },
+  );
+
+export const useProjectRepositoryOptionsQuery = (
+  id: string,
+  branch: string | null,
+  enabled: boolean,
+) =>
+  useGetQuery<ProjectRepositoryOptions>(
+    ROUTES_API.api.techHealth.projects[":id"].repositoryOptions.__path,
+    { id, branch },
+    {
+      queryKey: projectRepositoryOptionsQueryKey(id, branch),
+      enabled,
+      placeholderData: keepPreviousData,
+    },
   );

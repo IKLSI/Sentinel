@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
@@ -142,6 +143,11 @@ export const TicketsPage: React.FC = () => {
 
         {loading && !tickets ? (
           <CenteredLoader />
+        ) : error && !tickets ? (
+          <LoadErrorState
+            onRetry={() => ticketsQuery.refetch()}
+            retrying={ticketsQuery.isFetching}
+          />
         ) : (
           <Box
             sx={{

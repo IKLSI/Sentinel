@@ -343,6 +343,7 @@ const baseComponents = {
       input: {
         color: "var(--text)",
         "&::placeholder": { color: "var(--muted)", opacity: 1 },
+        "&:focus": { boxShadow: "none" },
       },
     },
   },

@@ -43,7 +43,7 @@ public class AuthController : BaseController
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpPost("forgot-password")]
-    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
+    [EnableRateLimiting(RateLimitPolicies.ForgotPassword)]
     public async Task<ActionResult<ApiMessageResponse>> ForgotPassword(
         [FromBody] ForgotPasswordRequest request,
         [FromServices] AuthForgotPasswordService service,
@@ -67,7 +67,7 @@ public class AuthController : BaseController
         ToActionResult(await service.ExecuteAsync(request, cancellationToken));
 
     [HttpPost("verify-email")]
-    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
+    [EnableRateLimiting(RateLimitPolicies.VerifyEmail)]
     public async Task<ActionResult<ApiMessageResponse>> VerifyEmail(
         [FromBody] VerifyEmailRequest request,
         [FromServices] AuthVerifyEmailService service,
@@ -75,7 +75,7 @@ public class AuthController : BaseController
         ToActionResult(await service.ExecuteAsync(request, cancellationToken));
 
     [HttpPost("resend-verification")]
-    [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
+    [EnableRateLimiting(RateLimitPolicies.ResendVerification)]
     public async Task<ActionResult<ApiMessageResponse>> ResendVerification(
         [FromBody] ResendVerificationRequest request,
         [FromServices] AuthResendVerificationService service,

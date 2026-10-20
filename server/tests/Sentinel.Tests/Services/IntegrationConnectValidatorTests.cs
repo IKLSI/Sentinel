@@ -32,6 +32,24 @@ public class IntegrationConnectValidatorTests
             && error.Code == ValidationCodes.OrganizationGitlabUrlInvalid);
     }
 
+    [Theory]
+    [InlineData("http://git.entreprise.fr")]
+    [InlineData("https://localhost")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("https://169.254.169.254")]
+    [InlineData("https://10.0.0.5")]
+    [InlineData("https://user:secret@git.entreprise.fr")]
+    public async Task ValidateAsync_WhenGitLabUrlIsNotPublicHttps_ReturnsFieldError(string baseUrl)
+    {
+        ConnectIntegrationDto model = new ConnectIntegrationDto { Token = "glpat-test", BaseUrl = baseUrl };
+
+        Result result = await _sut.ValidateAsync(model, RepositoryType.GitLab, CancellationToken.None);
+
+        result.ValidationErrors.Should().ContainSingle(error =>
+            error.Identifier == nameof(ConnectIntegrationDto.BaseUrl)
+            && error.Code == ValidationCodes.OrganizationGitlabUrlInvalid);
+    }
+
     [Fact]
     public async Task ValidateAsync_ForGitHub_IgnoresTheGitLabUrl()
     {

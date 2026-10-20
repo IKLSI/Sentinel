@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Sentinel.API.Constants;
 using Sentinel.API.Attributes;
 using Sentinel.Application.Jobs.GetRecurring;
 using Sentinel.Application.Jobs.TriggerTechHealthScan;
@@ -24,6 +26,9 @@ public class JobsController : BaseController
         ToActionResult(service.Execute(sortBy, sortDirection));
 
     [HttpPost("tech-health-scan/trigger")]
-    public ActionResult<ApiMessageResponse> TriggerTechHealthScan([FromServices] TechHealthScanTriggerService service) =>
-        ToActionResult(service.Execute());
+    [EnableRateLimiting(RateLimitPolicies.Scan)]
+    public async Task<ActionResult<ApiMessageResponse>> TriggerTechHealthScan(
+        [FromServices] TechHealthScanTriggerService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 }

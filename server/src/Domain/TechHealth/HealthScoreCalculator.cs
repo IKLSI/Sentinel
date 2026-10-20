@@ -15,8 +15,11 @@ public static class HealthScoreCalculator
     private const int LowPenalty = 2;
     private const int EolDependencyPenalty = 10;
     private const int EolRuntimePenalty = 15;
+    private const int ApproachingEolRuntimePenalty = 5;
     private const int ScoreDecayConstant = 150;
     private const int MaxScore = 100;
+    private const int CriticalVulnerabilityCeiling = 74;
+    private const int ActivelyThreatenedCeiling = 59;
 
     public static int Calculate(Project project) => Calculate(project, _ => false);
 
@@ -28,14 +31,30 @@ public static class HealthScoreCalculator
         {
             double weight = WeightOf(dependency);
 
-            if (dependency.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty * weight;
+            if (dependency.IsDeprecated) penalty += EolDependencyPenalty * weight;
 
             penalty += VulnerabilityPenalty(dependency, isResolved) * weight;
         }
 
         penalty += RuntimePenalty(project);
 
-        return ToScore(penalty);
+        return Math.Min(ToScore(penalty), ScoreCeiling(project, isResolved));
+    }
+
+    private static int ScoreCeiling(Project project, Func<Vulnerability, bool> isResolved)
+    {
+        List<Vulnerability> openProductionVulnerabilities = project.Dependencies
+            .Where(dependency => dependency.Type == DependencyType.Prod)
+            .SelectMany(dependency => dependency.Vulnerabilities)
+            .Where(vulnerability => !isResolved(vulnerability))
+            .ToList();
+
+        if (openProductionVulnerabilities.Any(VulnerabilityRiskCalculator.IsActivelyThreatened))
+            return ActivelyThreatenedCeiling;
+
+        return openProductionVulnerabilities.Any(vulnerability => vulnerability.Severity == VulnerabilitySeverity.Critical)
+            ? CriticalVulnerabilityCeiling
+            : MaxScore;
     }
 
     public static HealthScoreBreakdown Breakdown(Project project)
@@ -47,7 +66,7 @@ public static class HealthScoreCalculator
         {
             double weight = WeightOf(dependency);
 
-            if (dependency.Status == DependencyStatus.EOL) freshnessPenalty += EolDependencyPenalty * weight;
+            if (dependency.IsDeprecated) freshnessPenalty += EolDependencyPenalty * weight;
 
             securityPenalty += VulnerabilityPenalty(dependency, _ => false) * weight;
         }
@@ -75,7 +94,9 @@ public static class HealthScoreCalculator
                 SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability));
 
     private static double RuntimePenalty(Project project) =>
-        project.Runtimes.Count(runtime => runtime.IsEol == true) * EolRuntimePenalty;
+        RuntimeGrouping.ByName(project.Runtimes).Sum(group => FindingRules.IsEol(group)
+            ? EolRuntimePenalty
+            : FindingRules.IsApproachingEol(group.MostAtRisk, DateTime.UtcNow) ? ApproachingEolRuntimePenalty : 0);
 
     private static int ToScore(double penalty) => (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
 
@@ -106,7 +127,7 @@ public static class HealthScoreCalculator
     }
 
     private static int UpdateWeight(Dependency dependency) =>
-        DependencyStatusCalculator.Compute(dependency.CurrentVersion, dependency.LatestVersion) switch
+        DependencyStatusCalculator.UpdateOf(dependency) switch
         {
             DependencyStatus.MajorUpdate => MajorUpdateWeight,
             DependencyStatus.MinorUpdate => MinorUpdateWeight,

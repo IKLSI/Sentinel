@@ -114,10 +114,10 @@ export const UrgentTicketRow: React.FC<Props> = ({ ticket }) => {
           </Box>
           <Box
             component="span"
-            sx={{ display: "inline-flex", alignItems: "center", gap: "2px" }}
+            sx={{ display: "inline-flex", alignItems: "center", gap: "3px" }}
           >
-            <MessageOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
             {ticket.commentCount}
+            <MessageOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
           </Box>
         </Box>
       </Box>

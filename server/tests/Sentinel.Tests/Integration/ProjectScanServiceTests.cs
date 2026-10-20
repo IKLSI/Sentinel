@@ -9,6 +9,7 @@ using Sentinel.Application.Dashboard;
 using Sentinel.Application.Options;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Constants;
@@ -49,8 +50,13 @@ public class ProjectScanServiceTests
             GitLabInstance gitLab) =>
             throw new NotSupportedException();
 
-        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null) =>
+        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null,
+            string? branch = null) =>
             Task.FromResult<string?>(HeadCommitSha);
+
+        public Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
+            RepositoryAccess? access = null) =>
+            throw new NotSupportedException();
 
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
             RepositoryAccess? access = null, string? commitSha = null)
@@ -60,7 +66,7 @@ public class ProjectScanServiceTests
 
             return Task.FromResult(ListingFails
                 ? new RepositoryFileListing([], false)
-                : new RepositoryFileListing([("package.json", "https://host/package.json")], false));
+                : new RepositoryFileListing([("package.json", "https://host/package.json", "package.json")], false));
         }
 
         public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
@@ -112,11 +118,10 @@ public class ProjectScanServiceTests
 
     private sealed class NoopJobScheduler : IJobScheduler
     {
-        public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) { }
+        public void Enqueue<TJob>(string queue, Expression<Func<TJob, Task>> methodCall) { }
 
-        public void Schedule<TJob>(Expression<Func<TJob, Task>> methodCall, TimeSpan delay) { }
+        public void Schedule<TJob>(string queue, Expression<Func<TJob, Task>> methodCall, TimeSpan delay) { }
 
-        public void TriggerRecurring(string recurringJobId) { }
     }
 
     private sealed class NoopNotifier : IRealtimeNotifier
@@ -162,6 +167,9 @@ public class ProjectScanServiceTests
                 scope.SystemScope,
                 new DatabaseConnectionHolder(scope.Context),
                 new FakeAuditLogService(),
+                new ProjectScanGate(),
+                new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context),
+                    scope.CommitScopeFactory, new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
                 NullLogger<ProjectScanService>.Instance);
         }
 

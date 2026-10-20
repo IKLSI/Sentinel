@@ -12,6 +12,11 @@ export type Runtime = components["schemas"]["RuntimeDto"];
 
 export type Vulnerability = components["schemas"]["VulnerabilityDto"];
 
+export type VulnerabilitySuppression = components["schemas"]["SuppressionDto"];
+
+export type SuppressVulnerability =
+  components["schemas"]["SuppressVulnerabilityDto"];
+
 export type FindingTicket = components["schemas"]["FindingTicketDto"];
 
 export type AvailableRepo = components["schemas"]["AvailableRepoDto"];
@@ -22,5 +27,8 @@ export type CreateProject = components["schemas"]["CreateProjectDto"];
 
 export type UpdateProject = components["schemas"]["UpdateProjectDto"];
 
-export type ProjectScanFrequency =
-  components["schemas"]["ProjectScanFrequencyDto"];
+export type ProjectScanSettings =
+  components["schemas"]["ProjectScanSettingsDto"];
+
+export type ProjectRepositoryOptions =
+  components["schemas"]["ProjectRepositoryOptionsDto"];

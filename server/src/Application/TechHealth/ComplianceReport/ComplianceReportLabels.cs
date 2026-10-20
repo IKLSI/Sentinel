@@ -44,8 +44,12 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
 
     public string ControlSbomRequirement => Text("exports.compliance.control.sbom.requirement");
     public string ControlSbomDetail => Text("exports.compliance.control.sbom.detail");
+    public string ControlSbomDetailMissing => Text("exports.compliance.control.sbom.detail_missing");
+    public string ControlSbomDetailPartial => Text("exports.compliance.control.sbom.detail_partial");
     public string ControlCveRequirement => Text("exports.compliance.control.cve.requirement");
     public string ControlCveDetail => Text("exports.compliance.control.cve.detail");
+    public string ControlCveDetailMissing => Text("exports.compliance.control.cve.detail_missing");
+    public string ControlCveDetailIncomplete => Text("exports.compliance.control.cve.detail_incomplete");
     public string ControlEolRequirement => Text("exports.compliance.control.eol.requirement");
     public string ControlEolDetailOk => Text("exports.compliance.control.eol.detail_ok");
     public string ControlTraceabilityRequirement => Text("exports.compliance.control.traceability.requirement");
@@ -65,6 +69,10 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
     public string HeaderEventAction => Text("exports.compliance.header.event_action");
     public string HeaderEventUser => Text("exports.compliance.header.event_user");
     public string EventSystemUser => Text("exports.compliance.event.system_user");
+
+    public string ControlCveDetailStale(int days) =>
+        localizer.Get(culture, "exports.compliance.control.cve.detail_stale",
+            new Dictionary<string, string> { ["days"] = days.ToString() });
 
     public string ControlEolDetailWarn(int count) =>
         Count("exports.compliance.control.eol.detail_warn", count);

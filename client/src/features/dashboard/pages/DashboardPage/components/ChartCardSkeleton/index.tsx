@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import { keyframes } from "@mui/material/styles";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
-import { CHART_MIN_HEIGHT } from "@/features/dashboard/pages/DashboardPage/constants";
+import { RESPONSIVE_CHART_MIN_HEIGHT } from "@/features/dashboard/pages/DashboardPage/constants";
 
 interface Props {
   title: string;
@@ -27,7 +27,7 @@ const FLOW_BARS = [
 const AXIS_LABELS = ["first", "second", "third", "last"];
 
 const HEADER_PLACEHOLDERS = {
-  trend: ["start", "best", "today"],
+  trend: [],
   flow: ["detected", "resolved"],
 } as const;
 
@@ -38,6 +38,7 @@ const shimmerSx = {
 export const ChartCardSkeleton: React.FC<Props> = ({ title, variant }) => (
   <DashboardCard
     title={title}
+    scrollable={false}
     action={
       <Box sx={{ display: "flex", gap: "16px" }}>
         {HEADER_PLACEHOLDERS[variant].map((key) => (
@@ -49,7 +50,7 @@ export const ChartCardSkeleton: React.FC<Props> = ({ title, variant }) => (
     <Box
       sx={{
         flex: 1,
-        minHeight: CHART_MIN_HEIGHT,
+        minHeight: RESPONSIVE_CHART_MIN_HEIGHT,
         display: "flex",
         flexDirection: "column",
         gap: "10px",

@@ -20,6 +20,7 @@ public partial class RepositoryHostClient(
     private static readonly TimeSpan MaxFileDownloadDuration = TimeSpan.FromSeconds(60);
     private const int RepositoryPageSize = 100;
     private const int RepositoryPageLimit = 20;
+    private const int BranchPageLimit = 10;
 
     private static readonly HashSet<string> SkippedDirs = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -64,7 +65,7 @@ public partial class RepositoryHostClient(
 
         if (platform.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
         {
-            using HttpRequestMessage request = BuildGitLabRequest($"{gitLab.ApiBaseUrl}/user", gitLab, token);
+            using HttpRequestMessage request = BuildGitLabRequest($"{gitLab.ApiBaseUrl}/user", token);
             try
             {
                 using HttpResponseMessage response =
@@ -87,14 +88,26 @@ public partial class RepositoryHostClient(
     }
 
     public async Task<string?> GetHeadCommitAsync(string host, string owner, string repo,
+        RepositoryAccess? access = null, string? branch = null)
+    {
+        RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
+
+        if (RepositoryHosts.IsGitHub(host))
+            return await GetGitHubHeadCommitAsync(owner, repo, effectiveAccess.Token, branch);
+        if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
+            return await GetGitLabHeadCommitAsync(owner, repo, effectiveAccess, branch);
+        return null;
+    }
+
+    public async Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
         RepositoryAccess? access = null)
     {
         RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
 
         if (RepositoryHosts.IsGitHub(host))
-            return await GetGitHubHeadCommitAsync(owner, repo, effectiveAccess.Token);
+            return await ListGitHubBranchesAsync(owner, repo, effectiveAccess.Token);
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
-            return await GetGitLabHeadCommitAsync(owner, repo, effectiveAccess);
+            return await ListGitLabBranchesAsync(owner, repo, effectiveAccess);
         return null;
     }
 
@@ -125,7 +138,7 @@ public partial class RepositoryHostClient(
 
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
         {
-            using HttpRequestMessage request = BuildGitLabRequest(url, effectiveAccess.GitLab, effectiveAccess.Token);
+            using HttpRequestMessage request = BuildGitLabRequest(url, effectiveAccess.Token);
             return await SendBoundedAsync(httpClientFactory.CreateClient(HttpClientNames.GitLab), request, url);
         }
 
@@ -133,7 +146,7 @@ public partial class RepositoryHostClient(
         return await SendBoundedAsync(httpClientFactory.CreateClient(HttpClientNames.Registry), anonymousRequest, url);
     }
 
-    private static HttpRequestMessage BuildGitLabRequest(string url, GitLabInstance gitLab, string? token)
+    private static HttpRequestMessage BuildGitLabRequest(string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
         if (!string.IsNullOrEmpty(token)) request.Headers.Add("PRIVATE-TOKEN", token);

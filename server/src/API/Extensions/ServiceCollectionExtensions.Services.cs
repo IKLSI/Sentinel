@@ -4,12 +4,15 @@ using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Auth.Login;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Security;
 using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Application.TechHealth.ExportSbom;
+using Sentinel.Application.TechHealth.PublicScan;
+using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
@@ -60,7 +63,7 @@ public static partial class ServiceCollectionExtensions
             client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
 
         services.AddResilientHttpClient(HttpClientNames.GitLab, 90, client =>
-            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"));
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Scanner/1.0"), publicNetworkOnly: true);
 
         services.AddResilientHttpClient(HttpClientNames.EolDate, 45, client =>
             client.DefaultRequestHeaders.Add("Accept", "application/json"));
@@ -81,7 +84,8 @@ public static partial class ServiceCollectionExtensions
         this IServiceCollection services,
         string name,
         int timeoutSeconds,
-        Action<HttpClient> configure)
+        Action<HttpClient> configure,
+        bool publicNetworkOnly = false)
     {
         services.AddHttpClient(name, client =>
         {
@@ -91,7 +95,9 @@ public static partial class ServiceCollectionExtensions
         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.All,
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = !publicNetworkOnly,
+            ConnectCallback = publicNetworkOnly ? PublicNetworkConnector.ConnectAsync : null
         })
         .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
         .AddHttpMessageHandler<ResilientHttpHandler>()
@@ -107,10 +113,11 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<AuditLogBatchWriter>();
         services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<TokenService>();
+        services.AddSingleton<LoginAttemptTracker>();
         services.AddScoped<TokenProtector>();
         services.AddScoped<QueuedTokenProtector>();
         services.AddScoped<ExportService>();
-        services.AddScoped<DashboardCache>();
+        services.AddSingleton<DashboardCache>();
         services.AddScoped<ApiKeyPrincipalCache>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
@@ -124,10 +131,14 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ProjectHealthHistoryWriter>();
         services.AddScoped<ProjectScanService>();
         services.AddScoped<DueProjectScanService>();
+        services.AddSingleton<ProjectScanGate>();
+        services.AddSingleton<PublicScanThrottle>();
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
+        services.AddScoped<ProjectHealthRecalculator>();
 
         services.AddTransient<TechHealthScanJob>();
+        services.AddTransient<DataRetentionJob>();
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();

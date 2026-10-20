@@ -14,6 +14,8 @@ namespace Sentinel.Infrastructure.Email;
 
 public partial class EmailService : IEmailService
 {
+    private const int ImplicitTlsPort = 465;
+
     private readonly EmailSettings _email;
     private readonly ILocalizer _localizer;
     private readonly ILogger<EmailService> _logger;
@@ -67,7 +69,7 @@ public partial class EmailService : IEmailService
 
         await SendAsync(message);
 
-        _logger.LogInformation("Invitation email sent to {Email}", invitation.Email);
+        _logger.LogInformation("Invitation email sent to {Email}", MaskEmail(invitation.Email));
     }
 
     public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture)
@@ -99,7 +101,7 @@ public partial class EmailService : IEmailService
 
         await SendAsync(message);
 
-        _logger.LogInformation("Existing account notification sent to {Email}", email);
+        _logger.LogInformation("Existing account notification sent to {Email}", MaskEmail(email));
     }
 
     public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture)
@@ -128,7 +130,7 @@ public partial class EmailService : IEmailService
 
         await SendAsync(message);
 
-        _logger.LogInformation("Password reset email sent to {Email}", email);
+        _logger.LogInformation("Password reset email sent to {Email}", MaskEmail(email));
     }
 
     public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture)
@@ -157,7 +159,7 @@ public partial class EmailService : IEmailService
 
         await SendAsync(message);
 
-        _logger.LogInformation("Verification email sent to {Email}", email);
+        _logger.LogInformation("Verification email sent to {Email}", MaskEmail(email));
     }
 
     public async Task SendAccountSuspendedAsync(string email, string organizationName, string culture)
@@ -184,7 +186,7 @@ public partial class EmailService : IEmailService
 
         await SendAsync(message);
 
-        _logger.LogInformation("Account suspension email sent to {Email}", email);
+        _logger.LogInformation("Account suspension email sent to {Email}", MaskEmail(email));
     }
 
     public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
@@ -242,7 +244,7 @@ public partial class EmailService : IEmailService
 
             await SendAsync(message);
 
-            _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", recipient.Email, projectName);
+            _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", MaskEmail(recipient.Email), projectName);
         }
     }
 
@@ -306,7 +308,7 @@ public partial class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+        await client.ConnectAsync(host, port, SocketOptionsFor(port));
 
         if (!string.IsNullOrEmpty(username))
             await client.AuthenticateAsync(username, password);
@@ -315,10 +317,20 @@ public partial class EmailService : IEmailService
         await client.DisconnectAsync(true);
     }
 
+    internal static SecureSocketOptions SocketOptionsFor(int port) =>
+        port == ImplicitTlsPort ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+
     private string Text(string culture, string key) => _localizer.Get(culture, key);
 
     private string Text(string culture, string key, IReadOnlyDictionary<string, string> parameters) =>
         _localizer.Get(culture, key, parameters);
+
+    private static string MaskEmail(string email)
+    {
+        int at = email.IndexOf('@');
+
+        return at <= 0 ? "***" : $"{email[0]}***{email[at..]}";
+    }
 
     private static string LoadTemplate(string fileName)
     {

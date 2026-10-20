@@ -5,12 +5,17 @@ namespace Sentinel.Infrastructure.Data;
 
 public partial class SentinelContext
 {
+    private static AuditAction AuditActionFromStorage(string stored) =>
+        Enum.TryParse(stored, out AuditAction action) ? action : AuditAction.Unknown;
+
     private static void ConfigureAuditLog(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Action).HasConversion<string>().IsRequired();
+            entity.Property(e => e.Action)
+                .HasConversion(action => action.ToString(), stored => AuditActionFromStorage(stored))
+                .IsRequired();
             entity.Property(e => e.EntityType).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Jti).HasMaxLength(36);
             entity.HasIndex(e => e.Jti);

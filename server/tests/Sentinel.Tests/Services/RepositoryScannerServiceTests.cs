@@ -10,7 +10,8 @@ namespace Sentinel.Tests.Services;
 
 public class RepositoryScannerServiceTests
 {
-    private sealed class FakeRepositoryHost(Dictionary<string, string> filesByUrl, string? headCommitSha = null)
+    private sealed class FakeRepositoryHost(Dictionary<string, string> filesByUrl, string? headCommitSha = null,
+        bool truncated = false)
         : IRepositoryHostClient
     {
         public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform,
@@ -22,8 +23,12 @@ public class RepositoryScannerServiceTests
             throw new NotSupportedException();
 
         public Task<string?> GetHeadCommitAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null) =>
+            RepositoryAccess? access = null, string? branch = null) =>
             Task.FromResult(headCommitSha);
+
+        public Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
+            RepositoryAccess? access = null) =>
+            throw new NotSupportedException();
 
         public string? RequestedCommitSha { get; private set; }
 
@@ -33,7 +38,8 @@ public class RepositoryScannerServiceTests
             RequestedCommitSha = commitSha;
 
             return Task.FromResult(new RepositoryFileListing(
-                filesByUrl.Keys.Select(url => (Path.GetFileName(url), url)).ToList(), false));
+                filesByUrl.Keys.Select(url => (Path.GetFileName(url), url, new Uri(url).AbsolutePath.TrimStart('/')))
+                    .ToList(), truncated));
         }
 
         public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
@@ -310,6 +316,35 @@ public class RepositoryScannerServiceTests
         });
 
         outcome.Dependencies.Should().ContainSingle();
+        outcome.IsComplete.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ScanRepository_EveryManifestRead_IsComplete()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
+        });
+
+        outcome.IsComplete.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ScanRepository_TruncatedListing_IsIncomplete()
+    {
+        RepositoryScannerService scanner = new RepositoryScannerService(
+            new FakeRepositoryHost(new Dictionary<string, string>
+            {
+                ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
+            }, truncated: true),
+            new ManifestParserService(),
+            new NoopRegistry(),
+            NullLogger<RepositoryScannerService>.Instance);
+
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app");
+
+        outcome.IsComplete.Should().BeFalse();
     }
 
     [Fact]
@@ -383,5 +418,53 @@ public class RepositoryScannerServiceTests
         });
 
         outcome.ManifestsRead.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ScanRepository_Monorepo_MatchesEachManifestWithTheLockFileOfItsDirectory()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/apps/web/package.json"] = """{ "dependencies": { "react": "^18.2.0" } }""",
+            ["https://host/apps/web/package-lock.json"] = """{ "lockfileVersion": 3, "packages": { "node_modules/react": { "version": "18.3.1" } } }""",
+            ["https://host/apps/api/package.json"] = """{ "dependencies": { "react": "^17.0.0", "express": "4.19.2" } }""",
+        });
+
+        outcome.Dependencies.Select(d => (d.Name, d.CurrentVersion)).Should().BeEquivalentTo(
+            [("react", "18.3.1"), ("react", "17.0.0"), ("express", "4.19.2")]);
+        outcome.Dependencies.Single(d => d.CurrentVersion == "18.3.1").ManifestPath
+            .Should().Be("apps/web/package-lock.json");
+    }
+
+    [Fact]
+    public async Task ScanRepository_ExcludesFixturesAndExamples()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
+            ["https://host/test/fixtures/package.json"] = """{ "dependencies": { "lodash": "4.17.15" } }""",
+            ["https://host/examples/demo/package.json"] = """{ "dependencies": { "express": "4.0.0" } }""",
+        });
+
+        outcome.Dependencies.Should().ContainSingle().Which.Name.Should().Be("axios");
+    }
+
+    [Fact]
+    public async Task ScanRepository_RootPath_RestrictsTheScanToTheSubfolder()
+    {
+        RepositoryScannerService scanner = new RepositoryScannerService(
+            new FakeRepositoryHost(new Dictionary<string, string>
+            {
+                ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
+                ["https://host/services/billing/package.json"] = """{ "dependencies": { "stripe": "15.0.0" } }""",
+            }),
+            new ManifestParserService(),
+            new NoopRegistry(),
+            NullLogger<RepositoryScannerService>.Instance);
+
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app",
+            scope: new RepositoryScanScope(null, "/services/billing/"));
+
+        outcome.Dependencies.Should().ContainSingle().Which.Name.Should().Be("stripe");
     }
 }

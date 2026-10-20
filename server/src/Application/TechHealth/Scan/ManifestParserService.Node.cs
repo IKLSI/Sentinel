@@ -7,6 +7,8 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public partial class ManifestParserService
 {
+    private const string NodeModulesSegment = "node_modules/";
+
     private static void ParsePackageJson(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
         try
@@ -16,9 +18,18 @@ public partial class ManifestParserService
 
             if (root.TryGetProperty("engines", out JsonElement engines) && engines.TryGetProperty("node", out JsonElement nodeProp))
             {
-                string v = VersionText.Clean(nodeProp.GetString() ?? "");
-                if (!string.IsNullOrEmpty(v))
-                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Node.js", Version = v });
+                string specification = nodeProp.GetString() ?? "";
+                string v = VersionText.Clean(specification);
+                if (VersionText.StartsWithDigit(v))
+                {
+                    runtimes.Add(new Runtime
+                    {
+                        ProjectId = projectId,
+                        Name = "Node.js",
+                        Version = v,
+                        IsMinimumConstraint = !VersionText.IsExact(specification)
+                    });
+                }
             }
 
             foreach ((string name, string version) in DetectNpmFrameworkRuntimes(root))
@@ -49,6 +60,7 @@ public partial class ManifestParserService
             ["nuxt"] = "Nuxt",
             ["gatsby"] = "Gatsby",
             ["astro"] = "Astro",
+            ["react-native"] = "React Native",
         };
 
         List<(string Name, string Version)> detected = new List<(string, string)>();
@@ -61,8 +73,7 @@ public partial class ManifestParserService
                 if (detected.Any(runtime => runtime.Name == name)) continue;
                 if (!deps.TryGetProperty(pkg, out JsonElement vProp)) continue;
 
-                string v = VersionText.Clean(vProp.GetString() ?? "");
-                if (!string.IsNullOrEmpty(v)) detected.Add((name, v));
+                if (TryReadNpmVersion(vProp.GetString() ?? "", out string v, out bool _)) detected.Add((name, v));
             }
         }
 
@@ -73,18 +84,34 @@ public partial class ManifestParserService
     {
         foreach (JsonProperty prop in element.EnumerateObject())
         {
-            string v = VersionText.Clean(prop.Value.GetString() ?? "");
-            if (string.IsNullOrEmpty(v)) continue;
+            if (!TryReadNpmVersion(prop.Value.GetString() ?? "", out string v, out bool pinned)) continue;
             deps.Add(new Dependency
             {
                 ProjectId = projectId,
                 Name = prop.Name,
                 CurrentVersion = v,
+                IsVersionPinned = pinned,
                 Type = type,
                 Ecosystem = DependencyEcosystem.Npm,
                 Status = DependencyStatus.UpToDate,
             });
         }
+    }
+
+    private static bool TryReadNpmVersion(string specification, out string version, out bool pinned)
+    {
+        string spec = specification.Trim();
+
+        if (spec.StartsWith("npm:", StringComparison.OrdinalIgnoreCase))
+        {
+            int at = spec.LastIndexOf('@');
+            spec = at > 4 ? spec[(at + 1)..] : string.Empty;
+        }
+
+        version = VersionText.Clean(spec);
+        pinned = VersionText.IsExact(spec);
+
+        return !spec.Contains(':') && !spec.Contains('/') && VersionText.StartsWithDigit(version);
     }
 
     private static void ParsePackageLockJson(Guid projectId, string content, List<Dependency> deps)
@@ -100,13 +127,11 @@ public partial class ManifestParserService
             {
                 foreach (JsonProperty pkg in packages.EnumerateObject())
                 {
-                    string key = pkg.Name;
-                    if (!key.StartsWith("node_modules/", StringComparison.Ordinal)) continue;
+                    int segment = pkg.Name.LastIndexOf(NodeModulesSegment, StringComparison.Ordinal);
+                    if (segment < 0) continue;
 
-                    string name = key["node_modules/".Length..];
+                    string name = pkg.Name[(segment + NodeModulesSegment.Length)..];
                     if (string.IsNullOrEmpty(name)) continue;
-
-                    if (name.Contains("/node_modules/")) continue;
 
                     string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
                     if (string.IsNullOrEmpty(version)) continue;
@@ -266,4 +291,41 @@ public partial class ManifestParserService
         return (name, version);
     }
 
+    private static void ParseBunLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(content, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
+
+            if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)) return;
+
+            foreach (JsonProperty package in packages.EnumerateObject())
+            {
+                if (package.Value.ValueKind != JsonValueKind.Array || package.Value.GetArrayLength() == 0) continue;
+
+                string identifier = package.Value[0].GetString() ?? "";
+                int at = identifier.LastIndexOf('@');
+                if (at <= 0) continue;
+
+                string name = identifier[..at];
+                string version = identifier[(at + 1)..];
+                if (!VersionText.StartsWithDigit(version)) continue;
+
+                deps.Add(new Dependency
+                {
+                    ProjectId = projectId,
+                    Name = name,
+                    CurrentVersion = version,
+                    Type = DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Npm,
+                    Status = DependencyStatus.UpToDate,
+                });
+            }
+        }
+        catch { }
+    }
 }

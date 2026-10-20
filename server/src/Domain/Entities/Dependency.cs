@@ -14,13 +14,14 @@ public enum DependencyEcosystem
     Composer,
     Gem,
     Maven,
-    Gradle,
     NuGet,
     Go,
     Cargo,
     Hex,
     Pub,
-    Swift
+    Swift,
+    CocoaPods,
+    GitHubActions
 }
 
 public enum DependencyStatus
@@ -41,6 +42,9 @@ public class Dependency : IEntityWithId
     public string? LatestVersion { get; set; }
     public string? Publisher { get; set; }
     public string? License { get; set; }
+    public bool IsDeprecated { get; set; }
+    public bool IsVersionPinned { get; set; } = true;
+    public string? ManifestPath { get; set; }
     public DependencyType Type { get; set; } = DependencyType.Prod;
     public bool IsDirect { get; set; } = true;
     public DependencyEcosystem Ecosystem { get; set; } = DependencyEcosystem.Npm;

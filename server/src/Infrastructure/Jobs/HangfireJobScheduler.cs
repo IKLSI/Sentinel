@@ -4,16 +4,11 @@ using Sentinel.Domain.Abstractions;
 
 namespace Sentinel.Infrastructure.Jobs;
 
-public sealed class HangfireJobScheduler(
-    IBackgroundJobClient backgroundJobs,
-    IRecurringJobManager recurringJobs) : IJobScheduler
+public sealed class HangfireJobScheduler(IBackgroundJobClient backgroundJobs) : IJobScheduler
 {
-    public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) =>
-        backgroundJobs.Enqueue(methodCall);
+    public void Enqueue<TJob>(string queue, Expression<Func<TJob, Task>> methodCall) =>
+        backgroundJobs.Enqueue(queue, methodCall);
 
-    public void Schedule<TJob>(Expression<Func<TJob, Task>> methodCall, TimeSpan delay) =>
-        backgroundJobs.Schedule(methodCall, delay);
-
-    public void TriggerRecurring(string recurringJobId) =>
-        recurringJobs.Trigger(recurringJobId);
+    public void Schedule<TJob>(string queue, Expression<Func<TJob, Task>> methodCall, TimeSpan delay) =>
+        backgroundJobs.Schedule(queue, methodCall, delay);
 }

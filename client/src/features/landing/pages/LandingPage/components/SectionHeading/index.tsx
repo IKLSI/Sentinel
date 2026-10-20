@@ -3,10 +3,9 @@ import Box from "@mui/material/Box";
 interface Props {
   title: string;
   subtitle: string;
-  emphasis?: string;
 }
 
-export const SectionHeading = ({ title, subtitle, emphasis }: Props) => (
+export const SectionHeading = ({ title, subtitle }: Props) => (
   <Box sx={{ textAlign: "center", maxWidth: 860, mx: "auto", mb: "48px" }}>
     <Box
       component="h2"
@@ -43,17 +42,6 @@ export const SectionHeading = ({ title, subtitle, emphasis }: Props) => (
       }}
     >
       {subtitle}
-      {emphasis && (
-        <>
-          <br />
-          <Box
-            component="strong"
-            sx={{ color: "var(--text)", fontWeight: 700 }}
-          >
-            {emphasis}
-          </Box>
-        </>
-      )}
     </Box>
   </Box>
 );

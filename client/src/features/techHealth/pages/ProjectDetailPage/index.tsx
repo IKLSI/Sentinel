@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import { useProjectQuery } from "@/domains/projects/queries";
-import { VulnerabilitySeverity } from "@/enums";
 import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
@@ -64,35 +63,18 @@ export const ProjectDetailPage: React.FC = () => {
   if (loading) return <ProjectDetailSkeleton />;
   if (!project) return null;
 
-  const vulnAccent = allVulns.some(
-    (v) => v.severity === VulnerabilitySeverity.Critical,
-  )
-    ? "var(--red)"
-    : allVulns.some((v) => v.severity === VulnerabilitySeverity.High)
-      ? "var(--orange)"
-      : undefined;
-
-  const runtimeAccent = project.runtimes.some((r) => r.isEol)
-    ? "var(--red)"
-    : undefined;
-
   const tabDefs: TabDef[] = [
     {
       icon: <GppBadOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.vulnerabilities"),
-      count: allVulns.length,
-      accentColor: vulnAccent,
     },
     {
       icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.dependencies"),
-      count: project.dependencies.length,
     },
     {
       icon: <StorageOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.runtimes"),
-      count: project.runtimes.length,
-      accentColor: runtimeAccent,
     },
   ];
 

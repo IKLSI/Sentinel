@@ -5,6 +5,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.TechHealth.ComplianceReport;
@@ -16,6 +17,9 @@ public partial class ComplianceReportService(
     IAuditLogRepository auditLogRepository,
     ILocalizer localizer)
 {
+    private const string SbomFrameworks = "NIS2 · CRA · DORA";
+    private const string CveFrameworks = "NIS2 · DORA";
+
     public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, Guid currentUserId,
         CancellationToken cancellationToken)
     {
@@ -54,9 +58,9 @@ public partial class ComplianceReportService(
             .ThenByDescending(v => v.CvssScore)
             .ToList();
 
-        List<Runtime> eolRuntimes = project.Runtimes
-            .Where(r => r.IsEol == true)
-            .OrderBy(r => r.Name)
+        List<Runtime> eolRuntimes = RuntimeGrouping.ByName(project.Runtimes)
+            .Where(FindingRules.IsEol)
+            .Select(group => group.MostAtRisk)
             .ToList();
 
         bool vulnerabilitiesTruncated = vulnerabilities.Count > ExportLimits.MaxComplianceVulnerabilityRows;
@@ -99,21 +103,21 @@ public partial class ComplianceReportService(
             ReportFingerprint = fingerprint,
             GeneratedByName = currentUser?.FullName,
             GeneratedByEmail = currentUser?.Email,
-            Controls = BuildControls(vulnerabilities, eolRuntimes, renderedAuditTrail, labels)
+            Controls = BuildControls(project, generatedAt, vulnerabilities, eolRuntimes, renderedAuditTrail, labels)
         };
     }
 
-    private static List<ControlRow> BuildControls(List<Vulnerability> vulnerabilities, List<Runtime> eolRuntimes,
+    private static List<ControlRow> BuildControls(Project project, DateTime generatedAt,
+        List<Vulnerability> vulnerabilities, List<Runtime> eolRuntimes,
         List<ComplianceAuditLogRow> auditTrail, ComplianceReportLabels labels)
     {
         bool hasUnfixableVulnerabilities = vulnerabilities.Any(v => string.IsNullOrWhiteSpace(v.FixedVersion));
+        ScanReliability reliability = ComplianceScanAssessment.Of(project, generatedAt);
 
         return new List<ControlRow>
         {
-            new(labels.ControlSbomRequirement, "NIS2 · CRA · DORA", ControlStatus.Covered,
-                labels.ControlSbomDetail),
-            new(labels.ControlCveRequirement, "NIS2 · DORA", ControlStatus.Covered,
-                labels.ControlCveDetail),
+            SbomControl(reliability, labels),
+            CveControl(reliability, ComplianceScanAssessment.DaysSinceLastScan(project, generatedAt), labels),
             new(labels.ControlEolRequirement, "CRA", eolRuntimes.Count == 0 ? ControlStatus.Covered : ControlStatus.Attention,
                 eolRuntimes.Count == 0 ? labels.ControlEolDetailOk : labels.ControlEolDetailWarn(eolRuntimes.Count)),
             new(labels.ControlTraceabilityRequirement, "DORA",
@@ -125,4 +129,28 @@ public partial class ComplianceReportService(
                 hasUnfixableVulnerabilities ? labels.ControlPatchingDetailWarn : labels.ControlPatchingDetailOk)
         };
     }
+
+    private static ControlRow SbomControl(ScanReliability reliability, ComplianceReportLabels labels) =>
+        reliability switch
+        {
+            ScanReliability.Missing => new(labels.ControlSbomRequirement, SbomFrameworks, ControlStatus.Attention,
+                labels.ControlSbomDetailMissing),
+            ScanReliability.InventoryIncomplete => new(labels.ControlSbomRequirement, SbomFrameworks,
+                ControlStatus.Partial, labels.ControlSbomDetailPartial),
+            _ => new(labels.ControlSbomRequirement, SbomFrameworks, ControlStatus.Covered, labels.ControlSbomDetail)
+        };
+
+    private static ControlRow CveControl(ScanReliability reliability, int daysSinceLastScan,
+        ComplianceReportLabels labels) =>
+        reliability switch
+        {
+            ScanReliability.Missing => new(labels.ControlCveRequirement, CveFrameworks, ControlStatus.Attention,
+                labels.ControlCveDetailMissing),
+            ScanReliability.InventoryIncomplete or ScanReliability.VulnerabilityDataIncomplete =>
+                new(labels.ControlCveRequirement, CveFrameworks, ControlStatus.Partial,
+                    labels.ControlCveDetailIncomplete),
+            ScanReliability.Stale => new(labels.ControlCveRequirement, CveFrameworks, ControlStatus.Partial,
+                labels.ControlCveDetailStale(daysSinceLastScan)),
+            _ => new(labels.ControlCveRequirement, CveFrameworks, ControlStatus.Covered, labels.ControlCveDetail)
+        };
 }

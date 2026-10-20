@@ -25,6 +25,7 @@ public class AuthLoginService : IService
     private readonly IRefreshTokenStore _refreshTokenStore;
     private readonly ILogger<AuthLoginService> _logger;
     private readonly AuthLoginValidator _validator;
+    private readonly LoginAttemptTracker _loginAttempts;
 
     public AuthLoginService(
         IUserRepository userRepository,
@@ -36,7 +37,8 @@ public class AuthLoginService : IService
         IAuditLogService auditLog,
         IRefreshTokenStore refreshTokenStore,
         ILogger<AuthLoginService> logger,
-        AuthLoginValidator validator)
+        AuthLoginValidator validator,
+        LoginAttemptTracker loginAttempts)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -48,6 +50,7 @@ public class AuthLoginService : IService
         _refreshTokenStore = refreshTokenStore;
         _logger = logger;
         _validator = validator;
+        _loginAttempts = loginAttempts;
     }
 
     public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest model, CancellationToken cancellationToken)
@@ -57,6 +60,11 @@ public class AuthLoginService : IService
         if (!validationResult.IsSuccess)
             return Result<LoginResponse>.From(validationResult);
 
+        string email = model.Email.Trim();
+
+        if (_loginAttempts.IsLockedOut(email))
+            return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthTooManyAttempts);
+
         User? user;
         string accessToken;
         string refreshToken;
@@ -64,12 +72,27 @@ public class AuthLoginService : IService
         using (_systemScope.Enter())
         {
             IReadOnlyList<User> candidates = await _userRepository
-                .ListActiveByEmailAsync(model.Email, QueryTracking.Tracked, cancellationToken);
+                .ListActiveByEmailAsync(email, QueryTracking.Tracked, cancellationToken);
 
             user = ResolveSingleMatch(candidates, model.Password);
 
             if (user == null)
-                return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidCredentials);
+            {
+                bool lockedOut = _loginAttempts.RecordFailure(email);
+
+                await _auditLog.LogAsync(
+                    AuditAction.LoginFailed,
+                    entityType: AuditEntityTypes.User,
+                    organizationId: candidates.Count == 1 ? candidates[0].OrganizationId : null,
+                    userId: candidates.Count == 1 ? candidates[0].Id : null,
+                    entityId: candidates.Count == 1 ? candidates[0].Id : null);
+
+                return Result<LoginResponse>.Unauthorized(lockedOut
+                    ? ErrorCodes.AuthTooManyAttempts
+                    : ErrorCodes.AuthInvalidCredentials);
+            }
+
+            _loginAttempts.Reset(email);
 
             if (!user.IsEmailVerified)
                 return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);

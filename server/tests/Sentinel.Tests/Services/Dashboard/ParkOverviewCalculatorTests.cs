@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Sentinel.Application.Dashboard.GetStats;
 using Sentinel.Domain.Entities;
-using Sentinel.Tests.Helpers;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Tests.Services.Dashboard;
 
@@ -9,31 +9,31 @@ public class ParkOverviewCalculatorTests
 {
     private static readonly DateOnly Today = new(2026, 10, 19);
 
+    private static DashboardProjectRow ProjectRow(string name, int? score, string? grade) =>
+        new(Guid.NewGuid(), name, RepositoryType.GitHub, null, ScanCoverage.Covered, null, score, grade);
+
     [Fact]
     public void Build_AgregeScoresFaillesDependancesEtFinsDeVie()
     {
-        Project tily = new ProjectGraphBuilder("Tily")
-            .WithDependency("next", DependencyStatus.Vulnerable)
-            .WithVulnerability("next", "CVE-1", VulnerabilitySeverity.Critical, 9.1m, isKnownExploited: true)
-            .WithDependency("react", DependencyStatus.MajorUpdate, latestVersion: "2.0.0")
-            .WithDependency("vitest", DependencyStatus.MajorUpdate, DependencyType.Dev, latestVersion: "2.0.0")
-            .WithRuntime(".NET", "8", Today.AddDays(22).ToDateTime(TimeOnly.MinValue))
-            .Build();
+        DashboardProjectRow tily = ProjectRow("Tily", 62, "C");
+        DashboardProjectRow sentinel = ProjectRow("Sentinel", 96, "A");
+        DashboardProjectRow neverScanned = ProjectRow("Nouveau", null, null);
 
-        Project sentinel = new ProjectGraphBuilder("Sentinel")
-            .WithDependency("zod")
-            .WithRuntime("Node", "22", Today.AddDays(193).ToDateTime(TimeOnly.MinValue))
-            .Build();
+        IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(
+        [
+            new DashboardRuntimeRow(tily.Id, ".NET", "8", Today.AddDays(22).ToDateTime(TimeOnly.MinValue), false,
+                false),
+            new DashboardRuntimeRow(sentinel.Id, "Node", "22", Today.AddDays(193).ToDateTime(TimeOnly.MinValue), false,
+                false),
+        ], Today);
 
-        Project neverScanned = new ProjectGraphBuilder("Nouveau").BuildUnscored();
-
-        Project[] projects = [tily, sentinel, neverScanned];
-
-        ParkOverviewDto overview = ParkOverviewCalculator.Build(projects,
-            RuntimeDeadlineCalculator.Compute(projects, Today), 5);
+        ParkOverviewDto overview = ParkOverviewCalculator.Build([tily, sentinel, neverScanned],
+            new VulnerabilityTotalsRow(1, 1, 0, 0, 0, 1),
+            new DependencyTotalsRow(4, 1, 0, 2, 0, 1, 1),
+            deadlines, 5);
 
         overview.ProjectCount.Should().Be(3);
-        overview.AverageScore.Should().Be((int)Math.Round((tily.HealthScore!.Value + sentinel.HealthScore!.Value) / 2.0));
+        overview.AverageScore.Should().Be(79);
         overview.ScoreDelta.Should().Be(5);
         overview.Vulnerabilities.Critical.Should().Be(1);
         overview.Vulnerabilities.KnownExploited.Should().Be(1);
@@ -48,7 +48,8 @@ public class ParkOverviewCalculatorTests
     [Fact]
     public void Build_AucunProjetEvalue_ScoreIndisponible()
     {
-        ParkOverviewDto overview = ParkOverviewCalculator.Build([new ProjectGraphBuilder().BuildUnscored()], [], null);
+        ParkOverviewDto overview = ParkOverviewCalculator.Build([ProjectRow("Nouveau", null, null)],
+            VulnerabilityTotalsRow.Empty, DependencyTotalsRow.Empty, [], null);
 
         overview.AverageScore.Should().BeNull();
         overview.Grade.Should().BeNull();

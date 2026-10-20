@@ -6,6 +6,8 @@ public sealed record ProjectSummaryRow(
     Guid Id,
     string Name,
     string? RepositoryUrl,
+    string? Branch,
+    string? RootPath,
     RepositoryType RepositoryType,
     DateTime? LastScanAt,
     string? LastScanError,

@@ -31,6 +31,7 @@ public class TicketsController : BaseController
     private const int AttachmentRequestSizeLimitBytes = 12 * 1024 * 1024;
 
     [HttpGet]
+    [AllowApiKey]
     public async Task<ActionResult<PagedResult<TicketDto>>> GetTickets(
         [FromQuery] TicketGridModel query,
         [FromServices] TicketGridService service,
@@ -66,6 +67,7 @@ public class TicketsController : BaseController
         ToActionResult(await service.ExecuteAsync(request, cancellationToken));
 
     [HttpGet("{id:guid}")]
+    [AllowApiKey]
     public async Task<ActionResult<TicketDto>> GetTicket(
         Guid id,
         [FromServices] TicketGetByIdService service,

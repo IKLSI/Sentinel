@@ -9,6 +9,7 @@ interface Props {
   subtitle: string;
   sx?: SxProps<Theme>;
   iconSize?: number;
+  action?: React.ReactNode;
 }
 
 export const EmptyState: React.FC<Props> = ({
@@ -17,6 +18,7 @@ export const EmptyState: React.FC<Props> = ({
   subtitle,
   sx,
   iconSize = 32,
+  action,
 }) => (
   <Box className="empty-state" sx={{ padding: "24px !important", ...sx }}>
     <Box className="empty-state-icon">
@@ -28,5 +30,6 @@ export const EmptyState: React.FC<Props> = ({
     <Box className="empty-state-subtitle" sx={{ fontSize: "14px !important" }}>
       {subtitle}
     </Box>
+    {action && <Box sx={{ mt: "16px" }}>{action}</Box>}
   </Box>
 );

@@ -55,8 +55,8 @@ export const Sidebar: React.FC = () => {
   }, [pathname, filteredSections]);
 
   useEffect(() => {
-    if (isMobile) close();
-  }, [isMobile, close]);
+    if (isMobile && pathname) close();
+  }, [isMobile, pathname, close]);
 
   useEffect(() => {
     if (isMobile && isOpen) {

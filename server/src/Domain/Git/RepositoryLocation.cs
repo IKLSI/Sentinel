@@ -6,6 +6,7 @@ public readonly record struct RepositoryLocation(string Host, string Owner, stri
 {
     private const string GitSuffix = ".git";
     private const string GitLabRouteSeparator = "-";
+    private const string TreeSegment = "tree";
 
     public static bool TryParse(string? url, out RepositoryLocation location)
     {
@@ -29,6 +30,23 @@ public readonly record struct RepositoryLocation(string Host, string Owner, stri
                 : repository);
 
         return true;
+    }
+
+    public static (string? Branch, string? Path) ReadTreeReference(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url.TrimEnd('/'), UriKind.Absolute, out Uri? uri))
+            return (null, null);
+
+        string[] segments = uri.AbsolutePath.Trim('/').Split('/');
+        int treeIndex = Array.IndexOf(segments, TreeSegment);
+
+        if (treeIndex < 0 || treeIndex + 1 >= segments.Length) return (null, null);
+
+        string? path = treeIndex + 2 < segments.Length
+            ? string.Join('/', segments[(treeIndex + 2)..].Select(Uri.UnescapeDataString))
+            : null;
+
+        return (Uri.UnescapeDataString(segments[treeIndex + 1]), path);
     }
 
     private static string[] RepositorySegments(string host, string[] segments)

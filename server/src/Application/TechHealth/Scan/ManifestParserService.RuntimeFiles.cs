@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
@@ -58,8 +59,44 @@ public partial class ManifestParserService
         ["dart"] = "Dart",
     };
 
+    private static readonly Dictionary<string, string> DockerOperatingSystemImages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["alpine"] = "Alpine Linux",
+        ["debian"] = "Debian",
+        ["ubuntu"] = "Ubuntu",
+        ["centos"] = "CentOS",
+        ["rockylinux"] = "Rocky Linux",
+        ["rockylinux/rockylinux"] = "Rocky Linux",
+        ["almalinux"] = "AlmaLinux",
+        ["amazonlinux"] = "Amazon Linux",
+        ["fedora"] = "Fedora",
+    };
+
+    private static readonly Dictionary<string, string> DebianCodenames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["stretch"] = "9",
+        ["buster"] = "10",
+        ["bullseye"] = "11",
+        ["bookworm"] = "12",
+        ["trixie"] = "13",
+    };
+
+    private static readonly Dictionary<string, string> UbuntuCodenames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["bionic"] = "18.04",
+        ["focal"] = "20.04",
+        ["jammy"] = "22.04",
+        ["lunar"] = "23.04",
+        ["mantic"] = "23.10",
+        ["noble"] = "24.04",
+        ["oracular"] = "24.10",
+        ["plucky"] = "25.04",
+        ["questing"] = "25.10",
+    };
+
     private static readonly HashSet<string> RuntimeDeclarationFileNames = new(StringComparer.OrdinalIgnoreCase)
     {
+        "gradle-wrapper.properties",
         "global.json",
         "go.work",
         "runtime.txt",
@@ -166,9 +203,9 @@ public partial class ManifestParserService
 
     private static void ParseDockerfile(Guid projectId, string content, List<Runtime> runtimes)
     {
-        foreach (Match from in Regex.Matches(content, @"^\s*FROM\s+(\S+)", RegexOptions.Multiline | RegexOptions.IgnoreCase))
+        foreach (Match from in Regex.Matches(content, @"^\s*FROM\s+(?:--\S+\s+)*(\S+)", RegexOptions.Multiline | RegexOptions.IgnoreCase))
         {
-            string reference = from.Groups[1].Value;
+            string reference = DockerRegistryPrefixRegex().Replace(from.Groups[1].Value, string.Empty);
 
             int digest = reference.IndexOf('@');
             if (digest >= 0) reference = reference[..digest];
@@ -179,6 +216,9 @@ public partial class ManifestParserService
             string image = reference[..tagSeparator];
             string tag = reference[(tagSeparator + 1)..];
 
+            if (DetectBaseOperatingSystem(image, tag) is (string osName, string osVersion))
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = osName, Version = osVersion });
+
             if (tag.Length == 0 || !char.IsDigit(tag[0])) continue;
             if (!DockerBaseImageRuntimes.TryGetValue(image, out string? runtimeName)) continue;
 
@@ -188,6 +228,78 @@ public partial class ManifestParserService
             runtimes.Add(new Runtime { ProjectId = projectId, Name = runtimeName, Version = version });
         }
     }
+
+    [GeneratedRegex(@"^(?:(?:index\.)?docker\.io/)?(?:library/)?", RegexOptions.IgnoreCase)]
+    private static partial Regex DockerRegistryPrefixRegex();
+
+    private static (string Name, string Version)? DetectBaseOperatingSystem(string image, string tag)
+    {
+        if (DockerOperatingSystemImages.TryGetValue(image, out string? operatingSystem))
+        {
+            string release = tag.Split('-')[0];
+            string? version = operatingSystem switch
+            {
+                "Debian" when DebianCodenames.TryGetValue(release, out string? debian) => debian,
+                "Ubuntu" when UbuntuCodenames.TryGetValue(release, out string? ubuntu) => ubuntu,
+                _ => char.IsDigit(release.FirstOrDefault()) ? ReadDeclaredVersion(release) : null
+            };
+
+            return version == null ? null : (operatingSystem, version);
+        }
+
+        foreach (string part in tag.Split('-'))
+        {
+            Match alpine = AlpineTagRegex().Match(part);
+            if (alpine.Success) return ("Alpine Linux", alpine.Groups[1].Value);
+
+            if (DebianCodenames.TryGetValue(part, out string? debianVersion)) return ("Debian", debianVersion);
+            if (UbuntuCodenames.TryGetValue(part, out string? ubuntuVersion)) return ("Ubuntu", ubuntuVersion);
+        }
+
+        return null;
+    }
+
+    private static void ParseGradleWrapperProperties(Guid projectId, string content, List<Runtime> runtimes)
+    {
+        Match distribution = GradleDistributionRegex().Match(content);
+
+        if (distribution.Success)
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Gradle", Version = distribution.Groups[1].Value });
+    }
+
+    private static void AddDependencyDerivedRuntimes(Guid projectId, List<Dependency> deps, List<Runtime> runtimes)
+    {
+        foreach (Dependency dependency in deps)
+        {
+            if (!DependencyRuntimes.TryGetValue((dependency.Ecosystem, dependency.Name), out string? runtimeName))
+                continue;
+            if (!VersionText.StartsWithDigit(dependency.CurrentVersion)) continue;
+            if (runtimes.Any(runtime => runtime.Name == runtimeName)) continue;
+
+            runtimes.Add(new Runtime
+            {
+                ProjectId = projectId,
+                Name = runtimeName,
+                Version = dependency.CurrentVersion,
+                IsMinimumConstraint = !dependency.IsVersionPinned
+            });
+        }
+    }
+
+    private static readonly Dictionary<(DependencyEcosystem, string), string> DependencyRuntimes = new()
+    {
+        [(DependencyEcosystem.Maven, "org.springframework:spring-core")] = "Spring Framework",
+        [(DependencyEcosystem.Maven, "org.springframework:spring-context")] = "Spring Framework",
+        [(DependencyEcosystem.Maven, "io.quarkus:quarkus-core")] = "Quarkus",
+        [(DependencyEcosystem.Maven, "io.quarkus.platform:quarkus-bom")] = "Quarkus",
+        [(DependencyEcosystem.Hex, "phoenix")] = "Phoenix",
+    };
+
+    [GeneratedRegex(@"^alpine(\d+\.\d+)$", RegexOptions.IgnoreCase)]
+    private static partial Regex AlpineTagRegex();
+
+    [GeneratedRegex(@"distributionUrl=.*gradle-(\d+(?:\.\d+)*)-(?:bin|all)\.zip")]
+    private static partial Regex GradleDistributionRegex();
 
     private static string? ReadDeclaredVersion(string declaration)
     {

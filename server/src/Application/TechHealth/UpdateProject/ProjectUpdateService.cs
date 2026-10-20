@@ -1,3 +1,4 @@
+using Sentinel.Domain.TechHealth;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -18,33 +19,41 @@ public class ProjectUpdateService(
     ITenantContext tenant,
     ProjectUpdateValidator validator) : IService
 {
-    public async Task<Result<ProjectScanFrequencyDto>> ExecuteAsync(Guid projectId, UpdateProjectDto model,
+    public async Task<Result<ProjectScanSettingsDto>> ExecuteAsync(Guid projectId, UpdateProjectDto model,
         CancellationToken cancellationToken)
     {
         Result validationResult = await validator.ValidateAsync(model, cancellationToken);
 
         if (!validationResult.IsSuccess)
-            return Result<ProjectScanFrequencyDto>.From(validationResult);
+            return Result<ProjectScanSettingsDto>.From(validationResult);
 
         if (tenant.OrganizationId is not Guid organizationId)
-            return Result<ProjectScanFrequencyDto>.Unauthorized();
+            return Result<ProjectScanSettingsDto>.Unauthorized();
 
         Project? project = await projectRepository.GetOrDefaultInOrganizationAsync(projectId, organizationId,
             QueryTracking.Tracked, cancellationToken);
 
         if (project == null)
-            return Result<ProjectScanFrequencyDto>.NotFound(ErrorCodes.ProjectNotFound);
+            return Result<ProjectScanSettingsDto>.NotFound(ErrorCodes.ProjectNotFound);
 
         if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
         {
-            return Result<ProjectScanFrequencyDto>.Error(
+            return Result<ProjectScanSettingsDto>.Error(
                 ErrorCodes.ProjectInvalidScanFrequency,
                 new Dictionary<string, string> { ["values"] = string.Join(", ", Enum.GetNames<ScanFrequency>()) });
         }
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
+            string? branch = string.IsNullOrWhiteSpace(model.Branch) ? null : model.Branch.Trim();
+            string? rootPath = RepositoryScanPaths.NormalizeRootPath(model.RootPath);
+
+            if (branch != project.Branch || rootPath != project.RootPath)
+                project.LastScannedCommitSha = null;
+
             project.ScanFrequency = scanFrequency;
+            project.Branch = branch;
+            project.RootPath = rootPath;
             await commitScope.CommitAsync(cancellationToken);
         }
 
@@ -59,6 +68,11 @@ public class ProjectUpdateService(
             entityId: projectId,
             jti: tenant.Jti);
 
-        return new ProjectScanFrequencyDto { ScanFrequency = project.ScanFrequency.ToString() };
+        return new ProjectScanSettingsDto
+        {
+            ScanFrequency = project.ScanFrequency.ToString(),
+            Branch = project.Branch,
+            RootPath = project.RootPath
+        };
     }
 }

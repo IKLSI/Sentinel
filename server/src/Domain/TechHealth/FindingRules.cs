@@ -5,11 +5,22 @@ namespace Sentinel.Domain.TechHealth;
 
 public static class FindingRules
 {
+    private static readonly TimeSpan ApproachingEolWindow = TimeSpan.FromDays(90);
+
     public static bool IsOutdated(Dependency dependency) =>
-        dependency.Status == DependencyStatus.EOL || UpdateStatusOf(dependency) != DependencyStatus.UpToDate;
+        dependency.IsDeprecated || UpdateStatusOf(dependency) != DependencyStatus.UpToDate;
 
     public static DependencyStatus UpdateStatusOf(Dependency dependency) =>
-        DependencyStatusCalculator.Compute(dependency.CurrentVersion, dependency.LatestVersion);
+        DependencyStatusCalculator.UpdateOf(dependency);
 
-    public static bool IsEol(RuntimeGroup group) => group.MostAtRisk.IsEol == true;
+    public static bool IsEol(RuntimeGroup group) => IsEffectivelyEol(group.MostAtRisk);
+
+    public static bool IsEffectivelyEol(Runtime runtime) => runtime.IsEol == true && !runtime.IsMinimumConstraint;
+
+    public static bool IsApproachingEol(Runtime runtime, DateTime now) =>
+        !runtime.IsMinimumConstraint
+        && runtime.IsEol != true
+        && runtime.EolDate is DateTime eolDate
+        && eolDate > now
+        && eolDate - now <= ApproachingEolWindow;
 }

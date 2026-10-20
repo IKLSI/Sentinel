@@ -22,7 +22,7 @@ public class IntegrationConnectValidator : IValidator
             errors
                 .MaxLength(nameof(model.BaseUrl), model.BaseUrl, MaxBaseUrlLength,
                     ValidationCodes.OrganizationGitlabUrlMaxLength)
-                .HttpUrl(nameof(model.BaseUrl), model.BaseUrl, ValidationCodes.OrganizationGitlabUrlInvalid);
+                .HttpsUrl(nameof(model.BaseUrl), model.BaseUrl, ValidationCodes.OrganizationGitlabUrlInvalid);
         }
 
         return Task.FromResult(errors.ToResult());

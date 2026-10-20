@@ -16,7 +16,9 @@ export const RING_SIZE = 38;
 
 export const RING_THICKNESS = 4;
 
-export const CHART_MIN_HEIGHT = 140;
+const CHART_MIN_HEIGHT = 140;
+
+export const RESPONSIVE_CHART_MIN_HEIGHT = { xs: CHART_MIN_HEIGHT, lg: 0 };
 
 export const SCORE_AXIS_PADDING = 5;
 

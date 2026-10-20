@@ -11,6 +11,7 @@ import {
   VirtualTable,
   type VirtualTableColumn,
 } from "@/components/ui/common/VirtualTable";
+import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
 import { type DependencyStatus, FindingKind } from "@/enums";
@@ -60,7 +61,10 @@ const comparators = {
     statusOf(a).weight - statusOf(b).weight,
 };
 
-const searchableValues = (dependency: Dependency) => [dependency.name];
+const searchableValues = (dependency: Dependency) => [
+  dependency.name,
+  dependency.manifestPath ?? "",
+];
 
 const ecosystemSx = {
   fontFamily: "var(--font-mono)",
@@ -87,6 +91,13 @@ const vulnCountSx = {
   fontSize: "11px",
   fontWeight: 700,
   color: "var(--red)",
+} as const;
+
+const manifestPathSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "10px",
+  color: "var(--muted)",
+  minWidth: 0,
 } as const;
 
 const NO_VALUE = "—";
@@ -119,6 +130,11 @@ const DependencyRow = memo<RowProps>(
       <TR index={index}>
         <TD>
           <TruncatedText mono strong text={dependency.name} />
+          {dependency.manifestPath && (
+            <Box sx={manifestPathSx}>
+              <TruncatedText text={dependency.manifestPath} />
+            </Box>
+          )}
         </TD>
         <TD>
           <Box component="span" sx={ecosystemSx}>
@@ -137,7 +153,13 @@ const DependencyRow = memo<RowProps>(
         </TD>
         <TD muted>
           <Box sx={versionSx}>
-            <span>{dependency.currentVersion}</span>
+            {dependency.isVersionPinned ? (
+              <span>{dependency.currentVersion}</span>
+            ) : (
+              <AppTooltip title={t("tech_health.version.range_hint")}>
+                <span>{`≥ ${dependency.currentVersion}`}</span>
+              </AppTooltip>
+            )}
             {dependency.latestVersion &&
               dependency.latestVersion !== dependency.currentVersion && (
                 <>
@@ -152,7 +174,7 @@ const DependencyRow = memo<RowProps>(
           </Box>
         </TD>
         <TD>
-          <StatusChip variant="gray">{t(status.labelKey)}</StatusChip>
+          <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
         </TD>
         <TD align="center">
           {vulnCount > 0 ? (

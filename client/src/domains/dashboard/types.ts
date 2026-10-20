@@ -2,8 +2,6 @@ import type { components } from "@/types/api.gen";
 
 export type DashboardStats = components["schemas"]["DashboardStatsDto"];
 
-export type DashboardPeriod = components["schemas"]["DashboardPeriod"];
-
 export type ParkOverview = components["schemas"]["ParkOverviewDto"];
 
 export type ScorePoint = components["schemas"]["ScorePointDto"];

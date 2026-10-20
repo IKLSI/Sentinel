@@ -8,6 +8,11 @@ import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { MemberRow } from "@/features/settings/pages/SettingsPage/components/MemberRow";
+import {
+  MemberAccessConfirmModal,
+  type PendingMemberChange,
+} from "@/features/settings/pages/SettingsPage/components/MemberAccessConfirmModal";
+import type { User } from "@/domains/users/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/contexts/I18nContext";
 import { useUpdateUserMutation } from "@/domains/users/mutations";
@@ -60,6 +65,8 @@ export const MembersTab: React.FC<Props> = ({
   );
 
   const updateAccessStatus = useUpdateUserMutation();
+  const [pendingChange, setPendingChange] =
+    useState<PendingMemberChange | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
   const [page, setPage] = useState(1);
@@ -118,21 +125,35 @@ export const MembersTab: React.FC<Props> = ({
     { key: ACTIONS_COLUMN_KEY, label: "", width: "8%" },
   ];
 
-  const handleToggleAccessStatus = (
-    memberId: string,
-    currentStatus: string,
-  ) => {
+  const handleToggleAccessStatus = (member: User) => {
+    if (member.accessStatus === UserAccessStatus.Active) {
+      setPendingChange({ kind: "suspend", member });
+      return;
+    }
+    updateAccessStatus.mutate(
+      { id: member.id, data: { accessStatus: UserAccessStatus.Active } },
+      { onError: onToggleError },
+    );
+  };
+
+  const handleRoleChange = (member: User, role: string) => {
+    if (role !== member.role) setPendingChange({ kind: "role", member, role });
+  };
+
+  const confirmPendingChange = () => {
+    if (!pendingChange) return;
     updateAccessStatus.mutate(
       {
-        id: memberId,
-        data: {
-          accessStatus:
-            currentStatus === UserAccessStatus.Active
-              ? UserAccessStatus.Suspended
-              : UserAccessStatus.Active,
-        },
+        id: pendingChange.member.id,
+        data:
+          pendingChange.kind === "role"
+            ? { role: pendingChange.role }
+            : { accessStatus: UserAccessStatus.Suspended },
       },
-      { onError: onToggleError },
+      {
+        onSuccess: () => setPendingChange(null),
+        onError: onToggleError,
+      },
     );
   };
 
@@ -241,13 +262,14 @@ export const MembersTab: React.FC<Props> = ({
                     <MemberRow
                       key={m.id}
                       member={m}
-                      roleLabel={ROLE_LABELS[m.role] ?? m.role}
+                      roleLabels={ROLE_LABELS}
                       isCurrentUser={m.id === user?.id}
-                      toggling={
+                      busy={
                         updateAccessStatus.isPending &&
                         updateAccessStatus.variables?.id === m.id
                       }
                       onToggleAccessStatus={handleToggleAccessStatus}
+                      onRoleChange={handleRoleChange}
                     />
                   ))}
                 </Box>
@@ -269,6 +291,14 @@ export const MembersTab: React.FC<Props> = ({
           </Box>
         )}
       </Box>
+
+      <MemberAccessConfirmModal
+        change={pendingChange}
+        roleLabels={ROLE_LABELS}
+        saving={updateAccessStatus.isPending}
+        onClose={() => setPendingChange(null)}
+        onConfirm={confirmPendingChange}
+      />
     </>
   );
 };

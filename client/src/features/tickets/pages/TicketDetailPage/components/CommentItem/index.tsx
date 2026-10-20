@@ -2,8 +2,6 @@ import React from "react";
 import Box from "@mui/material/Box";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
-import { format } from "date-fns";
-import { getDateFnsLocale } from "@/configs/locales";
 import { useI18n, useT } from "@/contexts/I18nContext";
 import { useDownloadAttachmentMutation } from "@/domains/tickets/downloads";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
@@ -18,6 +16,7 @@ import {
   parseCommentContent,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { initialsFromName } from "@/formatters/initials";
+import { formatShortDateTime } from "@/formatters/date";
 
 type Comment = Ticket["comments"][number];
 
@@ -120,9 +119,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               fontSize: "11px",
             }}
           >
-            {format(new Date(c.createdAt), "HH:mm", {
-              locale: getDateFnsLocale(culture),
-            })}
+            {formatShortDateTime(c.createdAt, culture)}
           </Box>
 
           {isOwn && (

@@ -14,18 +14,16 @@ public class DueProjectScanServiceTests
     {
         public List<(Guid ProjectId, TimeSpan Delay)> Scheduled { get; } = new();
 
-        public void Enqueue<TJob>(Expression<Func<TJob, Task>> methodCall) =>
-            throw new NotSupportedException();
+        public void Enqueue<TJob>(string queue, Expression<Func<TJob, Task>> methodCall) =>
+            Schedule(queue, methodCall, TimeSpan.Zero);
 
-        public void Schedule<TJob>(Expression<Func<TJob, Task>> methodCall, TimeSpan delay)
+        public void Schedule<TJob>(string queue, Expression<Func<TJob, Task>> methodCall, TimeSpan delay)
         {
             MethodCallExpression call = (MethodCallExpression)methodCall.Body;
             Guid projectId = (Guid)Expression.Lambda(call.Arguments[0]).Compile().DynamicInvoke()!;
 
             Scheduled.Add((projectId, delay));
         }
-
-        public void TriggerRecurring(string recurringJobId) => throw new NotSupportedException();
     }
 
     [Fact]
@@ -77,8 +75,54 @@ public class DueProjectScanServiceTests
         jobs.Scheduled[0].Delay.Should().Be(TimeSpan.Zero);
     }
 
+    [Fact]
+    public async Task ScheduleAllForOrganizationAsync_QueuesEveryProjectImmediately()
+    {
+        using TestScope scope = new TestScope();
+        Project recentlyScanned = NewProject(scope, ScanFrequency.Weekly, DateTime.UtcNow.AddHours(-1));
+        Project manual = NewProject(scope, ScanFrequency.Manual, null);
+        await scope.SeedAsync(scope.NewOrganization(), recentlyScanned, manual);
+
+        RecordingJobScheduler jobs = new RecordingJobScheduler();
+
+        await Build(scope, jobs).ScheduleAllForOrganizationAsync(scope.OrganizationId, CancellationToken.None);
+
+        jobs.Scheduled.Select(job => job.ProjectId).Should().BeEquivalentTo([recentlyScanned.Id, manual.Id]);
+        jobs.Scheduled.Should().OnlyContain(job => job.Delay == TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task ScheduleAllForOrganizationAsync_ProjectAlreadyQueued_IsNotScheduledTwice()
+    {
+        using TestScope scope = new TestScope();
+        Project daily = NewProject(scope, ScanFrequency.Daily, null);
+        await scope.SeedAsync(scope.NewOrganization(), daily);
+
+        RecordingJobScheduler jobs = new RecordingJobScheduler();
+        DueProjectScanService service = Build(scope, jobs);
+
+        await service.ScheduleAllForOrganizationAsync(scope.OrganizationId, CancellationToken.None);
+        await service.ScheduleAllForOrganizationAsync(scope.OrganizationId, CancellationToken.None);
+
+        jobs.Scheduled.Select(job => job.ProjectId).Should().ContainSingle().Which.Should().Be(daily.Id);
+    }
+
+    [Fact]
+    public async Task ScheduleAllForOrganizationAsync_OtherOrganizationProjects_AreNotScheduled()
+    {
+        using TestScope scope = new TestScope();
+        Project daily = NewProject(scope, ScanFrequency.Daily, null);
+        await scope.SeedAsync(scope.NewOrganization(), daily);
+
+        RecordingJobScheduler jobs = new RecordingJobScheduler();
+
+        await Build(scope, jobs).ScheduleAllForOrganizationAsync(Guid.NewGuid(), CancellationToken.None);
+
+        jobs.Scheduled.Should().BeEmpty();
+    }
+
     private static DueProjectScanService Build(TestScope scope, IJobScheduler jobs) =>
-        new DueProjectScanService(scope.Projects, jobs, NullLogger<DueProjectScanService>.Instance);
+        new DueProjectScanService(scope.Projects, jobs, new ProjectScanGate(), NullLogger<DueProjectScanService>.Instance);
 
     private static Project NewProject(TestScope scope, ScanFrequency frequency, DateTime? lastScanAt) => new()
     {

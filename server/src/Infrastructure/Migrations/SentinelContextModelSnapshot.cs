@@ -154,7 +154,13 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDeprecated")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDirect")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsVersionPinned")
                         .HasColumnType("boolean");
 
                     b.Property<string>("LatestVersion")
@@ -163,6 +169,10 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<string>("License")
                         .HasColumnType("text");
+
+                    b.Property<string>("ManifestPath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -325,6 +335,10 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Branch")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("Coverage")
                         .IsRequired()
                         .HasColumnType("text");
@@ -360,6 +374,10 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.Property<string>("RepositoryUrl")
                         .HasColumnType("text");
+
+                    b.Property<string>("RootPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ScanFrequency")
                         .IsRequired()
@@ -421,6 +439,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool?>("IsEol")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsMinimumConstraint")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -898,6 +919,52 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("VulnerabilityResolutions");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Entities.VulnerabilitySuppression", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FindingKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Justification")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProjectId", "FindingKey")
+                        .IsUnique();
+
+                    b.ToTable("VulnerabilitySuppressions");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>
                 {
                     b.HasOne("Sentinel.Domain.Entities.User", "CreatedBy")
@@ -1091,6 +1158,17 @@ namespace Sentinel.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.VulnerabilityResolution", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Entities.VulnerabilitySuppression", b =>
                 {
                     b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany()

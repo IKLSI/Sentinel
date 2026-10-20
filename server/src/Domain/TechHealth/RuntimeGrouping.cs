@@ -21,6 +21,7 @@ public static class RuntimeGrouping
 
     private static int RiskRank(Runtime runtime) => runtime switch
     {
+        { IsMinimumConstraint: true } => 4,
         { IsEol: true } => 0,
         { EolDate: not null } => 1,
         { IsEol: false } => 2,

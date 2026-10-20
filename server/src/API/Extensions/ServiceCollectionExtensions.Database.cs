@@ -62,10 +62,11 @@ public static partial class ServiceCollectionExtensions
     }
 
     private const string HangfireApplicationName = "sentinel-hangfire";
-    private const int HangfireMaxPoolSize = 5;
+    private const int HangfireMaxPoolSize = 8;
     private const int HangfireKeepAliveSeconds = 30;
     private const int HangfireConnectionIdleLifetimeSeconds = 60;
-    private const int HangfireWorkerCount = 2;
+    private const int HangfireScanWorkerCount = 2;
+    private const int HangfireGeneralWorkerCount = 1;
     private static readonly TimeSpan HangfireSchedulePollingInterval = TimeSpan.FromMinutes(1);
 
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
@@ -94,7 +95,17 @@ public static partial class ServiceCollectionExtensions
 
         services.AddHangfireServer(options =>
         {
-            options.WorkerCount = HangfireWorkerCount;
+            options.ServerName = $"{Environment.MachineName}:general";
+            options.Queues = [JobQueues.Emails, JobQueues.Default];
+            options.WorkerCount = HangfireGeneralWorkerCount;
+            options.SchedulePollingInterval = HangfireSchedulePollingInterval;
+        });
+
+        services.AddHangfireServer(options =>
+        {
+            options.ServerName = $"{Environment.MachineName}:scans";
+            options.Queues = [JobQueues.Scans];
+            options.WorkerCount = HangfireScanWorkerCount;
             options.SchedulePollingInterval = HangfireSchedulePollingInterval;
         });
 

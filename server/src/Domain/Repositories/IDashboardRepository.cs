@@ -27,4 +27,15 @@ public interface IDashboardRepository
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DashboardProjectRow>> GetProjectsAsync(Guid organizationId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DashboardRuntimeRow>> GetRuntimesAsync(Guid organizationId,
+        CancellationToken cancellationToken);
+
+    Task<VulnerabilityTotalsRow> GetVulnerabilityTotalsAsync(Guid organizationId,
+        CancellationToken cancellationToken);
+
+    Task<DependencyTotalsRow> GetDependencyTotalsAsync(Guid organizationId, CancellationToken cancellationToken);
 }

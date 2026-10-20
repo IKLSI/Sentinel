@@ -6,13 +6,11 @@ import { ROUTES } from "@/constants/routes";
 
 interface ErrorPageProps {
   status?: number;
-  message?: string;
   onRetry?: () => void;
 }
 
 export const ErrorPage: React.FC<ErrorPageProps> = ({
   status = 500,
-  message,
   onRetry,
 }) => {
   const navigate = useNavigate();
@@ -20,7 +18,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   const supportEmail = useAppConfigQuery().data?.supportEmail ?? "";
 
   const is404 = status === 404;
-  const defaultMessage = t(is404 ? "error.404.title" : "error.500.title");
+  const title = t(is404 ? "error.404.title" : "error.500.title");
   const subtitle = t(is404 ? "error.404.subtitle" : "error.500.subtitle");
 
   return (
@@ -30,7 +28,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
       <div className="ep-ghost">{status}</div>
 
       <div className="ep-content">
-        <div className="ep-title">{message ?? defaultMessage}</div>
+        <div className="ep-title">{title}</div>
         <div className="ep-subtitle">{subtitle}</div>
 
         <div className="ep-line">

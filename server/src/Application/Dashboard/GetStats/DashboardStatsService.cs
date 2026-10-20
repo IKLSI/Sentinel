@@ -1,9 +1,7 @@
-using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 
@@ -12,88 +10,77 @@ namespace Sentinel.Application.Dashboard.GetStats;
 public class DashboardStatsService(
     IDashboardRepository dashboardRepository,
     IProjectRepository projectRepository,
-    DashboardStatsValidator validator,
-    IMemoryCache cache,
+    DashboardCache dashboardCache,
     ITenantContext tenant) : IService
 {
     private const int ActivityCount = 8;
-    private const int MaxProjects = 500;
     private const int ProjectRowCount = 5;
     private const int UrgentTicketCount = 8;
+    private const int WindowDays = 30;
 
-    public async Task<Result<DashboardStatsDto>> ExecuteAsync(DashboardStatsRequest request,
-        CancellationToken cancellationToken)
+    public async Task<Result<DashboardStatsDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
         if (tenant.OrganizationId is not Guid organizationId || organizationId == Guid.Empty)
             return Result<DashboardStatsDto>.Unauthorized();
 
-        Result validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (dashboardCache.TryGet(organizationId, out DashboardStatsDto? cached))
+            return cached!;
 
-        if (!validationResult.IsSuccess)
-            return Result<DashboardStatsDto>.From(validationResult);
+        long version = dashboardCache.VersionOf(organizationId);
 
-        if (cache.TryGetValue(CacheKeys.Dashboard(organizationId, (int)request.Period),
-                out DashboardStatsDto? cached) && cached != null)
-            return cached;
+        DashboardStatsDto stats = await BuildAsync(organizationId, cancellationToken);
 
-        IReadOnlyDictionary<DashboardPeriod, DashboardStatsDto> statsByPeriod =
-            await BuildAllPeriodsAsync(organizationId, cancellationToken);
+        dashboardCache.Store(organizationId, version, stats);
 
-        MemoryCacheEntryOptions cacheOptions = new()
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
-            Priority = CacheItemPriority.High,
-            Size = 1
-        };
-
-        foreach ((DashboardPeriod period, DashboardStatsDto stats) in statsByPeriod)
-            cache.Set(CacheKeys.Dashboard(organizationId, (int)period), stats, cacheOptions);
-
-        return statsByPeriod[request.Period];
+        return stats;
     }
 
-    private async Task<IReadOnlyDictionary<DashboardPeriod, DashboardStatsDto>> BuildAllPeriodsAsync(
-        Guid organizationId, CancellationToken cancellationToken)
+    private async Task<DashboardStatsDto> BuildAsync(Guid organizationId, CancellationToken cancellationToken)
     {
         DateTime now = DateTime.UtcNow;
         DateOnly today = DateOnly.FromDateTime(now);
-        DateOnly widestStart = WindowStart(Enum.GetValues<DashboardPeriod>().Max(), today);
-        DateTime widestStartAt = widestStart.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        DateOnly windowStart = today.AddDays(-(WindowDays - 1));
+        DateTime windowStartAt = windowStart.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
 
-        IReadOnlyList<Project> projects = await projectRepository.ListWithHealthDetailsByNameAsync(organizationId,
-            MaxProjects, cancellationToken);
+        IReadOnlyList<DashboardProjectRow> projects =
+            await dashboardRepository.GetProjectsAsync(organizationId, cancellationToken);
+        IReadOnlyList<DashboardRuntimeRow> runtimes =
+            await dashboardRepository.GetRuntimesAsync(organizationId, cancellationToken);
+        VulnerabilityTotalsRow vulnerabilityTotals =
+            await dashboardRepository.GetVulnerabilityTotalsAsync(organizationId, cancellationToken);
+        DependencyTotalsRow dependencyTotals =
+            await dashboardRepository.GetDependencyTotalsAsync(organizationId, cancellationToken);
         IReadOnlyList<OpenTicketRow> openTickets = await dashboardRepository.GetOpenTicketsAsync(organizationId,
             cancellationToken);
-        IReadOnlyList<ScoreSnapshotRow> snapshots = await LoadSnapshotsAsync(organizationId, projects, widestStart,
+        IReadOnlyList<ScoreSnapshotRow> snapshots = await LoadSnapshotsAsync(organizationId, projects, windowStart,
             today, cancellationToken);
         IReadOnlyDictionary<DateTime, int> openDetections = await dashboardRepository
-            .GetVulnerabilityDetectionCountsAsync(organizationId, widestStartAt, cancellationToken);
+            .GetVulnerabilityDetectionCountsAsync(organizationId, windowStartAt, cancellationToken);
         IReadOnlyDictionary<DateTime, int> resolvedDetections = await dashboardRepository
-            .GetResolvedVulnerabilityDetectionCountsAsync(organizationId, widestStartAt, cancellationToken);
+            .GetResolvedVulnerabilityDetectionCountsAsync(organizationId, windowStartAt, cancellationToken);
         IReadOnlyDictionary<DateTime, int> resolutions = await dashboardRepository
-            .GetVulnerabilityResolutionCountsAsync(organizationId, widestStartAt, cancellationToken);
+            .GetVulnerabilityResolutionCountsAsync(organizationId, windowStartAt, cancellationToken);
         List<ActivityItemDto> recentActivity = await BuildRecentActivityAsync(organizationId, now, cancellationToken);
-
-        IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(projects, today);
         List<UrgentTicketDto> urgentTickets = await BuildUrgentTicketsAsync(organizationId, cancellationToken);
 
-        return Enum.GetValues<DashboardPeriod>().ToDictionary(period => period, period =>
-        {
-            DateOnly windowStart = WindowStart(period, today);
-            List<ScorePointDto> scoreHistory = ScoreHistoryBuilder.Build(snapshots, windowStart, today);
+        IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(runtimes, today);
+        List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
+        IReadOnlyList<Project> priorityProjects = await projectRepository.ListWithHealthDetailsByIdsAsync(
+            organizationId, priorityIds, cancellationToken);
+        List<ScorePointDto> scoreHistory = ScoreHistoryBuilder.Build(snapshots, windowStart, today);
 
-            return new DashboardStatsDto
-            {
-                Overview = ParkOverviewCalculator.Build(projects, deadlines, ScoreHistoryBuilder.Delta(scoreHistory)),
-                ScoreHistory = scoreHistory,
-                VulnerabilityFlow = VulnerabilityFlowBuilder.Build(openDetections, resolvedDetections, resolutions,
-                    windowStart, today),
-                UrgentTickets = urgentTickets,
-                Projects = ProjectHealthBuilder.Build(projects, ScoreHistoryBuilder.ScoresAt(snapshots, windowStart),
-                    openTickets, deadlines, ProjectRowCount),
-                RecentActivity = recentActivity,
-            };
-        });
+        return new DashboardStatsDto
+        {
+            Overview = ParkOverviewCalculator.Build(projects, vulnerabilityTotals, dependencyTotals, deadlines,
+                ScoreHistoryBuilder.Delta(scoreHistory)),
+            ScoreHistory = scoreHistory,
+            VulnerabilityFlow = VulnerabilityFlowBuilder.Build(openDetections, resolvedDetections, resolutions,
+                windowStart, today),
+            UrgentTickets = urgentTickets,
+            Projects = ProjectHealthBuilder.Build(priorityIds, priorityProjects,
+                ScoreHistoryBuilder.ScoresAt(snapshots, windowStart), openTickets, deadlines),
+            RecentActivity = recentActivity,
+        };
     }
 
     private async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(Guid organizationId,
@@ -115,10 +102,9 @@ public class DashboardStatsService(
         }).ToList();
     }
 
-    private static DateOnly WindowStart(DashboardPeriod period, DateOnly today) => today.AddDays(-((int)period - 1));
-
     private async Task<IReadOnlyList<ScoreSnapshotRow>> LoadSnapshotsAsync(Guid organizationId,
-        IReadOnlyList<Project> projects, DateOnly windowStart, DateOnly today, CancellationToken cancellationToken)
+        IReadOnlyList<DashboardProjectRow> projects, DateOnly windowStart, DateOnly today,
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<ScoreSnapshotRow> stored = await dashboardRepository.GetScoreSnapshotsAsync(organizationId,
             windowStart, cancellationToken);

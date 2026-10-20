@@ -7,42 +7,60 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public partial class ManifestParserService
 {
+    private static readonly Dictionary<string, string> PythonFrameworkIndicators = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["django"] = "Django",
+        ["flask"] = "Flask",
+        ["fastapi"] = "FastAPI",
+        ["tornado"] = "Tornado",
+        ["aiohttp"] = "aiohttp",
+    };
+
     private static void ParseRequirementsTxt(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Dictionary<string, string> frameworkIndicators = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["django"] = "Django",
-            ["flask"] = "Flask",
-            ["fastapi"] = "FastAPI",
-            ["tornado"] = "Tornado",
-            ["aiohttp"] = "aiohttp",
-        };
-
         foreach (string raw in content.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
             string line = raw.Trim();
             if (line.StartsWith('#') || line.StartsWith('-') || string.IsNullOrEmpty(line)) continue;
 
-            (string name, string version) = ParseRequirementLine(line);
+            AddPythonRequirement(projectId, line, DependencyType.Prod, deps);
+        }
 
-            if (string.IsNullOrEmpty(name)) continue;
+        AddPythonFrameworkRuntimes(projectId, deps, runtimes);
+    }
 
-            if (frameworkIndicators.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = version });
+    private static void AddPythonRequirement(Guid projectId, string requirement, DependencyType type,
+        List<Dependency> deps)
+    {
+        (string name, string version, bool pinned) = ParseRequirementLine(requirement);
 
-            deps.Add(new Dependency
+        if (string.IsNullOrEmpty(name)) return;
+
+        deps.Add(new Dependency
+        {
+            ProjectId = projectId,
+            Name = name,
+            CurrentVersion = version,
+            IsVersionPinned = pinned,
+            Type = type,
+            Ecosystem = DependencyEcosystem.PyPI,
+            Status = DependencyStatus.UpToDate,
+        });
+    }
+
+    private static void AddPythonFrameworkRuntimes(Guid projectId, List<Dependency> deps, List<Runtime> runtimes)
+    {
+        foreach (Dependency dep in deps)
+        {
+            if (PythonFrameworkIndicators.TryGetValue(dep.Name, out string? framework)
+                && !string.IsNullOrEmpty(dep.CurrentVersion))
             {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.PyPI,
-                Status = DependencyStatus.UpToDate,
-            });
+                runtimes.Add(new Runtime { ProjectId = projectId, Name = framework, Version = dep.CurrentVersion });
+            }
         }
     }
 
-    private static (string Name, string Version) ParseRequirementLine(string line)
+    private static (string Name, string Version, bool Pinned) ParseRequirementLine(string line)
     {
         int comment = line.IndexOf('#');
         if (comment >= 0) line = line[..comment];
@@ -53,48 +71,57 @@ public partial class ManifestParserService
         line = line.Trim();
 
         Match name = RequirementNameRegex().Match(line);
-        if (!name.Success) return (string.Empty, string.Empty);
+        if (!name.Success) return (string.Empty, string.Empty, false);
 
         string constraints = line[name.Length..].Trim();
 
         if (constraints.StartsWith('['))
         {
             int extrasEnd = constraints.IndexOf(']');
-            if (extrasEnd < 0) return (name.Groups[1].Value, string.Empty);
+            if (extrasEnd < 0) return (name.Groups[1].Value, string.Empty, false);
             constraints = constraints[(extrasEnd + 1)..];
         }
 
         Match pinned = RequirementPinnedVersionRegex().Match(constraints);
-        if (pinned.Success) return (name.Groups[1].Value, pinned.Groups[1].Value.TrimEnd('*', '.'));
+        if (pinned.Success)
+        {
+            string version = pinned.Groups[1].Value;
+            bool isExact = !version.Contains('*') && !constraints.Contains(',');
+
+            return (name.Groups[1].Value, version.TrimEnd('*', '.'), isExact);
+        }
 
         Match minimum = RequirementMinimumVersionRegex().Match(constraints);
 
-        return (name.Groups[1].Value, minimum.Success ? minimum.Groups[1].Value : string.Empty);
+        return (name.Groups[1].Value, minimum.Success ? minimum.Groups[1].Value : string.Empty, false);
     }
 
     private static void ParsePyprojectToml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Match pythonMatch = Regex.Match(content, @"python\s*=\s*['""]([^'""]+)['""]");
-        if (pythonMatch.Success)
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Python", Version = VersionText.Clean(pythonMatch.Groups[1].Value) });
+        AddPythonRuntimeConstraint(projectId, content, runtimes);
 
-        MatchCollection poetryDepBlocks = Regex.Matches(content,
-            @"\[tool\.poetry(?:\.group\.\w+)?\.dependencies\](.*?)(?=\[|\z)",
-            RegexOptions.Singleline);
-
-        foreach (Match block in poetryDepBlocks)
+        foreach (Match block in PoetryDependencyBlockRegex().Matches(content))
         {
-            bool isDevBlock = block.Value.Contains("dev");
-            foreach (Match dep in Regex.Matches(block.Groups[1].Value, @"^(\w[\w\-\.]+)\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline))
+            string group = block.Groups["group"].Value;
+            bool isDevBlock = block.Groups["legacyDev"].Success
+                || (group.Length > 0 && !group.Equals("main", StringComparison.OrdinalIgnoreCase));
+
+            foreach (Match dep in PoetryDependencyLineRegex().Matches(block.Groups["body"].Value))
             {
-                string name = dep.Groups[1].Value;
+                string name = dep.Groups["name"].Value;
                 if (name.Equals("python", StringComparison.OrdinalIgnoreCase)) continue;
-                string version = VersionText.Clean(dep.Groups[2].Value);
+
+                string? specification = ReadPoetrySpecification(dep.Groups["value"].Value.Trim());
+                if (specification == null) continue;
+
+                string version = VersionText.Clean(specification);
+
                 deps.Add(new Dependency
                 {
                     ProjectId = projectId,
                     Name = name,
-                    CurrentVersion = version,
+                    CurrentVersion = VersionText.StartsWithDigit(version) ? version : string.Empty,
+                    IsVersionPinned = VersionText.IsExact(specification),
                     Type = isDevBlock ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.PyPI,
                     Status = DependencyStatus.UpToDate,
@@ -102,43 +129,85 @@ public partial class ManifestParserService
             }
         }
 
-        Match pep517Match = Regex.Match(content, @"\[project\].*?dependencies\s*=\s*\[(.*?)\]", RegexOptions.Singleline);
-        if (pep517Match.Success)
-        {
-            foreach (Match dep in Regex.Matches(pep517Match.Groups[1].Value, @"[""']([a-zA-Z0-9\-_\.]+)[>=<~!]+([a-zA-Z0-9.\-_]+)[""']"))
-            {
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = dep.Groups[1].Value,
-                    CurrentVersion = dep.Groups[2].Value,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.PyPI,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
-        }
+        foreach (string requirement in ReadProjectDependencies(content))
+            AddPythonRequirement(projectId, requirement, DependencyType.Prod, deps);
 
-        Dictionary<string, string> frameworkMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        AddPythonFrameworkRuntimes(projectId, deps, runtimes);
+    }
+
+    private static void AddPythonRuntimeConstraint(Guid projectId, string content, List<Runtime> runtimes)
+    {
+        Match pythonMatch = PythonVersionRegex().Match(content);
+        if (!pythonMatch.Success) return;
+
+        string specification = pythonMatch.Groups[1].Value;
+        string version = VersionText.Clean(specification);
+        if (!VersionText.StartsWithDigit(version)) return;
+
+        runtimes.Add(new Runtime
         {
-            ["django"] = "Django",
-            ["flask"] = "Flask",
-            ["fastapi"] = "FastAPI",
-        };
-        foreach (Dependency dep in deps)
+            ProjectId = projectId,
+            Name = "Python",
+            Version = version,
+            IsMinimumConstraint = !VersionText.IsExact(specification)
+        });
+    }
+
+    private static string? ReadPoetrySpecification(string value)
+    {
+        if (value.StartsWith('"') || value.StartsWith('\''))
+            return value.Trim('"', '\'');
+
+        if (!value.StartsWith('{')) return null;
+
+        Match inlineVersion = InlineTableVersionRegex().Match(value);
+
+        return inlineVersion.Success ? inlineVersion.Groups[1].Value : null;
+    }
+
+    private static IEnumerable<string> ReadProjectDependencies(string content)
+    {
+        Match projectSection = ProjectSectionRegex().Match(content);
+        if (!projectSection.Success) yield break;
+
+        string section = projectSection.Groups[1].Value;
+        Match start = ProjectDependenciesStartRegex().Match(section);
+        if (!start.Success) yield break;
+
+        int position = start.Index + start.Length;
+        char? quote = null;
+        int itemStart = -1;
+
+        for (; position < section.Length; position++)
         {
-            if (frameworkMap.TryGetValue(dep.Name, out string? fw) && !string.IsNullOrEmpty(dep.CurrentVersion))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = dep.CurrentVersion });
+            char current = section[position];
+
+            if (quote == null)
+            {
+                if (current == ']') yield break;
+                if (current is '"' or '\'')
+                {
+                    quote = current;
+                    itemStart = position + 1;
+                }
+
+                continue;
+            }
+
+            if (current != quote) continue;
+
+            yield return section[itemStart..position];
+            quote = null;
         }
     }
 
     private static void ParsePoetryLock(Guid projectId, string content, List<Dependency> deps)
     {
-        foreach (Match block in Regex.Matches(content, @"\[\[package\]\](.*?)(?=\[\[package\]\]|\z)", RegexOptions.Singleline))
+        foreach (Match block in TomlPackageBlockRegex().Matches(content))
         {
             string b = block.Groups[1].Value;
-            Match nameMatch = Regex.Match(b, @"^\s*name\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
-            Match versionMatch = Regex.Match(b, @"^\s*version\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            Match nameMatch = TomlNameRegex().Match(b);
+            Match versionMatch = TomlVersionRegex().Match(b);
             if (!nameMatch.Success || !versionMatch.Success) continue;
 
             Match categoryMatch = Regex.Match(b, @"^\s*category\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
@@ -150,6 +219,28 @@ public partial class ManifestParserService
                 Name = nameMatch.Groups[1].Value,
                 CurrentVersion = versionMatch.Groups[1].Value,
                 Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.PyPI,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
+    }
+
+    private static void ParseUvLock(Guid projectId, string content, List<Dependency> deps)
+    {
+        foreach (Match block in TomlPackageBlockRegex().Matches(content))
+        {
+            string b = block.Groups[1].Value;
+            Match nameMatch = TomlNameRegex().Match(b);
+            Match versionMatch = TomlVersionRegex().Match(b);
+            if (!nameMatch.Success || !versionMatch.Success) continue;
+            if (UvLocalSourceRegex().IsMatch(b)) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = nameMatch.Groups[1].Value,
+                CurrentVersion = versionMatch.Groups[1].Value,
+                Type = DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.PyPI,
                 Status = DependencyStatus.UpToDate,
             });
@@ -190,4 +281,34 @@ public partial class ManifestParserService
         catch { }
     }
 
+    [GeneratedRegex(@"(?:requires-python|^\s*python)\s*=\s*['""]([^'""]+)['""]", RegexOptions.Multiline)]
+    private static partial Regex PythonVersionRegex();
+
+    [GeneratedRegex(@"^\[tool\.poetry\.(?:group\.(?<group>[\w-]+)\.)?(?<legacyDev>dev-)?dependencies\][^\n]*\n(?<body>.*?)(?=^\[|\z)",
+        RegexOptions.Multiline | RegexOptions.Singleline)]
+    private static partial Regex PoetryDependencyBlockRegex();
+
+    [GeneratedRegex(@"^(?<name>\w[\w\-\.]*)\s*=\s*(?<value>.+)$", RegexOptions.Multiline)]
+    private static partial Regex PoetryDependencyLineRegex();
+
+    [GeneratedRegex(@"version\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex InlineTableVersionRegex();
+
+    [GeneratedRegex(@"^\[project\]\s*\n(.*?)(?=^\[|\z)", RegexOptions.Multiline | RegexOptions.Singleline)]
+    private static partial Regex ProjectSectionRegex();
+
+    [GeneratedRegex(@"^dependencies\s*=\s*\[", RegexOptions.Multiline)]
+    private static partial Regex ProjectDependenciesStartRegex();
+
+    [GeneratedRegex(@"\[\[package\]\](.*?)(?=\[\[package\]\]|\z)", RegexOptions.Singleline)]
+    private static partial Regex TomlPackageBlockRegex();
+
+    [GeneratedRegex(@"^\s*name\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline)]
+    private static partial Regex TomlNameRegex();
+
+    [GeneratedRegex(@"^\s*version\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline)]
+    private static partial Regex TomlVersionRegex();
+
+    [GeneratedRegex(@"^\s*source\s*=\s*\{\s*(?:editable|virtual|directory|path)\s*=", RegexOptions.Multiline)]
+    private static partial Regex UvLocalSourceRegex();
 }

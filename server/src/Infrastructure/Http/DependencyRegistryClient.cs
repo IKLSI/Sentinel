@@ -11,7 +11,7 @@ using Sentinel.Domain.Versioning;
 namespace Sentinel.Infrastructure.Http;
 
 public sealed record RegistryPackage(string? LatestVersion, string? Publisher, string? License = null,
-    bool IsFailure = false)
+    bool IsFailure = false, bool IsDeprecated = false)
 {
     public static readonly RegistryPackage Unresolved = new(null, null, null);
 
@@ -93,11 +93,12 @@ public class DependencyRegistryClient(
         dep.LatestVersion = package.LatestVersion;
         dep.Publisher = package.Publisher ?? NamespacePublisher(dep);
         dep.License = package.License;
+        dep.IsDeprecated = package.IsDeprecated;
     }
 
     private static string? NamespacePublisher(Dependency dep) => dep.Ecosystem switch
     {
-        DependencyEcosystem.Maven or DependencyEcosystem.Gradle => SegmentBefore(dep.Name, ':'),
+        DependencyEcosystem.Maven => SegmentBefore(dep.Name, ':'),
         DependencyEcosystem.Composer => SegmentBefore(dep.Name, '/'),
         DependencyEcosystem.Npm when dep.Name.StartsWith('@') => SegmentBefore(dep.Name, '/')?.TrimStart('@'),
         DependencyEcosystem.Go => GoNamespace(dep.Name),
@@ -155,8 +156,10 @@ public class DependencyRegistryClient(
             ?? FirstPersonName(root, "maintainers")
             ?? PersonName(root, "_npmUser");
         string? license = Text(root, "license");
+        bool isDeprecated = root.TryGetProperty("deprecated", out JsonElement deprecated)
+            && deprecated.ValueKind == JsonValueKind.String;
 
-        return new RegistryPackage(version, publisher, license);
+        return new RegistryPackage(version, publisher, license, IsDeprecated: isDeprecated);
     }
 
     private static async Task<RegistryPackage> FetchNuGetAsync(HttpClient client, string package)
@@ -242,7 +245,11 @@ public class DependencyRegistryClient(
             .ToList();
         string? version = stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
 
-        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"), StringOrFirst(pkg, "license"));
+        bool isAbandoned = pkg.TryGetProperty("abandoned", out JsonElement abandoned)
+            && abandoned.ValueKind is JsonValueKind.True or JsonValueKind.String;
+
+        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"), StringOrFirst(pkg, "license"),
+            IsDeprecated: isAbandoned);
     }
 
     private static async Task<RegistryPackage> FetchRubyGemsAsync(HttpClient client, string gem)
@@ -306,7 +313,10 @@ public class DependencyRegistryClient(
             ? Text(pubspec, "publisher") ?? StringOrFirst(pubspec, "authors")
             : null;
 
-        return new RegistryPackage(Text(latest, "version"), publisher);
+        bool isDiscontinued = doc.RootElement.TryGetProperty("isDiscontinued", out JsonElement discontinued)
+            && discontinued.ValueKind == JsonValueKind.True;
+
+        return new RegistryPackage(Text(latest, "version"), publisher, IsDeprecated: isDiscontinued);
     }
 
     private static async Task<JsonDocument> ParseJsonAsync(HttpResponseMessage response)

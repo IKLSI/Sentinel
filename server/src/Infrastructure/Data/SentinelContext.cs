@@ -41,6 +41,7 @@ public partial class SentinelContext : DbContext, IDataProtectionKeyContext
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<ProjectHealthSnapshot> ProjectHealthSnapshots => Set<ProjectHealthSnapshot>();
     public DbSet<VulnerabilityResolution> VulnerabilityResolutions => Set<VulnerabilityResolution>();
+    public DbSet<VulnerabilitySuppression> VulnerabilitySuppressions => Set<VulnerabilitySuppression>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +63,7 @@ public partial class SentinelContext : DbContext, IDataProtectionKeyContext
         ConfigureRuntime(modelBuilder);
         ConfigureProjectHealthSnapshot(modelBuilder);
         ConfigureVulnerabilityResolution(modelBuilder);
+        ConfigureVulnerabilitySuppression(modelBuilder);
         ConfigureAuditLog(modelBuilder);
         ConfigureTicketAttachment(modelBuilder);
         ConfigureApiKey(modelBuilder);
@@ -114,6 +116,9 @@ public partial class SentinelContext : DbContext, IDataProtectionKeyContext
             .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<VulnerabilityResolution>()
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
+
+        modelBuilder.Entity<VulnerabilitySuppression>()
             .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<PasswordResetToken>()

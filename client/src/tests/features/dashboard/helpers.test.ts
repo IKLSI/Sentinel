@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { dashboardQueryKey } from "@/domains/dashboard/constants";
 import {
   arcPath,
   deltaColor,
@@ -88,11 +87,5 @@ describe("arcPath", () => {
 
     expect(path.startsWith("M50,")).toBe(true);
     expect(path.endsWith("A50,50 0 0 1 150,100")).toBe(true);
-  });
-});
-
-describe("dashboardQueryKey", () => {
-  it("keeps the shared prefix so realtime invalidation reaches every period", () => {
-    expect(dashboardQueryKey("Week")).toEqual(["dashboard-stats", "Week"]);
   });
 });

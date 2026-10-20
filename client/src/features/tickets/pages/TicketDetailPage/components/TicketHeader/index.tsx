@@ -1,19 +1,13 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import LinkRounded from "@mui/icons-material/LinkRounded";
 import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
   palette: DetailPalette;
-  endpointMatch: string | null;
-  titleBeforeEndpoint: string;
+  title: string;
 }
 
-export const TicketHeader: React.FC<Props> = ({
-  palette,
-  endpointMatch,
-  titleBeforeEndpoint,
-}) => {
+export const TicketHeader: React.FC<Props> = ({ palette, title }) => {
   return (
     <Box
       sx={{
@@ -41,28 +35,7 @@ export const TicketHeader: React.FC<Props> = ({
           flexWrap: "wrap",
         }}
       >
-        {titleBeforeEndpoint}
-        {endpointMatch && (
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              fontFamily: "var(--font-mono)",
-              fontSize: { xs: "15px", md: "20px" },
-              color: palette.endpointFg,
-              background: palette.endpointBg,
-              border: `1px solid ${palette.endpointBorder}`,
-              borderRadius: "var(--r-md)",
-              px: "11px",
-              py: "5px",
-              fontWeight: 600,
-            }}
-          >
-            <LinkRounded sx={{ fontSize: 16, color: palette.endpointIcon }} />
-            {endpointMatch}
-          </Box>
-        )}
+        {title}
       </Box>
     </Box>
   );

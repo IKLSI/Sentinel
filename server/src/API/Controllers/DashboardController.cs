@@ -11,9 +11,9 @@ namespace Sentinel.API.Controllers;
 public class DashboardController : BaseController
 {
     [HttpGet("stats")]
+    [AllowApiKey]
     public async Task<ActionResult<DashboardStatsDto>> GetStats(
         [FromServices] DashboardStatsService service,
-        CancellationToken cancellationToken,
-        [FromQuery] DashboardPeriod period = DashboardPeriod.Month) =>
-        ToActionResult(await service.ExecuteAsync(new DashboardStatsRequest { Period = period }, cancellationToken));
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 }

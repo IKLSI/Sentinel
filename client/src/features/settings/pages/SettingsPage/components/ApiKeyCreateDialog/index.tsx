@@ -17,6 +17,11 @@ import {
   createApiKeySchema,
   type CreateApiKeyFormValues,
 } from "@/features/settings/pages/SettingsPage/components/ApiKeyCreateDialog/schemas";
+import {
+  defaultExpirationDate,
+  maxExpirationDate,
+  minExpirationDate,
+} from "@/features/settings/pages/SettingsPage/components/ApiKeyCreateDialog/helpers";
 
 interface Props {
   open: boolean;
@@ -44,15 +49,15 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
   } = useForm<CreateApiKeyFormValues>({
     resolver: zodResolver(createApiKeySchema),
     mode: "onChange",
-    defaultValues: { name: "", expiresAt: "" },
+    defaultValues: { name: "", expiresAt: defaultExpirationDate() },
   });
 
   const handleCreate = handleFormSubmit((data) => {
     createKeyMutation.mutate(
-      { data: { name: data.name.trim(), expiresAt: data.expiresAt || null } },
+      { data: { name: data.name.trim(), expiresAt: data.expiresAt } },
       {
         onSuccess: (created) => {
-          reset({ name: "", expiresAt: "" });
+          reset({ name: "", expiresAt: defaultExpirationDate() });
           onCreated(created);
         },
         onError: onCreateError,
@@ -62,7 +67,7 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
 
   const handleClose = () => {
     onClose();
-    reset({ name: "", expiresAt: "" });
+    reset({ name: "", expiresAt: defaultExpirationDate() });
   };
 
   return (
@@ -117,7 +122,9 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
           <Box
             component="input"
             type="date"
-            min={new Date().toISOString().split("T")[0]}
+            required
+            min={minExpirationDate()}
+            max={maxExpirationDate()}
             sx={{ ...inp, colorScheme: "dark" }}
             {...register("expiresAt")}
           />

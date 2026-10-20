@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Sentinel.Application.Audit;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Security;
+using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
@@ -33,10 +34,30 @@ public class ProjectScanService(
     ISystemScope systemScope,
     IDatabaseConnectionHolder connectionHolder,
     IAuditLogService auditLog,
+    ProjectScanGate scanGate,
+    ProjectHealthRecalculator healthRecalculator,
     ILogger<ProjectScanService> logger)
 {
     [AutomaticRetry(Attempts = 0)]
     public async Task ScanProjectAsync(Guid projectId)
+    {
+        if (!scanGate.TryStart(projectId))
+        {
+            logger.LogInformation("Project {ProjectId}: a scan is already running, this one is skipped", projectId);
+            return;
+        }
+
+        try
+        {
+            await ScanExclusivelyAsync(projectId);
+        }
+        finally
+        {
+            scanGate.Complete(projectId);
+        }
+    }
+
+    private async Task ScanExclusivelyAsync(Guid projectId)
     {
         using IDisposable elevation = systemScope.Enter();
         await using IAsyncDisposable connection = await connectionHolder.HoldOpenAsync(CancellationToken.None);
@@ -74,14 +95,20 @@ public class ProjectScanService(
         bool scanRan = false;
         bool repositoryUnchanged = false;
         bool inventoryReplaced = false;
+        bool inventoryComplete = true;
+        bool keepExistingInventory = false;
         string? scannedCommitSha = null;
+
+        Organization? organization = await organizationRepository.GetOrDefaultAsync(project.OrganizationId,
+            QueryTracking.NoTracking, CancellationToken.None);
 
         if (!string.IsNullOrEmpty(project.RepositoryUrl))
         {
             scanRan = true;
 
-            RepositoryAccess repositoryAccess = await ResolveRepositoryAccessAsync(project);
-            string? headCommitSha = await repositoryScanner.GetHeadCommitAsync(project.RepositoryUrl, repositoryAccess);
+            RepositoryAccess repositoryAccess = RepositoryAccessFactory.For(project, organization, tokenProtector);
+            string? headCommitSha = await repositoryScanner.GetHeadCommitAsync(project.RepositoryUrl, repositoryAccess,
+                project.Branch);
 
             repositoryUnchanged = headCommitSha != null
                 && headCommitSha == project.LastScannedCommitSha
@@ -95,17 +122,24 @@ public class ProjectScanService(
             else
             {
                 ScanOutcome outcome = await repositoryScanner.ScanRepositoryAsync(projectId, project.RepositoryUrl,
-                    repositoryAccess, headCommitSha);
+                    repositoryAccess, headCommitSha,
+                    new RepositoryScanScope(project.Branch, project.RootPath));
 
                 scanError = outcome.Error;
                 manifestsRead = outcome.ManifestsRead;
+                inventoryComplete = outcome.IsComplete;
+                keepExistingInventory = !outcome.IsComplete && project.Coverage == ScanCoverage.Covered;
 
-                if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
+                if (keepExistingInventory)
+                {
+                    logger.LogWarning("Scan of {Url}: inventory incomplete, existing data kept", project.RepositoryUrl);
+                }
+                else if (outcome.Dependencies.Count > 0 || outcome.Runtimes.Count > 0)
                 {
                     await inventoryWriter.ReplaceInventoryAsync(projectId, outcome.Dependencies, outcome.Runtimes,
                         CancellationToken.None);
 
-                    scannedCommitSha = headCommitSha;
+                    scannedCommitSha = outcome.IsComplete ? headCommitSha : null;
                     inventoryReplaced = true;
                 }
                 else if (scanError != null)
@@ -126,7 +160,7 @@ public class ProjectScanService(
 
         project = reloadedProject;
 
-        if (repositoryUnchanged)
+        if (repositoryUnchanged || keepExistingInventory)
         {
             await repositoryScanner.RefreshVersionsAsync(project.Dependencies.ToList());
         }
@@ -144,21 +178,31 @@ public class ProjectScanService(
         ProjectInventoryWriter.StageRuntimeChanges(runtimeResults);
         await exploitSignalEnricher.EnrichAsync(project.Dependencies.ToList());
 
+        HashSet<Guid> suppressedIds =
+            await healthRecalculator.SuppressedVulnerabilityIdsAsync(project, CancellationToken.None);
+
         project.Coverage = ScanCoverageResolver.Resolve(project, scanRan, scanError, manifestsRead);
-        project.HealthScore = project.Coverage == ScanCoverage.Covered ? HealthScoreCalculator.Calculate(project) : null;
+        project.HealthScore = project.Coverage == ScanCoverage.Covered
+            ? HealthScoreCalculator.Calculate(project, vulnerability => suppressedIds.Contains(vulnerability.Id))
+            : null;
         project.HealthGrade = project.HealthScore is { } score ? HealthScoreCalculator.ToGrade(score) : null;
 
         DateTime scannedAt = DateTime.UtcNow;
         project.LastScanAt = scannedAt;
         project.LastScanError = scanError
+            ?? (inventoryComplete ? null : ErrorCodes.ScanInventoryIncomplete)
             ?? (vulnerabilityOutcome.IsComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
+
+        bool findingsReliable = project.Coverage == ScanCoverage.Covered
+            && vulnerabilityOutcome.IsComplete
+            && inventoryComplete;
 
         if (!vulnerabilityOutcome.IsComplete)
             logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
 
         await healthHistoryWriter.StageSnapshotAsync(project, scannedAt, CancellationToken.None);
 
-        if (project.Coverage == ScanCoverage.Covered && vulnerabilityOutcome.IsComplete)
+        if (findingsReliable)
             await healthHistoryWriter.StageResolutionsAsync(project, previousDetections, scannedAt,
                 CancellationToken.None);
 
@@ -166,10 +210,11 @@ public class ProjectScanService(
 
         bool ticketsChanged = false;
 
-        if (project.Coverage == ScanCoverage.Covered && vulnerabilityOutcome.IsComplete)
+        if (findingsReliable)
         {
             FindingTicketSyncResult? sync = await findingTicketSync.SyncAsync(project);
-            bool ticketsCreated = await criticalVulnerabilityTickets.CreateMissingAsync(project, sync?.LinkedTickets);
+            bool ticketsCreated = await criticalVulnerabilityTickets.CreateMissingAsync(project, sync?.LinkedTickets,
+                suppressedIds);
             ticketsChanged = sync?.TicketsChanged == true || ticketsCreated;
         }
 
@@ -187,21 +232,8 @@ public class ProjectScanService(
                 new RealtimeEvent(RealtimeResources.Tickets));
 
         await NotifyProjectChangedAsync(project.OrganizationId, projectId);
-        await vulnerabilityAlerts.TrySendAsync(project, isFirstScan, previousCveIds);
-    }
-
-    private async Task<RepositoryAccess> ResolveRepositoryAccessAsync(Project project)
-    {
-        Organization? organization = await organizationRepository.GetOrDefaultAsync(project.OrganizationId,
-            QueryTracking.NoTracking, CancellationToken.None);
-
-        if (organization == null) return RepositoryAccess.Anonymous;
-
-        string? stored = project.RepositoryType == RepositoryType.GitLab
-            ? organization.GitlabToken
-            : organization.GithubToken;
-
-        return new RepositoryAccess(tokenProtector.Unprotect(stored), organization.ToGitLabInstance());
+        if (findingsReliable)
+            await vulnerabilityAlerts.TrySendAsync(project, isFirstScan, previousCveIds, suppressedIds);
     }
 
     private async Task MarkScanFailedAsync(Guid projectId)

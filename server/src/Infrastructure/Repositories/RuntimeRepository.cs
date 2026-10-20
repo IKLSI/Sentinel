@@ -14,4 +14,11 @@ public class RuntimeRepository : CrudEntityWithIdRepository<Runtime>, IRuntimeRe
         Query(QueryTracking.Tracked)
             .Where(r => r.ProjectId == projectId)
             .ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<RuntimeLifecycleRow>> ListLifecycleByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(r => r.ProjectId == projectId)
+            .Select(r => new RuntimeLifecycleRow(r.Name, r.Version, r.IsEol, r.EolDate))
+            .ToListAsync(cancellationToken);
 }

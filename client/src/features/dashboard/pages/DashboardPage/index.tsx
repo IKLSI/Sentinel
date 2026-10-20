@@ -3,9 +3,9 @@ import { Suspense, lazy, useEffect } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useI18n } from "@/contexts/I18nContext";
-import { DEFAULT_DASHBOARD_PERIOD } from "@/domains/dashboard/constants";
 import { useDashboard } from "@/domains/dashboard/queries";
 import { useToast } from "@/hooks/useToast";
+import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { ParkHero } from "@/features/dashboard/pages/DashboardPage/components/ParkHero";
 import { ProjectsSection } from "@/features/dashboard/pages/DashboardPage/components/ProjectsSection";
@@ -27,11 +27,7 @@ const VulnerabilityFlowCard = lazy(() =>
 export const DashboardPage: React.FC = () => {
   const { t } = useI18n();
   const { showToast } = useToast();
-  const {
-    data: stats,
-    error,
-    isLoading,
-  } = useDashboard(DEFAULT_DASHBOARD_PERIOD);
+  const { data: stats, error, isLoading, isFetching, refetch } = useDashboard();
 
   useEffect(() => {
     if (error) showToast(t("dashboard.toast.stats_load_error"), "error");
@@ -47,12 +43,14 @@ export const DashboardPage: React.FC = () => {
           height: "100vh",
         }}
       >
-        {isLoading && (
+        {isLoading ? (
           <CircularProgress
             size={36}
             thickness={3}
             sx={{ color: "var(--accent)" }}
           />
+        ) : (
+          <LoadErrorState onRetry={() => refetch()} retrying={isFetching} />
         )}
       </Box>
     );

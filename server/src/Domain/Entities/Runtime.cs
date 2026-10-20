@@ -9,6 +9,7 @@ public class Runtime : IEntityWithId
     public string Version { get; set; } = string.Empty;
     public DateTime? EolDate { get; set; }
     public bool? IsEol { get; set; }
+    public bool IsMinimumConstraint { get; set; }
 
     public Project Project { get; set; } = null!;
 }

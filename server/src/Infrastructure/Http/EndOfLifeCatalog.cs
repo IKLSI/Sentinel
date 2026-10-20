@@ -30,10 +30,20 @@ public static class EndOfLifeCatalog
         ["Rails"] = "rails",
         ["Kotlin"] = "kotlin",
         ["Elixir"] = "elixir",
-        ["Phoenix"] = "phoenix-framework",
         ["Spring Boot"] = "spring-boot",
         ["Spring Framework"] = "spring-framework",
         ["Quarkus"] = "quarkus-framework",
+        ["Phoenix"] = "phoenix-framework",
+        ["React Native"] = "react-native",
+        ["Gradle"] = "gradle",
+        ["Alpine Linux"] = "alpine-linux",
+        ["Debian"] = "debian",
+        ["Ubuntu"] = "ubuntu",
+        ["CentOS"] = "centos",
+        ["Rocky Linux"] = "rocky-linux",
+        ["AlmaLinux"] = "almalinux",
+        ["Amazon Linux"] = "amazon-linux",
+        ["Fedora"] = "fedora",
     };
 
     public static string? ResolveProduct(string runtimeName) =>

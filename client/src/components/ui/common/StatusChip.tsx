@@ -105,14 +105,12 @@ const colorMap: Record<Variant, { bg: string; color: string; border: string }> =
 
 interface StatusChipProps {
   variant?: Variant;
-  pill?: boolean;
   startAdornment?: React.ReactNode;
   children: React.ReactNode;
 }
 
 export const StatusChip: React.FC<StatusChipProps> = ({
   variant = "gray",
-  pill: _pill,
   startAdornment,
   children,
 }) => {

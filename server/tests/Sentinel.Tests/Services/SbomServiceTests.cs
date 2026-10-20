@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using Sentinel.Infrastructure.Repositories;
 using Sentinel.Application.Exports;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Domain.Entities;
@@ -17,7 +18,7 @@ public class SbomServiceTests
     public async Task GenerateAsync_QuandLeProjetEstIntrouvable_RetourneNull()
     {
         using TestScope scope = new TestScope();
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(Guid.NewGuid(), scope.OrganizationId, SbomFormat.CycloneDx,
             CancellationToken.None);
@@ -31,7 +32,7 @@ public class SbomServiceTests
         using TestScope scope = new TestScope();
         Project project = await SeedProjectAsync(scope);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.CycloneDx,
             CancellationToken.None);
@@ -62,7 +63,7 @@ public class SbomServiceTests
         using TestScope scope = new TestScope();
         Project project = await SeedProjectAsync(scope);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.CycloneDx,
             CancellationToken.None);
@@ -88,7 +89,7 @@ public class SbomServiceTests
         using TestScope scope = new TestScope();
         Project project = await SeedProjectAsync(scope);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.Spdx,
             CancellationToken.None);
@@ -135,7 +136,7 @@ public class SbomServiceTests
         using TestScope scope = new TestScope();
         Project project = await SeedProjectAsync(scope);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.Spdx,
             CancellationToken.None);
@@ -163,7 +164,7 @@ public class SbomServiceTests
 
         await scope.SeedAsync(project);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.Spdx,
             CancellationToken.None);
@@ -174,6 +175,33 @@ public class SbomServiceTests
         package.GetProperty("externalRefs").GetArrayLength().Should().Be(1);
         package.GetProperty("externalRefs")[0].GetProperty("referenceLocator").GetString()
             .Should().Be("pkg:npm/sans-version");
+    }
+
+    [Theory]
+    [InlineData(DependencyEcosystem.Maven, "org.apache.logging.log4j:log4j-core", "2.14.1", "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1")]
+    [InlineData(DependencyEcosystem.Npm, "@angular/core", "17.0.0", "pkg:npm/%40angular/core@17.0.0")]
+    [InlineData(DependencyEcosystem.Composer, "Symfony/Console", "6.4.0", "pkg:composer/symfony/console@6.4.0")]
+    [InlineData(DependencyEcosystem.Go, "github.com/gin-gonic/gin", "v1.9.1", "pkg:golang/github.com/gin-gonic/gin@v1.9.1")]
+    [InlineData(DependencyEcosystem.PyPI, "Django_Rest.Framework", "3.15.0", "pkg:pypi/django-rest-framework@3.15.0")]
+    public async Task GenerateAsync_EnCycloneDx_ConstruitDesPurlConformes(DependencyEcosystem ecosystem, string name,
+        string version, string expectedPurl)
+    {
+        using TestScope scope = new TestScope();
+
+        await scope.SeedAsync(scope.NewOrganization());
+
+        Project project = NewProject(scope.OrganizationId);
+        project.Dependencies.Add(new Dependency { Name = name, CurrentVersion = version, Ecosystem = ecosystem });
+
+        await scope.SeedAsync(project);
+
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
+
+        ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.CycloneDx,
+            CancellationToken.None);
+
+        Parse(result!.Content).GetProperty("components")[0].GetProperty("purl").GetString()
+            .Should().Be(expectedPurl);
     }
 
     [Fact]
@@ -201,7 +229,7 @@ public class SbomServiceTests
 
         await scope.SeedAsync(project);
 
-        SbomService sut = new(scope.Projects, scope.Organizations);
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
 
         ExportResult? cyclone = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.CycloneDx,
             CancellationToken.None);
@@ -220,6 +248,68 @@ public class SbomServiceTests
         Package(packages, "left-pad").GetProperty("licenseDeclared").GetString().Should().Be("MIT");
         Package(packages, "left-pad").GetProperty("licenseConcluded").GetString().Should().Be(NoAssertion);
         Package(packages, "Mon Projet").GetProperty("licenseDeclared").GetString().Should().Be(NoAssertion);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_EnVex_ReporteLesVulnerabilitesEtLeurAnalyse()
+    {
+        using TestScope scope = new TestScope();
+
+        await scope.SeedAsync(scope.NewOrganization());
+
+        Project project = NewProject(scope.OrganizationId);
+        Dependency dependency = new Dependency
+        {
+            Name = "lodash",
+            CurrentVersion = "4.17.15",
+            Ecosystem = DependencyEcosystem.Npm
+        };
+        dependency.Vulnerabilities.Add(new Vulnerability
+        {
+            CveId = "GHSA-ignored",
+            CveAlias = "CVE-2020-1",
+            PackageName = "lodash",
+            Severity = VulnerabilitySeverity.High,
+            CvssScore = 7.5m
+        });
+        dependency.Vulnerabilities.Add(new Vulnerability
+        {
+            CveId = "GHSA-open",
+            PackageName = "lodash",
+            Severity = VulnerabilitySeverity.Critical,
+            CvssScore = 9.8m,
+            FixedVersion = "4.17.21"
+        });
+        project.Dependencies.Add(dependency);
+
+        await scope.SeedAsync(project, new VulnerabilitySuppression
+        {
+            OrganizationId = scope.OrganizationId,
+            ProjectId = project.Id,
+            FindingKey = Sentinel.Domain.TechHealth.FindingKeys.ForVulnerability(DependencyEcosystem.Npm, "lodash",
+                "GHSA-ignored"),
+            Reason = SuppressionReason.NotAffected,
+            Justification = "Code jamais appelé"
+        });
+
+        SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));
+
+        ExportResult? result = await sut.GenerateAsync(project.Id, scope.OrganizationId, SbomFormat.Vex,
+            CancellationToken.None);
+
+        result!.FileName.Should().StartWith("vex-");
+        JsonElement bom = Parse(result.Content);
+        bom.TryGetProperty("components", out _).Should().BeFalse();
+
+        JsonElement[] vulnerabilities = bom.GetProperty("vulnerabilities").EnumerateArray().ToArray();
+        vulnerabilities.Should().HaveCount(2);
+
+        JsonElement ignored = vulnerabilities.Single(v => v.GetProperty("id").GetString() == "CVE-2020-1");
+        ignored.GetProperty("analysis").GetProperty("state").GetString().Should().Be("not_affected");
+        ignored.GetProperty("affects")[0].GetProperty("ref").GetString().Should().Be("pkg:npm/lodash@4.17.15");
+
+        JsonElement open = vulnerabilities.Single(v => v.GetProperty("id").GetString() == "GHSA-open");
+        open.GetProperty("analysis").GetProperty("state").GetString().Should().Be("in_triage");
     }
 
     private static async Task<Project> SeedProjectAsync(TestScope scope)

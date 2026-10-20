@@ -13,13 +13,15 @@ public class CvssVectorTests
     [InlineData("CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:L/I:N/A:N", 1.8)]
     [InlineData("CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", 9.8)]
     [InlineData("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N", 0.0)]
+    [InlineData("CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N", 9.8)]
+    [InlineData("CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N", 3.7)]
     public void TryComputeBaseScore_MatchesThePublishedScore(string vector, double expected)
     {
         CvssVector.TryComputeBaseScore(vector).Should().Be((decimal)expected);
     }
 
     [Theory]
-    [InlineData("CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N")]
+    [InlineData("CVSS:4.0/AV:N/AC:L/PR:N")]
     [InlineData("AV:N/AC:L/Au:N/C:P/I:P/A:P")]
     [InlineData("CVSS:3.1/AV:N/AC:L/PR:N")]
     [InlineData("CVSS:3.1/AV:X/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H")]

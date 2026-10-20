@@ -19,7 +19,7 @@ import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/componen
 import {
   CHART_GRADIENT_ID,
   SCORE_AXIS_PADDING,
-  CHART_MIN_HEIGHT,
+  RESPONSIVE_CHART_MIN_HEIGHT,
   SCORE_MAX,
   SCORE_MIN,
 } from "@/features/dashboard/pages/DashboardPage/constants";
@@ -64,40 +64,8 @@ export const ScoreTrendCard: React.FC<Props> = ({ history }) => {
       ]
     : [SCORE_MIN, SCORE_MAX];
 
-  const summary = [
-    { key: "start", value: known[0] },
-    { key: "best", value: known.length ? Math.max(...known) : undefined },
-    { key: "today", value: known[known.length - 1] },
-  ];
-
   return (
-    <DashboardCard
-      title={t("dashboard.trend.title")}
-      action={
-        known.length > 0 && (
-          <Box sx={{ display: "flex", gap: "22px" }}>
-            {summary.map((item) => (
-              <Box
-                key={item.key}
-                sx={{ fontSize: "12px", color: "var(--muted2)" }}
-              >
-                {t(`dashboard.trend.${item.key}`)}{" "}
-                <Box
-                  component="b"
-                  sx={{
-                    fontSize: "18px",
-                    color: "var(--text)",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {item.value ?? "–"}
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        )
-      }
-    >
+    <DashboardCard title={t("dashboard.trend.title")} scrollable={false}>
       {known.length < MINIMUM_POINTS ? (
         <EmptyState
           icon={ShowChartOutlined}
@@ -107,7 +75,11 @@ export const ScoreTrendCard: React.FC<Props> = ({ history }) => {
         />
       ) : (
         <Box
-          sx={{ flex: 1, minHeight: CHART_MIN_HEIGHT, position: "relative" }}
+          sx={{
+            flex: 1,
+            minHeight: RESPONSIVE_CHART_MIN_HEIGHT,
+            position: "relative",
+          }}
         >
           <Box sx={{ position: "absolute", inset: 0 }}>
             <ResponsiveContainer width="100%" height="100%">

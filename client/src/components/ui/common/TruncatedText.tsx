@@ -7,17 +7,9 @@ interface Props {
   text: string;
   mono?: boolean;
   strong?: boolean;
-  color?: string;
-  fontSize?: string;
 }
 
-export const TruncatedText: React.FC<Props> = ({
-  text,
-  mono,
-  strong,
-  color,
-  fontSize,
-}) => {
+export const TruncatedText: React.FC<Props> = ({ text, mono, strong }) => {
   const { ref, truncated } = useIsTextTruncated<HTMLSpanElement>();
 
   return (
@@ -28,9 +20,9 @@ export const TruncatedText: React.FC<Props> = ({
         sx={{
           display: "block",
           fontFamily: mono ? "var(--font-mono)" : "inherit",
-          fontSize: fontSize ?? (mono ? "11px" : "12px"),
+          fontSize: mono ? "11px" : "12px",
           fontWeight: strong ? 600 : 400,
-          color: color ?? "inherit",
+          color: "inherit",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",

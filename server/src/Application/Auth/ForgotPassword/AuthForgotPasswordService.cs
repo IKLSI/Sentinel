@@ -34,10 +34,11 @@ public class AuthForgotPasswordService(
 
         string email = model.Email.ToLowerInvariant();
         string rawToken = SecureToken.Generate();
+        User? user;
 
         using (systemScope.Enter())
         {
-            User? user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
+            user = await userRepository.GetOrDefaultActiveByEmailAsync(email,
                 QueryTracking.NoTracking, cancellationToken);
 
             if (user == null)
@@ -61,9 +62,14 @@ public class AuthForgotPasswordService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendPasswordResetEmailJob>(j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendPasswordResetEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
 
-        await auditLog.LogAsync(AuditAction.PasswordResetRequested, entityType: AuditEntityTypes.User);
+        await auditLog.LogAsync(
+            AuditAction.PasswordResetRequested,
+            entityType: AuditEntityTypes.User,
+            organizationId: user.OrganizationId,
+            userId: user.Id,
+            entityId: user.Id);
 
         return ApiMessageResponse.Create(SuccessCodes.AuthPasswordResetRequested);
     }

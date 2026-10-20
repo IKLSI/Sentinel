@@ -91,21 +91,6 @@ export const TicketDetailPage: React.FC = () => {
     if (notFound) showToast(t("tickets.detail.not_found_toast"), "error");
   }, [notFound, showToast, t]);
 
-  const endpointMatch = useMemo(() => {
-    if (!ticket) return null;
-    const merged = `${ticket.title} ${ticket.description}`;
-    return merged.match(/(\/api\/[a-z0-9/_-]+)/i)?.[1] ?? null;
-  }, [ticket]);
-
-  const titleBeforeEndpoint = useMemo(() => {
-    const title = ticket?.title ?? "";
-    if (!endpointMatch) return title;
-    if (title.includes(endpointMatch)) {
-      return title.replace(endpointMatch, "").trim();
-    }
-    return title;
-  }, [ticket, endpointMatch]);
-
   const startEditComment = useCallback((commentId: string, content: string) => {
     const { text, attachments } = parseCommentContent(content);
     setEditingCommentId((current) => {
@@ -240,11 +225,7 @@ export const TicketDetailPage: React.FC = () => {
             boxShadow: palette.panelShadow,
           }}
         >
-          <TicketHeader
-            palette={palette}
-            endpointMatch={endpointMatch}
-            titleBeforeEndpoint={titleBeforeEndpoint}
-          />
+          <TicketHeader palette={palette} title={ticket.title} />
 
           <Box
             sx={{

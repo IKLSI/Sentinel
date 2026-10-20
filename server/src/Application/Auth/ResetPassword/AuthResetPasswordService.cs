@@ -16,6 +16,7 @@ public class AuthResetPasswordService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IPasswordResetTokenRepository tokenRepository,
+    IApiKeyRepository apiKeyRepository,
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
@@ -56,14 +57,20 @@ public class AuthResetPasswordService(
 
             resetToken.IsUsed = true;
 
+            await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
         }
 
         cache.Remove(CacheKeys.AuthAccount(user.Id));
 
-        logger.LogInformation("Password reset for {Email}", user.Email);
+        logger.LogInformation("Password reset for user {UserId}", user.Id);
 
-        await auditLog.LogAsync(AuditAction.PasswordReset, entityType: AuditEntityTypes.User);
+        await auditLog.LogAsync(
+            AuditAction.PasswordReset,
+            entityType: AuditEntityTypes.User,
+            organizationId: user.OrganizationId,
+            userId: user.Id,
+            entityId: user.Id);
 
         return ApiMessageResponse.Create(SuccessCodes.AuthPasswordReset);
     }

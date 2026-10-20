@@ -10,6 +10,7 @@ namespace Sentinel.Application.TechHealth.GetProject;
 public class ProjectGetByIdService(
     IProjectRepository projectRepository,
     ITicketRepository ticketRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository,
     ITenantContext tenant) : IService
 {
     public async Task<Result<ProjectDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
@@ -26,6 +27,9 @@ public class ProjectGetByIdService(
         IReadOnlyList<FindingTicketRow> findingTickets =
             await ticketRepository.ListFindingLinksByProjectAsync(projectId, cancellationToken);
 
-        return ProjectMapper.ToDto(project, findingTickets);
+        IReadOnlyList<VulnerabilitySuppression> suppressions =
+            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
+
+        return ProjectMapper.ToDto(project, findingTickets, suppressions);
     }
 }

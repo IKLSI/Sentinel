@@ -2,23 +2,35 @@ using Sentinel.Application.Exports;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CycloneDX;
 using CycloneDX.Json;
 using CycloneDX.Models;
+using CycloneDX.Models.Vulnerabilities;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 using Dependency = Sentinel.Domain.Entities.Dependency;
+using Vulnerability = Sentinel.Domain.Entities.Vulnerability;
+using CycloneVulnerability = CycloneDX.Models.Vulnerabilities.Vulnerability;
 
 namespace Sentinel.Application.TechHealth.ExportSbom;
 
 public enum SbomFormat
 {
     CycloneDx,
-    Spdx
+    Spdx,
+    Vex
 }
 
-public class SbomService(IProjectRepository projectRepository, IOrganizationRepository organizationRepository)
+public class SbomService(
+    IProjectRepository projectRepository,
+    IOrganizationRepository organizationRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository)
 {
+    private const string OsvSourceName = "OSV";
+    private const string OsvAdvisoryUrl = "https://osv.dev/vulnerability/";
+
     private const string ToolVendor = "Sentinel";
     private const string ToolName = "Sentinel Tech-Health";
     private const string SpdxVersion = "SPDX-2.3";
@@ -34,13 +46,14 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
         [DependencyEcosystem.Composer] = "composer",
         [DependencyEcosystem.Gem] = "gem",
         [DependencyEcosystem.Maven] = "maven",
-        [DependencyEcosystem.Gradle] = "maven",
         [DependencyEcosystem.NuGet] = "nuget",
         [DependencyEcosystem.Go] = "golang",
         [DependencyEcosystem.Cargo] = "cargo",
         [DependencyEcosystem.Hex] = "hex",
         [DependencyEcosystem.Pub] = "pub",
         [DependencyEcosystem.Swift] = "swift",
+        [DependencyEcosystem.CocoaPods] = "cocoapods",
+        [DependencyEcosystem.GitHubActions] = "githubactions",
     };
 
     private static readonly JsonSerializerOptions SpdxJsonOptions = new()
@@ -52,7 +65,7 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
     public async Task<ExportResult?> GenerateAsync(Guid projectId, Guid organizationId, SbomFormat format, CancellationToken cancellationToken)
     {
         Project? project = await projectRepository
-            .GetOrDefaultInOrganizationWithDependenciesAsync(projectId, organizationId, cancellationToken);
+            .GetOrDefaultInOrganizationWithHealthDetailsAsync(projectId, organizationId, cancellationToken);
 
         if (project == null) return null;
 
@@ -67,16 +80,24 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
         DateTime timestamp = DateTime.UtcNow;
         string slug = ExportFileName.Slugify(project.Name);
 
-        return format == SbomFormat.CycloneDx
-            ? BuildCycloneDx(project, dependencies, supplier, timestamp, slug)
-            : BuildSpdx(project, dependencies, supplier, timestamp, slug);
+        if (format == SbomFormat.Spdx) return BuildSpdx(project, dependencies, supplier, timestamp, slug);
+
+        IReadOnlyList<VulnerabilitySuppression> suppressions = await suppressionRepository
+            .ListActiveByProjectAsync(projectId, timestamp, cancellationToken);
+        Dictionary<string, VulnerabilitySuppression> suppressionsByKey = suppressions
+            .ToDictionary(suppression => suppression.FindingKey);
+
+        return BuildCycloneDx(project, dependencies, suppressionsByKey, supplier, timestamp, slug,
+            format == SbomFormat.Vex);
     }
 
-    private static ExportResult BuildCycloneDx(Project project, List<Dependency> dependencies, string supplier,
-        DateTime timestamp, string slug)
+    private static ExportResult BuildCycloneDx(Project project, List<Dependency> dependencies,
+        Dictionary<string, VulnerabilitySuppression> suppressionsByKey, string supplier, DateTime timestamp,
+        string slug, bool vexOnly)
     {
         Bom bom = new()
         {
+            SpecVersion = SpecificationVersion.v1_6,
             SerialNumber = $"urn:uuid:{Guid.NewGuid()}",
             Version = 1,
             Metadata = new Metadata
@@ -111,6 +132,15 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
 
         string rootRef = bom.Metadata.Component.BomRef;
 
+        bom.Vulnerabilities = BuildVulnerabilities(dependencies, suppressionsByKey);
+
+        if (vexOnly)
+        {
+            bom.Components = null;
+            string vexJson = Serializer.Serialize(bom);
+            return new ExportResult(Encoding.UTF8.GetBytes(vexJson), $"vex-{slug}-cyclonedx.json");
+        }
+
         bom.Dependencies =
         [
             new CycloneDX.Models.Dependency
@@ -126,13 +156,72 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
         return new ExportResult(Encoding.UTF8.GetBytes(json), $"sbom-{slug}-cyclonedx.json");
     }
 
-    private static readonly HashSet<string> KnownSpdxLicenseIds = new(StringComparer.OrdinalIgnoreCase)
+    private static List<CycloneVulnerability> BuildVulnerabilities(List<Dependency> dependencies,
+        Dictionary<string, VulnerabilitySuppression> suppressionsByKey) =>
+        dependencies
+            .SelectMany(dependency => dependency.Vulnerabilities.Select(vulnerability =>
+                ToCycloneVulnerability(dependency, vulnerability, suppressionsByKey)))
+            .ToList();
+
+    private static CycloneVulnerability ToCycloneVulnerability(Dependency dependency, Vulnerability vulnerability,
+        Dictionary<string, VulnerabilitySuppression> suppressionsByKey)
     {
-        "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0",
-        "LGPL-2.1", "LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0", "LGPL-3.0-only", "LGPL-3.0-or-later",
-        "GPL-2.0", "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0", "GPL-3.0-only", "GPL-3.0-or-later",
-        "Unlicense", "0BSD", "CC0-1.0", "WTFPL", "Zlib"
+        string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
+            vulnerability.CveId);
+
+        return new CycloneVulnerability
+        {
+            BomRef = $"sentinel:vulnerability:{vulnerability.Id}",
+            Id = vulnerability.CveAlias ?? vulnerability.CveId,
+            Source = new Source { Name = OsvSourceName, Url = OsvAdvisoryUrl + vulnerability.CveId },
+            Description = string.IsNullOrWhiteSpace(vulnerability.Description) ? null : vulnerability.Description,
+            Recommendation = vulnerability.FixedVersion == null ? null : $"Upgrade to {vulnerability.FixedVersion}",
+            Ratings =
+            [
+                new Rating
+                {
+                    Score = (double)vulnerability.CvssScore,
+                    Severity = CycloneSeverity(vulnerability.Severity),
+                    Method = ScoreMethod.Other
+                }
+            ],
+            Affects = [new Affects { Ref = ComponentRef(dependency) }],
+            Analysis = suppressionsByKey.TryGetValue(findingKey, out VulnerabilitySuppression? suppression)
+                ? AnalysisOf(suppression)
+                : new Analysis { State = ImpactAnalysisState.In_Triage }
+        };
+    }
+
+    private static Analysis AnalysisOf(VulnerabilitySuppression suppression) => suppression.Reason switch
+    {
+        SuppressionReason.NotAffected => new Analysis
+        {
+            State = ImpactAnalysisState.Not_Affected,
+            Detail = suppression.Justification
+        },
+        SuppressionReason.FalsePositive => new Analysis
+        {
+            State = ImpactAnalysisState.False_Positive,
+            Detail = suppression.Justification
+        },
+        _ => new Analysis
+        {
+            State = ImpactAnalysisState.Exploitable,
+            Response = [Response.Will_Not_Fix],
+            Detail = suppression.Justification
+        }
     };
+
+    private static Severity CycloneSeverity(VulnerabilitySeverity severity) => severity switch
+    {
+        VulnerabilitySeverity.Critical => Severity.Critical,
+        VulnerabilitySeverity.High => Severity.High,
+        VulnerabilitySeverity.Medium => Severity.Medium,
+        _ => Severity.Low
+    };
+
+    private static string ComponentRef(Dependency dependency) =>
+        BuildPurl(dependency) ?? $"sentinel:dependency:{dependency.Id}";
 
     private static Component ToCycloneComponent(Dependency dependency)
     {
@@ -147,16 +236,21 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
             Publisher = publisher,
             Supplier = new OrganizationalEntity { Name = publisher },
             Purl = purl,
-            BomRef = purl ?? $"sentinel:dependency:{dependency.Id}",
+            BomRef = ComponentRef(dependency),
             Licenses = string.IsNullOrWhiteSpace(dependency.License)
                 ? null
                 : new List<LicenseChoice> { BuildLicenseChoice(dependency.License) }
         };
     }
 
-    private static LicenseChoice BuildLicenseChoice(string license) => KnownSpdxLicenseIds.Contains(license)
-        ? new LicenseChoice { License = new License { Id = license } }
-        : new LicenseChoice { License = new License { Name = license } };
+    private static LicenseChoice BuildLicenseChoice(string license)
+    {
+        if (SpdxLicense.IdOf(license) is { } id) return new LicenseChoice { License = new License { Id = id } };
+
+        return SpdxLicense.ExpressionOf(license) is { } expression
+            ? new LicenseChoice { Expression = expression }
+            : new LicenseChoice { License = new License { Name = license } };
+    }
 
     private static string PublisherOrNoAssertion(Dependency dependency) =>
         string.IsNullOrWhiteSpace(dependency.Publisher) ? SpdxNoAssertion : dependency.Publisher;
@@ -208,7 +302,9 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
                     ? SpdxNoAssertion
                     : SpdxOrganization(dependency.Publisher),
                 LicenseConcluded = SpdxNoAssertion,
-                LicenseDeclared = string.IsNullOrWhiteSpace(dependency.License) ? SpdxNoAssertion : dependency.License,
+                LicenseDeclared = string.IsNullOrWhiteSpace(dependency.License)
+                    ? SpdxNoAssertion
+                    : SpdxLicense.ExpressionOf(dependency.License) ?? SpdxNoAssertion,
                 CopyrightText = SpdxNoAssertion,
                 ExternalRefs = purl == null
                     ? null
@@ -259,10 +355,24 @@ public class SbomService(IProjectRepository projectRepository, IOrganizationRepo
         if (!PurlTypes.TryGetValue(dependency.Ecosystem, out string? type)) return null;
         if (string.IsNullOrWhiteSpace(dependency.Name)) return null;
 
-        string name = Uri.EscapeDataString(dependency.Name);
+        string path = string.Join('/', PurlPathSegments(dependency).Select(Uri.EscapeDataString));
+
         return string.IsNullOrWhiteSpace(dependency.CurrentVersion)
-            ? $"pkg:{type}/{name}"
-            : $"pkg:{type}/{name}@{Uri.EscapeDataString(dependency.CurrentVersion)}";
+            ? $"pkg:{type}/{path}"
+            : $"pkg:{type}/{path}@{Uri.EscapeDataString(dependency.CurrentVersion)}";
+    }
+
+    private static IEnumerable<string> PurlPathSegments(Dependency dependency)
+    {
+        string name = dependency.Name.Trim();
+
+        return dependency.Ecosystem switch
+        {
+            DependencyEcosystem.Maven => name.Split(':', 2),
+            DependencyEcosystem.PyPI => [name.ToLowerInvariant().Replace('_', '-').Replace('.', '-')],
+            DependencyEcosystem.Composer => name.ToLowerInvariant().Split('/'),
+            _ => name.Split('/', StringSplitOptions.RemoveEmptyEntries)
+        };
     }
 
     private sealed class SpdxDocument

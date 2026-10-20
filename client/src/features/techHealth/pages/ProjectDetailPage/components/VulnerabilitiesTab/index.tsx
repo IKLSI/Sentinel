@@ -33,14 +33,18 @@ import {
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
+import { SuppressionCell } from "@/features/techHealth/pages/ProjectDetailPage/components/SuppressionCell";
 
 const COLUMN_KEYS = {
   risk: "risk",
   library: "library",
   description: "description",
+  cvss: "cvss",
+  epss: "epss",
   reference: "reference",
   fixedVersion: "fixedVersion",
   ticket: "ticket",
+  suppression: "suppression",
 } as const;
 
 const DEFAULT_SORT = { key: COLUMN_KEYS.risk, direction: "desc" } as const;
@@ -57,6 +61,10 @@ const comparators = {
     a.dependencyName.localeCompare(b.dependencyName),
   [COLUMN_KEYS.description]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
     a.description.localeCompare(b.description),
+  [COLUMN_KEYS.cvss]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
+    a.cvssScore - b.cvssScore,
+  [COLUMN_KEYS.epss]: (a: VulnerabilityRow, b: VulnerabilityRow) =>
+    (a.epssScore ?? -1) - (b.epssScore ?? -1),
 };
 
 const searchableValues = (vuln: VulnerabilityRow) => [
@@ -74,7 +82,31 @@ const referenceSx = {
   px: "7px",
   py: "3px",
   borderRadius: "var(--r-xs)",
+  textDecoration: "none",
+  whiteSpace: "nowrap",
+  "&:hover": { textDecoration: "underline" },
 } as const;
+
+const secondaryReferenceSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "10px",
+  color: "var(--muted)",
+  textDecoration: "none",
+  "&:hover": { color: "var(--cyan)", textDecoration: "underline" },
+} as const;
+
+const scoreSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+  color: "var(--text)",
+} as const;
+
+const OSV_VULNERABILITY_URL = "https://osv.dev/vulnerability/";
+
+const NVD_VULNERABILITY_URL = "https://nvd.nist.gov/vuln/detail/";
+
+const isCve = (identifier: string | null): identifier is string =>
+  identifier?.toUpperCase().startsWith("CVE-") ?? false;
 
 const RISK_LEVELS = [1, 2, 3, 4] as const;
 
@@ -184,12 +216,45 @@ const VulnRow = memo<{
       <TD>
         <TruncatedText text={vuln.description} />
       </TD>
+      <TD align="center">
+        <Box component="span" sx={scoreSx}>
+          {vuln.cvssScore > 0 ? vuln.cvssScore.toFixed(1) : NO_VALUE}
+        </Box>
+      </TD>
+      <TD align="center">
+        <Box component="span" sx={scoreSx}>
+          {vuln.epssScore != null ? formatPercent(vuln.epssScore) : NO_VALUE}
+        </Box>
+      </TD>
       <TD>
-        <AppTooltip title={vuln.cveAlias ? vuln.cveId : ""}>
-          <Box component="span" sx={referenceSx}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <Box
+            component="a"
+            href={
+              isCve(vuln.cveAlias)
+                ? `${NVD_VULNERABILITY_URL}${encodeURIComponent(vuln.cveAlias)}`
+                : `${OSV_VULNERABILITY_URL}${encodeURIComponent(vuln.cveId)}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={referenceSx}
+          >
             {vuln.cveAlias ?? vuln.cveId}
           </Box>
-        </AppTooltip>
+          {vuln.cveAlias && (
+            <AppTooltip title={vuln.cveId}>
+              <Box
+                component="a"
+                href={`${OSV_VULNERABILITY_URL}${encodeURIComponent(vuln.cveId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={secondaryReferenceSx}
+              >
+                OSV
+              </Box>
+            </AppTooltip>
+          )}
+        </Box>
       </TD>
       <TD mono muted>
         {vuln.fixedVersion ?? NO_VALUE}
@@ -201,6 +266,14 @@ const VulnRow = memo<{
           findingKey={vuln.findingKey}
           linkedTicket={vuln.linkedTicket}
           actionable
+        />
+      </TD>
+      <TD align="center">
+        <SuppressionCell
+          projectId={projectId}
+          findingKey={vuln.findingKey}
+          vulnerabilityLabel={vuln.cveAlias ?? vuln.cveId}
+          suppression={vuln.suppression}
         />
       </TD>
     </TR>
@@ -253,19 +326,33 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
     {
       key: COLUMN_KEYS.risk,
       label: t("tech_health.table.vuln.risk"),
-      width: "17%",
+      width: "15%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.library,
       label: t("tech_health.table.dep.library"),
-      width: "16%",
+      width: "14%",
       sortable: true,
     },
     {
       key: COLUMN_KEYS.description,
       label: t("tech_health.table.vuln.vulnerability"),
-      width: "36%",
+      width: "21%",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.cvss,
+      label: t("tech_health.table.vuln.cvss"),
+      width: "6%",
+      align: "center",
+      sortable: true,
+    },
+    {
+      key: COLUMN_KEYS.epss,
+      label: t("tech_health.table.vuln.epss"),
+      width: "6%",
+      align: "center",
       sortable: true,
     },
     {
@@ -276,12 +363,18 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
     {
       key: COLUMN_KEYS.fixedVersion,
       label: t("tech_health.table.vuln.fixed_version"),
-      width: "10%",
+      width: "9%",
     },
     {
       key: COLUMN_KEYS.ticket,
       label: t("tech_health.table.ticket"),
       width: "9%",
+      align: "center",
+    },
+    {
+      key: COLUMN_KEYS.suppression,
+      label: t("tech_health.table.vuln.exception"),
+      width: "8%",
       align: "center",
     },
   ];

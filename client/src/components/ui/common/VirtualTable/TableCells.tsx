@@ -4,8 +4,6 @@ import Box from "@mui/material/Box";
 export type CellAlign = "left" | "center" | "right";
 export type SortDirection = "asc" | "desc";
 
-const RAIL_WIDTH = "3px";
-
 export const TD: React.FC<{
   children: React.ReactNode;
   mono?: boolean;
@@ -30,31 +28,14 @@ export const TD: React.FC<{
 
 export const TR: React.FC<{
   children: React.ReactNode;
-  accent?: string;
   index?: number;
-}> = ({ children, accent, index }) => (
+}> = ({ children, index }) => (
   <Box
     component="tr"
     data-index={index}
     sx={{
       "&:last-child td": { borderBottom: "none" },
       "&:hover td": { background: "var(--s2)" },
-      ...(accent
-        ? {
-            "& > td:first-of-type": {
-              position: "relative",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: RAIL_WIDTH,
-                background: accent,
-              },
-            },
-          }
-        : {}),
     }}
   >
     {children}

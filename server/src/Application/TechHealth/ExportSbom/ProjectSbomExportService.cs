@@ -13,6 +13,7 @@ public class ProjectSbomExportService(
     ITenantContext tenant) : IService
 {
     private const string SpdxFormat = "spdx";
+    private const string VexFormat = "vex";
 
     public async Task<Result<FileDownload>> ExecuteAsync(Guid projectId, string? format, CancellationToken cancellationToken)
     {
@@ -25,9 +26,12 @@ public class ProjectSbomExportService(
         if (!projectExists)
             return Result<FileDownload>.NotFound(ErrorCodes.ProjectNotFound);
 
-        SbomFormat sbomFormat = string.Equals(format, SpdxFormat, StringComparison.OrdinalIgnoreCase)
-            ? SbomFormat.Spdx
-            : SbomFormat.CycloneDx;
+        SbomFormat sbomFormat = format?.ToLowerInvariant() switch
+        {
+            SpdxFormat => SbomFormat.Spdx,
+            VexFormat => SbomFormat.Vex,
+            _ => SbomFormat.CycloneDx
+        };
 
         ExportResult? export = await sbomService.GenerateAsync(projectId, organizationId, sbomFormat, cancellationToken);
 

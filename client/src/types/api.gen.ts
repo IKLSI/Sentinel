@@ -189,11 +189,6 @@ export interface paths {
   };
   "/api/dashboard/stats": {
     get: {
-      parameters: {
-        query?: {
-          period?: components["schemas"]["DashboardPeriod"];
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -492,9 +487,9 @@ export interface paths {
         /** @description OK */
         200: {
           content: {
-            "application/json": components["schemas"]["ProjectScanFrequencyDto"];
-            "text/json": components["schemas"]["ProjectScanFrequencyDto"];
-            "text/plain": components["schemas"]["ProjectScanFrequencyDto"];
+            "application/json": components["schemas"]["ProjectScanSettingsDto"];
+            "text/json": components["schemas"]["ProjectScanSettingsDto"];
+            "text/plain": components["schemas"]["ProjectScanSettingsDto"];
           };
         };
       };
@@ -511,6 +506,28 @@ export interface paths {
         /** @description OK */
         200: {
           content: never;
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/repository-options": {
+    get: {
+      parameters: {
+        query?: {
+          branch?: string;
+        };
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectRepositoryOptionsDto"];
+            "text/json": components["schemas"]["ProjectRepositoryOptionsDto"];
+            "text/plain": components["schemas"]["ProjectRepositoryOptionsDto"];
+          };
         };
       };
     };
@@ -538,6 +555,48 @@ export interface paths {
       parameters: {
         path: {
           id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: never;
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/suppressions": {
+    post: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      requestBody?: {
+        content: {
+          "application/*+json": components["schemas"]["SuppressVulnerabilityDto"];
+          "application/json": components["schemas"]["SuppressVulnerabilityDto"];
+          "text/json": components["schemas"]["SuppressVulnerabilityDto"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["SuppressionDto"];
+            "text/json": components["schemas"]["SuppressionDto"];
+            "text/plain": components["schemas"]["SuppressionDto"];
+          };
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/suppressions/{suppressionId}": {
+    delete: {
+      parameters: {
+        path: {
+          id: string;
+          suppressionId: string;
         };
       };
       responses: {
@@ -1120,8 +1179,6 @@ export interface components {
       email: string;
       role: string;
     };
-    /** @enum {string} */
-    DashboardPeriod: "Week" | "Month" | "Quarter";
     DashboardStatsDto: {
       overview: components["schemas"]["ParkOverviewDto"];
       projects: components["schemas"]["ProjectHealthDto"][];
@@ -1155,8 +1212,10 @@ export interface components {
       id: string;
       isDirect: boolean;
       isOutdated: boolean;
+      isVersionPinned: boolean;
       latestVersion: string | null;
       linkedTicket: components["schemas"]["FindingTicketDto"];
+      manifestPath: string | null;
       name: string;
       status: string;
       type: string;
@@ -1231,6 +1290,7 @@ export interface components {
       vulnerabilities: components["schemas"]["VulnerabilityCountsDto"];
     };
     ProjectDto: {
+      branch: string | null;
       coverage: string;
       /** Format: int32 */
       criticalVulnerabilities: number;
@@ -1244,9 +1304,11 @@ export interface components {
       knownExploitedVulnerabilities: number;
       /** Format: date-time */
       lastScanAt: string | null;
+      lastScanError: string | null;
       name: string;
       repositoryType: string;
       repositoryUrl: string | null;
+      rootPath: string | null;
       runtimes: components["schemas"]["RuntimeDto"][];
       scanFrequency: string;
       /** Format: int32 */
@@ -1278,10 +1340,20 @@ export interface components {
       id: string;
       name: string;
     };
-    ProjectScanFrequencyDto: {
+    ProjectRepositoryOptionsDto: {
+      available: boolean;
+      branches: string[];
+      defaultBranch: string | null;
+      directories: string[];
+      truncated: boolean;
+    };
+    ProjectScanSettingsDto: {
+      branch: string | null;
+      rootPath: string | null;
       scanFrequency: string;
     };
     ProjectSummaryDto: {
+      branch: string | null;
       coverage: string;
       /** Format: int32 */
       criticalVulnerabilities: number;
@@ -1298,6 +1370,7 @@ export interface components {
       name: string;
       repositoryType: string;
       repositoryUrl: string | null;
+      rootPath: string | null;
       scanFrequency: string;
       /** Format: int32 */
       totalDependencies: number;
@@ -1354,6 +1427,7 @@ export interface components {
       /** Format: uuid */
       id: string;
       isEol: boolean | null;
+      isMinimumConstraint: boolean;
       linkedTicket: components["schemas"]["FindingTicketDto"];
       name: string;
       version: string;
@@ -1377,6 +1451,24 @@ export interface components {
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";
+    SuppressionDto: {
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      expiresAt: string | null;
+      findingKey: string;
+      /** Format: uuid */
+      id: string;
+      justification: string;
+      reason: string;
+    };
+    SuppressVulnerabilityDto: {
+      /** Format: date-time */
+      expiresAt?: string | null;
+      findingKey: string;
+      justification: string;
+      reason: string;
+    };
     TicketAttachmentDto: {
       /** Format: date-time */
       createdAt: string;
@@ -1470,6 +1562,8 @@ export interface components {
       theme?: string | null;
     };
     UpdateProjectDto: {
+      branch?: string | null;
+      rootPath?: string | null;
       scanFrequency: string;
     };
     UpdateTicketDto: {
@@ -1574,6 +1668,7 @@ export interface components {
       linkedTicket: components["schemas"]["FindingTicketDto"];
       priority: string;
       severity: string;
+      suppression: components["schemas"]["SuppressionDto"];
     };
     VulnerabilityFlowPointDto: {
       date: string;

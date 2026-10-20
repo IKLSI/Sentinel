@@ -1,6 +1,7 @@
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
@@ -39,7 +40,7 @@ public class ProjectHealthHistoryWriter(
     {
         HashSet<string> currentCveIds = project.Dependencies
             .SelectMany(dependency => dependency.Vulnerabilities)
-            .Select(vulnerability => vulnerability.CveId)
+            .Select(VulnerabilityIdentity.Of)
             .ToHashSet();
 
         IEnumerable<VulnerabilityResolution> resolutions = previousDetections

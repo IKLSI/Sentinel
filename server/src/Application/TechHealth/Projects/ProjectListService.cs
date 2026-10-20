@@ -25,6 +25,8 @@ public class ProjectListService(
         Id = project.Id,
         Name = project.Name,
         RepositoryUrl = project.RepositoryUrl,
+        Branch = project.Branch,
+        RootPath = project.RootPath,
         RepositoryType = project.RepositoryType.ToString(),
         LastScanAt = project.LastScanAt,
         LastScanError = project.LastScanError,

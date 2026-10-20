@@ -52,9 +52,14 @@ public class AuthVerifyEmailService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        logger.LogInformation("Email verified for {Email}", user.Email);
+        logger.LogInformation("Email verified for user {UserId}", user.Id);
 
-        await auditLog.LogAsync(AuditAction.EmailVerified, entityType: AuditEntityTypes.User);
+        await auditLog.LogAsync(
+            AuditAction.EmailVerified,
+            entityType: AuditEntityTypes.User,
+            organizationId: user.OrganizationId,
+            userId: user.Id,
+            entityId: user.Id);
 
         return ApiMessageResponse.Create(SuccessCodes.AuthEmailVerified);
     }

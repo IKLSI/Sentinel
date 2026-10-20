@@ -45,7 +45,7 @@ public class TicketUploadAttachmentService(
             Id = attachmentId,
             TicketId = ticketId,
             UploadedById = userId,
-            FileName = Path.GetFileName(model.FileName),
+            FileName = model.SanitizedFileName,
             Content = location.InlineContent,
             ContentLength = location.InlineContent?.LongLength ?? 0,
             ContentType = model.ContentType,

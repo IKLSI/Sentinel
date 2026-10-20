@@ -51,9 +51,9 @@ public class ManifestParserServiceTests
     [InlineData(".tool-versions", 0)]
     [InlineData("Dockerfile", 0)]
     [InlineData(".nvmrc", 0)]
-    [InlineData("package.json", 1)]
-    [InlineData("package-lock.json", 2)]
-    public void ScanPriority_ReadsRuntimeDeclarationsBeforeLockFiles(string fileName, int expected)
+    [InlineData("package-lock.json", 1)]
+    [InlineData("package.json", 2)]
+    public void ScanPriority_ReadsRuntimeDeclarationsThenLockFilesBeforeManifests(string fileName, int expected)
     {
         ManifestParserService.ScanPriority(fileName).Should().Be(expected);
     }
@@ -81,7 +81,7 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
-    public void ParsePackageLockJson_V3_KeepsTopLevelPackagesOnly()
+    public void ParsePackageLockJson_V3_IncludesNestedPackages()
     {
         const string content = """
         {
@@ -97,9 +97,10 @@ public class ManifestParserServiceTests
 
         (List<Dependency> dependencies, _) = Parse("package-lock.json", content);
 
-        dependencies.Should().HaveCount(2);
+        dependencies.Should().HaveCount(3);
         SingleDependency(dependencies, "axios").CurrentVersion.Should().Be("1.6.8");
         SingleDependency(dependencies, "vitest").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "follow-redirects").CurrentVersion.Should().Be("1.15.6");
     }
 
     [Fact]
@@ -208,8 +209,9 @@ public class ManifestParserServiceTests
 
         (List<Dependency> dependencies, List<Runtime> runtimes) = Parse("pyproject.toml", content);
 
-        dependencies.Should().ContainSingle();
+        dependencies.Should().HaveCount(2);
         SingleDependency(dependencies, "fastapi").CurrentVersion.Should().Be("0.110.0");
+        SingleDependency(dependencies, "httpx").IsVersionPinned.Should().BeFalse();
         SingleRuntime(runtimes, "FastAPI").Version.Should().Be("0.110.0");
     }
 
@@ -1023,5 +1025,341 @@ public class ManifestParserServiceTests
 
         dependencies.Should().BeEmpty();
         runtimes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseGemfileLock_ReadsLockedGemsAndDirectness()
+    {
+        const string content = """
+        GEM
+          remote: https://rubygems.org/
+          specs:
+            nokogiri (1.16.2-x86_64-linux)
+              racc (~> 1.4)
+            racc (1.7.3)
+            rails (7.1.3)
+
+        PLATFORMS
+          x86_64-linux
+
+        DEPENDENCIES
+          nokogiri
+          rails (~> 7.1)
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("Gemfile.lock", content);
+
+        dependencies.Should().HaveCount(3);
+        SingleDependency(dependencies, "nokogiri").CurrentVersion.Should().Be("1.16.2");
+        SingleDependency(dependencies, "racc").IsDirect.Should().BeFalse();
+        SingleDependency(dependencies, "rails").IsDirect.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParseUvLock_SkipsTheLocalProject()
+    {
+        const string content = """
+        [[package]]
+        name = "app"
+        version = "0.1.0"
+        source = { editable = "." }
+
+        [[package]]
+        name = "httpx"
+        version = "0.27.0"
+        source = { registry = "https://pypi.org/simple" }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("uv.lock", content);
+
+        SingleDependency(dependencies, "httpx").CurrentVersion.Should().Be("0.27.0");
+        dependencies.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ParseBunLock_ReadsPackagesWithTrailingCommas()
+    {
+        const string content = """
+        {
+          "lockfileVersion": 1,
+          "packages": {
+            "react": ["react@19.0.0", "", {}, "sha512-x"],
+            "@types/node": ["@types/node@22.10.2", "", {}, "sha512-y"],
+            "app": ["app@workspace:packages/app"],
+          },
+        }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("bun.lock", content);
+
+        dependencies.Should().HaveCount(2);
+        SingleDependency(dependencies, "@types/node").CurrentVersion.Should().Be("22.10.2");
+    }
+
+    [Fact]
+    public void ParsePackagesConfig_ReadsNuGetPackages()
+    {
+        const string content = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <packages>
+          <package id="Newtonsoft.Json" version="13.0.1" targetFramework="net48" />
+          <package id="NUnit" version="3.14.0" targetFramework="net48" developmentDependency="true" />
+        </packages>
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("packages.config", content);
+
+        SingleDependency(dependencies, "Newtonsoft.Json").Ecosystem.Should().Be(DependencyEcosystem.NuGet);
+        SingleDependency(dependencies, "NUnit").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
+    public void ParsePodfileLock_ReadsPodsAndDirectness()
+    {
+        const string content = """
+        PODS:
+          - Alamofire (5.8.1)
+          - Firebase/Core (10.20.0):
+            - FirebaseCore (= 10.20.0)
+          - FirebaseCore (10.20.0)
+
+        DEPENDENCIES:
+          - Alamofire (~> 5.8)
+          - Firebase/Core
+
+        COCOAPODS: 1.15.2
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("Podfile.lock", content);
+
+        dependencies.Should().HaveCount(3);
+        SingleDependency(dependencies, "Alamofire").Ecosystem.Should().Be(DependencyEcosystem.CocoaPods);
+        SingleDependency(dependencies, "Firebase").IsDirect.Should().BeTrue();
+        SingleDependency(dependencies, "FirebaseCore").IsDirect.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ParseWorkflow_ReadsVersionedActionsOnly()
+    {
+        const string content = """
+        jobs:
+          build:
+            steps:
+              - uses: actions/checkout@v4
+              - uses: github/codeql-action/init@v3.25.1
+              - uses: ./local-action
+              - uses: docker://alpine:3.19
+              - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
+        """;
+
+        (List<Dependency> dependencies, _) = Parse(ManifestParserService.WorkflowFileName, content);
+
+        dependencies.Should().HaveCount(2);
+        SingleDependency(dependencies, "actions/checkout").IsVersionPinned.Should().BeFalse();
+        SingleDependency(dependencies, "github/codeql-action").CurrentVersion.Should().Be("3.25.1");
+        SingleDependency(dependencies, "github/codeql-action").Ecosystem.Should().Be(DependencyEcosystem.GitHubActions);
+    }
+
+    [Theory]
+    [InlineData("https://raw.githubusercontent.com/acme/app/HEAD/.github/workflows/ci.yml", true)]
+    [InlineData("https://gitlab.com/api/v4/projects/1/repository/files/.github%2Fworkflows%2Fci.yaml/raw?ref=HEAD", true)]
+    [InlineData("https://raw.githubusercontent.com/acme/app/HEAD/config/ci.yml", false)]
+    public void IsWorkflowFile_DetectsGitHubWorkflows(string url, bool expected)
+    {
+        ManifestParserService.IsWorkflowFile(url).Should().Be(expected);
+    }
+
+    [Fact]
+    public void ParsePackageJson_SkipsNonRegistrySpecsAndFlagsRanges()
+    {
+        const string content = """
+        {
+          "engines": { "node": ">=14" },
+          "dependencies": {
+            "axios": "1.6.8",
+            "lodash": "^4.17.21",
+            "shared": "workspace:*",
+            "local": "file:../local",
+            "forked": "github:acme/forked",
+            "aliased": "npm:react@18.2.0"
+          }
+        }
+        """;
+
+        (List<Dependency> dependencies, List<Runtime> runtimes) = Parse("package.json", content);
+
+        dependencies.Select(dependency => dependency.Name).Should().BeEquivalentTo(["axios", "lodash", "aliased"]);
+        SingleDependency(dependencies, "axios").IsVersionPinned.Should().BeTrue();
+        SingleDependency(dependencies, "lodash").IsVersionPinned.Should().BeFalse();
+        SingleDependency(dependencies, "aliased").CurrentVersion.Should().Be("18.2.0");
+        SingleRuntime(runtimes, "Node.js").IsMinimumConstraint.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParsePyprojectToml_ReadsPoetryGroupsInlineTablesAndExtras()
+    {
+        const string content = """
+        [tool.poetry.dependencies]
+        python = "^3.10"
+        devtools = "1.0.0"
+        uvicorn = { version = "0.29.0", extras = ["standard"] }
+
+        [tool.poetry.group.dev.dependencies]
+        pytest = "^8.0"
+
+        [project]
+        name = "app"
+        requires-python = ">=3.10"
+        dependencies = ["uvicorn[standard] >= 0.29", "requests==2.31.0"]
+        """;
+
+        (List<Dependency> dependencies, List<Runtime> runtimes) = Parse("pyproject.toml", content);
+
+        dependencies.Single(d => d.Name == "devtools").Type.Should().Be(DependencyType.Prod);
+        dependencies.First(d => d.Name == "uvicorn").CurrentVersion.Should().Be("0.29.0");
+        dependencies.Single(d => d.Name == "pytest").Type.Should().Be(DependencyType.Dev);
+        dependencies.Single(d => d.Name == "requests").IsVersionPinned.Should().BeTrue();
+        dependencies.Last(d => d.Name == "uvicorn").IsVersionPinned.Should().BeFalse();
+        runtimes.Single(r => r.Name == "Python").IsMinimumConstraint.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParseGemfile_TracksGroupsAcrossNestedBlocks()
+    {
+        const string content = """
+        source "https://rubygems.org"
+
+        gem "rails", "7.1.3"
+
+        platforms :jruby do
+          gem "jruby-openssl"
+        end
+
+        group :development, :test do
+          gem "rspec", "~> 3.13"
+          if ENV["CI"] do
+            gem "simplecov"
+          end
+          gem "rubocop"
+        end
+
+        gem "puma", group: :development
+        gem "pg"
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("Gemfile", content);
+
+        SingleDependency(dependencies, "rails").IsVersionPinned.Should().BeTrue();
+        SingleDependency(dependencies, "jruby-openssl").Type.Should().Be(DependencyType.Prod);
+        SingleDependency(dependencies, "rspec").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "rubocop").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "puma").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "pg").Type.Should().Be(DependencyType.Prod);
+    }
+
+    [Fact]
+    public void ParsePomXml_IgnoresManagedAndPluginDependencies()
+    {
+        const string content = """
+        <project xmlns="http://maven.apache.org/POM/4.0.0">
+          <dependencyManagement>
+            <dependencies>
+              <dependency><groupId>org.managed</groupId><artifactId>bom</artifactId><version>1.0</version></dependency>
+            </dependencies>
+          </dependencyManagement>
+          <dependencies>
+            <dependency><groupId>org.app</groupId><artifactId>core</artifactId><version>2.0</version></dependency>
+          </dependencies>
+          <build>
+            <plugins>
+              <plugin>
+                <artifactId>maven-plugin</artifactId>
+                <dependencies>
+                  <dependency><groupId>org.plugin</groupId><artifactId>helper</artifactId><version>3.0</version></dependency>
+                </dependencies>
+              </plugin>
+            </plugins>
+          </build>
+        </project>
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("pom.xml", content);
+
+        dependencies.Should().ContainSingle().Which.Name.Should().Be("org.app:core");
+    }
+
+    [Fact]
+    public void ParseCsproj_SkipsUnresolvedPropertiesAndReadsVersionOverride()
+    {
+        const string content = """
+        <Project Sdk="Microsoft.NET.Sdk">
+          <ItemGroup>
+            <PackageReference Include="Serilog" Version="$(SerilogVersion)" />
+            <PackageReference Include="Polly" VersionOverride="8.4.0" />
+          </ItemGroup>
+        </Project>
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("App.csproj", content);
+
+        dependencies.Should().ContainSingle().Which.CurrentVersion.Should().Be("8.4.0");
+    }
+
+    [Fact]
+    public void ParseDockerfile_HandlesPlatformFlagsAndRegistryPrefixes()
+    {
+        const string content = """
+        FROM --platform=$BUILDPLATFORM node:20-alpine AS build
+        FROM docker.io/library/python:3.12-slim
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("Dockerfile", content);
+
+        SingleRuntime(runtimes, "Node.js").Version.Should().Be("20");
+        SingleRuntime(runtimes, "Python").Version.Should().Be("3.12");
+    }
+
+    [Fact]
+    public void ParseDockerfile_DetectsBaseOperatingSystems()
+    {
+        const string content = """
+        FROM node:20-alpine3.19 AS build
+        FROM python:3.12-slim-bookworm AS tools
+        FROM ubuntu:jammy
+        FROM debian:12-slim
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("Dockerfile", content);
+
+        SingleRuntime(runtimes, "Alpine Linux").Version.Should().Be("3.19");
+        SingleRuntime(runtimes, "Ubuntu").Version.Should().Be("22.04");
+        runtimes.Where(runtime => runtime.Name == "Debian").Select(runtime => runtime.Version)
+            .Should().BeEquivalentTo(["12", "12"]);
+    }
+
+    [Fact]
+    public void ParseGradleWrapperProperties_ReadsTheGradleVersion()
+    {
+        const string content = "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip";
+
+        (_, List<Runtime> runtimes) = Parse("gradle-wrapper.properties", content);
+
+        SingleRuntime(runtimes, "Gradle").Version.Should().Be("8.5");
+    }
+
+    [Fact]
+    public void ParsePomXml_DerivesTheSpringFrameworkRuntime()
+    {
+        const string content = """
+        <project>
+          <dependencies>
+            <dependency><groupId>org.springframework</groupId><artifactId>spring-core</artifactId><version>5.3.39</version></dependency>
+          </dependencies>
+        </project>
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("pom.xml", content);
+
+        SingleRuntime(runtimes, "Spring Framework").Version.Should().Be("5.3.39");
     }
 }

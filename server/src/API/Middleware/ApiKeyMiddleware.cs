@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Sentinel.API.Attributes;
+using Sentinel.API.Contracts;
 using Sentinel.Application.ApiKeys.Validate;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
@@ -32,6 +34,17 @@ public class ApiKeyMiddleware
             Result<ApiKeyPrincipalDto> result =
                 await apiKeyValidateService.ExecuteAsync(rawKey.ToString(), context.RequestAborted);
 
+            if (result.IsSuccess && !IsApiKeyAllowed(context))
+            {
+                _logger.LogWarning("API key {Path} refused: endpoint not open to API keys", context.Request.Path);
+
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(
+                    ApiErrorResponse.Create(ErrorCodes.ApiKeyEndpointNotAllowed, StatusCodes.Status403Forbidden),
+                    context.RequestAborted);
+                return;
+            }
+
             if (result.IsSuccess)
             {
                 ApiKeyPrincipalDto principal = result.Value!;
@@ -59,4 +72,7 @@ public class ApiKeyMiddleware
 
         await _next(context);
     }
+
+    private static bool IsApiKeyAllowed(HttpContext context) =>
+        context.GetEndpoint()?.Metadata.GetMetadata<AllowApiKeyAttribute>() != null;
 }

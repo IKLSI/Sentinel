@@ -169,12 +169,75 @@ public class HealthScoreCalculatorTests
     }
 
     [Fact]
-    public void Calculate_CriticalVulnerabilityPenaltyIsAbsolute()
+    public void Calculate_OpenCriticalVulnerability_CapsTheScoreAtGradeC()
     {
         Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
         AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
 
+        int score = HealthScoreCalculator.Calculate(project);
+
+        score.Should().Be(74);
+        HealthScoreCalculator.ToGrade(score).Should().Be("C");
+    }
+
+    [Fact]
+    public void Calculate_KnownExploitedVulnerability_CapsTheScoreAtGradeD()
+    {
+        Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate);
+        project.Dependencies.First().Vulnerabilities.Add(new Vulnerability
+        {
+            CveId = "CVE-2026-1",
+            Severity = VulnerabilitySeverity.High,
+            IsKnownExploited = true
+        });
+
+        HealthScoreCalculator.ToGrade(HealthScoreCalculator.Calculate(project)).Should().Be("D");
+    }
+
+    [Fact]
+    public void Calculate_CriticalVulnerabilityOnDevDependency_DoesNotCapTheScore()
+    {
+        Project project = ProjectWithDependencies(50, DependencyStatus.UpToDate, DependencyType.Dev);
+        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
+
+        HealthScoreCalculator.Calculate(project).Should().BeGreaterThan(74);
+    }
+
+    [Fact]
+    public void Calculate_UnpinnedRangeBehindByAMinorVersion_IsNotPenalized()
+    {
+        Project project = ProjectWithDependencies(1, DependencyStatus.MinorUpdate);
+        project.Dependencies.First().IsVersionPinned = false;
+
+        HealthScoreCalculator.Calculate(project).Should().Be(100);
+    }
+
+    [Fact]
+    public void Calculate_EndOfLifeMinimumConstraintOnly_IsNotPenalized()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        project.Runtimes.Add(new Runtime { Name = "Node.js", Version = "14", IsEol = true, IsMinimumConstraint = true });
+
+        HealthScoreCalculator.Calculate(project).Should().Be(100);
+    }
+
+    [Fact]
+    public void Calculate_SameEndOfLifeRuntimeDeclaredTwice_IsPenalizedOnce()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        project.Runtimes.Add(new Runtime { Name = "Node.js", Version = "16", IsEol = true });
+        project.Runtimes.Add(new Runtime { Name = "Node.js", Version = "14", IsEol = true });
+
         HealthScoreCalculator.Calculate(project).Should().Be(90);
+    }
+
+    [Fact]
+    public void Calculate_DeprecatedDependency_AppliesTheEndOfLifePenalty()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        project.Dependencies.First().IsDeprecated = true;
+
+        HealthScoreCalculator.Calculate(project).Should().Be(94);
     }
 
     [Fact]
@@ -326,5 +389,20 @@ public class HealthScoreCalculatorTests
         HealthScoreCalculator.Calculate(project, _ => true)
             .Should().Be(HealthScoreCalculator.Calculate(ProjectWithDependencies(2, DependencyStatus.UpToDate)));
         HealthScoreCalculator.Calculate(project, _ => false).Should().Be(HealthScoreCalculator.Calculate(project));
+    }
+
+    [Fact]
+    public void Calculate_RuntimeReachingEndOfLifeWithinNinetyDays_AppliesALightPenalty()
+    {
+        Project project = ProjectWithDependencies(10, DependencyStatus.UpToDate);
+        project.Runtimes.Add(new Runtime
+        {
+            Name = "Node.js",
+            Version = "20",
+            IsEol = false,
+            EolDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        HealthScoreCalculator.Calculate(project).Should().Be(97);
     }
 }

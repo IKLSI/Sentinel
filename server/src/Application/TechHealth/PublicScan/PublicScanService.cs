@@ -15,6 +15,7 @@ public class PublicScanService(
     RuntimeEolScanService runtimeEol,
     ExploitSignalEnricher exploitSignalEnricher,
     IMemoryCache cache,
+    PublicScanThrottle throttle,
     PublicScanValidator validator) : IService
 {
     public async Task<Result<PublicScanResponse>> ExecuteAsync(
@@ -35,7 +36,19 @@ public class PublicScanService(
         if (cache.TryGetValue(cacheKey, out PublicScanResponse? cached) && cached != null)
             return Result<PublicScanResponse>.Success(cached);
 
-        Result<PublicScanResponse> result = await ScanAsync(request.RepositoryUrl!, headCommitSha);
+        if (!throttle.TryEnter())
+            return Result<PublicScanResponse>.Error(ErrorCodes.PublicScanBusy);
+
+        Result<PublicScanResponse> result;
+
+        try
+        {
+            result = await ScanAsync(request.RepositoryUrl!, headCommitSha);
+        }
+        finally
+        {
+            throttle.Exit();
+        }
 
         if (result.IsSuccess && result.Value is { } response)
         {
@@ -60,8 +73,14 @@ public class PublicScanService(
         if (outcome.Error != null)
             return Result<PublicScanResponse>.Error(outcome.Error);
 
+        if (outcome.Dependencies.Count == 0 && outcome.Runtimes.Count == 0)
+            return Result<PublicScanResponse>.Error(ErrorCodes.ScanNoDependencies);
+
         VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScan.ScanAsync(
             outcome.Dependencies, new Dictionary<string, DateTime>());
+
+        if (!vulnerabilityOutcome.IsComplete)
+            return Result<PublicScanResponse>.Error(ErrorCodes.ScanVulnerabilityDataIncomplete);
 
         foreach (VulnerabilityScanResult result in vulnerabilityOutcome.Results)
         {
@@ -88,7 +107,7 @@ public class PublicScanService(
         int highCount = outcome.Dependencies
             .SelectMany(d => d.Vulnerabilities)
             .Count(v => v.Severity == VulnerabilitySeverity.High);
-        int eolRuntimeCount = outcome.Runtimes.Count(r => r.IsEol == true);
+        int eolRuntimeCount = RuntimeGrouping.ByName(outcome.Runtimes).Count(FindingRules.IsEol);
 
         return Result<PublicScanResponse>.Success(new PublicScanResponse(
             grade,

@@ -37,6 +37,13 @@ public static class ValidationCodes
     public const string ProjectRepositoryUrlInvalid = "validation.project.repository_url_invalid";
     public const string ProjectRepositoryTypeInvalid = "validation.project.repository_type_invalid";
     public const string ProjectScanFrequencyInvalid = "validation.project.scan_frequency_invalid";
+    public const string ProjectBranchInvalid = "validation.project.branch_invalid";
+    public const string ProjectRootPathInvalid = "validation.project.root_path_invalid";
+
+    public const string SuppressionFindingKeyRequired = "validation.suppression.finding_key_required";
+    public const string SuppressionReasonInvalid = "validation.suppression.reason_invalid";
+    public const string SuppressionJustificationRequired = "validation.suppression.justification_required";
+    public const string SuppressionExpirationInvalid = "validation.suppression.expiration_invalid";
 
     public const string TicketTitleRequired = "validation.ticket.title_required";
     public const string TicketTitleMaxLength = "validation.ticket.title_max_length";

@@ -6,17 +6,25 @@ namespace Sentinel.Application.Dashboard.GetStats;
 
 public static class ProjectHealthBuilder
 {
-    public static List<ProjectHealthDto> Build(IReadOnlyList<Project> projects,
-        IReadOnlyDictionary<Guid, int> baselineScores, IReadOnlyList<OpenTicketRow> openTickets,
-        IReadOnlyList<RuntimeDeadline> deadlines, int take)
-    {
-        ILookup<Guid?, OpenTicketRow> ticketsByProject = openTickets.ToLookup(t => t.ProjectId);
-
-        return projects
-            .OrderByDescending(NextActionResolver.HasScanError)
+    public static List<Guid> SelectPriorityIds(IReadOnlyList<DashboardProjectRow> projects, int take) =>
+        projects
+            .OrderByDescending(project => NextActionResolver.HasScanError(project.Coverage, project.LastScanError))
             .ThenBy(project => project.HealthScore ?? int.MaxValue)
             .ThenBy(project => project.Name)
             .Take(take)
+            .Select(project => project.Id)
+            .ToList();
+
+    public static List<ProjectHealthDto> Build(IReadOnlyList<Guid> priorityIds, IReadOnlyList<Project> projects,
+        IReadOnlyDictionary<Guid, int> baselineScores, IReadOnlyList<OpenTicketRow> openTickets,
+        IReadOnlyList<RuntimeDeadline> deadlines)
+    {
+        ILookup<Guid?, OpenTicketRow> ticketsByProject = openTickets.ToLookup(t => t.ProjectId);
+        Dictionary<Guid, Project> projectsById = projects.ToDictionary(project => project.Id);
+
+        return priorityIds
+            .Where(projectsById.ContainsKey)
+            .Select(id => projectsById[id])
             .Select(project => ToDto(project, baselineScores, ticketsByProject[project.Id].ToList(), deadlines))
             .ToList();
     }

@@ -30,6 +30,8 @@ public class Project : IEntityWithId
     public Guid OrganizationId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? RepositoryUrl { get; set; }
+    public string? Branch { get; set; }
+    public string? RootPath { get; set; }
     public RepositoryType RepositoryType { get; set; } = RepositoryType.GitHub;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }

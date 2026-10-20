@@ -12,9 +12,11 @@ import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
 import type {
   CreateProject,
   Project,
-  ProjectScanFrequency,
+  ProjectScanSettings,
   ProjectSummary,
+  SuppressVulnerability,
   UpdateProject,
+  VulnerabilitySuppression,
 } from "@/domains/projects/types";
 
 const updateCachedProjects = (
@@ -50,18 +52,36 @@ export const useScanProjectMutation = () =>
     ROUTES_API.api.techHealth.projects[":id"].scan.__path,
   );
 
-export const useUpdateProjectFrequencyMutation = () =>
+export const useUpdateProjectSettingsMutation = () =>
   usePatchMutation<
-    ProjectScanFrequency,
-    ProjectScanFrequency,
+    ProjectScanSettings,
+    ProjectScanSettings,
     { id: string; data: UpdateProject & { scanFrequency: ScanFrequency } }
   >(ROUTES_API.api.techHealth.projects[":id"].__path, {
-    onSuccess: (_result, { id, data }) =>
+    onSuccess: (result, { id }) =>
       updateCachedProjects((projects) =>
         projects.map((project) =>
           project.id === id
-            ? { ...project, scanFrequency: data.scanFrequency }
+            ? {
+                ...project,
+                scanFrequency: result.scanFrequency,
+                branch: result.branch,
+                rootPath: result.rootPath,
+              }
             : project,
         ),
       ),
   });
+
+export const useSuppressVulnerabilityMutation = () =>
+  usePostMutation<
+    VulnerabilitySuppression,
+    VulnerabilitySuppression,
+    { id: string; data: SuppressVulnerability }
+  >(ROUTES_API.api.techHealth.projects[":id"].suppressions.__path);
+
+export const useRemoveSuppressionMutation = () =>
+  useDeleteMutation<void, void, { id: string; suppressionId: string }>(
+    ROUTES_API.api.techHealth.projects[":id"].suppressions[":suppressionId"]
+      .__path,
+  );

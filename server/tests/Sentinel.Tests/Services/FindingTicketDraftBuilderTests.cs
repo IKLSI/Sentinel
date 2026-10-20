@@ -54,7 +54,7 @@ public class FindingTicketDraftBuilderTests
     public void ForDependency_QuandLePaquetEstEnFinDeVie_PrioriteHaute()
     {
         Dependency dependency = NewDependency("1.0.0", null);
-        dependency.Status = DependencyStatus.EOL;
+        dependency.IsDeprecated = true;
 
         FindingTicketDraft draft = _builder.ForDependency(dependency);
 

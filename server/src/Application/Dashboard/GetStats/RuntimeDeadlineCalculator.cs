@@ -1,18 +1,17 @@
-using Sentinel.Domain.Entities;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Dashboard.GetStats;
 
 public static class RuntimeDeadlineCalculator
 {
-    public static IReadOnlyList<RuntimeDeadline> Compute(IReadOnlyList<Project> projects, DateOnly today) =>
-        projects
-            .SelectMany(project => project.Runtimes.Select(runtime => (Project: project, Runtime: runtime)))
-            .Where(entry => entry.Runtime.EolDate != null || entry.Runtime.IsEol == true)
-            .GroupBy(entry => (entry.Runtime.Name, entry.Runtime.Version))
+    public static IReadOnlyList<RuntimeDeadline> Compute(IReadOnlyList<DashboardRuntimeRow> runtimes, DateOnly today) =>
+        runtimes
+            .Where(runtime => !runtime.IsMinimumConstraint && (runtime.EolDate != null || runtime.IsEol == true))
+            .GroupBy(runtime => (runtime.Name, runtime.Version))
             .Select(group =>
             {
                 DateOnly eolDate = group
-                    .Select(entry => entry.Runtime.EolDate is DateTime date ? DateOnly.FromDateTime(date) : today)
+                    .Select(runtime => runtime.EolDate is DateTime date ? DateOnly.FromDateTime(date) : today)
                     .Min();
 
                 return new RuntimeDeadline(
@@ -20,7 +19,7 @@ public static class RuntimeDeadlineCalculator
                     group.Key.Version,
                     eolDate,
                     eolDate.DayNumber - today.DayNumber,
-                    group.Select(entry => entry.Project.Id).Distinct().ToList());
+                    group.Select(runtime => runtime.ProjectId).Distinct().ToList());
             })
             .OrderBy(deadline => deadline.DaysLeft)
             .ThenBy(deadline => deadline.Runtime)

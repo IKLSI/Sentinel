@@ -5,6 +5,8 @@ public class ProjectSummaryDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? RepositoryUrl { get; set; }
+    public string? Branch { get; set; }
+    public string? RootPath { get; set; }
     public string RepositoryType { get; set; } = string.Empty;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }

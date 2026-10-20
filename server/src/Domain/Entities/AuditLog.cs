@@ -3,7 +3,9 @@ namespace Sentinel.Domain.Entities;
 
 public enum AuditAction
 {
+    Unknown,
     Login,
+    LoginFailed,
     Logout,
     PasswordResetRequested,
     PasswordReset,
@@ -37,13 +39,13 @@ public enum AuditAction
     GithubIntegrationSaved,
     GitlabIntegrationSaved,
 
-    CheckoutStarted,
-    PortalOpened,
 
     ApiKeyCreated,
     ApiKeyRevoked,
 
-    AccountDeleted
+    AccountDeleted,
+    VulnerabilitySuppressed,
+    VulnerabilitySuppressionRemoved
 }
 
 public class AuditLog : IEntityWithId

@@ -83,13 +83,13 @@ public partial class RepositoryHostClient
         return request;
     }
 
-    private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token)
+    private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token, string? branch)
     {
         try
         {
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
-                $"https://api.github.com/repos/{owner}/{repo}/commits/HEAD", token);
+                $"https://api.github.com/repos/{owner}/{repo}/commits/{Uri.EscapeDataString(branch ?? "HEAD")}", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(GitHubShaMediaType));
 
             using HttpResponseMessage response = await client.SendAsync(request);
@@ -106,9 +106,55 @@ public partial class RepositoryHostClient
         }
     }
 
+    private async Task<RepositoryBranchListing?> ListGitHubBranchesAsync(string owner, string repo, string? token)
+    {
+        HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+        string repositoryApiUrl = $"https://api.github.com/repos/{owner}/{repo}";
+
+        try
+        {
+            string? defaultBranch;
+
+            using (HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, repositoryApiUrl, token))
+            using (HttpResponseMessage response = await client.SendAsync(request))
+            {
+                if (!response.IsSuccessStatusCode) return null;
+
+                JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>();
+                defaultBranch = repository.TryGetProperty("default_branch", out JsonElement d) ? d.GetString() : null;
+            }
+
+            List<string> branches = [];
+
+            for (int page = 1; page <= BranchPageLimit; page++)
+            {
+                using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
+                    $"{repositoryApiUrl}/branches?per_page={RepositoryPageSize}&page={page}", token);
+                using HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode) return new RepositoryBranchListing(defaultBranch, branches, true);
+
+                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+                if (items == null || items.Count == 0) break;
+
+                branches.AddRange(items
+                    .Select(item => item.TryGetProperty("name", out JsonElement n) ? n.GetString() : null)
+                    .OfType<string>());
+
+                if (items.Count < RepositoryPageSize) return new RepositoryBranchListing(defaultBranch, branches, false);
+            }
+
+            return new RepositoryBranchListing(defaultBranch, branches, branches.Count >= BranchPageLimit * RepositoryPageSize);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "GitHub branch listing failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
     private async Task<RepositoryFileListing> ListGitHubFilesAsync(string owner, string repo, string reference, string? token = null)
     {
-        List<(string Name, string Url)> result = new List<(string, string)>();
+        List<(string Name, string Url, string Path)> result = new List<(string, string, string)>();
         JsonElement treeResponse;
         try
         {
@@ -150,7 +196,7 @@ public partial class RepositoryHostClient
             if (IsInSkippedDirectory(path)) continue;
 
             string fileName = Path.GetFileName(path);
-            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}"));
+            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}", path));
         }
 
         return new RepositoryFileListing(result, isTruncated);
