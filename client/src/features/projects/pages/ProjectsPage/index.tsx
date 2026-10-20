@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
+import { projectKeys } from "@/domains/projects/constants";
 import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
 import {
   useDeleteProjectMutation,
@@ -28,6 +28,7 @@ import {
 import { SCAN_FEEDBACK_TIMEOUT_MS } from "@/features/projects/pages/ProjectsPage/constants";
 import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
+import { ProjectSettingsModal } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
@@ -48,6 +49,7 @@ export const ProjectsPage: React.FC = () => {
   const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
+  const [editTarget, setEditTarget] = useState<ProjectSummary | null>(null);
   const [scanningId, setScanningId] = useState<string | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
   const [collapsedSections, setCollapsedSections] = useState<
@@ -108,7 +110,7 @@ export const ProjectsPage: React.FC = () => {
       if (scanningIdRef.current) return;
       scanBaselineRef.current =
         queryClient
-          .getQueryData<ProjectSummary[]>(PROJECTS_QUERY_KEY)
+          .getQueryData<ProjectSummary[]>(projectKeys.list())
           ?.find((p) => p.id === id)?.lastScanAt ?? null;
       scanningIdRef.current = id;
       setScanningId(id);
@@ -177,18 +179,17 @@ export const ProjectsPage: React.FC = () => {
     [grouped],
   );
 
+  const onlyUntracked =
+    filtered.length > 0 &&
+    grouped[UNTRACKED_SECTION].length === filtered.length;
+
   useEffect(() => {
-    if (loading) return;
-    const onlyUntracked =
-      filtered.length > 0 &&
-      grouped[UNTRACKED_SECTION].length === filtered.length;
-    if (onlyUntracked) {
-      setCollapsedSections((prev) => ({
-        ...prev,
-        [UNTRACKED_SECTION]: false,
-      }));
-    }
-  }, [loading, filtered, grouped]);
+    if (loading || !onlyUntracked) return;
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [UNTRACKED_SECTION]: false,
+    }));
+  }, [loading, onlyUntracked]);
 
   return (
     <>
@@ -266,6 +267,7 @@ export const ProjectsPage: React.FC = () => {
                       }))
                     }
                     scanningId={scanningId}
+                    onEdit={setEditTarget}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}
                   />
@@ -281,6 +283,14 @@ export const ProjectsPage: React.FC = () => {
         onClose={() => setShowSyncModal(false)}
         showToast={showToast}
       />
+
+      {editTarget && (
+        <ProjectSettingsModal
+          key={editTarget.id}
+          project={editTarget}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
 
       <DeleteModal
         open={!!deleteTarget}

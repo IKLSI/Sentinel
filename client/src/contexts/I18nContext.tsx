@@ -15,8 +15,13 @@ import { buildUrl } from "@/helpers/url";
 
 type Translations = Record<string, string>;
 
+export type Translate = (
+  key: string,
+  vars?: Record<string, string | number>,
+) => string;
+
 interface I18nContextValue {
-  t: (key: string, vars?: Record<string, string | number>) => string;
+  t: Translate;
   ready: boolean;
   culture: Language;
   setLanguage: (lang: Language) => void;

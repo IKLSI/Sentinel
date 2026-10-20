@@ -8,7 +8,7 @@ import {
   usePostMutation,
 } from "@/domains/helpers";
 import type { ScanFrequency } from "@/enums";
-import { PROJECTS_QUERY_KEY } from "@/domains/projects/constants";
+import { projectKeys } from "@/domains/projects/constants";
 import type {
   CreateProject,
   Project,
@@ -22,7 +22,7 @@ import type {
 const updateCachedProjects = (
   update: (projects: ProjectSummary[]) => ProjectSummary[],
 ) =>
-  queryClient.setQueryData<ProjectSummary[]>(PROJECTS_QUERY_KEY, (previous) =>
+  queryClient.setQueryData<ProjectSummary[]>(projectKeys.list(), (previous) =>
     update(previous ?? []),
   );
 

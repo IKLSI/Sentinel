@@ -6,7 +6,7 @@ import {
   usePostMutation,
   usePutMutation,
 } from "@/domains/helpers";
-import { ticketQueryKey } from "@/domains/tickets/constants";
+import { ticketKeys } from "@/domains/tickets/constants";
 import type {
   CreateComment,
   CreateTicket,
@@ -21,7 +21,7 @@ const updateCachedComments = (
   ticketId: string,
   update: (comments: TicketComment[]) => TicketComment[],
 ) =>
-  queryClient.setQueryData<Ticket>(ticketQueryKey(ticketId), (previous) =>
+  queryClient.setQueryData<Ticket>(ticketKeys.detail(ticketId), (previous) =>
     previous
       ? { ...previous, comments: update(previous.comments ?? []) }
       : previous,
@@ -42,7 +42,7 @@ export const useUpdateTicketMutation = () =>
     ROUTES_API.api.tickets[":id"].__path,
     {
       onSuccess: (updated) =>
-        queryClient.setQueryData(ticketQueryKey(updated.id), updated),
+        queryClient.setQueryData(ticketKeys.detail(updated.id), updated),
     },
   );
 

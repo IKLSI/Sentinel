@@ -7,12 +7,10 @@ import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { useT } from "@/contexts/I18nContext";
 import type { FindingTicket } from "@/domains/projects/types";
-import { useCreateTicketFromFindingMutation } from "@/domains/tickets/mutations";
 import { type FindingKind, TicketStatus } from "@/enums";
 import { statusLabel } from "@/features/tickets/constants";
-import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-
-const NO_VALUE = "—";
+import { useFindingActions } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
+import { NO_VALUE } from "@/constants/display";
 
 const createButtonSx = {
   all: "unset",
@@ -43,7 +41,6 @@ const variantOf = (status: string) => {
 };
 
 interface Props {
-  projectId: string;
   kind: FindingKind;
   findingKey: string;
   linkedTicket?: FindingTicket | null;
@@ -51,11 +48,11 @@ interface Props {
 }
 
 export const FindingTicketCell = memo<Props>(
-  ({ projectId, kind, findingKey, linkedTicket, actionable }) => {
+  ({ kind, findingKey, linkedTicket, actionable }) => {
     const t = useT();
     const navigate = useNavigate();
-    const createMutation = useCreateTicketFromFindingMutation();
-    const onCreateError = useApiErrorToast("tech_health.ticket.create_error");
+    const { createTicket, creatingFindingKey } = useFindingActions();
+    const creating = creatingFindingKey === findingKey;
 
     const openTicket = (ticketId: string) =>
       navigate({ to: "/tickets/$id", params: { id: ticketId } });
@@ -91,19 +88,11 @@ export const FindingTicketCell = memo<Props>(
           component="button"
           type="button"
           aria-label={t("tech_health.ticket.create")}
-          disabled={createMutation.isPending}
-          onClick={() =>
-            createMutation.mutate(
-              { data: { projectId, kind, findingKey } },
-              {
-                onSuccess: (ticket) => openTicket(ticket.id),
-                onError: onCreateError,
-              },
-            )
-          }
+          disabled={creatingFindingKey !== null}
+          onClick={() => createTicket(kind, findingKey)}
           sx={createButtonSx}
         >
-          {createMutation.isPending ? (
+          {creating ? (
             <CircularProgress size={14} />
           ) : (
             <AddTaskOutlined sx={{ fontSize: 16 }} />

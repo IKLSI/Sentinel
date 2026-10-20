@@ -1,13 +1,7 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { getQueryOptions, useGetQuery } from "@/domains/helpers";
-import {
-  AVAILABLE_REPOS_QUERY_KEY,
-  PROJECT_OPTIONS_QUERY_KEY,
-  PROJECTS_QUERY_KEY,
-  projectQueryKey,
-  projectRepositoryOptionsQueryKey,
-} from "@/domains/projects/constants";
+import { projectKeys } from "@/domains/projects/constants";
 import type {
   AvailableRepos,
   Project,
@@ -18,13 +12,13 @@ import type {
 
 export const projectsQueryOptions = getQueryOptions<ProjectSummary[]>(
   ROUTES_API.api.techHealth.projects.__path,
-  PROJECTS_QUERY_KEY,
+  projectKeys.list(),
 );
 
 export const projectQueryOptions = (id: string) =>
   getQueryOptions<Project>(
     ROUTES_API.api.techHealth.projects[":id"].__path,
-    projectQueryKey(id),
+    projectKeys.detail(id),
     { id },
   );
 
@@ -33,7 +27,7 @@ export const useProjectsQuery = (enabled = true) =>
     ROUTES_API.api.techHealth.projects.__path,
     {},
     {
-      queryKey: PROJECTS_QUERY_KEY,
+      queryKey: projectKeys.list(),
       enabled,
     },
   );
@@ -42,7 +36,7 @@ export const useProjectOptionsQuery = () =>
   useGetQuery<ProjectOption[]>(
     ROUTES_API.api.techHealth.projects.options.__path,
     {},
-    { queryKey: PROJECT_OPTIONS_QUERY_KEY },
+    { queryKey: projectKeys.options() },
   );
 
 export const useProjectQuery = (id: string | undefined) =>
@@ -50,7 +44,7 @@ export const useProjectQuery = (id: string | undefined) =>
     ROUTES_API.api.techHealth.projects[":id"].__path,
     { id },
     {
-      queryKey: projectQueryKey(id ?? ""),
+      queryKey: projectKeys.detail(id ?? ""),
       enabled: !!id,
     },
   );
@@ -59,7 +53,7 @@ export const useAvailableReposQuery = (enabled: boolean) =>
   useGetQuery<AvailableRepos>(
     ROUTES_API.api.techHealth.projects.availableRepos.__path,
     {},
-    { queryKey: AVAILABLE_REPOS_QUERY_KEY, enabled },
+    { queryKey: projectKeys.availableRepos(), enabled },
   );
 
 export const useProjectRepositoryOptionsQuery = (
@@ -71,7 +65,7 @@ export const useProjectRepositoryOptionsQuery = (
     ROUTES_API.api.techHealth.projects[":id"].repositoryOptions.__path,
     { id, branch },
     {
-      queryKey: projectRepositoryOptionsQueryKey(id, branch),
+      queryKey: projectKeys.repositoryOptions(id, branch),
       enabled,
       placeholderData: keepPreviousData,
     },

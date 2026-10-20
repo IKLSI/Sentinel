@@ -28,6 +28,7 @@ import {
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
+import { NO_VALUE } from "@/constants/display";
 
 const COLUMN_KEYS = {
   library: "library",
@@ -100,11 +101,10 @@ const manifestPathSx = {
   minWidth: 0,
 } as const;
 
-const NO_VALUE = "—";
+const mutedSx = { color: "var(--muted)" } as const;
 
 interface RowProps {
   dependency: Dependency;
-  projectId: string;
   typeProd: string;
   typeDev: string;
   relationDirect: string;
@@ -115,7 +115,6 @@ interface RowProps {
 const DependencyRow = memo<RowProps>(
   ({
     dependency,
-    projectId,
     typeProd,
     typeDev,
     relationDirect,
@@ -163,7 +162,7 @@ const DependencyRow = memo<RowProps>(
             {dependency.latestVersion &&
               dependency.latestVersion !== dependency.currentVersion && (
                 <>
-                  <Box component="span" sx={{ color: "var(--muted)" }}>
+                  <Box component="span" sx={mutedSx}>
                     →
                   </Box>
                   <Box component="span" sx={latestVersionSx}>
@@ -182,14 +181,13 @@ const DependencyRow = memo<RowProps>(
               {vulnCount}
             </Box>
           ) : (
-            <Box component="span" sx={{ color: "var(--muted)" }}>
+            <Box component="span" sx={mutedSx}>
               {NO_VALUE}
             </Box>
           )}
         </TD>
         <TD align="center">
           <FindingTicketCell
-            projectId={projectId}
             kind={FindingKind.OutdatedDependency}
             findingKey={dependency.findingKey}
             linkedTicket={dependency.linkedTicket}
@@ -203,14 +201,10 @@ const DependencyRow = memo<RowProps>(
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
-  projectId: string;
   dependencies: Dependency[];
 }
 
-export const DependenciesTab: React.FC<Props> = ({
-  projectId,
-  dependencies,
-}) => {
+export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
   const t = useT();
 
   const fields = useMemo(
@@ -330,7 +324,6 @@ export const DependenciesTab: React.FC<Props> = ({
           <DependencyRow
             key={dependency.id}
             dependency={dependency}
-            projectId={projectId}
             typeProd={t("tech_health.dep.type_prod")}
             typeDev={t("tech_health.dep.type_dev")}
             relationDirect={t("tech_health.dep.relation_direct")}

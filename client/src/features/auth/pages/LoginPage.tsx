@@ -55,7 +55,9 @@ export const LoginPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (mounted) setTimeout(() => setFocus("email"), 700);
+    if (!mounted) return;
+    const id = setTimeout(() => setFocus("email"), 700);
+    return () => clearTimeout(id);
   }, [mounted, setFocus]);
 
   const onSubmit = handleFormSubmit(async (data) => {

@@ -1,8 +1,7 @@
-import { format } from "date-fns";
-import type { Locale } from "date-fns/locale";
 import type { Ticket, TicketHistory } from "@/domains/tickets/types";
 import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
 import { statusLabel } from "@/features/tickets/constants";
+import type { Translate } from "@/contexts/I18nContext";
 
 const ATTACHMENT_SEPARATOR = "<!-- attachments -->";
 const IMAGE_LINK_PATTERN = /^!\[(.+?)\]\((.+?)\)$/;
@@ -139,9 +138,7 @@ export const typeLabelKeys: Record<string, string> = {
   question: "tickets.detail.type_question",
 };
 
-type TFn = (k: string, v?: Record<string, string | number>) => string;
-
-export function getRelativeShort(date: string, t: TFn, locale: Locale) {
+export function getRelativeShort(date: string, t: Translate, culture: string) {
   const diff = Math.max(0, Date.now() - new Date(date).getTime());
   const min = Math.floor(diff / 60000);
   if (min < 1) return t("tickets.detail.relative_now");
@@ -150,7 +147,10 @@ export function getRelativeShort(date: string, t: TFn, locale: Locale) {
   if (hours < 24) return t("tickets.detail.relative_hours", { n: hours });
   const days = Math.floor(hours / 24);
   if (days < 7) return t("tickets.detail.relative_days", { n: days });
-  return format(new Date(date), "dd MMM", { locale });
+  return new Date(date).toLocaleDateString(culture, {
+    day: "2-digit",
+    month: "short",
+  });
 }
 
 function normalizePriorityKey(value?: string) {
@@ -160,7 +160,7 @@ function normalizePriorityKey(value?: string) {
 
 function mapPriorityLabel(
   value: string | undefined | null,
-  t: TFn,
+  t: Translate,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,
 ) {
   if (!value) return "—";
@@ -171,7 +171,7 @@ function mapPriorityLabel(
 
 export function historyPresentation(
   entry: TicketHistory,
-  t: TFn,
+  t: Translate,
   isDark: boolean,
   priorityConfig: ReturnType<typeof buildPriorityConfig>,
   ticket?: Ticket,

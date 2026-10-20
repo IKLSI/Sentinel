@@ -22,7 +22,18 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 700,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "vendor",
+              test: /node_modules[\\/](react|react-dom|scheduler|@emotion|@tanstack[\\/](react-query|query-core|react-router|router-core|history))[\\/]/,
+            },
+          ],
+        },
+      },
+    },
   },
   server: {
     port: 3000,

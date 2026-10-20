@@ -1,10 +1,10 @@
 import type React from "react";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useI18n } from "@/contexts/I18nContext";
 import { useDashboard } from "@/domains/dashboard/queries";
-import { useToast } from "@/hooks/useToast";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { ParkHero } from "@/features/dashboard/pages/DashboardPage/components/ParkHero";
@@ -26,12 +26,9 @@ const VulnerabilityFlowCard = lazy(() =>
 
 export const DashboardPage: React.FC = () => {
   const { t } = useI18n();
-  const { showToast } = useToast();
   const { data: stats, error, isLoading, isFetching, refetch } = useDashboard();
 
-  useEffect(() => {
-    if (error) showToast(t("dashboard.toast.stats_load_error"), "error");
-  }, [error, showToast, t]);
+  useQueryErrorToast(!!error, "dashboard.toast.stats_load_error");
 
   if (isLoading || !stats) {
     return (

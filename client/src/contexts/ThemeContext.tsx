@@ -44,12 +44,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updatePreferences = updatePreferencesMutation.mutate;
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === Theme.Dark ? Theme.Light : Theme.Dark;
-      if (isAuthenticated) updatePreferences({ data: { theme: next } });
-      return next;
-    });
-  }, [isAuthenticated, updatePreferences]);
+    const next = theme === Theme.Dark ? Theme.Light : Theme.Dark;
+    setTheme(next);
+    if (isAuthenticated) updatePreferences({ data: { theme: next } });
+  }, [theme, isAuthenticated, updatePreferences]);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
 

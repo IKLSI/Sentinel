@@ -1,4 +1,4 @@
-import { HealthGrade } from "@/enums";
+import { HealthGrade, SortDirection } from "@/enums";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
 import ReportOutlined from "@mui/icons-material/ReportOutlined";
 import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
@@ -9,6 +9,7 @@ import RemoveCircleOutlineOutlined from "@mui/icons-material/RemoveCircleOutline
 import type { SvgIconComponent } from "@mui/icons-material";
 import type { ProjectSummary } from "@/domains/projects/types";
 import { isCovered } from "@/formatters/coverage";
+import type { SortState } from "@/hooks/useSortState";
 
 export const UNTRACKED_SECTION = "NONE" as const;
 
@@ -59,17 +60,11 @@ export const getGrade = (grade: string | null | undefined): HealthGrade => {
   return HealthGrade.F;
 };
 
-interface ProjectSortState {
-  col: string;
-  dir: "asc" | "desc";
-}
-
 export const sortProjects = (
   items: ProjectSummary[],
-  sort: ProjectSortState | null,
+  sort: SortState<string>,
 ): ProjectSummary[] => {
-  if (!sort) return items;
-  const mul = sort.dir === "asc" ? 1 : -1;
+  const mul = sort.dir === SortDirection.Asc ? 1 : -1;
   return items.slice().sort((a, b) => {
     switch (sort.col) {
       case "name":

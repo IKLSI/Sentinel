@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FindingKind } from "@/enums";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
+import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 import { render, screen } from "@/tests/test-utils";
 
 const navigate = vi.fn();
@@ -25,13 +26,14 @@ describe("FindingTicketCell", () => {
 
   it("affiche le ticket lié et ouvre son détail au clic", async () => {
     const { user } = render(
-      <FindingTicketCell
-        projectId={PROJECT_ID}
-        kind={FindingKind.Vulnerability}
-        findingKey={FINDING_KEY}
-        linkedTicket={{ id: "t-1", reference: "TKT-000042", status: "new" }}
-        actionable
-      />,
+      <FindingActionsProvider projectId={PROJECT_ID}>
+        <FindingTicketCell
+          kind={FindingKind.Vulnerability}
+          findingKey={FINDING_KEY}
+          linkedTicket={{ id: "t-1", reference: "TKT-000042", status: "new" }}
+          actionable
+        />
+      </FindingActionsProvider>,
     );
 
     await user.click(await screen.findByText("TKT-000042"));
@@ -45,13 +47,14 @@ describe("FindingTicketCell", () => {
 
   it("n'affiche aucune action quand le finding n'est pas actionnable", async () => {
     render(
-      <FindingTicketCell
-        projectId={PROJECT_ID}
-        kind={FindingKind.OutdatedDependency}
-        findingKey="npm:express"
-        linkedTicket={null}
-        actionable={false}
-      />,
+      <FindingActionsProvider projectId={PROJECT_ID}>
+        <FindingTicketCell
+          kind={FindingKind.OutdatedDependency}
+          findingKey="npm:express"
+          linkedTicket={null}
+          actionable={false}
+        />
+      </FindingActionsProvider>,
     );
 
     expect(await screen.findByText("—")).toBeInTheDocument();
@@ -64,13 +67,14 @@ describe("FindingTicketCell", () => {
     );
 
     const { user } = render(
-      <FindingTicketCell
-        projectId={PROJECT_ID}
-        kind={FindingKind.EolRuntime}
-        findingKey="nodejs"
-        linkedTicket={null}
-        actionable
-      />,
+      <FindingActionsProvider projectId={PROJECT_ID}>
+        <FindingTicketCell
+          kind={FindingKind.EolRuntime}
+          findingKey="nodejs"
+          linkedTicket={null}
+          actionable
+        />
+      </FindingActionsProvider>,
     );
 
     await user.click(await screen.findByRole("button"));

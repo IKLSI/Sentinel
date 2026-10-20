@@ -1,18 +1,13 @@
-export const PROJECTS_QUERY_KEY = ["projects"] as const;
-
-export const AVAILABLE_REPOS_QUERY_KEY = ["available-repos"] as const;
-
-export const PROJECT_OPTIONS_QUERY_KEY = ["project-options"] as const;
-
-export const PROJECT_DETAIL_QUERY_KEY = ["project"] as const;
-
-export const projectRepositoryOptionsQueryKey = (
-  id: string,
-  branch: string | null,
-) => ["project-repository-options", id, branch] as const;
-
-export const projectQueryKey = (id: string) =>
-  [...PROJECT_DETAIL_QUERY_KEY, id] as const;
+export const projectKeys = {
+  all: ["projects"] as const,
+  list: () => [...projectKeys.all, "list"] as const,
+  options: () => [...projectKeys.all, "options"] as const,
+  availableRepos: () => [...projectKeys.all, "available-repos"] as const,
+  details: () => [...projectKeys.all, "detail"] as const,
+  detail: (id: string) => [...projectKeys.details(), id] as const,
+  repositoryOptions: (id: string, branch: string | null) =>
+    [...projectKeys.all, "repository-options", id, branch] as const,
+};
 
 export const PROJECTS_EXPORT_FALLBACK_FILE = "techhealth.xlsx";
 

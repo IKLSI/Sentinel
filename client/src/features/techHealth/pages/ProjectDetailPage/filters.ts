@@ -18,16 +18,44 @@ import {
   SEV_CONFIG,
   getRuntimeUrgency,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
-
-type Translate = (
-  key: string,
-  vars?: Record<string, string | number>,
-) => string;
+import type { Translate } from "@/contexts/I18nContext";
 
 export type VulnerabilityRow = Vulnerability & {
   dependencyName: string;
   dependencyType: string;
 };
+
+const vulnerabilityRowCache = new WeakMap<Vulnerability, VulnerabilityRow>();
+
+const toVulnerabilityRow = (
+  dependency: Dependency,
+  vulnerability: Vulnerability,
+): VulnerabilityRow => {
+  const cached = vulnerabilityRowCache.get(vulnerability);
+  if (
+    cached?.dependencyName === dependency.name &&
+    cached.dependencyType === dependency.type
+  ) {
+    return cached;
+  }
+
+  const row = {
+    ...vulnerability,
+    dependencyName: dependency.name,
+    dependencyType: dependency.type,
+  };
+  vulnerabilityRowCache.set(vulnerability, row);
+  return row;
+};
+
+export const toVulnerabilityRows = (
+  dependencies: Dependency[],
+): VulnerabilityRow[] =>
+  dependencies.flatMap((dependency) =>
+    dependency.vulnerabilities.map((vulnerability) =>
+      toVulnerabilityRow(dependency, vulnerability),
+    ),
+  );
 
 const GRID_FILTER_FIELDS = {
   risk: "risk",

@@ -4,11 +4,7 @@ import type {
 } from "@/components/ui/forms/FilterBuilder/types";
 import { UserAccessStatus, UserRole } from "@/enums";
 import { USER_FILTER_FIELDS } from "@/features/users/pages/UsersPage/filterParams";
-
-type Translate = (
-  key: string,
-  vars?: Record<string, string | number>,
-) => string;
+import type { Translate } from "@/contexts/I18nContext";
 
 export const buildUserFilterFields = (
   t: Translate,

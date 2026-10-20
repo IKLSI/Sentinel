@@ -5,12 +5,10 @@ import AddOutlined from "@mui/icons-material/AddOutlined";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
 import ReportProblemOutlined from "@mui/icons-material/ReportProblemOutlined";
-import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
-import { getDateFnsLocale } from "@/configs/locales";
 import { useI18n } from "@/contexts/I18nContext";
-import type { Language } from "@/enums";
 import type { ActivityItem } from "@/domains/dashboard/types";
+import { formatElapsed } from "@/formatters/date";
 
 interface Props {
   item: ActivityItem;
@@ -29,13 +27,6 @@ const ICONS = {
 } as const;
 
 const CVSS_DECIMALS = 1;
-
-const APPROXIMATE_PREFIX = /^(environ|about)\s+/i;
-
-const formatElapsed = (timestamp: string, culture: Language) =>
-  formatDistanceToNow(new Date(timestamp), {
-    locale: getDateFnsLocale(culture),
-  }).replace(APPROXIMATE_PREFIX, "~ ");
 
 const ellipsis = {
   whiteSpace: "nowrap",

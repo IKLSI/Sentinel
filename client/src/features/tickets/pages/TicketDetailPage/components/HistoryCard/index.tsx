@@ -1,7 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
-import { getDateFnsLocale } from "@/configs/locales";
 import type { Ticket } from "@/domains/tickets/types";
 import {
   type DetailPalette,
@@ -121,12 +120,8 @@ export const HistoryCard: React.FC<Props> = ({
                       mt: "4px",
                     }}
                   >
-                    {getRelativeShort(
-                      h.createdAt,
-                      t,
-                      getDateFnsLocale(culture),
-                    )}{" "}
-                    · {h.userName || t("tickets.history.system")}
+                    {getRelativeShort(h.createdAt, t, culture)} ·{" "}
+                    {h.userName || t("tickets.history.system")}
                   </Box>
                 </Box>
               </Box>

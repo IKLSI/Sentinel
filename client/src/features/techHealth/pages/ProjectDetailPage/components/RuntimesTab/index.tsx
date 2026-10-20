@@ -90,12 +90,23 @@ const meterSx = {
   overflow: "hidden",
 } as const;
 
+const meterFillStyle = {
+  position: "absolute",
+  inset: "0 auto 0 0",
+  borderRadius: 2,
+} as const;
+
+const daysLabelSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+  whiteSpace: "nowrap",
+} as const;
+
 const RuntimeRow = memo<{
   runtime: Runtime;
-  projectId: string;
   index: number;
   locale: string;
-}>(({ runtime, projectId, index, locale }) => {
+}>(({ runtime, index, locale }) => {
   const t = useT();
   const urgency = getRuntimeUrgency(runtime);
   const colors = EOL_COLOR[urgency];
@@ -133,25 +144,15 @@ const RuntimeRow = memo<{
       <TD>
         <Box sx={deadlineSx}>
           <Box sx={meterSx}>
-            <Box
-              sx={{
-                position: "absolute",
-                inset: "0 auto 0 0",
+            <span
+              style={{
+                ...meterFillStyle,
                 width: `${getRuntimeProgress(runtime)}%`,
-                borderRadius: "2px",
                 background: colors.stripe,
               }}
             />
           </Box>
-          <Box
-            component="span"
-            sx={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              color: colors.text,
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Box component="span" sx={daysLabelSx} style={{ color: colors.text }}>
             {getDaysLabel(runtime, t)}
           </Box>
         </Box>
@@ -161,7 +162,6 @@ const RuntimeRow = memo<{
       </TD>
       <TD align="center">
         <FindingTicketCell
-          projectId={projectId}
           kind={FindingKind.EolRuntime}
           findingKey={runtime.findingKey}
           linkedTicket={runtime.linkedTicket}
@@ -174,11 +174,10 @@ const RuntimeRow = memo<{
 RuntimeRow.displayName = "RuntimeRow";
 
 interface Props {
-  projectId: string;
   runtimes: Runtime[];
 }
 
-export const RuntimesTab: React.FC<Props> = ({ projectId, runtimes }) => {
+export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
   const t = useT();
   const { culture } = useI18n();
 
@@ -283,7 +282,6 @@ export const RuntimesTab: React.FC<Props> = ({ projectId, runtimes }) => {
           <RuntimeRow
             key={runtime.id}
             runtime={runtime}
-            projectId={projectId}
             index={index}
             locale={culture}
           />

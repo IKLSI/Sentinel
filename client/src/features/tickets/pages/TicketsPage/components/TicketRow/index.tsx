@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
@@ -24,6 +24,7 @@ interface Props {
 
 const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
   const navigate = useNavigate();
+  const router = useRouter();
   const t = useT();
   const isAdmin = useIsAdmin();
 
@@ -32,6 +33,12 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       component="tr"
       onClick={() =>
         navigate({ to: "/tickets/$id", params: { id: ticket.id } })
+      }
+      onMouseEnter={() =>
+        void router.preloadRoute({
+          to: "/tickets/$id",
+          params: { id: ticket.id },
+        })
       }
       sx={{
         cursor: "pointer",

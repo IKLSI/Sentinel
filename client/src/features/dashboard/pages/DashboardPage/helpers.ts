@@ -1,10 +1,6 @@
 import type { NextAction } from "@/domains/dashboard/types";
 import { SCORE_DELTA_NEUTRAL } from "@/features/dashboard/pages/DashboardPage/constants";
-
-type Translate = (
-  key: string,
-  vars?: Record<string, string | number>,
-) => string;
+import type { Translate } from "@/contexts/I18nContext";
 
 interface GradeMeta {
   color: string;

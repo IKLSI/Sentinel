@@ -7,6 +7,7 @@ import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { useProjectOptionsQuery } from "@/domains/projects/queries";
 import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
@@ -114,9 +115,7 @@ export const TicketsPage: React.FC = () => {
   const loading = ticketsQuery.isLoading;
   const error = ticketsQuery.error;
 
-  useEffect(() => {
-    if (error) showToast(t("tickets.list.load_error"), "error");
-  }, [error, showToast, t]);
+  useQueryErrorToast(!!error, "tickets.list.load_error");
 
   useEffect(() => {
     if (openCreate) openCreateDialog();

@@ -8,6 +8,7 @@ import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
+import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -87,9 +88,7 @@ export const TicketDetailPage: React.FC = () => {
   );
   const deleteCommentLoading = deleteCommentMutation.isPending;
 
-  useEffect(() => {
-    if (notFound) showToast(t("tickets.detail.not_found_toast"), "error");
-  }, [notFound, showToast, t]);
+  useQueryErrorToast(notFound, "tickets.detail.not_found_toast");
 
   const startEditComment = useCallback((commentId: string, content: string) => {
     const { text, attachments } = parseCommentContent(content);

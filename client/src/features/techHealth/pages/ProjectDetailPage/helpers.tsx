@@ -242,3 +242,6 @@ export function getDaysLabel(
     return t("tech_health.runtime.expired_since", { days: Math.abs(days) });
   return t("tech_health.runtime.days_remaining", { days });
 }
+
+export const riskConfigOf = (vulnerability: { priority: string }) =>
+  RISK_CONFIG[vulnerability.priority as RiskPriority] ?? RISK_CONFIG.Low;

@@ -2,18 +2,12 @@ import type { QueryKey } from "@tanstack/react-query";
 import { API_KEYS_QUERY_KEY } from "@/domains/apiKeys/constants";
 import { DASHBOARD_QUERY_KEY } from "@/domains/dashboard/constants";
 import { JOBS_QUERY_KEY } from "@/domains/jobs/constants";
-import {
-  AVAILABLE_REPOS_QUERY_KEY,
-  PROJECT_DETAIL_QUERY_KEY,
-  PROJECT_OPTIONS_QUERY_KEY,
-  PROJECTS_QUERY_KEY,
-  projectQueryKey,
-} from "@/domains/projects/constants";
+import { projectKeys } from "@/domains/projects/constants";
 import {
   INTEGRATIONS_QUERY_KEY,
   ORGANIZATION_QUERY_KEY,
 } from "@/domains/settings/constants";
-import { TICKETS_QUERY_KEY, ticketQueryKey } from "@/domains/tickets/constants";
+import { ticketKeys } from "@/domains/tickets/constants";
 import { USERS_QUERY_KEY } from "@/domains/users/constants";
 import { REALTIME_RESOURCES } from "@/domains/realtime/contract.gen";
 import type { RealtimeEvent } from "@/domains/realtime/types";
@@ -29,56 +23,60 @@ const reportUnhandledResource = (resource: never): QueryKey[] => {
   return [];
 };
 
+const affectedProjectDetailKeys = (projectIds?: string[]): QueryKey[] =>
+  projectIds ? projectIds.map(projectKeys.detail) : [projectKeys.details()];
+
 export const resolveInvalidatedKeys = ({
   resource,
   id,
+  projectIds,
 }: RealtimeEvent): QueryKey[] => {
   switch (resource) {
     case REALTIME_RESOURCES.Projects:
       return [
-        PROJECTS_QUERY_KEY,
+        projectKeys.list(),
         DASHBOARD_QUERY_KEY,
-        AVAILABLE_REPOS_QUERY_KEY,
-        PROJECT_OPTIONS_QUERY_KEY,
+        projectKeys.availableRepos(),
+        projectKeys.options(),
       ];
     case REALTIME_RESOURCES.Project:
       return [
-        PROJECTS_QUERY_KEY,
+        projectKeys.list(),
         DASHBOARD_QUERY_KEY,
-        PROJECT_OPTIONS_QUERY_KEY,
-        ...(id ? [projectQueryKey(id)] : []),
+        projectKeys.options(),
+        ...(id ? [projectKeys.detail(id)] : []),
       ];
     case REALTIME_RESOURCES.Tickets:
       return [
-        [TICKETS_QUERY_KEY],
+        ticketKeys.lists(),
         DASHBOARD_QUERY_KEY,
-        PROJECTS_QUERY_KEY,
-        PROJECT_DETAIL_QUERY_KEY,
+        projectKeys.list(),
+        ...affectedProjectDetailKeys(projectIds),
       ];
     case REALTIME_RESOURCES.Ticket:
       return [
-        [TICKETS_QUERY_KEY],
+        ticketKeys.lists(),
         DASHBOARD_QUERY_KEY,
-        PROJECTS_QUERY_KEY,
-        PROJECT_DETAIL_QUERY_KEY,
-        ...(id ? [ticketQueryKey(id)] : []),
+        projectKeys.list(),
+        ...affectedProjectDetailKeys(projectIds),
+        ...(id ? [ticketKeys.detail(id)] : []),
       ];
     case REALTIME_RESOURCES.TicketActivity:
       return [
-        [TICKETS_QUERY_KEY],
+        ticketKeys.lists(),
         DASHBOARD_QUERY_KEY,
-        ...(id ? [ticketQueryKey(id)] : []),
+        ...(id ? [ticketKeys.detail(id)] : []),
       ];
     case REALTIME_RESOURCES.Jobs:
       return [JOBS_QUERY_KEY];
     case REALTIME_RESOURCES.Users:
-      return [[USERS_QUERY_KEY], [TICKETS_QUERY_KEY], DASHBOARD_QUERY_KEY];
+      return [[USERS_QUERY_KEY], ticketKeys.lists(), DASHBOARD_QUERY_KEY];
     case REALTIME_RESOURCES.ApiKeys:
       return [API_KEYS_QUERY_KEY];
     case REALTIME_RESOURCES.Organization:
       return [ORGANIZATION_QUERY_KEY];
     case REALTIME_RESOURCES.Integrations:
-      return [INTEGRATIONS_QUERY_KEY, AVAILABLE_REPOS_QUERY_KEY];
+      return [INTEGRATIONS_QUERY_KEY, projectKeys.availableRepos()];
     default:
       return reportUnhandledResource(resource);
   }

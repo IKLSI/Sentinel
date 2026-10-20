@@ -10,11 +10,7 @@ import {
   TICKET_FILTER_FIELDS,
   UNSET_FILTER_VALUE,
 } from "@/features/tickets/pages/TicketsPage/filterParams";
-
-type Translate = (
-  key: string,
-  vars?: Record<string, string | number>,
-) => string;
+import type { Translate } from "@/contexts/I18nContext";
 
 export const buildTicketFilterFields = (
   t: Translate,

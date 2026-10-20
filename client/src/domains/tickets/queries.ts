@@ -1,6 +1,6 @@
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { getQueryOptions, useGetQuery } from "@/domains/helpers";
-import { ticketQueryKey, ticketsQueryKey } from "@/domains/tickets/constants";
+import { ticketKeys } from "@/domains/tickets/constants";
 import type {
   Ticket,
   TicketFilters,
@@ -12,7 +12,7 @@ export const useTicketsQuery = (filters: TicketFilters, enabled = true) =>
     ROUTES_API.api.tickets.__path,
     {},
     {
-      queryKey: ticketsQueryKey(filters),
+      queryKey: ticketKeys.list(filters),
       enabled,
       placeholderData: (previous) => previous,
     },
@@ -22,7 +22,7 @@ export const useTicketsQuery = (filters: TicketFilters, enabled = true) =>
 export const ticketQueryOptions = (id: string) =>
   getQueryOptions<Ticket>(
     ROUTES_API.api.tickets[":id"].__path,
-    ticketQueryKey(id),
+    ticketKeys.detail(id),
     { id },
   );
 
@@ -31,7 +31,7 @@ export const useTicketQuery = (id: string | undefined) =>
     ROUTES_API.api.tickets[":id"].__path,
     { id },
     {
-      queryKey: ticketQueryKey(id ?? ""),
+      queryKey: ticketKeys.detail(id ?? ""),
       enabled: !!id,
     },
   );
