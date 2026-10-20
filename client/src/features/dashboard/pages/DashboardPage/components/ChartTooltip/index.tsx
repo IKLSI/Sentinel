@@ -10,6 +10,7 @@ interface Props {
     color?: string;
   }>;
   labels: Record<string, string>;
+  hideZeroValues?: boolean;
 }
 
 export const ChartTooltip: React.FC<Props> = ({
@@ -17,9 +18,13 @@ export const ChartTooltip: React.FC<Props> = ({
   label,
   payload,
   labels,
+  hideZeroValues = false,
 }) => {
   const rows = (payload ?? []).filter(
-    (entry) => entry.value !== null && entry.value !== undefined,
+    (entry) =>
+      entry.value !== null &&
+      entry.value !== undefined &&
+      !(hideZeroValues && Number(entry.value) === 0),
   );
 
   if (!active || rows.length === 0) return null;
