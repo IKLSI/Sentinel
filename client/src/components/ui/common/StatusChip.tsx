@@ -139,7 +139,7 @@ export const StatusChip: React.FC<StatusChipProps> = ({
         border: "none",
         borderRadius: 0,
         "& .MuiChip-label": {
-          px: "4px",
+          px: 0,
           display: "flex",
           alignItems: "center",
           gap: startAdornment ? "4px" : 0,

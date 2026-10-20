@@ -1459,14 +1459,12 @@ export interface components {
       findingKey: string;
       /** Format: uuid */
       id: string;
-      justification: string;
       reason: string;
     };
     SuppressVulnerabilityDto: {
       /** Format: date-time */
       expiresAt?: string | null;
       findingKey: string;
-      justification: string;
       reason: string;
     };
     TicketAttachmentDto: {

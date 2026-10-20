@@ -956,11 +956,6 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Justification")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 

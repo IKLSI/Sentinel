@@ -1,5 +1,5 @@
 import type React from "react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
@@ -12,7 +12,6 @@ import { useSuppressVulnerabilityMutation } from "@/domains/projects/mutations";
 import { SuppressionReason } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
-  JUSTIFICATION_MAX_LENGTH,
   type SuppressionFormValues,
   suppressionSchema,
 } from "@/features/techHealth/pages/ProjectDetailPage/components/SuppressionModal/schemas";
@@ -27,7 +26,6 @@ interface Props {
 
 const DEFAULT_VALUES: SuppressionFormValues = {
   reason: SuppressionReason.NotAffected,
-  justification: "",
   expiresAt: "",
 };
 
@@ -46,12 +44,12 @@ export const SuppressionModal: React.FC<Props> = ({
 }) => {
   const t = useT();
   const formId = useId();
+  const [dateFocused, setDateFocused] = useState(false);
   const suppressMutation = useSuppressVulnerabilityMutation();
   const onSuppressError = useApiErrorToast("tech_health.suppression.error");
 
   const {
     control,
-    register,
     handleSubmit,
     reset,
     formState: { isValid },
@@ -74,7 +72,6 @@ export const SuppressionModal: React.FC<Props> = ({
         data: {
           findingKey,
           reason: values.reason,
-          justification: values.justification.trim(),
           expiresAt: values.expiresAt || null,
         },
       },
@@ -150,25 +147,24 @@ export const SuppressionModal: React.FC<Props> = ({
             </TextField>
           )}
         />
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          minRows={3}
-          label={t("tech_health.suppression.justification_label")}
-          slotProps={{ htmlInput: { maxLength: JUSTIFICATION_MAX_LENGTH } }}
-          {...register("justification")}
-        />
-        <TextField
-          fullWidth
-          size="small"
-          type="date"
-          label={t("tech_health.suppression.expires_label")}
-          slotProps={{
-            inputLabel: { shrink: true },
-            htmlInput: { min: tomorrow() },
-          }}
-          {...register("expiresAt")}
+        <Controller
+          name="expiresAt"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              fullWidth
+              size="small"
+              type={field.value || dateFocused ? "date" : "text"}
+              label={t("tech_health.suppression.expires_label")}
+              onFocus={() => setDateFocused(true)}
+              onBlur={() => {
+                setDateFocused(false);
+                field.onBlur();
+              }}
+              slotProps={{ htmlInput: { min: tomorrow() } }}
+            />
+          )}
         />
       </Box>
     </AppModal>

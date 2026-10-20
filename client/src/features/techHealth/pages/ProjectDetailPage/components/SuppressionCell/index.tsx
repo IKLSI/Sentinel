@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useI18n } from "@/contexts/I18nContext";
 import type { VulnerabilitySuppression } from "@/domains/projects/types";
@@ -31,7 +32,6 @@ export const SuppressionCell = memo<Props>(
       const details = [
         t("tech_health.suppression.badge"),
         t(`tech_health.suppression.reason.${suppression.reason}`),
-        suppression.justification,
         suppression.expiresAt
           ? t("tech_health.suppression.until", {
               date: formatDate(suppression.expiresAt, culture),
@@ -39,40 +39,39 @@ export const SuppressionCell = memo<Props>(
           : null,
       ].filter(Boolean);
 
-      const tooltip = (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-          {[
-            ...details,
-            ...(isAdmin ? [t("tech_health.suppression.reactivate_hint")] : []),
-          ].map((line) => (
-            <span key={String(line)}>{line}</span>
-          ))}
-        </Box>
-      );
-
       if (!isAdmin) {
         return (
-          <AppTooltip title={tooltip}>
+          <AppTooltip
+            title={
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: "3px" }}
+              >
+                {details.map((line) => (
+                  <span key={String(line)}>{line}</span>
+                ))}
+              </Box>
+            }
+          >
             <Box
               component="span"
               aria-label={t("tech_health.suppression.badge")}
               sx={{ display: "inline-flex" }}
             >
-              <VisibilityOffOutlined sx={suppressedIconSx} />
+              <VisibilityOutlined sx={suppressedIconSx} />
             </Box>
           </AppTooltip>
         );
       }
 
       return (
-        <AppTooltip title={tooltip}>
+        <AppTooltip title={t("tech_health.suppression.reactivate")}>
           <IconButton
             size="small"
             aria-label={t("tech_health.suppression.reactivate")}
             disabled={removingSuppressionId === suppression.id}
             onClick={() => removeSuppression(suppression.id)}
           >
-            <VisibilityOffOutlined sx={suppressedIconSx} />
+            <VisibilityOutlined sx={suppressedIconSx} />
           </IconButton>
         </AppTooltip>
       );

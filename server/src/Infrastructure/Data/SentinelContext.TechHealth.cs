@@ -134,7 +134,6 @@ public partial class SentinelContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FindingKey).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Reason).HasConversion<string>().HasMaxLength(30).IsRequired();
-            entity.Property(e => e.Justification).HasMaxLength(1000).IsRequired();
             entity.HasIndex(e => new { e.ProjectId, e.FindingKey }).IsUnique();
             entity.HasIndex(e => e.OrganizationId);
 

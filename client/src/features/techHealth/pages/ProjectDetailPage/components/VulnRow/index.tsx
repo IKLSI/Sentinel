@@ -26,17 +26,8 @@ const referenceSx = {
   px: "7px",
   py: "3px",
   borderRadius: "var(--r-xs)",
-  textDecoration: "none",
+  textDecoration: "underline",
   whiteSpace: "nowrap",
-  "&:hover": { textDecoration: "underline" },
-} as const;
-
-const secondaryReferenceSx = {
-  fontFamily: "var(--font-mono)",
-  fontSize: "10px",
-  color: "var(--muted)",
-  textDecoration: "none",
-  "&:hover": { color: "var(--cyan)", textDecoration: "underline" },
 } as const;
 
 const scoreSx = {
@@ -187,19 +178,6 @@ export const VulnRow = memo<{
           >
             {vuln.cveAlias ?? vuln.cveId}
           </Box>
-          {vuln.cveAlias && (
-            <AppTooltip title={vuln.cveId}>
-              <Box
-                component="a"
-                href={`${OSV_VULNERABILITY_URL}${encodeURIComponent(vuln.cveId)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={secondaryReferenceSx}
-              >
-                OSV
-              </Box>
-            </AppTooltip>
-          )}
         </Box>
       </TD>
       <TD mono muted>

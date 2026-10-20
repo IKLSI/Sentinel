@@ -52,7 +52,8 @@ jobs:
           for dump in sentinel-*.dump; do
             "$PG_BIN/pg_restore" --list "$dump" > /dev/null
             "$PG_BIN/psql" "$RESTORE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-            "$PG_BIN/pg_restore" --dbname="$RESTORE_URL" --no-owner --no-privileges --exit-on-error "$dump"
+            "$PG_BIN/pg_restore" --list "$dump" | grep -v -E ' SCHEMA - public( |$)' > restore.list
+            "$PG_BIN/pg_restore" --dbname="$RESTORE_URL" --use-list=restore.list --no-owner --no-privileges --exit-on-error "$dump"
           done
           "$PG_BIN/psql" "$RESTORE_URL" -v ON_ERROR_STOP=1 -At <<'SQL'
           DO $$

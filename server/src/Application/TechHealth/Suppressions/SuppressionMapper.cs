@@ -9,7 +9,6 @@ public static class SuppressionMapper
         Id = suppression.Id,
         FindingKey = suppression.FindingKey,
         Reason = suppression.Reason.ToString(),
-        Justification = suppression.Justification,
         CreatedAt = suppression.CreatedAt,
         ExpiresAt = suppression.ExpiresAt
     };

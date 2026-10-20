@@ -288,8 +288,7 @@ public class SbomServiceTests
             ProjectId = project.Id,
             FindingKey = Sentinel.Domain.TechHealth.FindingKeys.ForVulnerability(DependencyEcosystem.Npm, "lodash",
                 "GHSA-ignored"),
-            Reason = SuppressionReason.NotAffected,
-            Justification = "Code jamais appelé"
+            Reason = SuppressionReason.NotAffected
         });
 
         SbomService sut = new(scope.Projects, scope.Organizations, new VulnerabilitySuppressionRepository(scope.Context));

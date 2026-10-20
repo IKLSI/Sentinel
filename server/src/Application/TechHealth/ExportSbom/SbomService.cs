@@ -196,19 +196,16 @@ public class SbomService(
     {
         SuppressionReason.NotAffected => new Analysis
         {
-            State = ImpactAnalysisState.Not_Affected,
-            Detail = suppression.Justification
+            State = ImpactAnalysisState.Not_Affected
         },
         SuppressionReason.FalsePositive => new Analysis
         {
-            State = ImpactAnalysisState.False_Positive,
-            Detail = suppression.Justification
+            State = ImpactAnalysisState.False_Positive
         },
         _ => new Analysis
         {
             State = ImpactAnalysisState.Exploitable,
-            Response = [Response.Will_Not_Fix],
-            Detail = suppression.Justification
+            Response = [Response.Will_Not_Fix]
         }
     };
 

@@ -42,7 +42,6 @@ public static class ValidationCodes
 
     public const string SuppressionFindingKeyRequired = "validation.suppression.finding_key_required";
     public const string SuppressionReasonInvalid = "validation.suppression.reason_invalid";
-    public const string SuppressionJustificationRequired = "validation.suppression.justification_required";
     public const string SuppressionExpirationInvalid = "validation.suppression.expiration_invalid";
 
     public const string TicketTitleRequired = "validation.ticket.title_required";
