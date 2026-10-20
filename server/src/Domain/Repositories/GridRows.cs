@@ -21,6 +21,20 @@ public sealed record TicketGridRow(
     DateTime UpdatedAt,
     int CommentCount);
 
+public sealed record TicketExportRow(
+    int Number,
+    string? ProjectName,
+    string Title,
+    TicketPriority Priority,
+    TicketType Type,
+    TicketStatus Status,
+    string? AssignedToFirstName,
+    string? AssignedToLastName,
+    string? CreatedByFirstName,
+    string? CreatedByLastName,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
 public sealed record UserGridRow(
     Guid Id,
     string Email,

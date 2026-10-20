@@ -1,5 +1,9 @@
+using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+using Sentinel.Domain.Constants;
 using Sentinel.Application.Security;
 using Sentinel.Domain.Entities;
 using Sentinel.Application.Options;
@@ -74,5 +78,39 @@ public class TokenServiceTests
 
         token.Should().NotBeNullOrEmpty();
         token.Split('.').Should().HaveCount(3); // JWT = header.payload.signature
+    }
+
+    [Fact]
+    public async Task GenerateAccessToken_IsValidatedWithTheExpectedClaims()
+    {
+        User user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@test.fr",
+            OrganizationId = Guid.NewGuid(),
+            PasswordHash = "x",
+            Role = UserRole.Admin,
+            TokenVersion = 3
+        };
+
+        string token = BuildService().GenerateAccessToken(user);
+
+        TokenValidationResult result = await new JsonWebTokenHandler().ValidateTokenAsync(token,
+            new TokenValidationParameters
+            {
+                ValidIssuer = "test-issuer",
+                ValidAudience = "test-audience",
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes("test-secret-key-with-sufficient-length-1234567890")),
+                ClockSkew = TimeSpan.Zero
+            });
+
+        result.IsValid.Should().BeTrue();
+        result.Claims.Should().Contain(ClaimNames.Role, "Admin");
+        result.Claims.Should().Contain(JwtRegisteredClaimNames.Sub, user.Id.ToString());
+        result.Claims.Should().Contain(ClaimNames.OrganizationId, user.OrganizationId.ToString());
+        result.Claims.Should().Contain(ClaimNames.TokenVersion, "3");
+        result.Claims.Should().ContainKey(JwtRegisteredClaimNames.Jti);
+        result.Claims.Should().ContainKey(JwtRegisteredClaimNames.Exp);
     }
 }

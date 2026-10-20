@@ -14,16 +14,22 @@ public record EmailRecipient(string Email, string Culture);
 public interface IEmailService
 {
     Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName,
-        string invitedByName, string frontendBaseUrl, string culture);
+        string invitedByName, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken);
 
-    Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture);
+    Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken);
 
-    Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture);
+    Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken);
 
-    Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture);
+    Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken);
 
-    Task SendAccountSuspendedAsync(string email, string organizationName, string culture);
+    Task SendAccountSuspendedAsync(string email, string organizationName, string culture,
+        CancellationToken cancellationToken);
 
     Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName,
-        string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns);
+        string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns,
+        CancellationToken cancellationToken);
 }

@@ -10,10 +10,20 @@ public class DependencyRepository : CrudEntityWithIdRepository<Dependency>, IDep
 {
     public DependencyRepository(SentinelContext context) : base(context) { }
 
-    public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.Tracked)
+    public async Task<IReadOnlyList<Dependency>> ListTrackedByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.Tracked)
             .Where(d => d.ProjectId == projectId)
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> DeleteByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0) return 0;
+
+        return await Query(QueryTracking.Tracked)
+            .Where(d => ids.Contains(d.Id))
             .ExecuteDeleteAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<PackageMetadataRow>> ListPackageMetadataByProjectAsync(Guid projectId,
         CancellationToken cancellationToken) =>

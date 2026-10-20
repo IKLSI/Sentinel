@@ -27,7 +27,8 @@ public class DueProjectScanService(
         List<Guid> queuedProjectIds = projectIds.Where(scanGate.TryQueue).ToList();
 
         foreach (Guid projectId in queuedProjectIds)
-            jobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId));
+            jobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
+                CancellationToken.None));
 
         logger.LogInformation("{Count} project scans queued for organization {OrganizationId}",
             queuedProjectIds.Count, organizationId);
@@ -50,7 +51,7 @@ public class DueProjectScanService(
         for (int index = 0; index < dueProjectIds.Count; index++)
         {
             Guid projectId = dueProjectIds[index];
-            jobs.Schedule<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId),
+            jobs.Schedule<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId, CancellationToken.None),
                 spacing * index);
         }
 

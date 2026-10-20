@@ -11,9 +11,14 @@ public class ProjectInventoryWriter(
     IRuntimeRepository runtimeRepository,
     ICommitScopeFactory commitScopeFactory)
 {
-    public async Task ReplaceInventoryAsync(Guid projectId, IReadOnlyList<Dependency> dependencies,
+    public async Task ReconcileInventoryAsync(Project project, IReadOnlyList<Dependency> dependencies,
         IReadOnlyList<Runtime> runtimes, CancellationToken cancellationToken)
     {
+        Guid projectId = project.Id;
+
+        foreach (Dependency dependency in dependencies) dependency.OrganizationId = project.OrganizationId;
+        foreach (Runtime runtime in runtimes) runtime.OrganizationId = project.OrganizationId;
+
         InventoryCarryOver.ApplyPackageMetadata(dependencies,
             await dependencyRepository.ListPackageMetadataByProjectAsync(projectId, cancellationToken));
         InventoryCarryOver.ApplyRuntimeLifecycle(runtimes,
@@ -21,10 +26,15 @@ public class ProjectInventoryWriter(
 
         await commitScopeFactory.ExecuteInTransactionAsync(async token =>
         {
-            await dependencyRepository.DeleteByProjectAsync(projectId, token);
-            await runtimeRepository.DeleteByProjectAsync(projectId, token);
-            await dependencyRepository.AddRangeAsync(dependencies, token);
-            await runtimeRepository.AddRangeAsync(runtimes, token);
+            InventoryChanges<Dependency> dependencyChanges = InventoryReconciliation.ReconcileDependencies(
+                await dependencyRepository.ListTrackedByProjectAsync(projectId, token), dependencies);
+            InventoryChanges<Runtime> runtimeChanges = InventoryReconciliation.ReconcileRuntimes(
+                await runtimeRepository.ListTrackedByProjectAsync(projectId, token), runtimes);
+
+            await dependencyRepository.DeleteByIdsAsync(dependencyChanges.RemovedIds, token);
+            await runtimeRepository.DeleteByIdsAsync(runtimeChanges.RemovedIds, token);
+            await dependencyRepository.AddRangeAsync(dependencyChanges.Added, token);
+            await runtimeRepository.AddRangeAsync(runtimeChanges.Added, token);
         }, cancellationToken);
     }
 

@@ -15,25 +15,25 @@ public class RepositoryScannerServiceTests
         : IRepositoryHostClient
     {
         public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform,
-            GitLabInstance gitLab) =>
+            GitLabInstance gitLab, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
-            GitLabInstance gitLab) =>
+            GitLabInstance gitLab, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<string?> GetHeadCommitAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null, string? branch = null) =>
+            RepositoryAccess? access, string? branch, CancellationToken cancellationToken) =>
             Task.FromResult(headCommitSha);
 
         public Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null) =>
+            RepositoryAccess? access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public string? RequestedCommitSha { get; private set; }
 
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null, string? commitSha = null)
+            RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken)
         {
             RequestedCommitSha = commitSha;
 
@@ -42,13 +42,16 @@ public class RepositoryScannerServiceTests
                     .ToList(), truncated));
         }
 
-        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
+        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access, CancellationToken cancellationToken) =>
             Task.FromResult(filesByUrl.TryGetValue(url, out string? content) ? content : null);
     }
 
     private sealed class NoopRegistry : IDependencyRegistryClient
     {
-        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies) => Task.CompletedTask;
+        public Task<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>> GetMetadataAsync(
+            IReadOnlyCollection<RegistryPackageQuery> packages, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>>(
+                new Dictionary<RegistryPackageQuery, RegistryPackageMetadata>());
     }
 
     private static Task<ScanOutcome> ScanAsync(Dictionary<string, string> filesByUrl)
@@ -56,10 +59,11 @@ public class RepositoryScannerServiceTests
         RepositoryScannerService scanner = new RepositoryScannerService(
             new FakeRepositoryHost(filesByUrl),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        return scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app");
+        return scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, null,
+            TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -179,10 +183,11 @@ public class RepositoryScannerServiceTests
         RepositoryScannerService scanner = new RepositoryScannerService(
             new FakeRepositoryHost(new Dictionary<string, string>()),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "not-a-url");
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "not-a-url", null, null, null,
+            TestContext.Current.CancellationToken);
 
         outcome.Error.Should().Be(ErrorCodes.ScanInvalidRepositoryUrl);
     }
@@ -299,9 +304,10 @@ public class RepositoryScannerServiceTests
         });
 
         RepositoryScannerService scanner = new RepositoryScannerService(host, new ManifestParserService(),
-            new NoopRegistry(), NullLogger<RepositoryScannerService>.Instance);
+            new RegistryMetadataApplier(new NoopRegistry()), NullLogger<RepositoryScannerService>.Instance);
 
-        await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, "abc123");
+        await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, "abc123", null,
+            TestContext.Current.CancellationToken);
 
         host.RequestedCommitSha.Should().Be("abc123");
     }
@@ -339,10 +345,11 @@ public class RepositoryScannerServiceTests
                 ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
             }, truncated: true),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app");
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, null,
+            TestContext.Current.CancellationToken);
 
         outcome.IsComplete.Should().BeFalse();
     }
@@ -353,10 +360,11 @@ public class RepositoryScannerServiceTests
         RepositoryScannerService scanner = new RepositoryScannerService(
             new FakeRepositoryHost(new Dictionary<string, string>(), headCommitSha: "abc123"),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        string? sha = await scanner.GetHeadCommitAsync("https://github.com/acme/app");
+        string? sha = await scanner.GetHeadCommitAsync("https://github.com/acme/app", null, null,
+            TestContext.Current.CancellationToken);
 
         sha.Should().Be("abc123");
     }
@@ -367,10 +375,10 @@ public class RepositoryScannerServiceTests
         RepositoryScannerService scanner = new RepositoryScannerService(
             new FakeRepositoryHost(new Dictionary<string, string>(), headCommitSha: "abc123"),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        string? sha = await scanner.GetHeadCommitAsync("not-a-url");
+        string? sha = await scanner.GetHeadCommitAsync("not-a-url", null, null, TestContext.Current.CancellationToken);
 
         sha.Should().BeNull();
     }
@@ -389,10 +397,10 @@ public class RepositoryScannerServiceTests
         RepositoryScannerService scanner = new RepositoryScannerService(
             new FakeRepositoryHost(new Dictionary<string, string>()),
             new ManifestParserService(),
-            new StubRegistry("2.0.0"),
+            new RegistryMetadataApplier(new StubRegistry("2.0.0")),
             NullLogger<RepositoryScannerService>.Instance);
 
-        await scanner.RefreshVersionsAsync([dependency]);
+        await scanner.RefreshVersionsAsync([dependency], TestContext.Current.CancellationToken);
 
         dependency.LatestVersion.Should().Be("2.0.0");
         dependency.Status.Should().Be(DependencyStatus.MajorUpdate);
@@ -400,12 +408,11 @@ public class RepositoryScannerServiceTests
 
     private sealed class StubRegistry(string latestVersion) : IDependencyRegistryClient
     {
-        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies)
-        {
-            foreach (Dependency dependency in dependencies) dependency.LatestVersion = latestVersion;
-
-            return Task.CompletedTask;
-        }
+        public Task<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>> GetMetadataAsync(
+            IReadOnlyCollection<RegistryPackageQuery> packages, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>>(
+                packages.ToDictionary(package => package,
+                    _ => new RegistryPackageMetadata(latestVersion, null, null, false)));
     }
 
     [Fact]
@@ -459,11 +466,11 @@ public class RepositoryScannerServiceTests
                 ["https://host/services/billing/package.json"] = """{ "dependencies": { "stripe": "15.0.0" } }""",
             }),
             new ManifestParserService(),
-            new NoopRegistry(),
+            new RegistryMetadataApplier(new NoopRegistry()),
             NullLogger<RepositoryScannerService>.Instance);
 
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app",
-            scope: new RepositoryScanScope(null, "/services/billing/"));
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null, new RepositoryScanScope(null, "/services/billing/"),
+            TestContext.Current.CancellationToken);
 
         outcome.Dependencies.Should().ContainSingle().Which.Name.Should().Be("stripe");
     }

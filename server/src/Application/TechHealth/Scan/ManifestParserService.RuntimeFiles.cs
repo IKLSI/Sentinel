@@ -139,27 +139,23 @@ public partial class ManifestParserService
 
     private static void ParseGlobalJson(Guid projectId, string content, List<Runtime> runtimes)
     {
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(content);
+        using JsonDocument doc = JsonDocument.Parse(content);
 
-            if (!doc.RootElement.TryGetProperty("sdk", out JsonElement sdk)) return;
-            if (!sdk.TryGetProperty("version", out JsonElement versionProperty)) return;
+        if (!doc.RootElement.TryGetProperty("sdk", out JsonElement sdk)) return;
+        if (!sdk.TryGetProperty("version", out JsonElement versionProperty)) return;
 
-            string? version = ReadDeclaredVersion(versionProperty.GetString() ?? string.Empty);
-            if (version == null) return;
+        string? version = ReadDeclaredVersion(versionProperty.GetString() ?? string.Empty);
+        if (version == null) return;
 
-            string[] segments = version.Split('.');
-            string runtimeVersion = segments.Length >= 2 ? $"{segments[0]}.{segments[1]}" : segments[0];
+        string[] segments = version.Split('.');
+        string runtimeVersion = segments.Length >= 2 ? $"{segments[0]}.{segments[1]}" : segments[0];
 
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = ".NET", Version = runtimeVersion });
-        }
-        catch { }
+        runtimes.Add(new Runtime { ProjectId = projectId, Name = ".NET", Version = runtimeVersion });
     }
 
     private static void ParseGoWork(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match goVersion = Regex.Match(content, @"^go\s+([\d.]+)", RegexOptions.Multiline);
+        Match goVersion = GoDirectiveRegex().Match(content);
 
         if (goVersion.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Go", Version = goVersion.Groups[1].Value });
@@ -167,7 +163,7 @@ public partial class ManifestParserService
 
     private static void ParseRuntimeTxt(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match declaration = Regex.Match(content.Trim(), @"^([a-zA-Z.\-]+)-v?([\d.]+)");
+        Match declaration = ToolVersionDeclarationRegex().Match(content.Trim());
         if (!declaration.Success) return;
 
         Dictionary<string, string> platforms = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -192,7 +188,7 @@ public partial class ManifestParserService
 
     private static void ParseRustToolchain(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match channel = Regex.Match(content, @"channel\s*=\s*[""']([^""']+)[""']");
+        Match channel = RustToolchainChannelRegex().Match(content);
         string declared = channel.Success ? channel.Groups[1].Value : content.Trim();
 
         string? version = ReadDeclaredVersion(declared);
@@ -203,7 +199,7 @@ public partial class ManifestParserService
 
     private static void ParseDockerfile(Guid projectId, string content, List<Runtime> runtimes)
     {
-        foreach (Match from in Regex.Matches(content, @"^\s*FROM\s+(?:--\S+\s+)*(\S+)", RegexOptions.Multiline | RegexOptions.IgnoreCase))
+        foreach (Match from in DockerFromRegex().Matches(content))
         {
             string reference = DockerRegistryPrefixRegex().Replace(from.Groups[1].Value, string.Empty);
 
@@ -303,8 +299,23 @@ public partial class ManifestParserService
 
     private static string? ReadDeclaredVersion(string declaration)
     {
-        Match version = Regex.Match(declaration.Trim(), @"(\d+(?:\.\d+)*)");
+        Match version = NumericVersionRegex().Match(declaration.Trim());
 
         return version.Success ? version.Groups[1].Value : null;
     }
+
+    [GeneratedRegex(@"^go\s+([\d.]+)", RegexOptions.Multiline)]
+    private static partial Regex GoDirectiveRegex();
+
+    [GeneratedRegex(@"^([a-zA-Z.\-]+)-v?([\d.]+)")]
+    private static partial Regex ToolVersionDeclarationRegex();
+
+    [GeneratedRegex(@"channel\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex RustToolchainChannelRegex();
+
+    [GeneratedRegex(@"^\s*FROM\s+(?:--\S+\s+)*(\S+)", RegexOptions.Multiline | RegexOptions.IgnoreCase)]
+    private static partial Regex DockerFromRegex();
+
+    [GeneratedRegex(@"(\d+(?:\.\d+)*)")]
+    private static partial Regex NumericVersionRegex();
 }

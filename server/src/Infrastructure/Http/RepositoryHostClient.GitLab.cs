@@ -12,7 +12,8 @@ public partial class RepositoryHostClient
     private const int GitLabTreePageLimit = 100;
     private const int MaxConcurrentGitLabTreeRequests = 4;
 
-    private async Task<RepositoryListing> ListGitLabUserRepositoriesAsync(string token, GitLabInstance gitLab)
+    private async Task<RepositoryListing> ListGitLabUserRepositoriesAsync(string token, GitLabInstance gitLab,
+        CancellationToken cancellationToken)
     {
         List<(string, string)> result = new();
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.GitLab);
@@ -28,8 +29,8 @@ public partial class RepositoryHostClient
 
             try
             {
-                try { response = await client.SendAsync(request); }
-                catch (Exception ex)
+                try { response = await client.SendAsync(request, cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "Failed to fetch GitLab repositories");
                     return new RepositoryListing(false, null, result, false);
@@ -41,8 +42,8 @@ public partial class RepositoryHostClient
                     return new RepositoryListing(false, (int)response.StatusCode, result, false);
                 }
 
-                try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
-                catch (Exception ex)
+                try { projects = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "Failed to read GitLab repositories");
                     return new RepositoryListing(false, null, result, false);
@@ -76,7 +77,7 @@ public partial class RepositoryHostClient
     }
 
     private async Task<string?> GetGitLabHeadCommitAsync(string owner, string repo, RepositoryAccess access,
-        string? branch)
+        string? branch, CancellationToken cancellationToken)
     {
         string encodedPath = Uri.EscapeDataString($"{owner}/{repo}");
 
@@ -86,15 +87,15 @@ public partial class RepositoryHostClient
             using HttpRequestMessage request = BuildGitLabRequest(
                 $"{access.GitLab.ApiBaseUrl}/projects/{encodedPath}/repository/commits?per_page=1{BranchFilter(branch)}", access.Token);
 
-            using HttpResponseMessage response = await client.SendAsync(request);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode) return null;
 
-            List<JsonElement>? commits = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+            List<JsonElement>? commits = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
             if (commits == null || commits.Count == 0) return null;
 
             return commits[0].TryGetProperty("id", out JsonElement id) ? id.GetString() : null;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "GitLab head commit lookup failed for {Owner}/{Repo}", owner, repo);
             return null;
@@ -102,7 +103,7 @@ public partial class RepositoryHostClient
     }
 
     private async Task<RepositoryBranchListing?> ListGitLabBranchesAsync(string owner, string repo,
-        RepositoryAccess access)
+        RepositoryAccess access, CancellationToken cancellationToken)
     {
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.GitLab);
         string projectApiUrl = $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";
@@ -115,11 +116,11 @@ public partial class RepositoryHostClient
             {
                 using HttpRequestMessage request = BuildGitLabRequest(
                     $"{projectApiUrl}/repository/branches?per_page={RepositoryPageSize}&page={page}", access.Token);
-                using HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                     return page == 1 ? null : new RepositoryBranchListing(defaultBranch, branches, true);
 
-                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
                 if (items == null || items.Count == 0) break;
 
                 foreach (JsonElement item in items)
@@ -137,7 +138,7 @@ public partial class RepositoryHostClient
 
             return new RepositoryBranchListing(defaultBranch, branches, branches.Count >= BranchPageLimit * RepositoryPageSize);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "GitLab branch listing failed for {Owner}/{Repo}", owner, repo);
             return null;
@@ -145,12 +146,13 @@ public partial class RepositoryHostClient
     }
 
     private async Task<RepositoryFileListing> ListGitLabFilesAsync(HttpClient client, string owner, string repo,
-        string reference, RepositoryAccess access)
+        string reference, RepositoryAccess access, CancellationToken cancellationToken)
     {
         List<(string Name, string Url, string Path)> result = new List<(string, string, string)>();
         string projectApiUrl = $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";
 
-        GitLabTreePage? firstPage = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, 1);
+        GitLabTreePage? firstPage = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, 1,
+            cancellationToken);
         if (firstPage == null) return new RepositoryFileListing(result, false);
 
         List<List<JsonElement>> pages = [firstPage.Items];
@@ -159,8 +161,10 @@ public partial class RepositoryHostClient
         if (firstPage.Items.Count >= GitLabTreePageSize)
         {
             truncated = firstPage.TotalPages is int totalPages
-                ? await AppendKnownGitLabTreePagesAsync(client, projectApiUrl, reference, access, totalPages, pages)
-                : await AppendSequentialGitLabTreePagesAsync(client, projectApiUrl, reference, access, pages);
+                ? await AppendKnownGitLabTreePagesAsync(client, projectApiUrl, reference, access, totalPages, pages,
+                    cancellationToken)
+                : await AppendSequentialGitLabTreePagesAsync(client, projectApiUrl, reference, access, pages,
+                    cancellationToken);
         }
 
         if (truncated)
@@ -189,15 +193,20 @@ public partial class RepositoryHostClient
         string.IsNullOrWhiteSpace(branch) ? string.Empty : $"&ref_name={Uri.EscapeDataString(branch)}";
 
     private static async Task<bool> AppendKnownGitLabTreePagesAsync(HttpClient client, string projectApiUrl,
-        string reference, RepositoryAccess access, int totalPages, List<List<JsonElement>> pages)
+        string reference, RepositoryAccess access, int totalPages, List<List<JsonElement>> pages,
+        CancellationToken cancellationToken)
     {
         int lastPage = Math.Min(totalPages, GitLabTreePageLimit);
         GitLabTreePage?[] fetched = new GitLabTreePage?[Math.Max(0, lastPage - 1)];
 
         await Parallel.ForEachAsync(Enumerable.Range(2, fetched.Length),
-            new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentGitLabTreeRequests },
-            async (page, _) => fetched[page - 2] =
-                await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, page));
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = MaxConcurrentGitLabTreeRequests,
+                CancellationToken = cancellationToken
+            },
+            async (page, token) => fetched[page - 2] =
+                await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, page, token));
 
         foreach (GitLabTreePage? page in fetched)
         {
@@ -209,11 +218,12 @@ public partial class RepositoryHostClient
     }
 
     private static async Task<bool> AppendSequentialGitLabTreePagesAsync(HttpClient client, string projectApiUrl,
-        string reference, RepositoryAccess access, List<List<JsonElement>> pages)
+        string reference, RepositoryAccess access, List<List<JsonElement>> pages, CancellationToken cancellationToken)
     {
         for (int page = 2; page <= GitLabTreePageLimit; page++)
         {
-            GitLabTreePage? fetched = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, page);
+            GitLabTreePage? fetched = await FetchGitLabTreePageAsync(client, projectApiUrl, reference, access, page,
+                cancellationToken);
             if (fetched == null) return true;
 
             pages.Add(fetched.Items);
@@ -225,17 +235,17 @@ public partial class RepositoryHostClient
     }
 
     private static async Task<GitLabTreePage?> FetchGitLabTreePageAsync(HttpClient client, string projectApiUrl,
-        string reference, RepositoryAccess access, int page)
+        string reference, RepositoryAccess access, int page, CancellationToken cancellationToken)
     {
         try
         {
             using HttpRequestMessage request = BuildGitLabRequest(
                 $"{projectApiUrl}/repository/tree?recursive=true&per_page={GitLabTreePageSize}&page={page}&ref={reference}",
                 access.Token);
-            using HttpResponseMessage response = await client.SendAsync(request);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode) return null;
 
-            List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+            List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
             if (items == null) return null;
 
             int? totalPages = response.Headers.TryGetValues("X-Total-Pages", out IEnumerable<string>? values)
@@ -245,7 +255,7 @@ public partial class RepositoryHostClient
 
             return new GitLabTreePage(items, totalPages);
         }
-        catch
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
             return null;
         }

@@ -90,6 +90,7 @@ public partial class ExportService
         }
 
         int lastDataRow = projects.Count > 0 ? projects.Count + FirstDataRow - 1 : HeaderRow;
+        ApplyDataBlockStyle(ws, FirstDataRow, lastDataRow, headers.Length);
 
         if (projects.Count > 0)
         {
@@ -121,6 +122,7 @@ public partial class ExportService
         currentRow++;
 
         List<Runtime> runtimes = project.Runtimes.OrderBy(r => r.Name).ToList();
+        int firstRuntimeRow = currentRow;
         for (int i = 0; i < runtimes.Count; i++)
         {
             Runtime r = runtimes[i];
@@ -147,6 +149,8 @@ public partial class ExportService
             currentRow++;
         }
 
+        ApplyDataBlockStyle(ws, firstRuntimeRow, currentRow - 1, runtimeHeaders.Length);
+
         if (runtimes.Count == 0)
         {
             IXLCell emptyCell = ws.Cell(currentRow, 1);
@@ -172,6 +176,7 @@ public partial class ExportService
             .ThenBy(d => d.Name)
             .ToList();
 
+        int firstDependencyRow = currentRow;
         for (int i = 0; i < deps.Count; i++)
         {
             Dependency d = deps[i];
@@ -203,6 +208,8 @@ public partial class ExportService
 
             currentRow++;
         }
+
+        ApplyDataBlockStyle(ws, firstDependencyRow, currentRow - 1, depHeaders.Length);
 
         if (deps.Count == 0)
         {
@@ -244,6 +251,7 @@ public partial class ExportService
             ApplyHeadersAtRow(ws, vulnHeaders, currentRow);
             currentRow++;
 
+            int firstVulnerabilityRow = currentRow;
             for (int i = 0; i < vulnPairs.Count; i++)
             {
                 (Dependency dep, Vulnerability v) = vulnPairs[i];
@@ -278,6 +286,8 @@ public partial class ExportService
 
                 currentRow++;
             }
+
+            ApplyDataBlockStyle(ws, firstVulnerabilityRow, currentRow - 1, vulnHeaders.Length, autoHeight: true);
         }
 
         FinalizeSheet(ws, Math.Max(runtimeHeaders.Length, Math.Max(depHeaders.Length, vulnHeaders.Length)), 0, 0, 0, 0);

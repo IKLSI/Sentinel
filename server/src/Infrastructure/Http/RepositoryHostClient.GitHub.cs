@@ -10,7 +10,8 @@ public partial class RepositoryHostClient
 {
     private const string GitHubShaMediaType = "application/vnd.github.sha";
 
-    private async Task<RepositoryListing> ListGitHubUserRepositoriesAsync(string token)
+    private async Task<RepositoryListing> ListGitHubUserRepositoriesAsync(string token,
+        CancellationToken cancellationToken)
     {
         List<(string, string)> result = new();
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
@@ -27,8 +28,8 @@ public partial class RepositoryHostClient
 
             try
             {
-                try { response = await client.SendAsync(request); }
-                catch (Exception ex)
+                try { response = await client.SendAsync(request, cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "Failed to fetch GitHub repositories");
                     return new RepositoryListing(false, null, result, false);
@@ -40,8 +41,8 @@ public partial class RepositoryHostClient
                     return new RepositoryListing(false, (int)response.StatusCode, result, false);
                 }
 
-                try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(); }
-                catch (Exception ex)
+                try { repos = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "Failed to read GitHub repositories");
                     return new RepositoryListing(false, null, result, false);
@@ -83,7 +84,8 @@ public partial class RepositoryHostClient
         return request;
     }
 
-    private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token, string? branch)
+    private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token, string? branch,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -92,21 +94,22 @@ public partial class RepositoryHostClient
                 $"https://api.github.com/repos/{owner}/{repo}/commits/{Uri.EscapeDataString(branch ?? "HEAD")}", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(GitHubShaMediaType));
 
-            using HttpResponseMessage response = await client.SendAsync(request);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode) return null;
 
-            string sha = (await response.Content.ReadAsStringAsync()).Trim();
+            string sha = (await response.Content.ReadAsStringAsync(cancellationToken)).Trim();
 
             return string.IsNullOrEmpty(sha) ? null : sha;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "GitHub head commit lookup failed for {Owner}/{Repo}", owner, repo);
             return null;
         }
     }
 
-    private async Task<RepositoryBranchListing?> ListGitHubBranchesAsync(string owner, string repo, string? token)
+    private async Task<RepositoryBranchListing?> ListGitHubBranchesAsync(string owner, string repo, string? token,
+        CancellationToken cancellationToken)
     {
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
         string repositoryApiUrl = $"https://api.github.com/repos/{owner}/{repo}";
@@ -116,11 +119,11 @@ public partial class RepositoryHostClient
             string? defaultBranch;
 
             using (HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, repositoryApiUrl, token))
-            using (HttpResponseMessage response = await client.SendAsync(request))
+            using (HttpResponseMessage response = await client.SendAsync(request, cancellationToken))
             {
                 if (!response.IsSuccessStatusCode) return null;
 
-                JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>();
+                JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
                 defaultBranch = repository.TryGetProperty("default_branch", out JsonElement d) ? d.GetString() : null;
             }
 
@@ -130,10 +133,10 @@ public partial class RepositoryHostClient
             {
                 using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                     $"{repositoryApiUrl}/branches?per_page={RepositoryPageSize}&page={page}", token);
-                using HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode) return new RepositoryBranchListing(defaultBranch, branches, true);
 
-                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
+                List<JsonElement>? items = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
                 if (items == null || items.Count == 0) break;
 
                 branches.AddRange(items
@@ -145,14 +148,15 @@ public partial class RepositoryHostClient
 
             return new RepositoryBranchListing(defaultBranch, branches, branches.Count >= BranchPageLimit * RepositoryPageSize);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "GitHub branch listing failed for {Owner}/{Repo}", owner, repo);
             return null;
         }
     }
 
-    private async Task<RepositoryFileListing> ListGitHubFilesAsync(string owner, string repo, string reference, string? token = null)
+    private async Task<RepositoryFileListing> ListGitHubFilesAsync(string owner, string repo, string reference, string? token,
+        CancellationToken cancellationToken)
     {
         List<(string Name, string Url, string Path)> result = new List<(string, string, string)>();
         JsonElement treeResponse;
@@ -161,15 +165,15 @@ public partial class RepositoryHostClient
             HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                 $"https://api.github.com/repos/{owner}/{repo}/git/trees/{reference}?recursive=1", token);
-            using HttpResponseMessage response = await client.SendAsync(request);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("GitHub API {Owner}/{Repo}: {StatusCode}", owner, repo, (int)response.StatusCode);
                 return new RepositoryFileListing(result, false);
             }
-            treeResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
+            treeResponse = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "GitHub file listing failed for {Owner}/{Repo}", owner, repo);
             return new RepositoryFileListing(result, false);

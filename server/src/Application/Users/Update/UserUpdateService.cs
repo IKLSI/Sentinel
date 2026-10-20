@@ -135,7 +135,8 @@ public class UserUpdateService(
         }
 
         if (suspensionTransition)
-            jobs.Enqueue<SendAccountSuspendedEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(userId));
+            jobs.Enqueue<SendAccountSuspendedEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(userId,
+                CancellationToken.None));
 
         dashboardCache.Invalidate(organizationId);
 

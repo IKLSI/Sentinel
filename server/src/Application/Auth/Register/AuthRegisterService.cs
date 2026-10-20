@@ -94,7 +94,8 @@ public class AuthRegisterService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken,
+            CancellationToken.None));
 
         await auditLog.LogAsync(
             AuditAction.OrganizationRegistered,
@@ -113,7 +114,8 @@ public class AuthRegisterService(
         string frontendBaseUrl = frontendOptions.Value.BaseUrl;
         string culture = language ?? LanguageValues.Fr;
 
-        jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
+        jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture,
+            CancellationToken.None));
 
         return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }

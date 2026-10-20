@@ -18,12 +18,12 @@ public class FindingTicketSyncService(
 {
     private const string StatusField = "Status";
 
-    public async Task<FindingTicketSyncResult?> SyncAsync(Project project)
+    public async Task<FindingTicketSyncResult?> SyncAsync(Project project, CancellationToken cancellationToken)
     {
         try
         {
             IReadOnlyList<Ticket> tickets = await ticketRepository.ListFindingLinkedByProjectAsync(project.Id,
-                QueryTracking.Tracked, CancellationToken.None);
+                QueryTracking.Tracked, cancellationToken);
 
             if (tickets.Count == 0) return new FindingTicketSyncResult(tickets, TicketsChanged: false);
 
@@ -58,8 +58,8 @@ public class FindingTicketSyncService(
 
             using (ICommitScope commitScope = commitScopeFactory.Begin())
             {
-                await ticketHistoryRepository.AddRangeAsync(changes, CancellationToken.None);
-                await commitScope.CommitAsync(CancellationToken.None);
+                await ticketHistoryRepository.AddRangeAsync(changes, cancellationToken);
+                await commitScope.CommitAsync(cancellationToken);
             }
 
             foreach (TicketHistory change in changes)

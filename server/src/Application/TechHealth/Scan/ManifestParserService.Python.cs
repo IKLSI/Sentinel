@@ -210,7 +210,7 @@ public partial class ManifestParserService
             Match versionMatch = TomlVersionRegex().Match(b);
             if (!nameMatch.Success || !versionMatch.Success) continue;
 
-            Match categoryMatch = Regex.Match(b, @"^\s*category\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            Match categoryMatch = PoetryCategoryRegex().Match(b);
             bool isDev = categoryMatch.Success && categoryMatch.Groups[1].Value.Equals("dev", StringComparison.OrdinalIgnoreCase);
 
             deps.Add(new Dependency
@@ -249,36 +249,32 @@ public partial class ManifestParserService
 
     private static void ParsePipfileLock(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        foreach ((string section, DependencyType type) in new[] { ("default", DependencyType.Prod), ("develop", DependencyType.Dev) })
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
+            if (!root.TryGetProperty(section, out JsonElement packages)) continue;
 
-            foreach ((string section, DependencyType type) in new[] { ("default", DependencyType.Prod), ("develop", DependencyType.Dev) })
+            foreach (JsonProperty pkg in packages.EnumerateObject())
             {
-                if (!root.TryGetProperty(section, out JsonElement packages)) continue;
+                string version = pkg.Value.TryGetProperty("version", out JsonElement vProp)
+                    ? VersionText.Clean(vProp.GetString() ?? "")
+                    : "";
 
-                foreach (JsonProperty pkg in packages.EnumerateObject())
+                if (string.IsNullOrEmpty(version)) continue;
+
+                deps.Add(new Dependency
                 {
-                    string version = pkg.Value.TryGetProperty("version", out JsonElement vProp)
-                        ? VersionText.Clean(vProp.GetString() ?? "")
-                        : "";
-
-                    if (string.IsNullOrEmpty(version)) continue;
-
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = pkg.Name,
-                        CurrentVersion = version,
-                        Type = type,
-                        Ecosystem = DependencyEcosystem.PyPI,
-                        Status = DependencyStatus.UpToDate,
-                    });
-                }
+                    ProjectId = projectId,
+                    Name = pkg.Name,
+                    CurrentVersion = version,
+                    Type = type,
+                    Ecosystem = DependencyEcosystem.PyPI,
+                    Status = DependencyStatus.UpToDate,
+                });
             }
         }
-        catch { }
     }
 
     [GeneratedRegex(@"(?:requires-python|^\s*python)\s*=\s*['""]([^'""]+)['""]", RegexOptions.Multiline)]
@@ -311,4 +307,7 @@ public partial class ManifestParserService
 
     [GeneratedRegex(@"^\s*source\s*=\s*\{\s*(?:editable|virtual|directory|path)\s*=", RegexOptions.Multiline)]
     private static partial Regex UvLocalSourceRegex();
+
+    [GeneratedRegex(@"^\s*category\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline)]
+    private static partial Regex PoetryCategoryRegex();
 }

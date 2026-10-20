@@ -18,20 +18,21 @@ public sealed record RegistryPackage(string? LatestVersion, string? Publisher, s
     public static readonly RegistryPackage Failure = new(null, null, null, IsFailure: true);
 }
 
-public class DependencyRegistryClient(
+public partial class DependencyRegistryClient(
     IHttpClientFactory httpClientFactory,
     IMemoryCache cache,
     InFlightRequestCoalescer coalescer) : IDependencyRegistryClient
 {
     private const int MaxConcurrentRegistryRequests = 10;
 
-    public async Task FetchRegistryMetadataAsync(List<Dependency> deps)
+    public async Task<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>> GetMetadataAsync(
+        IReadOnlyCollection<RegistryPackageQuery> packages, CancellationToken cancellationToken)
     {
         HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
         using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentRegistryRequests);
 
-        IEnumerable<Task> tasks = deps
-            .Where(d => d.Ecosystem is
+        (RegistryPackageQuery Query, RegistryPackage Package)[] resolved = await Task.WhenAll(packages
+            .Where(package => package.Ecosystem is
                 DependencyEcosystem.Npm or
                 DependencyEcosystem.NuGet or
                 DependencyEcosystem.PyPI or
@@ -42,31 +43,33 @@ public class DependencyRegistryClient(
                 DependencyEcosystem.Cargo or
                 DependencyEcosystem.Hex or
                 DependencyEcosystem.Pub)
-            .Select(async dep =>
+            .Select(async package =>
             {
-                await throttle.WaitAsync();
-                try { await ResolvePackageAsync(client, dep); }
+                await throttle.WaitAsync(cancellationToken);
+                try { return (package, await ResolvePackageAsync(client, package, cancellationToken)); }
                 finally { throttle.Release(); }
-            });
-        await Task.WhenAll(tasks);
+            }));
+
+        return resolved
+            .Where(entry => !entry.Package.IsFailure)
+            .ToDictionary(entry => entry.Query, entry => new RegistryPackageMetadata(entry.Package.LatestVersion,
+                entry.Package.Publisher, entry.Package.License, entry.Package.IsDeprecated));
     }
 
-    private async Task ResolvePackageAsync(HttpClient client, Dependency dep)
+    private async Task<RegistryPackage> ResolvePackageAsync(HttpClient client, RegistryPackageQuery package,
+        CancellationToken cancellationToken)
     {
-        string cacheKey = CacheKeys.LatestVersion(dep.Ecosystem, dep.Name);
+        string cacheKey = CacheKeys.LatestVersion(package.Ecosystem, package.Name);
 
         if (cache.TryGetValue(cacheKey, out RegistryPackage? cached) && cached != null)
-        {
-            Apply(dep, cached);
-            return;
-        }
+            return cached;
 
-        RegistryPackage package = await coalescer.RunAsync(cacheKey, () => LoadPackageAsync(client, dep, cacheKey));
-
-        Apply(dep, package);
+        return await coalescer.RunAsync(cacheKey, () => LoadPackageAsync(client, package, cacheKey),
+            cancellationToken);
     }
 
-    private async Task<RegistryPackage> LoadPackageAsync(HttpClient client, Dependency dep, string cacheKey)
+    private async Task<RegistryPackage> LoadPackageAsync(HttpClient client, RegistryPackageQuery dep,
+        string cacheKey)
     {
         if (cache.TryGetValue(cacheKey, out RegistryPackage? cached) && cached != null)
             return cached;
@@ -86,38 +89,7 @@ public class DependencyRegistryClient(
         return package;
     }
 
-    private static void Apply(Dependency dep, RegistryPackage package)
-    {
-        if (package.IsFailure) return;
-
-        dep.LatestVersion = package.LatestVersion;
-        dep.Publisher = package.Publisher ?? NamespacePublisher(dep);
-        dep.License = package.License;
-        dep.IsDeprecated = package.IsDeprecated;
-    }
-
-    private static string? NamespacePublisher(Dependency dep) => dep.Ecosystem switch
-    {
-        DependencyEcosystem.Maven => SegmentBefore(dep.Name, ':'),
-        DependencyEcosystem.Composer => SegmentBefore(dep.Name, '/'),
-        DependencyEcosystem.Npm when dep.Name.StartsWith('@') => SegmentBefore(dep.Name, '/')?.TrimStart('@'),
-        DependencyEcosystem.Go => GoNamespace(dep.Name),
-        _ => null,
-    };
-
-    private static string? SegmentBefore(string value, char separator)
-    {
-        int index = value.IndexOf(separator);
-        return index > 0 ? value[..index] : null;
-    }
-
-    private static string? GoNamespace(string module)
-    {
-        string[] segments = module.Split('/');
-        return segments.Length >= 2 ? segments[1] : null;
-    }
-
-    private static async Task<RegistryPackage> FetchPackageAsync(HttpClient client, Dependency dep)
+    private static async Task<RegistryPackage> FetchPackageAsync(HttpClient client, RegistryPackageQuery dep)
     {
         try
         {
@@ -228,27 +200,38 @@ public class DependencyRegistryClient(
         return new RegistryPackage(version?.TrimStart('v'), null);
     }
 
-    private static readonly Regex PackagistPrereleaseTag =
-        new(@"-(dev|alpha|beta|rc)(\.|\d|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"-(dev|alpha|beta|rc)(\.|\d|$)", RegexOptions.IgnoreCase)]
+    private static partial Regex PackagistPrereleaseTag();
 
     private static async Task<RegistryPackage> FetchPackagistAsync(HttpClient client, string package)
     {
-        using HttpResponseMessage response = await client.GetAsync($"https://packagist.org/packages/{Uri.EscapeDataString(package)}.json");
+        using HttpResponseMessage response = await client.GetAsync(
+            $"https://repo.packagist.org/p2/{Uri.EscapeDataString(package).Replace("%2F", "/")}.json");
         if (!response.IsSuccessStatusCode) return Unsuccessful(response);
         using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("package", out JsonElement pkg)) return RegistryPackage.Unresolved;
-        if (!pkg.TryGetProperty("versions", out JsonElement versions)) return RegistryPackage.Unresolved;
-        List<string> stableVersions = versions.EnumerateObject()
-            .Select(p => p.Name)
-            .Where(v => !PackagistPrereleaseTag.IsMatch(v))
-            .OrderByDescending(VersionText.Clean, VersionComparer.Instance)
-            .ToList();
-        string? version = stableVersions.Count > 0 ? VersionText.Clean(stableVersions[0]) : null;
+        if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)
+            || !packages.TryGetProperty(package, out JsonElement releases)
+            || releases.ValueKind != JsonValueKind.Array)
+        {
+            return RegistryPackage.Unresolved;
+        }
 
-        bool isAbandoned = pkg.TryGetProperty("abandoned", out JsonElement abandoned)
+        List<JsonElement> entries = releases.EnumerateArray().ToList();
+        if (entries.Count == 0) return RegistryPackage.Unresolved;
+
+        string? version = entries
+            .Select(entry => Text(entry, "version"))
+            .OfType<string>()
+            .Where(v => !PackagistPrereleaseTag().IsMatch(v))
+            .Select(VersionText.Clean)
+            .OrderByDescending(v => v, VersionComparer.Instance)
+            .FirstOrDefault();
+
+        JsonElement newest = entries[0];
+        bool isAbandoned = newest.TryGetProperty("abandoned", out JsonElement abandoned)
             && abandoned.ValueKind is JsonValueKind.True or JsonValueKind.String;
 
-        return new RegistryPackage(version, FirstPersonName(pkg, "maintainers"), StringOrFirst(pkg, "license"),
+        return new RegistryPackage(version, FirstPersonName(newest, "authors"), StringOrFirst(newest, "license"),
             IsDeprecated: isAbandoned);
     }
 
@@ -264,18 +247,19 @@ public class DependencyRegistryClient(
 
     private static async Task<RegistryPackage> FetchCratesAsync(HttpClient client, string crate)
     {
-        using HttpResponseMessage response = await client.GetAsync($"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}");
+        using HttpResponseMessage response = await client.GetAsync(
+            $"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}?include=default_version");
         if (!response.IsSuccessStatusCode) return Unsuccessful(response);
         using JsonDocument doc = await ParseJsonAsync(response);
         if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return RegistryPackage.Unresolved;
 
-        string? newestVersion = Text(crateObj, "newest_version");
-        string? license = CrateVersionLicense(doc.RootElement, newestVersion);
+        string? defaultVersion = Text(crateObj, "default_version") ?? Text(crateObj, "newest_version");
+        string? license = CrateVersionLicense(doc.RootElement, defaultVersion);
 
-        return new RegistryPackage(newestVersion, null, license);
+        return new RegistryPackage(defaultVersion, null, license);
     }
 
-    private static string? CrateVersionLicense(JsonElement root, string? newestVersion)
+    private static string? CrateVersionLicense(JsonElement root, string? version)
     {
         if (!root.TryGetProperty("versions", out JsonElement versions) || versions.ValueKind != JsonValueKind.Array)
             return null;
@@ -283,7 +267,7 @@ public class DependencyRegistryClient(
         List<JsonElement> entries = versions.EnumerateArray().ToList();
         if (entries.Count == 0) return null;
 
-        JsonElement target = entries.FirstOrDefault(v => Text(v, "num") == newestVersion, entries[0]);
+        JsonElement target = entries.FirstOrDefault(v => Text(v, "num") == version, entries[0]);
         return Text(target, "license");
     }
 

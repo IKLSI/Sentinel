@@ -10,10 +10,20 @@ public class RuntimeRepository : CrudEntityWithIdRepository<Runtime>, IRuntimeRe
 {
     public RuntimeRepository(SentinelContext context) : base(context) { }
 
-    public Task<int> DeleteByProjectAsync(Guid projectId, CancellationToken cancellationToken) =>
-        Query(QueryTracking.Tracked)
+    public async Task<IReadOnlyList<Runtime>> ListTrackedByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.Tracked)
             .Where(r => r.ProjectId == projectId)
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> DeleteByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0) return 0;
+
+        return await Query(QueryTracking.Tracked)
+            .Where(r => ids.Contains(r.Id))
             .ExecuteDeleteAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<RuntimeLifecycleRow>> ListLifecycleByProjectAsync(Guid projectId,
         CancellationToken cancellationToken) =>

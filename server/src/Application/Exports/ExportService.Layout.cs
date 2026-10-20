@@ -54,15 +54,22 @@ public partial class ExportService
 
     private static void SetRowBackground(IXLWorksheet ws, int row, int colCount, XLColor color, bool autoHeight = false)
     {
-        IXLRange range = ws.Range(row, 1, row, colCount);
-        range.Style.Fill.BackgroundColor = color;
+        ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = color;
+        if (!autoHeight)
+            ws.Row(row).Height = 18;
+    }
+
+    private static void ApplyDataBlockStyle(IXLWorksheet ws, int firstRow, int lastRow, int colCount,
+        bool autoHeight = false)
+    {
+        if (lastRow < firstRow) return;
+
+        IXLRange range = ws.Range(firstRow, 1, lastRow, colCount);
         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         range.Style.Border.OutsideBorderColor = BorderColor;
         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
         range.Style.Border.InsideBorderColor = BorderColor;
         range.Style.Alignment.Vertical = autoHeight ? XLAlignmentVerticalValues.Top : XLAlignmentVerticalValues.Center;
-        if (!autoHeight)
-            ws.Row(row).Height = 18;
     }
 
     private static void ApplyTotalsRow(IXLWorksheet ws, int row, int colCount)

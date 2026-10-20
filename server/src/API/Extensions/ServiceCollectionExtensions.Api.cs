@@ -23,7 +23,7 @@ public static partial class ServiceCollectionExtensions
             {
                 Title = "Sentinel API",
                 Version = "v1",
-                Description = "API de gestion TMA (Tierce Maintenance Applicative)"
+                Description = "API de suivi de la santé technique des dépôts"
             });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

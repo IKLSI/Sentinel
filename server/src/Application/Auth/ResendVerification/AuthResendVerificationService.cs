@@ -62,7 +62,8 @@ public class AuthResendVerificationService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendEmailVerificationJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken,
+            CancellationToken.None));
 
         await auditLog.LogAsync(
             AuditAction.EmailVerificationResent,

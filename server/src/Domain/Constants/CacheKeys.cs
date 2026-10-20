@@ -10,6 +10,7 @@ public static class CacheKeys
     private const string ApiKeyPrincipalPrefix = "auth:apikey";
     private const string LocalePrefix = "locale";
     private const string AdvisoryPrefix = "osv:advisory";
+    private const string PackageAdvisoriesPrefix = "osv:package";
     private const string RuntimeLifecyclePrefix = "eol:product";
     private const string EpssPrefix = "epss:cve";
     private const string PublicScanPrefix = "public-scan";
@@ -25,6 +26,7 @@ public static class CacheKeys
     public static readonly TimeSpan LatestVersionUnresolvedTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan LocaleTtl = TimeSpan.FromHours(1);
     public static readonly TimeSpan AdvisoryTtl = TimeSpan.FromHours(24);
+    public static readonly TimeSpan PackageAdvisoriesTtl = TimeSpan.FromHours(1);
     public static readonly TimeSpan RuntimeLifecycleTtl = TimeSpan.FromHours(12);
     public static readonly TimeSpan RuntimeLifecycleUnresolvedTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan ExploitSignalTtl = TimeSpan.FromHours(24);
@@ -46,6 +48,9 @@ public static class CacheKeys
         $"{LatestVersionPrefix}:{ecosystem}:{packageName.ToLowerInvariant()}";
 
     public static string Advisory(string advisoryId) => $"{AdvisoryPrefix}:{advisoryId}";
+
+    public static string PackageAdvisories(DependencyEcosystem ecosystem, string packageName, string version) =>
+        $"{PackageAdvisoriesPrefix}:{ecosystem}:{packageName.ToLowerInvariant()}@{version}";
 
     public static string RuntimeLifecycle(string product) => $"{RuntimeLifecyclePrefix}:{product}";
 

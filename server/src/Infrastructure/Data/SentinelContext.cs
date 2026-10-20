@@ -101,13 +101,13 @@ public partial class SentinelContext : DbContext, IDataProtectionKeyContext
             .HasQueryFilter(e => BypassTenantFilter || e.Ticket.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Dependency>()
-            .HasQueryFilter(e => BypassTenantFilter || e.Project.OrganizationId == CurrentOrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Runtime>()
-            .HasQueryFilter(e => BypassTenantFilter || e.Project.OrganizationId == CurrentOrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<Vulnerability>()
-            .HasQueryFilter(e => BypassTenantFilter || e.Dependency.Project.OrganizationId == CurrentOrganizationId);
+            .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);
 
         modelBuilder.Entity<ApiKey>()
             .HasQueryFilter(e => BypassTenantFilter || e.OrganizationId == CurrentOrganizationId);

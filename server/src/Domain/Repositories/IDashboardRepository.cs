@@ -14,14 +14,8 @@ public interface IDashboardRepository
     Task<IReadOnlyList<VulnerabilityActivityRow>> GetCriticalVulnerabilityActivityAsync(Guid organizationId,
         DateTime since, CancellationToken cancellationToken);
 
-    Task<IReadOnlyDictionary<DateTime, int>> GetVulnerabilityDetectionCountsAsync(Guid organizationId,
-        DateTime windowStart, CancellationToken cancellationToken);
-
-    Task<IReadOnlyDictionary<DateTime, int>> GetResolvedVulnerabilityDetectionCountsAsync(Guid organizationId,
-        DateTime windowStart, CancellationToken cancellationToken);
-
-    Task<IReadOnlyDictionary<DateTime, int>> GetVulnerabilityResolutionCountsAsync(Guid organizationId,
-        DateTime windowStart, CancellationToken cancellationToken);
+    Task<VulnerabilityFlowCountsRow> GetVulnerabilityFlowCountsAsync(Guid organizationId, DateTime windowStart,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ScoreSnapshotRow>> GetScoreSnapshotsAsync(Guid organizationId, DateOnly windowStart,
         CancellationToken cancellationToken);

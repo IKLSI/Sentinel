@@ -11,41 +11,37 @@ public partial class ManifestParserService
 
     private static void ParseCsproj(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        try
+        XDocument doc = System.Xml.Linq.XDocument.Parse(content);
+
+        IEnumerable<string> targetFrameworks = doc.Descendants("TargetFramework").Select(e => e.Value)
+            .Concat(doc.Descendants("TargetFrameworks").SelectMany(e => e.Value.Split(';')));
+
+        foreach (string targetFramework in targetFrameworks)
         {
-            XDocument doc = System.Xml.Linq.XDocument.Parse(content);
+            if (ParseTargetFramework(targetFramework) is not (string name, string version)) continue;
 
-            IEnumerable<string> targetFrameworks = doc.Descendants("TargetFramework").Select(e => e.Value)
-                .Concat(doc.Descendants("TargetFrameworks").SelectMany(e => e.Value.Split(';')));
-
-            foreach (string targetFramework in targetFrameworks)
-            {
-                if (ParseTargetFramework(targetFramework) is not (string name, string version)) continue;
-
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
-            }
-
-            foreach (XElement pkgRef in doc.Descendants("PackageReference"))
-            {
-                string name = pkgRef.Attribute("Include")?.Value ?? "";
-                string version = pkgRef.Attribute("VersionOverride")?.Value
-                    ?? pkgRef.Attribute("Version")?.Value
-                    ?? pkgRef.Element("Version")?.Value
-                    ?? "";
-                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.Contains('$')) continue;
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.NuGet,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
         }
-        catch { }
+
+        foreach (XElement pkgRef in doc.Descendants("PackageReference"))
+        {
+            string name = pkgRef.Attribute("Include")?.Value ?? "";
+            string version = pkgRef.Attribute("VersionOverride")?.Value
+                ?? pkgRef.Attribute("Version")?.Value
+                ?? pkgRef.Element("Version")?.Value
+                ?? "";
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.Contains('$')) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.NuGet,
+                Status = DependencyStatus.UpToDate,
+            });
+        }
     }
 
     private static (string Name, string Version)? ParseTargetFramework(string targetFramework)
@@ -54,10 +50,10 @@ public partial class ManifestParserService
 
         if (moniker.StartsWith("netstandard", StringComparison.Ordinal)) return null;
 
-        Match modern = Regex.Match(moniker, @"^net(?:coreapp)?(\d+)\.(\d+)");
+        Match modern = ModernTargetFrameworkRegex().Match(moniker);
         if (modern.Success) return (".NET", $"{modern.Groups[1].Value}.{modern.Groups[2].Value}");
 
-        Match legacy = Regex.Match(moniker, @"^net(\d)(\d)(\d)?$");
+        Match legacy = LegacyTargetFrameworkRegex().Match(moniker);
         if (!legacy.Success) return null;
 
         string version = legacy.Groups[3].Success
@@ -69,49 +65,45 @@ public partial class ManifestParserService
 
     private static void ParsePomXml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        try
+        XDocument doc = System.Xml.Linq.XDocument.Parse(content);
+        XNamespace ns = doc.Root?.Name.Namespace ?? System.Xml.Linq.XNamespace.None;
+
+        Dictionary<string, string> properties = ReadMavenProperties(doc, ns);
+
+        string? javaVersion = doc.Descendants(ns + "maven.compiler.release").FirstOrDefault()?.Value
+                       ?? doc.Descendants(ns + "maven.compiler.source").FirstOrDefault()?.Value
+                       ?? doc.Descendants(ns + "maven.compiler.target").FirstOrDefault()?.Value
+                       ?? doc.Descendants(ns + "java.version").FirstOrDefault()?.Value;
+
+        javaVersion = ResolveMavenVersion(javaVersion ?? string.Empty, properties);
+
+        if (!string.IsNullOrEmpty(javaVersion))
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
+
+        string? springBootVersion = ReadSpringBootParentVersion(doc, ns);
+        if (!string.IsNullOrEmpty(springBootVersion))
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootVersion });
+
+        foreach (XElement dep in doc.Descendants(ns + "dependency").Where(IsProjectDependency))
         {
-            XDocument doc = System.Xml.Linq.XDocument.Parse(content);
-            XNamespace ns = doc.Root?.Name.Namespace ?? System.Xml.Linq.XNamespace.None;
+            string groupId = dep.Element(ns + "groupId")?.Value ?? "";
+            string artifactId = dep.Element(ns + "artifactId")?.Value ?? "";
+            string version = ResolveMavenVersion(dep.Element(ns + "version")?.Value ?? "", properties);
+            string scope = dep.Element(ns + "scope")?.Value ?? "compile";
 
-            Dictionary<string, string> properties = ReadMavenProperties(doc, ns);
+            if (string.IsNullOrEmpty(artifactId) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
 
-            string? javaVersion = doc.Descendants(ns + "maven.compiler.release").FirstOrDefault()?.Value
-                           ?? doc.Descendants(ns + "maven.compiler.source").FirstOrDefault()?.Value
-                           ?? doc.Descendants(ns + "maven.compiler.target").FirstOrDefault()?.Value
-                           ?? doc.Descendants(ns + "java.version").FirstOrDefault()?.Value;
-
-            javaVersion = ResolveMavenVersion(javaVersion ?? string.Empty, properties);
-
-            if (!string.IsNullOrEmpty(javaVersion))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
-
-            string? springBootVersion = ReadSpringBootParentVersion(doc, ns);
-            if (!string.IsNullOrEmpty(springBootVersion))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootVersion });
-
-            foreach (XElement dep in doc.Descendants(ns + "dependency").Where(IsProjectDependency))
+            string name = string.IsNullOrEmpty(groupId) ? artifactId : $"{groupId}:{artifactId}";
+            deps.Add(new Dependency
             {
-                string groupId = dep.Element(ns + "groupId")?.Value ?? "";
-                string artifactId = dep.Element(ns + "artifactId")?.Value ?? "";
-                string version = ResolveMavenVersion(dep.Element(ns + "version")?.Value ?? "", properties);
-                string scope = dep.Element(ns + "scope")?.Value ?? "compile";
-
-                if (string.IsNullOrEmpty(artifactId) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
-
-                string name = string.IsNullOrEmpty(groupId) ? artifactId : $"{groupId}:{artifactId}";
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = scope == "test" ? DependencyType.Dev : DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.Maven,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = scope == "test" ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Maven,
+                Status = DependencyStatus.UpToDate,
+            });
         }
-        catch { }
     }
 
     private static bool IsProjectDependency(XElement dependency) =>
@@ -142,7 +134,7 @@ public partial class ManifestParserService
     {
         string trimmed = version.Trim();
 
-        Match reference = Regex.Match(trimmed, @"^\$\{([^}]+)\}$");
+        Match reference = MavenPropertyReferenceRegex().Match(trimmed);
         if (!reference.Success) return trimmed;
 
         return properties.TryGetValue(reference.Groups[1].Value, out string? resolved) ? resolved : string.Empty;
@@ -150,31 +142,27 @@ public partial class ManifestParserService
 
     private static void ParseDirectoryPackagesProps(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        XDocument doc = System.Xml.Linq.XDocument.Parse(content);
+
+        foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "PackageVersion"))
         {
-            XDocument doc = System.Xml.Linq.XDocument.Parse(content);
+            string name = package.Attribute("Include")?.Value ?? "";
+            string version = package.Attribute("Version")?.Value
+                ?? package.Elements().FirstOrDefault(e => e.Name.LocalName == "Version")?.Value
+                ?? "";
 
-            foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "PackageVersion"))
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
+
+            deps.Add(new Dependency
             {
-                string name = package.Attribute("Include")?.Value ?? "";
-                string version = package.Attribute("Version")?.Value
-                    ?? package.Elements().FirstOrDefault(e => e.Name.LocalName == "Version")?.Value
-                    ?? "";
-
-                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.NuGet,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.NuGet,
+                Status = DependencyStatus.UpToDate,
+            });
         }
-        catch { }
     }
 
     private static void ParseVersionCatalog(Guid projectId, string content, List<Dependency> deps)
@@ -202,7 +190,7 @@ public partial class ManifestParserService
 
             if (section == "versions")
             {
-                Match literal = Regex.Match(value, @"^[""']([^""']+)[""']");
+                Match literal = QuotedLiteralPrefixRegex().Match(value);
                 if (literal.Success) versions[key] = literal.Groups[1].Value;
                 continue;
             }
@@ -230,26 +218,26 @@ public partial class ManifestParserService
     private static (string? Name, string? Version) ResolveCatalogLibrary(string value,
         Dictionary<string, string> versions)
     {
-        Match shorthand = Regex.Match(value, @"^[""']([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+):([^""']+)[""']$");
+        Match shorthand = VersionCatalogShorthandRegex().Match(value);
         if (shorthand.Success) return (shorthand.Groups[1].Value, shorthand.Groups[2].Value);
 
         string? module = null;
 
-        Match moduleMatch = Regex.Match(value, @"module\s*=\s*[""']([^""']+)[""']");
+        Match moduleMatch = VersionCatalogModuleRegex().Match(value);
         if (moduleMatch.Success)
         {
             module = moduleMatch.Groups[1].Value;
         }
         else
         {
-            Match group = Regex.Match(value, @"group\s*=\s*[""']([^""']+)[""']");
-            Match artifact = Regex.Match(value, @"name\s*=\s*[""']([^""']+)[""']");
+            Match group = VersionCatalogGroupRegex().Match(value);
+            Match artifact = VersionCatalogNameRegex().Match(value);
             if (group.Success && artifact.Success) module = $"{group.Groups[1].Value}:{artifact.Groups[1].Value}";
         }
 
         if (module == null) return (null, null);
 
-        Match versionReference = Regex.Match(value, @"version\.ref\s*=\s*[""']([^""']+)[""']");
+        Match versionReference = VersionCatalogVersionRefRegex().Match(value);
         if (versionReference.Success)
         {
             return versions.TryGetValue(versionReference.Groups[1].Value, out string? resolved)
@@ -257,7 +245,7 @@ public partial class ManifestParserService
                 : (null, null);
         }
 
-        Match literalVersion = Regex.Match(value, @"version\s*=\s*[""']([^""']+)[""']");
+        Match literalVersion = InlineTableVersionRegex().Match(value);
 
         return literalVersion.Success ? (module, literalVersion.Groups[1].Value) : (null, null);
     }
@@ -268,14 +256,13 @@ public partial class ManifestParserService
         if (javaVersion != null)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Java", Version = javaVersion });
 
-        Match kotlinMatch = Regex.Match(content, @"kotlin\(['""]jvm['""]\)\s+version\s+['""]([^'""]+)['""]");
+        Match kotlinMatch = KotlinJvmPluginRegex().Match(content);
         if (!kotlinMatch.Success)
-            kotlinMatch = Regex.Match(content, @"id\s*[\(\s]['""]org\.jetbrains\.kotlin\.jvm['""]\)?\s+version\s+['""]([^'""]+)['""]");
+            kotlinMatch = KotlinJvmPluginIdRegex().Match(content);
         if (kotlinMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Kotlin", Version = kotlinMatch.Groups[1].Value });
 
-        Match springBootMatch = Regex.Match(content,
-            @"id\s*[\(\s]['""]org\.springframework\.boot['""]\)?\s+version\s+['""]([^'""]+)['""]");
+        Match springBootMatch = SpringBootPluginRegex().Match(content);
         if (springBootMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Spring Boot", Version = springBootMatch.Groups[1].Value });
 
@@ -317,14 +304,13 @@ public partial class ManifestParserService
 
     private static string? ReadGradleJavaVersion(string content)
     {
-        Match toolchain = Regex.Match(content, @"JavaLanguageVersion\.of\s*\(\s*['""]?(\d+)['""]?\s*\)");
+        Match toolchain = JavaToolchainRegex().Match(content);
         if (toolchain.Success) return toolchain.Groups[1].Value;
 
-        Match jvmToolchain = Regex.Match(content, @"jvmToolchain\s*\(\s*['""]?(\d+)['""]?\s*\)");
+        Match jvmToolchain = JvmToolchainRegex().Match(content);
         if (jvmToolchain.Success) return jvmToolchain.Groups[1].Value;
 
-        Match javaVersionConstant = Regex.Match(content,
-            @"(?:source|target)Compatibility\s*[=:]\s*JavaVersion\.VERSION_(\d+)(?:_(\d+))?");
+        Match javaVersionConstant = JavaVersionConstantRegex().Match(content);
         if (javaVersionConstant.Success)
         {
             return javaVersionConstant.Groups[2].Success
@@ -332,44 +318,40 @@ public partial class ManifestParserService
                 : javaVersionConstant.Groups[1].Value;
         }
 
-        Match literal = Regex.Match(content, @"(?:source|target)Compatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?");
+        Match literal = JavaCompatibilityLiteralRegex().Match(content);
 
         return literal.Success ? literal.Groups[1].Value : null;
     }
 
     private static void ParseNuGetLockJson(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        if (!doc.RootElement.TryGetProperty("dependencies", out JsonElement frameworks)) return;
+
+        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (JsonProperty framework in frameworks.EnumerateObject())
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            if (!doc.RootElement.TryGetProperty("dependencies", out JsonElement frameworks)) return;
-
-            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (JsonProperty framework in frameworks.EnumerateObject())
+            foreach (JsonProperty pkg in framework.Value.EnumerateObject())
             {
-                foreach (JsonProperty pkg in framework.Value.EnumerateObject())
+                string type = pkg.Value.TryGetProperty("type", out JsonElement t) ? t.GetString() ?? "" : "";
+                if (type.Equals("Project", StringComparison.OrdinalIgnoreCase)) continue;
+
+                string version = pkg.Value.TryGetProperty("resolved", out JsonElement r) ? r.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(version) || !seen.Add(pkg.Name)) continue;
+
+                deps.Add(new Dependency
                 {
-                    string type = pkg.Value.TryGetProperty("type", out JsonElement t) ? t.GetString() ?? "" : "";
-                    if (type.Equals("Project", StringComparison.OrdinalIgnoreCase)) continue;
-
-                    string version = pkg.Value.TryGetProperty("resolved", out JsonElement r) ? r.GetString() ?? "" : "";
-                    if (string.IsNullOrEmpty(version) || !seen.Add(pkg.Name)) continue;
-
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = pkg.Name,
-                        CurrentVersion = version,
-                        Type = DependencyType.Prod,
-                        IsDirect = type.Equals(NuGetDirectDependencyType, StringComparison.OrdinalIgnoreCase),
-                        Ecosystem = DependencyEcosystem.NuGet,
-                        Status = DependencyStatus.UpToDate,
-                    });
-                }
+                    ProjectId = projectId,
+                    Name = pkg.Name,
+                    CurrentVersion = version,
+                    Type = DependencyType.Prod,
+                    IsDirect = type.Equals(NuGetDirectDependencyType, StringComparison.OrdinalIgnoreCase),
+                    Ecosystem = DependencyEcosystem.NuGet,
+                    Status = DependencyStatus.UpToDate,
+                });
             }
         }
-        catch { }
     }
 
     private static void ParseGradleLockfile(Guid projectId, string content, List<Dependency> deps)
@@ -403,30 +385,74 @@ public partial class ManifestParserService
 
     private static void ParsePackagesConfig(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        XDocument doc = XDocument.Parse(content);
+
+        foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "package"))
         {
-            XDocument doc = XDocument.Parse(content);
+            string name = package.Attribute("id")?.Value ?? "";
+            string version = package.Attribute("version")?.Value ?? "";
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
 
-            foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "package"))
+            bool isDevelopment = string.Equals(package.Attribute("developmentDependency")?.Value, "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            deps.Add(new Dependency
             {
-                string name = package.Attribute("id")?.Value ?? "";
-                string version = package.Attribute("version")?.Value ?? "";
-                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
-
-                bool isDevelopment = string.Equals(package.Attribute("developmentDependency")?.Value, "true",
-                    StringComparison.OrdinalIgnoreCase);
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = isDevelopment ? DependencyType.Dev : DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.NuGet,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = isDevelopment ? DependencyType.Dev : DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.NuGet,
+                Status = DependencyStatus.UpToDate,
+            });
         }
-        catch { }
     }
+
+    [GeneratedRegex(@"^net(?:coreapp)?(\d+)\.(\d+)")]
+    private static partial Regex ModernTargetFrameworkRegex();
+
+    [GeneratedRegex(@"^net(\d)(\d)(\d)?$")]
+    private static partial Regex LegacyTargetFrameworkRegex();
+
+    [GeneratedRegex(@"^\$\{([^}]+)\}$")]
+    private static partial Regex MavenPropertyReferenceRegex();
+
+    [GeneratedRegex(@"^[""']([^""']+)[""']")]
+    private static partial Regex QuotedLiteralPrefixRegex();
+
+    [GeneratedRegex(@"^[""']([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+):([^""']+)[""']$")]
+    private static partial Regex VersionCatalogShorthandRegex();
+
+    [GeneratedRegex(@"module\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex VersionCatalogModuleRegex();
+
+    [GeneratedRegex(@"group\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex VersionCatalogGroupRegex();
+
+    [GeneratedRegex(@"name\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex VersionCatalogNameRegex();
+
+    [GeneratedRegex(@"version\.ref\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex VersionCatalogVersionRefRegex();
+
+    [GeneratedRegex(@"kotlin\(['""]jvm['""]\)\s+version\s+['""]([^'""]+)['""]")]
+    private static partial Regex KotlinJvmPluginRegex();
+
+    [GeneratedRegex(@"id\s*[\(\s]['""]org\.jetbrains\.kotlin\.jvm['""]\)?\s+version\s+['""]([^'""]+)['""]")]
+    private static partial Regex KotlinJvmPluginIdRegex();
+
+    [GeneratedRegex(@"id\s*[\(\s]['""]org\.springframework\.boot['""]\)?\s+version\s+['""]([^'""]+)['""]")]
+    private static partial Regex SpringBootPluginRegex();
+
+    [GeneratedRegex(@"JavaLanguageVersion\.of\s*\(\s*['""]?(\d+)['""]?\s*\)")]
+    private static partial Regex JavaToolchainRegex();
+
+    [GeneratedRegex(@"jvmToolchain\s*\(\s*['""]?(\d+)['""]?\s*\)")]
+    private static partial Regex JvmToolchainRegex();
+
+    [GeneratedRegex(@"(?:source|target)Compatibility\s*[=:]\s*JavaVersion\.VERSION_(\d+)(?:_(\d+))?")]
+    private static partial Regex JavaVersionConstantRegex();
+
+    [GeneratedRegex(@"(?:source|target)Compatibility\s*[=:]\s*['""]?(\d[\d.]*)['""]?")]
+    private static partial Regex JavaCompatibilityLiteralRegex();
 }

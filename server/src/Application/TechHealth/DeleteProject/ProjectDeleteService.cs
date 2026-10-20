@@ -42,7 +42,8 @@ public class ProjectDeleteService(
             new RealtimeEvent(RealtimeResources.Projects));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets));
+            new RealtimeEvent(RealtimeResources.Tickets,
+                ProjectIds: RealtimeEvent.AffectedProjects(projectId)));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Project, projectId));

@@ -63,7 +63,8 @@ public class UserInviteService(
             string frontendBaseUrl = frontendOptions.Value.BaseUrl;
             string culture = existingAccountLanguage ?? LanguageValues.Fr;
 
-            jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture));
+            jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture,
+                CancellationToken.None));
 
             return Result<ApiMessageResponse>.Accepted(
                 ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
@@ -90,7 +91,8 @@ public class UserInviteService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendInvitationEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(invitation.Id, protectedToken));
+        jobs.Enqueue<SendInvitationEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(invitation.Id, protectedToken,
+            CancellationToken.None));
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Users));

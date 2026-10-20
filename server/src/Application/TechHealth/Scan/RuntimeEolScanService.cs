@@ -10,7 +10,8 @@ public class RuntimeEolScanService(IRuntimeLifecycleClient runtimeLifecycle)
 {
     private const int MaxConcurrentLookups = 10;
 
-    public async Task<IReadOnlyList<RuntimeEolResult>> ScanAsync(IReadOnlyCollection<Runtime> runtimes)
+    public async Task<IReadOnlyList<RuntimeEolResult>> ScanAsync(IReadOnlyCollection<Runtime> runtimes,
+        CancellationToken cancellationToken)
     {
         if (runtimes.Count == 0) return [];
 
@@ -18,17 +19,18 @@ public class RuntimeEolScanService(IRuntimeLifecycleClient runtimeLifecycle)
 
         RuntimeEolResult?[] results = await Task.WhenAll(runtimes.Select(async runtime =>
         {
-            await throttle.WaitAsync();
-            try { return await FetchAsync(runtime); }
+            await throttle.WaitAsync(cancellationToken);
+            try { return await FetchAsync(runtime, cancellationToken); }
             finally { throttle.Release(); }
         }));
 
         return results.OfType<RuntimeEolResult>().ToList();
     }
 
-    private async Task<RuntimeEolResult?> FetchAsync(Runtime runtime)
+    private async Task<RuntimeEolResult?> FetchAsync(Runtime runtime, CancellationToken cancellationToken)
     {
-        RuntimeLifecycle? lifecycle = await runtimeLifecycle.GetLifecycleAsync(runtime.Name, runtime.Version);
+        RuntimeLifecycle? lifecycle = await runtimeLifecycle.GetLifecycleAsync(runtime.Name, runtime.Version,
+            cancellationToken);
 
         if (lifecycle == null) return null;
 

@@ -50,7 +50,6 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddSingleton<HostConcurrencyLimiter>();
         services.AddSingleton<InFlightRequestCoalescer>();
-        services.AddTransient<ResilientHttpHandler>();
         services.AddTransient<HostConcurrencyHandler>();
 
         services.AddResilientHttpClient(HttpClientNames.Osv, 90, client =>
@@ -80,6 +79,8 @@ public static partial class ServiceCollectionExtensions
         return services;
     }
 
+    private const string HttpRetryPipelineName = "retry";
+
     private static IServiceCollection AddResilientHttpClient(
         this IServiceCollection services,
         string name,
@@ -87,7 +88,7 @@ public static partial class ServiceCollectionExtensions
         Action<HttpClient> configure,
         bool publicNetworkOnly = false)
     {
-        services.AddHttpClient(name, client =>
+        IHttpClientBuilder httpClient = services.AddHttpClient(name, client =>
         {
             configure(client);
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
@@ -99,9 +100,11 @@ public static partial class ServiceCollectionExtensions
             AllowAutoRedirect = !publicNetworkOnly,
             ConnectCallback = publicNetworkOnly ? PublicNetworkConnector.ConnectAsync : null
         })
-        .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
-        .AddHttpMessageHandler<ResilientHttpHandler>()
-        .AddHttpMessageHandler<HostConcurrencyHandler>();
+        .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+        httpClient.AddResilienceHandler(HttpRetryPipelineName, (pipeline, context) => HttpRetryPolicy.Configure(pipeline,
+            context.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HttpRetryPolicy))));
+        httpClient.AddHttpMessageHandler<HostConcurrencyHandler>();
 
         return services;
     }
@@ -121,6 +124,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ApiKeyPrincipalCache>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
+        services.AddScoped<RegistryMetadataApplier>();
         services.AddScoped<VulnerabilityScanService>();
         services.AddScoped<RuntimeEolScanService>();
         services.AddScoped<ExploitSignalEnricher>();
@@ -129,6 +133,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<CriticalVulnerabilityTicketService>();
         services.AddScoped<ProjectInventoryWriter>();
         services.AddScoped<ProjectHealthHistoryWriter>();
+        services.AddScoped<ProjectInventoryAcquirer>();
+        services.AddScoped<ProjectFindingsRefresher>();
+        services.AddScoped<ScanFollowUpService>();
         services.AddScoped<ProjectScanService>();
         services.AddScoped<DueProjectScanService>();
         services.AddSingleton<ProjectScanGate>();

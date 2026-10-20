@@ -14,19 +14,21 @@ public sealed record RepositoryFileListing(List<(string Name, string Url, string
 
 public interface IRepositoryHostClient
 {
-    Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform, GitLabInstance gitLab);
+    Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform, GitLabInstance gitLab,
+        CancellationToken cancellationToken);
 
     Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
-        GitLabInstance gitLab);
+        GitLabInstance gitLab, CancellationToken cancellationToken);
 
-    Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null,
-        string? branch = null);
+    Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access,
+        string? branch, CancellationToken cancellationToken);
 
     Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
-        RepositoryAccess? access = null);
+        RepositoryAccess? access, CancellationToken cancellationToken);
 
     Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-        RepositoryAccess? access = null, string? commitSha = null);
+        RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken);
 
-    Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null);
+    Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access,
+        CancellationToken cancellationToken);
 }

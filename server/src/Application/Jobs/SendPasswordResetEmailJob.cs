@@ -29,7 +29,7 @@ public class SendPasswordResetEmailJob
         _tokenProtector = tokenProtector;
     }
 
-    public async Task ExecuteAsync(string email, string protectedToken)
+    public async Task ExecuteAsync(string email, string protectedToken, CancellationToken cancellationToken)
     {
         string? rawToken = _tokenProtector.Unprotect(protectedToken);
 
@@ -40,11 +40,11 @@ public class SendPasswordResetEmailJob
 
         using (_systemScope.Enter())
         {
-            language = await _userRepository.GetLanguageByEmailOrDefaultAsync(email, CancellationToken.None);
+            language = await _userRepository.GetLanguageByEmailOrDefaultAsync(email, cancellationToken);
         }
 
         string culture = language ?? LanguageValues.Fr;
 
-        await _emailService.SendPasswordResetAsync(email, rawToken, _frontend.BaseUrl, culture);
+        await _emailService.SendPasswordResetAsync(email, rawToken, _frontend.BaseUrl, culture, cancellationToken);
     }
 }

@@ -59,6 +59,7 @@ public class TicketUpdateService(
             newStatus = parsedStatus;
         }
 
+        Guid? previousProjectId = ticket.ProjectId;
         string oldStatusCode = ticket.Status.ToString().ToLower();
         string newStatusCode = (newStatus ?? ticket.Status).ToString().ToLower();
 
@@ -75,7 +76,8 @@ public class TicketUpdateService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId));
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId,
+                RealtimeEvent.AffectedProjects(previousProjectId, ticket.ProjectId)));
 
         bool statusChanged = newStatus.HasValue && oldStatusCode != newStatusCode;
 

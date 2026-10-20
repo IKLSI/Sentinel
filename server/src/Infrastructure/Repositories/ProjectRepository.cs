@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 using Sentinel.Infrastructure.Data;
 
 namespace Sentinel.Infrastructure.Repositories;
@@ -27,6 +28,30 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
         CancellationToken cancellationToken) =>
         WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+
+    public Task<Project?> GetOrDefaultInOrganizationForFindingAsync(Guid projectId, Guid organizationId,
+        FindingKind kind, string findingKey, CancellationToken cancellationToken)
+    {
+        IQueryable<Project> query = Query(QueryTracking.NoTracking).AsSplitQuery();
+
+        query = kind switch
+        {
+            FindingKind.Vulnerability => WithAdvisory(query, FindingKeys.AdvisoryOf(findingKey)),
+            FindingKind.OutdatedDependency => WithPackage(query, FindingKeys.PackageOf(findingKey)),
+            _ => query.Include(p => p.Runtimes)
+        };
+
+        return query.FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId,
+            cancellationToken);
+    }
+
+    private static IQueryable<Project> WithAdvisory(IQueryable<Project> query, string advisoryId) =>
+        query.Include(p => p.Dependencies
+                .Where(d => d.Vulnerabilities.Any(v => v.CveId.ToLower() == advisoryId)))
+            .ThenInclude(d => d.Vulnerabilities.Where(v => v.CveId.ToLower() == advisoryId));
+
+    private static IQueryable<Project> WithPackage(IQueryable<Project> query, string packageName) =>
+        query.Include(p => p.Dependencies.Where(d => d.Name.ToLower() == packageName));
 
     public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
@@ -98,10 +123,62 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .Take(take)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByIdsAsync(Guid organizationId,
+    public async Task<IReadOnlyList<Project>> ListScoringGraphsByIdsAsync(Guid organizationId,
         IReadOnlyCollection<Guid> projectIds, CancellationToken cancellationToken) =>
-        await WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
+        await Query(QueryTracking.NoTracking)
+            .AsSplitQuery()
             .Where(p => p.OrganizationId == organizationId && projectIds.Contains(p.Id))
+            .Select(p => new Project
+            {
+                Id = p.Id,
+                OrganizationId = p.OrganizationId,
+                Name = p.Name,
+                RepositoryType = p.RepositoryType,
+                LastScanAt = p.LastScanAt,
+                LastScanError = p.LastScanError,
+                HealthScore = p.HealthScore,
+                HealthGrade = p.HealthGrade,
+                Coverage = p.Coverage,
+                Dependencies = p.Dependencies.Select(d => new Dependency
+                {
+                    Id = d.Id,
+                    ProjectId = d.ProjectId,
+                    Name = d.Name,
+                    CurrentVersion = d.CurrentVersion,
+                    LatestVersion = d.LatestVersion,
+                    IsDeprecated = d.IsDeprecated,
+                    IsVersionPinned = d.IsVersionPinned,
+                    Type = d.Type,
+                    IsDirect = d.IsDirect,
+                    Ecosystem = d.Ecosystem,
+                    Status = d.Status,
+                    Vulnerabilities = d.Vulnerabilities.Select(v => new Vulnerability
+                    {
+                        Id = v.Id,
+                        DependencyId = v.DependencyId,
+                        CveId = v.CveId,
+                        CveAlias = v.CveAlias,
+                        CvssScore = v.CvssScore,
+                        PackageName = v.PackageName,
+                        FixedVersion = v.FixedVersion,
+                        Severity = v.Severity,
+                        DetectedAt = v.DetectedAt,
+                        EpssScore = v.EpssScore,
+                        EpssPercentile = v.EpssPercentile,
+                        IsKnownExploited = v.IsKnownExploited
+                    }).ToList()
+                }).ToList(),
+                Runtimes = p.Runtimes.Select(r => new Runtime
+                {
+                    Id = r.Id,
+                    ProjectId = r.ProjectId,
+                    Name = r.Name,
+                    Version = r.Version,
+                    EolDate = r.EolDate,
+                    IsEol = r.IsEol,
+                    IsMinimumConstraint = r.IsMinimumConstraint
+                }).ToList()
+            })
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId,

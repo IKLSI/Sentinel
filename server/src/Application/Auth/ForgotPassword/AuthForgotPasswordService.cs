@@ -62,7 +62,8 @@ public class AuthForgotPasswordService(
 
         string protectedToken = tokenProtector.Protect(rawToken);
 
-        jobs.Enqueue<SendPasswordResetEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken));
+        jobs.Enqueue<SendPasswordResetEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(email, protectedToken,
+            CancellationToken.None));
 
         await auditLog.LogAsync(
             AuditAction.PasswordResetRequested,

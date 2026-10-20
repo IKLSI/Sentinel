@@ -24,13 +24,13 @@ public class SendAccountSuspendedEmailJob
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(Guid userId)
+    public async Task ExecuteAsync(Guid userId, CancellationToken cancellationToken)
     {
         User? user;
 
         using (_systemScope.Enter())
         {
-            user = await _userRepository.GetOrDefaultWithOrganizationAsync(userId, CancellationToken.None);
+            user = await _userRepository.GetOrDefaultWithOrganizationAsync(userId, cancellationToken);
         }
 
         if (user == null)
@@ -45,6 +45,7 @@ public class SendAccountSuspendedEmailJob
             return;
         }
 
-        await _emailService.SendAccountSuspendedAsync(user.Email, user.Organization.Name, user.Language);
+        await _emailService.SendAccountSuspendedAsync(user.Email, user.Organization.Name, user.Language,
+            cancellationToken);
     }
 }

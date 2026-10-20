@@ -120,6 +120,7 @@ public class TicketCreateFromFindingServiceTests
         {
             Id = Guid.NewGuid(),
             ProjectId = project.Id,
+            OrganizationId = project.OrganizationId,
             Name = "lodash",
             CurrentVersion = "4.17.15",
             LatestVersion = "4.17.21",
@@ -129,6 +130,7 @@ public class TicketCreateFromFindingServiceTests
         {
             Id = Guid.NewGuid(),
             ProjectId = project.Id,
+            OrganizationId = project.OrganizationId,
             Name = "express",
             CurrentVersion = "5.0.0",
             LatestVersion = "5.0.0",
@@ -138,6 +140,7 @@ public class TicketCreateFromFindingServiceTests
         {
             Id = Guid.NewGuid(),
             DependencyId = lodash.Id,
+            OrganizationId = project.OrganizationId,
             CveId = "GHSA-1",
             PackageName = "lodash",
             Description = "Faille"

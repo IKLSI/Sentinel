@@ -1,12 +1,15 @@
 using System.Net;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Sentinel.Infrastructure.Http;
 
 namespace Sentinel.Tests.Services;
 
-public class ResilientHttpHandlerTests
+public class HttpRetryPolicyTests
 {
+    private const string ClientName = "test";
+
     private sealed class SequenceHandler(params Func<HttpResponseMessage>[] responses) : HttpMessageHandler
     {
         public int Calls { get; private set; }
@@ -16,8 +19,17 @@ public class ResilientHttpHandlerTests
             Task.FromResult(responses[Math.Min(Calls++, responses.Length - 1)]());
     }
 
-    private static HttpClient Client(HttpMessageHandler inner) =>
-        new(new ResilientHttpHandler(NullLogger<ResilientHttpHandler>.Instance) { InnerHandler = inner });
+    private static HttpClient Client(HttpMessageHandler inner)
+    {
+        ServiceCollection services = new ServiceCollection();
+
+        services.AddHttpClient(ClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => inner)
+            .AddResilienceHandler("retry", pipeline =>
+                HttpRetryPolicy.Configure(pipeline, NullLogger.Instance));
+
+        return services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>().CreateClient(ClientName);
+    }
 
     private static HttpResponseMessage RateLimited(DateTimeOffset reset)
     {
@@ -34,7 +46,8 @@ public class ResilientHttpHandlerTests
             () => RateLimited(DateTimeOffset.UtcNow),
             () => new HttpResponseMessage(HttpStatusCode.OK));
 
-        HttpResponseMessage response = await Client(inner).GetAsync("https://api.github.com/repos/acme/app");
+        HttpResponseMessage response = await Client(inner).GetAsync("https://api.github.com/repos/acme/app",
+            TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         inner.Calls.Should().Be(2);
@@ -45,7 +58,8 @@ public class ResilientHttpHandlerTests
     {
         SequenceHandler inner = new(() => RateLimited(DateTimeOffset.UtcNow.AddMinutes(30)));
 
-        HttpResponseMessage response = await Client(inner).GetAsync("https://api.github.com/repos/acme/app");
+        HttpResponseMessage response = await Client(inner).GetAsync("https://api.github.com/repos/acme/app",
+            TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         inner.Calls.Should().Be(1);
@@ -56,8 +70,23 @@ public class ResilientHttpHandlerTests
     {
         SequenceHandler inner = new(() => new HttpResponseMessage(HttpStatusCode.Forbidden));
 
-        await Client(inner).GetAsync("https://api.github.com/repos/acme/private");
+        await Client(inner).GetAsync("https://api.github.com/repos/acme/private",
+            TestContext.Current.CancellationToken);
 
         inner.Calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task SendAsync_TransientServerError_IsRetriedUntilSuccess()
+    {
+        SequenceHandler inner = new(
+            () => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+            () => new HttpResponseMessage(HttpStatusCode.OK));
+
+        HttpResponseMessage response = await Client(inner).GetAsync("https://api.osv.dev/v1/vulns/GHSA-1",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        inner.Calls.Should().Be(2);
     }
 }

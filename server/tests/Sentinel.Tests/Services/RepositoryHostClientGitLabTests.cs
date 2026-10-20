@@ -93,7 +93,8 @@ public class RepositoryHostClientGitLabTests
         RecordingHandler handler = new RecordingHandler();
 
         RepositoryFileListing listing = await Client(handler)
-            .ListFilesAsync("git.entreprise.fr", "groupe/sous-groupe", "projet", SelfHosted);
+            .ListFilesAsync("git.entreprise.fr", "groupe/sous-groupe", "projet", SelfHosted, null,
+                TestContext.Current.CancellationToken);
 
         handler.RequestedUris.Should().ContainSingle().Which.AbsoluteUri.Should()
             .StartWith("https://git.entreprise.fr/api/v4/projects/groupe%2Fsous-groupe%2Fprojet/repository/tree");
@@ -116,7 +117,8 @@ public class RepositoryHostClientGitLabTests
     {
         TokenRecordingHandler handler = new TokenRecordingHandler();
 
-        await Client(handler).ListFilesAsync("git.entreprise.fr", "groupe", "projet", SelfHosted);
+        await Client(handler).ListFilesAsync("git.entreprise.fr", "groupe", "projet", SelfHosted, null,
+            TestContext.Current.CancellationToken);
 
         handler.Tokens.Should().ContainSingle().Which.Should().Be("glpat-test");
     }
@@ -127,7 +129,7 @@ public class RepositoryHostClientGitLabTests
         RecordingHandler handler = new RecordingHandler();
 
         RepositoryFileListing listing = await Client(handler)
-            .ListFilesAsync("gitlab.com", "groupe", "projet", SelfHosted);
+            .ListFilesAsync("gitlab.com", "groupe", "projet", SelfHosted, null, TestContext.Current.CancellationToken);
 
         listing.Files.Should().BeEmpty();
         handler.RequestedUris.Should().BeEmpty();
@@ -138,7 +140,8 @@ public class RepositoryHostClientGitLabTests
     {
         TreeHandler handler = new TreeHandler(totalPages: 3, sendTotalPagesHeader: true);
 
-        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo");
+        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo", null, null,
+            TestContext.Current.CancellationToken);
 
         listing.Files.Should().HaveCount(201);
         listing.Files[0].Name.Should().Be("f1-0.txt");
@@ -152,7 +155,8 @@ public class RepositoryHostClientGitLabTests
     {
         TreeHandler handler = new TreeHandler(totalPages: 150, sendTotalPagesHeader: true);
 
-        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo");
+        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo", null, null,
+            TestContext.Current.CancellationToken);
 
         listing.Truncated.Should().BeTrue();
         handler.RequestedPages.Max().Should().Be(100);
@@ -164,7 +168,8 @@ public class RepositoryHostClientGitLabTests
     {
         TreeHandler handler = new TreeHandler(totalPages: 2, sendTotalPagesHeader: false);
 
-        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo");
+        RepositoryFileListing listing = await Client(handler).ListFilesAsync("gitlab.com", "group", "repo", null, null,
+            TestContext.Current.CancellationToken);
 
         listing.Files.Should().HaveCount(101);
         listing.Truncated.Should().BeFalse();

@@ -21,7 +21,7 @@ internal record ParsedManifest(string Directory, bool IsLockFile, List<Dependenc
 public class RepositoryScannerService(
     IRepositoryHostClient hostClient,
     ManifestParserService parser,
-    IDependencyRegistryClient registry,
+    RegistryMetadataApplier registryMetadata,
     ILogger<RepositoryScannerService> logger)
 {
     private const int MaxConcurrentDownloads = 10;
@@ -68,26 +68,28 @@ public class RepositoryScannerService(
     private static string DirectnessKey(Dependency dependency) =>
         PackageNameNormalizer.ForVulnerabilityFeed(dependency.Ecosystem, dependency.Name).ToLowerInvariant();
 
-    public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access = null, string? branch = null)
+    public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access, string? branch,
+        CancellationToken cancellationToken)
     {
         if (!RepositoryLocation.TryParse(repoUrl, out RepositoryLocation location))
             return Task.FromResult<string?>(null);
 
-        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, access, branch);
+        return hostClient.GetHeadCommitAsync(location.Host, location.Owner, location.Repository, access, branch,
+            cancellationToken);
     }
 
-    public async Task RefreshVersionsAsync(List<Dependency> dependencies)
+    public async Task RefreshVersionsAsync(List<Dependency> dependencies, CancellationToken cancellationToken)
     {
         if (dependencies.Count == 0) return;
 
-        await registry.FetchRegistryMetadataAsync(RegistryCandidates(dependencies));
+        await registryMetadata.ApplyAsync(RegistryCandidates(dependencies), cancellationToken);
 
         foreach (Dependency dependency in dependencies)
             dependency.Status = DependencyStatusCalculator.For(dependency);
     }
 
-    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access = null,
-        string? commitSha = null, RepositoryScanScope? scope = null)
+    public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access,
+        string? commitSha, RepositoryScanScope? scope, CancellationToken cancellationToken)
     {
         RepositoryScanScope effectiveScope = scope ?? RepositoryScanScope.Default;
         string? rootPath = RepositoryScanPaths.NormalizeRootPath(effectiveScope.RootPath);
@@ -102,7 +104,7 @@ public class RepositoryScannerService(
 
             (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
             RepositoryFileListing listing = await hostClient.ListFilesAsync(host, owner, repo, access,
-                commitSha);
+                commitSha, cancellationToken);
 
             if (listing.Files.Count == 0)
             {
@@ -136,8 +138,8 @@ public class RepositoryScannerService(
             {
                 string? content;
 
-                await throttle.WaitAsync();
-                try { content = await hostClient.FetchTextAsync(host, file.Url, access); }
+                await throttle.WaitAsync(cancellationToken);
+                try { content = await hostClient.FetchTextAsync(host, file.Url, access, cancellationToken); }
                 finally { throttle.Release(); }
 
                 if (content == null)
@@ -148,12 +150,16 @@ public class RepositoryScannerService(
 
                 try
                 {
-                    (List<Dependency> deps, List<Runtime> rts) = parser.Parse(projectId, file.Name, content);
+                    ManifestParseOutcome outcome = parser.ParseReportingFailure(projectId, file.Name, content);
 
-                    foreach (Dependency dependency in deps) dependency.ManifestPath = file.Path;
+                    if (outcome.Failure != null)
+                        logger.LogWarning(outcome.Failure, "Manifest {Path} is malformed, only its readable part is kept",
+                            file.Path);
+
+                    foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
 
                     return new ParsedManifest(RepositoryScanPaths.DirectoryOf(file.Path),
-                        ManifestParserService.IsLockFile(file.Name), deps, rts);
+                        ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes);
                 }
                 catch (Exception ex)
                 {
@@ -188,9 +194,11 @@ public class RepositoryScannerService(
                 ApplyDirectness(lockFile.Dependencies, coveredManifestDeps);
             }
 
+            List<LockedPackages> lockedPackages = lockFiles.Select(LockedPackages.Of).ToList();
+
             List<Dependency> unlockedManifestDeps = manifests
                 .SelectMany(manifest => manifest.Dependencies
-                    .Where(dependency => !IsLocked(dependency, manifest.Directory, lockFiles)))
+                    .Where(dependency => !IsLocked(dependency, manifest.Directory, lockedPackages)))
                 .ToList();
 
             List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
@@ -207,14 +215,14 @@ public class RepositoryScannerService(
                 .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            await registry.FetchRegistryMetadataAsync(RegistryCandidates(dedupedDeps));
+            await registryMetadata.ApplyAsync(RegistryCandidates(dedupedDeps), cancellationToken);
 
             foreach (Dependency dep in dedupedDeps)
                 dep.Status = DependencyStatusCalculator.For(dep);
 
             return new ScanOutcome(dedupedDeps, dedupedRuntimes, null, parsed.Count, isComplete);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "Repository {RepoUrl} scan failed", repoUrl);
             return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
@@ -225,8 +233,19 @@ public class RepositoryScannerService(
     private static List<Dependency> RegistryCandidates(IEnumerable<Dependency> dependencies) =>
         dependencies.Where(dependency => dependency.IsDirect).ToList();
 
-    private static bool IsLocked(Dependency dependency, string manifestDirectory, List<ParsedManifest> lockFiles) =>
-        lockFiles.Any(lockFile => RepositoryScanPaths.Covers(lockFile.Directory, manifestDirectory)
-            && lockFile.Dependencies.Any(locked => locked.Ecosystem == dependency.Ecosystem
-                && locked.Name.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase)));
+    private static bool IsLocked(Dependency dependency, string manifestDirectory,
+        List<LockedPackages> lockedPackages) =>
+        lockedPackages.Any(locked => RepositoryScanPaths.Covers(locked.Directory, manifestDirectory)
+            && locked.Contains(dependency));
+
+    private sealed record LockedPackages(string Directory, HashSet<(DependencyEcosystem, string)> Packages)
+    {
+        public static LockedPackages Of(ParsedManifest lockFile) => new(lockFile.Directory,
+            lockFile.Dependencies.Select(Key).ToHashSet());
+
+        public bool Contains(Dependency dependency) => Packages.Contains(Key(dependency));
+
+        private static (DependencyEcosystem, string) Key(Dependency dependency) =>
+            (dependency.Ecosystem, dependency.Name.ToUpperInvariant());
+    }
 }

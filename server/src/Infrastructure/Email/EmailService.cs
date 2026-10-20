@@ -27,7 +27,8 @@ public partial class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl, string culture)
+    public async Task SendInvitationAsync(UserInvitation invitation, string rawToken, string organizationName, string invitedByName, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken)
     {
         string acceptUrl  = $"{frontendBaseUrl}/accept-invitation?token={rawToken}";
         string roleLabel = invitation.Role == UserRole.Admin
@@ -67,12 +68,13 @@ public partial class EmailService : IEmailService
             })
         }.ToMessageBody();
 
-        await SendAsync(message);
+        await SendAsync(message, cancellationToken);
 
         _logger.LogInformation("Invitation email sent to {Email}", MaskEmail(invitation.Email));
     }
 
-    public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture)
+    public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken)
     {
         string loginUrl = $"{frontendBaseUrl}/login";
 
@@ -99,12 +101,13 @@ public partial class EmailService : IEmailService
             })
         }.ToMessageBody();
 
-        await SendAsync(message);
+        await SendAsync(message, cancellationToken);
 
         _logger.LogInformation("Existing account notification sent to {Email}", MaskEmail(email));
     }
 
-    public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture)
+    public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken)
     {
         string resetUrl = $"{frontendBaseUrl}/reset-password?token={resetToken}";
 
@@ -128,12 +131,13 @@ public partial class EmailService : IEmailService
                 new Dictionary<string, string> { ["url"] = resetUrl })
         }.ToMessageBody();
 
-        await SendAsync(message);
+        await SendAsync(message, cancellationToken);
 
         _logger.LogInformation("Password reset email sent to {Email}", MaskEmail(email));
     }
 
-    public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture)
+    public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture,
+        CancellationToken cancellationToken)
     {
         string verifyUrl = $"{frontendBaseUrl}/verify-email?token={verificationToken}";
 
@@ -157,12 +161,13 @@ public partial class EmailService : IEmailService
                 new Dictionary<string, string> { ["url"] = verifyUrl })
         }.ToMessageBody();
 
-        await SendAsync(message);
+        await SendAsync(message, cancellationToken);
 
         _logger.LogInformation("Verification email sent to {Email}", MaskEmail(email));
     }
 
-    public async Task SendAccountSuspendedAsync(string email, string organizationName, string culture)
+    public async Task SendAccountSuspendedAsync(string email, string organizationName, string culture,
+        CancellationToken cancellationToken)
     {
         string html = RenderTemplate("account-suspended.html", culture, new Dictionary<string, string>
         {
@@ -184,12 +189,13 @@ public partial class EmailService : IEmailService
                 new Dictionary<string, string> { ["organization"] = organizationName })
         }.ToMessageBody();
 
-        await SendAsync(message);
+        await SendAsync(message, cancellationToken);
 
         _logger.LogInformation("Account suspension email sent to {Email}", MaskEmail(email));
     }
 
-    public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns)
+    public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns,
+        CancellationToken cancellationToken)
     {
         int critical = newVulns.Count(v => v.Severity == "Critical");
         int high = newVulns.Count(v => v.Severity == "High");
@@ -242,7 +248,7 @@ public partial class EmailService : IEmailService
             message.Subject = subject;
             message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
 
-            await SendAsync(message);
+            await SendAsync(message, cancellationToken);
 
             _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", MaskEmail(recipient.Email), projectName);
         }
@@ -299,7 +305,7 @@ public partial class EmailService : IEmailService
         return rows;
     }
 
-    private async Task SendAsync(MimeMessage message)
+    private async Task SendAsync(MimeMessage message, CancellationToken cancellationToken)
     {
         string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
         int    port     = _email.Port;
@@ -308,13 +314,13 @@ public partial class EmailService : IEmailService
 
         using SmtpClient client = new SmtpClient();
 
-        await client.ConnectAsync(host, port, SocketOptionsFor(port));
+        await client.ConnectAsync(host, port, SocketOptionsFor(port), cancellationToken);
 
         if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password);
+            await client.AuthenticateAsync(username, password, cancellationToken);
 
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await client.SendAsync(message, cancellationToken);
+        await client.DisconnectAsync(true, cancellationToken);
     }
 
     internal static SecureSocketOptions SocketOptionsFor(int port) =>

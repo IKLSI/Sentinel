@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using Microsoft.Extensions.Logging;
+using Sentinel.Application.Tickets;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
@@ -33,7 +34,7 @@ public partial class ExportService(
     public async Task<ExportResult> ExportTicketsExcelAsync(
         Guid organizationId, TicketFilter filter, Guid currentUserId, CancellationToken cancellationToken)
     {
-        List<TicketGridRow> tickets = (await ticketRepository.ListForExportAsync(
+        List<TicketExportRow> tickets = (await ticketRepository.ListForExportAsync(
             organizationId, filter, ExportLimits.MaxTicketRows + 1, cancellationToken)).ToList();
 
         bool truncated = tickets.Count > ExportLimits.MaxTicketRows;
@@ -77,7 +78,7 @@ public partial class ExportService(
     private static string ComposeName(string? firstName, string? lastName) =>
         firstName == null && lastName == null ? string.Empty : $"{firstName} {lastName}".Trim();
 
-    private byte[] WriteTicketsExcel(List<TicketGridRow> tickets, ExportLabels L, bool truncated)
+    private byte[] WriteTicketsExcel(List<TicketExportRow> tickets, ExportLabels L, bool truncated)
     {
         string[] headers = L.TicketHeaders;
 
@@ -92,12 +93,12 @@ public partial class ExportService(
 
         for (int i = 0; i < tickets.Count; i++)
         {
-            TicketGridRow t = tickets[i];
+            TicketExportRow t = tickets[i];
             int row = i + FirstDataRow;
 
             SetRowBackground(ws, row, headers.Length, i % 2 == 1 ? AltRowColor : XLColor.White);
 
-            ws.Cell(row, 1).Value = $"TKT-{t.Id.ToString().Replace("-", "")[..6].ToUpper()}";
+            ws.Cell(row, 1).Value = TicketReference.For(t.Number);
             ws.Cell(row, 2).Value = t.Title;
 
             (_, XLColor stFg) = TicketStatusColor(t.Status);
@@ -116,6 +117,7 @@ public partial class ExportService(
         }
 
         int lastDataRow = tickets.Count > 0 ? tickets.Count + FirstDataRow - 1 : HeaderRow;
+        ApplyDataBlockStyle(ws, FirstDataRow, lastDataRow, headers.Length);
 
         if (tickets.Count > 0)
         {

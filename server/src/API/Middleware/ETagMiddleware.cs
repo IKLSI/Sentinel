@@ -139,8 +139,25 @@ public class ETagMiddleware
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
             WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
-        public override void Write(byte[] buffer, int offset, int count) =>
-            WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            DecideOnFirstWrite();
+
+            if (_buffer is not null)
+            {
+                if (_buffer.Length + count <= _maxBufferedBytes)
+                {
+                    _buffer.Write(buffer, offset, count);
+                    return;
+                }
+
+                _target.Write(_buffer.GetBuffer(), 0, (int)_buffer.Length);
+                _buffer.Dispose();
+                _buffer = null;
+            }
+
+            _target.Write(buffer, offset, count);
+        }
 
         public override void Flush()
         {

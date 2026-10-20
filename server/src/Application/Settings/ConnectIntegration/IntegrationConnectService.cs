@@ -47,7 +47,7 @@ public class IntegrationConnectService(
             : organization.ToGitLabInstance();
 
         (string Id, string Login)? account = await repositoryHostClient
-            .GetAuthenticatedAccountAsync(model.Token, platform.ToString().ToLower(), gitLab);
+            .GetAuthenticatedAccountAsync(model.Token, platform.ToString().ToLower(), gitLab, cancellationToken);
 
         if (account == null)
             return Result.Error(InvalidTokenCode(platform));

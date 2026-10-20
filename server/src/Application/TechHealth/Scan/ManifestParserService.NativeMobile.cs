@@ -9,8 +9,7 @@ public partial class ManifestParserService
 {
     private static void ParseCMakeLists(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match cmakeVersionMatch = Regex.Match(content, @"cmake_minimum_required\s*\(\s*VERSION\s+([\d.]+)",
-            RegexOptions.IgnoreCase);
+        Match cmakeVersionMatch = CMakeMinimumVersionRegex().Match(content);
 
         if (!cmakeVersionMatch.Success) return;
 
@@ -21,7 +20,7 @@ public partial class ManifestParserService
             Version = cmakeVersionMatch.Groups[1].Value.TrimEnd('.')
         });
 
-        Match cxxStandard = Regex.Match(content, @"CMAKE_CXX_STANDARD\s+(\d+)", RegexOptions.IgnoreCase);
+        Match cxxStandard = CMakeCxxStandardRegex().Match(content);
 
         if (cxxStandard.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "C++", Version = cxxStandard.Groups[1].Value });
@@ -29,7 +28,7 @@ public partial class ManifestParserService
 
     private static void ParseMixExs(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Match elixirMatch = Regex.Match(content, @"elixir:\s*[""']([^""']+)[""']");
+        Match elixirMatch = ElixirVersionRegex().Match(content);
         if (elixirMatch.Success)
         {
             runtimes.Add(new Runtime
@@ -41,7 +40,7 @@ public partial class ManifestParserService
             });
         }
 
-        foreach (Match m in Regex.Matches(content, @"\{:(\w+)\s*,\s*[""']([\^~>=<\s]*\d[^""']*)[""']"))
+        foreach (Match m in MixDependencyRegex().Matches(content))
         {
             string version = VersionText.Clean(m.Groups[2].Value);
             if (string.IsNullOrEmpty(version)) continue;
@@ -61,7 +60,7 @@ public partial class ManifestParserService
 
     private static void ParseMixLock(Guid projectId, string content, List<Dependency> deps)
     {
-        foreach (Match m in Regex.Matches(content, @"[""']\w+[""']:\s*\{:hex,\s*:(\w+),\s*[""']([^""']+)[""']"))
+        foreach (Match m in MixLockHexEntryRegex().Matches(content))
         {
             deps.Add(new Dependency
             {
@@ -77,11 +76,11 @@ public partial class ManifestParserService
 
     private static void ParsePubspecYaml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Match envBlock = Regex.Match(content, @"^environment:\s*\n((?:[ \t]+.*\n?)*)", RegexOptions.Multiline);
+        Match envBlock = PubspecEnvironmentRegex().Match(content);
         if (envBlock.Success)
         {
             string env = envBlock.Groups[1].Value;
-            Match dartMatch = Regex.Match(env, @"sdk:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)");
+            Match dartMatch = DartSdkRegex().Match(env);
             if (dartMatch.Success)
             {
                 runtimes.Add(new Runtime
@@ -93,7 +92,7 @@ public partial class ManifestParserService
                 });
             }
 
-            Match flutterMatch = Regex.Match(env, @"flutter:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)");
+            Match flutterMatch = FlutterSdkRegex().Match(env);
             if (flutterMatch.Success)
             {
                 runtimes.Add(new Runtime
@@ -122,7 +121,7 @@ public partial class ManifestParserService
 
             if (section == null) continue;
 
-            Match m = Regex.Match(line, @"^  ([a-zA-Z0-9_]+):\s*(.*)$");
+            Match m = PubspecEntryRegex().Match(line);
             if (!m.Success) continue;
 
             string rest = m.Groups[2].Value.Trim();
@@ -183,10 +182,10 @@ public partial class ManifestParserService
 
             if (!inPackages) continue;
 
-            Match pkgStart = Regex.Match(line, @"^  (\S[^:]*):\s*$");
+            Match pkgStart = PubspecLockPackageRegex().Match(line);
             if (pkgStart.Success) { Flush(); name = pkgStart.Groups[1].Value; continue; }
 
-            Match prop = Regex.Match(line, @"^    (version|dependency|source):\s*[""']?([^""'\n]+?)[""']?\s*$");
+            Match prop = PubspecLockPropertyRegex().Match(line);
             if (!prop.Success) continue;
 
             switch (prop.Groups[1].Value)
@@ -201,52 +200,48 @@ public partial class ManifestParserService
 
     private static void ParsePackageSwift(Guid projectId, string content, List<Runtime> runtimes)
     {
-        Match toolsMatch = Regex.Match(content, @"swift-tools-version:\s*([\d.]+)");
+        Match toolsMatch = SwiftToolsVersionRegex().Match(content);
         if (toolsMatch.Success)
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Swift", Version = toolsMatch.Groups[1].Value });
     }
 
     private static void ParsePackageResolved(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        JsonElement pins;
+        if (root.TryGetProperty("pins", out JsonElement p)) pins = p;
+        else if (root.TryGetProperty("object", out JsonElement obj) && obj.TryGetProperty("pins", out JsonElement p1)) pins = p1;
+        else return;
+
+        foreach (JsonElement pin in pins.EnumerateArray())
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
+            string location =
+                pin.TryGetProperty("location", out JsonElement l) ? l.GetString() ?? "" :
+                pin.TryGetProperty("repositoryURL", out JsonElement r) ? r.GetString() ?? "" : "";
+            if (string.IsNullOrEmpty(location)) continue;
 
-            JsonElement pins;
-            if (root.TryGetProperty("pins", out JsonElement p)) pins = p;
-            else if (root.TryGetProperty("object", out JsonElement obj) && obj.TryGetProperty("pins", out JsonElement p1)) pins = p1;
-            else return;
+            string? version = pin.TryGetProperty("state", out JsonElement state) && state.TryGetProperty("version", out JsonElement v)
+                ? v.GetString() : null;
+            if (string.IsNullOrEmpty(version)) continue;
 
-            foreach (JsonElement pin in pins.EnumerateArray())
+            deps.Add(new Dependency
             {
-                string location =
-                    pin.TryGetProperty("location", out JsonElement l) ? l.GetString() ?? "" :
-                    pin.TryGetProperty("repositoryURL", out JsonElement r) ? r.GetString() ?? "" : "";
-                if (string.IsNullOrEmpty(location)) continue;
-
-                string? version = pin.TryGetProperty("state", out JsonElement state) && state.TryGetProperty("version", out JsonElement v)
-                    ? v.GetString() : null;
-                if (string.IsNullOrEmpty(version)) continue;
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = NormalizeSwiftUrl(location),
-                    CurrentVersion = version,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.Swift,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
+                ProjectId = projectId,
+                Name = NormalizeSwiftUrl(location),
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Swift,
+                Status = DependencyStatus.UpToDate,
+            });
         }
-        catch { }
     }
 
     private static string NormalizeSwiftUrl(string url)
     {
-        string s = Regex.Replace(url.Trim(), @"^https?://", "");
-        s = Regex.Replace(s, @"\.git$", "");
+        string s = UrlSchemeRegex().Replace(url.Trim(), "");
+        s = GitSuffixRegex().Replace(s, "");
         return s.TrimEnd('/');
     }
 
@@ -294,4 +289,46 @@ public partial class ManifestParserService
 
     [GeneratedRegex(@"^  - ""?([^\s""(]+)""?(?: \(=?\s*([^)]+)\))?:?$")]
     private static partial Regex PodLineRegex();
+
+    [GeneratedRegex(@"cmake_minimum_required\s*\(\s*VERSION\s+([\d.]+)", RegexOptions.IgnoreCase)]
+    private static partial Regex CMakeMinimumVersionRegex();
+
+    [GeneratedRegex(@"CMAKE_CXX_STANDARD\s+(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex CMakeCxxStandardRegex();
+
+    [GeneratedRegex(@"elixir:\s*[""']([^""']+)[""']")]
+    private static partial Regex ElixirVersionRegex();
+
+    [GeneratedRegex(@"\{:(\w+)\s*,\s*[""']([\^~>=<\s]*\d[^""']*)[""']")]
+    private static partial Regex MixDependencyRegex();
+
+    [GeneratedRegex(@"[""']\w+[""']:\s*\{:hex,\s*:(\w+),\s*[""']([^""']+)[""']")]
+    private static partial Regex MixLockHexEntryRegex();
+
+    [GeneratedRegex(@"^environment:\s*\n((?:[ \t]+.*\n?)*)", RegexOptions.Multiline)]
+    private static partial Regex PubspecEnvironmentRegex();
+
+    [GeneratedRegex(@"sdk:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)")]
+    private static partial Regex DartSdkRegex();
+
+    [GeneratedRegex(@"flutter:\s*[""']?([\^~>=<\s]*)(\d[\d.]*)")]
+    private static partial Regex FlutterSdkRegex();
+
+    [GeneratedRegex(@"^  ([a-zA-Z0-9_]+):\s*(.*)$")]
+    private static partial Regex PubspecEntryRegex();
+
+    [GeneratedRegex(@"^  (\S[^:]*):\s*$")]
+    private static partial Regex PubspecLockPackageRegex();
+
+    [GeneratedRegex(@"^    (version|dependency|source):\s*[""']?([^""'\n]+?)[""']?\s*$")]
+    private static partial Regex PubspecLockPropertyRegex();
+
+    [GeneratedRegex(@"swift-tools-version:\s*([\d.]+)")]
+    private static partial Regex SwiftToolsVersionRegex();
+
+    [GeneratedRegex(@"^https?://")]
+    private static partial Regex UrlSchemeRegex();
+
+    [GeneratedRegex(@"\.git$")]
+    private static partial Regex GitSuffixRegex();
 }

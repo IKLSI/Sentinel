@@ -13,7 +13,8 @@ public class EndOfLifeRuntimeLifecycleClient(
     InFlightRequestCoalescer coalescer,
     ILogger<EndOfLifeRuntimeLifecycleClient> logger) : IRuntimeLifecycleClient
 {
-    public async Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version)
+    public async Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version,
+        CancellationToken cancellationToken)
     {
         string? product = EndOfLifeCatalog.ResolveProduct(runtimeName);
         if (product == null) return null;
@@ -21,7 +22,7 @@ public class EndOfLifeRuntimeLifecycleClient(
         string? normalizedVersion = EndOfLifeCatalog.NormalizeVersion(runtimeName, version);
         if (normalizedVersion == null) return null;
 
-        IReadOnlyCollection<EndOfLifeCycle> cycles = await GetCyclesAsync(product);
+        IReadOnlyCollection<EndOfLifeCycle> cycles = await GetCyclesAsync(product, cancellationToken);
 
         EndOfLifeCycle? cycle = EndOfLifeCatalog.SelectCycle(cycles, normalizedVersion);
 
@@ -35,14 +36,15 @@ public class EndOfLifeRuntimeLifecycleClient(
         return new RuntimeLifecycle(cycle.IsEndOfLife, cycle.EndOfLifeDate);
     }
 
-    private async Task<IReadOnlyCollection<EndOfLifeCycle>> GetCyclesAsync(string product)
+    private async Task<IReadOnlyCollection<EndOfLifeCycle>> GetCyclesAsync(string product,
+        CancellationToken cancellationToken)
     {
         string cacheKey = CacheKeys.RuntimeLifecycle(product);
 
         if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
             return cached;
 
-        return await coalescer.RunAsync(cacheKey, () => LoadCyclesAsync(product, cacheKey));
+        return await coalescer.RunAsync(cacheKey, () => LoadCyclesAsync(product, cacheKey), cancellationToken);
     }
 
     private async Task<IReadOnlyCollection<EndOfLifeCycle>> LoadCyclesAsync(string product, string cacheKey)

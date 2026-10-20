@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
+using Sentinel.Application.TechHealth.Scan;
 using Sentinel.Domain.Entities;
 using Sentinel.Infrastructure.Http;
 
@@ -55,9 +56,43 @@ public class DependencyRegistryClientTests
     {
         Dependency dependency = New("fzaninotto/faker", DependencyEcosystem.Composer);
 
-        await Fetch(dependency, """{ "package": { "abandoned": true, "versions": { "1.9.2": {} } } }""");
+        await Fetch(dependency,
+            """{ "packages": { "fzaninotto/faker": [ { "version": "v1.9.2", "abandoned": true } ] } }""");
 
         dependency.IsDeprecated.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FetchRegistryMetadataAsync_SurPackagist_IgnoreLesPreversionsEtLitLePremierAuteur()
+    {
+        Dependency dependency = New("monolog/monolog", DependencyEcosystem.Composer);
+
+        await Fetch(dependency, """
+            { "packages": { "monolog/monolog": [
+                { "version": "4.0.0-RC1", "license": [ "MIT" ], "authors": [ { "name": "Jordi Boggiano" } ] },
+                { "version": "3.9.0" },
+                { "version": "3.10.0" }
+            ] } }
+            """);
+
+        dependency.LatestVersion.Should().Be("3.10.0");
+        dependency.License.Should().Be("MIT");
+        dependency.Publisher.Should().Be("Jordi Boggiano");
+        dependency.IsDeprecated.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FetchRegistryMetadataAsync_SurCrates_LitLaVersionParDefautEtSaLicence()
+    {
+        Dependency dependency = New("serde", DependencyEcosystem.Cargo);
+
+        await Fetch(dependency, """
+            { "crate": { "default_version": "1.0.229", "newest_version": "0.0.0" },
+              "versions": [ { "num": "1.0.229", "license": "MIT OR Apache-2.0" } ] }
+            """);
+
+        dependency.LatestVersion.Should().Be("1.0.229");
+        dependency.License.Should().Be("MIT OR Apache-2.0");
     }
 
     [Fact]
@@ -92,7 +127,7 @@ public class DependencyRegistryClientTests
 
         await Fetch(scoped, """{ "version": "18.0.0" }""");
         await Fetch(go, """{ "Version": "v1.10.0" }""");
-        await Fetch(composer, """{ "package": { "versions": { "6.4.0": {} } } }""");
+        await Fetch(composer, """{ "packages": { "symfony/console": [ { "version": "6.4.0" } ] } }""");
 
         scoped.Publisher.Should().Be("angular");
         go.Publisher.Should().Be("gin-gonic");
@@ -153,7 +188,7 @@ public class DependencyRegistryClientTests
             cache ?? new MemoryCache(new MemoryCacheOptions { SizeLimit = 100 }),
             new InFlightRequestCoalescer());
 
-        await client.FetchRegistryMetadataAsync([dependency]);
+        await new RegistryMetadataApplier(client).ApplyAsync([dependency], TestContext.Current.CancellationToken);
     }
 
     private sealed class StubHandler(string payload, HttpStatusCode status) : HttpMessageHandler

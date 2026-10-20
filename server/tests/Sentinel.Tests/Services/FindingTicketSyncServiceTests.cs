@@ -20,7 +20,7 @@ public class FindingTicketSyncServiceTests
         Ticket ticket = NewTicket(scope, TicketStatus.InProgress);
         await scope.SeedAsync(ticket);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: false));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: false), TestContext.Current.CancellationToken);
 
         Ticket reloaded = await ReloadAsync(scope, ticket.Id);
         reloaded.Status.Should().Be(TicketStatus.Resolved);
@@ -39,7 +39,7 @@ public class FindingTicketSyncServiceTests
         Ticket ticket = NewTicket(scope, TicketStatus.New);
         await scope.SeedAsync(ticket);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true), TestContext.Current.CancellationToken);
 
         (await ReloadAsync(scope, ticket.Id)).Status.Should().Be(TicketStatus.New);
         scope.Context.TicketHistories.Should().BeEmpty();
@@ -52,7 +52,8 @@ public class FindingTicketSyncServiceTests
         Ticket ticket = NewTicket(scope, TicketStatus.InProgress);
         await scope.SeedAsync(ticket);
 
-        FindingTicketSyncResult? result = await BuildSut(scope).SyncAsync(NewProject(scope, withCve: false));
+        FindingTicketSyncResult? result = await BuildSut(scope).SyncAsync(NewProject(scope, withCve: false),
+            TestContext.Current.CancellationToken);
 
         result!.LinkedTickets.Should().ContainSingle().Which.Id.Should().Be(ticket.Id);
         result.TicketsChanged.Should().BeTrue();
@@ -66,7 +67,7 @@ public class FindingTicketSyncServiceTests
         ticket.AutoResolvedAt = DateTime.UtcNow.AddDays(-1);
         await scope.SeedAsync(ticket);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true), TestContext.Current.CancellationToken);
 
         Ticket reloaded = await ReloadAsync(scope, ticket.Id);
         reloaded.Status.Should().Be(TicketStatus.New);
@@ -80,7 +81,7 @@ public class FindingTicketSyncServiceTests
         Ticket ticket = NewTicket(scope, TicketStatus.Resolved);
         await scope.SeedAsync(ticket);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true), TestContext.Current.CancellationToken);
 
         (await ReloadAsync(scope, ticket.Id)).Status.Should().Be(TicketStatus.Resolved);
     }
@@ -93,7 +94,7 @@ public class FindingTicketSyncServiceTests
         ticket.AutoResolvedAt = DateTime.UtcNow;
         await scope.SeedAsync(ticket);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true), TestContext.Current.CancellationToken);
 
         (await ReloadAsync(scope, ticket.Id)).Status.Should().Be(TicketStatus.Closed);
     }
@@ -107,7 +108,7 @@ public class FindingTicketSyncServiceTests
         Ticket open = NewTicket(scope, TicketStatus.New);
         await scope.SeedAsync(autoResolved, open);
 
-        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true));
+        await BuildSut(scope).SyncAsync(NewProject(scope, withCve: true), TestContext.Current.CancellationToken);
 
         (await ReloadAsync(scope, autoResolved.Id)).Status.Should().Be(TicketStatus.Resolved);
     }

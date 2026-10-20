@@ -3,6 +3,7 @@ using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Realtime;
@@ -22,6 +23,9 @@ public class TicketDeleteService(
         if (tenant.OrganizationId is not Guid organizationId)
             return Result.Unauthorized();
 
+        Ticket? ticket = await ticketRepository.GetOrDefaultAsync(ticketId, QueryTracking.NoTracking,
+            cancellationToken);
+
         int deleted = await ticketRepository.DeleteInOrganizationAsync(ticketId, organizationId, cancellationToken);
 
         if (deleted == 0)
@@ -30,7 +34,8 @@ public class TicketDeleteService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Ticket, ticketId));
+            new RealtimeEvent(RealtimeResources.Ticket, ticketId,
+                RealtimeEvent.AffectedProjects(ticket?.ProjectId)));
 
         await auditLog.LogAsync(
             AuditAction.TicketDeleted,

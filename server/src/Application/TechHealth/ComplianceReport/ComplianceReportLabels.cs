@@ -9,11 +9,9 @@ internal sealed class ComplianceReportLabels(ILocalizer localizer, string cultur
 
     public string Slug => Text("exports.compliance.slug");
     public string Title => Text("exports.compliance.title");
-    public string Tagline => Text("exports.compliance.tagline");
     public string DateFormat => Text("exports.stamp_date_format");
     public string At => Text("exports.at");
     public string OrganizationFallback => Text("exports.compliance.organization_fallback");
-    public string GradeNotCovered => Text("exports.compliance.grade_not_covered");
 
     public string SummaryDependencies => Text("exports.compliance.summary.dependencies");
     public string SummaryCritical => Text("exports.compliance.summary.critical");

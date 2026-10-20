@@ -66,7 +66,8 @@ public class TicketCreateService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets));
+            new RealtimeEvent(RealtimeResources.Tickets,
+                ProjectIds: RealtimeEvent.AffectedProjects(ticket.ProjectId)));
 
         await auditLog.LogAsync(
             AuditAction.TicketCreated,

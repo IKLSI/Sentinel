@@ -3,6 +3,9 @@ using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
+public sealed record ManifestParseOutcome(List<Dependency> Dependencies, List<Runtime> Runtimes,
+    Exception? Failure);
+
 public partial class ManifestParserService
 {
     [GeneratedRegex(@"(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testRuntimeOnly|annotationProcessor|classpath)\s*[('""]([a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+:[a-zA-Z0-9.\-_]+)['"")]", RegexOptions.Multiline)]
@@ -115,8 +118,34 @@ public partial class ManifestParserService
 
     public (List<Dependency>, List<Runtime>) Parse(Guid projectId, string fileName, string content)
     {
+        ManifestParseOutcome outcome = ParseReportingFailure(projectId, fileName, content);
+
+        return (outcome.Dependencies, outcome.Runtimes);
+    }
+
+    public ManifestParseOutcome ParseReportingFailure(Guid projectId, string fileName, string content)
+    {
         List<Dependency> deps = new List<Dependency>();
         List<Runtime> runtimes = new List<Runtime>();
+        Exception? failure = null;
+
+        try
+        {
+            ParseInto(projectId, fileName, content, deps, runtimes);
+        }
+        catch (Exception exception)
+        {
+            failure = exception;
+        }
+
+        if (!IsLockFile(fileName)) AddDependencyDerivedRuntimes(projectId, deps, runtimes);
+
+        return new ManifestParseOutcome(deps, runtimes, failure);
+    }
+
+    private static void ParseInto(Guid projectId, string fileName, string content, List<Dependency> deps,
+        List<Runtime> runtimes)
+    {
         string lower = fileName.ToLowerInvariant();
 
         if (lower == "package.json") ParsePackageJson(projectId, content, deps, runtimes);
@@ -161,10 +190,6 @@ public partial class ManifestParserService
         else if (lower == ".tool-versions") ParseToolVersions(projectId, content, runtimes);
         else if (lower == "gradle-wrapper.properties") ParseGradleWrapperProperties(projectId, content, runtimes);
         else if (VersionFileRuntimes.ContainsKey(lower)) ParseVersionFile(projectId, lower, content, runtimes);
-
-        if (!IsLockFile(fileName)) AddDependencyDerivedRuntimes(projectId, deps, runtimes);
-
-        return (deps, runtimes);
     }
 
 }

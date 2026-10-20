@@ -20,6 +20,8 @@ public partial class SentinelContext
             entity.Property(e => e.Branch).HasMaxLength(255);
             entity.Property(e => e.RootPath).HasMaxLength(500);
             entity.HasIndex(e => e.OrganizationId);
+            entity.HasAlternateKey(e => new { e.Id, e.OrganizationId });
+            entity.HasIndex(e => new { e.ScanFrequency, e.LastScanAt });
 
             entity.HasOne(e => e.Organization)
                 .WithMany()
@@ -42,11 +44,13 @@ public partial class SentinelContext
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.Ecosystem).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();
-            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasAlternateKey(e => new { e.Id, e.OrganizationId });
 
             entity.HasOne(e => e.Project)
                 .WithMany(p => p.Dependencies)
-                .HasForeignKey(e => e.ProjectId)
+                .HasForeignKey(e => new { e.ProjectId, e.OrganizationId })
+                .HasPrincipalKey(p => new { p.Id, p.OrganizationId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -62,13 +66,14 @@ public partial class SentinelContext
             entity.Property(e => e.EpssScore).HasPrecision(6, 5);
             entity.Property(e => e.EpssPercentile).HasPrecision(6, 5);
             entity.Property(e => e.Severity).HasConversion<string>();
-            entity.HasIndex(e => e.DependencyId);
             entity.HasIndex(e => new { e.Severity, e.DependencyId });
             entity.HasIndex(e => e.DetectedAt);
+            entity.HasIndex(e => new { e.OrganizationId, e.Severity });
 
             entity.HasOne(e => e.Dependency)
                 .WithMany(d => d.Vulnerabilities)
-                .HasForeignKey(e => e.DependencyId)
+                .HasForeignKey(e => new { e.DependencyId, e.OrganizationId })
+                .HasPrincipalKey(d => new { d.Id, d.OrganizationId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -80,11 +85,12 @@ public partial class SentinelContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Version).HasMaxLength(50).IsRequired();
-            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.OrganizationId);
 
             entity.HasOne(e => e.Project)
                 .WithMany(p => p.Runtimes)
-                .HasForeignKey(e => e.ProjectId)
+                .HasForeignKey(e => new { e.ProjectId, e.OrganizationId })
+                .HasPrincipalKey(p => new { p.Id, p.OrganizationId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

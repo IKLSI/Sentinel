@@ -39,19 +39,19 @@ public class ProjectRepositoryOptionsService(
         RepositoryAccess access = RepositoryAccessFactory.For(project, organization, tokenProtector);
 
         RepositoryBranchListing? branches = await repositoryHostClient.ListBranchesAsync(location.Host,
-            location.Owner, location.Repository, access);
+            location.Owner, location.Repository, access, cancellationToken);
 
         if (branches == null)
             return new ProjectRepositoryOptionsDto();
 
         string? selectedBranch = string.IsNullOrWhiteSpace(branch) ? branches.DefaultBranch : branch.Trim();
         string? commitSha = await repositoryHostClient.GetHeadCommitAsync(location.Host, location.Owner,
-            location.Repository, access, selectedBranch);
+            location.Repository, access, selectedBranch, cancellationToken);
 
         RepositoryFileListing files = commitSha == null
             ? new RepositoryFileListing([], false)
             : await repositoryHostClient.ListFilesAsync(location.Host, location.Owner, location.Repository, access,
-                commitSha);
+                commitSha, cancellationToken);
 
         return new ProjectRepositoryOptionsDto
         {

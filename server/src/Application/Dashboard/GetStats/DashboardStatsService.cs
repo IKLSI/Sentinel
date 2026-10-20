@@ -54,18 +54,14 @@ public class DashboardStatsService(
             cancellationToken);
         IReadOnlyList<ScoreSnapshotRow> snapshots = await LoadSnapshotsAsync(organizationId, projects, windowStart,
             today, cancellationToken);
-        IReadOnlyDictionary<DateTime, int> openDetections = await dashboardRepository
-            .GetVulnerabilityDetectionCountsAsync(organizationId, windowStartAt, cancellationToken);
-        IReadOnlyDictionary<DateTime, int> resolvedDetections = await dashboardRepository
-            .GetResolvedVulnerabilityDetectionCountsAsync(organizationId, windowStartAt, cancellationToken);
-        IReadOnlyDictionary<DateTime, int> resolutions = await dashboardRepository
-            .GetVulnerabilityResolutionCountsAsync(organizationId, windowStartAt, cancellationToken);
+        VulnerabilityFlowCountsRow flowCounts = await dashboardRepository
+            .GetVulnerabilityFlowCountsAsync(organizationId, windowStartAt, cancellationToken);
         List<ActivityItemDto> recentActivity = await BuildRecentActivityAsync(organizationId, now, cancellationToken);
         List<UrgentTicketDto> urgentTickets = await BuildUrgentTicketsAsync(organizationId, cancellationToken);
 
         IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(runtimes, today);
         List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
-        IReadOnlyList<Project> priorityProjects = await projectRepository.ListWithHealthDetailsByIdsAsync(
+        IReadOnlyList<Project> priorityProjects = await projectRepository.ListScoringGraphsByIdsAsync(
             organizationId, priorityIds, cancellationToken);
         List<ScorePointDto> scoreHistory = ScoreHistoryBuilder.Build(snapshots, windowStart, today);
 
@@ -74,8 +70,8 @@ public class DashboardStatsService(
             Overview = ParkOverviewCalculator.Build(projects, vulnerabilityTotals, dependencyTotals, deadlines,
                 ScoreHistoryBuilder.Delta(scoreHistory)),
             ScoreHistory = scoreHistory,
-            VulnerabilityFlow = VulnerabilityFlowBuilder.Build(openDetections, resolvedDetections, resolutions,
-                windowStart, today),
+            VulnerabilityFlow = VulnerabilityFlowBuilder.Build(flowCounts.Opened, flowCounts.ResolvedDetections,
+                flowCounts.Resolutions, windowStart, today),
             UrgentTickets = urgentTickets,
             Projects = ProjectHealthBuilder.Build(priorityIds, priorityProjects,
                 ScoreHistoryBuilder.ScoresAt(snapshots, windowStart), openTickets, deadlines),

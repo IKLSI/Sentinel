@@ -11,37 +11,33 @@ public partial class ManifestParserService
 
     private static void ParsePackageJson(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        if (root.TryGetProperty("engines", out JsonElement engines) && engines.TryGetProperty("node", out JsonElement nodeProp))
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
-
-            if (root.TryGetProperty("engines", out JsonElement engines) && engines.TryGetProperty("node", out JsonElement nodeProp))
+            string specification = nodeProp.GetString() ?? "";
+            string v = VersionText.Clean(specification);
+            if (VersionText.StartsWithDigit(v))
             {
-                string specification = nodeProp.GetString() ?? "";
-                string v = VersionText.Clean(specification);
-                if (VersionText.StartsWithDigit(v))
+                runtimes.Add(new Runtime
                 {
-                    runtimes.Add(new Runtime
-                    {
-                        ProjectId = projectId,
-                        Name = "Node.js",
-                        Version = v,
-                        IsMinimumConstraint = !VersionText.IsExact(specification)
-                    });
-                }
+                    ProjectId = projectId,
+                    Name = "Node.js",
+                    Version = v,
+                    IsMinimumConstraint = !VersionText.IsExact(specification)
+                });
             }
-
-            foreach ((string name, string version) in DetectNpmFrameworkRuntimes(root))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
-
-            if (root.TryGetProperty("dependencies", out JsonElement prodDeps))
-                ExtractNpmDeps(projectId, prodDeps, DependencyType.Prod, deps);
-
-            if (root.TryGetProperty("devDependencies", out JsonElement devDeps))
-                ExtractNpmDeps(projectId, devDeps, DependencyType.Dev, deps);
         }
-        catch { }
+
+        foreach ((string name, string version) in DetectNpmFrameworkRuntimes(root))
+            runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
+
+        if (root.TryGetProperty("dependencies", out JsonElement prodDeps))
+            ExtractNpmDeps(projectId, prodDeps, DependencyType.Prod, deps);
+
+        if (root.TryGetProperty("devDependencies", out JsonElement devDeps))
+            ExtractNpmDeps(projectId, devDeps, DependencyType.Dev, deps);
     }
 
     private static List<(string Name, string Version)> DetectNpmFrameworkRuntimes(JsonElement root)
@@ -116,44 +112,40 @@ public partial class ManifestParserService
 
     private static void ParsePackageLockJson(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        int lockfileVersion = root.TryGetProperty("lockfileVersion", out JsonElement vProp) ? vProp.GetInt32() : 1;
+
+        if (lockfileVersion >= 2 && root.TryGetProperty("packages", out JsonElement packages))
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
-
-            int lockfileVersion = root.TryGetProperty("lockfileVersion", out JsonElement vProp) ? vProp.GetInt32() : 1;
-
-            if (lockfileVersion >= 2 && root.TryGetProperty("packages", out JsonElement packages))
+            foreach (JsonProperty pkg in packages.EnumerateObject())
             {
-                foreach (JsonProperty pkg in packages.EnumerateObject())
+                int segment = pkg.Name.LastIndexOf(NodeModulesSegment, StringComparison.Ordinal);
+                if (segment < 0) continue;
+
+                string name = pkg.Name[(segment + NodeModulesSegment.Length)..];
+                if (string.IsNullOrEmpty(name)) continue;
+
+                string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
+                if (string.IsNullOrEmpty(version)) continue;
+
+                bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
+                deps.Add(new Dependency
                 {
-                    int segment = pkg.Name.LastIndexOf(NodeModulesSegment, StringComparison.Ordinal);
-                    if (segment < 0) continue;
-
-                    string name = pkg.Name[(segment + NodeModulesSegment.Length)..];
-                    if (string.IsNullOrEmpty(name)) continue;
-
-                    string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
-                    if (string.IsNullOrEmpty(version)) continue;
-
-                    bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = name,
-                        CurrentVersion = version,
-                        Type = isDev ? DependencyType.Dev : DependencyType.Prod,
-                        Ecosystem = DependencyEcosystem.Npm,
-                        Status = DependencyStatus.UpToDate,
-                    });
-                }
-            }
-            else if (root.TryGetProperty("dependencies", out JsonElement dependencies))
-            {
-                ExtractPackageLockV1Deps(projectId, dependencies, deps);
+                    ProjectId = projectId,
+                    Name = name,
+                    CurrentVersion = version,
+                    Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Npm,
+                    Status = DependencyStatus.UpToDate,
+                });
             }
         }
-        catch { }
+        else if (root.TryGetProperty("dependencies", out JsonElement dependencies))
+        {
+            ExtractPackageLockV1Deps(projectId, dependencies, deps);
+        }
     }
 
     private static void ExtractPackageLockV1Deps(Guid projectId, JsonElement dependencies, List<Dependency> deps)
@@ -181,50 +173,46 @@ public partial class ManifestParserService
 
     private static void ParseYarnLock(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        string? currentName = null;
+        foreach (string raw in content.Split('\n'))
         {
-            string? currentName = null;
-            foreach (string raw in content.Split('\n'))
+            string line = raw.TrimEnd();
+
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
             {
-                string line = raw.TrimEnd();
-
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
-                {
-                    currentName = null;
-                    continue;
-                }
-
-                if (!line.StartsWith(' ') && line.EndsWith(':'))
-                {
-                    string firstEntry = line.TrimEnd(':').Split(',')[0].Trim().Trim('"');
-                    int atIdx = firstEntry.LastIndexOf('@');
-                    currentName = atIdx > 0 ? firstEntry[..atIdx] : null;
-                    continue;
-                }
-
-                if (currentName == null) continue;
-
-                Match vMatch = Regex.Match(line.Trim(), @"^version:?\s+[""']?([^""'\s]+)[""']?$");
-                if (!vMatch.Success) continue;
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = currentName,
-                    CurrentVersion = vMatch.Groups[1].Value,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.Npm,
-                    Status = DependencyStatus.UpToDate,
-                });
                 currentName = null;
+                continue;
             }
+
+            if (!line.StartsWith(' ') && line.EndsWith(':'))
+            {
+                string firstEntry = line.TrimEnd(':').Split(',')[0].Trim().Trim('"');
+                int atIdx = firstEntry.LastIndexOf('@');
+                currentName = atIdx > 0 ? firstEntry[..atIdx] : null;
+                continue;
+            }
+
+            if (currentName == null) continue;
+
+            Match vMatch = YarnLockVersionRegex().Match(line.Trim());
+            if (!vMatch.Success) continue;
+
+            deps.Add(new Dependency
+            {
+                ProjectId = projectId,
+                Name = currentName,
+                CurrentVersion = vMatch.Groups[1].Value,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Npm,
+                Status = DependencyStatus.UpToDate,
+            });
+            currentName = null;
         }
-        catch { }
     }
 
     private static void ParsePnpmLock(Guid projectId, string content, List<Dependency> deps)
     {
-        Match versionMatch = Regex.Match(content, @"lockfileVersion:\s*['""]?(\d+)");
+        Match versionMatch = PnpmLockfileVersionRegex().Match(content);
         int major = versionMatch.Success ? int.Parse(versionMatch.Groups[1].Value) : 9;
 
         bool inPackages = false;
@@ -241,7 +229,7 @@ public partial class ManifestParserService
             }
 
             if (!inPackages) continue;
-            if (!Regex.IsMatch(line, @"^  \S")) continue;
+            if (!PnpmTopLevelKeyRegex().IsMatch(line)) continue;
             if (!line.EndsWith(':')) continue;
 
             string key = line.Trim().TrimEnd(':').Trim().Trim('\'', '"');
@@ -293,39 +281,44 @@ public partial class ManifestParserService
 
     private static void ParseBunLock(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content, new JsonDocumentOptions
         {
-            using JsonDocument doc = JsonDocument.Parse(content, new JsonDocumentOptions
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Skip
+        });
+
+        if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)) return;
+
+        foreach (JsonProperty package in packages.EnumerateObject())
+        {
+            if (package.Value.ValueKind != JsonValueKind.Array || package.Value.GetArrayLength() == 0) continue;
+
+            string identifier = package.Value[0].GetString() ?? "";
+            int at = identifier.LastIndexOf('@');
+            if (at <= 0) continue;
+
+            string name = identifier[..at];
+            string version = identifier[(at + 1)..];
+            if (!VersionText.StartsWithDigit(version)) continue;
+
+            deps.Add(new Dependency
             {
-                AllowTrailingCommas = true,
-                CommentHandling = JsonCommentHandling.Skip
+                ProjectId = projectId,
+                Name = name,
+                CurrentVersion = version,
+                Type = DependencyType.Prod,
+                Ecosystem = DependencyEcosystem.Npm,
+                Status = DependencyStatus.UpToDate,
             });
-
-            if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)) return;
-
-            foreach (JsonProperty package in packages.EnumerateObject())
-            {
-                if (package.Value.ValueKind != JsonValueKind.Array || package.Value.GetArrayLength() == 0) continue;
-
-                string identifier = package.Value[0].GetString() ?? "";
-                int at = identifier.LastIndexOf('@');
-                if (at <= 0) continue;
-
-                string name = identifier[..at];
-                string version = identifier[(at + 1)..];
-                if (!VersionText.StartsWithDigit(version)) continue;
-
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.Npm,
-                    Status = DependencyStatus.UpToDate,
-                });
-            }
         }
-        catch { }
     }
+
+    [GeneratedRegex(@"^version:?\s+[""']?([^""'\s]+)[""']?$")]
+    private static partial Regex YarnLockVersionRegex();
+
+    [GeneratedRegex(@"lockfileVersion:\s*['""]?(\d+)")]
+    private static partial Regex PnpmLockfileVersionRegex();
+
+    [GeneratedRegex(@"^  \S")]
+    private static partial Regex PnpmTopLevelKeyRegex();
 }

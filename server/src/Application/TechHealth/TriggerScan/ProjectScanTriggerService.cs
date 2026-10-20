@@ -28,7 +28,8 @@ public class ProjectScanTriggerService(
             return Result.NotFound(ErrorCodes.ProjectNotFound);
 
         if (scanGate.TryQueue(projectId))
-            backgroundJobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId));
+            backgroundJobs.Enqueue<ProjectScanService>(JobQueues.Scans, service => service.ScanProjectAsync(projectId,
+                CancellationToken.None));
 
         await auditLog.LogAsync(
             AuditAction.ScanTriggered,

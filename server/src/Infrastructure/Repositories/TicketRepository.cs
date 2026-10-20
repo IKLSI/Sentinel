@@ -25,18 +25,7 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         TicketSortField sortBy, SortDirection sortDirection, int page, int pageSize,
         CancellationToken cancellationToken)
     {
-        IQueryable<Ticket> query = ApplyFilter(FilteredQuery(organizationId), filter);
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            string pattern = SearchPattern.Like(filter.Search);
-            IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
-
-            query = query.Where(t =>
-                EF.Functions.ILike(t.Title, pattern) ||
-                EF.Functions.ILike(t.Description, pattern) ||
-                comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
-        }
+        IQueryable<Ticket> query = ApplySearch(ApplyFilter(FilteredQuery(organizationId), filter), filter.Search);
 
         int totalCount = await query.CountAsync(cancellationToken);
 
@@ -49,6 +38,19 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
             .ToListAsync(cancellationToken);
 
         return new PagedList<TicketGridRow>(items, totalCount);
+    }
+
+    private IQueryable<Ticket> ApplySearch(IQueryable<Ticket> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+
+        string pattern = SearchPattern.Like(search);
+        IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
+
+        return query.Where(t =>
+            EF.Functions.ILike(t.Title, pattern) ||
+            EF.Functions.ILike(t.Description, pattern) ||
+            comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
     }
 
     private static readonly Expression<Func<Ticket, int>> StatusRank = t =>
@@ -106,26 +108,29 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         t.UpdatedAt,
         t.Comments.Count);
 
-    public async Task<IReadOnlyList<TicketGridRow>> ListForExportAsync(Guid organizationId, TicketFilter filter,
+    private static readonly Expression<Func<Ticket, TicketExportRow>> ToExportRow = t => new TicketExportRow(
+        t.Number,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.UpdatedAt);
+
+    public async Task<IReadOnlyList<TicketExportRow>> ListForExportAsync(Guid organizationId, TicketFilter filter,
         int maxRows, CancellationToken cancellationToken)
     {
-        IQueryable<Ticket> query = ApplyFilter(FilteredQuery(organizationId), filter);
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            string pattern = SearchPattern.Like(filter.Search);
-            IQueryable<TicketComment> comments = Context.TicketComments.AsNoTracking();
-
-            query = query.Where(t =>
-                EF.Functions.ILike(t.Title, pattern) ||
-                EF.Functions.ILike(t.Description, pattern) ||
-                comments.Any(c => c.TicketId == t.Id && EF.Functions.ILike(c.Content, pattern)));
-        }
+        IQueryable<Ticket> query = ApplySearch(ApplyFilter(FilteredQuery(organizationId), filter), filter.Search);
 
         return await query
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxRows)
-            .Select(ToGridRow)
+            .Select(ToExportRow)
             .ToListAsync(cancellationToken);
     }
 

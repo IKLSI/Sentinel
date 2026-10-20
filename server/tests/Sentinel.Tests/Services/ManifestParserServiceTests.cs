@@ -1028,6 +1028,26 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParseReportingFailure_MalformedContent_ExposesTheFailure()
+    {
+        ManifestParseOutcome outcome = new ManifestParserService()
+            .ParseReportingFailure(ProjectId, "package.json", "{ not json");
+
+        outcome.Failure.Should().NotBeNull();
+        outcome.Dependencies.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseReportingFailure_ValidContent_ReportsNoFailure()
+    {
+        ManifestParseOutcome outcome = new ManifestParserService()
+            .ParseReportingFailure(ProjectId, "package.json", """{ "dependencies": { "axios": "1.6.0" } }""");
+
+        outcome.Failure.Should().BeNull();
+        outcome.Dependencies.Should().ContainSingle();
+    }
+
+    [Fact]
     public void ParseGemfileLock_ReadsLockedGemsAndDirectness()
     {
         const string content = """

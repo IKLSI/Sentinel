@@ -14,13 +14,16 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<Project?> GetOrDefaultInOrganizationWithHealthDetailsAsync(Guid projectId, Guid organizationId,
         CancellationToken cancellationToken);
 
+    Task<Project?> GetOrDefaultInOrganizationForFindingAsync(Guid projectId, Guid organizationId, FindingKind kind,
+        string findingKey, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Project>> ListWithHealthDetailsByIdsAsync(Guid organizationId,
+    Task<IReadOnlyList<Project>> ListScoringGraphsByIdsAsync(Guid organizationId,
         IReadOnlyCollection<Guid> projectIds, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<string?>> ListRepositoryUrlsAsync(Guid organizationId, CancellationToken cancellationToken);

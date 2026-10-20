@@ -30,7 +30,8 @@ public class PublicScanService(
         if (!RepositoryLocation.TryParse(request.RepositoryUrl, out RepositoryLocation location))
             return Result<PublicScanResponse>.Error(ErrorCodes.ScanInvalidRepositoryUrl);
 
-        string? headCommitSha = await scanner.GetHeadCommitAsync(request.RepositoryUrl!);
+        string? headCommitSha = await scanner.GetHeadCommitAsync(request.RepositoryUrl!, null, null,
+            cancellationToken);
         string cacheKey = CacheKeys.PublicScan(location.Host, location.Owner, location.Repository, headCommitSha);
 
         if (cache.TryGetValue(cacheKey, out PublicScanResponse? cached) && cached != null)
@@ -43,7 +44,7 @@ public class PublicScanService(
 
         try
         {
-            result = await ScanAsync(request.RepositoryUrl!, headCommitSha);
+            result = await ScanAsync(request.RepositoryUrl!, headCommitSha, cancellationToken);
         }
         finally
         {
@@ -64,11 +65,13 @@ public class PublicScanService(
         return result;
     }
 
-    private async Task<Result<PublicScanResponse>> ScanAsync(string repositoryUrl, string? headCommitSha)
+    private async Task<Result<PublicScanResponse>> ScanAsync(string repositoryUrl, string? headCommitSha,
+        CancellationToken cancellationToken)
     {
         Guid ephemeralId = Guid.NewGuid();
 
-        ScanOutcome outcome = await scanner.ScanRepositoryAsync(ephemeralId, repositoryUrl, commitSha: headCommitSha);
+        ScanOutcome outcome = await scanner.ScanRepositoryAsync(ephemeralId, repositoryUrl, null, headCommitSha,
+            null, cancellationToken);
 
         if (outcome.Error != null)
             return Result<PublicScanResponse>.Error(outcome.Error);
@@ -77,7 +80,7 @@ public class PublicScanService(
             return Result<PublicScanResponse>.Error(ErrorCodes.ScanNoDependencies);
 
         VulnerabilityScanOutcome vulnerabilityOutcome = await vulnerabilityScan.ScanAsync(
-            outcome.Dependencies, new Dictionary<string, DateTime>());
+            outcome.Dependencies, new Dictionary<string, DateTime>(), cancellationToken);
 
         if (!vulnerabilityOutcome.IsComplete)
             return Result<PublicScanResponse>.Error(ErrorCodes.ScanVulnerabilityDataIncomplete);
@@ -88,12 +91,12 @@ public class PublicScanService(
                 result.Dependency.Vulnerabilities.Add(vulnerability);
         }
 
-        IReadOnlyList<RuntimeEolResult> eolResults = await runtimeEol.ScanAsync(outcome.Runtimes);
+        IReadOnlyList<RuntimeEolResult> eolResults = await runtimeEol.ScanAsync(outcome.Runtimes, cancellationToken);
 
         foreach (RuntimeEolResult result in eolResults)
             result.Runtime.IsEol = result.IsEol;
 
-        await exploitSignalEnricher.EnrichAsync(outcome.Dependencies);
+        await exploitSignalEnricher.EnrichAsync(outcome.Dependencies, cancellationToken);
 
         Project project = new() { Dependencies = outcome.Dependencies, Runtimes = outcome.Runtimes };
 

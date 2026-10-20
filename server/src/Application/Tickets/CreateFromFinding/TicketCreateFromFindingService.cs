@@ -47,8 +47,8 @@ public class TicketCreateFromFindingService(
         if (existing != null)
             return await LoadDtoAsync(existing.Id, cancellationToken);
 
-        Project? project = await projectRepository.GetOrDefaultInOrganizationWithHealthDetailsAsync(model.ProjectId,
-            organizationId, cancellationToken);
+        Project? project = await projectRepository.GetOrDefaultInOrganizationForFindingAsync(model.ProjectId,
+            organizationId, model.Kind, findingKey, cancellationToken);
 
         if (project == null)
             return Result<TicketDto>.NotFound(ErrorCodes.ProjectNotFound);
@@ -87,7 +87,8 @@ public class TicketCreateFromFindingService(
         dashboardCache.Invalidate(organizationId);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets));
+            new RealtimeEvent(RealtimeResources.Tickets,
+                ProjectIds: RealtimeEvent.AffectedProjects(ticket.ProjectId)));
 
         await auditLog.LogAsync(
             AuditAction.TicketCreated,

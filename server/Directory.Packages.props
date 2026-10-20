@@ -11,6 +11,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
   </ItemGroup>
@@ -23,7 +24,7 @@
   </ItemGroup>
   <ItemGroup Label="API / Documentation">
     <PackageVersion Include="Scalar.AspNetCore" Version="2.18.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.3.0" />
   </ItemGroup>
   <ItemGroup Label="Journalisation">
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -36,6 +37,7 @@
   </ItemGroup>
   <ItemGroup Label="Securite / Cryptographie">
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
   </ItemGroup>

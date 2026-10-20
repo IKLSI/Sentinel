@@ -84,10 +84,10 @@ public class TenantIsolationTests
         Project foreignProject = scope.NewProject(organizationId: foreignOrganizationId);
         await scope.SeedAsSystemAsync(foreignProject);
 
-        Dependency foreignDependency = scope.NewDependency(foreignProject.Id);
+        Dependency foreignDependency = scope.NewDependency(foreignProject.Id, foreignOrganizationId);
         await scope.SeedAsSystemAsync(foreignDependency);
 
-        Vulnerability foreignVulnerability = scope.NewVulnerability(foreignDependency.Id);
+        Vulnerability foreignVulnerability = scope.NewVulnerability(foreignDependency.Id, foreignOrganizationId);
         await scope.SeedAsSystemAsync(foreignVulnerability);
 
         int visibleDependencies = await scope.Context.Dependencies

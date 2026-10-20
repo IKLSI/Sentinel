@@ -23,7 +23,7 @@ public partial class SentinelContext
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.OrganizationId);
             entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasIndex(e => new { e.EntityType, e.EntityId, e.CreatedAt });
         });
     }
 

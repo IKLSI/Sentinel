@@ -43,23 +43,23 @@ public class ProjectScanServiceTests
         public string? LastRequestedSha { get; private set; }
 
         public Task<RepositoryListing> ListUserRepositoriesAsync(string token, string platform,
-            GitLabInstance gitLab) =>
+            GitLabInstance gitLab, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<(string Id, string Login)?> GetAuthenticatedAccountAsync(string token, string platform,
-            GitLabInstance gitLab) =>
+            GitLabInstance gitLab, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
-        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access = null,
-            string? branch = null) =>
+        public Task<string?> GetHeadCommitAsync(string host, string owner, string repo, RepositoryAccess? access,
+            string? branch, CancellationToken cancellationToken) =>
             Task.FromResult<string?>(HeadCommitSha);
 
         public Task<RepositoryBranchListing?> ListBranchesAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null) =>
+            RepositoryAccess? access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<RepositoryFileListing> ListFilesAsync(string host, string owner, string repo,
-            RepositoryAccess? access = null, string? commitSha = null)
+            RepositoryAccess? access, string? commitSha, CancellationToken cancellationToken)
         {
             ListFilesCalls++;
             LastRequestedSha = commitSha;
@@ -69,7 +69,7 @@ public class ProjectScanServiceTests
                 : new RepositoryFileListing([("package.json", "https://host/package.json", "package.json")], false));
         }
 
-        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access = null) =>
+        public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access, CancellationToken cancellationToken) =>
             Task.FromResult<string?>(ManifestContent);
     }
 
@@ -78,12 +78,14 @@ public class ProjectScanServiceTests
         public int Calls { get; private set; }
         public string? LatestVersion { get; set; } = "1.6.0";
 
-        public Task FetchRegistryMetadataAsync(List<Dependency> dependencies)
+        public Task<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>> GetMetadataAsync(
+            IReadOnlyCollection<RegistryPackageQuery> packages, CancellationToken cancellationToken)
         {
             Calls++;
-            foreach (Dependency dependency in dependencies) dependency.LatestVersion = LatestVersion;
 
-            return Task.CompletedTask;
+            return Task.FromResult<IReadOnlyDictionary<RegistryPackageQuery, RegistryPackageMetadata>>(
+                packages.ToDictionary(package => package,
+                    _ => new RegistryPackageMetadata(LatestVersion, null, null, false)));
         }
     }
 
@@ -93,12 +95,12 @@ public class ProjectScanServiceTests
         public bool IsComplete { get; set; } = true;
         public Dictionary<string, VulnerabilityAdvisory> Advisories { get; } = new();
 
-        public Task<VulnerabilityQueryResult> QueryAsync(IReadOnlyList<VulnerabilityQuery> queries) =>
+        public Task<VulnerabilityQueryResult> QueryAsync(IReadOnlyList<VulnerabilityQuery> queries, CancellationToken cancellationToken) =>
             Task.FromResult(new VulnerabilityQueryResult(
                 queries.Select(_ => (IReadOnlyList<string>?)ReportedIds).ToList(), IsComplete));
 
         public Task<IReadOnlyDictionary<string, VulnerabilityAdvisory>> GetAdvisoriesAsync(
-            IReadOnlyCollection<string> advisoryIds) =>
+            IReadOnlyCollection<string> advisoryIds, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyDictionary<string, VulnerabilityAdvisory>>(
                 Advisories.Where(entry => advisoryIds.Contains(entry.Key))
                     .ToDictionary(entry => entry.Key, entry => entry.Value));
@@ -106,13 +108,13 @@ public class ProjectScanServiceTests
 
     private sealed class NoopLifecycle : IRuntimeLifecycleClient
     {
-        public Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version) =>
+        public Task<RuntimeLifecycle?> GetLifecycleAsync(string runtimeName, string version, CancellationToken cancellationToken) =>
             Task.FromResult<RuntimeLifecycle?>(null);
     }
 
     private sealed class NoopExploitIntelligence : IExploitIntelligenceClient
     {
-        public Task<IReadOnlyDictionary<string, ExploitSignal>> GetSignalsAsync(IReadOnlyCollection<string> cveIds) =>
+        public Task<IReadOnlyDictionary<string, ExploitSignal>> GetSignalsAsync(IReadOnlyCollection<string> cveIds, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyDictionary<string, ExploitSignal>>(new Dictionary<string, ExploitSignal>());
     }
 
@@ -140,36 +142,43 @@ public class ProjectScanServiceTests
 
             VulnerabilityRepository vulnerabilities = new VulnerabilityRepository(scope.Context);
 
+            ProjectInventoryWriter inventoryWriter = new ProjectInventoryWriter(
+                new DependencyRepository(scope.Context), vulnerabilities, new RuntimeRepository(scope.Context),
+                scope.CommitScopeFactory);
+            RepositoryScannerService repositoryScanner = new RepositoryScannerService(Host,
+                new ManifestParserService(), new RegistryMetadataApplier(Registry),
+                NullLogger<RepositoryScannerService>.Instance);
+
             Service = new ProjectScanService(
                 scope.Projects,
-                scope.Organizations,
                 vulnerabilities,
-                new RepositoryScannerService(Host, new ManifestParserService(), Registry,
-                    NullLogger<RepositoryScannerService>.Instance),
-                new VulnerabilityScanService(Feed),
-                new RuntimeEolScanService(new NoopLifecycle()),
-                new ExploitSignalEnricher(new NoopExploitIntelligence()),
-                new VulnerabilityAlertService(scope.Organizations, scope.Users, new NoopJobScheduler(),
-                    Options.Create(new FrontendSettings()), NullLogger<VulnerabilityAlertService>.Instance),
-                new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),
-                    scope.CommitScopeFactory, new FakeAuditLogService(),
-                    NullLogger<FindingTicketSyncService>.Instance),
-                new CriticalVulnerabilityTicketService(scope.Tickets, scope.Organizations, scope.Users,
-                    scope.CommitScopeFactory, TestLocalizer.Create(), new FakeAuditLogService(),
-                    NullLogger<CriticalVulnerabilityTicketService>.Instance),
-                new ProjectInventoryWriter(new DependencyRepository(scope.Context), vulnerabilities,
-                    new RuntimeRepository(scope.Context), scope.CommitScopeFactory),
+                new ProjectInventoryAcquirer(repositoryScanner, inventoryWriter, scope.Organizations,
+                    new TokenProtector(new EphemeralDataProtectionProvider(), NullLogger<TokenProtector>.Instance),
+                    NullLogger<ProjectInventoryAcquirer>.Instance),
+                new ProjectFindingsRefresher(repositoryScanner, new VulnerabilityScanService(Feed),
+                    new RuntimeEolScanService(new NoopLifecycle()),
+                    new ExploitSignalEnricher(new NoopExploitIntelligence()), inventoryWriter),
+                inventoryWriter,
                 new ProjectHealthHistoryWriter(new ProjectHealthSnapshotRepository(scope.Context),
                     new VulnerabilityResolutionRepository(scope.Context)),
-                new TokenProtector(new EphemeralDataProtectionProvider(), NullLogger<TokenProtector>.Instance),
-                new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
+                new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context),
+                    scope.CommitScopeFactory, new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
+                new ScanFollowUpService(
+                    new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),
+                        scope.CommitScopeFactory, new FakeAuditLogService(),
+                        NullLogger<FindingTicketSyncService>.Instance),
+                    new CriticalVulnerabilityTicketService(scope.Tickets, scope.Organizations, scope.Users,
+                        scope.CommitScopeFactory, TestLocalizer.Create(), new FakeAuditLogService(),
+                        NullLogger<CriticalVulnerabilityTicketService>.Instance),
+                    new VulnerabilityAlertService(scope.Organizations, scope.Users, new NoopJobScheduler(),
+                        Options.Create(new FrontendSettings()), NullLogger<VulnerabilityAlertService>.Instance),
+                    new FakeAuditLogService(),
+                    new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
+                    new NoopNotifier()),
                 new NoopNotifier(),
                 scope.SystemScope,
                 new DatabaseConnectionHolder(scope.Context),
-                new FakeAuditLogService(),
                 new ProjectScanGate(),
-                new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context),
-                    scope.CommitScopeFactory, new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
                 NullLogger<ProjectScanService>.Instance);
         }
 
@@ -197,7 +206,7 @@ public class ProjectScanServiceTests
         }
 
         public Task ScanAsync() =>
-            Service.ScanProjectAsync(Project.Id);
+            Service.ScanProjectAsync(Project.Id, TestContext.Current.CancellationToken);
 
         public async Task<Project> ReloadAsync()
         {
@@ -274,6 +283,37 @@ public class ProjectScanServiceTests
         Project scanned = await harness.ReloadAsync();
         scanned.LastScannedCommitSha.Should().Be("sha-2");
         scanned.Dependencies.Should().ContainSingle().Which.CurrentVersion.Should().Be("1.7.0");
+    }
+
+    [Fact]
+    public async Task Scan_NouveauCommitSansChangementDeDependance_ConserveLesLignesEtLesVulnerabilites()
+    {
+        _fixture.EnsureAvailable();
+
+        await using Harness harness = await Harness.CreateAsync(_fixture);
+
+        harness.Feed.ReportedIds = ["GHSA-1"];
+        harness.Feed.Advisories["GHSA-1"] = new VulnerabilityAdvisory("GHSA-1", 9.8m,
+            VulnerabilitySeverity.Critical, "boom",
+            new Dictionary<string, string> { ["axios"] = "1.6.8" });
+
+        await harness.ScanAsync();
+
+        Project first = await harness.ReloadAsync();
+        Dependency firstDependency = first.Dependencies.Should().ContainSingle().Subject;
+        Vulnerability firstVulnerability = firstDependency.Vulnerabilities.Should().ContainSingle().Subject;
+
+        harness.Host.HeadCommitSha = "sha-2";
+
+        await harness.ScanAsync();
+
+        Project second = await harness.ReloadAsync();
+        Dependency secondDependency = second.Dependencies.Should().ContainSingle().Subject;
+
+        secondDependency.Id.Should().Be(firstDependency.Id);
+        secondDependency.Vulnerabilities.Should().ContainSingle()
+            .Which.Id.Should().Be(firstVulnerability.Id);
+        second.LastScannedCommitSha.Should().Be("sha-2");
     }
 
     [Fact]

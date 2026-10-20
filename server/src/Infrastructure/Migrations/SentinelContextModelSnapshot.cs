@@ -134,7 +134,7 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("EntityType", "EntityId");
+                    b.HasIndex("EntityType", "EntityId", "CreatedAt");
 
                     b.ToTable("AuditLogs");
                 });
@@ -179,6 +179,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -195,7 +198,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProjectId", "OrganizationId");
 
                     b.ToTable("Dependencies");
                 });
@@ -393,6 +398,8 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
+                    b.HasIndex("ScanFrequency", "LastScanAt");
+
                     b.ToTable("Projects");
                 });
 
@@ -449,6 +456,9 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -459,7 +469,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProjectId", "OrganizationId");
 
                     b.ToTable("Runtimes");
                 });
@@ -866,6 +878,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<bool>("IsKnownExploited")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PackageName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -876,9 +891,11 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DependencyId");
-
                     b.HasIndex("DetectedAt");
+
+                    b.HasIndex("DependencyId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "Severity");
 
                     b.HasIndex("Severity", "DependencyId");
 
@@ -988,7 +1005,8 @@ namespace Sentinel.Infrastructure.Migrations
                 {
                     b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany("Dependencies")
-                        .HasForeignKey("ProjectId")
+                        .HasForeignKey("ProjectId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1021,7 +1039,8 @@ namespace Sentinel.Infrastructure.Migrations
                 {
                     b.HasOne("Sentinel.Domain.Entities.Project", "Project")
                         .WithMany("Runtimes")
-                        .HasForeignKey("ProjectId")
+                        .HasForeignKey("ProjectId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1150,7 +1169,8 @@ namespace Sentinel.Infrastructure.Migrations
                 {
                     b.HasOne("Sentinel.Domain.Entities.Dependency", "Dependency")
                         .WithMany("Vulnerabilities")
-                        .HasForeignKey("DependencyId")
+                        .HasForeignKey("DependencyId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

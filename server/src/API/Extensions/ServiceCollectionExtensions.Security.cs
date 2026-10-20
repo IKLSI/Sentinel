@@ -1,6 +1,5 @@
 using Sentinel.API.Contracts;
 using Sentinel.API.Constants;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -9,6 +8,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;

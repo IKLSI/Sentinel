@@ -18,8 +18,8 @@ public class InFlightRequestCoalescerTests
             return gate.Task;
         };
 
-        Task<string> first = sut.RunAsync("key", fetch);
-        Task<string> second = sut.RunAsync("key", fetch);
+        Task<string> first = sut.RunAsync("key", fetch, TestContext.Current.CancellationToken);
+        Task<string> second = sut.RunAsync("key", fetch, TestContext.Current.CancellationToken);
 
         gate.SetResult("value");
 
@@ -33,8 +33,10 @@ public class InFlightRequestCoalescerTests
         InFlightRequestCoalescer sut = new InFlightRequestCoalescer();
         int calls = 0;
 
-        await sut.RunAsync("key", () => Task.FromResult(Interlocked.Increment(ref calls)));
-        int second = await sut.RunAsync("key", () => Task.FromResult(Interlocked.Increment(ref calls)));
+        await sut.RunAsync("key", () => Task.FromResult(Interlocked.Increment(ref calls)),
+            TestContext.Current.CancellationToken);
+        int second = await sut.RunAsync("key", () => Task.FromResult(Interlocked.Increment(ref calls)),
+            TestContext.Current.CancellationToken);
 
         second.Should().Be(2);
     }
@@ -44,8 +46,8 @@ public class InFlightRequestCoalescerTests
     {
         InFlightRequestCoalescer sut = new InFlightRequestCoalescer();
 
-        string first = await sut.RunAsync("a", () => Task.FromResult("A"));
-        string second = await sut.RunAsync("b", () => Task.FromResult("B"));
+        string first = await sut.RunAsync("a", () => Task.FromResult("A"), TestContext.Current.CancellationToken);
+        string second = await sut.RunAsync("b", () => Task.FromResult("B"), TestContext.Current.CancellationToken);
 
         (first, second).Should().Be(("A", "B"));
     }

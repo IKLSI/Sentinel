@@ -33,7 +33,7 @@ public class SendInvitationEmailJob
         _tokenProtector = tokenProtector;
     }
 
-    public async Task ExecuteAsync(Guid invitationId, string protectedToken)
+    public async Task ExecuteAsync(Guid invitationId, string protectedToken, CancellationToken cancellationToken)
     {
         string? rawToken = _tokenProtector.Unprotect(protectedToken);
 
@@ -45,7 +45,7 @@ public class SendInvitationEmailJob
         using (_systemScope.Enter())
         {
             invitation = await _invitationRepository
-                .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, CancellationToken.None);
+                .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, cancellationToken);
         }
 
         if (invitation == null)
@@ -60,7 +60,8 @@ public class SendInvitationEmailJob
             invitation.Organization.Name,
             invitation.InvitedBy.FullName,
             _frontend.BaseUrl,
-            invitation.InvitedBy.Language
+            invitation.InvitedBy.Language,
+            cancellationToken
         );
     }
 }

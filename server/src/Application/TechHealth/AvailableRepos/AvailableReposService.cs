@@ -53,7 +53,7 @@ public class AvailableReposService(
         PlatformListing[] listings = await Task.WhenAll(integrations
             .Where(integration => !string.IsNullOrEmpty(integration.Token))
             .Select(integration => ListAsync(organizationId, integration.Token!, integration.Platform,
-                organization.ToGitLabInstance())));
+                organization.ToGitLabInstance(), cancellationToken)));
 
         foreach ((RepositoryType platform, RepositoryListing? listing) in listings)
         {
@@ -89,7 +89,7 @@ public class AvailableReposService(
     }
 
     private async Task<PlatformListing> ListAsync(Guid organizationId, string protectedToken, RepositoryType platform,
-        GitLabInstance gitLab)
+        GitLabInstance gitLab, CancellationToken cancellationToken)
     {
         string cacheKey = CacheKeys.AvailableRepos(organizationId, platform, Fingerprint(protectedToken + gitLab.BaseUrl));
 
@@ -102,7 +102,8 @@ public class AvailableReposService(
             return new PlatformListing(platform, null);
 
         RepositoryListing listing =
-            await repositoryHostClient.ListUserRepositoriesAsync(token, platform.ToString().ToLower(), gitLab);
+            await repositoryHostClient.ListUserRepositoriesAsync(token, platform.ToString().ToLower(), gitLab,
+                cancellationToken);
 
         if (listing.Success)
         {

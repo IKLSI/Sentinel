@@ -25,4 +25,20 @@ public class FindingKeysTests
     {
         FindingKeys.ForRuntime(" Node.js ").Should().Be("node.js");
     }
+
+    [Fact]
+    public void AdvisoryOf_ExtraitLAvisMemeAvecUnPaquetMavenACoordonnees()
+    {
+        string key = FindingKeys.ForVulnerability(DependencyEcosystem.Maven, "org.apache:log4j", "CVE-2021-44228");
+
+        FindingKeys.AdvisoryOf(key).Should().Be("cve-2021-44228");
+    }
+
+    [Fact]
+    public void PackageOf_ConserveLesDeuxPointsDuNomMaven()
+    {
+        string key = FindingKeys.ForDependency(DependencyEcosystem.Maven, "org.apache:log4j");
+
+        FindingKeys.PackageOf(key).Should().Be("org.apache:log4j");
+    }
 }

@@ -94,18 +94,20 @@ public sealed class PostgresScope : IAsyncDisposable
         Name = "Projet de test"
     };
 
-    public Dependency NewDependency(Guid projectId) => new()
+    public Dependency NewDependency(Guid projectId, Guid? organizationId = null) => new()
     {
         Id = Guid.NewGuid(),
         ProjectId = projectId,
+        OrganizationId = organizationId ?? OrganizationId,
         Name = "paquet-test",
         CurrentVersion = "1.0.0"
     };
 
-    public Vulnerability NewVulnerability(Guid dependencyId) => new()
+    public Vulnerability NewVulnerability(Guid dependencyId, Guid? organizationId = null) => new()
     {
         Id = Guid.NewGuid(),
         DependencyId = dependencyId,
+        OrganizationId = organizationId ?? OrganizationId,
         CveId = "CVE-2026-0001",
         Description = "Faille de test",
         PackageName = "paquet-test"

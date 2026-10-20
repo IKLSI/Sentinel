@@ -90,3 +90,8 @@ public sealed record OpenTicketRow(
     TicketPriority Priority,
     bool IsAssigned,
     DateTime CreatedAt);
+
+public sealed record VulnerabilityFlowCountsRow(
+    IReadOnlyDictionary<DateTime, int> Opened,
+    IReadOnlyDictionary<DateTime, int> ResolvedDetections,
+    IReadOnlyDictionary<DateTime, int> Resolutions);

@@ -61,80 +61,76 @@ public partial class ManifestParserService
 
     private static void ParseComposerJson(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        if (root.TryGetProperty("require", out JsonElement require))
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
-
-            if (root.TryGetProperty("require", out JsonElement require))
+            foreach (JsonProperty prop in require.EnumerateObject())
             {
-                foreach (JsonProperty prop in require.EnumerateObject())
-                {
-                    string specification = prop.Value.GetString() ?? "";
-                    string version = VersionText.Clean(specification);
-                    if (!VersionText.StartsWithDigit(version)) version = string.Empty;
+                string specification = prop.Value.GetString() ?? "";
+                string version = VersionText.Clean(specification);
+                if (!VersionText.StartsWithDigit(version)) version = string.Empty;
 
-                    if (prop.Name.Equals("php", StringComparison.OrdinalIgnoreCase))
+                if (prop.Name.Equals("php", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(version))
                     {
-                        if (!string.IsNullOrEmpty(version))
+                        runtimes.Add(new Runtime
                         {
-                            runtimes.Add(new Runtime
-                            {
-                                ProjectId = projectId,
-                                Name = "PHP",
-                                Version = version,
-                                IsMinimumConstraint = !VersionText.IsExact(specification)
-                            });
-                        }
-                        continue;
+                            ProjectId = projectId,
+                            Name = "PHP",
+                            Version = version,
+                            IsMinimumConstraint = !VersionText.IsExact(specification)
+                        });
                     }
-
-                    if (prop.Name.Equals("laravel/framework", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
-                        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Laravel", Version = version });
-
-                    if (SymfonyRuntimePackages.Contains(prop.Name) && !string.IsNullOrEmpty(version))
-                        runtimes.Add(new Runtime { ProjectId = projectId, Name = "Symfony", Version = version });
-
-                    if (string.IsNullOrEmpty(version)) continue;
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = prop.Name,
-                        CurrentVersion = version,
-                        IsVersionPinned = VersionText.IsExact(specification),
-                        Type = DependencyType.Prod,
-                        Ecosystem = DependencyEcosystem.Composer,
-                        Status = DependencyStatus.UpToDate,
-                    });
+                    continue;
                 }
-            }
 
-            if (root.TryGetProperty("require-dev", out JsonElement requireDev))
-            {
-                foreach (JsonProperty prop in requireDev.EnumerateObject())
+                if (prop.Name.Equals("laravel/framework", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
+                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Laravel", Version = version });
+
+                if (SymfonyRuntimePackages.Contains(prop.Name) && !string.IsNullOrEmpty(version))
+                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Symfony", Version = version });
+
+                if (string.IsNullOrEmpty(version)) continue;
+                deps.Add(new Dependency
                 {
-                    string specification = prop.Value.GetString() ?? "";
-                    string version = VersionText.Clean(specification);
-                    if (!VersionText.StartsWithDigit(version)) continue;
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = prop.Name,
-                        CurrentVersion = version,
-                        IsVersionPinned = VersionText.IsExact(specification),
-                        Type = DependencyType.Dev,
-                        Ecosystem = DependencyEcosystem.Composer,
-                        Status = DependencyStatus.UpToDate,
-                    });
-                }
+                    ProjectId = projectId,
+                    Name = prop.Name,
+                    CurrentVersion = version,
+                    IsVersionPinned = VersionText.IsExact(specification),
+                    Type = DependencyType.Prod,
+                    Ecosystem = DependencyEcosystem.Composer,
+                    Status = DependencyStatus.UpToDate,
+                });
             }
         }
-        catch { }
+
+        if (root.TryGetProperty("require-dev", out JsonElement requireDev))
+        {
+            foreach (JsonProperty prop in requireDev.EnumerateObject())
+            {
+                string specification = prop.Value.GetString() ?? "";
+                string version = VersionText.Clean(specification);
+                if (!VersionText.StartsWithDigit(version)) continue;
+                deps.Add(new Dependency
+                {
+                    ProjectId = projectId,
+                    Name = prop.Name,
+                    CurrentVersion = version,
+                    IsVersionPinned = VersionText.IsExact(specification),
+                    Type = DependencyType.Dev,
+                    Ecosystem = DependencyEcosystem.Composer,
+                    Status = DependencyStatus.UpToDate,
+                });
+            }
+        }
     }
 
     private static void ParseGemfile(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        Match rubyMatch = Regex.Match(content, @"^ruby\s+['""]([^'""]+)['""]", RegexOptions.Multiline);
+        Match rubyMatch = RubyVersionRegex().Match(content);
         if (rubyMatch.Success)
         {
             runtimes.Add(new Runtime
@@ -301,7 +297,7 @@ public partial class ManifestParserService
             string name = line[..eqIdx].Trim();
             string value = line[(eqIdx + 1)..].Trim();
 
-            Match simpleMatch = Regex.Match(value, @"^[""']([^""']+)[""']$");
+            Match simpleMatch = QuotedLiteralRegex().Match(value);
             if (simpleMatch.Success)
             {
                 deps.Add(new Dependency
@@ -317,7 +313,7 @@ public partial class ManifestParserService
                 continue;
             }
 
-            Match tableVersionMatch = Regex.Match(value, @"version\s*=\s*[""']([^""']+)[""']");
+            Match tableVersionMatch = InlineTableVersionRegex().Match(value);
             if (tableVersionMatch.Success)
             {
                 deps.Add(new Dependency
@@ -339,20 +335,20 @@ public partial class ManifestParserService
 
     private static string? DetectRustVersion(string content)
     {
-        Match minimumSupported = Regex.Match(content, @"rust-version\s*=\s*[""']([\d.]+)[""']");
+        Match minimumSupported = RustVersionRegex().Match(content);
 
         return minimumSupported.Success ? minimumSupported.Groups[1].Value : null;
     }
 
     private static void ParseCargoLock(Guid projectId, string content, List<Dependency> deps)
     {
-        foreach (Match block in Regex.Matches(content, @"\[\[package\]\](.*?)(?=\[\[package\]\]|\z)", RegexOptions.Singleline))
+        foreach (Match block in TomlPackageBlockRegex().Matches(content))
         {
             string b = block.Groups[1].Value;
-            Match nameMatch = Regex.Match(b, @"^\s*name\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
-            Match versionMatch = Regex.Match(b, @"^\s*version\s*=\s*[""']([^""']+)[""']", RegexOptions.Multiline);
+            Match nameMatch = TomlNameRegex().Match(b);
+            Match versionMatch = TomlVersionRegex().Match(b);
             if (!nameMatch.Success || !versionMatch.Success) continue;
-            if (!Regex.IsMatch(b, @"^\s*source\s*=", RegexOptions.Multiline)) continue;
+            if (!TomlSourceRegex().IsMatch(b)) continue;
 
             deps.Add(new Dependency
             {
@@ -368,34 +364,42 @@ public partial class ManifestParserService
 
     private static void ParseComposerLock(Guid projectId, string content, List<Dependency> deps)
     {
-        try
+        using JsonDocument doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+
+        foreach ((string section, DependencyType type) in new[] { ("packages", DependencyType.Prod), ("packages-dev", DependencyType.Dev) })
         {
-            using JsonDocument doc = JsonDocument.Parse(content);
-            JsonElement root = doc.RootElement;
+            if (!root.TryGetProperty(section, out JsonElement packages)) continue;
 
-            foreach ((string section, DependencyType type) in new[] { ("packages", DependencyType.Prod), ("packages-dev", DependencyType.Dev) })
+            foreach (JsonElement pkg in packages.EnumerateArray())
             {
-                if (!root.TryGetProperty(section, out JsonElement packages)) continue;
+                string name = pkg.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
+                string version = pkg.TryGetProperty("version", out JsonElement v) ? VersionText.Clean(v.GetString() ?? "") : "";
 
-                foreach (JsonElement pkg in packages.EnumerateArray())
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
+
+                deps.Add(new Dependency
                 {
-                    string name = pkg.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
-                    string version = pkg.TryGetProperty("version", out JsonElement v) ? VersionText.Clean(v.GetString() ?? "") : "";
-
-                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
-
-                    deps.Add(new Dependency
-                    {
-                        ProjectId = projectId,
-                        Name = name,
-                        CurrentVersion = version,
-                        Type = type,
-                        Ecosystem = DependencyEcosystem.Composer,
-                        Status = DependencyStatus.UpToDate,
-                    });
-                }
+                    ProjectId = projectId,
+                    Name = name,
+                    CurrentVersion = version,
+                    Type = type,
+                    Ecosystem = DependencyEcosystem.Composer,
+                    Status = DependencyStatus.UpToDate,
+                });
             }
         }
-        catch { }
     }
+
+    [GeneratedRegex(@"^ruby\s+['""]([^'""]+)['""]", RegexOptions.Multiline)]
+    private static partial Regex RubyVersionRegex();
+
+    [GeneratedRegex(@"^[""']([^""']+)[""']$")]
+    private static partial Regex QuotedLiteralRegex();
+
+    [GeneratedRegex(@"rust-version\s*=\s*[""']([\d.]+)[""']")]
+    private static partial Regex RustVersionRegex();
+
+    [GeneratedRegex(@"^\s*source\s*=", RegexOptions.Multiline)]
+    private static partial Regex TomlSourceRegex();
 }
