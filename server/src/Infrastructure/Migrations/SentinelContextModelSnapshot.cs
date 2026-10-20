@@ -378,6 +378,39 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Entities.ProjectHealthSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "Day");
+
+                    b.HasIndex("ProjectId", "Day")
+                        .IsUnique();
+
+                    b.ToTable("ProjectHealthSnapshots");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Entities.Runtime", b =>
                 {
                     b.Property<Guid>("Id")
@@ -831,6 +864,40 @@ namespace Sentinel.Infrastructure.Migrations
                     b.ToTable("Vulnerabilities");
                 });
 
+            modelBuilder.Entity("Sentinel.Domain.Entities.VulnerabilityResolution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CveId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("OrganizationId", "DetectedAt");
+
+                    b.HasIndex("OrganizationId", "ResolvedAt");
+
+                    b.ToTable("VulnerabilityResolutions");
+                });
+
             modelBuilder.Entity("Sentinel.Domain.Entities.ApiKey", b =>
                 {
                     b.HasOne("Sentinel.Domain.Entities.User", "CreatedBy")
@@ -870,6 +937,17 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Entities.ProjectHealthSnapshot", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Runtime", b =>
@@ -1010,6 +1088,17 @@ namespace Sentinel.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Dependency");
+                });
+
+            modelBuilder.Entity("Sentinel.Domain.Entities.VulnerabilityResolution", b =>
+                {
+                    b.HasOne("Sentinel.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Sentinel.Domain.Entities.Dependency", b =>

@@ -31,6 +31,8 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<IVulnerabilityRepository, VulnerabilityRepository>();
         services.AddScoped<IRuntimeRepository, RuntimeRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<IProjectHealthSnapshotRepository, ProjectHealthSnapshotRepository>();
+        services.AddScoped<IVulnerabilityResolutionRepository, VulnerabilityResolutionRepository>();
 
         return services;
     }

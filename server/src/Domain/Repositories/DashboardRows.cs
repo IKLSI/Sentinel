@@ -1,3 +1,5 @@
+using Sentinel.Domain.Entities;
+
 namespace Sentinel.Domain.Repositories;
 
 public sealed record UrgentTicketRow(
@@ -34,3 +36,16 @@ public sealed record VulnerabilityActivityRow(
     decimal CvssScore,
     string ProjectName,
     Guid ProjectId);
+
+public sealed record ScoreSnapshotRow(
+    Guid ProjectId,
+    DateOnly Day,
+    int Score);
+
+public sealed record OpenTicketRow(
+    Guid Id,
+    int Number,
+    Guid? ProjectId,
+    TicketPriority Priority,
+    bool IsAssigned,
+    DateTime CreatedAt);

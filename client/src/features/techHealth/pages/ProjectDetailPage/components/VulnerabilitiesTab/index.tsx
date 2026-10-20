@@ -2,6 +2,7 @@ import type React from "react";
 import { memo, useMemo } from "react";
 import Box from "@mui/material/Box";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import LocalFireDepartmentOutlined from "@mui/icons-material/LocalFireDepartmentOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { GridFooter } from "@/components/ui/common/GridFooter";
@@ -75,11 +76,9 @@ const referenceSx = {
   borderRadius: "var(--r-xs)",
 } as const;
 
-const riskLabelSx = { whiteSpace: "nowrap" } as const;
+const RISK_LEVELS = [1, 2, 3, 4] as const;
 
 const NO_VALUE = "—";
-
-const DETAIL_SEPARATOR = " · ";
 
 type Translate = (
   key: string,
@@ -110,9 +109,7 @@ const riskDetails = (vuln: VulnerabilityRow, t: Translate) =>
       }),
     vuln.dependencyType !== DEPENDENCY_TYPE_PROD &&
       t("tech_health.risk.dev_dependency"),
-  ]
-    .filter(Boolean)
-    .join(DETAIL_SEPARATOR);
+  ].filter(Boolean);
 
 const VulnRow = memo<{
   vuln: VulnerabilityRow;
@@ -125,12 +122,59 @@ const VulnRow = memo<{
   return (
     <TR index={index}>
       <TD>
-        <AppTooltip title={riskDetails(vuln, t)}>
+        <AppTooltip
+          title={
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+              {riskDetails(vuln, t).map((line) => (
+                <span key={String(line)}>{line}</span>
+              ))}
+            </Box>
+          }
+        >
           <Box
             component="span"
-            sx={{ ...riskLabelSx, color: riskConfig.color }}
+            sx={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
           >
-            {t(riskConfig.labelKey)}
+            <Box
+              component="span"
+              aria-hidden
+              sx={{
+                display: "inline-flex",
+                alignItems: "flex-end",
+                gap: "2px",
+              }}
+            >
+              {RISK_LEVELS.map((level) => (
+                <Box
+                  key={level}
+                  component="span"
+                  sx={{
+                    width: 3,
+                    height: 4 + level * 3,
+                    borderRadius: "1px",
+                    background:
+                      level <= riskConfig.weight
+                        ? riskConfig.color
+                        : "var(--border2)",
+                  }}
+                />
+              ))}
+            </Box>
+            <Box
+              component="span"
+              sx={{
+                fontSize: "12px",
+                color: "var(--text)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t(riskConfig.labelKey)}
+            </Box>
+            {vuln.isKnownExploited && (
+              <LocalFireDepartmentOutlined
+                sx={{ fontSize: 14, color: "var(--red)" }}
+              />
+            )}
           </Box>
         </AppTooltip>
       </TD>
@@ -209,7 +253,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
     {
       key: COLUMN_KEYS.risk,
       label: t("tech_health.table.vuln.risk"),
-      width: "14%",
+      width: "17%",
       sortable: true,
     },
     {
@@ -221,7 +265,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
     {
       key: COLUMN_KEYS.description,
       label: t("tech_health.table.vuln.vulnerability"),
-      width: "39%",
+      width: "36%",
       sortable: true,
     },
     {

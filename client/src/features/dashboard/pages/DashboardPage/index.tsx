@@ -1,88 +1,43 @@
 import type React from "react";
-import { Suspense, lazy, useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useI18n } from "@/contexts/I18nContext";
+import { DEFAULT_DASHBOARD_PERIOD } from "@/domains/dashboard/constants";
 import { useDashboard } from "@/domains/dashboard/queries";
-import { useProjectsQuery } from "@/domains/projects/queries";
 import { useToast } from "@/hooks/useToast";
-import { useT } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { Theme } from "@/enums";
-import { isCovered } from "@/formatters/coverage";
-import {
-  DASHBOARD_PANEL_ITEM_LIMIT,
-  GRADE_ORDER,
-  PRIORITY_ORDER,
-  buildPalette,
-} from "@/features/dashboard/pages/DashboardPage/helpers";
-import { UrgentTicketsPanel } from "@/features/dashboard/pages/DashboardPage/components/UrgentTicketsPanel";
-import { ActivityPanel } from "@/features/dashboard/pages/DashboardPage/components/ActivityPanel";
-import { ProjectsPanel } from "@/features/dashboard/pages/DashboardPage/components/ProjectsPanel";
+import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
+import { ParkHero } from "@/features/dashboard/pages/DashboardPage/components/ParkHero";
+import { ProjectsSection } from "@/features/dashboard/pages/DashboardPage/components/ProjectsSection";
+import { RecentActivityCard } from "@/features/dashboard/pages/DashboardPage/components/RecentActivityCard";
+import { UrgentTicketsCard } from "@/features/dashboard/pages/DashboardPage/components/UrgentTicketsCard";
 
-const vulnerabilityDiscoveryPanelModule = import(
-  "@/features/dashboard/pages/DashboardPage/components/VulnerabilityDiscoveryPanel"
+const ScoreTrendCard = lazy(() =>
+  import(
+    "@/features/dashboard/pages/DashboardPage/components/ScoreTrendCard"
+  ).then((m) => ({ default: m.ScoreTrendCard })),
 );
 
-const VulnerabilityDiscoveryPanel = lazy(() =>
-  vulnerabilityDiscoveryPanelModule.then((m) => ({
-    default: m.VulnerabilityDiscoveryPanel,
-  })),
+const VulnerabilityFlowCard = lazy(() =>
+  import(
+    "@/features/dashboard/pages/DashboardPage/components/VulnerabilityFlowCard"
+  ).then((m) => ({ default: m.VulnerabilityFlowCard })),
 );
 
 export const DashboardPage: React.FC = () => {
+  const { t } = useI18n();
   const { showToast } = useToast();
-  const t = useT();
-  const { theme } = useTheme();
-  const isDark = theme === Theme.Dark;
-  const palette = useMemo(() => buildPalette(isDark), [isDark]);
-
-  const dashboardQuery = useDashboard();
-  const projectsQuery = useProjectsQuery();
-
-  const stats = dashboardQuery.data;
-  const projects = useMemo(
-    () =>
-      (projectsQuery.data ?? []).filter(isCovered).sort((a, b) => {
-        const ga = GRADE_ORDER[a.healthGrade?.toUpperCase() ?? ""] ?? 5;
-        const gb = GRADE_ORDER[b.healthGrade?.toUpperCase() ?? ""] ?? 5;
-        return (
-          ga - gb ||
-          (b.criticalVulnerabilities ?? 0) - (a.criticalVulnerabilities ?? 0) ||
-          (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0) ||
-          (b.totalDependencies ?? 0) - (a.totalDependencies ?? 0)
-        );
-      }),
-    [projectsQuery.data],
-  );
-  const loading = dashboardQuery.isLoading || projectsQuery.isLoading;
+  const {
+    data: stats,
+    error,
+    isLoading,
+  } = useDashboard(DEFAULT_DASHBOARD_PERIOD);
 
   useEffect(() => {
-    if (dashboardQuery.error)
-      showToast(t("dashboard.toast.stats_load_error"), "error");
-  }, [dashboardQuery.error, showToast, t]);
+    if (error) showToast(t("dashboard.toast.stats_load_error"), "error");
+  }, [error, showToast, t]);
 
-  useEffect(() => {
-    if (projectsQuery.error)
-      showToast(t("dashboard.toast.projects_load_error"), "error");
-  }, [projectsQuery.error, showToast, t]);
-
-  const urgent = useMemo(
-    () =>
-      [...(stats?.urgentTickets ?? [])]
-        .sort(
-          (a, b) =>
-            (PRIORITY_ORDER[b.priority ?? ""] ?? 0) -
-            (PRIORITY_ORDER[a.priority ?? ""] ?? 0),
-        )
-        .slice(0, DASHBOARD_PANEL_ITEM_LIMIT),
-    [stats?.urgentTickets],
-  );
-  const activity = (stats?.recentActivity ?? []).slice(
-    0,
-    DASHBOARD_PANEL_ITEM_LIMIT,
-  );
-
-  if (loading) {
+  if (isLoading || !stats) {
     return (
       <Box
         sx={{
@@ -92,39 +47,82 @@ export const DashboardPage: React.FC = () => {
           height: "100vh",
         }}
       >
-        <CircularProgress
-          size={36}
-          thickness={3}
-          sx={{ color: palette.loader }}
-        />
+        {isLoading && (
+          <CircularProgress
+            size={36}
+            thickness={3}
+            sx={{ color: "var(--accent)" }}
+          />
+        )}
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: "20px", height: "100vh", overflow: "hidden" }}>
+    <Box
+      sx={{
+        height: { xs: "auto", lg: "100vh" },
+        minHeight: "100vh",
+        overflowY: { xs: "auto", lg: "hidden" },
+        boxSizing: "border-box",
+        p: "16px 20px",
+        display: "grid",
+        gridTemplateRows: {
+          xs: "auto",
+          lg: "auto minmax(0, 1fr) minmax(0, 1fr)",
+        },
+        gap: "14px",
+      }}
+    >
+      <ParkHero overview={stats.overview} />
+
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "6fr 5fr",
-          gridTemplateRows: "1fr 1fr 200px",
+          gridTemplateColumns: {
+            xs: "1fr",
+            lg: "minmax(0, 2fr) minmax(0, 1fr)",
+          },
           gap: "14px",
-          height: "calc(100vh - 40px)",
-          minHeight: "580px",
+          minHeight: 0,
         }}
       >
-        <ProjectsPanel projects={projects} palette={palette} />
-
-        <UrgentTicketsPanel urgent={urgent} palette={palette} isDark={isDark} />
-
-        <ActivityPanel activity={activity} palette={palette} />
-
-        <Suspense fallback={null}>
-          <VulnerabilityDiscoveryPanel
-            data={stats?.vulnerabilitiesDetectedPerDay ?? []}
-            palette={palette}
-          />
+        <Suspense
+          fallback={
+            <ChartCardSkeleton
+              title={t("dashboard.trend.title")}
+              variant="trend"
+            />
+          }
+        >
+          <ScoreTrendCard history={stats.scoreHistory} />
         </Suspense>
+        <UrgentTicketsCard tickets={stats.urgentTickets} />
+      </Box>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            lg: "repeat(3, minmax(0, 1fr))",
+          },
+          gap: "14px",
+          minHeight: 0,
+        }}
+      >
+        <ProjectsSection projects={stats.projects} />
+        <Suspense
+          fallback={
+            <ChartCardSkeleton
+              title={t("dashboard.flow.title")}
+              variant="flow"
+            />
+          }
+        >
+          <VulnerabilityFlowCard flow={stats.vulnerabilityFlow} />
+        </Suspense>
+        <RecentActivityCard activity={stats.recentActivity} />
       </Box>
     </Box>
   );

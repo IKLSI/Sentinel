@@ -93,7 +93,9 @@ public class ProjectScanServiceTests
 
         public Task<IReadOnlyDictionary<string, VulnerabilityAdvisory>> GetAdvisoriesAsync(
             IReadOnlyCollection<string> advisoryIds) =>
-            Task.FromResult<IReadOnlyDictionary<string, VulnerabilityAdvisory>>(Advisories);
+            Task.FromResult<IReadOnlyDictionary<string, VulnerabilityAdvisory>>(
+                Advisories.Where(entry => advisoryIds.Contains(entry.Key))
+                    .ToDictionary(entry => entry.Key, entry => entry.Value));
     }
 
     private sealed class NoopLifecycle : IRuntimeLifecycleClient
@@ -152,6 +154,8 @@ public class ProjectScanServiceTests
                     NullLogger<CriticalVulnerabilityTicketService>.Instance),
                 new ProjectInventoryWriter(new DependencyRepository(scope.Context), vulnerabilities,
                     new RuntimeRepository(scope.Context), scope.CommitScopeFactory),
+                new ProjectHealthHistoryWriter(new ProjectHealthSnapshotRepository(scope.Context),
+                    new VulnerabilityResolutionRepository(scope.Context)),
                 new TokenProtector(new EphemeralDataProtectionProvider(), NullLogger<TokenProtector>.Instance),
                 new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
                 new NoopNotifier(),
@@ -322,5 +326,61 @@ public class ProjectScanServiceTests
         dependency.Vulnerabilities.Should().ContainSingle()
             .Which.FixedVersion.Should().Be("1.6.8");
         scanned.HealthScore.Should().BeLessThan(100);
+    }
+
+    [Fact]
+    public async Task Scan_ProjetEvalue_EnregistreLInstantaneDuScoreDuJour()
+    {
+        _fixture.EnsureAvailable();
+
+        await using Harness harness = await Harness.CreateAsync(_fixture);
+
+        await harness.ScanAsync();
+        await harness.ScanAsync();
+
+        Project scanned = await harness.ReloadAsync();
+
+        using IDisposable elevation = harness.Scope.SystemScope.Enter();
+
+        List<ProjectHealthSnapshot> snapshots = await harness.Scope.Context.ProjectHealthSnapshots
+            .AsNoTracking()
+            .Where(s => s.ProjectId == scanned.Id)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        ProjectHealthSnapshot snapshot = snapshots.Should().ContainSingle().Subject;
+        snapshot.Score.Should().Be(scanned.HealthScore);
+        snapshot.Grade.Should().Be(scanned.HealthGrade);
+        snapshot.Day.Should().Be(DateOnly.FromDateTime(DateTime.UtcNow));
+        snapshot.OrganizationId.Should().Be(scanned.OrganizationId);
+    }
+
+    [Fact]
+    public async Task Scan_VulnerabiliteDisparue_EstJournaliseeCommeCorrigee()
+    {
+        _fixture.EnsureAvailable();
+
+        await using Harness harness = await Harness.CreateAsync(_fixture);
+
+        harness.Feed.ReportedIds = ["GHSA-1"];
+        harness.Feed.Advisories["GHSA-1"] = new VulnerabilityAdvisory("GHSA-1", 9.8m,
+            VulnerabilitySeverity.Critical, "boom",
+            new Dictionary<string, string> { ["axios"] = "1.6.8" });
+
+        await harness.ScanAsync();
+
+        harness.Feed.ReportedIds = [];
+
+        await harness.ScanAsync();
+
+        using IDisposable elevation = harness.Scope.SystemScope.Enter();
+
+        List<VulnerabilityResolution> resolutions = await harness.Scope.Context.VulnerabilityResolutions
+            .AsNoTracking()
+            .Where(r => r.ProjectId == harness.Project.Id)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        VulnerabilityResolution resolution = resolutions.Should().ContainSingle().Subject;
+        resolution.CveId.Should().Be("GHSA-1");
+        resolution.ResolvedAt.Should().BeOnOrAfter(resolution.DetectedAt);
     }
 }

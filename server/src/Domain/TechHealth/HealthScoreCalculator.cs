@@ -18,7 +18,9 @@ public static class HealthScoreCalculator
     private const int ScoreDecayConstant = 150;
     private const int MaxScore = 100;
 
-    public static int Calculate(Project project)
+    public static int Calculate(Project project) => Calculate(project, _ => false);
+
+    public static int Calculate(Project project, Func<Vulnerability, bool> isResolved)
     {
         double penalty = OutdatedPenalty(project);
 
@@ -28,14 +30,32 @@ public static class HealthScoreCalculator
 
             if (dependency.Status == DependencyStatus.EOL) penalty += EolDependencyPenalty * weight;
 
-            penalty += dependency.Vulnerabilities.Sum(vulnerability =>
-                    SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability))
-                * weight;
+            penalty += VulnerabilityPenalty(dependency, isResolved) * weight;
         }
 
-        penalty += project.Runtimes.Count(runtime => runtime.IsEol == true) * EolRuntimePenalty;
+        penalty += RuntimePenalty(project);
 
-        return (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
+        return ToScore(penalty);
+    }
+
+    public static HealthScoreBreakdown Breakdown(Project project)
+    {
+        double securityPenalty = 0;
+        double freshnessPenalty = OutdatedPenalty(project);
+
+        foreach (Dependency dependency in project.Dependencies)
+        {
+            double weight = WeightOf(dependency);
+
+            if (dependency.Status == DependencyStatus.EOL) freshnessPenalty += EolDependencyPenalty * weight;
+
+            securityPenalty += VulnerabilityPenalty(dependency, _ => false) * weight;
+        }
+
+        return new HealthScoreBreakdown(
+            ToScore(securityPenalty),
+            ToScore(RuntimePenalty(project)),
+            ToScore(freshnessPenalty));
     }
 
     public static string ToGrade(int score) => score switch
@@ -47,6 +67,17 @@ public static class HealthScoreCalculator
         >= 30 => "E",
         _ => "F"
     };
+
+    private static double VulnerabilityPenalty(Dependency dependency, Func<Vulnerability, bool> isResolved) =>
+        dependency.Vulnerabilities
+            .Where(vulnerability => !isResolved(vulnerability))
+            .Sum(vulnerability =>
+                SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability));
+
+    private static double RuntimePenalty(Project project) =>
+        project.Runtimes.Count(runtime => runtime.IsEol == true) * EolRuntimePenalty;
+
+    private static int ToScore(double penalty) => (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
 
     private static int SeverityPenalty(VulnerabilitySeverity severity) => severity switch
     {

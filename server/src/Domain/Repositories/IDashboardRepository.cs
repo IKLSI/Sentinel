@@ -16,4 +16,15 @@ public interface IDashboardRepository
 
     Task<IReadOnlyDictionary<DateTime, int>> GetVulnerabilityDetectionCountsAsync(Guid organizationId,
         DateTime windowStart, CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<DateTime, int>> GetResolvedVulnerabilityDetectionCountsAsync(Guid organizationId,
+        DateTime windowStart, CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<DateTime, int>> GetVulnerabilityResolutionCountsAsync(Guid organizationId,
+        DateTime windowStart, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ScoreSnapshotRow>> GetScoreSnapshotsAsync(Guid organizationId, DateOnly windowStart,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId, CancellationToken cancellationToken);
 }

@@ -87,10 +87,76 @@ public class DashboardRepository : IDashboardRepository
             .Select(g => new { Date = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Date, x => x.Count, cancellationToken);
 
+    public async Task<IReadOnlyDictionary<DateTime, int>> GetResolvedVulnerabilityDetectionCountsAsync(
+        Guid organizationId, DateTime windowStart, CancellationToken cancellationToken) =>
+        await Resolutions(organizationId)
+            .Where(r => r.DetectedAt >= windowStart)
+            .GroupBy(r => r.DetectedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Date, x => x.Count, cancellationToken);
+
+    public async Task<IReadOnlyDictionary<DateTime, int>> GetVulnerabilityResolutionCountsAsync(Guid organizationId,
+        DateTime windowStart, CancellationToken cancellationToken) =>
+        await Resolutions(organizationId)
+            .Where(r => r.ResolvedAt >= windowStart)
+            .GroupBy(r => r.ResolvedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Date, x => x.Count, cancellationToken);
+
+    public async Task<IReadOnlyList<ScoreSnapshotRow>> GetScoreSnapshotsAsync(Guid organizationId,
+        DateOnly windowStart, CancellationToken cancellationToken)
+    {
+        IQueryable<ProjectHealthSnapshot> snapshots = Snapshots(organizationId);
+
+        List<ScoreSnapshotRow> inWindow = await snapshots
+            .Where(s => s.Day >= windowStart)
+            .Select(s => new ScoreSnapshotRow(s.ProjectId, s.Day, s.Score))
+            .ToListAsync(cancellationToken);
+
+        IQueryable<ProjectDay> latestDaysBeforeWindow = snapshots
+            .Where(s => s.Day < windowStart)
+            .GroupBy(s => s.ProjectId)
+            .Select(g => new ProjectDay { ProjectId = g.Key, Day = g.Max(s => s.Day) });
+
+        List<ScoreSnapshotRow> carriedOver = await (
+                from snapshot in snapshots
+                join latest in latestDaysBeforeWindow
+                    on new { snapshot.ProjectId, snapshot.Day } equals new { latest.ProjectId, latest.Day }
+                select new ScoreSnapshotRow(snapshot.ProjectId, snapshot.Day, snapshot.Score))
+            .ToListAsync(cancellationToken);
+
+        return [.. carriedOver, .. inWindow];
+    }
+
+    public async Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Tickets(organizationId)
+            .Where(t => OpenStatuses.Contains(t.Status))
+            .Select(t => new OpenTicketRow(
+                t.Id,
+                t.Number,
+                t.ProjectId,
+                t.Priority,
+                t.AssignedToId != null,
+                t.CreatedAt))
+            .ToListAsync(cancellationToken);
+
     private IQueryable<Ticket> Tickets(Guid organizationId) =>
         _context.Tickets.AsNoTracking().Where(t => t.OrganizationId == organizationId);
 
     private IQueryable<Vulnerability> Vulnerabilities(Guid organizationId) =>
         _context.Vulnerabilities.AsNoTracking()
             .Where(v => v.Dependency.Project.OrganizationId == organizationId);
+
+    private IQueryable<VulnerabilityResolution> Resolutions(Guid organizationId) =>
+        _context.VulnerabilityResolutions.AsNoTracking().Where(r => r.OrganizationId == organizationId);
+
+    private IQueryable<ProjectHealthSnapshot> Snapshots(Guid organizationId) =>
+        _context.ProjectHealthSnapshots.AsNoTracking().Where(s => s.OrganizationId == organizationId);
+
+    private sealed class ProjectDay
+    {
+        public Guid ProjectId { get; init; }
+        public DateOnly Day { get; init; }
+    }
 }

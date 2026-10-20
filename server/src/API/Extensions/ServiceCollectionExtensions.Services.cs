@@ -121,6 +121,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<FindingTicketSyncService>();
         services.AddScoped<CriticalVulnerabilityTicketService>();
         services.AddScoped<ProjectInventoryWriter>();
+        services.AddScoped<ProjectHealthHistoryWriter>();
         services.AddScoped<ProjectScanService>();
         services.AddScoped<DueProjectScanService>();
         services.AddScoped<SbomService>();

@@ -85,4 +85,36 @@ public partial class SentinelContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
+
+    private static void ConfigureProjectHealthSnapshot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProjectHealthSnapshot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Grade).HasMaxLength(2).IsRequired();
+            entity.HasIndex(e => new { e.ProjectId, e.Day }).IsUnique();
+            entity.HasIndex(e => new { e.OrganizationId, e.Day });
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureVulnerabilityResolution(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VulnerabilityResolution>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CveId).HasMaxLength(50).IsRequired();
+            entity.HasIndex(e => new { e.OrganizationId, e.ResolvedAt });
+            entity.HasIndex(e => new { e.OrganizationId, e.DetectedAt });
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
 }

@@ -294,4 +294,37 @@ public class HealthScoreCalculatorTests
         HealthScoreCalculator.Calculate(likely)
             .Should().BeLessThan(HealthScoreCalculator.Calculate(unlikely));
     }
+
+    [Fact]
+    public void Breakdown_IsoleChaqueAxeDuScore()
+    {
+        Project project = ProjectWithDependencies(4, DependencyStatus.MajorUpdate);
+        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
+        project.Runtimes.Add(new Runtime { Name = "Node", Version = "16", IsEol = true });
+
+        HealthScoreBreakdown breakdown = HealthScoreCalculator.Breakdown(project);
+
+        breakdown.Security.Should().BeLessThan(100);
+        breakdown.Runtimes.Should().BeLessThan(100);
+        breakdown.Freshness.Should().BeLessThan(100);
+    }
+
+    [Fact]
+    public void Breakdown_ProjetSain_ToutEstAuMaximum()
+    {
+        HealthScoreBreakdown breakdown = HealthScoreCalculator.Breakdown(ProjectWithDependencies(3, DependencyStatus.UpToDate));
+
+        breakdown.Should().Be(new HealthScoreBreakdown(100, 100, 100));
+    }
+
+    [Fact]
+    public void Calculate_FaillesConsidereesCorrigees_RetrouveLeScoreSansElles()
+    {
+        Project project = ProjectWithDependencies(2, DependencyStatus.UpToDate);
+        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.High);
+
+        HealthScoreCalculator.Calculate(project, _ => true)
+            .Should().Be(HealthScoreCalculator.Calculate(ProjectWithDependencies(2, DependencyStatus.UpToDate)));
+        HealthScoreCalculator.Calculate(project, _ => false).Should().Be(HealthScoreCalculator.Calculate(project));
+    }
 }

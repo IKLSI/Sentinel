@@ -189,6 +189,11 @@ export interface paths {
   };
   "/api/dashboard/stats": {
     get: {
+      parameters: {
+        query?: {
+          period?: components["schemas"]["DashboardPeriod"];
+        };
+      };
       responses: {
         /** @description OK */
         200: {
@@ -1115,13 +1120,32 @@ export interface components {
       email: string;
       role: string;
     };
+    /** @enum {string} */
+    DashboardPeriod: "Week" | "Month" | "Quarter";
     DashboardStatsDto: {
+      overview: components["schemas"]["ParkOverviewDto"];
+      projects: components["schemas"]["ProjectHealthDto"][];
       recentActivity: components["schemas"]["ActivityItemDto"][];
+      scoreHistory: components["schemas"]["ScorePointDto"][];
       urgentTickets: components["schemas"]["UrgentTicketDto"][];
-      vulnerabilitiesDetectedPerDay: components["schemas"]["VulnerabilityDetectionDataPointDto"][];
+      vulnerabilityFlow: components["schemas"]["VulnerabilityFlowPointDto"][];
     };
     DeleteAccountDto: {
       password: string;
+    };
+    DependencyCountsDto: {
+      /** Format: int32 */
+      endOfLife: number;
+      /** Format: int32 */
+      majorUpdate: number;
+      /** Format: int32 */
+      minorUpdate: number;
+      /** Format: int32 */
+      total: number;
+      /** Format: int32 */
+      upToDate: number;
+      /** Format: int32 */
+      vulnerable: number;
     };
     DependencyDto: {
       currentVersion: string;
@@ -1149,6 +1173,11 @@ export interface components {
     ForgotPasswordRequest: {
       email: string;
     };
+    GradeCountDto: {
+      /** Format: int32 */
+      count: number;
+      grade: string;
+    };
     IntegrationSettingsDto: {
       gitlabBaseUrl: string;
       hasGithubToken: boolean;
@@ -1164,10 +1193,42 @@ export interface components {
       accessToken: string;
       user: components["schemas"]["UserProfile"];
     };
+    NextActionDto: {
+      kind: components["schemas"]["NextActionKind"];
+      target: string | null;
+      /** Format: uuid */
+      ticketId: string | null;
+      ticketReference: string | null;
+      version: string | null;
+    };
+    /** @enum {string} */
+    NextActionKind:
+      | "FixScan"
+      | "UpdateDependency"
+      | "AssignTicket"
+      | "PlanRuntimeMigration";
     OrganizationSettingsDto: {
       alertMinSeverity: components["schemas"]["VulnerabilitySeverity"];
       name: string;
       securityAlertsEnabled: boolean;
+    };
+    ParkOverviewDto: {
+      /** Format: int32 */
+      averageScore: number | null;
+      dependencies: components["schemas"]["DependencyCountsDto"];
+      grade: string | null;
+      gradeDistribution: components["schemas"]["GradeCountDto"][];
+      /** Format: int32 */
+      majorUpdatesInProduction: number;
+      /** Format: int32 */
+      nextRuntimeEolInDays: number | null;
+      /** Format: int32 */
+      projectCount: number;
+      /** Format: int32 */
+      runtimesEndingSoon: number;
+      /** Format: int32 */
+      scoreDelta: number | null;
+      vulnerabilities: components["schemas"]["VulnerabilityCountsDto"];
     };
     ProjectDto: {
       coverage: string;
@@ -1194,6 +1255,23 @@ export interface components {
       totalTickets: number;
       /** Format: int32 */
       totalVulnerabilities: number;
+    };
+    ProjectHealthDto: {
+      breakdown: components["schemas"]["ScoreBreakdownDto"];
+      coverage: string;
+      grade: string | null;
+      hasScanError: boolean;
+      /** Format: uuid */
+      id: string;
+      /** Format: date-time */
+      lastScanAt: string | null;
+      name: string;
+      nextAction: components["schemas"]["NextActionDto"];
+      repositoryType: string;
+      /** Format: int32 */
+      score: number | null;
+      /** Format: int32 */
+      scoreDelta: number | null;
     };
     ProjectOptionDto: {
       /** Format: uuid */
@@ -1280,6 +1358,22 @@ export interface components {
       name: string;
       version: string;
       versions: string[];
+    };
+    ScoreBreakdownDto: {
+      /** Format: int32 */
+      freshness: number;
+      freshnessGrade: string;
+      /** Format: int32 */
+      runtimes: number;
+      runtimesGrade: string;
+      /** Format: int32 */
+      security: number;
+      securityGrade: string;
+    };
+    ScorePointDto: {
+      date: string;
+      /** Format: int32 */
+      score: number | null;
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";
@@ -1447,10 +1541,19 @@ export interface components {
     VerifyEmailRequest: {
       token: string;
     };
-    VulnerabilityDetectionDataPointDto: {
+    VulnerabilityCountsDto: {
       /** Format: int32 */
-      count: number;
-      date: string;
+      critical: number;
+      /** Format: int32 */
+      high: number;
+      /** Format: int32 */
+      knownExploited: number;
+      /** Format: int32 */
+      low: number;
+      /** Format: int32 */
+      medium: number;
+      /** Format: int32 */
+      total: number;
     };
     VulnerabilityDto: {
       cveAlias: string | null;
@@ -1471,6 +1574,13 @@ export interface components {
       linkedTicket: components["schemas"]["FindingTicketDto"];
       priority: string;
       severity: string;
+    };
+    VulnerabilityFlowPointDto: {
+      date: string;
+      /** Format: int32 */
+      detected: number;
+      /** Format: int32 */
+      resolved: number;
     };
     /** @enum {string} */
     VulnerabilitySeverity: "Critical" | "High" | "Medium" | "Low";

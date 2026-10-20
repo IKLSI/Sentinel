@@ -32,7 +32,8 @@ public static class CacheKeys
     public static readonly TimeSpan PublicScanUnpinnedTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
 
-    public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
+    public static string Dashboard(Guid organizationId, int periodDays) =>
+        $"{DashboardPrefix}:{organizationId}:{periodDays}";
 
     public static string AuthAccount(Guid userId) => $"{AuthAccountPrefix}:{userId}";
 

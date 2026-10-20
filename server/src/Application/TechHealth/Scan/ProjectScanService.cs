@@ -26,6 +26,7 @@ public class ProjectScanService(
     FindingTicketSyncService findingTicketSync,
     CriticalVulnerabilityTicketService criticalVulnerabilityTickets,
     ProjectInventoryWriter inventoryWriter,
+    ProjectHealthHistoryWriter healthHistoryWriter,
     TokenProtector tokenProtector,
     DashboardCache dashboardCache,
     IRealtimeNotifier realtimeNotifier,
@@ -146,12 +147,20 @@ public class ProjectScanService(
         project.Coverage = ScanCoverageResolver.Resolve(project, scanRan, scanError, manifestsRead);
         project.HealthScore = project.Coverage == ScanCoverage.Covered ? HealthScoreCalculator.Calculate(project) : null;
         project.HealthGrade = project.HealthScore is { } score ? HealthScoreCalculator.ToGrade(score) : null;
-        project.LastScanAt = DateTime.UtcNow;
+
+        DateTime scannedAt = DateTime.UtcNow;
+        project.LastScanAt = scannedAt;
         project.LastScanError = scanError
             ?? (vulnerabilityOutcome.IsComplete ? null : ErrorCodes.ScanVulnerabilityDataIncomplete);
 
         if (!vulnerabilityOutcome.IsComplete)
             logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
+
+        await healthHistoryWriter.StageSnapshotAsync(project, scannedAt, CancellationToken.None);
+
+        if (project.Coverage == ScanCoverage.Covered && vulnerabilityOutcome.IsComplete)
+            await healthHistoryWriter.StageResolutionsAsync(project, previousDetections, scannedAt,
+                CancellationToken.None);
 
         await inventoryWriter.SaveAsync(CancellationToken.None);
 

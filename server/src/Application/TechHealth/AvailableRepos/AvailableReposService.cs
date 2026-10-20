@@ -80,7 +80,7 @@ public class AvailableReposService(
 
         return new AvailableReposResponse
         {
-            Repos = repos,
+            Repos = [.. repos.OrderBy(repo => repo.Name, StringComparer.OrdinalIgnoreCase)],
             HasToken = !string.IsNullOrEmpty(organization.GithubToken) || !string.IsNullOrEmpty(organization.GitlabToken),
             FetchFailed = fetchFailed,
             FetchFailedStatusCode = fetchFailedStatusCode,
