@@ -19,6 +19,8 @@ public partial class SentinelContext
             entity.Property(e => e.LastScannedCommitSha).HasMaxLength(64);
             entity.Property(e => e.Branch).HasMaxLength(255);
             entity.Property(e => e.RootPath).HasMaxLength(500);
+            entity.Property(e => e.BadgeToken).HasMaxLength(64);
+            entity.HasIndex(e => e.BadgeToken).IsUnique().HasFilter("\"BadgeToken\" IS NOT NULL");
             entity.HasIndex(e => e.OrganizationId);
             entity.HasAlternateKey(e => new { e.Id, e.OrganizationId });
             entity.HasIndex(e => new { e.ScanFrequency, e.LastScanAt });

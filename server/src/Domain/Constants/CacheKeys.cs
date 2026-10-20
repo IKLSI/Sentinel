@@ -14,6 +14,7 @@ public static class CacheKeys
     private const string RuntimeLifecyclePrefix = "eol:product";
     private const string EpssPrefix = "epss:cve";
     private const string PublicScanPrefix = "public-scan";
+    private const string ProjectBadgePrefix = "project-badge";
     private const string AvailableReposPrefix = "available-repos";
     private const string RefreshGracePrefix = "auth:refresh-grace";
 
@@ -32,6 +33,7 @@ public static class CacheKeys
     public static readonly TimeSpan ExploitSignalTtl = TimeSpan.FromHours(24);
     public static readonly TimeSpan ExploitSignalUnavailableTtl = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan PublicScanTtl = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan ProjectBadgeTtl = TimeSpan.FromMinutes(5);
     public static readonly TimeSpan PublicScanUnpinnedTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
     public static readonly TimeSpan RefreshGraceTtl = TimeSpan.FromSeconds(30);
@@ -58,6 +60,8 @@ public static class CacheKeys
 
     public static string PublicScan(string host, string owner, string repository, string? commitSha) =>
         $"{PublicScanPrefix}:{host}/{owner}/{repository}:{commitSha}".ToLowerInvariant();
+
+    public static string ProjectBadge(string token) => $"{ProjectBadgePrefix}:{token}";
 
     public static string RefreshGrace(string previousTokenHash) => $"{RefreshGracePrefix}:{previousTokenHash}";
 

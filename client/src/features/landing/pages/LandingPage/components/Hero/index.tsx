@@ -6,9 +6,30 @@ import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { useT } from "@/contexts/I18nContext";
 
 const DASHBOARD_PREVIEW = {
-  src: "/landing/dashboard-preview.png",
+  src: "/landing/dashboard-preview.webp",
   width: 2000,
-  height: 1148,
+  height: 1150,
+} as const;
+
+const DASHBOARD_PREVIEW_MOBILE = {
+  src: "/landing/dashboard-preview-mobile.webp",
+  width: 1105,
+  height: 720,
+  mediaQuery: "(max-width: 899.95px)",
+} as const;
+
+const MOBILE_PREVIEW_FADE =
+  "linear-gradient(to bottom, #000 62%, transparent), linear-gradient(to right, #000 88%, transparent)";
+
+const floatingCardSx = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  background: "var(--s1)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  boxShadow: "var(--sh-3)",
+  p: "12px 16px",
 } as const;
 
 const fadeUp = {
@@ -26,12 +47,12 @@ export const Hero = () => {
       component="section"
       sx={{
         position: "relative",
-        minHeight: "calc(100dvh - 88px)",
+        minHeight: { md: "calc(100dvh - 88px)" },
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        py: { xs: "48px", md: "88px" },
+        py: { xs: "32px", md: "88px" },
         borderBottom: "1px solid var(--border)",
         background: "#eef2ff",
         overflow: "hidden",
@@ -75,22 +96,23 @@ export const Hero = () => {
           px: { xs: "20px", md: "32px" },
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1fr 1.15fr" },
-          gap: { xs: "40px", md: "72px" },
+          gap: { xs: "28px", md: "72px" },
           alignItems: "center",
         }}
       >
-        <Box sx={{ maxWidth: 680 }}>
+        <Box sx={{ maxWidth: 680, textAlign: { xs: "center", md: "left" } }}>
           <Box
             component="h1"
             sx={{
               ...fadeUp,
               m: 0,
-              fontSize: { xs: "38px", md: "58px" },
+              fontSize: { xs: "clamp(32px, 9.4vw, 42px)", md: "58px" },
               fontWeight: 900,
-              letterSpacing: "-0.04em",
-              lineHeight: 1.05,
+              letterSpacing: { xs: "-0.035em", md: "-0.04em" },
+              lineHeight: { xs: 1.1, md: 1.05 },
+              textWrap: "balance",
               color: "var(--text)",
-              mb: "22px",
+              mb: { xs: "16px", md: "22px" },
               animation: "heroFadeUp 0.6s ease 0.08s both",
             }}
           >
@@ -103,8 +125,9 @@ export const Hero = () => {
               m: 0,
               fontSize: { xs: "15px", md: "17px" },
               lineHeight: 1.55,
+              textWrap: "pretty",
               color: "var(--text-secondary)",
-              mb: "32px",
+              mb: { xs: "24px", md: "32px" },
               animation: "heroFadeUp 0.6s ease 0.16s both",
             }}
           >
@@ -114,8 +137,8 @@ export const Hero = () => {
             sx={{
               ...fadeUp,
               display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
               gap: "12px",
-              flexWrap: "wrap",
               animation: "heroFadeUp 0.6s ease 0.24s both",
             }}
           >
@@ -130,6 +153,7 @@ export const Hero = () => {
                 fontSize: "15px",
                 borderRadius: "var(--r-lg)",
                 boxShadow: "0 12px 32px -8px var(--accent-border)",
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               {t("landing.hero.cta_primary")}
@@ -146,6 +170,7 @@ export const Hero = () => {
                 borderRadius: "var(--r-lg)",
                 borderColor: "var(--border2)",
                 color: "var(--text)",
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               {t("landing.hero.cta_secondary")}
@@ -156,9 +181,10 @@ export const Hero = () => {
               ...fadeUp,
               display: "flex",
               alignItems: "center",
+              justifyContent: { xs: "center", md: "flex-start" },
               gap: "18px",
               flexWrap: "wrap",
-              mt: "24px",
+              mt: { xs: "20px", md: "24px" },
               fontSize: "13px",
               color: "var(--muted)",
               animation: "heroFadeUp 0.6s ease 0.3s both",
@@ -180,7 +206,7 @@ export const Hero = () => {
           sx={{
             position: "relative",
             width: "100%",
-            perspective: "1400px",
+            perspective: { md: "1400px" },
             animation: "heroFadeUp 0.7s ease 0.15s both",
             ...fadeUp,
           }}
@@ -188,104 +214,121 @@ export const Hero = () => {
           <Box
             sx={{
               width: "100%",
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
+              border: { xs: "none", md: "1px solid var(--border)" },
+              borderRadius: { xs: "14px 14px 0 0", md: "14px" },
               overflow: "hidden",
-              transform: "rotateY(-14deg) rotateX(4deg)",
-              boxShadow:
-                "40px 55px 70px -30px rgba(15, 23, 42, 0.45), 90px 70px 90px -50px rgba(15, 23, 42, 0.3)",
+              maskImage: { xs: MOBILE_PREVIEW_FADE, md: "none" },
+              WebkitMaskImage: { xs: MOBILE_PREVIEW_FADE, md: "none" },
+              maskComposite: { xs: "intersect", md: "add" },
+              WebkitMaskComposite: { xs: "source-in", md: "source-over" },
+              transform: { xs: "none", md: "rotateY(-14deg) rotateX(4deg)" },
+              boxShadow: {
+                xs: "none",
+                md: "40px 55px 70px -30px rgba(15, 23, 42, 0.45), 90px 70px 90px -50px rgba(15, 23, 42, 0.3)",
+              },
             }}
           >
-            <img
-              src={DASHBOARD_PREVIEW.src}
-              width={DASHBOARD_PREVIEW.width}
-              height={DASHBOARD_PREVIEW.height}
-              fetchPriority="high"
-              alt={t("landing.hero.image_alt")}
-              style={{ display: "block", width: "100%", height: "auto" }}
-            />
+            <picture>
+              <source
+                media={DASHBOARD_PREVIEW_MOBILE.mediaQuery}
+                srcSet={DASHBOARD_PREVIEW_MOBILE.src}
+                width={DASHBOARD_PREVIEW_MOBILE.width}
+                height={DASHBOARD_PREVIEW_MOBILE.height}
+              />
+              <img
+                src={DASHBOARD_PREVIEW.src}
+                width={DASHBOARD_PREVIEW.width}
+                height={DASHBOARD_PREVIEW.height}
+                fetchPriority="high"
+                alt={t("landing.hero.image_alt")}
+                style={{ display: "block", width: "100%", height: "auto" }}
+              />
+            </picture>
           </Box>
 
           <Box
             sx={{
-              position: "absolute",
-              top: "8%",
-              left: { xs: "-6px", md: "-32px" },
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              boxShadow: "var(--sh-3)",
-              p: "12px 16px",
+              display: { xs: "grid", md: "contents" },
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: "12px",
+              mt: { xs: "16px", md: 0 },
             }}
           >
             <Box
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: "10px",
-                background: "var(--red-subtle)",
-                color: "var(--red)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                ...floatingCardSx,
+                position: { md: "absolute" },
+                top: { md: "36%" },
+                left: { md: "-48px" },
               }}
             >
-              <WarningAmberOutlined sx={{ fontSize: 18 }} />
-            </Box>
-            <Box>
               <Box
-                sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: "10px",
+                  background: "var(--red-subtle)",
+                  color: "var(--red)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
               >
-                {t("landing.hero.score_badge_title")}
+                <WarningAmberOutlined sx={{ fontSize: 18 }} />
               </Box>
-              <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
-                {t("landing.hero.score_badge_subtitle")}
+              <Box>
+                <Box
+                  sx={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "var(--text)",
+                  }}
+                >
+                  {t("landing.hero.score_badge_title")}
+                </Box>
+                <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
+                  {t("landing.hero.score_badge_subtitle")}
+                </Box>
               </Box>
             </Box>
-          </Box>
 
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: "20%",
-              right: { xs: "-6px", md: "-80px" },
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              boxShadow: "var(--sh-3)",
-              p: "12px 16px",
-            }}
-          >
             <Box
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: "10px",
-                background: "var(--accent-subtle)",
-                color: "var(--accent2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                ...floatingCardSx,
+                position: { md: "absolute" },
+                bottom: { md: "20%" },
+                right: { md: "-80px" },
               }}
             >
-              <TrendingUpOutlined sx={{ fontSize: 18 }} />
-            </Box>
-            <Box>
               <Box
-                sx={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: "10px",
+                  background: "var(--accent-subtle)",
+                  color: "var(--accent2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
               >
-                {t("landing.hero.detected_title")}
+                <TrendingUpOutlined sx={{ fontSize: 18 }} />
               </Box>
-              <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
-                {t("landing.hero.detected_subtitle")}
+              <Box>
+                <Box
+                  sx={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "var(--text)",
+                  }}
+                >
+                  {t("landing.hero.detected_title")}
+                </Box>
+                <Box sx={{ fontSize: "11.5px", color: "var(--muted)" }}>
+                  {t("landing.hero.detected_subtitle")}
+                </Box>
               </Box>
             </Box>
           </Box>

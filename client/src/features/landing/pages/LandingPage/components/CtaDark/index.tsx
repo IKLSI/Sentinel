@@ -8,24 +8,15 @@ import CircularProgress from "@mui/material/CircularProgress";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { ROUTES } from "@/constants/routes";
 import { GRADES } from "@/features/landing/constants";
+import {
+  PUBLIC_SCAN_DEFAULT_ERROR_KEY,
+  PUBLIC_SCAN_ERROR_KEYS,
+} from "@/domains/publicScan/constants";
 import { usePublicScanMutation } from "@/domains/publicScan/mutations";
 import type { PublicScanResponse } from "@/domains/publicScan/types";
 import { useToast } from "@/hooks/useToast";
 import { extractApiErrorCode } from "@/helpers/apiError";
 import { useT } from "@/contexts/I18nContext";
-
-const ERROR_KEYS: Record<string, string> = {
-  "errors.scan.invalid_repository_url":
-    "landing.cta.error.invalid_repository_url",
-  "errors.scan.no_accessible_files": "landing.cta.error.no_accessible_files",
-  "errors.scan.failed": "landing.cta.error.scan_failed",
-  "errors.scan.vulnerability_data_incomplete": "landing.cta.error.scan_failed",
-  "errors.scan.no_dependencies": "landing.cta.error.no_dependencies",
-  "errors.scan.busy": "landing.cta.error.busy",
-  "errors.common.too_many_requests": "landing.cta.error.too_many_requests",
-};
-
-const DEFAULT_ERROR_KEY = "landing.cta.error.default";
 
 export const CtaDark = () => {
   const [repositoryUrl, setRepositoryUrl] = useState("");
@@ -44,7 +35,10 @@ export const CtaDark = () => {
         onError: (err) => {
           const code = extractApiErrorCode(err)?.code;
           showToast(
-            t((code && ERROR_KEYS[code]) || DEFAULT_ERROR_KEY),
+            t(
+              (code && PUBLIC_SCAN_ERROR_KEYS[code]) ||
+                PUBLIC_SCAN_DEFAULT_ERROR_KEY,
+            ),
             "error",
           );
         },

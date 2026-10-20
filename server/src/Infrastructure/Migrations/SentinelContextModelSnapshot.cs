@@ -340,6 +340,10 @@ namespace Sentinel.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BadgeToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Branch")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -395,6 +399,10 @@ namespace Sentinel.Infrastructure.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BadgeToken")
+                        .IsUnique()
+                        .HasFilter("\"BadgeToken\" IS NOT NULL");
 
                     b.HasIndex("OrganizationId");
 

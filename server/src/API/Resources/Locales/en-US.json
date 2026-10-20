@@ -566,9 +566,9 @@
   "landing.hero.description": "Connect your GitHub and GitLab repositories and Sentinel takes care of the rest. Vulnerabilities, outdated dependencies and risky configurations are caught before they turn into a production incident.",
   "landing.hero.detected_subtitle": "after connecting the repository",
   "landing.hero.detected_title": "Detected in 2 min",
-  "landing.hero.image_alt": "Sentinel dashboard",
-  "landing.hero.score_badge_subtitle": "2 critical vulnerabilities",
-  "landing.hero.score_badge_title": "Score 42/100",
+  "landing.hero.image_alt": "Sentinel dashboard: fleet score, vulnerabilities, priority tickets and activity",
+  "landing.hero.score_badge_subtitle": "3 critical vulnerabilities",
+  "landing.hero.score_badge_title": "Score 66/100",
   "landing.hero.title": "Don't let a dependency become a vulnerability.",
   "landing.ledger.critical_vulnerability": "Critical vulnerability",
   "landing.ledger.eol_dependency": "End-of-life dependency",
@@ -1238,5 +1238,13 @@
   "validation.ticket.project_required": "Project is required",
   "validation.ticket.finding_kind_invalid": "Invalid finding type",
   "validation.ticket.finding_key_required": "Finding key is required",
-  "validation.ticket.finding_key_max_length": "The finding key cannot exceed {maxLength} characters"
+  "validation.ticket.finding_key_max_length": "The finding key cannot exceed {maxLength} characters",
+  "public_scan.badge.copied": "Markdown copied",
+  "public_scan.badge.copy": "Copy Markdown",
+  "public_scan.badge.subtitle": "Show this repository's health score right in your README.",
+  "public_scan.subtitle": "Check the health of a public GitHub or GitLab repository, no account needed.",
+  "public_scan.title": "Scan a public repository",
+  "tech_health.badge.action": "README badge",
+  "tech_health.badge.title": "README badge",
+  "tech_health.badge.error": "Unable to generate the badge"
 }

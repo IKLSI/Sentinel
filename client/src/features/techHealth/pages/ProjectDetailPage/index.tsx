@@ -15,6 +15,7 @@ import { toVulnerabilityRows } from "@/features/techHealth/pages/ProjectDetailPa
 import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
+import { BadgeAction } from "@/features/techHealth/pages/ProjectDetailPage/components/BadgeAction";
 import { ExportActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ExportActions";
 import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
@@ -77,7 +78,12 @@ export const ProjectDetailPage: React.FC = () => {
       <ProjectHeaderCard
         project={project}
         eolRuntimes={eolRuntimes}
-        action={<ExportActions projectId={project.id} />}
+        action={
+          <Box sx={{ display: "flex", gap: "8px" }}>
+            <BadgeAction projectId={project.id} />
+            <ExportActions projectId={project.id} />
+          </Box>
+        }
       />
 
       <TabBar

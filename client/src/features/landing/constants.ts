@@ -97,3 +97,7 @@ export const FAQ_ITEM_IDS = [
   "security",
   "ci",
 ] as const;
+
+export const LANDING_NAV_HEIGHT = "64px";
+
+export const LANDING_NAV_TOP = { xs: "16px", md: "20px" } as const;

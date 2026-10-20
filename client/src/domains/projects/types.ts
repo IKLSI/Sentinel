@@ -32,3 +32,7 @@ export type ProjectScanSettings =
 
 export type ProjectRepositoryOptions =
   components["schemas"]["ProjectRepositoryOptionsDto"];
+
+export interface ProjectBadge {
+  token: string;
+}

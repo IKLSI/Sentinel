@@ -3,35 +3,28 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { LanguageFlag } from "@/components/ui/common/LanguageFlag";
 import { useI18n } from "@/contexts/I18nContext";
 import { Language } from "@/enums";
+import {
+  LANDING_NAV_HEIGHT,
+  LANDING_NAV_TOP,
+} from "@/features/landing/constants";
 
 const OPTIONS = [
   { code: Language.Fr, shortCode: "FR", labelKey: "profile.language.fr" },
   { code: Language.En, shortCode: "EN", labelKey: "profile.language.en" },
 ] as const;
 
-export const LanguageSwitch = () => {
+interface OptionsProps {
+  alwaysShowCode?: boolean;
+}
+
+export const LanguageOptions = ({ alwaysShowCode = false }: OptionsProps) => {
   const { t, culture, setLanguage } = useI18n();
 
   return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: { xs: "20px", md: "24px" },
-        right: { xs: "16px", md: "24px" },
-        zIndex: 110,
-        display: "flex",
-        alignItems: "center",
-        gap: "2px",
-        p: "4px",
-        borderRadius: "999px",
-        border: "1px solid var(--border)",
-        background: "color-mix(in srgb, var(--s1) 82%, transparent)",
-        backdropFilter: "blur(18px) saturate(160%)",
-        boxShadow: "var(--sh-2)",
-      }}
-    >
+    <>
       {OPTIONS.map(({ code, shortCode, labelKey }) => {
         const active = culture === code;
+        const showCode = alwaysShowCode || active;
         return (
           <ButtonBase
             key={code}
@@ -39,8 +32,8 @@ export const LanguageSwitch = () => {
             aria-pressed={active}
             onClick={() => setLanguage(code)}
             sx={{
-              height: 36,
-              px: "10px",
+              px: "14px",
+              py: "10px",
               borderRadius: "999px",
               color: active ? "#ffffff" : "var(--text-secondary)",
               background: active ? "var(--accent)" : "transparent",
@@ -63,9 +56,9 @@ export const LanguageSwitch = () => {
               sx={{
                 overflow: "hidden",
                 whiteSpace: "nowrap",
-                maxWidth: active ? 28 : 0,
-                ml: active ? "6px" : 0,
-                opacity: active ? 1 : 0,
+                maxWidth: showCode ? 28 : 0,
+                ml: showCode ? "6px" : 0,
+                opacity: showCode ? 1 : 0,
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.06em",
@@ -78,6 +71,30 @@ export const LanguageSwitch = () => {
           </ButtonBase>
         );
       })}
-    </Box>
+    </>
   );
 };
+
+export const LanguageSwitch = () => (
+  <Box
+    sx={{
+      position: "fixed",
+      top: LANDING_NAV_TOP,
+      right: { md: "24px" },
+      zIndex: 110,
+      display: { xs: "none", md: "flex" },
+      alignItems: "stretch",
+      gap: "2px",
+      height: LANDING_NAV_HEIGHT,
+      boxSizing: "border-box",
+      p: "6px",
+      borderRadius: "999px",
+      border: "1px solid var(--border)",
+      background: "color-mix(in srgb, var(--s1) 82%, transparent)",
+      backdropFilter: "blur(18px) saturate(160%)",
+      boxShadow: "var(--sh-2)",
+    }}
+  >
+    <LanguageOptions />
+  </Box>
+);

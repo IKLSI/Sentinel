@@ -12,6 +12,7 @@ using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
 using Sentinel.Application.TechHealth.ProjectOptions;
+using Sentinel.Application.TechHealth.ProjectBadge;
 using Sentinel.Application.TechHealth.Projects;
 using Sentinel.Application.TechHealth.RepositoryOptions;
 using Sentinel.Application.TechHealth.Suppressions;
@@ -158,4 +159,12 @@ public class TechHealthController : BaseController
         [FromServices] RemoveSuppressionService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, suppressionId, cancellationToken));
+
+    [HttpPost("projects/{id:guid}/badge")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<ActionResult<ProjectBadgeDto>> EnableProjectBadge(
+        Guid id,
+        [FromServices] ProjectBadgeEnableService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 }

@@ -12,5 +12,6 @@ public static class RateLimitPolicies
     public const string Invitation = "invitation";
     public const string Scan = "scan";
     public const string PublicScan = "public-scan";
+    public const string PublicBadge = "public-badge";
     public const string Export = "export";
 }

@@ -199,9 +199,6 @@ export const ProjectHeaderCard: React.FC<Props> = ({
           <Box component="span" sx={{ fontWeight: 600 }}>
             {t("tech_health.last_scan_error")}
           </Box>
-          <Box component="span" sx={{ color: "var(--muted2)" }}>
-            —
-          </Box>
           {t(project.lastScanError)}
         </Box>
       )}

@@ -566,9 +566,9 @@
   "landing.hero.description": "Connectez vos dépôts GitHub et GitLab, Sentinel s'occupe du reste. Vulnérabilités, dépendances obsolètes et configurations à risque sont repérées avant de devenir un incident en production.",
   "landing.hero.detected_subtitle": "après connexion du dépôt",
   "landing.hero.detected_title": "Détecté en 2 min",
-  "landing.hero.image_alt": "Tableau de bord Sentinel",
-  "landing.hero.score_badge_subtitle": "2 vulnérabilités critiques",
-  "landing.hero.score_badge_title": "Score 42/100",
+  "landing.hero.image_alt": "Tableau de bord Sentinel : note du parc, vulnérabilités, tickets prioritaires et activité",
+  "landing.hero.score_badge_subtitle": "3 vulnérabilités critiques",
+  "landing.hero.score_badge_title": "Score 66/100",
   "landing.hero.title": "Ne laissez plus une dépendance devenir une faille.",
   "landing.ledger.critical_vulnerability": "Vulnérabilité critique",
   "landing.ledger.eol_dependency": "Dépendance en fin de vie",
@@ -1238,5 +1238,13 @@
   "validation.ticket.project_required": "Le projet est requis",
   "validation.ticket.finding_kind_invalid": "Type de finding invalide",
   "validation.ticket.finding_key_required": "La clé du finding est requise",
-  "validation.ticket.finding_key_max_length": "La clé du finding ne peut pas dépasser {maxLength} caractères"
+  "validation.ticket.finding_key_max_length": "La clé du finding ne peut pas dépasser {maxLength} caractères",
+  "public_scan.badge.copied": "Markdown copié",
+  "public_scan.badge.copy": "Copier le Markdown",
+  "public_scan.badge.subtitle": "Affichez le score de santé de ce dépôt directement dans votre README.",
+  "public_scan.subtitle": "Découvrez la santé d'un dépôt GitHub ou GitLab public, sans créer de compte.",
+  "public_scan.title": "Scanner un dépôt public",
+  "tech_health.badge.action": "Badge README",
+  "tech_health.badge.title": "Badge pour le README",
+  "tech_health.badge.error": "Impossible de générer le badge"
 }

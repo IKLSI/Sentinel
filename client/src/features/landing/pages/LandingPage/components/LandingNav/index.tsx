@@ -7,8 +7,13 @@ import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { LanguageOptions } from "@/features/landing/pages/LandingPage/components/LanguageSwitch";
 import { ROUTES } from "@/constants/routes";
 import { useI18n } from "@/contexts/I18nContext";
+import {
+  LANDING_NAV_HEIGHT,
+  LANDING_NAV_TOP,
+} from "@/features/landing/constants";
 
 const LINKS = [
   { href: "#fonctionnalites", labelKey: "landing.nav.features" },
@@ -26,9 +31,9 @@ export const LandingNav = () => {
         position: "sticky",
         top: 0,
         zIndex: 100,
-        pt: { xs: "16px", md: "20px" },
+        pt: LANDING_NAV_TOP,
         pl: { xs: "16px", md: "168px" },
-        pr: { xs: "142px", md: "168px" },
+        pr: { xs: "16px", md: "168px" },
       }}
     >
       <Box
@@ -41,7 +46,10 @@ export const LandingNav = () => {
           justifyContent: "space-between",
           gap: "16px",
           px: { xs: "16px", md: "24px" },
-          py: "12px",
+          height: LANDING_NAV_HEIGHT,
+          boxSizing: "border-box",
+          position: "relative",
+          zIndex: 1,
           borderRadius: "999px",
           border: "1px solid var(--border)",
           background: "color-mix(in srgb, var(--s1) 82%, transparent)",
@@ -131,13 +139,32 @@ export const LandingNav = () => {
 
       {open && (
         <Box
+          aria-hidden
+          onClick={() => setOpen(false)}
+          sx={{
+            display: { xs: "block", md: "none" },
+            position: "fixed",
+            inset: 0,
+            zIndex: 0,
+            background: "color-mix(in srgb, var(--text) 22%, transparent)",
+            backdropFilter: "blur(3px)",
+          }}
+        />
+      )}
+
+      {open && (
+        <Box
           sx={{
             display: { xs: "flex", md: "none" },
             flexDirection: "column",
             gap: "4px",
-            maxWidth: 980,
-            mx: "auto",
-            mt: "10px",
+            position: "absolute",
+            zIndex: 1,
+            left: "16px",
+            right: "16px",
+            top: `calc(${LANDING_NAV_TOP.xs} + ${LANDING_NAV_HEIGHT} + 10px)`,
+            maxHeight: "calc(100dvh - 100px)",
+            overflowY: "auto",
             p: "10px",
             borderRadius: "20px",
             border: "1px solid var(--border)",
@@ -174,6 +201,9 @@ export const LandingNav = () => {
               gap: "8px",
             }}
           >
+            <Box sx={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+              <LanguageOptions alwaysShowCode />
+            </Box>
             <Button
               component={Link}
               to={ROUTES.LOGIN}

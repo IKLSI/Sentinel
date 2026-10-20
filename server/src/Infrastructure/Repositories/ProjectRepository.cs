@@ -53,6 +53,15 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
     private static IQueryable<Project> WithPackage(IQueryable<Project> query, string packageName) =>
         query.Include(p => p.Dependencies.Where(d => d.Name.ToLower() == packageName));
 
+    public Task<ProjectBadgeRow?> GetOrDefaultBadgeByTokenAcrossTenantsAsync(string badgeToken,
+        CancellationToken cancellationToken) =>
+        Context.Projects
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(p => p.BadgeToken == badgeToken)
+            .Select(p => new ProjectBadgeRow(p.Name, p.HealthScore, p.HealthGrade))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyList<ProjectSummaryRow>> ListSummariesByHealthRankAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);

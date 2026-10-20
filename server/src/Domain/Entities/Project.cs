@@ -32,6 +32,7 @@ public class Project : IEntityWithId
     public string? RepositoryUrl { get; set; }
     public string? Branch { get; set; }
     public string? RootPath { get; set; }
+    public string? BadgeToken { get; set; }
     public RepositoryType RepositoryType { get; set; } = RepositoryType.GitHub;
     public DateTime? LastScanAt { get; set; }
     public string? LastScanError { get; set; }

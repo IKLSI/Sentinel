@@ -22,3 +22,5 @@ public sealed record ProjectSummaryRow(
     int TotalTickets);
 
 public sealed record ProjectOptionRow(Guid Id, string Name);
+
+public sealed record ProjectBadgeRow(string Name, int? HealthScore, string? HealthGrade);

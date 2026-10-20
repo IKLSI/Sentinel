@@ -12,6 +12,7 @@ import { projectKeys } from "@/domains/projects/constants";
 import type {
   CreateProject,
   Project,
+  ProjectBadge,
   ProjectScanSettings,
   ProjectSummary,
   SuppressVulnerability,
@@ -84,4 +85,9 @@ export const useRemoveSuppressionMutation = () =>
   useDeleteMutation<void, void, { id: string; suppressionId: string }>(
     ROUTES_API.api.techHealth.projects[":id"].suppressions[":suppressionId"]
       .__path,
+  );
+
+export const useEnableProjectBadgeMutation = () =>
+  usePostMutation<ProjectBadge, ProjectBadge, { id: string }>(
+    "/api/tech-health/projects/:id/badge",
   );
