@@ -1,12 +1,12 @@
 import { HubConnectionBuilder, type HubConnection } from "@microsoft/signalr";
 import { refreshAccessToken } from "@/configs/apiClient";
 import { API_BASE_URL } from "@/configs/env";
+import { getAccessToken } from "@/configs/session";
 import { REALTIME_HUB_PATH } from "@/domains/realtime/contract.gen";
-import { STORAGE_KEYS } from "@/constants/storage";
 import { isAccessTokenExpiring } from "@/helpers/accessToken";
 
 const resolveAccessToken = async (): Promise<string> => {
-  const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  const token = getAccessToken();
   if (token && !isAccessTokenExpiring(token)) return token;
 
   try {

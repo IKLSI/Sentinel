@@ -250,6 +250,21 @@ export interface paths {
       };
     };
   };
+  "/api/public/badge/{token}.svg": {
+    get: {
+      parameters: {
+        path: {
+          token: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: never;
+        };
+      };
+    };
+  };
   "/api/public/scan": {
     post: {
       requestBody?: {
@@ -266,6 +281,20 @@ export interface paths {
             "application/json": components["schemas"]["PublicScanResponse"];
             "text/json": components["schemas"]["PublicScanResponse"];
             "text/plain": components["schemas"]["PublicScanResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/public/scoring-model": {
+    get: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ScoringModelDto"];
+            "text/json": components["schemas"]["ScoringModelDto"];
+            "text/plain": components["schemas"]["ScoringModelDto"];
           };
         };
       };
@@ -490,6 +519,25 @@ export interface paths {
             "application/json": components["schemas"]["ProjectScanSettingsDto"];
             "text/json": components["schemas"]["ProjectScanSettingsDto"];
             "text/plain": components["schemas"]["ProjectScanSettingsDto"];
+          };
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/badge": {
+    post: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectBadgeDto"];
+            "text/json": components["schemas"]["ProjectBadgeDto"];
+            "text/plain": components["schemas"]["ProjectBadgeDto"];
           };
         };
       };
@@ -1237,6 +1285,11 @@ export interface components {
       count: number;
       grade: string;
     };
+    GradeThresholdDto: {
+      grade: string;
+      /** Format: int32 */
+      minScore: number;
+    };
     IntegrationSettingsDto: {
       gitlabBaseUrl: string;
       hasGithubToken: boolean;
@@ -1288,6 +1341,9 @@ export interface components {
       /** Format: int32 */
       scoreDelta: number | null;
       vulnerabilities: components["schemas"]["VulnerabilityCountsDto"];
+    };
+    ProjectBadgeDto: {
+      token: string;
     };
     ProjectDto: {
       branch: string | null;
@@ -1421,8 +1477,13 @@ export interface components {
       token: string;
     };
     RuntimeDto: {
+      /** Format: int32 */
+      daysRemaining: number | null;
       /** Format: date-time */
       eolDate: string | null;
+      /** Format: int32 */
+      eolProgressPercent: number;
+      eolStatus: string;
       findingKey: string;
       /** Format: uuid */
       id: string;
@@ -1444,10 +1505,19 @@ export interface components {
       security: number;
       securityGrade: string;
     };
+    ScorePenaltyDto: {
+      kind: string;
+      /** Format: int32 */
+      points: number;
+    };
     ScorePointDto: {
       date: string;
       /** Format: int32 */
       score: number | null;
+    };
+    ScoringModelDto: {
+      grades: components["schemas"]["GradeThresholdDto"][];
+      penalties: components["schemas"]["ScorePenaltyDto"][];
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";

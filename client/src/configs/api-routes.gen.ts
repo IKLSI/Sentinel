@@ -62,8 +62,17 @@ export const ROUTES_API = {
     },
     public: {
       __path: "/api/public",
+      badge: {
+        __path: "/api/public/badge",
+        "{token}.svg": {
+          __path: "/api/public/badge/{token}.svg",
+        },
+      },
       scan: {
         __path: "/api/public/scan",
+      },
+      scoringModel: {
+        __path: "/api/public/scoring-model",
       },
     },
     settings: {
@@ -105,6 +114,9 @@ export const ROUTES_API = {
         },
         ":id": {
           __path: "/api/tech-health/projects/:id",
+          badge: {
+            __path: "/api/tech-health/projects/:id/badge",
+          },
           complianceReport: {
             __path: "/api/tech-health/projects/:id/compliance-report",
           },

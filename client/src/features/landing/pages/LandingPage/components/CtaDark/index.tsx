@@ -7,7 +7,8 @@ import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import { ROUTES } from "@/constants/routes";
-import { GRADES } from "@/features/landing/constants";
+import { DISPLAYED_GRADES } from "@/features/landing/constants";
+import { gradeColorOf } from "@/features/landing/helpers";
 import {
   PUBLIC_SCAN_DEFAULT_ERROR_KEY,
   PUBLIC_SCAN_ERROR_KEYS,
@@ -45,9 +46,6 @@ export const CtaDark = () => {
       },
     );
   };
-
-  const resultGrade =
-    result && GRADES.find((grade) => grade.letter === result.grade);
 
   return (
     <Box
@@ -100,21 +98,21 @@ export const CtaDark = () => {
             mb: "40px",
           }}
         >
-          {GRADES.map((grade, index) => {
+          {DISPLAYED_GRADES.map(([letter, color], index) => {
             const distanceFromCenter = Math.abs(
-              index - (GRADES.length - 1) / 2,
+              index - (DISPLAYED_GRADES.length - 1) / 2,
             );
             const mobileSize = 38 - distanceFromCenter * 4;
             const desktopSize = 60 - distanceFromCenter * 6;
-            const isActive = result?.grade === grade.letter;
+            const isActive = result?.grade === letter;
             return (
               <Box
-                key={grade.letter}
+                key={letter}
                 sx={{
                   width: { xs: mobileSize, md: desktopSize },
                   height: { xs: mobileSize, md: desktopSize },
                   borderRadius: { xs: "12px", md: "16px" },
-                  background: `linear-gradient(160deg, ${grade.color} 0%, color-mix(in srgb, ${grade.color} 70%, black) 100%)`,
+                  background: `linear-gradient(160deg, ${color} 0%, color-mix(in srgb, ${color} 70%, black) 100%)`,
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",
@@ -126,12 +124,12 @@ export const CtaDark = () => {
                   },
                   flexShrink: 0,
                   boxShadow: isActive
-                    ? `0 0 0 4px color-mix(in srgb, ${grade.color} 35%, transparent), 0 12px 24px -8px color-mix(in srgb, ${grade.color} 65%, transparent)`
-                    : `0 12px 24px -8px color-mix(in srgb, ${grade.color} 65%, transparent)`,
+                    ? `0 0 0 4px color-mix(in srgb, ${color} 35%, transparent), 0 12px 24px -8px color-mix(in srgb, ${color} 65%, transparent)`
+                    : `0 12px 24px -8px color-mix(in srgb, ${color} 65%, transparent)`,
                   opacity: result && !isActive ? 0.35 : 1,
                 }}
               >
-                {grade.letter}
+                {letter}
               </Box>
             );
           })}
@@ -183,7 +181,7 @@ export const CtaDark = () => {
                   width: 72,
                   height: 72,
                   borderRadius: "20px",
-                  background: resultGrade?.color ?? "var(--accent)",
+                  background: gradeColorOf(result?.grade),
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",

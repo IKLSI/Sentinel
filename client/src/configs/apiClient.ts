@@ -6,8 +6,8 @@ import axios, {
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { API_BASE_URL } from "@/configs/env";
 import { CONTENT_TYPES, HTTP_HEADERS, bearerToken } from "@/constants/http";
+import { endSession, getAccessToken, startSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
-import { STORAGE_KEYS } from "@/constants/storage";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -17,7 +17,7 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  const token = getAccessToken();
   if (token && config.headers)
     config.headers.Authorization = bearerToken(token);
   return config;
@@ -34,14 +34,14 @@ const requestNewAccessToken = async (): Promise<string> => {
     { withCredentials: true },
   );
   const { accessToken } = response.data;
-  localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+  startSession(accessToken);
   return accessToken;
 };
 
 const refreshUnlessAlreadyRenewed = (
   staleToken: string | null,
 ): Promise<string> => {
-  const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  const current = getAccessToken();
   return current && current !== staleToken
     ? Promise.resolve(current)
     : requestNewAccessToken();
@@ -71,23 +71,22 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config;
+    const sentToken = tokenOf(originalRequest?.headers?.Authorization);
 
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url?.includes(ROUTES_API.api.auth.login.__path)
+      sentToken !== null &&
+      !originalRequest._retry
     ) {
       originalRequest._retry = true;
 
       try {
-        const accessToken = await refreshAccessToken(
-          tokenOf(originalRequest.headers?.Authorization),
-        );
+        const accessToken = await refreshAccessToken(sentToken);
         originalRequest.headers.Authorization = bearerToken(accessToken);
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        endSession();
         window.location.href = ROUTES.LOGIN;
         return Promise.reject(refreshError);
       }

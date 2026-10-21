@@ -17,7 +17,7 @@ public static class ProjectHealthBuilder
 
     public static List<ProjectHealthDto> Build(IReadOnlyList<Guid> priorityIds, IReadOnlyList<Project> projects,
         IReadOnlyDictionary<Guid, int> baselineScores, IReadOnlyList<OpenTicketRow> openTickets,
-        IReadOnlyList<RuntimeDeadline> deadlines)
+        IReadOnlyList<RuntimeDeadline> deadlines, IReadOnlyDictionary<Guid, HashSet<Guid>> suppressedIdsByProject)
     {
         ILookup<Guid?, OpenTicketRow> ticketsByProject = openTickets.ToLookup(t => t.ProjectId);
         Dictionary<Guid, Project> projectsById = projects.ToDictionary(project => project.Id);
@@ -25,12 +25,14 @@ public static class ProjectHealthBuilder
         return priorityIds
             .Where(projectsById.ContainsKey)
             .Select(id => projectsById[id])
-            .Select(project => ToDto(project, baselineScores, ticketsByProject[project.Id].ToList(), deadlines))
+            .Select(project => ToDto(project, baselineScores, ticketsByProject[project.Id].ToList(), deadlines,
+                suppressedIdsByProject.GetValueOrDefault(project.Id) ?? []))
             .ToList();
     }
 
     private static ProjectHealthDto ToDto(Project project, IReadOnlyDictionary<Guid, int> baselineScores,
-        IReadOnlyList<OpenTicketRow> projectTickets, IReadOnlyList<RuntimeDeadline> deadlines)
+        IReadOnlyList<OpenTicketRow> projectTickets, IReadOnlyList<RuntimeDeadline> deadlines,
+        HashSet<Guid> suppressedIds)
     {
         bool isScored = project.HealthScore != null;
 
@@ -47,7 +49,10 @@ public static class ProjectHealthBuilder
             ScoreDelta = isScored && baselineScores.TryGetValue(project.Id, out int baseline)
                 ? project.HealthScore!.Value - baseline
                 : null,
-            Breakdown = isScored ? ToBreakdownDto(HealthScoreCalculator.Breakdown(project)) : null,
+            Breakdown = isScored
+                ? ToBreakdownDto(HealthScoreCalculator.Breakdown(project,
+                    vulnerability => suppressedIds.Contains(vulnerability.Id)))
+                : null,
             NextAction = NextActionResolver.Resolve(project, projectTickets, deadlines),
         };
     }

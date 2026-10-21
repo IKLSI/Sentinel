@@ -1,5 +1,4 @@
 import type React from "react";
-import { useNavigate } from "@tanstack/react-router";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import Box from "@mui/material/Box";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
@@ -9,12 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const LogoutButton: React.FC = () => {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   const t = useT();
 
   const handleLogout = async () => {
     await logout();
-    navigate({ to: ROUTES.LOGIN });
+    window.location.assign(ROUTES.LOGIN);
   };
 
   return (

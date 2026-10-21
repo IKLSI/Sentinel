@@ -114,11 +114,11 @@ export type SuppressionReason =
   (typeof SuppressionReason)[keyof typeof SuppressionReason];
 
 export const RuntimeEolStatus = {
-  Eol: "eol",
-  Danger: "danger",
-  Warn: "warn",
-  Ok: "ok",
-  Unknown: "unknown",
+  Eol: "Eol",
+  Danger: "Danger",
+  Warn: "Warn",
+  Ok: "Ok",
+  Unknown: "Unknown",
 } as const;
 export type RuntimeEolStatus =
   (typeof RuntimeEolStatus)[keyof typeof RuntimeEolStatus];

@@ -119,27 +119,27 @@ export const EOL_COLOR: Record<
   RuntimeEolStatus,
   { text: string; stripe: string; border: string }
 > = {
-  eol: {
+  [RuntimeEolStatus.Eol]: {
     text: "var(--red)",
     stripe: "var(--red)",
     border: "color-mix(in srgb, var(--red) 30%, transparent)",
   },
-  danger: {
+  [RuntimeEolStatus.Danger]: {
     text: "var(--orange)",
     stripe: "var(--orange)",
     border: "color-mix(in srgb, var(--orange) 25%, transparent)",
   },
-  warn: {
+  [RuntimeEolStatus.Warn]: {
     text: "var(--yellow)",
     stripe: "var(--yellow)",
     border: "color-mix(in srgb, var(--yellow) 25%, transparent)",
   },
-  ok: {
+  [RuntimeEolStatus.Ok]: {
     text: "var(--green)",
     stripe: "var(--green)",
     border: "var(--border)",
   },
-  unknown: {
+  [RuntimeEolStatus.Unknown]: {
     text: "var(--muted2)",
     stripe: "var(--border2)",
     border: "var(--border)",
@@ -150,79 +150,42 @@ export const RUNTIME_STATUS: Record<
   RuntimeEolStatus,
   { labelKey: string; variant: StatusVariant; weight: number }
 > = {
-  eol: {
+  [RuntimeEolStatus.Eol]: {
     labelKey: "tech_health.runtime_status.eol",
     variant: "red",
     weight: 4,
   },
-  danger: {
+  [RuntimeEolStatus.Danger]: {
     labelKey: "tech_health.runtime_status.imminent",
     variant: "orange",
     weight: 3,
   },
-  warn: {
+  [RuntimeEolStatus.Warn]: {
     labelKey: "tech_health.runtime_status.soon",
     variant: "blue",
     weight: 2,
   },
-  ok: {
+  [RuntimeEolStatus.Ok]: {
     labelKey: "tech_health.runtime_status.supported",
     variant: "green",
     weight: 1,
   },
-  unknown: {
+  [RuntimeEolStatus.Unknown]: {
     labelKey: "tech_health.runtime_status.unknown",
     variant: "gray",
     weight: 0,
   },
 };
 
-const MILLISECONDS_PER_DAY = 86400000;
-const DANGER_THRESHOLD_DAYS = 90;
-const WARN_THRESHOLD_DAYS = 180;
-const PROGRESS_WINDOW_DAYS = 365;
-const MIN_PROGRESS_PERCENT = 4;
-const MAX_PROGRESS_PERCENT = 100;
+export const getRuntimeDaysRemaining = (r: Runtime): number | null =>
+  r.daysRemaining ?? null;
 
-export function getRuntimeDaysRemaining(r: Runtime): number | null {
-  if (!r.eolDate) return null;
-  return Math.round(
-    (new Date(r.eolDate).getTime() - Date.now()) / MILLISECONDS_PER_DAY,
-  );
-}
+export const getRuntimeUrgency = (r: Runtime): RuntimeEolStatus =>
+  (Object.values(RuntimeEolStatus) as string[]).includes(r.eolStatus)
+    ? (r.eolStatus as RuntimeEolStatus)
+    : RuntimeEolStatus.Unknown;
 
-export function getRuntimeUrgency(r: Runtime): RuntimeEolStatus {
-  const days = getRuntimeDaysRemaining(r);
-
-  if (days === null) {
-    if (r.isEol === null || r.isEol === undefined)
-      return RuntimeEolStatus.Unknown;
-    return r.isEol ? RuntimeEolStatus.Eol : RuntimeEolStatus.Ok;
-  }
-
-  if (days < 0) return RuntimeEolStatus.Eol;
-  if (days < DANGER_THRESHOLD_DAYS) return RuntimeEolStatus.Danger;
-  if (days < WARN_THRESHOLD_DAYS) return RuntimeEolStatus.Warn;
-  return RuntimeEolStatus.Ok;
-}
-
-export function getRuntimeProgress(r: Runtime): number {
-  const urgency = getRuntimeUrgency(r);
-  if (urgency === RuntimeEolStatus.Unknown) return 0;
-  if (urgency === RuntimeEolStatus.Eol) return MAX_PROGRESS_PERCENT;
-
-  const days = getRuntimeDaysRemaining(r);
-  if (days === null) return MIN_PROGRESS_PERCENT;
-
-  const consumed =
-    ((PROGRESS_WINDOW_DAYS - days) / PROGRESS_WINDOW_DAYS) *
-    MAX_PROGRESS_PERCENT;
-
-  return Math.min(
-    MAX_PROGRESS_PERCENT,
-    Math.max(MIN_PROGRESS_PERCENT, Math.round(consumed)),
-  );
-}
+export const getRuntimeProgress = (r: Runtime): number => r.eolProgressPercent;
 
 export function getDaysLabel(
   r: Runtime,

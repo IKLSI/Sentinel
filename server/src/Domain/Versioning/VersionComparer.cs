@@ -4,72 +4,137 @@ public class VersionComparer : IComparer<string>
 {
     public static readonly VersionComparer Instance = new();
 
-    public int Compare(string? x, string? y)
+    private const int ReleaseRank = 0;
+    private const int UnknownQualifierRank = -1;
+
+    private static readonly Dictionary<string, int> QualifierRanks = new(StringComparer.Ordinal)
     {
-        (int[] leftCore, string leftPrerelease) = Split(x);
-        (int[] rightCore, string rightPrerelease) = Split(y);
+        ["dev"] = -6,
+        ["a"] = -5,
+        ["alpha"] = -5,
+        ["b"] = -4,
+        ["beta"] = -4,
+        ["m"] = -3,
+        ["milestone"] = -3,
+        ["c"] = -2,
+        ["rc"] = -2,
+        ["cr"] = -2,
+        ["pre"] = -2,
+        ["preview"] = -2,
+        ["final"] = ReleaseRank,
+        ["ga"] = ReleaseRank,
+        ["release"] = ReleaseRank,
+        ["post"] = 1,
+        ["p"] = 1,
+        ["r"] = 1,
+        ["rev"] = 1,
+        ["sp"] = 1,
+        ["patch"] = 1,
+    };
 
-        for (int i = 0; i < Math.Max(leftCore.Length, rightCore.Length); i++)
-        {
-            int leftPart = i < leftCore.Length ? leftCore[i] : 0;
-            int rightPart = i < rightCore.Length ? rightCore[i] : 0;
-
-            int comparison = leftPart.CompareTo(rightPart);
-            if (comparison != 0) return comparison;
-        }
-
-        return ComparePrerelease(leftPrerelease, rightPrerelease);
+    private readonly record struct Token(string Text, bool IsNumeric)
+    {
+        public int Rank => IsNumeric
+            ? ReleaseRank
+            : QualifierRanks.GetValueOrDefault(Text, UnknownQualifierRank);
     }
 
-    private static (int[] Core, string Prerelease) Split(string? version)
+    public int Compare(string? x, string? y)
     {
-        string text = (version ?? string.Empty).Trim();
+        (string leftEpoch, List<Token> left) = Tokenize(x);
+        (string rightEpoch, List<Token> right) = Tokenize(y);
 
-        if (text.StartsWith('v') || text.StartsWith('V')) text = text[1..];
+        int epochComparison = CompareNumbers(leftEpoch, rightEpoch);
+        if (epochComparison != 0) return epochComparison;
+
+        bool inPrerelease = false;
+
+        for (int i = 0; i < Math.Max(left.Count, right.Count); i++)
+        {
+            Token? leftToken = i < left.Count ? left[i] : null;
+            Token? rightToken = i < right.Count ? right[i] : null;
+
+            int comparison = CompareTokens(leftToken, rightToken, inPrerelease);
+            if (comparison != 0) return comparison;
+
+            if (leftToken is { IsNumeric: false } token && token.Rank < ReleaseRank) inPrerelease = true;
+        }
+
+        return 0;
+    }
+
+    private static int CompareTokens(Token? left, Token? right, bool inPrerelease)
+    {
+        if (left == null) return right == null ? 0 : -CompareToMissing(right.Value);
+        if (right == null) return CompareToMissing(left.Value);
+
+        Token l = left.Value;
+        Token r = right.Value;
+
+        if (l.IsNumeric && r.IsNumeric) return CompareNumbers(l.Text, r.Text);
+        if (l.IsNumeric) return inPrerelease ? -1 : 1;
+        if (r.IsNumeric) return inPrerelease ? 1 : -1;
+
+        int rankComparison = l.Rank.CompareTo(r.Rank);
+        if (rankComparison != 0) return rankComparison;
+
+        return l.Rank == UnknownQualifierRank ? string.CompareOrdinal(l.Text, r.Text) : 0;
+    }
+
+    private static int CompareToMissing(Token token) => token.IsNumeric
+        ? CompareNumbers(token.Text, "0")
+        : token.Rank.CompareTo(ReleaseRank);
+
+    private static int CompareNumbers(string left, string right)
+    {
+        string leftDigits = left.TrimStart('0');
+        string rightDigits = right.TrimStart('0');
+
+        int lengthComparison = leftDigits.Length.CompareTo(rightDigits.Length);
+        return lengthComparison != 0 ? lengthComparison : string.CompareOrdinal(leftDigits, rightDigits);
+    }
+
+    private static (string Epoch, List<Token> Tokens) Tokenize(string? version)
+    {
+        string text = (version ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (text.StartsWith('v')) text = text[1..];
 
         int buildSeparator = text.IndexOf('+');
         if (buildSeparator >= 0) text = text[..buildSeparator];
 
-        int prereleaseSeparator = text.IndexOf('-');
-
-        string core = prereleaseSeparator >= 0 ? text[..prereleaseSeparator] : text;
-        string prerelease = prereleaseSeparator >= 0 ? text[(prereleaseSeparator + 1)..] : string.Empty;
-
-        int[] parts = core
-            .Split('.')
-            .Select(part => int.TryParse(part, out int value) && value >= 0 ? value : 0)
-            .ToArray();
-
-        return (parts, prerelease);
-    }
-
-    private static int ComparePrerelease(string left, string right)
-    {
-        if (left.Length == 0 && right.Length == 0) return 0;
-        if (left.Length == 0) return 1;
-        if (right.Length == 0) return -1;
-
-        string[] leftIdentifiers = left.Split('.');
-        string[] rightIdentifiers = right.Split('.');
-
-        for (int i = 0; i < Math.Min(leftIdentifiers.Length, rightIdentifiers.Length); i++)
+        string epoch = "0";
+        int epochSeparator = text.IndexOf('!');
+        if (epochSeparator > 0 && text[..epochSeparator].All(char.IsAsciiDigit))
         {
-            int comparison = CompareIdentifier(leftIdentifiers[i], rightIdentifiers[i]);
-            if (comparison != 0) return comparison;
+            epoch = text[..epochSeparator];
+            text = text[(epochSeparator + 1)..];
         }
 
-        return leftIdentifiers.Length.CompareTo(rightIdentifiers.Length);
-    }
+        List<Token> tokens = [];
+        int start = 0;
 
-    private static int CompareIdentifier(string left, string right)
-    {
-        bool leftIsNumeric = int.TryParse(left, out int leftValue);
-        bool rightIsNumeric = int.TryParse(right, out int rightValue);
+        for (int i = 0; i <= text.Length; i++)
+        {
+            bool atEnd = i == text.Length;
+            bool isSeparator = !atEnd && !char.IsAsciiLetterOrDigit(text[i]);
+            bool kindChanges = !atEnd && !isSeparator && i > start
+                && char.IsAsciiDigit(text[i]) != char.IsAsciiDigit(text[i - 1]);
 
-        if (leftIsNumeric && rightIsNumeric) return leftValue.CompareTo(rightValue);
-        if (leftIsNumeric) return -1;
-        if (rightIsNumeric) return 1;
+            if (!atEnd && !isSeparator && !kindChanges) continue;
 
-        return string.CompareOrdinal(left, right);
+            if (i > start)
+            {
+                string part = text[start..i];
+                tokens.Add(new Token(part, char.IsAsciiDigit(part[0])));
+            }
+
+            start = isSeparator ? i + 1 : i;
+        }
+
+        while (tokens.Count > 0 && tokens[^1] is { IsNumeric: false, Rank: ReleaseRank })
+            tokens.RemoveAt(tokens.Count - 1);
+
+        return (epoch, tokens);
     }
 }

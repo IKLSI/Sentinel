@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers;
@@ -14,6 +15,7 @@ namespace Sentinel.Infrastructure.Http;
 public partial class RepositoryHostClient(
     IHttpClientFactory httpClientFactory,
     IOptions<RepositoryHostSettings> settings,
+    IMemoryCache cache,
     ILogger<RepositoryHostClient> logger) : IRepositoryHostClient
 {
     private const long MaxFileBytes = 5 * 1024 * 1024;
@@ -93,7 +95,9 @@ public partial class RepositoryHostClient(
         RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
 
         if (RepositoryHosts.IsGitHub(host))
-            return await GetGitHubHeadCommitAsync(owner, repo, effectiveAccess.Token, branch, cancellationToken);
+            return await GetGitHubHeadCommitAsync(owner, repo,
+                await ResolveGitHubTokenAsync(owner, repo, effectiveAccess.Token, cancellationToken), branch,
+                cancellationToken);
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
             return await GetGitLabHeadCommitAsync(owner, repo, effectiveAccess, branch, cancellationToken);
         return null;
@@ -105,7 +109,9 @@ public partial class RepositoryHostClient(
         RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
 
         if (RepositoryHosts.IsGitHub(host))
-            return await ListGitHubBranchesAsync(owner, repo, effectiveAccess.Token, cancellationToken);
+            return await ListGitHubBranchesAsync(owner, repo,
+                await ResolveGitHubTokenAsync(owner, repo, effectiveAccess.Token, cancellationToken),
+                cancellationToken);
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
             return await ListGitLabBranchesAsync(owner, repo, effectiveAccess, cancellationToken);
         return null;
@@ -118,7 +124,9 @@ public partial class RepositoryHostClient(
         RepositoryAccess effectiveAccess = access ?? RepositoryAccess.Anonymous;
 
         if (RepositoryHosts.IsGitHub(host))
-            return await ListGitHubFilesAsync(owner, repo, reference, effectiveAccess.Token, cancellationToken);
+            return await ListGitHubFilesAsync(owner, repo, reference,
+                await ResolveGitHubTokenAsync(owner, repo, effectiveAccess.Token, cancellationToken),
+                cancellationToken);
         if (RepositoryHosts.IsGitLab(host, effectiveAccess.GitLab.Host))
             return await ListGitLabFilesAsync(httpClientFactory.CreateClient(HttpClientNames.GitLab), owner, repo,
                 reference, effectiveAccess, cancellationToken);

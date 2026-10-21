@@ -3,6 +3,7 @@ import type { Runtime } from "@/domains/projects/types";
 import { RuntimeEolStatus } from "@/enums";
 import {
   getDaysLabel,
+  getRuntimeProgress,
   getRuntimeUrgency,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 
@@ -17,46 +18,31 @@ const runtime = (overrides: Partial<Runtime>): Runtime => ({
   eolDate: null,
   isEol: null,
   isMinimumConstraint: false,
+  eolStatus: RuntimeEolStatus.Unknown,
+  daysRemaining: null,
+  eolProgressPercent: 0,
   findingKey: "node.js",
   linkedTicket: null as unknown as Runtime["linkedTicket"],
   ...overrides,
 });
 
-const inDays = (days: number) =>
-  new Date(Date.now() + days * 86400000).toISOString();
-
 describe("getRuntimeUrgency", () => {
-  it("returns unknown when the lifecycle could not be resolved", () => {
-    expect(getRuntimeUrgency(runtime({ isEol: null }))).toBe(
+  it("uses the status assessed by the API", () => {
+    expect(
+      getRuntimeUrgency(runtime({ eolStatus: RuntimeEolStatus.Danger })),
+    ).toBe(RuntimeEolStatus.Danger);
+  });
+
+  it("falls back to unknown for an unexpected status", () => {
+    expect(getRuntimeUrgency(runtime({ eolStatus: "Later" }))).toBe(
       RuntimeEolStatus.Unknown,
     );
   });
+});
 
-  it("returns ok for a runtime confirmed as supported", () => {
-    expect(getRuntimeUrgency(runtime({ isEol: false }))).toBe(
-      RuntimeEolStatus.Ok,
-    );
-  });
-
-  it("returns eol for a runtime flagged without a date", () => {
-    expect(getRuntimeUrgency(runtime({ isEol: true }))).toBe(
-      RuntimeEolStatus.Eol,
-    );
-  });
-
-  it("grades the remaining support window", () => {
-    expect(getRuntimeUrgency(runtime({ eolDate: inDays(30) }))).toBe(
-      RuntimeEolStatus.Danger,
-    );
-    expect(getRuntimeUrgency(runtime({ eolDate: inDays(120) }))).toBe(
-      RuntimeEolStatus.Warn,
-    );
-    expect(getRuntimeUrgency(runtime({ eolDate: inDays(400) }))).toBe(
-      RuntimeEolStatus.Ok,
-    );
-    expect(getRuntimeUrgency(runtime({ eolDate: inDays(-10) }))).toBe(
-      RuntimeEolStatus.Eol,
-    );
+describe("getRuntimeProgress", () => {
+  it("uses the progress computed by the API", () => {
+    expect(getRuntimeProgress(runtime({ eolProgressPercent: 80 }))).toBe(80);
   });
 });
 
@@ -74,10 +60,10 @@ describe("getDaysLabel", () => {
   });
 
   it("counts the days left when an end-of-life date is known", () => {
-    expect(getDaysLabel(runtime({ eolDate: inDays(10) }), t)).toContain(
+    expect(getDaysLabel(runtime({ daysRemaining: 10 }), t)).toContain(
       "tech_health.runtime.days_remaining",
     );
-    expect(getDaysLabel(runtime({ eolDate: inDays(-10) }), t)).toContain(
+    expect(getDaysLabel(runtime({ daysRemaining: -10 }), t)).toContain(
       "tech_health.runtime.expired_since",
     );
   });

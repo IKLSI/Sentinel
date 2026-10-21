@@ -71,6 +71,9 @@ public class RuntimeDto
     public DateTime? EolDate { get; set; }
     public bool? IsEol { get; set; }
     public bool IsMinimumConstraint { get; set; }
+    public string EolStatus { get; set; } = string.Empty;
+    public int? DaysRemaining { get; set; }
+    public int EolProgressPercent { get; set; }
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
 }

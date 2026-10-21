@@ -6,7 +6,7 @@ import { useDeleteMyAccountMutation } from "@/domains/users/mutations";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
-import { STORAGE_KEYS } from "@/constants/storage";
+import { endSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
 import { inp } from "@/features/users/pages/ProfilePage/constants";
 
@@ -34,9 +34,7 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
       { data: { password: deletePassword } },
       {
         onSuccess: () => {
-          Object.values(STORAGE_KEYS).forEach((k) => {
-            localStorage.removeItem(k);
-          });
+          endSession();
           window.location.href = ROUTES.LOGIN;
         },
         onError: onDeleteError,

@@ -1,8 +1,10 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Sentinel.Domain.Abstractions;
+using Sentinel.Domain.Constants;
 
 namespace Sentinel.Infrastructure.Http;
 
@@ -78,10 +80,55 @@ public partial class RepositoryHostClient
     private HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(method, url);
-        string? effectiveToken = string.IsNullOrEmpty(token) ? settings.Value.GitHubToken : token;
-        if (!string.IsNullOrEmpty(effectiveToken))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", effectiveToken);
+        if (!string.IsNullOrEmpty(token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private async Task<string?> ResolveGitHubTokenAsync(string owner, string repo, string? token,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(token)) return token;
+
+        string serverToken = settings.Value.GitHubToken;
+        if (string.IsNullOrEmpty(serverToken)) return null;
+
+        return await IsPublicGitHubRepositoryAsync(owner, repo, serverToken, cancellationToken) ? serverToken : null;
+    }
+
+    private async Task<bool> IsPublicGitHubRepositoryAsync(string owner, string repo, string serverToken,
+        CancellationToken cancellationToken)
+    {
+        string cacheKey = CacheKeys.GitHubPublicRepository(owner, repo);
+        if (cache.TryGetValue(cacheKey, out bool cachedIsPublic)) return cachedIsPublic;
+
+        bool isPublic;
+
+        try
+        {
+            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
+                $"https://api.github.com/repos/{owner}/{repo}", serverToken);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return false;
+
+            JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            isPublic = repository.TryGetProperty("private", out JsonElement isPrivate)
+                && isPrivate.ValueKind == JsonValueKind.False;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitHub visibility lookup failed for {Owner}/{Repo}", owner, repo);
+            return false;
+        }
+
+        cache.Set(cacheKey, isPublic, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = CacheKeys.GitHubPublicRepositoryTtl,
+            Size = 1
+        });
+
+        return isPublic;
     }
 
     private async Task<string?> GetGitHubHeadCommitAsync(string owner, string repo, string? token, string? branch,

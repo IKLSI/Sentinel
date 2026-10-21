@@ -21,6 +21,28 @@ public static class HealthScoreCalculator
     private const int CriticalVulnerabilityCeiling = 74;
     private const int ActivelyThreatenedCeiling = 59;
 
+    public static IReadOnlyList<GradeThreshold> GradeThresholds { get; } =
+    [
+        new("A", 90),
+        new("B", 75),
+        new("C", 60),
+        new("D", 45),
+        new("E", 30),
+        new("F", 0),
+    ];
+
+    public static IReadOnlyList<ScorePenalty> Penalties { get; } =
+    [
+        new(ScorePenaltyKinds.CriticalVulnerability, CriticalPenalty),
+        new(ScorePenaltyKinds.EolRuntime, EolRuntimePenalty),
+        new(ScorePenaltyKinds.HighVulnerability, HighPenalty),
+        new(ScorePenaltyKinds.EolDependency, EolDependencyPenalty),
+        new(ScorePenaltyKinds.MediumVulnerability, MediumPenalty),
+        new(ScorePenaltyKinds.LowVulnerability, LowPenalty),
+        new(ScorePenaltyKinds.MajorVersionLag, MajorUpdateWeight),
+        new(ScorePenaltyKinds.MinorVersionLag, MinorUpdateWeight),
+    ];
+
     public static int Calculate(Project project) => Calculate(project, _ => false);
 
     public static int Calculate(Project project, Func<Vulnerability, bool> isResolved)
@@ -57,7 +79,9 @@ public static class HealthScoreCalculator
             : MaxScore;
     }
 
-    public static HealthScoreBreakdown Breakdown(Project project)
+    public static HealthScoreBreakdown Breakdown(Project project) => Breakdown(project, _ => false);
+
+    public static HealthScoreBreakdown Breakdown(Project project, Func<Vulnerability, bool> isResolved)
     {
         double securityPenalty = 0;
         double freshnessPenalty = OutdatedPenalty(project);
@@ -68,7 +92,7 @@ public static class HealthScoreCalculator
 
             if (dependency.IsDeprecated) freshnessPenalty += EolDependencyPenalty * weight;
 
-            securityPenalty += VulnerabilityPenalty(dependency, _ => false) * weight;
+            securityPenalty += VulnerabilityPenalty(dependency, isResolved) * weight;
         }
 
         return new HealthScoreBreakdown(
@@ -77,15 +101,8 @@ public static class HealthScoreCalculator
             ToScore(freshnessPenalty));
     }
 
-    public static string ToGrade(int score) => score switch
-    {
-        >= 90 => "A",
-        >= 75 => "B",
-        >= 60 => "C",
-        >= 45 => "D",
-        >= 30 => "E",
-        _ => "F"
-    };
+    public static string ToGrade(int score) =>
+        GradeThresholds.FirstOrDefault(threshold => score >= threshold.MinScore)?.Grade ?? GradeThresholds[^1].Grade;
 
     private static double VulnerabilityPenalty(Dependency dependency, Func<Vulnerability, bool> isResolved) =>
         dependency.Vulnerabilities

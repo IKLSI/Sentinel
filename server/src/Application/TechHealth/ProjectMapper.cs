@@ -129,6 +129,7 @@ public static class ProjectMapper
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links)
     {
         string findingKey = FindingKeys.ForRuntime(group.MostAtRisk.Name);
+        RuntimeEolAssessment assessment = RuntimeEolAssessment.Of(group.MostAtRisk, DateTime.UtcNow);
 
         return new RuntimeDto
         {
@@ -139,6 +140,9 @@ public static class ProjectMapper
             EolDate = group.MostAtRisk.EolDate,
             IsEol = group.MostAtRisk.IsEol,
             IsMinimumConstraint = group.MostAtRisk.IsMinimumConstraint,
+            EolStatus = assessment.Status.ToString(),
+            DaysRemaining = assessment.DaysRemaining,
+            EolProgressPercent = assessment.ProgressPercent,
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.EolRuntime, findingKey)
         };

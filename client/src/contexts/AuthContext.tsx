@@ -6,7 +6,13 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import { STORAGE_KEYS } from "@/constants/storage";
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshAccessToken } from "@/configs/apiClient";
+import {
+  endSession,
+  hasPersistedSession,
+  startSession,
+} from "@/configs/session";
 import { useI18n } from "@/contexts/I18nContext";
 import {
   useLoginMutation,
@@ -46,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const { setLanguage } = useI18n();
+  const queryClient = useQueryClient();
   const meMutation = useMeMutation();
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
@@ -63,20 +70,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    if (!token) {
+    if (!hasPersistedSession()) {
       setLoading(false);
       return;
     }
 
-    runMe(
-      {},
-      {
-        onSuccess: applyUser,
-        onError: () => localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
-        onSettled: () => setLoading(false),
-      },
-    );
+    refreshAccessToken(null)
+      .then(() =>
+        runMe(
+          {},
+          {
+            onSuccess: applyUser,
+            onError: endSession,
+            onSettled: () => setLoading(false),
+          },
+        ),
+      )
+      .catch(() => {
+        endSession();
+        setLoading(false);
+      });
   }, [runMe, applyUser]);
 
   const refreshUser = useCallback(
@@ -87,10 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (email: string, password: string) => {
       const response = await runLogin({ data: { email, password } });
-      localStorage.setItem(
-        STORAGE_KEYS.ACCESS_TOKEN,
-        response.accessToken ?? "",
-      );
+      startSession(response.accessToken ?? "");
       applyUser(response.user);
       return response.user;
     },
@@ -101,10 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await runLogout({});
     } finally {
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+      endSession();
+      queryClient.clear();
       setUser(null);
     }
-  }, [runLogout]);
+  }, [runLogout, queryClient]);
 
   const value = useMemo(
     () => ({

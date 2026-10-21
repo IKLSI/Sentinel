@@ -47,7 +47,7 @@ export const GRADE_VISUAL: Record<
 export const isUntracked = (project: ProjectSummary): boolean =>
   !isCovered(project);
 
-export const getGrade = (grade: string | null | undefined): HealthGrade => {
+export const getGrade = (grade: string | null | undefined): SectionKey => {
   if (
     grade === HealthGrade.A ||
     grade === HealthGrade.B ||
@@ -57,7 +57,7 @@ export const getGrade = (grade: string | null | undefined): HealthGrade => {
     grade === HealthGrade.F
   )
     return grade;
-  return HealthGrade.F;
+  return UNTRACKED_SECTION;
 };
 
 export const sortProjects = (

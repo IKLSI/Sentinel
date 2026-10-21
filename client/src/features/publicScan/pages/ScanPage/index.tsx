@@ -14,7 +14,7 @@ import {
   PUBLIC_SCAN_ERROR_KEYS,
 } from "@/domains/publicScan/constants";
 import { usePublicScanMutation } from "@/domains/publicScan/mutations";
-import { GRADES } from "@/features/landing/constants";
+import { gradeColorOf } from "@/features/landing/helpers";
 import { extractApiErrorCode } from "@/helpers/apiError";
 import { useToast } from "@/hooks/useToast";
 
@@ -59,9 +59,7 @@ export const ScanPage: React.FC = () => {
   };
 
   const result = scanMutation.data;
-  const gradeColor =
-    GRADES.find((grade) => grade.letter === result?.grade)?.color ??
-    "var(--accent)";
+  const gradeColor = gradeColorOf(result?.grade);
   return (
     <Box
       sx={{

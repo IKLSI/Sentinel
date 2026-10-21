@@ -1,3 +1,7 @@
+import type { components } from "@/types/api.gen";
+
+export type ScoringModel = components["schemas"]["ScoringModelDto"];
+
 export interface PublicScanRequest {
   repositoryUrl: string;
 }

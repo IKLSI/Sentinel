@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
@@ -85,6 +86,7 @@ public class RepositoryHostClientGitLabTests
     private static RepositoryHostClient Client(HttpMessageHandler handler) =>
         new RepositoryHostClient(new StubHttpClientFactory(handler),
             Options.Create(new RepositoryHostSettings()),
+            new MemoryCache(new MemoryCacheOptions()),
             NullLogger<RepositoryHostClient>.Instance);
 
     [Fact]

@@ -1,10 +1,19 @@
 import Box from "@mui/material/Box";
-import { GRADES, LEDGER_ROWS } from "@/features/landing/constants";
+import { MAX_HEALTH_SCORE } from "@/features/landing/constants";
+import {
+  formatGradeThreshold,
+  formatPenalty,
+  gradeColorOf,
+} from "@/features/landing/helpers";
+import { useScoringModelQuery } from "@/domains/publicScan/queries";
 import { SectionHeading } from "@/features/landing/pages/LandingPage/components/SectionHeading";
 import { useT } from "@/contexts/I18nContext";
 
 export const GradeScale = () => {
   const t = useT();
+  const { data: scoringModel } = useScoringModelQuery();
+  const grades = scoringModel?.grades ?? [];
+  const penalties = scoringModel?.penalties ?? [];
 
   return (
     <Box
@@ -64,9 +73,9 @@ export const GradeScale = () => {
             gap: "18px",
           }}
         >
-          {GRADES.map((grade) => (
+          {grades.map((grade, index) => (
             <Box
-              key={grade.letter}
+              key={grade.grade}
               sx={{
                 background: "var(--s1)",
                 border: "1px solid var(--border)",
@@ -83,17 +92,17 @@ export const GradeScale = () => {
                   height: 64,
                   flexShrink: 0,
                   borderRadius: "16px",
-                  background: grade.color,
+                  background: gradeColorOf(grade.grade),
                   color: "var(--bg)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "30px",
                   fontWeight: 800,
-                  boxShadow: `0 10px 20px -8px color-mix(in srgb, ${grade.color} 70%, transparent)`,
+                  boxShadow: `0 10px 20px -8px color-mix(in srgb, ${gradeColorOf(grade.grade)} 70%, transparent)`,
                 }}
               >
-                {grade.letter}
+                {grade.grade}
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Box
@@ -111,21 +120,21 @@ export const GradeScale = () => {
                       color: "var(--text)",
                     }}
                   >
-                    {t(`landing.grades.${grade.letter.toLowerCase()}.label`)}
+                    {t(`landing.grades.${grade.grade.toLowerCase()}.label`)}
                   </Box>
                   <Box
                     sx={{
                       fontSize: "11px",
                       fontWeight: 700,
-                      color: grade.color,
-                      background: `color-mix(in srgb, ${grade.color} 14%, var(--s1))`,
+                      color: gradeColorOf(grade.grade),
+                      background: `color-mix(in srgb, ${gradeColorOf(grade.grade)} 14%, var(--s1))`,
                       borderRadius: "999px",
                       px: "9px",
                       py: "3px",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {grade.threshold}
+                    {formatGradeThreshold(grades, index)}
                   </Box>
                 </Box>
                 <Box
@@ -135,7 +144,7 @@ export const GradeScale = () => {
                     lineHeight: 1.45,
                   }}
                 >
-                  {t(`landing.grades.${grade.letter.toLowerCase()}.desc`)}
+                  {t(`landing.grades.${grade.grade.toLowerCase()}.desc`)}
                 </Box>
               </Box>
             </Box>
@@ -189,13 +198,13 @@ export const GradeScale = () => {
                 ml: "16px",
               }}
             >
-              100
+              {MAX_HEALTH_SCORE}
             </Box>
           </Box>
 
-          {LEDGER_ROWS.map((row) => (
+          {penalties.map((penalty) => (
             <Box
-              key={row.id}
+              key={penalty.kind}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -208,7 +217,7 @@ export const GradeScale = () => {
               }}
             >
               <Box sx={{ color: "var(--text-secondary)" }}>
-                {t(`landing.ledger.${row.id}`)}
+                {t(`landing.ledger.${penalty.kind}`)}
               </Box>
               <Box
                 sx={{
@@ -218,7 +227,7 @@ export const GradeScale = () => {
                   flexShrink: 0,
                 }}
               >
-                {row.amount}
+                {formatPenalty(penalty.points)}
               </Box>
             </Box>
           ))}

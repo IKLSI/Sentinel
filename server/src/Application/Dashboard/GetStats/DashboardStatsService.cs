@@ -4,12 +4,14 @@ using Sentinel.Application.Tickets;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.Dashboard.GetStats;
 
 public class DashboardStatsService(
     IDashboardRepository dashboardRepository,
     IProjectRepository projectRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository,
     DashboardCache dashboardCache,
     ITenantContext tenant) : IService
 {
@@ -63,6 +65,8 @@ public class DashboardStatsService(
         List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
         IReadOnlyList<Project> priorityProjects = await projectRepository.ListScoringGraphsByIdsAsync(
             organizationId, priorityIds, cancellationToken);
+        Dictionary<Guid, HashSet<Guid>> suppressedIdsByProject =
+            await LoadSuppressedIdsAsync(priorityProjects, now, cancellationToken);
         List<ScorePointDto> scoreHistory = ScoreHistoryBuilder.Build(snapshots, windowStart, today);
 
         return new DashboardStatsDto
@@ -74,9 +78,26 @@ public class DashboardStatsService(
                 flowCounts.Resolutions, windowStart, today),
             UrgentTickets = urgentTickets,
             Projects = ProjectHealthBuilder.Build(priorityIds, priorityProjects,
-                ScoreHistoryBuilder.ScoresAt(snapshots, windowStart), openTickets, deadlines),
+                ScoreHistoryBuilder.ScoresAt(snapshots, windowStart), openTickets, deadlines, suppressedIdsByProject),
             RecentActivity = recentActivity,
         };
+    }
+
+    private async Task<Dictionary<Guid, HashSet<Guid>>> LoadSuppressedIdsAsync(IReadOnlyList<Project> projects,
+        DateTime now, CancellationToken cancellationToken)
+    {
+        Dictionary<Guid, HashSet<Guid>> suppressedIdsByProject = new();
+
+        foreach (Project project in projects)
+        {
+            IReadOnlyList<VulnerabilitySuppression> suppressions =
+                await suppressionRepository.ListActiveByProjectAsync(project.Id, now, cancellationToken);
+
+            suppressedIdsByProject[project.Id] = SuppressedVulnerabilities.IdsIn(project,
+                suppressions.Select(suppression => suppression.FindingKey).ToHashSet());
+        }
+
+        return suppressedIdsByProject;
     }
 
     private async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(Guid organizationId,

@@ -380,6 +380,30 @@ public class HealthScoreCalculatorTests
         breakdown.Should().Be(new HealthScoreBreakdown(100, 100, 100));
     }
 
+    [Theory]
+    [InlineData(100, "A")]
+    [InlineData(90, "A")]
+    [InlineData(89, "B")]
+    [InlineData(60, "C")]
+    [InlineData(45, "D")]
+    [InlineData(30, "E")]
+    [InlineData(29, "F")]
+    [InlineData(-1, "F")]
+    public void ToGrade_AppliqueLesSeuilsPublies(int score, string expected)
+    {
+        HealthScoreCalculator.ToGrade(score).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Breakdown_FaillesSupprimees_NePenalisentPasLaSecurite()
+    {
+        Project project = ProjectWithDependencies(2, DependencyStatus.UpToDate);
+        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
+
+        HealthScoreCalculator.Breakdown(project, _ => true).Security.Should().Be(100);
+        HealthScoreCalculator.Breakdown(project, _ => false).Security.Should().BeLessThan(100);
+    }
+
     [Fact]
     public void Calculate_FaillesConsidereesCorrigees_RetrouveLeScoreSansElles()
     {
