@@ -265,6 +265,20 @@ export interface paths {
       };
     };
   };
+  "/api/public/runtime-lifecycles": {
+    get: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["RuntimeLifecyclesDto"];
+            "text/json": components["schemas"]["RuntimeLifecyclesDto"];
+            "text/plain": components["schemas"]["RuntimeLifecyclesDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/public/scan": {
     post: {
       requestBody?: {
@@ -1494,6 +1508,26 @@ export interface components {
       version: string;
       versions: string[];
     };
+    RuntimeLifecycleItemDto: {
+      /** Format: int32 */
+      daysRemaining: number | null;
+      /** Format: date-time */
+      endOfLifeDate: string | null;
+      name: string;
+      /** Format: date-time */
+      releaseDate: string | null;
+      status: string;
+    };
+    RuntimeLifecyclesDto: {
+      /** Format: date-time */
+      asOf: string;
+      items: components["schemas"]["RuntimeLifecycleItemDto"][];
+      /** Format: int32 */
+      upcomingDays: number | null;
+      upcomingNames: string[];
+      /** Format: int32 */
+      warningWindowDays: number;
+    };
     ScoreBreakdownDto: {
       /** Format: int32 */
       freshness: number;
@@ -1515,9 +1549,48 @@ export interface components {
       /** Format: int32 */
       score: number | null;
     };
+    ScoringExampleDto: {
+      /** Format: int32 */
+      ceiling: number | null;
+      ceilingReason: string | null;
+      grade: string;
+      lines: components["schemas"]["ScoringExampleLineDto"][];
+      name: string;
+      /** Format: int32 */
+      rawScore: number;
+      /** Format: int32 */
+      score: number;
+      /** Format: double */
+      totalPenalty: number;
+    };
+    ScoringExampleLineDto: {
+      /** Format: int32 */
+      count: number;
+      /** Format: date-time */
+      eolDate: string | null;
+      identifiers: string[];
+      kind: string;
+      modifiers: string[];
+      /** Format: double */
+      multiplier: number | null;
+      /** Format: int32 */
+      outdated: number | null;
+      packages: string[];
+      /** Format: double */
+      points: number;
+      runtimeName: string | null;
+      runtimeVersion: string | null;
+      /** Format: int32 */
+      totalDirect: number | null;
+    };
     ScoringModelDto: {
+      examples: components["schemas"]["ScoringExampleDto"][];
       grades: components["schemas"]["GradeThresholdDto"][];
+      /** Format: int32 */
+      maxScore: number;
       penalties: components["schemas"]["ScorePenaltyDto"][];
+      /** Format: int32 */
+      scoreDecayConstant: number;
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";

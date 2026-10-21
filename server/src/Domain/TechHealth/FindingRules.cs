@@ -5,7 +5,9 @@ namespace Sentinel.Domain.TechHealth;
 
 public static class FindingRules
 {
-    private static readonly TimeSpan ApproachingEolWindow = TimeSpan.FromDays(90);
+    public const int ApproachingEolWindowDays = 90;
+
+    private static readonly TimeSpan ApproachingEolWindow = TimeSpan.FromDays(ApproachingEolWindowDays);
 
     public static bool IsOutdated(Dependency dependency) =>
         dependency.IsDeprecated || UpdateStatusOf(dependency) != DependencyStatus.UpToDate;

@@ -1,228 +1,210 @@
-import { useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import MenuOutlined from "@mui/icons-material/MenuOutlined";
-import CloseOutlined from "@mui/icons-material/CloseOutlined";
-import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
-import { LanguageOptions } from "@/features/landing/pages/LandingPage/components/LanguageSwitch";
 import { ROUTES } from "@/constants/routes";
-import { useI18n } from "@/contexts/I18nContext";
-import {
-  LANDING_NAV_HEIGHT,
-  LANDING_NAV_TOP,
-} from "@/features/landing/constants";
+import { useT } from "@/contexts/I18nContext";
+import { NAV_LINKS } from "@/features/landing/constants";
+import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LanguageToggle";
 
-const LINKS = [
-  { href: "#fonctionnalites", labelKey: "landing.nav.features" },
-  { href: "#faq", labelKey: "landing.nav.faq" },
-] as const;
+const SCROLL_THRESHOLD = 8;
+const LINKS_BREAKPOINT = "@media (min-width:1060px)";
+const FOCUS_RING = {
+  outline: "2px solid var(--ink)",
+  outlineOffset: "2px",
+};
 
-export const LandingNav = () => {
-  const [open, setOpen] = useState(false);
-  const { t } = useI18n();
+export const LandingNav: React.FC = () => {
+  const t = useT();
+  const [scrolled, setScrolled] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = entry.target.id;
+          if (entry.isIntersecting) setActiveId(id);
+          else setActiveId((current) => (current === id ? null : current));
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    for (const { id } of NAV_LINKS) {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Box
-      component="nav"
+      component="header"
       sx={{
         position: "sticky",
         top: 0,
-        zIndex: 100,
-        pt: LANDING_NAV_TOP,
-        pl: { xs: "16px", md: "168px" },
-        pr: { xs: "16px", md: "168px" },
+        zIndex: 30,
+        px: { xs: "16px", md: "24px" },
+        pt: { xs: "14px", md: "18px" },
+        pointerEvents: "none",
       }}
     >
       <Box
         sx={{
-          maxWidth: 980,
+          pointerEvents: "auto",
           mx: "auto",
-          display: { xs: "flex", md: "grid" },
-          gridTemplateColumns: { md: "1fr auto 1fr" },
+          maxWidth: 960,
+          height: 56,
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
           alignItems: "center",
-          justifyContent: "space-between",
           gap: "16px",
-          px: { xs: "16px", md: "24px" },
-          height: LANDING_NAV_HEIGHT,
+          pl: "10px",
+          pr: "8px",
           boxSizing: "border-box",
-          position: "relative",
-          zIndex: 1,
-          borderRadius: "999px",
-          border: "1px solid var(--border)",
-          background: "color-mix(in srgb, var(--s1) 82%, transparent)",
-          backdropFilter: "blur(18px) saturate(160%)",
-          boxShadow: "var(--sh-2)",
+          borderRadius: "22px",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.74))",
+          backdropFilter: "saturate(1.8) blur(16px)",
+          WebkitBackdropFilter: "saturate(1.8) blur(16px)",
+          boxShadow: scrolled
+            ? "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(16,17,36,.07), 0 18px 40px -18px rgba(40,36,120,.32)"
+            : "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(16,17,36,.06), 0 1px 2px rgba(16,17,36,.04), 0 12px 32px -16px rgba(40,36,120,.22)",
+          transition: "box-shadow .3s",
+          [LINKS_BREAKPOINT]: { gridTemplateColumns: "1fr auto 1fr" },
+          "@media (prefers-reduced-motion: reduce)": { transition: "none" },
         }}
       >
         <Box
+          component="a"
+          href="#top"
           sx={{
+            justifySelf: "start",
             display: "flex",
             alignItems: "center",
             gap: "10px",
+            p: "6px 10px 6px 6px",
+            borderRadius: "14px",
             fontWeight: 700,
-            fontSize: "16px",
-            letterSpacing: "0.02em",
+            fontSize: "15px",
+            letterSpacing: "0.05em",
             textTransform: "uppercase",
-            color: "var(--text)",
+            color: "var(--ink)",
+            "&:focus-visible": FOCUS_RING,
           }}
         >
-          <SentinelLogo width={22} height={26} />
+          <SentinelLogo width={26} height={30} />
           Sentinel
         </Box>
 
         <Box
+          component="nav"
+          aria-label={t("landing.nav.sections_label")}
           sx={{
-            display: { xs: "none", md: "flex" },
+            position: "relative",
+            display: "none",
             alignItems: "center",
             gap: "4px",
+            [LINKS_BREAKPOINT]: { display: "flex" },
           }}
         >
-          {LINKS.map((link) => (
+          {NAV_LINKS.map(({ id, labelKey }) => (
             <Box
-              key={link.href}
+              key={id}
               component="a"
-              href={link.href}
+              href={`#${id}`}
+              aria-current={activeId === id ? "true" : undefined}
               sx={{
-                fontSize: "13px",
-                fontWeight: 600,
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-                color: "var(--text-secondary)",
-                textDecoration: "none",
-                px: "14px",
-                py: "8px",
-                borderRadius: "var(--r-sm)",
-                transition: "color 0.15s",
-                "&:hover": { color: "var(--text)", textDecoration: "none" },
+                position: "relative",
+                display: "inline-flex",
+                px: "12px",
+                py: "7px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: activeId === id ? "var(--ink)" : "var(--ink-2)",
+                transition: "color .2s",
+                "&:hover": { color: "var(--ink)" },
+                "&:focus-visible": FOCUS_RING,
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  left: "50%",
+                  bottom: "1px",
+                  width: "4px",
+                  height: "4px",
+                  ml: "-2px",
+                  borderRadius: "50%",
+                  background: "var(--ink)",
+                  opacity: activeId === id ? 1 : 0,
+                },
               }}
             >
-              {t(link.labelKey)}
+              {t(labelKey)}
             </Box>
           ))}
         </Box>
 
         <Box
           sx={{
-            display: { xs: "none", md: "flex" },
+            justifySelf: "end",
+            display: "flex",
             alignItems: "center",
-            justifyContent: "flex-end",
-            gap: "8px",
+            gap: "14px",
           }}
         >
-          <Button
+          <Box
             component={Link}
             to={ROUTES.LOGIN}
-            variant="contained"
-            size="small"
             sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              height: 42,
               px: "18px",
-              borderRadius: "999px",
-              boxShadow: "0 8px 20px -8px var(--accent-border)",
-              textTransform: "uppercase",
+              borderRadius: "14px",
+              whiteSpace: "nowrap",
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "#ffffff",
+              background: "linear-gradient(180deg, #2a2c4f, #101124)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px -8px rgba(16,17,36,.6)",
+              "&:hover": {
+                background: "linear-gradient(180deg, #34376a, #1a1c38)",
+              },
+              "&:focus-visible": FOCUS_RING,
             }}
           >
-            {t("landing.nav.start")}
-          </Button>
-        </Box>
-
-        <IconButton
-          aria-label={t("landing.nav.menu_label")}
-          sx={{ display: { xs: "inline-flex", md: "none" } }}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <CloseOutlined /> : <MenuOutlined />}
-        </IconButton>
-      </Box>
-
-      {open && (
-        <Box
-          aria-hidden
-          onClick={() => setOpen(false)}
-          sx={{
-            display: { xs: "block", md: "none" },
-            position: "fixed",
-            inset: 0,
-            zIndex: 0,
-            background: "color-mix(in srgb, var(--text) 22%, transparent)",
-            backdropFilter: "blur(3px)",
-          }}
-        />
-      )}
-
-      {open && (
-        <Box
-          sx={{
-            display: { xs: "flex", md: "none" },
-            flexDirection: "column",
-            gap: "4px",
-            position: "absolute",
-            zIndex: 1,
-            left: "16px",
-            right: "16px",
-            top: `calc(${LANDING_NAV_TOP.xs} + ${LANDING_NAV_HEIGHT} + 10px)`,
-            maxHeight: "calc(100dvh - 100px)",
-            overflowY: "auto",
-            p: "10px",
-            borderRadius: "20px",
-            border: "1px solid var(--border)",
-            background: "var(--s1)",
-            boxShadow: "var(--sh-3)",
-          }}
-        >
-          {LINKS.map((link) => (
-            <Box
-              key={link.href}
-              component="a"
-              href={link.href}
-              onClick={() => setOpen(false)}
-              sx={{
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                textDecoration: "none",
-                p: "12px 14px",
-                borderRadius: "12px",
-                "&:hover": { color: "var(--text)", textDecoration: "none" },
-              }}
-            >
-              {t(link.labelKey)}
-            </Box>
-          ))}
+            {t("landing.nav.login")}
+          </Box>
+          <Box
+            aria-hidden
+            sx={{
+              width: "1px",
+              height: 22,
+              background: "var(--line)",
+              "@media (max-width:480px)": { display: "none" },
+            }}
+          />
           <Box
             sx={{
-              mt: "8px",
-              pt: "10px",
-              borderTop: "1px solid var(--border)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
+              display: "inline-flex",
+              "@media (max-width:420px)": { display: "none" },
             }}
           >
-            <Box sx={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-              <LanguageOptions alwaysShowCode />
-            </Box>
-            <Button
-              component={Link}
-              to={ROUTES.LOGIN}
-              variant="contained"
-              size="large"
-              fullWidth
-              endIcon={<ArrowForwardOutlined sx={{ fontSize: 18 }} />}
-              sx={{
-                py: "12px",
-                fontSize: "15px",
-                borderRadius: "var(--r-lg)",
-                boxShadow: "0 12px 28px -10px var(--accent-border)",
-              }}
-            >
-              {t("landing.nav.free_trial")}
-            </Button>
+            <LanguageToggle size="sm" />
           </Box>
         </Box>
-      )}
+      </Box>
     </Box>
   );
 };

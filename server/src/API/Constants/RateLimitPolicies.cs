@@ -13,5 +13,6 @@ public static class RateLimitPolicies
     public const string Scan = "scan";
     public const string PublicScan = "public-scan";
     public const string PublicBadge = "public-badge";
+    public const string PublicRuntimeLifecycles = "public-runtime-lifecycles";
     public const string Export = "export";
 }

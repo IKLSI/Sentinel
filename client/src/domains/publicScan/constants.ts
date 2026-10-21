@@ -12,3 +12,8 @@ export const PUBLIC_SCAN_ERROR_KEYS: Record<string, string> = {
 export const PUBLIC_SCAN_DEFAULT_ERROR_KEY = "landing.cta.error.default";
 
 export const SCORING_MODEL_QUERY_KEY = ["public", "scoring-model"] as const;
+
+export const RUNTIME_LIFECYCLES_QUERY_KEY = [
+  "public",
+  "runtime-lifecycles",
+] as const;

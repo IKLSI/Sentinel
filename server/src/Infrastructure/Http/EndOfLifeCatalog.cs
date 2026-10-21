@@ -1,6 +1,7 @@
 namespace Sentinel.Infrastructure.Http;
 
-public sealed record EndOfLifeCycle(string Cycle, bool? IsEndOfLife, DateTime? EndOfLifeDate);
+public sealed record EndOfLifeCycle(string Cycle, bool? IsEndOfLife, DateTime? EndOfLifeDate,
+    DateTime? ReleaseDate = null);
 
 public static class EndOfLifeCatalog
 {

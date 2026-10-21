@@ -68,6 +68,9 @@ export const ROUTES_API = {
           __path: "/api/public/badge/{token}.svg",
         },
       },
+      runtimeLifecycles: {
+        __path: "/api/public/runtime-lifecycles",
+      },
       scan: {
         __path: "/api/public/scan",
       },

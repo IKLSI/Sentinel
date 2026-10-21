@@ -14,4 +14,6 @@ public static class ScorePenaltyKinds
     public const string LowVulnerability = "low_vulnerability";
     public const string MajorVersionLag = "major_version_lag";
     public const string MinorVersionLag = "minor_version_lag";
+    public const string ApproachingEolRuntime = "approaching_eol_runtime";
+    public const string VersionLag = "version_lag";
 }

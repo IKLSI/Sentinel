@@ -1,42 +1,66 @@
 import Box from "@mui/material/Box";
-import { LanguageSwitch } from "@/features/landing/pages/LandingPage/components/LanguageSwitch";
-import { LandingNav } from "@/features/landing/pages/LandingPage/components/LandingNav";
-import { Hero } from "@/features/landing/pages/LandingPage/components/Hero";
-import { GradeScale } from "@/features/landing/pages/LandingPage/components/GradeScale";
-import { ProcessSteps } from "@/features/landing/pages/LandingPage/components/ProcessSteps";
-import { CompareTable } from "@/features/landing/pages/LandingPage/components/CompareTable";
-import { EcosystemChips } from "@/features/landing/pages/LandingPage/components/EcosystemChips";
+import GlobalStyles from "@mui/material/GlobalStyles";
+import { useI18n } from "@/contexts/I18nContext";
+import { LANDING_THEME } from "@/features/landing/constants";
+import { DemoLauncher } from "@/features/landing/pages/LandingPage/components/DemoLauncher";
+import { ClosingCta } from "@/features/landing/pages/LandingPage/components/ClosingCta";
+import { Deliverables } from "@/features/landing/pages/LandingPage/components/Deliverables";
+import { EcosystemLogos } from "@/features/landing/pages/LandingPage/components/EcosystemLogos";
 import { Faq } from "@/features/landing/pages/LandingPage/components/Faq";
-import { CtaDark } from "@/features/landing/pages/LandingPage/components/CtaDark";
+import { Hero } from "@/features/landing/pages/LandingPage/components/Hero";
+import { HowItWorks } from "@/features/landing/pages/LandingPage/components/HowItWorks";
 import { LandingFooter } from "@/features/landing/pages/LandingPage/components/LandingFooter";
+import { LandingNav } from "@/features/landing/pages/LandingPage/components/LandingNav";
+import { RuntimeTimeline } from "@/features/landing/pages/LandingPage/components/RuntimeTimeline";
+import { ScoreReport } from "@/features/landing/pages/LandingPage/components/ScoreReport";
 
-export const LandingPage = () => (
-  <Box
-    sx={{
-      minHeight: "100dvh",
-      background: "#eef2ff",
-      color: "var(--text)",
-      "--bg": "#ffffff",
-      "--s1": "#ffffff",
-      "--s2": "#f5f7fc",
-      "--s3": "#eaedfa",
-      "--border": "#dde3f2",
-      "--border2": "#c8d2eb",
-      "--text": "#0e1220",
-      "--text-secondary": "#3a4768",
-      "--muted": "#8898bb",
-      "--muted2": "#5c6f90",
-    }}
-  >
-    <LanguageSwitch />
-    <LandingNav />
-    <Hero />
-    <GradeScale />
-    <ProcessSteps />
-    <CompareTable />
-    <EcosystemChips />
-    <Faq />
-    <CtaDark />
-    <LandingFooter />
-  </Box>
-);
+const REDUCED_MOTION_STYLES = {
+  "@media (prefers-reduced-motion: reduce)": {
+    html: { scrollBehavior: "auto" },
+  },
+} as const;
+
+export const LandingPage = () => {
+  const { ready } = useI18n();
+
+  if (!ready)
+    return <Box sx={{ minHeight: "100dvh", background: "#ffffff" }} />;
+
+  return (
+    <Box
+      sx={{
+        ...LANDING_THEME,
+        minHeight: "100dvh",
+        overflowX: "clip",
+        background: "var(--page)",
+        color: "var(--ink)",
+        fontFamily: "var(--font-text)",
+        fontSize: "16px",
+        lineHeight: 1.6,
+        WebkitFontSmoothing: "antialiased",
+        fontFeatureSettings: '"cv11"',
+        "& :where(a)": { color: "inherit", textDecoration: "none" },
+        "& :where(a):hover": { textDecoration: "none" },
+        "& :where(:focus-visible)": {
+          outline: "2px solid var(--indigo)",
+          outlineOffset: "3px",
+        },
+      }}
+    >
+      <GlobalStyles styles={REDUCED_MOTION_STYLES} />
+      <LandingNav />
+      <Box component="main">
+        <Hero />
+        <DemoLauncher />
+        <EcosystemLogos />
+        <HowItWorks />
+        <ScoreReport />
+        <RuntimeTimeline />
+        <Deliverables />
+        <Faq />
+        <ClosingCta />
+      </Box>
+      <LandingFooter />
+    </Box>
+  );
+};

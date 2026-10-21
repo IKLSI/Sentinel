@@ -22,6 +22,7 @@ public static class CacheKeys
 
     public const string KnownExploitedCatalog = "kev:catalog";
     public const string KnownExploitedCatalogUnavailable = "kev:unavailable";
+    public const string PublicRuntimeLifecycles = "public:runtime-lifecycles";
 
     public static readonly TimeSpan AuthAccountTtl = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan ApiKeyPrincipalTtl = TimeSpan.FromSeconds(30);
@@ -41,6 +42,7 @@ public static class CacheKeys
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
     public static readonly TimeSpan RefreshGraceTtl = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan GitHubPublicRepositoryTtl = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan PublicRuntimeLifecyclesTtl = TimeSpan.FromMinutes(10);
 
     public static string Dashboard(Guid organizationId) => $"{DashboardPrefix}:{organizationId}";
 

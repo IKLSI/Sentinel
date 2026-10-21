@@ -2,6 +2,15 @@ import type { components } from "@/types/api.gen";
 
 export type ScoringModel = components["schemas"]["ScoringModelDto"];
 
+export type ScoringExample = components["schemas"]["ScoringExampleDto"];
+
+export type ScoringExampleLine = components["schemas"]["ScoringExampleLineDto"];
+
+export type RuntimeLifecycles = components["schemas"]["RuntimeLifecyclesDto"];
+
+export type RuntimeLifecycleItem =
+  components["schemas"]["RuntimeLifecycleItemDto"];
+
 export interface PublicScanRequest {
   repositoryUrl: string;
 }

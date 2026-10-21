@@ -16,8 +16,8 @@ public static class HealthScoreCalculator
     private const int EolDependencyPenalty = 10;
     private const int EolRuntimePenalty = 15;
     private const int ApproachingEolRuntimePenalty = 5;
-    private const int ScoreDecayConstant = 150;
-    private const int MaxScore = 100;
+    public const int ScoreDecayConstant = 150;
+    public const int MaxScore = 100;
     private const int CriticalVulnerabilityCeiling = 74;
     private const int ActivelyThreatenedCeiling = 59;
 
@@ -45,25 +45,49 @@ public static class HealthScoreCalculator
 
     public static int Calculate(Project project) => Calculate(project, _ => false);
 
-    public static int Calculate(Project project, Func<Vulnerability, bool> isResolved)
+    public static int Calculate(Project project, Func<Vulnerability, bool> isResolved) =>
+        Itemize(project, isResolved, DateTime.UtcNow).Score;
+
+    public static HealthScoreLedger Itemize(Project project, DateTime now) => Itemize(project, _ => false, now);
+
+    public static HealthScoreLedger Itemize(Project project, Func<Vulnerability, bool> isResolved, DateTime now)
     {
+        List<PenaltyCharge> charges = [];
         double penalty = OutdatedPenalty(project);
+
+        if (penalty > 0) charges.Add(VersionLagCharge(project, penalty));
 
         foreach (Dependency dependency in project.Dependencies)
         {
             double weight = WeightOf(dependency);
 
-            if (dependency.IsDeprecated) penalty += EolDependencyPenalty * weight;
+            if (dependency.IsDeprecated)
+            {
+                penalty += EolDependencyPenalty * weight;
+                charges.Add(DeprecationCharge(dependency, weight));
+            }
 
-            penalty += VulnerabilityPenalty(dependency, isResolved) * weight;
+            List<Vulnerability> openVulnerabilities = OpenVulnerabilities(dependency, isResolved);
+
+            penalty += openVulnerabilities.Sum(VulnerabilityPenalty) * weight;
+            charges.AddRange(openVulnerabilities.Select(vulnerability =>
+                VulnerabilityCharge(dependency, vulnerability, weight)));
         }
 
-        penalty += RuntimePenalty(project);
+        List<PenaltyCharge> runtimeCharges = RuntimeCharges(project, now);
 
-        return Math.Min(ToScore(penalty), ScoreCeiling(project, isResolved));
+        penalty += runtimeCharges.Sum(charge => charge.Points);
+        charges.AddRange(runtimeCharges);
+
+        int rawScore = ToScore(penalty);
+        (int? ceiling, string? ceilingReason) = ScoreCeiling(project, isResolved);
+        int score = Math.Min(rawScore, ceiling ?? MaxScore);
+
+        return new HealthScoreLedger(rawScore, score, ToGrade(score), penalty, ceiling, ceilingReason,
+            ToLines(charges));
     }
 
-    private static int ScoreCeiling(Project project, Func<Vulnerability, bool> isResolved)
+    private static (int? Ceiling, string? Reason) ScoreCeiling(Project project, Func<Vulnerability, bool> isResolved)
     {
         List<Vulnerability> openProductionVulnerabilities = project.Dependencies
             .Where(dependency => dependency.Type == DependencyType.Prod)
@@ -72,11 +96,11 @@ public static class HealthScoreCalculator
             .ToList();
 
         if (openProductionVulnerabilities.Any(VulnerabilityRiskCalculator.IsActivelyThreatened))
-            return ActivelyThreatenedCeiling;
+            return (ActivelyThreatenedCeiling, ScoreCeilingReasons.ActivelyExploited);
 
         return openProductionVulnerabilities.Any(vulnerability => vulnerability.Severity == VulnerabilitySeverity.Critical)
-            ? CriticalVulnerabilityCeiling
-            : MaxScore;
+            ? (CriticalVulnerabilityCeiling, ScoreCeilingReasons.CriticalInProduction)
+            : (null, null);
     }
 
     public static HealthScoreBreakdown Breakdown(Project project) => Breakdown(project, _ => false);
@@ -92,28 +116,110 @@ public static class HealthScoreCalculator
 
             if (dependency.IsDeprecated) freshnessPenalty += EolDependencyPenalty * weight;
 
-            securityPenalty += VulnerabilityPenalty(dependency, isResolved) * weight;
+            securityPenalty += OpenVulnerabilities(dependency, isResolved).Sum(VulnerabilityPenalty) * weight;
         }
 
         return new HealthScoreBreakdown(
             ToScore(securityPenalty),
-            ToScore(RuntimePenalty(project)),
+            ToScore(RuntimeCharges(project, DateTime.UtcNow).Sum(charge => charge.Points)),
             ToScore(freshnessPenalty));
     }
 
     public static string ToGrade(int score) =>
         GradeThresholds.FirstOrDefault(threshold => score >= threshold.MinScore)?.Grade ?? GradeThresholds[^1].Grade;
 
-    private static double VulnerabilityPenalty(Dependency dependency, Func<Vulnerability, bool> isResolved) =>
-        dependency.Vulnerabilities
-            .Where(vulnerability => !isResolved(vulnerability))
-            .Sum(vulnerability =>
-                SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability));
+    private static List<Vulnerability> OpenVulnerabilities(Dependency dependency,
+        Func<Vulnerability, bool> isResolved) =>
+        dependency.Vulnerabilities.Where(vulnerability => !isResolved(vulnerability)).ToList();
 
-    private static double RuntimePenalty(Project project) =>
-        RuntimeGrouping.ByName(project.Runtimes).Sum(group => FindingRules.IsEol(group)
-            ? EolRuntimePenalty
-            : FindingRules.IsApproachingEol(group.MostAtRisk, DateTime.UtcNow) ? ApproachingEolRuntimePenalty : 0);
+    private static double VulnerabilityPenalty(Vulnerability vulnerability) =>
+        SeverityPenalty(vulnerability.Severity) * VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability);
+
+    private static List<PenaltyCharge> RuntimeCharges(Project project, DateTime now) =>
+        RuntimeGrouping.ByName(project.Runtimes)
+            .Select(group => RuntimeCharge(group, now))
+            .OfType<PenaltyCharge>()
+            .ToList();
+
+    private static PenaltyCharge? RuntimeCharge(RuntimeGroup group, DateTime now)
+    {
+        if (FindingRules.IsEol(group))
+            return new PenaltyCharge(ScorePenaltyKinds.EolRuntime, [], 1, EolRuntimePenalty, null, null,
+                group.MostAtRisk);
+
+        return FindingRules.IsApproachingEol(group.MostAtRisk, now)
+            ? new PenaltyCharge(ScorePenaltyKinds.ApproachingEolRuntime, [], 1, ApproachingEolRuntimePenalty, null,
+                null, group.MostAtRisk)
+            : null;
+    }
+
+    private static PenaltyCharge VersionLagCharge(Project project, double penalty)
+    {
+        List<Dependency> directDependencies = DirectDependencies(project);
+
+        return new PenaltyCharge(ScorePenaltyKinds.VersionLag, [], 1, penalty, null, null, null)
+        {
+            Outdated = directDependencies.Count(dependency => UpdateWeight(dependency) > 0),
+            TotalDirect = directDependencies.Count
+        };
+    }
+
+    private static PenaltyCharge DeprecationCharge(Dependency dependency, double weight) =>
+        new(ScorePenaltyKinds.EolDependency, DependencyModifiers(dependency), weight, EolDependencyPenalty * weight,
+            null, dependency.Name, null);
+
+    private static PenaltyCharge VulnerabilityCharge(Dependency dependency, Vulnerability vulnerability, double weight)
+    {
+        List<string> modifiers = [];
+
+        if (VulnerabilityRiskCalculator.IsActivelyThreatened(vulnerability))
+            modifiers.Add(ScorePenaltyModifiers.ActivelyExploited);
+        else if (VulnerabilityRiskCalculator.IsLikelyExploited(vulnerability))
+            modifiers.Add(ScorePenaltyModifiers.LikelyExploited);
+
+        modifiers.AddRange(DependencyModifiers(dependency));
+
+        return new PenaltyCharge(SeverityKind(vulnerability.Severity), modifiers,
+            VulnerabilityRiskCalculator.PenaltyMultiplier(vulnerability) * weight,
+            VulnerabilityPenalty(vulnerability) * weight, vulnerability.CveAlias, dependency.Name, null);
+    }
+
+    private static List<string> DependencyModifiers(Dependency dependency) =>
+        dependency.Type == DependencyType.Dev ? [ScorePenaltyModifiers.DevDependency] : [];
+
+    private static List<ScorePenaltyLine> ToLines(List<PenaltyCharge> charges) => charges
+        .GroupBy(charge => charge.GroupKey)
+        .Select(group =>
+        {
+            PenaltyCharge first = group.First();
+
+            return new ScorePenaltyLine(
+                first.Kind,
+                first.Modifiers,
+                first.Multiplier == 1 ? null : first.Multiplier,
+                group.Count(),
+                group.Sum(charge => charge.Points),
+                DistinctValues(group.Select(charge => charge.Identifier)),
+                DistinctValues(group.Select(charge => charge.Package)),
+                first.Runtime,
+                first.Outdated,
+                first.TotalDirect);
+        })
+        .OrderByDescending(line => line.Points)
+        .ToList();
+
+    private static List<string> DistinctValues(IEnumerable<string?> values) => values
+        .OfType<string>()
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private static string SeverityKind(VulnerabilitySeverity severity) => severity switch
+    {
+        VulnerabilitySeverity.Critical => ScorePenaltyKinds.CriticalVulnerability,
+        VulnerabilitySeverity.High => ScorePenaltyKinds.HighVulnerability,
+        VulnerabilitySeverity.Medium => ScorePenaltyKinds.MediumVulnerability,
+        _ => ScorePenaltyKinds.LowVulnerability
+    };
 
     private static int ToScore(double penalty) => (int)Math.Round(MaxScore * Math.Exp(-penalty / ScoreDecayConstant));
 
@@ -129,9 +235,12 @@ public static class HealthScoreCalculator
     private static double WeightOf(Dependency dependency) =>
         dependency.Type == DependencyType.Dev ? DevDependencyWeight : 1;
 
+    private static List<Dependency> DirectDependencies(Project project) =>
+        project.Dependencies.Where(dependency => dependency.IsDirect).ToList();
+
     private static double OutdatedPenalty(Project project)
     {
-        List<Dependency> directDependencies = project.Dependencies.Where(dependency => dependency.IsDirect).ToList();
+        List<Dependency> directDependencies = DirectDependencies(project);
 
         if (directDependencies.Count == 0) return 0;
 
@@ -150,4 +259,19 @@ public static class HealthScoreCalculator
             DependencyStatus.MinorUpdate => MinorUpdateWeight,
             _ => 0
         };
+
+    private sealed record PenaltyCharge(
+        string Kind,
+        IReadOnlyList<string> Modifiers,
+        double Multiplier,
+        double Points,
+        string? Identifier,
+        string? Package,
+        Runtime? Runtime)
+    {
+        public int? Outdated { get; init; }
+        public int? TotalDirect { get; init; }
+
+        public string GroupKey => $"{Kind}|{string.Join(',', Modifiers)}|{Runtime?.Name}";
+    }
 }

@@ -33,7 +33,7 @@ public class EndOfLifeRuntimeLifecycleClient(
             return null;
         }
 
-        return new RuntimeLifecycle(cycle.IsEndOfLife, cycle.EndOfLifeDate);
+        return new RuntimeLifecycle(cycle.IsEndOfLife, cycle.EndOfLifeDate, cycle.ReleaseDate);
     }
 
     private async Task<IReadOnlyCollection<EndOfLifeCycle>> GetCyclesAsync(string product,
@@ -116,16 +116,26 @@ public class EndOfLifeRuntimeLifecycleClient(
 
         if (string.IsNullOrEmpty(cycle)) return null;
 
+        DateTime? releaseDate = ReadDate(release, "releaseDate");
+
         if (!release.TryGetProperty("eol", out JsonElement eol))
-            return new EndOfLifeCycle(cycle, null, null);
+            return new EndOfLifeCycle(cycle, null, null, releaseDate);
 
         return eol.ValueKind switch
         {
-            JsonValueKind.True => new EndOfLifeCycle(cycle, true, null),
-            JsonValueKind.False => new EndOfLifeCycle(cycle, false, null),
-            JsonValueKind.String when DateTime.TryParse(eol.GetString(), out DateTime eolDate) =>
-                new EndOfLifeCycle(cycle, null, DateTime.SpecifyKind(eolDate, DateTimeKind.Utc)),
-            _ => new EndOfLifeCycle(cycle, null, null)
+            JsonValueKind.True => new EndOfLifeCycle(cycle, true, null, releaseDate),
+            JsonValueKind.False => new EndOfLifeCycle(cycle, false, null, releaseDate),
+            JsonValueKind.String when ParseDate(eol.GetString()) is DateTime eolDate =>
+                new EndOfLifeCycle(cycle, null, eolDate, releaseDate),
+            _ => new EndOfLifeCycle(cycle, null, null, releaseDate)
         };
     }
+
+    private static DateTime? ReadDate(JsonElement release, string propertyName) =>
+        release.TryGetProperty(propertyName, out JsonElement property) && property.ValueKind == JsonValueKind.String
+            ? ParseDate(property.GetString())
+            : null;
+
+    private static DateTime? ParseDate(string? value) =>
+        DateTime.TryParse(value, out DateTime date) ? DateTime.SpecifyKind(date, DateTimeKind.Utc) : null;
 }

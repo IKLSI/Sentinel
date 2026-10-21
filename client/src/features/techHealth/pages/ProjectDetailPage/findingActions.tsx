@@ -13,7 +13,7 @@ interface FindingActions {
   removingSuppressionId: string | null;
 }
 
-const FindingActionsContext = createContext<FindingActions | null>(null);
+export const FindingActionsContext = createContext<FindingActions | null>(null);
 
 export const FindingActionsProvider: React.FC<{
   projectId: string;
