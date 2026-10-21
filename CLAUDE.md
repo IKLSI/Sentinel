@@ -11,7 +11,7 @@ SaaS multi-tenant de tech health : branche des dépôts GitHub/GitLab, parse leu
 - Backend : .NET 10, Clean Architecture, EF Core 10 + Npgsql, Hangfire, Serilog, JWT, SignalR, QuestPDF/ClosedXML, Scalar
 - Frontend : React 19, TypeScript 7, Vite 8, TanStack Router/Query, MUI v9, react-hook-form + zod, axios, Biome, Vitest
 - PostgreSQL (isolation par Row Level Security), base de dev distante (Supabase). Docker non requis en local, sauf pour les tests d'intégration (Testcontainers)
-- Déploiement : API conteneurisée via `server/Dockerfile` (multi-stage, utilisateur non-root, `HEALTHCHECK` sur `/health`, port lu dans `PORT`) ; front sur Vercel (`client/vercel.json` : rewrites SPA + CSP et en-têtes de sécurité). Mono-instance. Pas de README : ce fichier est la seule doc
+- Déploiement : API conteneurisée via `server/Dockerfile` (multi-stage, utilisateur non-root, `HEALTHCHECK` sur `/health`, port lu dans `PORT`) ; front sur Vercel (`client/vercel.json` : rewrites SPA + CSP et en-têtes de sécurité). Mono-instance. `README.md` = doc humaine (installation, variables d'environnement, déploiement) : la tenir à jour quand la config change
 
 ## Commandes et vérifications
 

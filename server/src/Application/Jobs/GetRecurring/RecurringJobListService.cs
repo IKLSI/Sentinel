@@ -2,6 +2,7 @@ using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Jobs.GetRecurring;
@@ -27,22 +28,26 @@ public class RecurringJobListService(IRecurringJobMonitor recurringJobs) : IServ
     {
         bool descending = sortDirection == SortDirection.Desc;
 
-        IEnumerable<RecurringJobStatusDto> sorted = sortBy switch
+        IOrderedEnumerable<RecurringJobStatusDto> pinned = jobs.OrderByDescending(IsPinned);
+
+        IOrderedEnumerable<RecurringJobStatusDto> sorted = sortBy switch
         {
             JobSortField.LastRun => descending
-                ? jobs.OrderByDescending(j => j.LastExecution)
-                : jobs.OrderBy(j => j.LastExecution),
+                ? pinned.ThenByDescending(j => j.LastExecution)
+                : pinned.ThenBy(j => j.LastExecution),
             JobSortField.Status => descending
-                ? jobs.OrderByDescending(j => j.LastJobState)
-                : jobs.OrderBy(j => j.LastJobState),
+                ? pinned.ThenByDescending(j => j.LastJobState)
+                : pinned.ThenBy(j => j.LastJobState),
             JobSortField.NextRun => descending
-                ? jobs.OrderByDescending(j => j.NextExecution)
-                : jobs.OrderBy(j => j.NextExecution),
+                ? pinned.ThenByDescending(j => j.NextExecution)
+                : pinned.ThenBy(j => j.NextExecution),
             _ => descending
-                ? jobs.OrderByDescending(j => j.Id)
-                : jobs.OrderBy(j => j.Id)
+                ? pinned.ThenByDescending(j => j.Id)
+                : pinned.ThenBy(j => j.Id)
         };
 
         return sorted.ToList();
     }
+
+    private static bool IsPinned(RecurringJobStatusDto job) => job.Id == RecurringJobIds.TechHealthScan;
 }
