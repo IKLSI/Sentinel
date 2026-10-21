@@ -9,6 +9,9 @@ public partial class ManifestParserService
 {
     private const string NodeModulesSegment = "node_modules/";
 
+    private static readonly string[] NpmDependencySections =
+        ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
+
     private static void ParsePackageJson(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
         using JsonDocument doc = JsonDocument.Parse(content);
@@ -80,11 +83,12 @@ public partial class ManifestParserService
     {
         foreach (JsonProperty prop in element.EnumerateObject())
         {
-            if (!TryReadNpmVersion(prop.Value.GetString() ?? "", out string v, out bool pinned)) continue;
+            string specification = prop.Value.GetString() ?? "";
+            if (!TryReadNpmVersion(specification, out string v, out bool pinned)) continue;
             deps.Add(new Dependency
             {
                 ProjectId = projectId,
-                Name = prop.Name,
+                Name = NpmAliasTarget(specification) ?? prop.Name,
                 CurrentVersion = v,
                 IsVersionPinned = pinned,
                 Type = type,
@@ -92,6 +96,17 @@ public partial class ManifestParserService
                 Status = DependencyStatus.UpToDate,
             });
         }
+    }
+
+    private static string? NpmAliasTarget(string specification)
+    {
+        string spec = specification.Trim();
+        if (!spec.StartsWith("npm:", StringComparison.OrdinalIgnoreCase)) return null;
+
+        int at = spec.LastIndexOf('@');
+        string target = at > 4 ? spec[4..at] : spec[4..];
+
+        return string.IsNullOrWhiteSpace(target) ? null : target;
     }
 
     private static bool TryReadNpmVersion(string specification, out string version, out bool pinned)
@@ -119,24 +134,31 @@ public partial class ManifestParserService
 
         if (lockfileVersion >= 2 && root.TryGetProperty("packages", out JsonElement packages))
         {
+            HashSet<string> rootDependencyNames = RootDependencyNames(packages);
+
             foreach (JsonProperty pkg in packages.EnumerateObject())
             {
                 int segment = pkg.Name.LastIndexOf(NodeModulesSegment, StringComparison.Ordinal);
                 if (segment < 0) continue;
 
-                string name = pkg.Name[(segment + NodeModulesSegment.Length)..];
-                if (string.IsNullOrEmpty(name)) continue;
+                string installedName = pkg.Name[(segment + NodeModulesSegment.Length)..];
+                if (string.IsNullOrEmpty(installedName)) continue;
 
                 string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
                 if (string.IsNullOrEmpty(version)) continue;
 
-                bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
+                string name = pkg.Value.TryGetProperty("name", out JsonElement realName)
+                    && realName.GetString() is { Length: > 0 } aliasTarget
+                        ? aliasTarget
+                        : installedName;
+
                 deps.Add(new Dependency
                 {
                     ProjectId = projectId,
                     Name = name,
                     CurrentVersion = version,
-                    Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                    Type = IsDevOnly(pkg.Value) ? DependencyType.Dev : DependencyType.Prod,
+                    IsDirect = segment == 0 && rootDependencyNames.Contains(installedName),
                     Ecosystem = DependencyEcosystem.Npm,
                     Status = DependencyStatus.UpToDate,
                 });
@@ -155,13 +177,13 @@ public partial class ManifestParserService
             string version = pkg.Value.TryGetProperty("version", out JsonElement ver) ? ver.GetString() ?? "" : "";
             if (string.IsNullOrEmpty(version)) continue;
 
-            bool isDev = pkg.Value.TryGetProperty("dev", out JsonElement devProp) && devProp.GetBoolean();
             deps.Add(new Dependency
             {
                 ProjectId = projectId,
                 Name = pkg.Name,
                 CurrentVersion = version,
-                Type = isDev ? DependencyType.Dev : DependencyType.Prod,
+                Type = IsDevOnly(pkg.Value) ? DependencyType.Dev : DependencyType.Prod,
+                IsDirect = false,
                 Ecosystem = DependencyEcosystem.Npm,
                 Status = DependencyStatus.UpToDate,
             });
@@ -169,6 +191,28 @@ public partial class ManifestParserService
             if (pkg.Value.TryGetProperty("dependencies", out JsonElement nested))
                 ExtractPackageLockV1Deps(projectId, nested, deps);
         }
+    }
+
+    private static bool IsDevOnly(JsonElement package) =>
+        IsFlagSet(package, "dev") || IsFlagSet(package, "devOptional");
+
+    private static bool IsFlagSet(JsonElement package, string flag) =>
+        package.TryGetProperty(flag, out JsonElement value) && value.ValueKind == JsonValueKind.True;
+
+    private static HashSet<string> RootDependencyNames(JsonElement packages)
+    {
+        HashSet<string> names = new(StringComparer.Ordinal);
+        if (!packages.TryGetProperty("", out JsonElement rootPackage)) return names;
+
+        foreach (string section in NpmDependencySections)
+        {
+            if (!rootPackage.TryGetProperty(section, out JsonElement dependencies)
+                || dependencies.ValueKind != JsonValueKind.Object) continue;
+
+            foreach (JsonProperty dependency in dependencies.EnumerateObject()) names.Add(dependency.Name);
+        }
+
+        return names;
     }
 
     private static void ParseYarnLock(Guid projectId, string content, List<Dependency> deps)

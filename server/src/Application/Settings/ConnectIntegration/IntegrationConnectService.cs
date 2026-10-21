@@ -14,6 +14,7 @@ namespace Sentinel.Application.Settings.ConnectIntegration;
 
 public class IntegrationConnectService(
     IOrganizationRepository organizationRepository,
+    IProjectRepository projectRepository,
     ICommitScopeFactory commitScopeFactory,
     IRepositoryHostClient repositoryHostClient,
     TokenProtector tokenProtector,
@@ -52,6 +53,10 @@ public class IntegrationConnectService(
         if (account == null)
             return Result.Error(InvalidTokenCode(platform));
 
+        if (platform == RepositoryType.GitLab
+            && await HasProjectsOnOtherGitLabHostAsync(organization, gitLab, cancellationToken))
+            return Result.Error(ErrorCodes.SettingsGitlabInstanceInUse);
+
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             string protectedToken = tokenProtector.Protect(model.Token);
@@ -81,6 +86,19 @@ public class IntegrationConnectService(
             jti: tenant.Jti);
 
         return Result.NoContent();
+    }
+
+    private async Task<bool> HasProjectsOnOtherGitLabHostAsync(Organization organization, GitLabInstance next,
+        CancellationToken cancellationToken)
+    {
+        string currentHost = organization.ToGitLabInstance().Host;
+        if (string.Equals(currentHost, next.Host, StringComparison.OrdinalIgnoreCase)) return false;
+
+        IReadOnlyList<string?> repositoryUrls =
+            await projectRepository.ListRepositoryUrlsAsync(organization.Id, cancellationToken);
+
+        return repositoryUrls.Any(url => RepositoryLocation.TryParse(url, out RepositoryLocation location)
+            && string.Equals(location.Host, currentHost, StringComparison.OrdinalIgnoreCase));
     }
 
     private static GitLabInstance GitLabInstanceOf(ConnectIntegrationDto model)

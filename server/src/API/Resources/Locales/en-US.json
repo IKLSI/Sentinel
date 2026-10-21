@@ -338,6 +338,7 @@
   "errors.projects.invalid_repository_url": "Invalid repository URL. Allowed hosts: github.com and the GitLab instance configured for the organization",
   "errors.projects.invalid_scan_frequency": "Invalid frequency ({values})",
   "errors.settings.token_required": "The token is required",
+  "errors.settings.gitlab_instance_in_use": "Projects of this organization still point to the current GitLab instance: delete them before switching instances",
   "errors.settings.invalid_github_token": "The GitHub token is invalid or could not be verified with the provider",
   "errors.settings.invalid_gitlab_token": "The GitLab token is invalid, or the instance is unreachable or presents an untrusted certificate",
   "errors.tickets.not_found": "Ticket not found",

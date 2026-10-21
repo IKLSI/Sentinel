@@ -14,6 +14,10 @@ public class DependencyStatusCalculatorTests
     [InlineData("1.2.3", "1.3.0", DependencyStatus.MinorUpdate)]
     [InlineData("1.2.3", "2.0.0", DependencyStatus.MajorUpdate)]
     [InlineData("1.2.3", "1.2.4", DependencyStatus.MinorUpdate)]
+    [InlineData("0.3.1", "0.4.0", DependencyStatus.MajorUpdate)]
+    [InlineData("0.3.1", "0.3.5", DependencyStatus.MinorUpdate)]
+    [InlineData("0.0.3", "0.0.4", DependencyStatus.MajorUpdate)]
+    [InlineData("0.9.0", "1.0.0", DependencyStatus.MajorUpdate)]
     public void Compute_ClassifiesTheGapToLatest(string current, string? latest, DependencyStatus expected)
     {
         DependencyStatusCalculator.Compute(current, latest).Should().Be(expected);

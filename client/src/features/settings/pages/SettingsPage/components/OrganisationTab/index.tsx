@@ -1,5 +1,7 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { type FieldErrors, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -27,6 +29,22 @@ import {
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
 import { GitlabInstanceFields } from "@/features/settings/pages/SettingsPage/components/GitlabInstanceFields";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import {
+  type GithubIntegrationFormValues,
+  type GitlabIntegrationFormValues,
+  type OrganizationFormValues,
+  githubIntegrationSchema,
+  gitlabIntegrationSchema,
+  organizationSchema,
+} from "@/features/settings/pages/SettingsPage/components/OrganisationTab/schemas";
+
+const DEFAULT_ORGANIZATION_FORM: OrganizationFormValues = {
+  name: "",
+  securityAlertsEnabled: true,
+  alertMinSeverity: "High",
+};
+
+const ALERTS_DISABLED_VALUE = "None";
 
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
@@ -37,7 +55,7 @@ export const OrganisationTab: React.FC = () => {
 
   const SEVERITIES = useMemo(
     () =>
-      ["None", ...SEVERITY_VALUES].map((value) => ({
+      [ALERTS_DISABLED_VALUE, ...SEVERITY_VALUES].map((value) => ({
         value,
         label: t(`settings.severity.${value}`),
       })),
@@ -57,40 +75,48 @@ export const OrganisationTab: React.FC = () => {
   const connectingGithub = connectGithubMutation.isPending;
   const connectingGitlab = connectGitlabMutation.isPending;
 
-  const [orgForm, setOrgForm] = useState({
-    name: "",
-    securityAlertsEnabled: true,
-    alertMinSeverity: "High",
+  const orgForm = useForm<OrganizationFormValues>({
+    resolver: zodResolver(organizationSchema),
+    defaultValues: DEFAULT_ORGANIZATION_FORM,
   });
-  const [githubToken, setGithubToken] = useState("");
-  const [gitlabToken, setGitlabToken] = useState("");
-  const [gitlabBaseUrl, setGitlabBaseUrl] = useState("");
+  const githubForm = useForm<GithubIntegrationFormValues>({
+    resolver: zodResolver(githubIntegrationSchema),
+    defaultValues: { token: "" },
+  });
+  const gitlabForm = useForm<GitlabIntegrationFormValues>({
+    resolver: zodResolver(gitlabIntegrationSchema),
+    defaultValues: { token: "", baseUrl: "" },
+  });
+
+  const resetOrgForm = orgForm.reset;
+  const setGitlabValue = gitlabForm.setValue;
 
   useEffect(() => {
     if (!integrationsQuery.data) return;
-    setGitlabBaseUrl(integrationsQuery.data.gitlabBaseUrl);
-  }, [integrationsQuery.data]);
+    setGitlabValue("baseUrl", integrationsQuery.data.gitlabBaseUrl);
+  }, [integrationsQuery.data, setGitlabValue]);
 
   useEffect(() => {
     if (!org) return;
-    setOrgForm({
+    resetOrgForm({
       name: org.name,
       securityAlertsEnabled: org.securityAlertsEnabled,
       alertMinSeverity: org.alertMinSeverity,
     });
-  }, [org]);
+  }, [org, resetOrgForm]);
 
-  const handleSaveOrg = () => {
-    if (!orgForm.name.trim()) {
-      showToast(t("settings.toast.name_required"), "warning");
-      return;
-    }
+  const warnFirstError = (errors: FieldErrors) => {
+    const message = Object.values(errors)[0]?.message;
+    if (typeof message === "string") showToast(t(message), "warning");
+  };
+
+  const handleSaveOrg = orgForm.handleSubmit((values) => {
     updateOrg.mutate(
       {
         data: {
-          name: orgForm.name,
-          securityAlertsEnabled: orgForm.securityAlertsEnabled,
-          alertMinSeverity: orgForm.alertMinSeverity as VulnerabilitySeverity,
+          name: values.name,
+          securityAlertsEnabled: values.securityAlertsEnabled,
+          alertMinSeverity: values.alertMinSeverity as VulnerabilitySeverity,
         },
       },
       {
@@ -98,52 +124,43 @@ export const OrganisationTab: React.FC = () => {
         onError: onOrgUpdateError,
       },
     );
-  };
+  }, warnFirstError);
 
-  const handleConnectGithub = () => {
-    if (!githubToken.trim()) {
-      showToast(t("settings.toast.token_required"), "warning");
-      return;
-    }
+  const handleConnectGithub = githubForm.handleSubmit(({ token }) => {
     connectGithubMutation.mutate(
-      { data: { token: githubToken.trim() } },
+      { data: { token } },
       {
         onSuccess: () => {
-          setGithubToken("");
+          githubForm.setValue("token", "");
           showToast(t("settings.toast.github_connected"), "success");
         },
         onError: onGithubError,
       },
     );
-  };
+  }, warnFirstError);
 
-  const handleConnectGitlab = () => {
-    if (!gitlabToken.trim()) {
-      showToast(t("settings.toast.token_required"), "warning");
-      return;
-    }
+  const handleConnectGitlab = gitlabForm.handleSubmit(({ token, baseUrl }) => {
     connectGitlabMutation.mutate(
-      {
-        data: {
-          token: gitlabToken.trim(),
-          baseUrl: gitlabBaseUrl.trim() || null,
-        },
-      },
+      { data: { token, baseUrl: baseUrl || null } },
       {
         onSuccess: () => {
-          setGitlabToken("");
+          gitlabForm.setValue("token", "");
           showToast(t("settings.toast.gitlab_connected"), "success");
         },
         onError: onGitlabError,
       },
     );
-  };
+  }, warnFirstError);
 
-  const orgUnchanged = org
-    ? orgForm.name === org.name &&
-      orgForm.securityAlertsEnabled === org.securityAlertsEnabled &&
-      orgForm.alertMinSeverity === org.alertMinSeverity
-    : true;
+  const securityAlertsEnabled = orgForm.watch("securityAlertsEnabled");
+  const alertMinSeverity = orgForm.watch("alertMinSeverity");
+
+  const handleSeverityChange = (value: string) => {
+    const enabled = value !== ALERTS_DISABLED_VALUE;
+    orgForm.setValue("securityAlertsEnabled", enabled, { shouldDirty: true });
+    if (enabled)
+      orgForm.setValue("alertMinSeverity", value, { shouldDirty: true });
+  };
 
   return (
     <Box sx={{ overflow: "auto", flex: 1, pr: "4px" }}>
@@ -178,10 +195,7 @@ export const OrganisationTab: React.FC = () => {
                     component="input"
                     type="text"
                     sx={inp}
-                    value={orgForm.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setOrgForm((f) => ({ ...f, name: e.target.value }))
-                    }
+                    {...orgForm.register("name")}
                   />
                 </Box>
                 <Box>
@@ -198,20 +212,12 @@ export const OrganisationTab: React.FC = () => {
                         appearance: "none",
                       }}
                       value={
-                        orgForm.securityAlertsEnabled
-                          ? orgForm.alertMinSeverity
-                          : "None"
+                        securityAlertsEnabled
+                          ? alertMinSeverity
+                          : ALERTS_DISABLED_VALUE
                       }
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        setOrgForm((f) =>
-                          e.target.value === "None"
-                            ? { ...f, securityAlertsEnabled: false }
-                            : {
-                                ...f,
-                                securityAlertsEnabled: true,
-                                alertMinSeverity: e.target.value,
-                              },
-                        )
+                        handleSeverityChange(e.target.value)
                       }
                     >
                       {SEVERITIES.map((s) => (
@@ -247,7 +253,7 @@ export const OrganisationTab: React.FC = () => {
                   variant="contained"
                   size="small"
                   onClick={handleSaveOrg}
-                  disabled={savingOrg || orgUnchanged}
+                  disabled={savingOrg || !orgForm.formState.isDirty}
                   sx={{ minWidth: "110px" }}
                 >
                   {savingOrg
@@ -288,8 +294,8 @@ export const OrganisationTab: React.FC = () => {
               )}
               helpScopes={["repo", "read:org"]}
               placeholder={t("settings.integrations.github_placeholder")}
-              token={githubToken}
-              onTokenChange={setGithubToken}
+              token={githubForm.watch("token")}
+              onTokenChange={(value) => githubForm.setValue("token", value)}
               onConnect={handleConnectGithub}
               connecting={connectingGithub}
             />
@@ -330,14 +336,16 @@ export const OrganisationTab: React.FC = () => {
               helpScopes={["read_api", "read_repository"]}
               placeholder={t("settings.integrations.gitlab_placeholder")}
               tokenLabel={t("settings.integrations.gitlab_token_label")}
-              token={gitlabToken}
-              onTokenChange={setGitlabToken}
+              token={gitlabForm.watch("token")}
+              onTokenChange={(value) => gitlabForm.setValue("token", value)}
               onConnect={handleConnectGitlab}
               connecting={connectingGitlab}
             >
               <GitlabInstanceFields
-                baseUrl={gitlabBaseUrl}
-                onBaseUrlChange={setGitlabBaseUrl}
+                baseUrl={gitlabForm.watch("baseUrl")}
+                onBaseUrlChange={(value) =>
+                  gitlabForm.setValue("baseUrl", value)
+                }
               />
             </IntegrationRow>
           </Box>

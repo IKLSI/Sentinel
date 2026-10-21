@@ -30,40 +30,54 @@ public class PublicScanService(
         if (!RepositoryLocation.TryParse(request.RepositoryUrl, out RepositoryLocation location))
             return Result<PublicScanResponse>.Error(ErrorCodes.ScanInvalidRepositoryUrl);
 
-        string? headCommitSha = await scanner.GetHeadCommitAsync(request.RepositoryUrl!, null, null,
-            cancellationToken);
-        string cacheKey = CacheKeys.PublicScan(location.Host, location.Owner, location.Repository, headCommitSha);
+        string latestKey = CacheKeys.PublicScanLatest(location.Host, location.Owner, location.Repository);
 
-        if (cache.TryGetValue(cacheKey, out PublicScanResponse? cached) && cached != null)
-            return Result<PublicScanResponse>.Success(cached);
+        if (TryReadCached(latestKey, out PublicScanResponse? latest))
+            return Result<PublicScanResponse>.Success(latest!);
 
         if (!throttle.TryEnter())
             return Result<PublicScanResponse>.Error(ErrorCodes.PublicScanBusy);
 
-        Result<PublicScanResponse> result;
-
         try
         {
-            result = await ScanAsync(request.RepositoryUrl!, headCommitSha, cancellationToken);
+            string? headCommitSha = await scanner.GetHeadCommitAsync(request.RepositoryUrl!, null, null,
+                cancellationToken);
+            string commitKey = CacheKeys.PublicScan(location.Host, location.Owner, location.Repository,
+                headCommitSha);
+
+            if (TryReadCached(commitKey, out PublicScanResponse? cached))
+            {
+                Store(latestKey, cached!, CacheKeys.PublicScanLatestTtl);
+                return Result<PublicScanResponse>.Success(cached!);
+            }
+
+            Result<PublicScanResponse> result = await ScanAsync(request.RepositoryUrl!, headCommitSha,
+                cancellationToken);
+
+            if (result.IsSuccess && result.Value is { } response)
+            {
+                Store(commitKey, response,
+                    headCommitSha == null ? CacheKeys.PublicScanUnpinnedTtl : CacheKeys.PublicScanTtl);
+                Store(latestKey, response, CacheKeys.PublicScanLatestTtl);
+            }
+
+            return result;
         }
         finally
         {
             throttle.Exit();
         }
-
-        if (result.IsSuccess && result.Value is { } response)
-        {
-            cache.Set(cacheKey, response, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = headCommitSha == null
-                    ? CacheKeys.PublicScanUnpinnedTtl
-                    : CacheKeys.PublicScanTtl,
-                Size = 1
-            });
-        }
-
-        return result;
     }
+
+    private bool TryReadCached(string key, out PublicScanResponse? response) =>
+        cache.TryGetValue(key, out response) && response != null;
+
+    private void Store(string key, PublicScanResponse response, TimeSpan lifetime) =>
+        cache.Set(key, response, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = lifetime,
+            Size = 1
+        });
 
     private async Task<Result<PublicScanResponse>> ScanAsync(string repositoryUrl, string? headCommitSha,
         CancellationToken cancellationToken)

@@ -152,9 +152,7 @@ public partial class RepositoryHostClient(
                 cancellationToken);
         }
 
-        using HttpRequestMessage anonymousRequest = new HttpRequestMessage(HttpMethod.Get, url);
-        return await SendBoundedAsync(httpClientFactory.CreateClient(HttpClientNames.Registry), anonymousRequest, url,
-            cancellationToken);
+        return null;
     }
 
     private static HttpRequestMessage BuildGitLabRequest(string url, string? token)

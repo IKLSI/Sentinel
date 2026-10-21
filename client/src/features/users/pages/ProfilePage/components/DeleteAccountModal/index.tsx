@@ -1,5 +1,7 @@
 import type React from "react";
-import { useState } from "react";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useDeleteMyAccountMutation } from "@/domains/users/mutations";
@@ -9,6 +11,12 @@ import { useT } from "@/contexts/I18nContext";
 import { endSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
 import { inp } from "@/features/users/pages/ProfilePage/constants";
+import {
+  type DeleteAccountFormValues,
+  deleteAccountSchema,
+} from "@/features/users/pages/ProfilePage/components/DeleteAccountModal/schemas";
+
+const EMPTY_FORM: DeleteAccountFormValues = { password: "" };
 
 interface Props {
   open: boolean;
@@ -18,20 +26,25 @@ interface Props {
 export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
   const t = useT();
   const onDeleteError = useApiErrorToast("profile.gdpr.delete_error");
-  const [deletePassword, setDeletePassword] = useState("");
+  const formId = useId();
+  const { register, handleSubmit, reset, watch } =
+    useForm<DeleteAccountFormValues>({
+      resolver: zodResolver(deleteAccountSchema),
+      defaultValues: EMPTY_FORM,
+    });
+  const hasPassword = watch("password").trim().length > 0;
 
   const deleteAccount = useDeleteMyAccountMutation();
   const deletingAccount = deleteAccount.isPending;
 
   const closeAndReset = () => {
     onClose();
-    setDeletePassword("");
+    reset(EMPTY_FORM);
   };
 
-  const handleDeleteAccount = () => {
-    if (!deletePassword.trim()) return;
+  const handleDeleteAccount = handleSubmit(({ password }) => {
     deleteAccount.mutate(
-      { data: { password: deletePassword } },
+      { data: { password } },
       {
         onSuccess: () => {
           endSession();
@@ -40,7 +53,7 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
         onError: onDeleteError,
       },
     );
-  };
+  });
 
   return (
     <AppModal
@@ -65,8 +78,9 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
             variant="contained"
             color="error"
             size="small"
-            onClick={handleDeleteAccount}
-            disabled={deletingAccount || !deletePassword.trim()}
+            type="submit"
+            form={formId}
+            disabled={deletingAccount || !hasPassword}
           >
             {deletingAccount
               ? t("profile.gdpr.deleting")
@@ -75,7 +89,13 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
         </>
       }
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Box
+        component="form"
+        id={formId}
+        onSubmit={handleDeleteAccount}
+        noValidate
+        sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
+      >
         <Box
           sx={{
             fontSize: "13px",
@@ -102,14 +122,7 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
             component="input"
             type="password"
             sx={{ ...inp, py: "9px", px: "12px", fontSize: "13px" }}
-            value={deletePassword}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setDeletePassword(e.target.value)
-            }
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === "Enter" && deletePassword.trim())
-                handleDeleteAccount();
-            }}
+            {...register("password")}
             autoFocus
           />
         </Box>

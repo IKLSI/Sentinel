@@ -48,6 +48,7 @@ public static class ErrorCodes
     public const string SettingsTokenRequired = "errors.settings.token_required";
     public const string SettingsInvalidGithubToken = "errors.settings.invalid_github_token";
     public const string SettingsInvalidGitlabToken = "errors.settings.invalid_gitlab_token";
+    public const string SettingsGitlabInstanceInUse = "errors.settings.gitlab_instance_in_use";
 
     public const string TicketNotFound = "errors.tickets.not_found";
     public const string TicketFindingNotFound = "errors.tickets.finding_not_found";

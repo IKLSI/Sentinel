@@ -104,6 +104,52 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParsePackageLockV3_DevOptionalEntry_IsDev()
+    {
+        const string content = """
+        {
+          "lockfileVersion": 3,
+          "packages": {
+            "node_modules/fsevents": { "version": "2.3.3", "devOptional": true }
+          }
+        }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("package-lock.json", content);
+
+        SingleDependency(dependencies, "fsevents").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
+    public void ParsePackageLockV3_AliasedEntry_UsesTheRealPackageName()
+    {
+        const string content = """
+        {
+          "lockfileVersion": 3,
+          "packages": {
+            "": { "dependencies": { "legacy-lodash": "npm:lodash@4.17.20" } },
+            "node_modules/legacy-lodash": { "name": "lodash", "version": "4.17.20" }
+          }
+        }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("package-lock.json", content);
+
+        Dependency lodash = SingleDependency(dependencies, "lodash");
+        lodash.CurrentVersion.Should().Be("4.17.20");
+        lodash.IsDirect.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParsePackageJson_AliasedDependency_UsesTheRealPackageName()
+    {
+        (List<Dependency> dependencies, _) = Parse("package.json",
+            """{ "dependencies": { "legacy-lodash": "npm:lodash@4.17.20" } }""");
+
+        SingleDependency(dependencies, "lodash").CurrentVersion.Should().Be("4.17.20");
+    }
+
+    [Fact]
     public void ParseYarnLock_ReadsClassicEntries()
     {
         const string content = """
@@ -1208,10 +1254,10 @@ public class ManifestParserServiceTests
 
         (List<Dependency> dependencies, List<Runtime> runtimes) = Parse("package.json", content);
 
-        dependencies.Select(dependency => dependency.Name).Should().BeEquivalentTo(["axios", "lodash", "aliased"]);
+        dependencies.Select(dependency => dependency.Name).Should().BeEquivalentTo(["axios", "lodash", "react"]);
         SingleDependency(dependencies, "axios").IsVersionPinned.Should().BeTrue();
         SingleDependency(dependencies, "lodash").IsVersionPinned.Should().BeFalse();
-        SingleDependency(dependencies, "aliased").CurrentVersion.Should().Be("18.2.0");
+        SingleDependency(dependencies, "react").CurrentVersion.Should().Be("18.2.0");
         SingleRuntime(runtimes, "Node.js").IsMinimumConstraint.Should().BeTrue();
     }
 

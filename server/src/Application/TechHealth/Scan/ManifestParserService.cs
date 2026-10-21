@@ -98,6 +98,16 @@ public partial class ManifestParserService
         "Podfile.lock",
     };
 
+    private static readonly HashSet<string> LockFilesReportingDirectness = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "package-lock.json",
+        "packages.lock.json",
+        "Gemfile.lock",
+        "pubspec.lock",
+        "Podfile.lock",
+        "Package.resolved",
+    };
+
     private static readonly string[] ProjectFileExtensions = [".csproj", ".fsproj", ".vbproj"];
 
     public static bool IsManifest(string name)
@@ -108,6 +118,9 @@ public partial class ManifestParserService
 
     public static bool IsLockFile(string name)
         => LockFileNames.Contains(name);
+
+    public static bool ReportsDirectness(string name)
+        => LockFilesReportingDirectness.Contains(name);
 
     public static int ScanPriority(string name)
     {

@@ -16,7 +16,8 @@ public sealed record RepositoryScanScope(string? Branch, string? RootPath)
     public static readonly RepositoryScanScope Default = new(null, null);
 }
 
-internal record ParsedManifest(string Directory, bool IsLockFile, List<Dependency> Dependencies, List<Runtime> Runtimes);
+internal record ParsedManifest(string FileName, string Directory, bool IsLockFile, List<Dependency> Dependencies,
+    List<Runtime> Runtimes);
 
 public class RepositoryScannerService(
     IRepositoryHostClient hostClient,
@@ -32,7 +33,7 @@ public class RepositoryScannerService(
         if (lockDeps.Count == 0 || manifestDeps.Count == 0) return;
 
         Dictionary<(DependencyEcosystem, string), DependencyType> declaredTypes = manifestDeps
-            .GroupBy(d => (d.Ecosystem, d.Name.ToLowerInvariant()))
+            .GroupBy(IdentityKey)
             .ToDictionary(
                 group => group.Key,
                 group => group.Any(d => d.Type == DependencyType.Prod)
@@ -41,32 +42,34 @@ public class RepositoryScannerService(
 
         foreach (Dependency dependency in lockDeps)
         {
-            if (declaredTypes.TryGetValue((dependency.Ecosystem, dependency.Name.ToLowerInvariant()),
-                out DependencyType declared))
+            if (declaredTypes.TryGetValue(IdentityKey(dependency), out DependencyType declared))
             {
                 dependency.Type = declared;
             }
         }
     }
 
-    private static void ApplyDirectness(List<Dependency> lockDeps, List<Dependency> manifestDeps)
+    private static void ApplyDirectness(ParsedManifest lockFile, List<Dependency> manifestDeps)
     {
-        Dictionary<DependencyEcosystem, HashSet<string>> directNamesByEcosystem = manifestDeps
+        HashSet<DependencyEcosystem> declaredEcosystems = manifestDeps.Select(d => d.Ecosystem).ToHashSet();
+        HashSet<(DependencyEcosystem, string)> directKeys = manifestDeps
             .Where(d => d.IsDirect)
-            .GroupBy(d => d.Ecosystem)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(DirectnessKey).ToHashSet());
+            .Select(IdentityKey)
+            .ToHashSet();
+        bool keepsParserDirectness = ManifestParserService.ReportsDirectness(lockFile.FileName);
 
-        foreach (Dependency dependency in lockDeps)
+        foreach (Dependency dependency in lockFile.Dependencies)
         {
-            if (directNamesByEcosystem.TryGetValue(dependency.Ecosystem, out HashSet<string>? directNames))
-                dependency.IsDirect = directNames.Contains(DirectnessKey(dependency));
+            if (declaredEcosystems.Contains(dependency.Ecosystem))
+                dependency.IsDirect = directKeys.Contains(IdentityKey(dependency));
+            else if (!keepsParserDirectness)
+                dependency.IsDirect = false;
         }
     }
 
-    private static string DirectnessKey(Dependency dependency) =>
-        PackageNameNormalizer.ForVulnerabilityFeed(dependency.Ecosystem, dependency.Name).ToLowerInvariant();
+    private static (DependencyEcosystem, string) IdentityKey(Dependency dependency) =>
+        (dependency.Ecosystem,
+            PackageNameNormalizer.ForVulnerabilityFeed(dependency.Ecosystem, dependency.Name).ToLowerInvariant());
 
     public Task<string?> GetHeadCommitAsync(string repoUrl, RepositoryAccess? access, string? branch,
         CancellationToken cancellationToken)
@@ -158,7 +161,7 @@ public class RepositoryScannerService(
 
                     foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
 
-                    return new ParsedManifest(RepositoryScanPaths.DirectoryOf(file.Path),
+                    return new ParsedManifest(file.Name, RepositoryScanPaths.DirectoryOf(file.Path),
                         ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes);
                 }
                 catch (Exception ex)
@@ -191,7 +194,7 @@ public class RepositoryScannerService(
                     .ToList();
 
                 ApplyDeclaredTypes(lockFile.Dependencies, coveredManifestDeps);
-                ApplyDirectness(lockFile.Dependencies, coveredManifestDeps);
+                ApplyDirectness(lockFile, coveredManifestDeps);
             }
 
             List<LockedPackages> lockedPackages = lockFiles.Select(LockedPackages.Of).ToList();
@@ -203,7 +206,7 @@ public class RepositoryScannerService(
 
             List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
                 .Concat(unlockedManifestDeps)
-                .GroupBy(d => (d.Ecosystem, Name: d.Name.ToLowerInvariant(), d.CurrentVersion))
+                .GroupBy(d => (Identity: IdentityKey(d), d.CurrentVersion))
                 .Select(g => g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First())
                 .ToList();
 
@@ -241,11 +244,8 @@ public class RepositoryScannerService(
     private sealed record LockedPackages(string Directory, HashSet<(DependencyEcosystem, string)> Packages)
     {
         public static LockedPackages Of(ParsedManifest lockFile) => new(lockFile.Directory,
-            lockFile.Dependencies.Select(Key).ToHashSet());
+            lockFile.Dependencies.Select(IdentityKey).ToHashSet());
 
-        public bool Contains(Dependency dependency) => Packages.Contains(Key(dependency));
-
-        private static (DependencyEcosystem, string) Key(Dependency dependency) =>
-            (dependency.Ecosystem, dependency.Name.ToUpperInvariant());
+        public bool Contains(Dependency dependency) => Packages.Contains(IdentityKey(dependency));
     }
 }

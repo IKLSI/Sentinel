@@ -244,13 +244,48 @@ public class RepositoryScannerServiceTests
     }
 
     [Fact]
-    public async Task ScanRepository_LockFileWithoutManifestOfItsEcosystem_KeepsEntriesDirect()
+    public async Task ScanRepository_LockFileWithoutManifestOfItsEcosystem_MarksEntriesTransitive()
     {
         ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
         {
             ["https://host/yarn.lock"] = """
             tinybench@^2.0.0:
               version "2.9.0"
+            """,
+        });
+
+        outcome.Dependencies.Should().ContainSingle().Which.IsDirect.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ScanRepository_PackageLockWithoutManifest_KeepsTheDirectnessItDeclares()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package-lock.json"] = """
+            {
+              "lockfileVersion": 3,
+              "packages": {
+                "": { "dependencies": { "axios": "^1.6.0" } },
+                "node_modules/axios": { "version": "1.6.8" },
+                "node_modules/follow-redirects": { "version": "1.15.6" }
+              }
+            }
+            """,
+        });
+
+        outcome.Dependencies.Single(dependency => dependency.Name == "axios").IsDirect.Should().BeTrue();
+        outcome.Dependencies.Single(dependency => dependency.Name == "follow-redirects").IsDirect.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ScanRepository_PythonNamesWithDifferentSeparators_AreDeduplicated()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/requirements.txt"] = "python_dateutil==2.9.0",
+            ["https://host/Pipfile.lock"] = """
+            { "default": { "python-dateutil": { "version": "==2.9.0" } }, "develop": {} }
             """,
         });
 
