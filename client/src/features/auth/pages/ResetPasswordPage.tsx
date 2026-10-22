@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { useResetPasswordMutation } from "@/domains/auth/mutations";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
@@ -119,11 +119,8 @@ export const ResetPasswordPage: React.FC = () => {
           </Box>
 
           <Box className="lp-logo">
-            <Box className="lp-logo-mark">
-              <SentinelLogo width={20} height={23} />
-            </Box>
             <Box className="lp-logo-wordmark">
-              {t("auth.reset_password.brand")}
+              <SentinelWordmark height={14} />
             </Box>
           </Box>
 

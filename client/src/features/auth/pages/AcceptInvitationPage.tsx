@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { useAcceptInvitationMutation } from "@/domains/users/mutations";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
@@ -103,11 +103,8 @@ export const AcceptInvitationPage: React.FC = () => {
 
           <Box className="aip-body">
             <Box className="aip-logo">
-              <Box className="aip-logo-mark">
-                <SentinelLogo width={18} height={21} />
-              </Box>
               <Box className="aip-logo-text">
-                {t("auth.accept_invitation.brand")}
+                <SentinelWordmark height={13} />
               </Box>
             </Box>
             <Box className="aip-headline">

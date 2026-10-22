@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
 import {
@@ -86,8 +86,7 @@ export const ScanPage: React.FC = () => {
             letterSpacing: "0.05em",
           }}
         >
-          <SentinelLogo width={22} height={26} />
-          {t("sidebar.brand")}
+          <SentinelWordmark height={18} />
         </Box>
 
         <Box component="h1" sx={{ m: 0, mb: "8px", fontSize: "28px" }}>

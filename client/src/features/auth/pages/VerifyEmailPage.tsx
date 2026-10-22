@@ -4,7 +4,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useVerifyEmailMutation } from "@/domains/auth/mutations";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 
@@ -40,11 +40,8 @@ export const VerifyEmailPage: React.FC = () => {
         <Box className="lp-right" sx={{ width: "100%" }}>
           <Box className="lp-form-wrap">
             <Box className="lp-logo" sx={{ marginBottom: "32px" }}>
-              <Box className="lp-logo-mark">
-                <SentinelLogo width={20} height={23} />
-              </Box>
               <Box className="lp-logo-wordmark" sx={{ color: "var(--text)" }}>
-                {t("auth.verify_email.brand")}
+                <SentinelWordmark height={14} />
               </Box>
             </Box>
 

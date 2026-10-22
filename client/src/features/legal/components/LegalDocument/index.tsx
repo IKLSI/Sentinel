@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import KeyboardArrowUpOutlined from "@mui/icons-material/KeyboardArrowUpOutlined";
 import MailOutlineOutlined from "@mui/icons-material/MailOutlineOutlined";
 import { Link } from "@tanstack/react-router";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
 import { LegalSectionCard } from "@/features/legal/components/LegalSectionCard";
@@ -106,19 +106,10 @@ export const LegalDocument: React.FC<Props> = ({
             gap: "12px",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <SentinelLogo width={22} height={26} />
-            <Box
-              sx={{
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                color: "var(--text)",
-                lineHeight: 1,
-              }}
-            >
-              {t("sidebar.brand")}
-            </Box>
+          <Box
+            sx={{ display: "flex", alignItems: "center", color: "var(--text)" }}
+          >
+            <SentinelWordmark height={18} />
           </Box>
 
           <Box

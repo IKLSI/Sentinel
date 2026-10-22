@@ -8,7 +8,7 @@ import {
   LANDING_SECTION_IDS,
   LANDING_WRAP_SX,
 } from "@/features/landing/constants";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { FooterColumn } from "@/features/landing/pages/LandingPage/components/FooterColumn";
 
 const linkSx = {
@@ -66,8 +66,7 @@ export const LandingFooter: React.FC = () => {
                 color: "var(--ink)",
               }}
             >
-              <SentinelLogo width={22} height={25} />
-              Sentinel
+              <SentinelWordmark height={20} />
             </Box>
             <Box
               component="p"

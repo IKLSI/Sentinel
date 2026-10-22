@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
 import { NAV_LINKS } from "@/features/landing/constants";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { LanguageToggle } from "@/features/landing/pages/LandingPage/components/LanguageToggle";
 
 const SCROLL_THRESHOLD = 8;
@@ -102,8 +102,7 @@ export const LandingNav: React.FC = () => {
             "&:focus-visible": FOCUS_RING,
           }}
         >
-          <SentinelLogo width={26} height={30} />
-          Sentinel
+          <SentinelWordmark height={22} />
         </Box>
 
         <Box

@@ -3,6 +3,7 @@ import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleA
 import Box from "@mui/material/Box";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
+import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 
 interface Props {
@@ -63,31 +64,8 @@ export const Header: React.FC<Props> = ({
           overflow: "hidden",
         }}
       >
-        <SentinelLogo />
-        <Box>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              color: "var(--text)",
-              lineHeight: 1,
-            }}
-          >
-            {t("sidebar.brand")}
-          </Box>
-          <Box
-            sx={{
-              fontSize: "9px",
-              color: "var(--muted)",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              mt: "3px",
-            }}
-          >
-            {t("sidebar.workspace")}
-          </Box>
+        <Box sx={{ color: "var(--text)" }}>
+          <SentinelWordmark height={20} />
         </Box>
       </Box>
 
