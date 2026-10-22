@@ -824,23 +824,6 @@ a:hover {
   );
   background-size: 28px 28px;
 }
-.lp-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: "Bricolage Grotesque", var(--font-ui), sans-serif;
-  font-size: 12px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 100px;
-  padding: 7px 14px 7px 9px;
-  backdrop-filter: blur(8px);
-  align-self: flex-start;
-}
 .lp-decor {
   position: absolute;
   inset: 0;
@@ -1535,6 +1518,7 @@ a:hover {
     display: none;
   }
   .lp-right {
+    flex-direction: column;
     padding: 36px 28px;
   }
 }

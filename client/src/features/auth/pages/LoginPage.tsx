@@ -19,6 +19,17 @@ import { RegisterModal } from "@/features/auth/pages/RegisterModal";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
 
+const LEGAL_LINKS_SX = {
+  mt: "36px",
+  "@media (min-width: 901px)": {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: "24px",
+    mt: 0,
+  },
+} as const;
+
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const resendVerificationMutation = useResendVerificationMutation();
@@ -209,9 +220,9 @@ export const LoginPage: React.FC = () => {
                 </button>
               )}
             </Box>
-
-            <LegalLinks tone="auth" sx={{ mt: "30px" }} />
           </Box>
+
+          <LegalLinks tone="auth" sx={LEGAL_LINKS_SX} />
         </Box>
       </Box>
       <ForgotPasswordModal

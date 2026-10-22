@@ -14,14 +14,16 @@ interface Props {
 
 const TONES = {
   auth: {
-    color: "var(--auth-gray-400)",
+    color: "var(--auth-gray-500)",
     hover: "var(--auth-gray-900)",
     dot: "var(--auth-gray-300)",
+    fontSize: "12px",
   },
   app: {
     color: "var(--muted)",
     hover: "var(--text)",
     dot: "var(--border2)",
+    fontSize: "10px",
   },
 } as const;
 
@@ -37,7 +39,7 @@ export const LegalLinks: React.FC<Props> = ({ tone, sx }) => {
   const t = useT();
   const palette = TONES[tone];
   const labelSx = {
-    fontSize: "10px",
+    fontSize: palette.fontSize,
     color: palette.color,
     textDecoration: "none",
     transition: "color 0.15s",

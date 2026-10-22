@@ -1,6 +1,5 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { useT } from "@/contexts/I18nContext";
 
 export const LoginShowcase: React.FC = () => {
@@ -10,10 +9,6 @@ export const LoginShowcase: React.FC = () => {
     <Box className="lp-left">
       <Box className="lp-left-noise" aria-hidden />
       <Box className="lp-left-body">
-        <Box className="lp-brand">
-          <SentinelLogo width={18} height={21} />
-          {t("auth.login.brand")}
-        </Box>
         <Box className="lp-left-headline">
           <Box component="h1">
             {t("auth.login.headline_part1")}
