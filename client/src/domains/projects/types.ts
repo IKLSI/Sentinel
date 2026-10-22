@@ -36,3 +36,7 @@ export type ProjectRepositoryOptions =
 export interface ProjectBadge {
   token: string;
 }
+
+export type Remediation = components["schemas"]["RemediationDto"];
+
+export type StartRemediation = components["schemas"]["StartRemediationDto"];

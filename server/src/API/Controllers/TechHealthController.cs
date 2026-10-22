@@ -14,6 +14,8 @@ using Sentinel.Application.TechHealth.GetProject;
 using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.ProjectBadge;
 using Sentinel.Application.TechHealth.Projects;
+using Sentinel.Application.TechHealth.Remediation;
+using Sentinel.Application.TechHealth.Remediation.StartRemediation;
 using Sentinel.Application.TechHealth.RepositoryOptions;
 using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.TechHealth.Suppressions.RemoveSuppression;
@@ -159,6 +161,15 @@ public class TechHealthController : BaseController
         [FromServices] RemoveSuppressionService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, suppressionId, cancellationToken));
+
+    [HttpPost("projects/{id:guid}/remediations")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<RemediationDto>> StartRemediation(
+        Guid id,
+        [FromBody] StartRemediationDto dto,
+        [FromServices] StartRemediationService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
 
     [HttpPost("projects/{id:guid}/badge")]
     [AuthorizeRoles(UserRole.Admin)]

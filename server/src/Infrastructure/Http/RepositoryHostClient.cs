@@ -155,6 +155,16 @@ public partial class RepositoryHostClient(
         return null;
     }
 
+    public async Task<string?> FindMergeRequestUrlAsync(string host, string owner, string repo,
+        RepositoryAccess access, string sourceBranch, CancellationToken cancellationToken)
+    {
+        if (RepositoryHosts.IsGitHub(host))
+            return await FindGitHubPullRequestUrlAsync(owner, repo, access.Token, sourceBranch, cancellationToken);
+        if (RepositoryHosts.IsGitLab(host, access.GitLab.Host))
+            return await FindGitLabMergeRequestUrlAsync(owner, repo, access, sourceBranch, cancellationToken);
+        return null;
+    }
+
     private static HttpRequestMessage BuildGitLabRequest(string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);

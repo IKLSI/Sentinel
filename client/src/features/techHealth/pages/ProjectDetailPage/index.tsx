@@ -94,7 +94,10 @@ export const ProjectDetailPage: React.FC = () => {
         }}
       />
 
-      <FindingActionsProvider projectId={project.id}>
+      <FindingActionsProvider
+        projectId={project.id}
+        remediationAvailable={project.remediationAvailable}
+      >
         <Box
           sx={{
             flex: "1 1 auto",

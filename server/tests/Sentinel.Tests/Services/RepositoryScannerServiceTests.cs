@@ -44,6 +44,10 @@ public class RepositoryScannerServiceTests
 
         public Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access, CancellationToken cancellationToken) =>
             Task.FromResult(filesByUrl.TryGetValue(url, out string? content) ? content : null);
+
+        public Task<string?> FindMergeRequestUrlAsync(string host, string owner, string repo,
+            RepositoryAccess access, string sourceBranch, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(null);
     }
 
     private sealed class NoopRegistry : IDependencyRegistryClient

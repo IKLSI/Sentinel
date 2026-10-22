@@ -77,6 +77,31 @@ public partial class RepositoryHostClient
         return new RepositoryListing(true, null, result, truncated);
     }
 
+    private async Task<string?> FindGitHubPullRequestUrlAsync(string owner, string repo, string? token,
+        string sourceBranch, CancellationToken cancellationToken)
+    {
+        try
+        {
+            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
+                $"https://api.github.com/repos/{owner}/{repo}/pulls?state=open&head={Uri.EscapeDataString($"{owner}:{sourceBranch}")}",
+                token);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+
+            List<JsonElement>? pulls = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
+
+            return pulls is [var pull, ..] && pull.TryGetProperty("html_url", out JsonElement url)
+                ? url.GetString()
+                : null;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitHub pull request lookup failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
     private HttpRequestMessage BuildGitHubRequest(HttpMethod method, string url, string? token)
     {
         HttpRequestMessage request = new HttpRequestMessage(method, url);

@@ -572,6 +572,32 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/{id}/remediations": {
+    post: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      requestBody?: {
+        content: {
+          "application/*+json": components["schemas"]["StartRemediationDto"];
+          "application/json": components["schemas"]["StartRemediationDto"];
+          "text/json": components["schemas"]["StartRemediationDto"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["RemediationDto"];
+            "text/json": components["schemas"]["RemediationDto"];
+            "text/plain": components["schemas"]["RemediationDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/tech-health/projects/{id}/repository-options": {
     get: {
       parameters: {
@@ -1376,6 +1402,7 @@ export interface components {
       lastScanAt: string | null;
       lastScanError: string | null;
       name: string;
+      remediationAvailable: boolean;
       repositoryType: string;
       repositoryUrl: string | null;
       rootPath: string | null;
@@ -1482,6 +1509,18 @@ export interface components {
       lastName: string;
       organizationName: string;
       password: string;
+    };
+    RemediationDto: {
+      /** Format: date-time */
+      createdAt: string;
+      failureCode: string | null;
+      /** Format: uuid */
+      id: string;
+      mergeRequestUrl: string | null;
+      status: string;
+      targetVersion: string;
+      /** Format: date-time */
+      updatedAt: string;
     };
     ResendVerificationRequest: {
       email: string;
@@ -1594,6 +1633,9 @@ export interface components {
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";
+    StartRemediationDto: {
+      findingKey: string;
+    };
     SuppressionDto: {
       /** Format: date-time */
       createdAt: string;
@@ -1791,6 +1833,7 @@ export interface components {
       total: number;
     };
     VulnerabilityDto: {
+      canRemediate: boolean;
       cveAlias: string | null;
       cveId: string;
       /** Format: double */
@@ -1805,9 +1848,11 @@ export interface components {
       /** Format: uuid */
       id: string;
       isKnownExploited: boolean;
+      isMajorUpgrade: boolean;
       isMaliciousPackage: boolean;
       linkedTicket: components["schemas"]["FindingTicketDto"];
       priority: string;
+      remediation: components["schemas"]["RemediationDto"];
       severity: string;
       suppression: components["schemas"]["SuppressionDto"];
     };

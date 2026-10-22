@@ -123,6 +123,9 @@ export const ROUTES_API = {
           complianceReport: {
             __path: "/api/tech-health/projects/:id/compliance-report",
           },
+          remediations: {
+            __path: "/api/tech-health/projects/:id/remediations",
+          },
           repositoryOptions: {
             __path: "/api/tech-health/projects/:id/repository-options",
           },

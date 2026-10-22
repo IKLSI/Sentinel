@@ -8,4 +8,5 @@ public static class HttpClientNames
     public const string EolDate = "EolDate";
     public const string Epss = "Epss";
     public const string Kev = "Kev";
+    public const string RemediationRunner = "RemediationRunner";
 }

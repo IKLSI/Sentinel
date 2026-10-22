@@ -42,6 +42,15 @@ public static class ErrorCodes
     public const string ProjectNotFound = "errors.projects.not_found";
     public const string VulnerabilityNotFound = "errors.projects.vulnerability_not_found";
     public const string SuppressionNotFound = "errors.projects.suppression_not_found";
+    public const string RemediationUnavailable = "errors.remediation.unavailable";
+    public const string RemediationNotEligible = "errors.remediation.not_eligible";
+    public const string RemediationTokenMissing = "errors.remediation.token_missing";
+    public const string RemediationInProgress = "errors.remediation.in_progress";
+    public const string RemediationTicketInvalid = "errors.remediation.ticket_invalid";
+    public const string RemediationStartFailed = "errors.remediation.start_failed";
+    public const string RemediationRunFailed = "errors.remediation.run_failed";
+    public const string RemediationNoMergeRequest = "errors.remediation.no_merge_request";
+    public const string RemediationTimedOut = "errors.remediation.timed_out";
     public const string ProjectInvalidRepositoryUrl = "errors.projects.invalid_repository_url";
     public const string ProjectInvalidScanFrequency = "errors.projects.invalid_scan_frequency";
 

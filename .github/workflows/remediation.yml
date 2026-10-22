@@ -1,0 +1,62 @@
+name: Sentinel remediation
+run-name: Sentinel remediation ${{ inputs.dispatch_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      dispatch_id:
+        description: Identifiant de déclenchement fourni par Sentinel
+        required: true
+        type: string
+      config_url:
+        description: URL de configuration Renovate exposée par l'API Sentinel
+        required: true
+        type: string
+      ticket:
+        description: Ticket à usage unique pour récupérer la configuration
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.176.4
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Masquer le ticket
+        env:
+          TICKET: ${{ inputs.ticket }}
+        run: echo "::add-mask::$TICKET"
+
+      - name: Récupérer la configuration
+        env:
+          TICKET: ${{ inputs.ticket }}
+          CONFIG_URL: ${{ inputs.config_url }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            -H "X-Remediation-Ticket: $TICKET" \
+            -H "Accept: application/json" \
+            -o "$RUNNER_TEMP/renovate-config.json" \
+            "$CONFIG_URL"
+          chmod 644 "$RUNNER_TEMP/renovate-config.json"
+
+      - name: Lancer Renovate
+        env:
+          RENOVATE_GITHUB_COM_TOKEN: ${{ github.token }}
+        run: |
+          docker run --rm \
+            -v "$RUNNER_TEMP/renovate-config.json:/tmp/renovate-config.json:ro" \
+            -e RENOVATE_CONFIG_FILE=/tmp/renovate-config.json \
+            -e RENOVATE_GITHUB_COM_TOKEN \
+            -e LOG_LEVEL=info \
+            "$RENOVATE_IMAGE"
+
+      - name: Supprimer la configuration
+        if: always()
+        run: rm -f "$RUNNER_TEMP/renovate-config.json"

@@ -17,5 +17,6 @@ public static class ConfigurationKeys
         public const string ForwardedHeaders = "ForwardedHeaders";
         public const string Database = "Database";
         public const string RepositoryHosts = "RepositoryHosts";
+        public const string Remediation = "Remediation";
     }
 }

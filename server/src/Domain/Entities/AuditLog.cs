@@ -45,7 +45,8 @@ public enum AuditAction
 
     AccountDeleted,
     VulnerabilitySuppressed,
-    VulnerabilitySuppressionRemoved
+    VulnerabilitySuppressionRemoved,
+    VulnerabilityRemediationRequested
 }
 
 public class AuditLog : IEntityWithId

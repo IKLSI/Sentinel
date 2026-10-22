@@ -17,6 +17,7 @@ import {
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 import { SuppressionCell } from "@/features/techHealth/pages/ProjectDetailPage/components/SuppressionCell";
+import { RemediationCell } from "@/features/techHealth/pages/ProjectDetailPage/components/RemediationCell";
 
 const referenceSx = {
   fontFamily: "var(--font-mono)",
@@ -98,6 +99,8 @@ const riskLabelSx = {
 const knownExploitedIconSx = { fontSize: 14, color: "var(--red)" } as const;
 
 const referencesSx = { display: "flex", alignItems: "center", gap: "6px" };
+
+const fixCellSx = { display: "inline-flex", alignItems: "center", gap: "4px" };
 
 const riskBarStyle = (level: number, filledColor: string | null) => ({
   width: 3,
@@ -181,7 +184,15 @@ export const VulnRow = memo<{
         </Box>
       </TD>
       <TD mono muted>
-        {vuln.fixedVersion ?? NO_VALUE}
+        <Box component="span" sx={fixCellSx}>
+          {vuln.fixedVersion ?? NO_VALUE}
+          <RemediationCell
+            findingKey={vuln.findingKey}
+            canRemediate={vuln.canRemediate}
+            isMajorUpgrade={vuln.isMajorUpgrade}
+            remediation={vuln.remediation}
+          />
+        </Box>
       </TD>
       <TD align="center">
         <FindingTicketCell

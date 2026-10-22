@@ -35,6 +35,7 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<IVulnerabilityResolutionRepository, VulnerabilityResolutionRepository>();
         services.AddScoped<IDataRetentionRepository, DataRetentionRepository>();
         services.AddScoped<IVulnerabilitySuppressionRepository, VulnerabilitySuppressionRepository>();
+        services.AddScoped<IVulnerabilityRemediationRepository, VulnerabilityRemediationRepository>();
 
         return services;
     }

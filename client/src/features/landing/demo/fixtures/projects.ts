@@ -39,6 +39,7 @@ const projectBase = {
   repositoryUrl: null,
   rootPath: null,
   scanFrequency: ScanFrequency.Daily,
+  remediationAvailable: false,
 } as const;
 
 const storefront: Project = {

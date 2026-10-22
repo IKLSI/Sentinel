@@ -31,4 +31,7 @@ public interface IRepositoryHostClient
 
     Task<string?> FetchTextAsync(string host, string url, RepositoryAccess? access,
         CancellationToken cancellationToken);
+
+    Task<string?> FindMergeRequestUrlAsync(string host, string owner, string repo, RepositoryAccess access,
+        string sourceBranch, CancellationToken cancellationToken);
 }

@@ -23,6 +23,7 @@ public static partial class ServiceCollectionExtensions
         services.BindSettings<CookieSettings>(configuration, ConfigurationKeys.Sections.Cookie, false);
         services.BindSettings<DatabaseSettings>(configuration, ConfigurationKeys.Sections.Database, true);
         services.BindSettings<RepositoryHostSettings>(configuration, ConfigurationKeys.Sections.RepositoryHosts, false);
+        services.BindSettings<RemediationSettings>(configuration, ConfigurationKeys.Sections.Remediation, false);
 
         services.AddOptions<SupportSettings>()
             .Validate(settings => string.IsNullOrWhiteSpace(settings.Email) || new EmailAddressAttribute().IsValid(settings.Email),

@@ -102,6 +102,34 @@ public partial class RepositoryHostClient
         }
     }
 
+    private async Task<string?> FindGitLabMergeRequestUrlAsync(string owner, string repo, RepositoryAccess access,
+        string sourceBranch, CancellationToken cancellationToken)
+    {
+        string projectApiUrl = $"{access.GitLab.ApiBaseUrl}/projects/{Uri.EscapeDataString($"{owner}/{repo}")}";
+
+        try
+        {
+            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.GitLab);
+            using HttpRequestMessage request = BuildGitLabRequest(
+                $"{projectApiUrl}/merge_requests?state=opened&source_branch={Uri.EscapeDataString(sourceBranch)}",
+                access.Token);
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+
+            List<JsonElement>? mergeRequests =
+                await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken);
+
+            return mergeRequests is [var mergeRequest, ..] && mergeRequest.TryGetProperty("web_url", out JsonElement url)
+                ? url.GetString()
+                : null;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "GitLab merge request lookup failed for {Owner}/{Repo}", owner, repo);
+            return null;
+        }
+    }
+
     private async Task<RepositoryBranchListing?> ListGitLabBranchesAsync(string owner, string repo,
         RepositoryAccess access, CancellationToken cancellationToken)
     {

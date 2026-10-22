@@ -23,4 +23,7 @@ public class Organization : IEntityWithId
 
     public GitLabInstance ToGitLabInstance() =>
         new(GitlabBaseUrl ?? RepositoryHosts.PublicGitLabBaseUrl);
+
+    public string? ProtectedTokenFor(RepositoryType repositoryType) =>
+        repositoryType == RepositoryType.GitLab ? GitlabToken : GithubToken;
 }

@@ -1,3 +1,4 @@
+using Sentinel.Application.TechHealth.Remediation;
 using Sentinel.Application.TechHealth.Suppressions;
 
 namespace Sentinel.Application.TechHealth;
@@ -21,6 +22,7 @@ public class ProjectDto
     public int TotalVulnerabilities { get; set; }
     public int KnownExploitedVulnerabilities { get; set; }
     public int TotalTickets { get; set; }
+    public bool RemediationAvailable { get; set; }
     public List<DependencyDto> Dependencies { get; set; } = new();
     public List<RuntimeDto> Runtimes { get; set; } = new();
 }
@@ -60,6 +62,9 @@ public class VulnerabilityDto
     public string FindingKey { get; set; } = string.Empty;
     public FindingTicketDto? LinkedTicket { get; set; }
     public SuppressionDto? Suppression { get; set; }
+    public bool CanRemediate { get; set; }
+    public bool IsMajorUpgrade { get; set; }
+    public RemediationDto? Remediation { get; set; }
 }
 
 public class RuntimeDto

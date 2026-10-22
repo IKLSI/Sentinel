@@ -76,6 +76,12 @@ public static partial class ServiceCollectionExtensions
         services.AddResilientHttpClient(HttpClientNames.Kev, 60, client =>
             client.DefaultRequestHeaders.Add("Accept", "application/json"));
 
+        services.AddHttpClient(HttpClientNames.RemediationRunner, client =>
+        {
+            client.DefaultRequestHeaders.Add("User-Agent", "Sentinel-Remediation/1.0");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
         return services;
     }
 
@@ -150,6 +156,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();
         services.AddTransient<SendAccountSuspendedEmailJob>();
+        services.AddTransient<RemediationRunJob>();
 
         return services;
     }
@@ -161,6 +168,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
         services.AddScoped<IRuntimeLifecycleClient, EndOfLifeRuntimeLifecycleClient>();
         services.AddScoped<IExploitIntelligenceClient, ExploitIntelligenceClient>();
+        services.AddScoped<IRemediationRunner, GitHubActionsRemediationRunner>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddSingleton<IRecurringJobMonitor, HangfireRecurringJobMonitor>();
         services.AddSingleton<IScopedServiceRunner, ScopedServiceRunner>();

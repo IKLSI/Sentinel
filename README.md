@@ -54,6 +54,7 @@ Au démarrage hors Development, l'API refuse aussi un rôle Postgres superuser o
 | --- | --- | --- |
 | `ConnectionStrings__Migrations` | `DefaultConnection` | Rôle propriétaire du schéma, utilisé pour appliquer les migrations |
 | `RepositoryHosts__GitHubToken` | vide | Token GitHub serveur, utilisé uniquement pour lever le quota sur les dépôts **publics** |
+| `Remediation__GitHubToken`, `Remediation__WorkflowRepository`, `Remediation__WorkflowFile`, `Remediation__WorkflowRef`, `Remediation__CallbackBaseUrl` | vide / vide / `remediation.yml` / `main` / vide | Correction automatique des vulnérabilités (voir [Correction automatique](#correction-automatique)). Toutes requises pour activer le bouton ; `CallbackBaseUrl` = URL HTTPS publique de l'API |
 | `Email__Host`, `Email__Port`, `Email__Username`, `Email__Password`, `Email__FromAddress`, `Email__FromName` | port 587 | SMTP des e-mails transactionnels |
 | `Support__Email` | vide | Adresse de support affichée dans l'application |
 | `Cors__AllowedOrigins__0` | `Frontend__BaseUrl` | Origines supplémentaires autorisées |
@@ -125,6 +126,19 @@ L'application tourne en **mono-instance** : rate limiting, caches et diffusion S
 - **Reverse-proxy** : masquer le paramètre `access_token` des URL `/hubs/sync` dans les logs (jeton SignalR passé en query string).
 - **Sauvegardes** : le workflow `backup-database.yml` réalise chaque nuit un dump chiffré, vérifie sa restauration et le conserve 7 jours en artifact GitHub.
 - **Versions** : `pnpm release` incrémente la version de `client/package.json`, crée le tag et pousse.
+
+### Correction automatique
+
+Le bouton « Corriger automatiquement » d'une vulnérabilité ouvre une merge request (GitLab) ou une pull request (GitHub) qui monte la dépendance à sa version corrective. Le travail est fait par [Renovate](https://github.com/renovatebot/renovate) (licence AGPL-3.0, utilisé sans modification) dans un run GitHub Actions éphémère (`.github/workflows/remediation.yml`), jamais dans le process de l'API.
+
+1. Le workflow doit être présent sur la branche par défaut du dépôt qui l'héberge (ce dépôt, ou un dépôt **privé** dédié qui en reprend une copie : les paramètres d'un run sont visibles dans l'onglet Actions).
+2. Créer un token GitHub fine-grained limité à ce dépôt, permission **Actions : Read and write**.
+3. Côté API : `Remediation__GitHubToken` (ce token), `Remediation__WorkflowRepository` (`owner/repo`), `Remediation__WorkflowFile` (`remediation.yml`), `Remediation__WorkflowRef` (`main`), `Remediation__CallbackBaseUrl` (URL publique de l'API, joignable depuis GitHub).
+4. Les organisations doivent fournir un token **en écriture** : scope `api` sur GitLab, `Contents` et `Pull requests` en écriture sur GitHub.
+
+Déroulé : l'API enregistre la demande et déclenche le workflow (`workflow_dispatch`, run nommé `Sentinel remediation <id>`). Le run récupère sa configuration Renovate via `GET /api/remediation-runs/{id}/config` avec un ticket à usage unique valable 15 minutes, masqué dans les logs, puis Renovate ouvre la MR sur la branche `sentinel/fix-<paquet>-<version>`. Un job Hangfire suit l'état du run toutes les 30 secondes et enregistre l'URL de la MR. Compter 3 à 5 minutes par correction.
+
+Limites : seules les dépendances directes avec une version corrective connue sont éligibles ; une montée de version majeure est signalée dans l'interface ; les registries privés ne sont pas pris en charge ; les minutes GitHub Actions gratuites (2 000/mois sur un dépôt privé) sont partagées par toutes les organisations.
 
 ## Licence
 

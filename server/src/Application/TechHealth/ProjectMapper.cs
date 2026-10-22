@@ -1,3 +1,4 @@
+using Sentinel.Application.TechHealth.Remediation;
 using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Entities;
@@ -11,11 +12,13 @@ public static class ProjectMapper
     public static ProjectDto ToDto(Project project) => ToDto(project, []);
 
     public static ProjectDto ToDto(Project project, IReadOnlyList<FindingTicketRow> findingTickets,
-        IReadOnlyList<VulnerabilitySuppression>? suppressions = null)
+        IReadOnlyList<VulnerabilitySuppression>? suppressions = null,
+        IReadOnlyList<VulnerabilityRemediation>? remediations = null, bool remediationAvailable = false)
     {
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(findingTickets);
-        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = (suppressions ?? [])
-            .ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto);
+        FindingAnnotations annotations = new(
+            (suppressions ?? []).ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto),
+            (remediations ?? []).ToDictionary(remediation => remediation.FindingKey, RemediationMapper.ToDto));
 
         return new ProjectDto
         {
@@ -31,6 +34,7 @@ public static class ProjectMapper
             HealthGrade = project.HealthGrade,
             Coverage = project.Coverage.ToString(),
             ScanFrequency = project.ScanFrequency.ToString(),
+            RemediationAvailable = remediationAvailable,
             TotalDependencies = project.Dependencies?.Count ?? 0,
             CriticalVulnerabilities = project.Dependencies?
                 .SelectMany(dependency => dependency.Vulnerabilities)
@@ -42,7 +46,7 @@ public static class ProjectMapper
                 .SelectMany(dependency => dependency.Vulnerabilities)
                 .Count(vulnerability => vulnerability.IsKnownExploited) ?? 0,
             Dependencies = project.Dependencies?
-                .Select(dependency => ToDto(dependency, links, suppressionsByKey))
+                .Select(dependency => ToDto(dependency, links, annotations))
                 .ToList() ?? [],
             Runtimes = project.Runtimes == null
                 ? []
@@ -73,7 +77,7 @@ public static class ProjectMapper
 
     private static DependencyDto ToDto(Dependency dependency,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
-        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
+        FindingAnnotations annotations)
     {
         string findingKey = FindingKeys.ForDependency(dependency.Ecosystem, dependency.Name);
 
@@ -93,14 +97,14 @@ public static class ProjectMapper
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.OutdatedDependency, findingKey),
             Vulnerabilities = dependency.Vulnerabilities
-                .Select(vulnerability => ToDto(dependency, vulnerability, links, suppressionsByKey))
+                .Select(vulnerability => ToDto(dependency, vulnerability, links, annotations))
                 .ToList()
         };
     }
 
     private static VulnerabilityDto ToDto(Dependency dependency, Vulnerability vulnerability,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
-        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
+        FindingAnnotations annotations)
     {
         string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
             vulnerability.CveId);
@@ -121,9 +125,16 @@ public static class ProjectMapper
             Priority = VulnerabilityRiskCalculator.Prioritize(vulnerability, dependency.Type).ToString(),
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.Vulnerability, findingKey),
-            Suppression = suppressionsByKey.GetValueOrDefault(findingKey)
+            Suppression = annotations.Suppressions.GetValueOrDefault(findingKey),
+            CanRemediate = RemediationRules.IsEligible(dependency, vulnerability),
+            IsMajorUpgrade = RemediationRules.IsMajorUpgrade(dependency, vulnerability),
+            Remediation = annotations.Remediations.GetValueOrDefault(findingKey)
         };
     }
+
+    private sealed record FindingAnnotations(
+        IReadOnlyDictionary<string, SuppressionDto> Suppressions,
+        IReadOnlyDictionary<string, RemediationDto> Remediations);
 
     private static RuntimeDto ToDto(RuntimeGroup group,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links)
