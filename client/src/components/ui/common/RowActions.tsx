@@ -1,3 +1,4 @@
+import IconButton from "@mui/material/IconButton";
 import { Box } from "@mui/material";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 
@@ -58,12 +59,11 @@ export const RowActions: React.FC<{
         const c = COLOR_MAP[action.color ?? "accent"];
         return (
           <AppTooltip key={action.label} title={action.label}>
-            <Box
-              component="button"
+            <IconButton
               type="button"
               onClick={action.disabled ? undefined : action.onClick}
               sx={{
-                all: "unset",
+                p: 0,
                 cursor: action.disabled ? "default" : "pointer",
                 width: 26,
                 height: 26,
@@ -82,7 +82,7 @@ export const RowActions: React.FC<{
               }}
             >
               {action.icon}
-            </Box>
+            </IconButton>
           </AppTooltip>
         );
       })}

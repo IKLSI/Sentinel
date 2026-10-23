@@ -2,6 +2,7 @@ import type React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import PersonOutlined from "@mui/icons-material/PersonOutlined";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
@@ -20,15 +21,16 @@ export const ProfileButton: React.FC<Props> = ({ collapsed }) => {
     <AppTooltip
       title={collapsed ? `${user?.firstName} ${user?.lastName?.[0]}.` : ""}
     >
-      <Box
-        component="button"
+      <ButtonBase
         onClick={() => navigate({ to: ROUTES.PROFILE })}
         sx={{
-          all: "unset",
+          font: "inherit",
+          textAlign: "inherit",
           cursor: "pointer",
           flex: collapsed ? "none" : 1,
           minWidth: 0,
           display: "flex",
+          justifyContent: "flex-start",
           alignItems: "center",
           gap: "8px",
           overflow: "hidden",
@@ -97,7 +99,7 @@ export const ProfileButton: React.FC<Props> = ({ collapsed }) => {
             </Box>
           </Box>
         )}
-      </Box>
+      </ButtonBase>
     </AppTooltip>
   );
 };

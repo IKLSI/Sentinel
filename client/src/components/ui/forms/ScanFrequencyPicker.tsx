@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { useT } from "@/contexts/I18nContext";
 import { ScanFrequency } from "@/enums";
 
@@ -41,15 +42,15 @@ export const ScanFrequencyPicker: React.FC<ScanFrequencyPickerProps> = ({
         const isActive = frequency === value;
 
         return (
-          <Box
+          <ButtonBase
             key={frequency}
-            component="button"
             type="button"
             role="radio"
             aria-checked={isActive}
             onClick={() => onChange(frequency)}
             sx={{
-              all: "unset",
+              font: "inherit",
+              textAlign: "inherit",
               cursor: isActive ? "default" : "pointer",
               display: "flex",
               alignItems: "center",
@@ -70,7 +71,7 @@ export const ScanFrequencyPicker: React.FC<ScanFrequencyPickerProps> = ({
             }}
           >
             {t(LABEL_KEYS[frequency])}
-          </Box>
+          </ButtonBase>
         );
       })}
     </Box>

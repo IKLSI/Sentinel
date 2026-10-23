@@ -1,5 +1,7 @@
 import { memo } from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import AddTaskOutlined from "@mui/icons-material/AddTaskOutlined";
 import { useNavigate } from "@tanstack/react-router";
@@ -13,7 +15,7 @@ import { useFindingActions } from "@/features/techHealth/pages/ProjectDetailPage
 import { NO_VALUE } from "@/constants/display";
 
 const createButtonSx = {
-  all: "unset",
+  p: 0,
   cursor: "pointer",
   width: 26,
   height: 26,
@@ -28,7 +30,8 @@ const createButtonSx = {
 } as const;
 
 const referenceSx = {
-  all: "unset",
+  font: "inherit",
+  textAlign: "inherit",
   cursor: "pointer",
   display: "inline-flex",
   fontFamily: "var(--font-mono)",
@@ -60,8 +63,7 @@ export const FindingTicketCell = memo<Props>(
     if (linkedTicket) {
       return (
         <AppTooltip title={statusLabel(t, linkedTicket.status)}>
-          <Box
-            component="button"
+          <ButtonBase
             type="button"
             onClick={() => openTicket(linkedTicket.id)}
             sx={referenceSx}
@@ -69,7 +71,7 @@ export const FindingTicketCell = memo<Props>(
             <StatusChip variant={variantOf(linkedTicket.status)}>
               {linkedTicket.reference}
             </StatusChip>
-          </Box>
+          </ButtonBase>
         </AppTooltip>
       );
     }
@@ -84,8 +86,7 @@ export const FindingTicketCell = memo<Props>(
 
     return (
       <AppTooltip title={t("tech_health.ticket.create")}>
-        <Box
-          component="button"
+        <IconButton
           type="button"
           aria-label={t("tech_health.ticket.create")}
           disabled={creatingFindingKey !== null}
@@ -97,7 +98,7 @@ export const FindingTicketCell = memo<Props>(
           ) : (
             <AddTaskOutlined sx={{ fontSize: 16 }} />
           )}
-        </Box>
+        </IconButton>
       </AppTooltip>
     );
   },

@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { useT } from "@/contexts/I18nContext";
 import {
   LANDING_EASING,
@@ -96,8 +97,7 @@ export const ClosingCta: React.FC = () => {
               const active = letter === grade;
               const show = () => setGrade(letter);
               return (
-                <Box
-                  component="button"
+                <ButtonBase
                   type="button"
                   key={letter}
                   aria-pressed={active}
@@ -132,7 +132,7 @@ export const ClosingCta: React.FC = () => {
                   }}
                 >
                   {letter}
-                </Box>
+                </ButtonBase>
               );
             })}
           </Box>

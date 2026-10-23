@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { getPageNumbers, navBtnSx, pageBtnSx } from "@/helpers/pagination";
 
 interface Props {
@@ -47,13 +48,12 @@ export const Pagination: React.FC<Props> = ({
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        <Box
-          component="button"
+        <ButtonBase
           sx={navBtnSx(page === 1)}
           onClick={() => onChange(page - 1)}
         >
           {previousLabel}
-        </Box>
+        </ButtonBase>
 
         <Box
           sx={{ display: "flex", alignItems: "center", gap: "2px", mx: "4px" }}
@@ -73,25 +73,23 @@ export const Pagination: React.FC<Props> = ({
                 ···
               </Box>
             ) : (
-              <Box
+              <ButtonBase
                 key={key}
-                component="button"
                 sx={pageBtnSx(value === page)}
                 onClick={() => value !== page && onChange(value as number)}
               >
                 {value}
-              </Box>
+              </ButtonBase>
             ),
           )}
         </Box>
 
-        <Box
-          component="button"
+        <ButtonBase
           sx={navBtnSx(page === totalPages)}
           onClick={() => onChange(page + 1)}
         >
           {nextLabel}
-        </Box>
+        </ButtonBase>
       </Box>
     </Box>
   );

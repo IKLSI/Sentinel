@@ -1,6 +1,7 @@
 import type React from "react";
 import { useId, useRef, useState } from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Skeleton from "@mui/material/Skeleton";
 import { useT } from "@/contexts/I18nContext";
 import { useScoringModelQuery } from "@/domains/publicScan/queries";
@@ -101,8 +102,7 @@ export const ScoreReport: React.FC = () => {
               {examples.map((item, index) => {
                 const isSelected = item === example;
                 return (
-                  <Box
-                    component="button"
+                  <ButtonBase
                     type="button"
                     role="tab"
                     key={item.name}
@@ -125,6 +125,7 @@ export const ScoreReport: React.FC = () => {
                       borderRadius: "999px",
                       cursor: "pointer",
                       font: "inherit",
+                      textAlign: "inherit",
                       fontSize: "14px",
                       fontWeight: isSelected ? 500 : 400,
                       color: isSelected ? "var(--ink)" : "var(--ink-2)",
@@ -150,7 +151,7 @@ export const ScoreReport: React.FC = () => {
                       }}
                     />
                     {item.name}
-                  </Box>
+                  </ButtonBase>
                 );
               })}
             </Box>

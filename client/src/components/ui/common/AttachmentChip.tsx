@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import ImageOutlined from "@mui/icons-material/ImageOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
@@ -65,15 +66,14 @@ export const AttachmentChip: React.FC<Props> = ({
       {attachment.fileName}
     </Box>
     {onRemove && (
-      <Box
-        component="button"
+      <IconButton
         type="button"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           onRemove();
         }}
         sx={{
-          all: "unset",
+          p: 0,
           display: "grid",
           placeItems: "center",
           cursor: "pointer",
@@ -86,7 +86,7 @@ export const AttachmentChip: React.FC<Props> = ({
         }}
       >
         <CloseRounded sx={{ fontSize: 11 }} />
-      </Box>
+      </IconButton>
     )}
   </Box>
 );

@@ -1,6 +1,7 @@
 import type React from "react";
 import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { useT } from "@/contexts/I18nContext";
 import { SubItemLink } from "@/components/layout/Sidebar/components/SubItemLink";
 import { ITEM_SX } from "@/components/layout/Sidebar/constants";
@@ -26,12 +27,13 @@ export const SectionGroup: React.FC<Props> = ({
 
   return (
     <>
-      <Box
-        component="button"
+      <ButtonBase
         onClick={onToggle}
         sx={{
-          all: "unset",
+          font: "inherit",
+          textAlign: "inherit",
           ...ITEM_SX,
+          justifyContent: "flex-start",
           width: "100%",
           boxSizing: "border-box",
           background:
@@ -75,7 +77,7 @@ export const SectionGroup: React.FC<Props> = ({
             transition: "transform 0.18s cubic-bezier(0.4,0,0.2,1)",
           }}
         />
-      </Box>
+      </ButtonBase>
       <Box
         sx={{
           overflow: "hidden",

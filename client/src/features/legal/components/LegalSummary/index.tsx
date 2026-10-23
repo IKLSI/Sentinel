@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { useT } from "@/contexts/I18nContext";
 import { LEGAL_HEADER_HEIGHT } from "@/features/legal/constants";
 import { numbered, scrollToSection } from "@/features/legal/helpers";
@@ -45,13 +46,13 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
         {sections.map((section, index) => {
           const active = section.id === activeId;
           return (
-            <Box
+            <ButtonBase
               key={section.id}
-              component="button"
               type="button"
               onClick={() => scrollToSection(section.id)}
               sx={{
                 display: "flex",
+                justifyContent: "flex-start",
                 gap: { xs: "6px", lg: "9px" },
                 alignItems: "baseline",
                 textAlign: "left",
@@ -85,7 +86,7 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
                 {numbered(index)}
               </Box>
               <Box component="span">{t(section.titleKey)}</Box>
-            </Box>
+            </ButtonBase>
           );
         })}
       </Box>

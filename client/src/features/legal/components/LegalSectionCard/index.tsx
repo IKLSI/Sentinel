@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import LinkOutlined from "@mui/icons-material/LinkOutlined";
@@ -58,12 +59,12 @@ export const LegalSectionCard: React.FC<Props> = ({
           {t(section.titleKey)}
         </Box>
         <Tooltip title={t("legal.shell.copy_anchor")} arrow>
-          <Box
-            component="button"
+          <IconButton
             type="button"
             className="legal-anchor legal-no-print"
             onClick={() => onCopyAnchor(section.id)}
             sx={{
+              p: 0,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
@@ -81,7 +82,7 @@ export const LegalSectionCard: React.FC<Props> = ({
             }}
           >
             <LinkOutlined sx={{ fontSize: 14 }} />
-          </Box>
+          </IconButton>
         </Tooltip>
       </Box>
 
@@ -202,6 +203,7 @@ export const LegalSectionCard: React.FC<Props> = ({
         <Link to={section.linkTo} style={{ textDecoration: "none" }}>
           <Box
             sx={{
+              p: 0,
               display: "inline-flex",
               alignItems: "center",
               gap: "7px",

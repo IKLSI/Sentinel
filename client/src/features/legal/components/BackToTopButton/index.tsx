@@ -1,5 +1,5 @@
 import type React from "react";
-import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import KeyboardArrowUpOutlined from "@mui/icons-material/KeyboardArrowUpOutlined";
 import { useT } from "@/contexts/I18nContext";
@@ -13,8 +13,7 @@ export const BackToTopButton: React.FC = () => {
 
   return (
     <Tooltip title={t("legal.shell.back_to_top")} arrow placement="left">
-      <Box
-        component="button"
+      <IconButton
         type="button"
         className="legal-no-print"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -23,6 +22,7 @@ export const BackToTopButton: React.FC = () => {
           right: { xs: "16px", md: "28px" },
           bottom: { xs: "16px", md: "28px" },
           zIndex: 25,
+          p: 0,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
@@ -43,7 +43,7 @@ export const BackToTopButton: React.FC = () => {
         }}
       >
         <KeyboardArrowUpOutlined sx={{ fontSize: 20 }} />
-      </Box>
+      </IconButton>
     </Tooltip>
   );
 };

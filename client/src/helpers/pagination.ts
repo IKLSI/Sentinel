@@ -24,7 +24,8 @@ export function getPageNumbers(
 }
 
 export const navBtnSx = (disabled: boolean) => ({
-  all: "unset" as const,
+  font: "inherit",
+  textAlign: "inherit",
   cursor: disabled ? "default" : "pointer",
   display: "flex",
   alignItems: "center",
@@ -51,7 +52,8 @@ export const navBtnSx = (disabled: boolean) => ({
 });
 
 export const pageBtnSx = (active: boolean) => ({
-  all: "unset" as const,
+  font: "inherit",
+  textAlign: "inherit",
   cursor: active ? "default" : "pointer",
   minWidth: "32px",
   height: "32px",

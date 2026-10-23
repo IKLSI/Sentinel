@@ -1,6 +1,6 @@
 import type React from "react";
 import { useNavigate } from "@tanstack/react-router";
-import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import {
@@ -28,11 +28,11 @@ export const CollapsedSectionButton: React.FC<Props> = ({
 
   return (
     <AppTooltip title={t(section.titleKey)} placement="right">
-      <Box
-        component="button"
+      <ButtonBase
         onClick={() => navigate({ to: activeItem.to })}
         sx={{
-          all: "unset",
+          font: "inherit",
+          textAlign: "inherit",
           height: "34px",
           width: "100%",
           boxSizing: "border-box",
@@ -54,7 +54,7 @@ export const CollapsedSectionButton: React.FC<Props> = ({
             transition: "color 0.12s",
           }}
         />
-      </Box>
+      </ButtonBase>
     </AppTooltip>
   );
 };

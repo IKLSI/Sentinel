@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
@@ -27,13 +28,14 @@ export const AppearancePicker: React.FC<Props> = ({ theme, onChange }) => {
       </Box>
       <Box sx={{ display: "flex", gap: "8px" }}>
         {([Theme.Light, Theme.Dark] as const).map((mode) => (
-          <Box
+          <ButtonBase
             key={mode}
-            component="button"
             type="button"
             onClick={() => onChange(mode)}
             sx={{
-              all: "unset",
+              font: "inherit",
+              textAlign: "inherit",
+              display: "block",
               cursor: "pointer",
               width: 100,
               boxSizing: "border-box",
@@ -161,7 +163,7 @@ export const AppearancePicker: React.FC<Props> = ({ theme, onChange }) => {
                 </Box>
               )}
             </Box>
-          </Box>
+          </ButtonBase>
         ))}
       </Box>
     </Box>

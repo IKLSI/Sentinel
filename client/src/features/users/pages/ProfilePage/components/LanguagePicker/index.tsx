@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { LanguageFlag } from "@/components/ui/common/LanguageFlag";
@@ -38,13 +39,14 @@ export const LanguagePicker: React.FC<Props> = ({ culture, onChange }) => {
             bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
           },
         ].map(({ code, label, bg }) => (
-          <Box
+          <ButtonBase
             key={code}
-            component="button"
             type="button"
             onClick={() => onChange(code)}
             sx={{
-              all: "unset",
+              font: "inherit",
+              textAlign: "inherit",
+              display: "block",
               cursor: "pointer",
               width: 100,
               boxSizing: "border-box",
@@ -116,7 +118,7 @@ export const LanguagePicker: React.FC<Props> = ({ culture, onChange }) => {
                 </Box>
               )}
             </Box>
-          </Box>
+          </ButtonBase>
         ))}
       </Box>
     </Box>

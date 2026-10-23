@@ -1,6 +1,6 @@
 import type React from "react";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
-import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
@@ -17,11 +17,10 @@ export const LogoutButton: React.FC = () => {
 
   return (
     <AppTooltip title={t("sidebar.logout")}>
-      <Box
-        component="button"
+      <IconButton
         onClick={handleLogout}
         sx={{
-          all: "unset",
+          p: 0,
           cursor: "pointer",
           width: 26,
           height: 26,
@@ -36,7 +35,7 @@ export const LogoutButton: React.FC = () => {
         }}
       >
         <LogoutOutlined sx={{ fontSize: 14 }} />
-      </Box>
+      </IconButton>
     </AppTooltip>
   );
 };

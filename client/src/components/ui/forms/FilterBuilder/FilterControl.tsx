@@ -1,5 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import ButtonBase from "@mui/material/ButtonBase";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import type {
@@ -20,7 +22,8 @@ interface Props {
 const INLINE_VALUES_MAX = 2;
 
 const segmentSx = {
-  all: "unset" as const,
+  font: "inherit",
+  textAlign: "inherit",
   display: "flex",
   alignItems: "center",
   gap: "6px",
@@ -75,23 +78,21 @@ export const FilterControl: React.FC<Props> = ({
   if (!field || !criterion?.values.length) {
     return (
       <Box sx={shellSx}>
-        <Box
-          component="button"
+        <ButtonBase
           type="button"
           onClick={onEditField}
           sx={{ ...segmentSx, color: "var(--muted2)", fontWeight: 500 }}
         >
           {labels.empty}
           <KeyboardArrowDownOutlined sx={{ fontSize: 14, opacity: 0.8 }} />
-        </Box>
+        </ButtonBase>
       </Box>
     );
   }
 
   return (
     <Box sx={shellSx}>
-      <Box
-        component="button"
+      <ButtonBase
         type="button"
         aria-label={labels.edit(field.label)}
         onClick={onEditField}
@@ -110,10 +111,9 @@ export const FilterControl: React.FC<Props> = ({
         <Box component="span" sx={{ transform: "translateY(1px)" }}>
           {`${field.label} :`}
         </Box>
-      </Box>
+      </ButtonBase>
 
-      <Box
-        component="button"
+      <ButtonBase
         type="button"
         aria-label={labels.edit(field.label)}
         onClick={onEditValues}
@@ -139,16 +139,16 @@ export const FilterControl: React.FC<Props> = ({
         <KeyboardArrowDownOutlined
           sx={{ fontSize: 14, flexShrink: 0, opacity: 0.7 }}
         />
-      </Box>
+      </ButtonBase>
 
-      <Box
-        component="button"
+      <IconButton
         type="button"
         aria-label={labels.remove(field.label)}
         onClick={onClear}
         sx={{
           ...segmentSx,
-          px: 0,
+          p: 0,
+          borderRadius: 0,
           width: "26px",
           flexShrink: 0,
           justifyContent: "center",
@@ -157,7 +157,7 @@ export const FilterControl: React.FC<Props> = ({
         }}
       >
         <CloseOutlined sx={{ fontSize: 13 }} />
-      </Box>
+      </IconButton>
     </Box>
   );
 };

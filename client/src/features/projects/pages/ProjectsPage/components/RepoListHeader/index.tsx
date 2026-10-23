@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import { useT } from "@/contexts/I18nContext";
 
 interface Props {
@@ -37,23 +38,21 @@ export const RepoListHeader: React.FC<Props> = ({
         {t("projects.sync_modal.projects_label")}
       </Box>
       {showSelectAll && (
-        <Box
+        <Link
           component="button"
+          type="button"
+          underline="none"
           onClick={onSelectAll}
           sx={{
-            border: "none",
-            background: "transparent",
             color: "var(--accent)",
             fontSize: "12px",
             fontWeight: 600,
-            cursor: "pointer",
-            outline: "none",
             transition: "color 0.12s",
             "&:hover": { color: "var(--accent2)" },
           }}
         >
           {t("projects.import_modal.select_all")}
-        </Box>
+        </Link>
       )}
     </Box>
   );

@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 
 export interface TabBarItem {
   icon: React.ReactNode;
@@ -24,12 +25,12 @@ export const TabBar: React.FC<Props> = ({ tabs, active, onChange }) => (
     {tabs.map((tab, i) => {
       const isActive = active === i;
       return (
-        <Box
+        <ButtonBase
           key={tab.label}
-          component="button"
           onClick={() => onChange(i)}
           sx={{
-            all: "unset",
+            font: "inherit",
+            textAlign: "inherit",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -69,7 +70,7 @@ export const TabBar: React.FC<Props> = ({ tabs, active, onChange }) => (
             {tab.icon}
           </Box>
           {tab.label}
-        </Box>
+        </ButtonBase>
       );
     })}
   </Box>

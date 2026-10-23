@@ -1,6 +1,8 @@
 import type React from "react";
 import KeyboardDoubleArrowLeftOutlined from "@mui/icons-material/KeyboardDoubleArrowLeftOutlined";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import ButtonBase from "@mui/material/ButtonBase";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { SentinelLogo } from "@/components/layout/SentinelLogo";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
@@ -22,11 +24,11 @@ export const Header: React.FC<Props> = ({
   if (collapsed && !isMobile) {
     return (
       <AppTooltip title={t("sidebar.expand")}>
-        <Box
-          component="button"
+        <ButtonBase
           onClick={onToggleCollapse}
           sx={{
-            all: "unset",
+            font: "inherit",
+            textAlign: "inherit",
             cursor: "pointer",
             height: "56px",
             flexShrink: 0,
@@ -39,7 +41,7 @@ export const Header: React.FC<Props> = ({
           }}
         >
           <SentinelLogo />
-        </Box>
+        </ButtonBase>
       </AppTooltip>
     );
   }
@@ -71,11 +73,10 @@ export const Header: React.FC<Props> = ({
 
       {!isMobile && (
         <AppTooltip title={t("sidebar.collapse")}>
-          <Box
-            component="button"
+          <IconButton
             onClick={onToggleCollapse}
             sx={{
-              all: "unset",
+              p: 0,
               cursor: "pointer",
               width: 22,
               height: 22,
@@ -94,7 +95,7 @@ export const Header: React.FC<Props> = ({
             }}
           >
             <KeyboardDoubleArrowLeftOutlined sx={{ fontSize: 14 }} />
-          </Box>
+          </IconButton>
         </AppTooltip>
       )}
     </Box>

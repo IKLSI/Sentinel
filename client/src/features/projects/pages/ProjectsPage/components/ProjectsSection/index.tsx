@@ -1,6 +1,7 @@
 import type React from "react";
 import { useMemo } from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/contexts/I18nContext";
@@ -69,8 +70,7 @@ export const ProjectsSection: React.FC<Props> = ({
         overflow: "hidden",
       }}
     >
-      <Box
-        component="button"
+      <ButtonBase
         type="button"
         aria-expanded={!collapsed}
         aria-label={
@@ -80,7 +80,8 @@ export const ProjectsSection: React.FC<Props> = ({
         }
         onClick={onToggleCollapsed}
         sx={{
-          all: "unset",
+          font: "inherit",
+          textAlign: "inherit",
           width: "100%",
           boxSizing: "border-box",
           cursor: "pointer",
@@ -196,7 +197,7 @@ export const ProjectsSection: React.FC<Props> = ({
             }}
           />
         </Box>
-      </Box>
+      </ButtonBase>
 
       {!collapsed && (
         <Box sx={{ overflow: "hidden" }}>
