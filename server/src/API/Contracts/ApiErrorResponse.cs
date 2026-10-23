@@ -13,7 +13,4 @@ public class ApiErrorResponse
 
     public static ApiErrorResponse Create(string code, int status) =>
         new() { Code = code, Status = status };
-
-    public static ApiErrorResponse Create(string code, int status, IReadOnlyDictionary<string, string> parameters) =>
-        new() { Code = code, Status = status, Params = parameters };
 }

@@ -29,6 +29,15 @@ public class ErrorHandlingMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_QuandUnAccesFichierEstRefuse_RepondUneErreurServeur()
+    {
+        (int status, string code) = await CaptureAsync(new UnauthorizedAccessException("accès au fichier refusé"));
+
+        status.Should().Be(StatusCodes.Status500InternalServerError);
+        code.Should().Be(ErrorCodes.Unexpected);
+    }
+
+    [Fact]
     public async Task InvokeAsync_QuandLaRequeteEstMalFormee_RepondUneErreurClient()
     {
         (int status, string code) = await CaptureAsync(

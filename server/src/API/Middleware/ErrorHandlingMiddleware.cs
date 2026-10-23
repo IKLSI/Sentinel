@@ -1,6 +1,5 @@
 using Sentinel.API.Contracts;
 using System.Net;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Constants;
 
@@ -46,30 +45,16 @@ public class ErrorHandlingMiddleware
     private static (HttpStatusCode StatusCode, string Code) Map(Exception exception) => exception switch
     {
         DbUpdateConcurrencyException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency),
-        UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ErrorCodes.Unauthorized),
         BadHttpRequestException badRequest => ((HttpStatusCode)badRequest.StatusCode, ErrorCodes.InvalidRequest),
         _ => (HttpStatusCode.InternalServerError, ErrorCodes.Unexpected)
     };
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        context.Response.ContentType = "application/json";
-
         (HttpStatusCode statusCode, string code) = Map(exception);
 
         context.Response.StatusCode = (int)statusCode;
 
-        ApiErrorResponse response = new()
-        {
-            Code = code,
-            Status = (int)statusCode
-        };
-
-        string json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        await context.Response.WriteAsync(json);
+        await context.Response.WriteAsJsonAsync(ApiErrorResponse.Create(code, (int)statusCode));
     }
 }
