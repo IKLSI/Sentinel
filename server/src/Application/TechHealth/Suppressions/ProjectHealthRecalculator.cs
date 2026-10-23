@@ -9,7 +9,6 @@ namespace Sentinel.Application.TechHealth.Suppressions;
 public class ProjectHealthRecalculator(
     IProjectRepository projectRepository,
     IVulnerabilitySuppressionRepository suppressionRepository,
-    ICommitScopeFactory commitScopeFactory,
     DashboardCache dashboardCache)
 {
     public async Task<HashSet<Guid>> SuppressedVulnerabilityIdsAsync(Project project,
@@ -24,19 +23,16 @@ public class ProjectHealthRecalculator(
     public async Task RecalculateAsync(Guid projectId, CancellationToken cancellationToken)
     {
         Project? project = await projectRepository.GetOrDefaultWithHealthDetailsAsync(projectId,
-            QueryTracking.Tracked, cancellationToken);
+            QueryTracking.NoTracking, cancellationToken);
 
         if (project == null || project.Coverage != ScanCoverage.Covered) return;
 
         HashSet<Guid> suppressedIds = await SuppressedVulnerabilityIdsAsync(project, cancellationToken);
 
-        using (ICommitScope commitScope = commitScopeFactory.Begin())
-        {
-            project.HealthScore = HealthScoreCalculator.Calculate(project, v => suppressedIds.Contains(v.Id));
-            project.HealthGrade = HealthScoreCalculator.ToGrade(project.HealthScore.Value);
+        int healthScore = HealthScoreCalculator.Calculate(project, v => suppressedIds.Contains(v.Id));
 
-            await commitScope.CommitAsync(cancellationToken);
-        }
+        await projectRepository.UpdateHealthAsync(projectId, healthScore, HealthScoreCalculator.ToGrade(healthScore),
+            cancellationToken);
 
         dashboardCache.Invalidate(project.OrganizationId);
     }

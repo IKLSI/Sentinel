@@ -166,7 +166,7 @@ public class ProjectScanServiceTests
                 new ProjectHealthHistoryWriter(new ProjectHealthSnapshotRepository(scope.Context),
                     new VulnerabilityResolutionRepository(scope.Context)),
                 new ProjectHealthRecalculator(scope.Projects, new VulnerabilitySuppressionRepository(scope.Context),
-                    scope.CommitScopeFactory, new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
+                    new DashboardCache(new MemoryCache(new MemoryCacheOptions()))),
                 new ScanFollowUpService(
                     new FindingTicketSyncService(scope.Tickets, new TicketHistoryRepository(scope.Context),
                         scope.CommitScopeFactory, new FakeAuditLogService(),

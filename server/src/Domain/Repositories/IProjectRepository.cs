@@ -38,6 +38,9 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<int> MarkScanFailedAsync(Guid projectId, string errorCode, DateTime scannedAt,
         CancellationToken cancellationToken);
 
+    Task<int> UpdateHealthAsync(Guid projectId, int healthScore, string healthGrade,
+        CancellationToken cancellationToken);
+
     Task<ProjectBadgeRow?> GetOrDefaultBadgeByTokenAcrossTenantsAsync(string badgeToken,
         CancellationToken cancellationToken);
 

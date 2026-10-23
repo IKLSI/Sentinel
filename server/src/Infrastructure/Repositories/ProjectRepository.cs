@@ -224,6 +224,14 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
                 .SetProperty(p => p.LastScanAt, scannedAt)
                 .SetProperty(p => p.LastScanError, errorCode), cancellationToken);
 
+    public Task<int> UpdateHealthAsync(Guid projectId, int healthScore, string healthGrade,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.HealthScore, healthScore)
+                .SetProperty(p => p.HealthGrade, healthGrade), cancellationToken);
+
     public async Task<IReadOnlyList<ProjectOptionRow>> ListOptionsByNameAsync(Guid organizationId,
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
