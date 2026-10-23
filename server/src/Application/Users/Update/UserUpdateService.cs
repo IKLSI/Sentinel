@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
+using Sentinel.Application.Security;
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
@@ -24,8 +23,7 @@ public class UserUpdateService(
     IRealtimeNotifier realtimeNotifier,
     DashboardCache dashboardCache,
     IJobScheduler jobs,
-    IMemoryCache cache,
-    ApiKeyPrincipalCache apiKeyPrincipalCache,
+    UserSessionCache userSessionCache,
     ITenantContext tenant,
     UserUpdateValidator validator) : IService
 {
@@ -51,7 +49,7 @@ public class UserUpdateService(
 
         if (!string.IsNullOrEmpty(model.Role))
         {
-            if (!Enum.TryParse(model.Role, true, out UserRole parsedRole))
+            if (!EnumValue.TryParse(model.Role, out UserRole parsedRole))
                 return Result<UserDto>.Error(ErrorCodes.UserInvalidRole);
 
             newRole = parsedRole;
@@ -61,7 +59,7 @@ public class UserUpdateService(
 
         if (!string.IsNullOrEmpty(model.AccessStatus))
         {
-            if (!Enum.TryParse(model.AccessStatus, true, out UserAccessStatus parsedAccessStatus))
+            if (!EnumValue.TryParse(model.AccessStatus, out UserAccessStatus parsedAccessStatus))
                 return Result<UserDto>.Error(ErrorCodes.UserInvalidAccessStatus);
 
             newAccessStatus = parsedAccessStatus;
@@ -129,10 +127,7 @@ public class UserUpdateService(
             return Result<UserDto>.NotFound(ErrorCodes.UserNotFound);
 
         if (invalidatesSessions)
-        {
-            cache.Remove(CacheKeys.AuthAccount(userId));
-            await apiKeyPrincipalCache.InvalidateForUserAsync(userId, cancellationToken);
-        }
+            await userSessionCache.InvalidateAsync(userId, cancellationToken);
 
         if (suspensionTransition)
             jobs.Enqueue<SendAccountSuspendedEmailJob>(JobQueues.Emails, j => j.ExecuteAsync(userId,

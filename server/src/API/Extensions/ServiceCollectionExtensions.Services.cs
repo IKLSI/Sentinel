@@ -128,6 +128,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ExportService>();
         services.AddSingleton<DashboardCache>();
         services.AddScoped<ApiKeyPrincipalCache>();
+        services.AddScoped<UserSessionCache>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<RegistryMetadataApplier>();

@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
+using Sentinel.Application.Security;
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Common;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Audit;
@@ -24,8 +23,7 @@ public class UserDeleteAccountService(
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     DashboardCache dashboardCache,
-    IMemoryCache cache,
-    ApiKeyPrincipalCache apiKeyPrincipalCache,
+    UserSessionCache userSessionCache,
     ITenantContext tenant) : IService
 {
     public async Task<Result> ExecuteAsync(DeleteAccountDto model, CancellationToken cancellationToken)
@@ -75,8 +73,7 @@ public class UserDeleteAccountService(
         if (lastAdminBlocked)
             return Result.Error(ErrorCodes.UserCannotDeleteLastAdmin);
 
-        cache.Remove(CacheKeys.AuthAccount(currentUserId));
-        await apiKeyPrincipalCache.InvalidateForUserAsync(currentUserId, cancellationToken);
+        await userSessionCache.InvalidateAsync(currentUserId, cancellationToken);
 
         dashboardCache.Invalidate(organizationId);
 

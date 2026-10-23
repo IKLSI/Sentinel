@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Sentinel.Application.Security;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -20,7 +20,7 @@ public class AuthResetPasswordService(
     ICommitScopeFactory commitScopeFactory,
     ISystemScope systemScope,
     IAuditLogService auditLog,
-    IMemoryCache cache,
+    UserSessionCache userSessionCache,
     ILogger<AuthResetPasswordService> logger,
     AuthResetPasswordValidator validator) : IService
 {
@@ -59,9 +59,9 @@ public class AuthResetPasswordService(
 
             await apiKeyRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
             await commitScope.CommitAsync(cancellationToken);
-        }
 
-        cache.Remove(CacheKeys.AuthAccount(user.Id));
+            await userSessionCache.InvalidateAsync(user.Id, cancellationToken);
+        }
 
         logger.LogInformation("Password reset for user {UserId}", user.Id);
 
