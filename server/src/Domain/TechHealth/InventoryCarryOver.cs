@@ -11,13 +11,12 @@ public static class InventoryCarryOver
     {
         Dictionary<(DependencyEcosystem, string), PackageMetadataRow> known = previous
             .Where(row => row.LatestVersion != null)
-            .GroupBy(row => (row.Ecosystem, row.Name.ToLowerInvariant()))
+            .GroupBy(row => (row.Ecosystem, DependencyIdentity.NameKey(row.Ecosystem, row.Name)))
             .ToDictionary(group => group.Key, group => group.First());
 
         foreach (Dependency dependency in dependencies.Where(dependency => dependency.LatestVersion == null))
         {
-            if (!known.TryGetValue((dependency.Ecosystem, dependency.Name.ToLowerInvariant()),
-                    out PackageMetadataRow? row))
+            if (!known.TryGetValue(DependencyIdentity.Of(dependency), out PackageMetadataRow? row))
             {
                 continue;
             }

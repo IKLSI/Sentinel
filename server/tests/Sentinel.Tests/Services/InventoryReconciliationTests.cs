@@ -38,6 +38,26 @@ public class InventoryReconciliationTests
     }
 
     [Fact]
+    public void ReconcileDependencies_PyPiSpellingChanges_KeepsTheExistingRow()
+    {
+        Dependency existing = new Dependency
+        {
+            Name = "Django_Filter", Ecosystem = DependencyEcosystem.PyPI, CurrentVersion = "23.5"
+        };
+        Dependency scanned = new Dependency
+        {
+            Name = "django-filter", Ecosystem = DependencyEcosystem.PyPI, CurrentVersion = "23.5"
+        };
+
+        InventoryChanges<Dependency> changes =
+            InventoryReconciliation.ReconcileDependencies([existing], [scanned]);
+
+        changes.Added.Should().BeEmpty();
+        changes.RemovedIds.Should().BeEmpty();
+        existing.Name.Should().Be("django-filter");
+    }
+
+    [Fact]
     public void ReconcileDependencies_VersionBumped_ReplacesTheRow()
     {
         Dependency existing = new Dependency

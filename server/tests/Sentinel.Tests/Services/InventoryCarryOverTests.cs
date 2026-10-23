@@ -27,6 +27,24 @@ public class InventoryCarryOverTests
     }
 
     [Fact]
+    public void ApplyPackageMetadata_PyPiSpellingDiffers_StillMatchesThePreviousRow()
+    {
+        Dependency dependency = new Dependency
+        {
+            Name = "django-filter",
+            Ecosystem = DependencyEcosystem.PyPI,
+            CurrentVersion = "23.5",
+            Status = DependencyStatus.UpToDate
+        };
+
+        InventoryCarryOver.ApplyPackageMetadata([dependency],
+            [new PackageMetadataRow(DependencyEcosystem.PyPI, "Django_Filter", "24.3", null, "BSD", false)]);
+
+        dependency.LatestVersion.Should().Be("24.3");
+        dependency.License.Should().Be("BSD");
+    }
+
+    [Fact]
     public void ApplyPackageMetadata_FreshRegistryData_IsKept()
     {
         Dependency dependency = new Dependency

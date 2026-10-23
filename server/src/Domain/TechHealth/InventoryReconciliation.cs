@@ -47,7 +47,8 @@ public static class InventoryReconciliation
     }
 
     private static (DependencyEcosystem, string, string) DependencyKey(Dependency dependency) =>
-        (dependency.Ecosystem, dependency.Name.ToUpperInvariant(), dependency.CurrentVersion);
+        (dependency.Ecosystem, DependencyIdentity.NameKey(dependency.Ecosystem, dependency.Name),
+            dependency.CurrentVersion);
 
     private static (string, string) RuntimeKey(Runtime runtime) =>
         (runtime.Name.ToUpperInvariant(), runtime.Version.Trim());
