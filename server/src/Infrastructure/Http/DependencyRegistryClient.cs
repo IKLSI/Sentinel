@@ -59,35 +59,20 @@ public partial class DependencyRegistryClient(
     private async Task<RegistryPackage> ResolvePackageAsync(HttpClient client, RegistryPackageQuery package,
         CancellationToken cancellationToken)
     {
-        string cacheKey = CacheKeys.LatestVersion(package.Ecosystem, package.Name);
-
-        if (cache.TryGetValue(cacheKey, out RegistryPackage? cached) && cached != null)
-            return cached;
-
-        return await coalescer.RunAsync(cacheKey, () => LoadPackageAsync(client, package, cacheKey),
-            cancellationToken);
+        return await coalescer.GetOrLoadAsync(cache, CacheKeys.LatestVersion(package.Ecosystem, package.Name),
+            () => FetchPackageAsync(client, package), CacheEntryFor, cancellationToken);
     }
 
-    private async Task<RegistryPackage> LoadPackageAsync(HttpClient client, RegistryPackageQuery dep,
-        string cacheKey)
-    {
-        if (cache.TryGetValue(cacheKey, out RegistryPackage? cached) && cached != null)
-            return cached;
-
-        RegistryPackage package = await FetchPackageAsync(client, dep);
-
-        if (package.IsFailure) return package;
-
-        cache.Set(cacheKey, package, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = package.LatestVersion == null
-                ? CacheKeys.LatestVersionUnresolvedTtl
-                : CacheKeys.LatestVersionTtl,
-            Size = 1
-        });
-
-        return package;
-    }
+    private static MemoryCacheEntryOptions? CacheEntryFor(RegistryPackage package) =>
+        package.IsFailure
+            ? null
+            : new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = package.LatestVersion == null
+                    ? CacheKeys.LatestVersionUnresolvedTtl
+                    : CacheKeys.LatestVersionTtl,
+                Size = 1
+            };
 
     private static async Task<RegistryPackage> FetchPackageAsync(HttpClient client, RegistryPackageQuery dep)
     {

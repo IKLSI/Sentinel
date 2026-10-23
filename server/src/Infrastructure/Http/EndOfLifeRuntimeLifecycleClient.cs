@@ -40,31 +40,17 @@ public class EndOfLifeRuntimeLifecycleClient(
     private async Task<IReadOnlyCollection<EndOfLifeCycle>> GetCyclesAsync(string product,
         CancellationToken cancellationToken)
     {
-        string cacheKey = CacheKeys.RuntimeLifecycle(product);
-
-        if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
-            return cached;
-
-        return await coalescer.RunAsync(cacheKey, () => LoadCyclesAsync(product, cacheKey), cancellationToken);
+        return await coalescer.GetOrLoadAsync(cache, CacheKeys.RuntimeLifecycle(product),
+            () => FetchCyclesAsync(product), CacheEntryFor, cancellationToken);
     }
 
-    private async Task<IReadOnlyCollection<EndOfLifeCycle>> LoadCyclesAsync(string product, string cacheKey)
+    private static MemoryCacheEntryOptions CacheEntryFor(IReadOnlyCollection<EndOfLifeCycle> cycles) => new()
     {
-        if (cache.TryGetValue(cacheKey, out IReadOnlyCollection<EndOfLifeCycle>? cached) && cached != null)
-            return cached;
-
-        IReadOnlyCollection<EndOfLifeCycle> cycles = await FetchCyclesAsync(product);
-
-        cache.Set(cacheKey, cycles, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = cycles.Count == 0
-                ? CacheKeys.RuntimeLifecycleUnresolvedTtl
-                : CacheKeys.RuntimeLifecycleTtl,
-            Size = Math.Max(1, cycles.Count)
-        });
-
-        return cycles;
-    }
+        AbsoluteExpirationRelativeToNow = cycles.Count == 0
+            ? CacheKeys.RuntimeLifecycleUnresolvedTtl
+            : CacheKeys.RuntimeLifecycleTtl,
+        Size = Math.Max(1, cycles.Count)
+    };
 
     private async Task<IReadOnlyCollection<EndOfLifeCycle>> FetchCyclesAsync(string product)
     {

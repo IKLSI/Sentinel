@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Sentinel.Infrastructure.Http;
 
@@ -20,5 +21,22 @@ public sealed class InFlightRequestCoalescer
         }
 
         return (T)(await pending.Value.WaitAsync(cancellationToken))!;
+    }
+
+    public async Task<T> GetOrLoadAsync<T>(IMemoryCache cache, string key, Func<Task<T>> load,
+        Func<T, MemoryCacheEntryOptions?> entryOptionsFor, CancellationToken cancellationToken) where T : class
+    {
+        if (cache.TryGetValue(key, out T? cached) && cached != null) return cached;
+
+        return await RunAsync(key, async () =>
+        {
+            if (cache.TryGetValue(key, out T? loadedMeanwhile) && loadedMeanwhile != null) return loadedMeanwhile;
+
+            T value = await load();
+
+            if (entryOptionsFor(value) is { } entryOptions) cache.Set(key, value, entryOptions);
+
+            return value;
+        }, cancellationToken);
     }
 }
