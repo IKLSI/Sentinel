@@ -1,5 +1,7 @@
 import type React from "react";
+import { useContext } from "react";
 import Box from "@mui/material/Box";
+import { VirtualRowMeasureContext } from "@/components/ui/common/VirtualTable/measureContext";
 
 export type CellAlign = "left" | "center" | "right";
 export type SortDirection = "asc" | "desc";
@@ -29,15 +31,20 @@ export const TD: React.FC<{
 export const TR: React.FC<{
   children: React.ReactNode;
   index?: number;
-}> = ({ children, index }) => (
-  <Box
-    component="tr"
-    data-index={index}
-    sx={{
-      "&:last-child td": { borderBottom: "none" },
-      "&:hover td": { background: "var(--s2)" },
-    }}
-  >
-    {children}
-  </Box>
-);
+}> = ({ children, index }) => {
+  const measureRow = useContext(VirtualRowMeasureContext);
+
+  return (
+    <Box
+      component="tr"
+      data-index={index}
+      ref={index === undefined ? undefined : (measureRow ?? undefined)}
+      sx={{
+        "&:last-child td": { borderBottom: "none" },
+        "&:hover td": { background: "var(--s2)" },
+      }}
+    >
+      {children}
+    </Box>
+  );
+};

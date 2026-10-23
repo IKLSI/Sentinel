@@ -8,6 +8,7 @@ import type {
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
+import { VirtualRowMeasureContext } from "@/components/ui/common/VirtualTable/measureContext";
 
 export interface VirtualTableColumn {
   key: string;
@@ -66,7 +67,7 @@ export function VirtualTable<T>({
   const columnCount = columns.length;
   const showNoResults = rows.length === 0 && Boolean(noResultsLabel);
 
-  const { items, paddingTop, paddingBottom } = useVirtualRows({
+  const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: estimateRowHeight,
@@ -141,7 +142,9 @@ export function VirtualTable<T>({
                 </Box>
               </Box>
             ) : (
-              <>
+              <VirtualRowMeasureContext.Provider
+                value={virtualizer.measureElement}
+              >
                 <VirtualRowSpacer
                   height={paddingTop}
                   columnCount={columnCount}
@@ -158,7 +161,7 @@ export function VirtualTable<T>({
                   height={paddingBottom}
                   columnCount={columnCount}
                 />
-              </>
+              </VirtualRowMeasureContext.Provider>
             )}
           </Box>
         </Box>
