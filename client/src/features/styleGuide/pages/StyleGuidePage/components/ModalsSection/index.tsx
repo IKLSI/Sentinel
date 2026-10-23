@@ -7,7 +7,6 @@ import { useT } from "@/contexts/I18nContext";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
-import { NO_HOVER_ELEVATION } from "@/features/styleGuide/pages/StyleGuidePage/constants";
 
 export const ModalsSection: React.FC = () => {
   const t = useT();
@@ -37,13 +36,18 @@ export const ModalsSection: React.FC = () => {
         title={t("style_guide.modal_demo.app_title")}
         actions={
           <>
-            <Button variant="text" onClick={() => setAppModalOpen(false)}>
+            <Button
+              variant="contained"
+              color="inherit"
+              size="small"
+              onClick={() => setAppModalOpen(false)}
+            >
               {t("common.cancel")}
             </Button>
             <Button
               variant="contained"
+              size="small"
               onClick={() => setAppModalOpen(false)}
-              sx={NO_HOVER_ELEVATION}
             >
               {t("common.save")}
             </Button>

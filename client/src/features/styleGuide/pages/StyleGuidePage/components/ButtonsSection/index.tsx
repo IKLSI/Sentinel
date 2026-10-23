@@ -9,7 +9,14 @@ import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
-import { NO_HOVER_ELEVATION } from "@/features/styleGuide/pages/StyleGuidePage/constants";
+
+const ROW_SX = {
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: "10px",
+  mb: "24px",
+} as const;
 
 export const ButtonsSection: React.FC = () => {
   const t = useT();
@@ -20,37 +27,36 @@ export const ButtonsSection: React.FC = () => {
       desc={t("style_guide.section.buttons_desc")}
     >
       <SubLabel>Variants</SubLabel>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "10px", mb: "24px" }}>
-        <Button variant="contained" sx={NO_HOVER_ELEVATION}>
-          {t("common.save")}
+      <Box sx={ROW_SX}>
+        <Button variant="contained">{t("common.save")}</Button>
+        <Button variant="contained" color="secondary">
+          Export
+        </Button>
+        <Button variant="contained" color="inherit">
+          {t("common.cancel")}
+        </Button>
+        <Button variant="contained" color="error">
+          {t("common.delete")}
         </Button>
         <Button variant="outlined">{t("common.edit")}</Button>
         <Button variant="text">{t("common.cancel")}</Button>
-        <Button variant="contained" color="error" sx={NO_HOVER_ELEVATION}>
-          {t("common.delete")}
-        </Button>
       </Box>
 
       <SubLabel>Sizes</SubLabel>
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: "10px",
-          mb: "24px",
-        }}
-      >
-        <Button variant="contained" size="small" sx={NO_HOVER_ELEVATION}>
+      <Box sx={ROW_SX}>
+        <Button variant="contained" size="small">
           Small
         </Button>
-        <Button variant="contained" size="medium" sx={NO_HOVER_ELEVATION}>
+        <Button variant="contained" size="medium">
           Default
+        </Button>
+        <Button variant="contained" size="large">
+          Large
         </Button>
       </Box>
 
       <SubLabel>With icons</SubLabel>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "10px", mb: "24px" }}>
+      <Box sx={ROW_SX}>
         <Button
           variant="outlined"
           startIcon={<DownloadOutlined sx={{ fontSize: 16 }} />}
@@ -60,7 +66,6 @@ export const ButtonsSection: React.FC = () => {
         <Button
           variant="contained"
           endIcon={<ArrowForwardOutlined sx={{ fontSize: 16 }} />}
-          sx={NO_HOVER_ELEVATION}
         >
           Next
         </Button>
@@ -78,8 +83,8 @@ export const ButtonsSection: React.FC = () => {
       </Box>
 
       <SubLabel>States</SubLabel>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-        <Button variant="contained" disabled sx={NO_HOVER_ELEVATION}>
+      <Box sx={{ ...ROW_SX, mb: 0 }}>
+        <Button variant="contained" disabled>
           {t("common.save")}
         </Button>
         <Button variant="outlined" disabled>
@@ -88,8 +93,7 @@ export const ButtonsSection: React.FC = () => {
         <Button
           variant="contained"
           disabled
-          startIcon={<CircularProgress size={12} sx={{ color: "inherit" }} />}
-          sx={NO_HOVER_ELEVATION}
+          startIcon={<CircularProgress size={12} color="inherit" />}
         >
           {t("common.deleting")}
         </Button>

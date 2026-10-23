@@ -79,10 +79,6 @@ export const RADII = [
   { key: "r-xl", label: "xl · 20px" },
 ] as const;
 
-export const NO_HOVER_ELEVATION = {
-  "&:hover": { boxShadow: "none", transform: "none" },
-} as const;
-
 export const SPACING = [
   { label: "1", px: 4 },
   { label: "2", px: 8 },

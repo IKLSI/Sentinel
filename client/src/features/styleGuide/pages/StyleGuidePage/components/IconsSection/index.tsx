@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import AutorenewOutlined from "@mui/icons-material/AutorenewOutlined";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { ICONS } from "@/features/styleGuide/pages/StyleGuidePage/constants";
+import { spin } from "@/styles/keyframes";
 
 export const IconsSection: React.FC = () => {
   return (
@@ -51,8 +52,7 @@ export const IconsSection: React.FC = () => {
             sx={{
               fontSize: 18,
               color: "var(--text-secondary)",
-              animation: "spin 1.2s linear infinite",
-              "@keyframes spin": { to: { transform: "rotate(360deg)" } },
+              animation: `${spin} 1.2s linear infinite`,
             }}
           />
           <Box sx={{ fontSize: "10px", color: "var(--muted2)" }}>Loader</Box>

@@ -6,8 +6,11 @@ import Avatar from "@mui/material/Avatar";
 import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import NotificationsNoneOutlined from "@mui/icons-material/NotificationsNoneOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
+import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
 
 export const CardsSection: React.FC = () => {
   const t = useT();
@@ -115,6 +118,17 @@ export const CardsSection: React.FC = () => {
               </Box>
             </Box>
           </Box>
+        </Paper>
+      </Box>
+
+      <Box sx={{ mt: "24px" }}>
+        <SubLabel>Empty state — EmptyState</SubLabel>
+        <Paper variant="outlined" sx={{ borderRadius: "var(--r-md)" }}>
+          <EmptyState
+            icon={FolderOutlined}
+            title="Aucun projet"
+            subtitle="Importez un dépôt GitHub ou GitLab pour commencer."
+          />
         </Paper>
       </Box>
     </Section>
