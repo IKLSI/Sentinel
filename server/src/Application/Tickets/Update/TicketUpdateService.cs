@@ -14,8 +14,7 @@ namespace Sentinel.Application.Tickets.Update;
 public class TicketUpdateService(
     ITicketRepository ticketRepository,
     ITicketHistoryRepository ticketHistoryRepository,
-    IProjectRepository projectRepository,
-    IUserRepository userRepository,
+    TicketLinkChecker linkChecker,
     ICommitScopeFactory commitScopeFactory,
     DashboardCache dashboardCache,
     IAuditLogService auditLog,
@@ -40,14 +39,9 @@ public class TicketUpdateService(
         if (ticket == null || ticket.OrganizationId != organizationId)
             return Result<TicketDto>.NotFound(ErrorCodes.TicketNotFound);
 
-        if (model.ProjectId is Guid projectId &&
-            !await projectRepository.ExistsInOrganizationAsync(projectId, organizationId, cancellationToken))
-            return Result<TicketDto>.NotFound(ErrorCodes.ProjectNotFound);
-
-        if (model.AssignedToId is Guid assignedToId &&
-            await userRepository.GetOrDefaultInOrganizationAsync(assignedToId, organizationId,
-                QueryTracking.NoTracking, cancellationToken) is null)
-            return Result<TicketDto>.NotFound(ErrorCodes.UserNotFound);
+        if (await linkChecker.FindMissingAsync(model.ProjectId, model.AssignedToId, organizationId,
+                cancellationToken) is { } missingLinkCode)
+            return Result<TicketDto>.NotFound(missingLinkCode);
 
         TicketStatus? newStatus = null;
 

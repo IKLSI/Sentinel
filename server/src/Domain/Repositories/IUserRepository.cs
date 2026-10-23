@@ -37,6 +37,8 @@ public interface IUserRepository : ICrudEntityWithIdRepository<User>
 
     Task<IReadOnlyList<EmailRecipient>> ListAdminRecipientsAsync(Guid organizationId, CancellationToken cancellationToken);
 
+    Task<bool> ExistsInOrganizationAsync(Guid userId, Guid organizationId, CancellationToken cancellationToken);
+
     Task<bool> ExistsByEmailInOrganizationAsync(string email, Guid organizationId, CancellationToken cancellationToken);
 
     Task<bool> ExistsByEmailAcrossTenantsAsync(string email, CancellationToken cancellationToken);
