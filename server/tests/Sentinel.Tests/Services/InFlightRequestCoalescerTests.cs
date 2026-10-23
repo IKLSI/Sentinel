@@ -51,4 +51,29 @@ public class InFlightRequestCoalescerTests
 
         (first, second).Should().Be(("A", "B"));
     }
+
+    [Fact]
+    public async Task RunAsync_WhenFirstWaiterIsCancelled_LaterCallerStillSharesTheRunningFetch()
+    {
+        InFlightRequestCoalescer sut = new InFlightRequestCoalescer();
+        TaskCompletionSource<string> gate = new TaskCompletionSource<string>();
+        int calls = 0;
+
+        Func<Task<string>> fetch = () =>
+        {
+            Interlocked.Increment(ref calls);
+            return gate.Task;
+        };
+
+        using CancellationTokenSource cancelled = new CancellationTokenSource();
+        Task<string> first = sut.RunAsync("key", fetch, cancelled.Token);
+        await cancelled.CancelAsync();
+        await FluentActions.Awaiting(() => first).Should().ThrowAsync<OperationCanceledException>();
+
+        Task<string> second = sut.RunAsync("key", fetch, TestContext.Current.CancellationToken);
+        gate.SetResult("value");
+
+        (await second).Should().Be("value");
+        calls.Should().Be(1);
+    }
 }

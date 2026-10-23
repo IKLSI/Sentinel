@@ -8,16 +8,17 @@ public sealed class InFlightRequestCoalescer
 
     public async Task<T> RunAsync<T>(string key, Func<Task<T>> factory, CancellationToken cancellationToken)
     {
+        Lazy<Task<object?>>? created = null;
         Lazy<Task<object?>> pending = _inFlight.GetOrAdd(key,
-            _ => new Lazy<Task<object?>>(async () => await factory()));
+            _ => created = new Lazy<Task<object?>>(async () => await factory()));
 
-        try
+        if (ReferenceEquals(pending, created))
         {
-            return (T)(await pending.Value.WaitAsync(cancellationToken))!;
+            _ = pending.Value.ContinueWith(
+                _ => _inFlight.TryRemove(new KeyValuePair<string, Lazy<Task<object?>>>(key, pending)),
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
-        finally
-        {
-            _inFlight.TryRemove(new KeyValuePair<string, Lazy<Task<object?>>>(key, pending));
-        }
+
+        return (T)(await pending.Value.WaitAsync(cancellationToken))!;
     }
 }
