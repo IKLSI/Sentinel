@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -135,11 +136,18 @@ public partial class RepositoryHostClient
             using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get,
                 $"https://api.github.com/repos/{owner}/{repo}", serverToken);
             using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode) return false;
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                isPublic = false;
+            }
+            else
+            {
+                if (!response.IsSuccessStatusCode) return false;
 
-            JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
-            isPublic = repository.TryGetProperty("private", out JsonElement isPrivate)
-                && isPrivate.ValueKind == JsonValueKind.False;
+                JsonElement repository = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+                isPublic = repository.TryGetProperty("private", out JsonElement isPrivate)
+                    && isPrivate.ValueKind == JsonValueKind.False;
+            }
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
