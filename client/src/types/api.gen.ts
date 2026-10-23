@@ -712,6 +712,27 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/import": {
+    post: {
+      requestBody?: {
+        content: {
+          "application/*+json": components["schemas"]["ImportProjectsDto"];
+          "application/json": components["schemas"]["ImportProjectsDto"];
+          "text/json": components["schemas"]["ImportProjectsDto"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectDto"][];
+            "text/json": components["schemas"]["ProjectDto"][];
+            "text/plain": components["schemas"]["ProjectDto"][];
+          };
+        };
+      };
+    };
+  };
   "/api/tech-health/projects/options": {
     get: {
       responses: {
@@ -1138,6 +1159,20 @@ export interface paths {
       };
     };
   };
+  "/api/users/options": {
+    get: {
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["UserOptionDto"][];
+            "text/json": components["schemas"]["UserOptionDto"][];
+            "text/plain": components["schemas"]["UserOptionDto"][];
+          };
+        };
+      };
+    };
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -1287,7 +1322,21 @@ export interface components {
     };
     DependencyDto: {
       currentVersion: string;
-      ecosystem: string;
+      /** @enum {string} */
+      ecosystem:
+        | "Npm"
+        | "PyPI"
+        | "Composer"
+        | "Gem"
+        | "Maven"
+        | "NuGet"
+        | "Go"
+        | "Cargo"
+        | "Hex"
+        | "Pub"
+        | "Swift"
+        | "CocoaPods"
+        | "GitHubActions";
       findingKey: string;
       /** Format: uuid */
       id: string;
@@ -1298,8 +1347,10 @@ export interface components {
       linkedTicket: components["schemas"]["FindingTicketDto"];
       manifestPath: string | null;
       name: string;
-      status: string;
-      type: string;
+      /** @enum {string} */
+      status: "UpToDate" | "MinorUpdate" | "MajorUpdate" | "EOL" | "Vulnerable";
+      /** @enum {string} */
+      type: "Prod" | "Dev";
       vulnerabilities: components["schemas"]["VulnerabilityDto"][];
     };
     /** @enum {string} */
@@ -1308,7 +1359,8 @@ export interface components {
       /** Format: uuid */
       id: string;
       reference: string;
-      status: string;
+      /** @enum {string} */
+      status: "new" | "inprogress" | "testing" | "resolved" | "closed";
     };
     ForgotPasswordRequest: {
       email: string;
@@ -1322,6 +1374,9 @@ export interface components {
       grade: string;
       /** Format: int32 */
       minScore: number;
+    };
+    ImportProjectsDto: {
+      projects: components["schemas"]["CreateProjectDto"][];
     };
     IntegrationSettingsDto: {
       gitlabBaseUrl: string;
@@ -1380,7 +1435,13 @@ export interface components {
     };
     ProjectDto: {
       branch: string | null;
-      coverage: string;
+      /** @enum {string} */
+      coverage:
+        | "NotScanned"
+        | "Failed"
+        | "NoManifest"
+        | "NoDependencies"
+        | "Covered";
       /** Format: int32 */
       criticalVulnerabilities: number;
       dependencies: components["schemas"]["DependencyDto"][];
@@ -1400,11 +1461,13 @@ export interface components {
       remediation: components["schemas"]["RemediationDto"];
       remediationAvailable: boolean;
       remediationIncludesMajorUpgrade: boolean;
-      repositoryType: string;
+      /** @enum {string} */
+      repositoryType: "GitHub" | "GitLab";
       repositoryUrl: string | null;
       rootPath: string | null;
       runtimes: components["schemas"]["RuntimeDto"][];
-      scanFrequency: string;
+      /** @enum {string} */
+      scanFrequency: "Daily" | "Weekly" | "Monthly" | "Manual";
       /** Format: int32 */
       totalDependencies: number;
       /** Format: int32 */
@@ -1414,7 +1477,13 @@ export interface components {
     };
     ProjectHealthDto: {
       breakdown: components["schemas"]["ScoreBreakdownDto"];
-      coverage: string;
+      /** @enum {string} */
+      coverage:
+        | "NotScanned"
+        | "Failed"
+        | "NoManifest"
+        | "NoDependencies"
+        | "Covered";
       grade: string | null;
       hasScanError: boolean;
       /** Format: uuid */
@@ -1423,7 +1492,8 @@ export interface components {
       lastScanAt: string | null;
       name: string;
       nextAction: components["schemas"]["NextActionDto"];
-      repositoryType: string;
+      /** @enum {string} */
+      repositoryType: "GitHub" | "GitLab";
       /** Format: int32 */
       score: number | null;
       /** Format: int32 */
@@ -1444,11 +1514,18 @@ export interface components {
     ProjectScanSettingsDto: {
       branch: string | null;
       rootPath: string | null;
-      scanFrequency: string;
+      /** @enum {string} */
+      scanFrequency: "Daily" | "Weekly" | "Monthly" | "Manual";
     };
     ProjectSummaryDto: {
       branch: string | null;
-      coverage: string;
+      /** @enum {string} */
+      coverage:
+        | "NotScanned"
+        | "Failed"
+        | "NoManifest"
+        | "NoDependencies"
+        | "Covered";
       /** Format: int32 */
       criticalVulnerabilities: number;
       healthGrade: string | null;
@@ -1462,10 +1539,12 @@ export interface components {
       lastScanAt: string | null;
       lastScanError: string | null;
       name: string;
-      repositoryType: string;
+      /** @enum {string} */
+      repositoryType: "GitHub" | "GitLab";
       repositoryUrl: string | null;
       rootPath: string | null;
-      scanFrequency: string;
+      /** @enum {string} */
+      scanFrequency: "Daily" | "Weekly" | "Monthly" | "Manual";
       /** Format: int32 */
       totalDependencies: number;
       /** Format: int32 */
@@ -1514,7 +1593,8 @@ export interface components {
       /** Format: uuid */
       id: string;
       mergeRequestUrl: string | null;
-      status: string;
+      /** @enum {string} */
+      status: "Queued" | "Running" | "Opened" | "Failed";
       /** Format: date-time */
       updatedAt: string;
     };
@@ -1532,7 +1612,8 @@ export interface components {
       eolDate: string | null;
       /** Format: int32 */
       eolProgressPercent: number;
-      eolStatus: string;
+      /** @enum {string} */
+      eolStatus: "Unknown" | "Ok" | "Warn" | "Danger" | "Eol";
       findingKey: string;
       /** Format: uuid */
       id: string;
@@ -1680,14 +1761,23 @@ export interface components {
       history: components["schemas"]["TicketHistoryDto"][];
       /** Format: uuid */
       id: string;
-      priority: string;
+      /** @enum {string} */
+      priority: "low" | "medium" | "high" | "critical";
       /** Format: uuid */
       projectId: string | null;
       projectName: string | null;
       reference: string;
-      status: string;
+      /** @enum {string} */
+      status: "new" | "inprogress" | "testing" | "resolved" | "closed";
       title: string;
-      type: string;
+      /** @enum {string} */
+      type:
+        | "bug"
+        | "feature"
+        | "question"
+        | "security"
+        | "performance"
+        | "maintenance";
     };
     TicketDtoPagedResult: {
       hasNextPage: boolean;
@@ -1745,11 +1835,14 @@ export interface components {
     UpdateTicketDto: {
       /** Format: uuid */
       assignedToId?: string | null;
+      clearAssignee: boolean;
+      clearProject: boolean;
       description?: string | null;
       priority?: components["schemas"]["TicketPriority"];
       /** Format: uuid */
       projectId?: string | null;
-      status?: string | null;
+      /** @enum {string|null} */
+      status?: "new" | "inprogress" | "testing" | "resolved" | "closed" | null;
       title?: string | null;
       type?: components["schemas"]["TicketType"];
     };
@@ -1764,14 +1857,23 @@ export interface components {
       /** Format: int32 */
       commentCount: number;
       id: string;
-      priority: string;
+      /** @enum {string} */
+      priority: "low" | "medium" | "high" | "critical";
       projectName: string | null;
       reference: string;
       title: string;
-      type: string;
+      /** @enum {string} */
+      type:
+        | "bug"
+        | "feature"
+        | "question"
+        | "security"
+        | "performance"
+        | "maintenance";
     };
     UserDto: {
-      accessStatus: string;
+      /** @enum {string} */
+      accessStatus: "Active" | "Suspended";
       /** Format: date-time */
       createdAt: string;
       email: string;
@@ -1782,8 +1884,10 @@ export interface components {
       /** Format: date-time */
       lastLoginAt: string | null;
       lastName: string;
-      role: string;
-      theme: string;
+      /** @enum {string} */
+      role: "Admin" | "Developer";
+      /** @enum {string} */
+      theme: "light" | "dark";
     };
     UserListDto: {
       items: components["schemas"]["UserDto"][];
@@ -1795,6 +1899,11 @@ export interface components {
       total: number;
       /** Format: int32 */
       totalPages: number;
+    };
+    UserOptionDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
     };
     UserProfile: {
       email: string;
@@ -1842,8 +1951,10 @@ export interface components {
       isKnownExploited: boolean;
       isMaliciousPackage: boolean;
       linkedTicket: components["schemas"]["FindingTicketDto"];
-      priority: string;
-      severity: string;
+      /** @enum {string} */
+      priority: "Urgent" | "High" | "Moderate" | "Low";
+      /** @enum {string} */
+      severity: "Critical" | "High" | "Medium" | "Low";
       suppression: components["schemas"]["SuppressionDto"];
     };
     VulnerabilityFlowPointDto: {

@@ -112,6 +112,9 @@ export const ROUTES_API = {
             __path: "/api/tech-health/projects/export/excel",
           },
         },
+        import: {
+          __path: "/api/tech-health/projects/import",
+        },
         options: {
           __path: "/api/tech-health/projects/options",
         },
@@ -185,6 +188,9 @@ export const ROUTES_API = {
         preferences: {
           __path: "/api/users/me/preferences",
         },
+      },
+      options: {
+        __path: "/api/users/options",
       },
       ":id": {
         __path: "/api/users/:id",
