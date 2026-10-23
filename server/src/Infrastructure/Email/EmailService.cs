@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -285,7 +286,7 @@ public partial class EmailService : IEmailService
                             <span style="display:inline-block;padding:3px 8px;border-radius:6px;background-color:#ffffff;border:1px solid {border};color:{color};font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;margin-right:8px;">{WebUtility.HtmlEncode(severityLabel)}</span>
                             <span style="color:#0e1220;font-weight:700;font-size:13px;">{WebUtility.HtmlEncode(v.PackageName)}</span>
                           </td>
-                          <td align="right" style="font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:#5c6f90;white-space:nowrap;">{WebUtility.HtmlEncode(v.CveId)} &middot; CVSS {v.CvssScore:F1}</td>
+                          <td align="right" style="font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:#5c6f90;white-space:nowrap;">{WebUtility.HtmlEncode(v.CveId)} &middot; CVSS {v.CvssScore.ToString("F1", CultureInfo.InvariantCulture)}</td>
                         </tr>
                         {fix}
                       </table>

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -137,5 +138,8 @@ public class EndOfLifeRuntimeLifecycleClient(
             : null;
 
     private static DateTime? ParseDate(string? value) =>
-        DateTime.TryParse(value, out DateTime date) ? DateTime.SpecifyKind(date, DateTimeKind.Utc) : null;
+        DateTime.TryParse(value, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime date)
+            ? date
+            : null;
 }

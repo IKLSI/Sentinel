@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -72,7 +73,8 @@ public class GitHubActionsRemediationRunner(
     {
         try
         {
-            string created = Uri.EscapeDataString($">={startedAfter.ToUniversalTime():yyyy-MM-ddTHH:mm:ssZ}");
+            string created = Uri.EscapeDataString(
+                $">={startedAfter.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)}");
 
             using HttpRequestMessage request = BuildRequest(HttpMethod.Get,
                 $"{WorkflowUrl()}/runs?event=workflow_dispatch&created={created}&per_page={RunLookupPageSize}");
