@@ -69,7 +69,7 @@ public partial class SentinelContext
             entity.Property(e => e.EpssPercentile).HasPrecision(6, 5);
             entity.Property(e => e.Severity).HasConversion<string>();
             entity.HasIndex(e => new { e.Severity, e.DependencyId });
-            entity.HasIndex(e => e.DetectedAt);
+            entity.HasIndex(e => new { e.OrganizationId, e.DetectedAt });
             entity.HasIndex(e => new { e.OrganizationId, e.Severity });
 
             entity.HasOne(e => e.Dependency)

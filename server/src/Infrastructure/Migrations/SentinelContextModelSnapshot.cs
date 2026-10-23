@@ -899,9 +899,9 @@ namespace Sentinel.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DetectedAt");
-
                     b.HasIndex("DependencyId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "DetectedAt");
 
                     b.HasIndex("OrganizationId", "Severity");
 
