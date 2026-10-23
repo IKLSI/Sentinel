@@ -1,3 +1,4 @@
+import { ROUTES_API } from "@/configs/api-routes.gen";
 import { usePostMutation } from "@/domains/helpers";
 import type {
   PublicScanRequest,
@@ -9,4 +10,4 @@ export const usePublicScanMutation = () =>
     PublicScanResponse,
     PublicScanResponse,
     { data: PublicScanRequest }
-  >("/api/public/scan");
+  >(ROUTES_API.api.public.scan.__path);

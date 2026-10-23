@@ -95,5 +95,5 @@ export const useStartRemediationMutation = () =>
 
 export const useEnableProjectBadgeMutation = () =>
   usePostMutation<ProjectBadge, ProjectBadge, { id: string }>(
-    "/api/tech-health/projects/:id/badge",
+    ROUTES_API.api.techHealth.projects[":id"].badge.__path,
   );
