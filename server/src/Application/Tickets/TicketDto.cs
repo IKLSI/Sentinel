@@ -1,3 +1,5 @@
+using Sentinel.Domain.Entities;
+using Sentinel.Application.Common.Contracts;
 namespace Sentinel.Application.Tickets;
 
 public class TicketDto
@@ -8,8 +10,11 @@ public class TicketDto
     public string? ProjectName { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    [EnumValues(typeof(TicketPriority), lowercase: true)]
     public string Priority { get; set; } = string.Empty;
+    [EnumValues(typeof(TicketType), lowercase: true)]
     public string Type { get; set; } = string.Empty;
+    [EnumValues(typeof(TicketStatus), lowercase: true)]
     public string Status { get; set; } = string.Empty;
     public Guid? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }

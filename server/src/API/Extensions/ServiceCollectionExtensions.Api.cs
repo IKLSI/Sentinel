@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi;
+using Sentinel.API.OpenApi;
 using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Extensions;
@@ -18,6 +19,7 @@ public static partial class ServiceCollectionExtensions
         {
             options.SupportNonNullableReferenceTypes();
             options.NonNullableReferenceTypesAsRequired();
+            options.SchemaFilter<EnumValuesSchemaFilter>();
 
             options.SwaggerDoc("v1", new OpenApiInfo
             {
