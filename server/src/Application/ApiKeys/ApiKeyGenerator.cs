@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using System.Text;
+using Sentinel.Application.Common;
 
 namespace Sentinel.Application.ApiKeys;
 
@@ -16,6 +16,5 @@ public static class ApiKeyGenerator
         return (rawKey, Hash(rawKey), rawKey[..Math.Min(PrefixLength, rawKey.Length)]);
     }
 
-    public static string Hash(string rawKey) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawKey))).ToLowerInvariant();
+    public static string Hash(string rawKey) => SecureToken.Hash(rawKey);
 }

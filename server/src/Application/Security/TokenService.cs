@@ -5,12 +5,15 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Application.Common;
 using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Security;
 
 public class TokenService
 {
+    private const int RefreshTokenByteLength = 64;
+
     private readonly JwtSettings _jwt;
 
     public TokenService(IOptions<JwtSettings> options)
@@ -44,17 +47,8 @@ public class TokenService
         return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 
-    public string GenerateRefreshToken()
-    {
-        byte[] randomBytes = new byte[64];
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
-        return Convert.ToBase64String(randomBytes);
-    }
+    public string GenerateRefreshToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(RefreshTokenByteLength));
 
-    public string HashRefreshToken(string refreshToken)
-    {
-        byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
-        return Convert.ToHexString(bytes).ToLower();
-    }
+    public string HashRefreshToken(string refreshToken) => SecureToken.Hash(refreshToken);
 }
