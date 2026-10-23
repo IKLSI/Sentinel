@@ -7,8 +7,9 @@ import { useVerifyEmailMutation } from "@/domains/auth/mutations";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
+import { AuthLayout } from "@/features/auth/components/AuthLayout";
+import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
-import "@/features/auth/auth.css";
 
 type Status = "loading" | "success" | "error";
 
@@ -36,109 +37,56 @@ export const VerifyEmailPage: React.FC = () => {
     );
   }, [token, verify]);
 
+  const goToLogin = (
+    <AuthSubmitButton spaced onClick={() => navigate({ to: ROUTES.LOGIN })}>
+      {t("auth.verify_email.go_to_login")}
+    </AuthSubmitButton>
+  );
+
   return (
-    <Box className="lp-root">
-      <Box className="lp-card">
-        <Box className="lp-right" sx={{ width: "100%" }}>
-          <Box className="lp-form-wrap">
-            <Box className="lp-logo" sx={{ marginBottom: "32px" }}>
-              <Box className="lp-logo-wordmark" sx={{ color: "var(--text)" }}>
-                <SentinelWordmark height={14} />
-              </Box>
-            </Box>
+    <AuthLayout>
+      <Box sx={{ mb: "32px", color: "var(--text)" }}>
+        <SentinelWordmark height={14} />
+      </Box>
 
-            {status === "loading" && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "16px",
-                  py: "40px",
-                }}
-              >
-                <CircularProgress size={28} />
-                <Box component="p" className="lp-form-sub">
-                  {t("auth.verify_email.loading")}
-                </Box>
-              </Box>
-            )}
-
-            {status === "success" && (
-              <Box className="aip-success">
-                <Box className="aip-success-icon">
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 28 28"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 14l6 6 10-10"
-                      style={{ stroke: "var(--auth-indigo-500)" }}
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Box>
-                <Box component="p" className="aip-success-title">
-                  {t("auth.verify_email.success_title")}
-                </Box>
-                <Box component="p" className="aip-success-sub">
-                  {t("auth.verify_email.success_sub")}
-                </Box>
-                <AuthSubmitButton
-                  spaced
-                  onClick={() => navigate({ to: ROUTES.LOGIN })}
-                >
-                  {t("auth.verify_email.go_to_login")}
-                </AuthSubmitButton>
-              </Box>
-            )}
-
-            {status === "error" && (
-              <Box className="aip-success">
-                <Box
-                  className="aip-success-icon"
-                  sx={{
-                    background:
-                      "color-mix(in srgb, var(--auth-red-600) 10%, transparent) !important",
-                  }}
-                >
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 28 28"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M9 9l10 10M19 9L9 19"
-                      style={{ stroke: "var(--auth-red-600)" }}
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </Box>
-                <Box component="p" className="aip-success-title">
-                  {t("auth.verify_email.error_title")}
-                </Box>
-                <Box component="p" className="aip-success-sub">
-                  {t("auth.verify_email.error_sub")}
-                </Box>
-                <AuthSubmitButton
-                  spaced
-                  onClick={() => navigate({ to: ROUTES.LOGIN })}
-                >
-                  {t("auth.verify_email.go_to_login")}
-                </AuthSubmitButton>
-              </Box>
-            )}
+      {status === "loading" && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+            py: "40px",
+          }}
+        >
+          <CircularProgress size={28} />
+          <Box
+            component="p"
+            sx={{ m: 0, fontSize: "13px", color: "var(--auth-gray-500)" }}
+          >
+            {t("auth.verify_email.loading")}
           </Box>
         </Box>
-      </Box>
-    </Box>
+      )}
+
+      {status === "success" && (
+        <AuthPageSuccess
+          title={t("auth.verify_email.success_title")}
+          subtitle={t("auth.verify_email.success_sub")}
+        >
+          {goToLogin}
+        </AuthPageSuccess>
+      )}
+
+      {status === "error" && (
+        <AuthPageSuccess
+          failed
+          title={t("auth.verify_email.error_title")}
+          subtitle={t("auth.verify_email.error_sub")}
+        >
+          {goToLogin}
+        </AuthPageSuccess>
+      )}
+    </AuthLayout>
   );
 };

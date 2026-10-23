@@ -5,14 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useCreateApiKeyMutation } from "@/domains/apiKeys/mutations";
 import type { CreatedApiKey } from "@/domains/apiKeys/types";
-import {
-  FieldLabel,
-  inp,
-} from "@/features/settings/pages/SettingsPage/helpers";
 import {
   createApiKeySchema,
   type CreateApiKeyFormValues,
@@ -107,28 +104,21 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
         noValidate
         sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
       >
-        <Box>
-          <FieldLabel>{t("settings.api_keys.modal_name_label")}</FieldLabel>
-          <Box
-            component="input"
-            autoFocus
-            placeholder={t("settings.api_keys.modal_name_placeholder")}
-            sx={inp}
-            {...register("name")}
-          />
-        </Box>
-        <Box>
-          <FieldLabel>{t("settings.api_keys.modal_expires_label")}</FieldLabel>
-          <Box
-            component="input"
-            type="date"
-            required
-            min={minExpirationDate()}
-            max={maxExpirationDate()}
-            sx={{ ...inp, colorScheme: "dark" }}
-            {...register("expiresAt")}
-          />
-        </Box>
+        <FormTextField
+          id={`${formId}-name`}
+          label={t("settings.api_keys.modal_name_label")}
+          registration={register("name")}
+          placeholder={t("settings.api_keys.modal_name_placeholder")}
+          autoFocus
+        />
+        <FormTextField
+          id={`${formId}-expires`}
+          label={t("settings.api_keys.modal_expires_label")}
+          registration={register("expiresAt")}
+          type="date"
+          required
+          inputProps={{ min: minExpirationDate(), max: maxExpirationDate() }}
+        />
       </Box>
     </AppModal>
   );

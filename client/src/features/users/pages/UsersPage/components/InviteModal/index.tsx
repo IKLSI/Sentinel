@@ -4,19 +4,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { FormSelectField } from "@/components/ui/forms/FormSelectField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { useInviteUserMutation } from "@/domains/users/mutations";
 import { UserRole } from "@/enums";
-import { inp } from "@/features/settings/pages/SettingsPage/helpers";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
 } from "@/features/users/pages/UsersPage/components/InviteModal/schemas";
-import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface Props {
   open: boolean;
@@ -96,99 +95,27 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
         sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <Box>
-            <Box
-              component="label"
-              sx={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "var(--muted2)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                display: "block",
-                mb: "7px",
-              }}
-            >
-              {t("settings.invite.email_label")}{" "}
-              <Box component="span" sx={{ color: "var(--red)" }}>
-                *
-              </Box>
-            </Box>
-            <Box
-              component="input"
-              type="email"
-              sx={{ ...inp, py: "9px", px: "12px", fontSize: "13px" }}
-              placeholder={t("settings.invite.email_placeholder")}
-              {...register("email")}
-            />
-            {errors.email && (
-              <Box sx={{ mt: "6px", fontSize: "11.5px", color: "var(--red)" }}>
-                {resolveFieldError(errors.email, t)}
-              </Box>
-            )}
-          </Box>
+          <FormTextField
+            id={`${formId}-email`}
+            label={t("settings.invite.email_label")}
+            registration={register("email")}
+            error={errors.email}
+            t={t}
+            type="email"
+            placeholder={t("settings.invite.email_placeholder")}
+            required
+          />
 
-          <Box>
-            <Box
-              component="label"
-              sx={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "var(--muted2)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                display: "block",
-                mb: "7px",
-              }}
-            >
-              {t("settings.invite.role_label")}
-            </Box>
-            <Box sx={{ position: "relative" }}>
-              <Box
-                component="select"
-                sx={{
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  background: "var(--s2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r-sm)",
-                  px: "12px",
-                  py: "9px",
-                  pr: "36px",
-                  fontSize: "13px",
-                  color: "var(--text)",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  transition: "border-color 0.15s, box-shadow 0.15s",
-                  "&:focus": {
-                    borderColor: "var(--accent-border)",
-                    boxShadow: "0 0 0 3px var(--accent-subtle)",
-                  },
-                }}
-                {...register("role")}
-              >
-                <option value={UserRole.Admin}>
-                  {t("settings.role.admin")}
-                </option>
-                <option value={UserRole.Developer}>
-                  {t("settings.role.developer")}
-                </option>
-              </Box>
-              <KeyboardArrowDownOutlined
-                sx={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: 16,
-                  color: "var(--muted)",
-                  pointerEvents: "none",
-                }}
-              />
-            </Box>
-          </Box>
+          <FormSelectField
+            id={`${formId}-role`}
+            label={t("settings.invite.role_label")}
+            registration={register("role")}
+          >
+            <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
+            <option value={UserRole.Developer}>
+              {t("settings.role.developer")}
+            </option>
+          </FormSelectField>
         </Box>
       </Box>
     </AppModal>

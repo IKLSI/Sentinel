@@ -66,35 +66,84 @@ export const AuthModalSuccess: React.FC<AuthModalSuccessProps> = ({
 interface AuthPageSuccessProps {
   title: string;
   subtitle: React.ReactNode;
+  failed?: boolean;
+  children?: React.ReactNode;
 }
 
 export const AuthPageSuccess: React.FC<AuthPageSuccessProps> = ({
   title,
   subtitle,
-}) => (
-  <Box className="aip-success">
-    <Box className="aip-success-icon">
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        aria-hidden="true"
+  failed = false,
+  children,
+}) => {
+  const tone = failed ? "var(--auth-red-600)" : "var(--auth-indigo-500)";
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "16px",
+        height: "100%",
+        textAlign: "center",
+      }}
+    >
+      <Box
+        sx={{
+          width: 64,
+          height: 64,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: tone,
+          background: failed
+            ? "color-mix(in srgb, var(--auth-red-600) 10%, transparent)"
+            : "var(--auth-indigo-50)",
+        }}
       >
-        <path
-          d="M6 14l6 6 10-10"
-          style={{ stroke: "var(--auth-indigo-500)" }}
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 28 28"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d={failed ? "M9 9l10 10M19 9L9 19" : "M6 14l6 6 10-10"}
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </Box>
+      <Box
+        component="p"
+        sx={{
+          m: 0,
+          fontSize: "20px",
+          fontWeight: 800,
+          letterSpacing: "-0.03em",
+          color: "var(--auth-gray-900)",
+        }}
+      >
+        {title}
+      </Box>
+      <Box
+        component="p"
+        sx={{
+          m: 0,
+          fontSize: "13px",
+          lineHeight: 1.6,
+          color: "var(--auth-gray-400)",
+        }}
+      >
+        {subtitle}
+      </Box>
+      {children}
     </Box>
-    <Box component="p" className="aip-success-title">
-      {title}
-    </Box>
-    <Box component="p" className="aip-success-sub">
-      {subtitle}
-    </Box>
-  </Box>
-);
+  );
+};

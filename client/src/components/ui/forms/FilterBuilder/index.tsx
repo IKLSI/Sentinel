@@ -9,6 +9,7 @@ import type {
   FilterCriterion,
   FilterFieldDefinition,
 } from "@/components/ui/forms/FilterBuilder/types";
+import { fadeInUp } from "@/styles/keyframes";
 
 interface Props {
   fields: FilterFieldDefinition[];
@@ -35,7 +36,7 @@ const popoverSx = {
   borderRadius: "var(--r-md)",
   boxShadow: "var(--sh-3)",
   overflow: "hidden",
-  animation: "fadeInUp 0.12s ease forwards",
+  animation: `${fadeInUp} 0.12s ease forwards`,
 };
 
 export const FilterBuilder: React.FC<Props> = ({

@@ -1,17 +1,17 @@
 import type React from "react";
+import { useId } from "react";
 import type { UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import CircularProgress from "@mui/material/CircularProgress";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { FormSelectField } from "@/components/ui/forms/FormSelectField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectOption } from "@/domains/projects/types";
 import type { UserOption } from "@/domains/users/types";
-import {
-  modalInputSx,
-  modalSelectSx,
-  modalTextareaSx,
-} from "@/features/tickets/pages/TicketsPage/helpers";
 import type { CreateTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
 
 interface Props {
@@ -26,25 +26,6 @@ interface Props {
   onCreateAnotherChange: (v: boolean) => void;
 }
 
-const Label: React.FC<{ children: React.ReactNode; mb?: string }> = ({
-  children,
-  mb = "5px",
-}) => (
-  <Box
-    component="label"
-    sx={{
-      display: "block",
-      fontSize: "11px",
-      fontWeight: 600,
-      mb,
-      color: "var(--muted2)",
-      letterSpacing: "0.04em",
-    }}
-  >
-    {children}
-  </Box>
-);
-
 export const CreateTicketModal: React.FC<Props> = ({
   open,
   onClose,
@@ -57,6 +38,7 @@ export const CreateTicketModal: React.FC<Props> = ({
   onCreateAnotherChange,
 }) => {
   const t = useT();
+  const fieldId = useId();
 
   return (
     <AppModal
@@ -65,37 +47,27 @@ export const CreateTicketModal: React.FC<Props> = ({
       title={t("tickets.list.create_title")}
       actions={
         <>
-          <Box
-            component="label"
+          <FormControlLabel
+            label={t("tickets.list.create_another")}
             sx={{
               mr: "auto",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "7px",
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "var(--muted2)",
-              cursor: "pointer",
-              userSelect: "none",
+              ml: 0,
+              gap: "4px",
+              "& .MuiFormControlLabel-label": {
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "var(--muted2)",
+              },
             }}
-          >
-            <Box
-              component="input"
-              type="checkbox"
-              checked={createAnother}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onCreateAnotherChange(e.target.checked)
-              }
-              sx={{
-                width: "14px",
-                height: "14px",
-                m: 0,
-                cursor: "pointer",
-                accentColor: "var(--accent)",
-              }}
-            />
-            {t("tickets.list.create_another")}
-          </Box>
+            control={
+              <Checkbox
+                size="small"
+                checked={createAnother}
+                onChange={(e) => onCreateAnotherChange(e.target.checked)}
+                sx={{ p: 0 }}
+              />
+            }
+          />
           <Button
             variant="contained"
             size="small"
@@ -120,106 +92,82 @@ export const CreateTicketModal: React.FC<Props> = ({
       }
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <Box>
-          <Label>
-            {t("tickets.list.field_title")}{" "}
-            <Box component="span" sx={{ color: "var(--red)" }}>
-              *
-            </Box>
-          </Label>
-          <Box
-            component="input"
-            autoFocus
-            type="text"
-            placeholder={t("tickets.list.title_placeholder")}
-            sx={modalInputSx}
-            {...register("title")}
-          />
+        <FormTextField
+          id={`${fieldId}-title`}
+          label={t("tickets.list.field_title")}
+          registration={register("title")}
+          autoFocus
+          required
+          placeholder={t("tickets.list.title_placeholder")}
+        />
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
+        >
+          <FormSelectField
+            id={`${fieldId}-priority`}
+            label={t("tickets.list.field_priority")}
+            registration={register("priority")}
+          >
+            <option value="Critical">
+              {t("tickets.list.priority_critical")}
+            </option>
+            <option value="High">{t("tickets.list.priority_high")}</option>
+            <option value="Medium">{t("tickets.list.priority_medium")}</option>
+            <option value="Low">{t("tickets.list.priority_low")}</option>
+          </FormSelectField>
+          <FormSelectField
+            id={`${fieldId}-type`}
+            label={t("tickets.list.field_type")}
+            registration={register("type")}
+          >
+            <option value="Bug">{t("tickets.list.type_bug")}</option>
+            <option value="Feature">{t("tickets.list.type_feature")}</option>
+            <option value="Security">{t("tickets.list.type_security")}</option>
+            <option value="Performance">
+              {t("tickets.list.type_performance")}
+            </option>
+            <option value="Maintenance">
+              {t("tickets.list.type_maintenance")}
+            </option>
+            <option value="Question">{t("tickets.list.type_question")}</option>
+          </FormSelectField>
         </Box>
         <Box
           sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
         >
-          <Box>
-            <Label>{t("tickets.list.field_priority")}</Label>
-            <Box
-              component="select"
-              sx={modalSelectSx}
-              {...register("priority")}
-            >
-              <option value="Critical">
-                {t("tickets.list.priority_critical")}
+          <FormSelectField
+            id={`${fieldId}-projectId`}
+            label={t("tickets.list.field_project")}
+            registration={register("projectId")}
+          >
+            <option value="">{t("tickets.list.no_project")}</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
-              <option value="High">{t("tickets.list.priority_high")}</option>
-              <option value="Medium">
-                {t("tickets.list.priority_medium")}
+            ))}
+          </FormSelectField>
+          <FormSelectField
+            id={`${fieldId}-assignedToId`}
+            label={t("tickets.list.field_assignee")}
+            registration={register("assignedToId")}
+          >
+            <option value="">{t("tickets.list.unassigned")}</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
               </option>
-              <option value="Low">{t("tickets.list.priority_low")}</option>
-            </Box>
-          </Box>
-          <Box>
-            <Label>{t("tickets.list.field_type")}</Label>
-            <Box component="select" sx={modalSelectSx} {...register("type")}>
-              <option value="Bug">{t("tickets.list.type_bug")}</option>
-              <option value="Feature">{t("tickets.list.type_feature")}</option>
-              <option value="Security">
-                {t("tickets.list.type_security")}
-              </option>
-              <option value="Performance">
-                {t("tickets.list.type_performance")}
-              </option>
-              <option value="Maintenance">
-                {t("tickets.list.type_maintenance")}
-              </option>
-              <option value="Question">
-                {t("tickets.list.type_question")}
-              </option>
-            </Box>
-          </Box>
+            ))}
+          </FormSelectField>
         </Box>
-        <Box
-          sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-        >
-          <Box>
-            <Label>{t("tickets.list.field_project")}</Label>
-            <Box
-              component="select"
-              sx={modalSelectSx}
-              {...register("projectId")}
-            >
-              <option value="">{t("tickets.list.no_project")}</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Box>
-          </Box>
-          <Box>
-            <Label>{t("tickets.list.field_assignee")}</Label>
-            <Box
-              component="select"
-              sx={modalSelectSx}
-              {...register("assignedToId")}
-            >
-              <option value="">{t("tickets.list.unassigned")}</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </Box>
-          </Box>
-        </Box>
-        <Box>
-          <Label>{t("tickets.list.field_description")}</Label>
-          <Box
-            component="textarea"
-            rows={5}
-            placeholder={t("tickets.list.description_placeholder")}
-            sx={modalTextareaSx}
-            {...register("description")}
-          />
-        </Box>
+        <FormTextField
+          id={`${fieldId}-description`}
+          label={t("tickets.list.field_description")}
+          registration={register("description")}
+          multiline
+          rows={5}
+          placeholder={t("tickets.list.description_placeholder")}
+        />
       </Box>
     </AppModal>
   );

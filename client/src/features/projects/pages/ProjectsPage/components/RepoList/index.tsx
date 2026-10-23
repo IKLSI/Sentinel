@@ -7,6 +7,7 @@ import { useT } from "@/contexts/I18nContext";
 import type { AvailableRepo } from "@/domains/projects/types";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
 import { RepoRow } from "@/features/projects/pages/ProjectsPage/components/RepoRow";
+import { EmptyState } from "@/components/ui/common/EmptyState";
 
 const REPO_ROW_ESTIMATED_HEIGHT_PX = 56;
 
@@ -79,15 +80,13 @@ export const RepoList: React.FC<Props> = ({
           </Box>
         </Box>
       ) : visible.length === 0 ? (
-        <Box className="empty-state">
-          <FolderOutlined className="empty-state-icon" sx={{ fontSize: 40 }} />
-          <Box className="empty-state-title">
-            {hasRepos ? t("projects.sync_modal.no_results") : emptyTitle}
-          </Box>
-          {!hasRepos && emptySubtitle && (
-            <Box className="empty-state-subtitle">{emptySubtitle}</Box>
-          )}
-        </Box>
+        <EmptyState
+          icon={FolderOutlined}
+          iconSize={40}
+          title={hasRepos ? t("projects.sync_modal.no_results") : emptyTitle}
+          subtitle={hasRepos ? undefined : emptySubtitle}
+          sx={{ p: { xs: "40px 20px", md: "72px 24px" } }}
+        />
       ) : (
         <Box
           sx={{

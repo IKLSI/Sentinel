@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,11 +7,10 @@ import { useToast } from "@/hooks/useToast";
 import { useUpdateMyProfileMutation } from "@/domains/users/mutations";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useT } from "@/contexts/I18nContext";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import type { UserRole } from "@/enums";
 import {
   CARD_SX,
-  inp,
-  inpRo,
   ROLE_LABEL_KEYS,
 } from "@/features/users/pages/ProfilePage/constants";
 import { InnerDivider } from "@/features/users/pages/ProfilePage/components/InnerDivider";
@@ -20,6 +19,7 @@ export const InfoCard: React.FC = () => {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const t = useT();
+  const fieldId = useId();
   const onUpdateError = useApiErrorToast("profile.toast.update_error");
 
   const [pf, setPf] = useState({
@@ -70,48 +70,18 @@ export const InfoCard: React.FC = () => {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <Box>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text)",
-              mb: "5px",
-            }}
-          >
-            {t("profile.field.first_name")}
-          </Box>
-          <Box
-            component="input"
-            type="text"
-            sx={inp}
-            value={pf.firstName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPf((f) => ({ ...f, firstName: e.target.value }))
-            }
-          />
-        </Box>
-        <Box>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text)",
-              mb: "5px",
-            }}
-          >
-            {t("profile.field.last_name")}
-          </Box>
-          <Box
-            component="input"
-            type="text"
-            sx={inp}
-            value={pf.lastName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPf((f) => ({ ...f, lastName: e.target.value }))
-            }
-          />
-        </Box>
+        <FormTextField
+          id={`${fieldId}-first_name`}
+          label={t("profile.field.first_name")}
+          value={pf.firstName}
+          onValueChange={(value) => setPf((f) => ({ ...f, firstName: value }))}
+        />
+        <FormTextField
+          id={`${fieldId}-last_name`}
+          label={t("profile.field.last_name")}
+          value={pf.lastName}
+          onValueChange={(value) => setPf((f) => ({ ...f, lastName: value }))}
+        />
       </Box>
 
       <Box
@@ -124,48 +94,23 @@ export const InfoCard: React.FC = () => {
           pb: "12px",
         }}
       >
-        <Box>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text)",
-              mb: "5px",
-            }}
-          >
-            {t("profile.field.email")}
-          </Box>
-          <Box
-            component="input"
-            type="email"
-            sx={inpRo}
-            value={user?.email ?? ""}
-            readOnly
-          />
-        </Box>
-        <Box>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text)",
-              mb: "5px",
-            }}
-          >
-            {t("profile.field.role")}
-          </Box>
-          <Box
-            component="input"
-            type="text"
-            sx={inpRo}
-            value={
-              user?.role && ROLE_LABEL_KEYS[user.role as UserRole]
-                ? t(ROLE_LABEL_KEYS[user.role as UserRole])
-                : (user?.role ?? "")
-            }
-            readOnly
-          />
-        </Box>
+        <FormTextField
+          id={`${fieldId}-email`}
+          label={t("profile.field.email")}
+          type="email"
+          value={user?.email ?? ""}
+          readOnly
+        />
+        <FormTextField
+          id={`${fieldId}-role`}
+          label={t("profile.field.role")}
+          value={
+            user?.role && ROLE_LABEL_KEYS[user.role as UserRole]
+              ? t(ROLE_LABEL_KEYS[user.role as UserRole])
+              : (user?.role ?? "")
+          }
+          readOnly
+        />
       </Box>
 
       <Box

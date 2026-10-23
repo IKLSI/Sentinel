@@ -1,11 +1,8 @@
 import type React from "react";
-import Box from "@mui/material/Box";
+import { useId } from "react";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import { DEFAULT_GITLAB_BASE_URL } from "@/domains/settings/constants";
-import {
-  FieldLabel,
-  inp,
-} from "@/features/settings/pages/SettingsPage/helpers";
 
 interface Props {
   baseUrl: string;
@@ -17,20 +14,16 @@ export const GitlabInstanceFields: React.FC<Props> = ({
   onBaseUrlChange,
 }) => {
   const t = useT();
+  const id = useId();
 
   return (
-    <Box>
-      <FieldLabel>{t("settings.integrations.gitlab_url_label")}</FieldLabel>
-      <Box
-        component="input"
-        type="url"
-        placeholder={DEFAULT_GITLAB_BASE_URL}
-        sx={inp}
-        value={baseUrl}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onBaseUrlChange(e.target.value)
-        }
-      />
-    </Box>
+    <FormTextField
+      id={id}
+      label={t("settings.integrations.gitlab_url_label")}
+      type="url"
+      placeholder={DEFAULT_GITLAB_BASE_URL}
+      value={baseUrl}
+      onValueChange={onBaseUrlChange}
+    />
   );
 };

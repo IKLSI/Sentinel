@@ -1,6 +1,7 @@
 import type React from "react";
 import { useRef } from "react";
 import Box from "@mui/material/Box";
+import InputBase from "@mui/material/InputBase";
 import {
   AttachmentChip,
   type CommentAttachment,
@@ -47,38 +48,34 @@ export const CommentEditor: React.FC<Props> = ({
       }}
       onClick={() => textareaRef.current?.focus()}
     >
-      <Box
-        component="textarea"
-        ref={textareaRef}
+      <InputBase
+        multiline
+        fullWidth
+        inputRef={textareaRef}
         value={value}
         placeholder={placeholder}
-        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-          onValueChange(e.target.value)
-        }
-        onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        onChange={(e) => onValueChange(e.target.value)}
+        onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
             onSubmit?.();
           }
         }}
         sx={{
-          all: "unset",
-          boxSizing: "border-box",
           display: "block",
-          width: "100%",
-          minHeight: `${minHeight}px`,
           p: "12px 16px",
-          fontFamily: "inherit",
           fontSize: "13px",
           lineHeight: 1.65,
           color: "var(--text)",
-          caretColor: "var(--text)",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          overflow: "auto",
-          resize: "vertical",
-          "&:focus": { boxShadow: "none", outline: "none" },
-          "&::placeholder": { color: "var(--muted2)", opacity: 1 },
+          "& .MuiInputBase-inputMultiline": {
+            minHeight: `${minHeight}px`,
+            p: 0,
+            wordBreak: "break-word",
+          },
+          "& .MuiInputBase-input::placeholder": {
+            color: "var(--muted2)",
+            opacity: 1,
+          },
         }}
       />
 

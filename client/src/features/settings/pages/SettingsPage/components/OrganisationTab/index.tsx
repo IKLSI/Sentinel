@@ -1,12 +1,13 @@
 import type React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useId, useMemo } from "react";
 import { type FieldErrors, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useToast } from "@/hooks/useToast";
+import { FormSelectField } from "@/components/ui/forms/FormSelectField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import { EMPTY_INTEGRATION_SETTINGS } from "@/domains/settings/constants";
 import type { VulnerabilitySeverity } from "@/enums";
@@ -22,9 +23,7 @@ import {
 import {
   CARD_SX,
   CardHeader,
-  FieldLabel,
   SEVERITY_VALUES,
-  inp,
 } from "@/features/settings/pages/SettingsPage/helpers";
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
 import { GitlabInstanceFields } from "@/features/settings/pages/SettingsPage/components/GitlabInstanceFields";
@@ -49,6 +48,7 @@ const ALERTS_DISABLED_VALUE = "None";
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
+  const fieldId = useId();
   const onOrgUpdateError = useApiErrorToast("settings.toast.org_update_error");
   const onGithubError = useApiErrorToast("settings.toast.github_error");
   const onGitlabError = useApiErrorToast("settings.toast.gitlab_error");
@@ -195,56 +195,27 @@ export const OrganisationTab: React.FC = () => {
                   py: "12px",
                 }}
               >
-                <Box>
-                  <FieldLabel>{t("settings.org.name_label")}</FieldLabel>
-                  <Box
-                    component="input"
-                    type="text"
-                    sx={inp}
-                    {...orgForm.register("name")}
-                  />
-                </Box>
-                <Box>
-                  <FieldLabel>
-                    {t("settings.org.alert_min_severity_label")}
-                  </FieldLabel>
-                  <Box sx={{ position: "relative" }}>
-                    <Box
-                      component="select"
-                      sx={{
-                        ...inp,
-                        pr: "28px",
-                        cursor: "pointer",
-                        appearance: "none",
-                      }}
-                      value={
-                        securityAlertsEnabled
-                          ? alertMinSeverity
-                          : ALERTS_DISABLED_VALUE
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        handleSeverityChange(e.target.value)
-                      }
-                    >
-                      {SEVERITIES.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </Box>
-                    <KeyboardArrowDownOutlined
-                      sx={{
-                        fontSize: 14,
-                        color: "var(--muted)",
-                        position: "absolute",
-                        right: "8px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <FormTextField
+                  id={`${fieldId}-name`}
+                  label={t("settings.org.name_label")}
+                  registration={orgForm.register("name")}
+                />
+                <FormSelectField
+                  id={`${fieldId}-severity`}
+                  label={t("settings.org.alert_min_severity_label")}
+                  value={
+                    securityAlertsEnabled
+                      ? alertMinSeverity
+                      : ALERTS_DISABLED_VALUE
+                  }
+                  onValueChange={handleSeverityChange}
+                >
+                  {SEVERITIES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </FormSelectField>
               </Box>
 
               <Box

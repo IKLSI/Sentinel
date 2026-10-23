@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
-import { ModalFormField } from "@/features/auth/components/ModalFormField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import { useForgotPasswordMutation } from "@/domains/auth/mutations";
 import { useT } from "@/contexts/I18nContext";
@@ -110,7 +110,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           noValidate
           sx={{ display: "flex", flexDirection: "column", gap: "14px" }}
         >
-          <ModalFormField
+          <FormTextField
             id={emailId}
             label={t("auth.forgot_password.email_label")}
             registration={register("email")}

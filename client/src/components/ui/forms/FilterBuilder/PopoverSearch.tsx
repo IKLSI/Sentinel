@@ -1,5 +1,6 @@
 import type React from "react";
-import Box from "@mui/material/Box";
+import InputAdornment from "@mui/material/InputAdornment";
+import InputBase from "@mui/material/InputBase";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 
 interface Props {
@@ -17,36 +18,29 @@ export const PopoverSearch: React.FC<Props> = ({
   onKeyDown,
   divider,
 }) => (
-  <Box
+  <InputBase
+    fullWidth
+    autoFocus
+    placeholder={placeholder}
+    value={value}
+    onChange={(event) => onChange(event.target.value)}
+    onKeyDown={onKeyDown}
+    startAdornment={
+      <InputAdornment position="start">
+        <SearchOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
+      </InputAdornment>
+    }
     sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
       px: "11px",
       py: "9px",
+      fontSize: "12.5px",
+      color: "var(--text)",
       borderBottom: divider ? "1px solid var(--border)" : "none",
+      "& .MuiInputBase-input": { p: 0 },
+      "& .MuiInputBase-input::placeholder": {
+        color: "var(--muted)",
+        opacity: 1,
+      },
     }}
-  >
-    <SearchOutlined sx={{ fontSize: 14, color: "var(--muted)" }} />
-    <Box
-      component="input"
-      type="text"
-      autoFocus
-      placeholder={placeholder}
-      value={value}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-        onChange(event.target.value)
-      }
-      onKeyDown={onKeyDown}
-      sx={{
-        all: "unset",
-        flex: 1,
-        fontFamily: "var(--font-ui)",
-        fontSize: "12.5px",
-        color: "var(--text)",
-        "&::placeholder": { color: "var(--muted)" },
-        "&:focus": { outline: "none", boxShadow: "none" },
-      }}
-    />
-  </Box>
+  />
 );

@@ -10,7 +10,7 @@ import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import { endSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
-import { inp } from "@/features/users/pages/ProfilePage/constants";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
 import {
   type DeleteAccountFormValues,
   deleteAccountSchema,
@@ -105,27 +105,13 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
         >
           {t("profile.gdpr.delete_confirm_body")}
         </Box>
-        <Box>
-          <Box
-            sx={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "var(--muted2)",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              mb: "7px",
-            }}
-          >
-            {t("profile.gdpr.delete_password_label")}
-          </Box>
-          <Box
-            component="input"
-            type="password"
-            sx={{ ...inp, py: "9px", px: "12px", fontSize: "13px" }}
-            {...register("password")}
-            autoFocus
-          />
-        </Box>
+        <FormTextField
+          id={`${formId}-password`}
+          label={t("profile.gdpr.delete_password_label")}
+          registration={register("password")}
+          type="password"
+          autoFocus
+        />
       </Box>
     </AppModal>
   );

@@ -1,13 +1,11 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import OutlinedInput from "@mui/material/OutlinedInput";
 import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { useT } from "@/contexts/I18nContext";
-import {
-  FieldLabel,
-  inp,
-} from "@/features/settings/pages/SettingsPage/helpers";
+import { FormField } from "@/components/ui/forms/FormField";
 
 interface Props {
   iconBackground: string;
@@ -45,6 +43,7 @@ export const IntegrationRow: React.FC<Props> = ({
   children,
 }) => {
   const t = useT();
+  const tokenId = React.useId();
   return (
     <Box
       sx={{ background: "var(--s1)", display: "flex", flexDirection: "column" }}
@@ -169,18 +168,20 @@ export const IntegrationRow: React.FC<Props> = ({
         {children && (
           <Box sx={{ flex: "1 1 240px", minWidth: 0 }}>{children}</Box>
         )}
-        <Box sx={{ flex: "1 1 320px", minWidth: 0 }}>
-          {tokenLabel && <FieldLabel>{tokenLabel}</FieldLabel>}
+        <FormField
+          id={tokenId}
+          label={tokenLabel}
+          sx={{ flex: "1 1 320px", minWidth: 0 }}
+        >
           <Box sx={{ display: "flex", gap: "8px" }}>
-            <Box
-              component="input"
+            <OutlinedInput
+              id={tokenId}
               type="password"
+              size="small"
               placeholder={placeholder}
-              sx={{ ...inp, flex: 1, minWidth: 0 }}
               value={token}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onTokenChange(e.target.value)
-              }
+              onChange={(e) => onTokenChange(e.target.value)}
+              sx={{ flex: 1, minWidth: 0 }}
             />
             <Button
               variant="contained"
@@ -194,7 +195,7 @@ export const IntegrationRow: React.FC<Props> = ({
                 : t("settings.integrations.connect")}
             </Button>
           </Box>
-        </Box>
+        </FormField>
       </Box>
     </Box>
   );

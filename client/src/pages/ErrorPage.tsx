@@ -1,10 +1,24 @@
 import type React from "react";
 import { useNavigate } from "@tanstack/react-router";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import Link from "@mui/material/Link";
 import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
 import { ROUTES } from "@/constants/routes";
-import "./ErrorPage.css";
+import {
+  ERROR_CONTENT_SX,
+  ERROR_DIVIDER_SX,
+  ERROR_DOT_GRID_SX,
+  ERROR_GHOST_SX,
+  ERROR_GLOW_SX,
+  ERROR_ROOT_SX,
+  ERROR_SUBTITLE_SX,
+  ERROR_SUPPORT_LINK_SX,
+  ERROR_SUPPORT_SX,
+  ERROR_TITLE_SX,
+} from "@/pages/errorPageStyles";
 
 interface ErrorPageProps {
   status?: number;
@@ -24,20 +38,26 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   const subtitle = t(is404 ? "error.404.subtitle" : "error.500.subtitle");
 
   return (
-    <div className="ep-root">
-      <div className="ep-glow" />
-      <div className="ep-grid" />
-      <div className="ep-ghost">{status}</div>
+    <Box sx={ERROR_ROOT_SX}>
+      <Box sx={ERROR_GLOW_SX} />
+      <Box sx={ERROR_DOT_GRID_SX} />
+      <Box sx={ERROR_GHOST_SX}>{status}</Box>
 
-      <div className="ep-content">
-        <div className="ep-title">{title}</div>
-        <div className="ep-subtitle">{subtitle}</div>
+      <Box sx={ERROR_CONTENT_SX}>
+        <Box sx={ERROR_TITLE_SX}>{title}</Box>
+        <Box sx={ERROR_SUBTITLE_SX}>{subtitle}</Box>
 
-        <div className="ep-line">
-          <span className="ep-line-label">sentinel</span>
-        </div>
+        <Divider sx={ERROR_DIVIDER_SX}>sentinel</Divider>
 
-        <div className="ep-actions">
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+          }}
+        >
           {onRetry && (
             <Button
               variant="outlined"
@@ -86,15 +106,17 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
           >
             {t("error.back_home")}
           </Button>
-        </div>
+        </Box>
 
         {supportEmail && (
-          <div className="ep-support">
+          <Box sx={ERROR_SUPPORT_SX}>
             {t("error.contact_support")} —{" "}
-            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-          </div>
+            <Link href={`mailto:${supportEmail}`} sx={ERROR_SUPPORT_LINK_SX}>
+              {supportEmail}
+            </Link>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };

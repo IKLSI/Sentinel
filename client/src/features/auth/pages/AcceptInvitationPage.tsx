@@ -5,21 +5,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import { useAcceptInvitationMutation } from "@/domains/users/mutations";
-import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
 import { useTokenPageLifecycle } from "@/features/auth/useTokenPageLifecycle";
-import { AuthFormField } from "@/features/auth/components/AuthFormField";
-import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
+import { PasswordTextField } from "@/components/ui/forms/PasswordTextField";
+import { AuthFormHeader } from "@/features/auth/components/AuthFormHeader";
+import { AuthLayout } from "@/features/auth/components/AuthLayout";
 import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
+import { InvitationShowcase } from "@/features/auth/components/InvitationShowcase";
 import {
   acceptInvitationSchema,
   type AcceptInvitationFormValues,
 } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
-import "@/features/auth/auth.css";
+import { riseInSx } from "@/features/auth/styles";
+
+const FORM_SX = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+  ...riseInSx(0.52),
+} as const;
+
+const NAME_ROW_SX = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "12px",
+} as const;
 
 const routeApi = getRouteApi("/accept-invitation");
 
@@ -30,24 +45,6 @@ export const AcceptInvitationPage: React.FC = () => {
   const onError = useApiErrorToast(
     "auth.accept_invitation.error_invalid_token",
   );
-
-  const STEPS = [
-    {
-      num: "1",
-      title: t("auth.accept_invitation.step1_title"),
-      desc: t("auth.accept_invitation.step1_desc"),
-    },
-    {
-      num: "2",
-      title: t("auth.accept_invitation.step2_title"),
-      desc: t("auth.accept_invitation.step2_desc"),
-    },
-    {
-      num: "3",
-      title: t("auth.accept_invitation.step3_title"),
-      desc: t("auth.accept_invitation.step3_desc"),
-    },
-  ];
 
   const {
     register,
@@ -97,146 +94,82 @@ export const AcceptInvitationPage: React.FC = () => {
   });
 
   return (
-    <Box className="aip-root">
-      <Box className="aip-card">
-        <Box className="aip-left">
-          <Box className="aip-noise" aria-hidden />
+    <AuthLayout aside={<InvitationShowcase />} formMaxWidth={380}>
+      {done ? (
+        <AuthPageSuccess
+          title={t("auth.accept_invitation.success_title")}
+          subtitle={
+            <>
+              {t("auth.accept_invitation.success_line1")}
+              <br />
+              {t("auth.accept_invitation.success_line2")}
+            </>
+          }
+        />
+      ) : (
+        <>
+          <AuthFormHeader
+            title={t("auth.accept_invitation.form_title")}
+            subtitle={t("auth.accept_invitation.form_sub")}
+          />
 
-          <Box className="aip-body">
-            <Box className="aip-logo">
-              <Box className="aip-logo-text">
-                <SentinelWordmark height={13} />
-              </Box>
-            </Box>
-            <Box className="aip-headline">
-              <Box component="h1">
-                {t("auth.accept_invitation.headline_part1")}
-                <br />
-                <Box component="span" className="aip-headline-accent">
-                  {t("auth.accept_invitation.headline_accent")}
-                </Box>
-              </Box>
-              <Box component="p" className="aip-headline-sub">
-                {t("auth.accept_invitation.headline_sub")}
-              </Box>
-            </Box>
-
-            <Box className="aip-steps">
-              {STEPS.map((s, i) => (
-                <Box
-                  key={s.num}
-                  className="aip-step"
-                  style={{ animationDelay: `${0.52 + i * 0.1}s` }}
-                >
-                  <Box className="aip-step-num">{s.num}</Box>
-                  <Box>
-                    <Box className="aip-step-title">{s.title}</Box>
-                    <Box className="aip-step-desc">{s.desc}</Box>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </Box>
-
-        <Box className="aip-right">
-          <Box className="aip-form-wrap">
-            {done ? (
-              <AuthPageSuccess
-                title={t("auth.accept_invitation.success_title")}
-                subtitle={
-                  <>
-                    {t("auth.accept_invitation.success_line1")}
-                    <br />
-                    {t("auth.accept_invitation.success_line2")}
-                  </>
-                }
+          <Box component="form" onSubmit={onSubmit} noValidate sx={FORM_SX}>
+            <Box sx={NAME_ROW_SX}>
+              <FormTextField
+                id={firstNameId}
+                label={t("auth.accept_invitation.firstname_label")}
+                registration={register("firstName")}
+                error={errors.firstName}
+                t={t}
+                placeholder={t("auth.accept_invitation.firstname_placeholder")}
+                autoComplete="given-name"
+                required
               />
-            ) : (
-              <>
-                <Box className="aip-form-header">
-                  <Box component="h2" className="aip-form-title">
-                    {t("auth.accept_invitation.form_title")}
-                  </Box>
-                  <Box component="p" className="aip-form-sub">
-                    {t("auth.accept_invitation.form_sub")}
-                  </Box>
-                </Box>
+              <FormTextField
+                id={lastNameId}
+                label={t("auth.accept_invitation.lastname_label")}
+                registration={register("lastName")}
+                t={t}
+                placeholder={t("auth.accept_invitation.lastname_placeholder")}
+                autoComplete="family-name"
+              />
+            </Box>
 
-                <form onSubmit={onSubmit} noValidate>
-                  <Box className="lp-field aip-row">
-                    <Box>
-                      <AuthFormField
-                        bare
-                        id={firstNameId}
-                        label={t("auth.accept_invitation.firstname_label")}
-                        registration={register("firstName")}
-                        error={errors.firstName}
-                        t={t}
-                        placeholder={t(
-                          "auth.accept_invitation.firstname_placeholder",
-                        )}
-                        autoComplete="given-name"
-                        required
-                      />
-                    </Box>
-                    <Box>
-                      <AuthFormField
-                        bare
-                        id={lastNameId}
-                        label={t("auth.accept_invitation.lastname_label")}
-                        registration={register("lastName")}
-                        t={t}
-                        placeholder={t(
-                          "auth.accept_invitation.lastname_placeholder",
-                        )}
-                        autoComplete="family-name"
-                      />
-                    </Box>
-                  </Box>
+            <PasswordTextField
+              id={passwordId}
+              label={t("auth.accept_invitation.password_label")}
+              registration={register("password")}
+              error={errors.password}
+              t={t}
+              placeholder={t("auth.accept_invitation.password_placeholder")}
+              autoComplete="new-password"
+              required
+              showPassword={showPassword}
+              onToggleShow={() => setShowPassword((v) => !v)}
+              showLabel={t("auth.accept_invitation.password_show")}
+              hideLabel={t("auth.accept_invitation.password_hide")}
+            />
 
-                  <AuthPasswordField
-                    id={passwordId}
-                    label={t("auth.accept_invitation.password_label")}
-                    registration={register("password")}
-                    error={errors.password}
-                    t={t}
-                    placeholder={t(
-                      "auth.accept_invitation.password_placeholder",
-                    )}
-                    autoComplete="new-password"
-                    required
-                    showPassword={showPassword}
-                    onToggleShow={() => setShowPassword((v) => !v)}
-                    showLabel={t("auth.accept_invitation.password_show")}
-                    hideLabel={t("auth.accept_invitation.password_hide")}
-                  />
+            <FormTextField
+              id={confirmId}
+              label={t("auth.accept_invitation.confirm_label")}
+              registration={register("confirm")}
+              error={errors.confirm}
+              t={t}
+              type={showPassword ? "text" : "password"}
+              placeholder={t("auth.accept_invitation.confirm_placeholder")}
+              autoComplete="new-password"
+              required
+            />
 
-                  <AuthFormField
-                    id={confirmId}
-                    label={t("auth.accept_invitation.confirm_label")}
-                    registration={register("confirm")}
-                    error={errors.confirm}
-                    t={t}
-                    type={showPassword ? "text" : "password"}
-                    placeholder={t(
-                      "auth.accept_invitation.confirm_placeholder",
-                    )}
-                    autoComplete="new-password"
-                    required
-                  />
-
-                  <AuthSubmitButton loading={loading} spaced>
-                    {t("auth.accept_invitation.submit")}
-                  </AuthSubmitButton>
-                </form>
-
-                <LegalLinks tone="auth" sx={{ mt: "30px" }} />
-              </>
-            )}
+            <AuthSubmitButton loading={loading}>
+              {t("auth.accept_invitation.submit")}
+            </AuthSubmitButton>
           </Box>
-        </Box>
-      </Box>
-    </Box>
+
+          <LegalLinks tone="auth" sx={{ mt: "30px" }} />
+        </>
+      )}
+    </AuthLayout>
   );
 };

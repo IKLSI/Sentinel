@@ -354,11 +354,22 @@ const baseComponents = {
           borderColor: "var(--red)",
         },
         "&.Mui-disabled": { opacity: 0.55 },
+        "&.MuiInputBase-readOnly .MuiOutlinedInput-input": {
+          color: "var(--muted2)",
+          cursor: "default",
+        },
       },
       input: {
         color: "var(--text)",
         "&::placeholder": { color: "var(--muted)", opacity: 1 },
         "&:focus": { boxShadow: "none" },
+        "&:-webkit-autofill, &:-webkit-autofill:hover, &:-webkit-autofill:focus":
+          {
+            WebkitBoxShadow: "0 0 0 100px var(--s2) inset",
+            WebkitTextFillColor: "var(--text)",
+            caretColor: "var(--text)",
+          },
+        "&::-ms-reveal": { display: "none" },
       },
     },
   },
@@ -375,6 +386,8 @@ const baseComponents = {
   MuiFormHelperText: {
     styleOverrides: {
       root: {
+        margin: "6px 0 0",
+        fontSize: "11.5px",
         color: "var(--muted2)",
         "&.Mui-error": { color: "var(--red)" },
       },

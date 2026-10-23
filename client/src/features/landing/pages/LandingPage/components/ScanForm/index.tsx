@@ -2,6 +2,8 @@ import type React from "react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import InputBase from "@mui/material/InputBase";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
 
@@ -52,38 +54,35 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
         },
       }}
     >
-      <Box
-        component="input"
-        aria-label={t("landing.scan.input_label")}
+      <InputBase
         type="text"
-        inputMode="url"
         autoComplete="off"
-        spellCheck={false}
         value={repository}
         placeholder={t("landing.scan.placeholder")}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-          setRepository(event.target.value)
-        }
+        onChange={(event) => setRepository(event.target.value)}
+        inputProps={{
+          "aria-label": t("landing.scan.input_label"),
+          inputMode: "url",
+          spellCheck: false,
+        }}
         sx={{
           flex: 1,
           minWidth: 0,
           height: 46,
-          border: 0,
-          outline: 0,
-          background: "transparent",
+          px: "18px",
           font: "400 15px var(--font-text)",
           color: isDark ? "#ffffff" : "var(--ink)",
-          px: "18px",
-          "&::placeholder": {
+          "& .MuiInputBase-input::placeholder": {
             color: isDark ? "#9d9bd6" : "var(--ink-3)",
             opacity: 1,
           },
-          "&:focus, &:focus-visible": { outline: 0, boxShadow: "none" },
-          "@media (max-width:560px)": { flex: "none", textAlign: "center" },
+          "@media (max-width:560px)": {
+            flex: "none",
+            "& .MuiInputBase-input": { textAlign: "center" },
+          },
         }}
       />
-      <Box
-        component="button"
+      <ButtonBase
         type="submit"
         sx={{
           display: "inline-flex",
@@ -108,7 +107,7 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
         }}
       >
         {t("landing.cta.scan_button")}
-      </Box>
+      </ButtonBase>
     </Box>
   );
 };

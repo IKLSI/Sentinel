@@ -8,6 +8,7 @@ import { RowActions } from "@/components/ui/common/RowActions";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectSummary } from "@/domains/projects/types";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { spin } from "@/styles/keyframes";
 
 interface Props {
   project: ProjectSummary;
@@ -220,7 +221,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
                     sx={{
                       fontSize: 12,
                       animation: isScanning
-                        ? "spin 1s linear infinite"
+                        ? `${spin} 1s linear infinite`
                         : "none",
                     }}
                   />

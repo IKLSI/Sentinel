@@ -6,8 +6,27 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileMenuButton } from "@/components/layout/MobileMenuButton";
+import {
+  EASE_OUT_EXPO,
+  pageProgress,
+  REDUCED_MOTION,
+} from "@/styles/keyframes";
 
 const SIDEBAR_GAP = 12;
+
+const PROGRESS_BAR_SX = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 2,
+  zIndex: 9999,
+  pointerEvents: "none",
+  background: "var(--accent)",
+  transformOrigin: "left center",
+  animation: `${pageProgress} 0.6s ${EASE_OUT_EXPO} forwards`,
+  [REDUCED_MOTION]: { display: "none" },
+} as const;
 
 const AppContent: React.FC = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -27,7 +46,7 @@ const AppContent: React.FC = () => {
         transition: "margin-left 0.2s cubic-bezier(0.4,0,0.2,1)",
       }}
     >
-      <div key={pathname} className="page-progress-bar" aria-hidden="true" />
+      <Box key={pathname} sx={PROGRESS_BAR_SX} aria-hidden="true" />
       <PageTransition>
         <Outlet />
       </PageTransition>

@@ -1,5 +1,6 @@
 import type React from "react";
-import Box from "@mui/material/Box";
+import InputAdornment from "@mui/material/InputAdornment";
+import OutlinedInput from "@mui/material/OutlinedInput";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import type { SxProps, Theme } from "@mui/material/styles";
 
@@ -22,49 +23,26 @@ export const SearchInput: React.FC<Props> = ({
   inputRef,
   onEscape,
 }) => (
-  <Box
+  <OutlinedInput
+    size="small"
+    inputRef={inputRef}
+    placeholder={placeholder}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Escape") onEscape?.();
+    }}
+    startAdornment={
+      <InputAdornment position="start">
+        <SearchOutlined sx={{ color: "var(--muted)", fontSize: "14px" }} />
+      </InputAdornment>
+    }
     sx={{
       width,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      background: "var(--s1)",
-      border: "1px solid var(--border)",
-      borderRadius: "var(--r)",
-      px: "10px",
       height: "32px",
-      transition: "border-color 0.15s, box-shadow 0.15s",
-      "&:focus-within": {
-        borderColor: "var(--accent-border)",
-        boxShadow: "0 0 0 3px var(--accent-subtle)",
-      },
+      fontSize: "12.5px",
+      background: "var(--s1)",
       ...sx,
     }}
-  >
-    <SearchOutlined
-      sx={{ color: "var(--muted)", fontSize: "14px", flexShrink: 0 }}
-    />
-    <Box
-      component="input"
-      type="text"
-      ref={inputRef}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-        onChange(e.target.value)
-      }
-      onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === "Escape") onEscape?.();
-      }}
-      sx={{
-        all: "unset",
-        flex: 1,
-        fontSize: "12.5px",
-        color: "var(--text)",
-        fontFamily: "var(--font-ui)",
-        "&::placeholder": { color: "var(--muted)" },
-        "&:focus": { outline: "none", boxShadow: "none !important" },
-      }}
-    />
-  </Box>
+  />
 );

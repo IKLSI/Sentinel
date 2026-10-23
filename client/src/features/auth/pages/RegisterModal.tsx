@@ -6,8 +6,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
-import { ModalFormField } from "@/features/auth/components/ModalFormField";
-import { ModalPasswordField } from "@/features/auth/components/ModalPasswordField";
+import { FormTextField } from "@/components/ui/forms/FormTextField";
+import { PasswordTextField } from "@/components/ui/forms/PasswordTextField";
 import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import {
   useRegisterMutation,
@@ -165,7 +165,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           noValidate
           sx={{ display: "flex", flexDirection: "column", gap: "14px" }}
         >
-          <ModalFormField
+          <FormTextField
             id={orgId}
             label={t("auth.register.organization_label")}
             registration={register("organizationName")}
@@ -177,7 +177,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           />
 
           <Box sx={{ display: "flex", gap: "14px" }}>
-            <ModalFormField
+            <FormTextField
               id={firstNameId}
               label={t("auth.register.firstname_label")}
               registration={register("firstName")}
@@ -188,7 +188,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               required
               sx={{ flex: 1, minWidth: 0 }}
             />
-            <ModalFormField
+            <FormTextField
               id={lastNameId}
               label={t("auth.register.lastname_label")}
               registration={register("lastName")}
@@ -201,7 +201,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             />
           </Box>
 
-          <ModalFormField
+          <FormTextField
             id={emailId}
             label={t("auth.register.email_label")}
             registration={register("email")}
@@ -213,7 +213,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             required
           />
 
-          <ModalPasswordField
+          <PasswordTextField
             id={passwordId}
             label={t("auth.register.password_label")}
             registration={register("password")}
