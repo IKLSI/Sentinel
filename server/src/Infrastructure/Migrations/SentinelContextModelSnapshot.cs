@@ -359,6 +359,9 @@ namespace Sentinel.Infrastructure.Migrations
                     b.Property<int?>("HealthScore")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("LastReliableScanAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("LastScanAt")
                         .HasColumnType("timestamp with time zone");
 

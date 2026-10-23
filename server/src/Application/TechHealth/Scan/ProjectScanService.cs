@@ -70,7 +70,7 @@ public class ProjectScanService(
     {
         Guid projectId = project.Id;
 
-        bool isFirstScan = project.LastScanAt == null;
+        DateTime? alertBaseline = project.LastReliableScanAt;
         (int? scoreBefore, string? gradeBefore, ScanCoverage coverageBefore, string? errorBefore) =
             (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError);
 
@@ -114,6 +114,8 @@ public class ProjectScanService(
         if (!vulnerabilityDataComplete)
             logger.LogWarning("Project {ProjectId}: vulnerability data incomplete for this scan", projectId);
 
+        if (findingsReliable) project.LastReliableScanAt = scannedAt;
+
         await healthHistoryWriter.StageSnapshotAsync(project, scannedAt, cancellationToken);
 
         if (findingsReliable)
@@ -130,7 +132,7 @@ public class ProjectScanService(
                 .Select(vulnerability => vulnerability.CveAlias ?? vulnerability.CveId));
 
         await followUps.RunAsync(project,
-            new ScanFindingsContext(findingsReliable, isFirstScan, previousDetections.Keys.ToHashSet(), suppressedIds,
+            new ScanFindingsContext(findingsReliable, alertBaseline, suppressedIds,
                 projectChanged),
             cancellationToken);
     }

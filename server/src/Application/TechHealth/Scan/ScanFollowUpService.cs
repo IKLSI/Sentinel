@@ -9,8 +9,7 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public sealed record ScanFindingsContext(
     bool FindingsReliable,
-    bool IsFirstScan,
-    HashSet<string> PreviousCveIds,
+    DateTime? AlertBaseline,
     HashSet<Guid> SuppressedVulnerabilityIds,
     bool ProjectChanged = true);
 
@@ -55,7 +54,7 @@ public class ScanFollowUpService(
         }
 
         if (findings.FindingsReliable)
-            await vulnerabilityAlerts.TrySendAsync(project, findings.IsFirstScan, findings.PreviousCveIds,
+            await vulnerabilityAlerts.TrySendAsync(project, findings.AlertBaseline,
                 findings.SuppressedVulnerabilityIds, cancellationToken);
     }
 }

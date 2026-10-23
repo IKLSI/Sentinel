@@ -119,7 +119,11 @@ public class TicketUpdateService(
         Guid? projectId = RequestedValue(model.ProjectId, model.ClearProject, ticket.ProjectId);
 
         if (projectId != ticket.ProjectId)
+        {
             ticket.ProjectId = projectId;
+            ticket.FindingKind = null;
+            ticket.FindingKey = null;
+        }
 
         Guid? assignedToId = RequestedValue(model.AssignedToId, model.ClearAssignee, ticket.AssignedToId);
 

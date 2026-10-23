@@ -158,20 +158,19 @@ public partial class ExportService(
         using XLWorkbook workbook = new();
         ApplyDocumentProperties(workbook, L.SubjectTechHealth);
         WriteRecapSheet(workbook, projects, L, truncated);
-        Dictionary<string, int> usedNames = [];
+        HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase) { L.SheetRecap };
         foreach (Project project in projects.Where(HasInventory))
         {
             string baseName = SafeSheetName(project.Name);
-            if (!usedNames.TryAdd(baseName, 1))
+            string sheetName = baseName;
+            for (int count = 2; !usedNames.Add(sheetName); count++)
             {
-                int count = usedNames[baseName] + 1;
-                usedNames[baseName] = count;
                 string suffix = $"_{count}";
-                baseName = baseName.Length + suffix.Length > 28
+                sheetName = baseName.Length + suffix.Length > 28
                     ? baseName[..(28 - suffix.Length)] + suffix
                     : baseName + suffix;
             }
-            WriteProjectSheet(workbook, project, baseName, L);
+            WriteProjectSheet(workbook, project, sheetName, L);
         }
         return SaveWorkbook(workbook);
     }
