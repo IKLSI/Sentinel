@@ -86,18 +86,13 @@ public class DashboardStatsService(
     private async Task<Dictionary<Guid, HashSet<Guid>>> LoadSuppressedIdsAsync(IReadOnlyList<Project> projects,
         DateTime now, CancellationToken cancellationToken)
     {
-        Dictionary<Guid, HashSet<Guid>> suppressedIdsByProject = new();
+        IReadOnlyDictionary<Guid, IReadOnlySet<string>> keysByProject = await suppressionRepository
+            .ListActiveFindingKeysByProjectAsync(projects.Select(project => project.Id).ToList(), now,
+                cancellationToken);
 
-        foreach (Project project in projects)
-        {
-            IReadOnlyList<VulnerabilitySuppression> suppressions =
-                await suppressionRepository.ListActiveByProjectAsync(project.Id, now, cancellationToken);
-
-            suppressedIdsByProject[project.Id] = SuppressedVulnerabilities.IdsIn(project,
-                suppressions.Select(suppression => suppression.FindingKey).ToHashSet());
-        }
-
-        return suppressedIdsByProject;
+        return projects.ToDictionary(
+            project => project.Id,
+            project => SuppressedVulnerabilities.IdsIn(project, keysByProject[project.Id]));
     }
 
     private async Task<List<UrgentTicketDto>> BuildUrgentTicketsAsync(Guid organizationId,

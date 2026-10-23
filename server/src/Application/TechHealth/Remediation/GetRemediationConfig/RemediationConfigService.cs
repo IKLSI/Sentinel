@@ -72,11 +72,10 @@ public class RemediationConfigService(
 
         if (project == null) return [];
 
-        IReadOnlyList<VulnerabilitySuppression> suppressions =
-            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
+        IReadOnlySet<string> suppressedKeys =
+            await suppressionRepository.ListActiveFindingKeysAsync(projectId, DateTime.UtcNow, cancellationToken);
 
-        return RemediationRules.TargetsFor(RemediationRules.RemediableFindings(project.Dependencies,
-            suppressions.Select(suppression => suppression.FindingKey).ToHashSet()));
+        return RemediationRules.TargetsFor(RemediationRules.RemediableFindings(project.Dependencies, suppressedKeys));
     }
 
     private static bool AcceptsTicket(VulnerabilityRemediation remediation, string configTicket) =>

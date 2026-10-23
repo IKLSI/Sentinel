@@ -15,11 +15,10 @@ public class ProjectHealthRecalculator(
     public async Task<HashSet<Guid>> SuppressedVulnerabilityIdsAsync(Project project,
         CancellationToken cancellationToken)
     {
-        IReadOnlyList<VulnerabilitySuppression> suppressions = await suppressionRepository
-            .ListActiveByProjectAsync(project.Id, DateTime.UtcNow, cancellationToken);
+        IReadOnlySet<string> suppressedKeys = await suppressionRepository
+            .ListActiveFindingKeysAsync(project.Id, DateTime.UtcNow, cancellationToken);
 
-        return SuppressedVulnerabilities.IdsIn(project,
-            suppressions.Select(suppression => suppression.FindingKey).ToHashSet());
+        return SuppressedVulnerabilities.IdsIn(project, suppressedKeys);
     }
 
     public async Task RecalculateAsync(Guid projectId, CancellationToken cancellationToken)

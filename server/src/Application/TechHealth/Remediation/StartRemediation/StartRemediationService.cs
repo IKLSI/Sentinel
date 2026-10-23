@@ -38,11 +38,10 @@ public class StartRemediationService(
         if (project == null)
             return Result<RemediationDto>.NotFound(ErrorCodes.ProjectNotFound);
 
-        IReadOnlyList<VulnerabilitySuppression> suppressions =
-            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
+        IReadOnlySet<string> suppressedKeys =
+            await suppressionRepository.ListActiveFindingKeysAsync(projectId, DateTime.UtcNow, cancellationToken);
 
-        if (RemediationRules.RemediableFindings(project.Dependencies,
-                suppressions.Select(suppression => suppression.FindingKey).ToHashSet()).Count == 0)
+        if (RemediationRules.RemediableFindings(project.Dependencies, suppressedKeys).Count == 0)
             return Result<RemediationDto>.Error(ErrorCodes.RemediationNotEligible);
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
