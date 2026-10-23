@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import BoltOutlined from "@mui/icons-material/BoltOutlined";
 import BugReportOutlined from "@mui/icons-material/BugReportOutlined";
-import MessageOutlined from "@mui/icons-material/MessageOutlined";
 import PersonOffOutlined from "@mui/icons-material/PersonOffOutlined";
 import SecurityOutlined from "@mui/icons-material/SecurityOutlined";
 import { useNavigate } from "@tanstack/react-router";
@@ -60,7 +59,8 @@ export const UrgentTicketRow: React.FC<Props> = ({ ticket }) => {
       sx={{
         width: "100%",
         minHeight: 48,
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto",
         alignItems: "center",
         gap: "8px",
         px: "10px",
@@ -74,33 +74,33 @@ export const UrgentTicketRow: React.FC<Props> = ({ ticket }) => {
       }}
     >
       <Icon sx={{ fontSize: 16, color: iconColor, flexShrink: 0 }} />
-      <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Box sx={{ minWidth: 0, overflow: "hidden" }}>
         <Box
           sx={{
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "var(--text)",
-            ...ellipsis,
-          }}
-          title={ticket.title}
-        >
-          {ticket.reference}
-        </Box>
-        <Box
-          sx={{
-            mt: "2px",
             display: "flex",
             alignItems: "center",
             gap: "6px",
-            fontSize: "10px",
-            color: "var(--text-secondary)",
+            minWidth: 0,
+            overflow: "hidden",
             whiteSpace: "nowrap",
           }}
         >
-          <span>{ticket.projectName ?? ticket.title}</span>
           <Box
             component="span"
             sx={{
+              flexShrink: 0,
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "var(--text)",
+            }}
+          >
+            {ticket.reference}
+          </Box>
+          <Box
+            component="span"
+            sx={{
+              flexShrink: 0,
+              fontSize: "10px",
               color: priorityColor,
               textTransform: "uppercase",
               letterSpacing: "0.08em",
@@ -109,16 +109,17 @@ export const UrgentTicketRow: React.FC<Props> = ({ ticket }) => {
           >
             • {t(`dashboard.tickets.priority.${ticket.priority}`)}
           </Box>
-          <Box component="span" sx={{ color: "var(--border2)" }}>
-            •
-          </Box>
-          <Box
-            component="span"
-            sx={{ display: "inline-flex", alignItems: "center", gap: "3px" }}
-          >
-            {ticket.commentCount}
-            <MessageOutlined sx={{ fontSize: 12, color: "var(--muted2)" }} />
-          </Box>
+        </Box>
+        <Box
+          sx={{
+            mt: "2px",
+            fontSize: "10px",
+            color: "var(--text-secondary)",
+            ...ellipsis,
+          }}
+          title={ticket.title}
+        >
+          {ticket.projectName ?? ticket.title}
         </Box>
       </Box>
       <AppTooltip
