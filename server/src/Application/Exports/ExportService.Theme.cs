@@ -20,6 +20,8 @@ public partial class ExportService
     private static readonly XLColor GreenFg = XLColor.FromHtml("#15803D");
     private static readonly XLColor GreenBg2 = XLColor.FromHtml("#D1FAE5");
     private static readonly XLColor GreenFg2 = XLColor.FromHtml("#16A34A");
+    private static readonly XLColor TealBg = XLColor.FromHtml("#CCFBF1");
+    private static readonly XLColor TealFg = XLColor.FromHtml("#0F766E");
     private static readonly XLColor GrayBg = XLColor.FromHtml("#F1F5F9");
     private static readonly XLColor GrayFg = XLColor.FromHtml("#475569");
     private static readonly XLColor OrangeBg = XLColor.FromHtml("#FFEDD5");
@@ -58,10 +60,9 @@ public partial class ExportService
     {
         null => (GrayBg, GrayFg),
         "A" => (GreenBg, GreenFg),
-        "B" => (GreenBg2, GreenFg2),
+        "B" => (TealBg, TealFg),
         "C" => (YellowBg, YellowFg),
         "D" => (OrangeBg, OrangeFg),
-        "E" => (OrangeBg, XLColor.FromHtml("#9A3412")),
         _ => (RedBg, RedFg),
     };
 
