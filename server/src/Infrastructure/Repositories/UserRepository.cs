@@ -154,7 +154,7 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
         CancellationToken cancellationToken) =>
         await Query(QueryTracking.NoTracking)
             .Where(u => u.OrganizationId == organizationId)
-            .Where(u => u.Role == UserRole.Admin)
+            .Where(u => u.Role == UserRole.Admin && u.AccessStatus == UserAccessStatus.Active)
             .Select(u => new EmailRecipient(u.Email, u.Language))
             .ToListAsync(cancellationToken);
 
