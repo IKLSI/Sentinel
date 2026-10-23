@@ -30,7 +30,7 @@ public class UserUpdatePreferencesService(
         if (user == null)
             return Result.NotFound(ErrorCodes.UserNotFound);
 
-        if (!string.IsNullOrEmpty(model.Theme) && Enum.TryParse(model.Theme, true, out ThemeType theme))
+        if (!string.IsNullOrEmpty(model.Theme) && EnumValue.TryParse(model.Theme, out ThemeType theme))
             user.Theme = theme;
 
         if (!string.IsNullOrEmpty(model.Language) && LanguageValues.All.Contains(model.Language))

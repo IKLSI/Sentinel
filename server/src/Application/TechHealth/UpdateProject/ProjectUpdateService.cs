@@ -36,7 +36,7 @@ public class ProjectUpdateService(
         if (project == null)
             return Result<ProjectScanSettingsDto>.NotFound(ErrorCodes.ProjectNotFound);
 
-        if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
+        if (!EnumValue.TryParse(model.ScanFrequency, out ScanFrequency scanFrequency))
         {
             return Result<ProjectScanSettingsDto>.Error(
                 ErrorCodes.ProjectInvalidScanFrequency,

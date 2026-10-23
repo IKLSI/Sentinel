@@ -38,10 +38,10 @@ public class ProjectCreateService(
         if (!validationResult.IsSuccess)
             return Result<ProjectDto>.From(validationResult);
 
-        if (!Enum.TryParse(model.RepositoryType, true, out RepositoryType repositoryType))
+        if (!EnumValue.TryParse(model.RepositoryType, out RepositoryType repositoryType))
             repositoryType = RepositoryType.GitHub;
 
-        if (!Enum.TryParse(model.ScanFrequency, true, out ScanFrequency scanFrequency))
+        if (!EnumValue.TryParse(model.ScanFrequency, out ScanFrequency scanFrequency))
             scanFrequency = ScanFrequency.Weekly;
 
         (string? branch, string? rootPath) = RepositoryLocation.ReadTreeReference(model.RepositoryUrl);

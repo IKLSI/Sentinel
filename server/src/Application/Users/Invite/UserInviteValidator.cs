@@ -39,7 +39,7 @@ public class UserInviteValidator(
     }
 
     public Result ValidateRole(CreateUserDto model, out UserRole role) =>
-        Enum.TryParse(model.Role, true, out role)
+        EnumValue.TryParse(model.Role, out role)
             ? Result.Success()
             : Result.Error(ErrorCodes.UserInvalidRole);
 }

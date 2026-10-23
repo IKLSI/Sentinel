@@ -62,7 +62,7 @@ public static class UserFilterParser
 
         foreach (string value in values)
         {
-            if (!TryParseValue(value, out TValue _))
+            if (!EnumValue.TryParse(value, out TValue _))
             {
                 return Result.Error(ErrorCodes.UserFilterValueInvalid, new Dictionary<string, string>
                 {
@@ -81,13 +81,10 @@ public static class UserFilterParser
 
         foreach (string value in values)
         {
-            if (TryParseValue(value, out TValue result) && !parsed.Contains(result))
+            if (EnumValue.TryParse(value, out TValue result) && !parsed.Contains(result))
                 parsed.Add(result);
         }
 
         return parsed;
     }
-
-    private static bool TryParseValue<TValue>(string value, out TValue parsed) where TValue : struct, Enum =>
-        Enum.TryParse(value, true, out parsed) && Enum.IsDefined(parsed);
 }

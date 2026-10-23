@@ -46,7 +46,7 @@ public sealed partial class ValidationErrors
 
     public ValidationErrors ParsableEnum<TEnum>(string identifier, string? value, string code)
         where TEnum : struct, Enum =>
-        !string.IsNullOrWhiteSpace(value) && !Enum.TryParse(value, true, out TEnum _) ? Add(identifier, code) : this;
+        !string.IsNullOrWhiteSpace(value) && !EnumValue.TryParse(value, out TEnum _) ? Add(identifier, code) : this;
 
     public ValidationErrors DefinedEnum<TEnum>(string identifier, TEnum value, string code)
         where TEnum : struct, Enum =>

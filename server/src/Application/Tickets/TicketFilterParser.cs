@@ -72,7 +72,7 @@ public static class TicketFilterParser
 
         foreach (string value in values)
         {
-            if (!TryParseValue(value, out TValue _))
+            if (!EnumValue.TryParse(value, out TValue _))
                 return InvalidValue(field, value);
         }
 
@@ -120,7 +120,7 @@ public static class TicketFilterParser
 
         foreach (string value in values)
         {
-            if (TryParseValue(value, out TValue result) && !parsed.Contains(result))
+            if (EnumValue.TryParse(value, out TValue result) && !parsed.Contains(result))
                 parsed.Add(result);
         }
 
@@ -146,9 +146,6 @@ public static class TicketFilterParser
 
         return new TicketReferenceFilter { Ids = ids, IncludeUnset = includeUnset };
     }
-
-    private static bool TryParseValue<TValue>(string value, out TValue parsed) where TValue : struct, Enum =>
-        Enum.TryParse(value, true, out parsed) && Enum.IsDefined(parsed);
 
     private static bool IsUnset(string value) => string.Equals(value, UnsetValue, StringComparison.OrdinalIgnoreCase);
 }

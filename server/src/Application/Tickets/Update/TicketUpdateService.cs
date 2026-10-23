@@ -53,7 +53,7 @@ public class TicketUpdateService(
 
         if (model.Status != null)
         {
-            if (!Enum.TryParse(model.Status, true, out TicketStatus parsedStatus))
+            if (!EnumValue.TryParse(model.Status, out TicketStatus parsedStatus))
                 return Result<TicketDto>.Error(ErrorCodes.TicketInvalidStatus);
 
             newStatus = parsedStatus;
