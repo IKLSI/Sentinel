@@ -1,3 +1,4 @@
+import { TicketStatus } from "@/enums";
 import { z } from "zod";
 
 export const createTicketSchema = z.object({
@@ -22,7 +23,7 @@ export const editTicketSchema = z.object({
   description: z.string(),
   priority: z.string(),
   type: z.string(),
-  status: z.string(),
+  status: z.enum(TicketStatus),
   projectId: z.string(),
   assignedToId: z.string(),
 });

@@ -1,3 +1,4 @@
+import { TicketStatus } from "@/enums";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -95,7 +96,7 @@ export const useEditTicketDialog = () => {
       description: "",
       priority: "medium",
       type: "bug",
-      status: "",
+      status: TicketStatus.New,
       projectId: "",
       assignedToId: "",
     },
@@ -126,6 +127,8 @@ export const useEditTicketDialog = () => {
       description: data.description,
       priority: data.priority as UpdateTicket["priority"],
       type: data.type as UpdateTicket["type"],
+      clearProject: !data.projectId,
+      clearAssignee: !data.assignedToId,
     };
     if (data.projectId) payload.projectId = data.projectId;
     if (data.assignedToId) payload.assignedToId = data.assignedToId;
