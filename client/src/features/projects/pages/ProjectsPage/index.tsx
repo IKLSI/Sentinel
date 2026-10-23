@@ -1,13 +1,8 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { projectKeys } from "@/domains/projects/constants";
 import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
-import {
-  useDeleteProjectMutation,
-  useScanProjectMutation,
-} from "@/domains/projects/mutations";
+import { useDeleteProjectMutation } from "@/domains/projects/mutations";
 import { useProjectsQuery } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
@@ -25,12 +20,12 @@ import {
   getGrade,
   isUntracked,
 } from "@/features/projects/pages/ProjectsPage/helpers";
-import { SCAN_FEEDBACK_TIMEOUT_MS } from "@/features/projects/pages/ProjectsPage/constants";
 import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
 import { ProjectSettingsModal } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useScanFeedback } from "@/features/projects/pages/ProjectsPage/hooks";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
 
@@ -38,19 +33,16 @@ export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
   const onDeleteError = useApiErrorToast("projects.toast.delete_error");
-  const onScanError = useApiErrorToast("projects.toast.scan_start_error");
-  const queryClient = useQueryClient();
   const { openImport } = routeApi.useSearch();
   const { data: projects = [], isLoading: loading } = useProjectsQuery();
   const deleteProjectMutation = useDeleteProjectMutation();
-  const { mutate: scanProject } = useScanProjectMutation();
   const exportProjectsMutation = useExportProjectsExcelMutation();
+  const { scanningId, startScan: handleScan } = useScanFeedback(projects);
   const deleting = deleteProjectMutation.isPending;
   const exporting = exportProjectsMutation.isPending;
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [editTarget, setEditTarget] = useState<ProjectSummary | null>(null);
-  const [scanningId, setScanningId] = useState<string | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<SectionKey, boolean>
@@ -63,16 +55,6 @@ export const ProjectsPage: React.FC = () => {
     A: false,
     [UNTRACKED_SECTION]: true,
   });
-  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scanBaselineRef = useRef<string | null>(null);
-  const scanningIdRef = useRef<string | null>(null);
-
-  useEffect(
-    () => () => {
-      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
-    },
-    [],
-  );
 
   const handleExport = () => {
     exportProjectsMutation.mutate(undefined, {
@@ -97,55 +79,6 @@ export const ProjectsPage: React.FC = () => {
       },
     );
   };
-
-  const stopScanFeedback = useCallback(() => {
-    if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
-    scanTimeoutRef.current = null;
-    scanningIdRef.current = null;
-    setScanningId(null);
-  }, []);
-
-  const handleScan = useCallback(
-    (id: string) => {
-      if (scanningIdRef.current) return;
-      scanBaselineRef.current =
-        queryClient
-          .getQueryData<ProjectSummary[]>(projectKeys.list())
-          ?.find((p) => p.id === id)?.lastScanAt ?? null;
-      scanningIdRef.current = id;
-      setScanningId(id);
-
-      scanProject(
-        { id },
-        {
-          onSuccess: () => {
-            showToast(t("projects.toast.scan_started"), "info");
-            scanTimeoutRef.current = setTimeout(() => {
-              stopScanFeedback();
-              showToast(t("projects.toast.scan_timeout"), "warning");
-            }, SCAN_FEEDBACK_TIMEOUT_MS);
-          },
-          onError: (err) => {
-            onScanError(err);
-            stopScanFeedback();
-          },
-        },
-      );
-    },
-    [queryClient, showToast, t, scanProject, onScanError, stopScanFeedback],
-  );
-
-  useEffect(() => {
-    if (!scanningId) return;
-    const scanned = projects.find((p) => p.id === scanningId);
-    if (!scanned || (scanned.lastScanAt ?? null) === scanBaselineRef.current)
-      return;
-
-    stopScanFeedback();
-    if (scanned.lastScanError)
-      showToast(t("projects.toast.scan_done_with_errors"), "warning");
-    else showToast(t("projects.toast.scan_done"), "success");
-  }, [projects, scanningId, stopScanFeedback, showToast, t]);
 
   const filtered = useMemo(
     () =>
