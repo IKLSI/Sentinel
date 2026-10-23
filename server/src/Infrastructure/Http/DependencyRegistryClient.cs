@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Parsing;
 using Sentinel.Domain.Versioning;
 
 namespace Sentinel.Infrastructure.Http;
@@ -168,7 +169,7 @@ public partial class DependencyRegistryClient(
         using HttpResponseMessage response = await client.GetAsync(
             $"https://repo1.maven.org/maven2/{Uri.EscapeDataString(groupPath).Replace("%2F", "/")}/{Uri.EscapeDataString(parts[1])}/maven-metadata.xml");
         if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        XDocument doc = XDocument.Parse(await response.Content.ReadAsStringAsync());
+        XDocument doc = UntrustedXml.Parse(await response.Content.ReadAsStringAsync());
         string? version = doc.Root?.Element("versioning")?.Element("release")?.Value
             ?? doc.Root?.Element("versioning")?.Element("latest")?.Value;
 

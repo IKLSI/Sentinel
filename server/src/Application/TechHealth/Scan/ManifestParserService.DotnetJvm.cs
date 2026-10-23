@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Parsing;
 
 namespace Sentinel.Application.TechHealth.Scan;
 
@@ -10,21 +10,9 @@ public partial class ManifestParserService
 {
     private const string NuGetDirectDependencyType = "Direct";
 
-    private static readonly XmlReaderSettings UntrustedXmlSettings = new()
-    {
-        DtdProcessing = DtdProcessing.Prohibit,
-        XmlResolver = null,
-    };
-
-    private static XDocument ParseUntrustedXml(string content)
-    {
-        using XmlReader reader = XmlReader.Create(new StringReader(content), UntrustedXmlSettings);
-        return XDocument.Load(reader);
-    }
-
     private static void ParseCsproj(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        XDocument doc = ParseUntrustedXml(content);
+        XDocument doc = UntrustedXml.Parse(content);
 
         IEnumerable<string> targetFrameworks = doc.Descendants("TargetFramework").Select(e => e.Value)
             .Concat(doc.Descendants("TargetFrameworks").SelectMany(e => e.Value.Split(';')));
@@ -78,7 +66,7 @@ public partial class ManifestParserService
 
     private static void ParsePomXml(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
-        XDocument doc = ParseUntrustedXml(content);
+        XDocument doc = UntrustedXml.Parse(content);
         XNamespace ns = doc.Root?.Name.Namespace ?? XNamespace.None;
 
         Dictionary<string, string> properties = ReadMavenProperties(doc, ns);
@@ -155,7 +143,7 @@ public partial class ManifestParserService
 
     private static void ParseDirectoryPackagesProps(Guid projectId, string content, List<Dependency> deps)
     {
-        XDocument doc = ParseUntrustedXml(content);
+        XDocument doc = UntrustedXml.Parse(content);
 
         foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "PackageVersion"))
         {
@@ -398,7 +386,7 @@ public partial class ManifestParserService
 
     private static void ParsePackagesConfig(Guid projectId, string content, List<Dependency> deps)
     {
-        XDocument doc = ParseUntrustedXml(content);
+        XDocument doc = UntrustedXml.Parse(content);
 
         foreach (XElement package in doc.Descendants().Where(e => e.Name.LocalName == "package"))
         {
