@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { readStorage, writeStorage } from "@/helpers/storage";
 
 interface SidebarContextValue {
   isOpen: boolean;
@@ -34,13 +35,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [isOpen, setIsOpen] = useState(() => window.innerWidth >= 768);
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED) === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [isCollapsed, setIsCollapsed] = useState(
+    () => readStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED) === "true",
+  );
 
   useEffect(() => {
     const handler = () => {
@@ -55,11 +52,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const toggleCollapse = useCallback(() => {
     setIsCollapsed((v) => {
       const next = !v;
-      try {
-        localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
-      } catch (e) {
-        void e;
-      }
+      writeStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(next));
       return next;
     });
   }, []);

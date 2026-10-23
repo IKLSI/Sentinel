@@ -21,7 +21,6 @@ export const PreferencesCard: React.FC = () => {
   const handleThemeToggle = (mode: Theme) => {
     if (theme === mode) return;
     toggleTheme();
-    updatePrefs.mutate({ data: { theme: mode } });
   };
 
   const handleLanguageChange = (lang: Language) => {

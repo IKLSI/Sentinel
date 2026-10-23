@@ -13,6 +13,7 @@ import { useUpdatePreferencesMutation } from "@/domains/users/mutations";
 import { useAuth } from "@/hooks/useAuth";
 import { Theme } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { readStoredValue, writeStorage } from "@/helpers/storage";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -29,18 +30,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
   const updatePreferencesMutation = useUpdatePreferencesMutation();
-  const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem(STORAGE_KEYS.THEME) as Theme) || Theme.Light;
-  });
+  const [theme, setTheme] = useState<Theme>(
+    () => readStoredValue(STORAGE_KEYS.THEME, Theme) ?? Theme.Light,
+  );
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
+    writeStorage(STORAGE_KEYS.THEME, theme);
   }, [theme]);
 
+  const userTheme = user?.theme;
   useEffect(() => {
-    if (user?.theme) setTheme(user.theme as Theme);
-  }, [user]);
+    if (userTheme) setTheme(userTheme as Theme);
+  }, [userTheme]);
 
   const updatePreferences = updatePreferencesMutation.mutate;
   const toggleTheme = useCallback(() => {

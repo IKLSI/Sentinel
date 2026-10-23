@@ -11,6 +11,7 @@ import { ROUTES_API } from "@/configs/api-routes.gen";
 import apiClient from "@/configs/apiClient";
 import { Language } from "@/enums";
 import { STORAGE_KEYS } from "@/constants/storage";
+import { readStoredValue, writeStorage } from "@/helpers/storage";
 import { buildUrl } from "@/helpers/url";
 
 type Translations = Record<string, string>;
@@ -67,7 +68,7 @@ export const I18nProvider: React.FC<{
 }> = ({ children, initialLanguage }) => {
   const [language, setLanguageState] = useState<Language>(
     initialLanguage ??
-      (localStorage.getItem(STORAGE_KEY) as Language | null) ??
+      readStoredValue(STORAGE_KEY, Language) ??
       detectBrowserLanguage(),
   );
   const [translations, setTranslations] = useState<Translations | null>(
@@ -100,7 +101,7 @@ export const I18nProvider: React.FC<{
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
-    localStorage.setItem(STORAGE_KEY, lang);
+    writeStorage(STORAGE_KEY, lang);
     setLanguageState(lang);
   }, []);
 
