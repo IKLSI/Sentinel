@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import { toLocalIsoDate } from "@/formatters/date";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import { useSuppressVulnerabilityMutation } from "@/domains/projects/mutations";
@@ -32,7 +33,7 @@ const DEFAULT_VALUES: SuppressionFormValues = {
 const tomorrow = () => {
   const date = new Date();
   date.setDate(date.getDate() + 1);
-  return date.toISOString().split("T")[0];
+  return toLocalIsoDate(date);
 };
 
 export const SuppressionModal: React.FC<Props> = ({

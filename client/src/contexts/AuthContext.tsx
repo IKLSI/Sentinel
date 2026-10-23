@@ -81,7 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           {},
           {
             onSuccess: applyUser,
-            onError: endSession,
+            onError: (error) => {
+              const status = (error as { response?: { status?: number } })
+                ?.response?.status;
+              if (status === 401 || status === 403) endSession();
+            },
             onSettled: () => setLoading(false),
           },
         ),

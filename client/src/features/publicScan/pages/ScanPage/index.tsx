@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -28,32 +28,39 @@ export const ScanPage: React.FC = () => {
   const scannedRepo = useRef<string | null>(null);
   const scanMutate = scanMutation.mutate;
 
+  const runScan = useCallback(
+    (url: string) =>
+      scanMutate(
+        { data: { repositoryUrl: url } },
+        {
+          onError: (err) => {
+            const code = extractApiErrorCode(err)?.code;
+            showToast(
+              t(
+                (code && PUBLIC_SCAN_ERROR_KEYS[code]) ||
+                  PUBLIC_SCAN_DEFAULT_ERROR_KEY,
+              ),
+              "error",
+            );
+          },
+        },
+      ),
+    [scanMutate, showToast, t],
+  );
+
   useEffect(() => {
     if (!repo || scannedRepo.current === repo) return;
     scannedRepo.current = repo;
     setRepositoryUrl(repo);
-    scanMutate(
-      { data: { repositoryUrl: repo } },
-      {
-        onError: (err) => {
-          const code = extractApiErrorCode(err)?.code;
-          showToast(
-            t(
-              (code && PUBLIC_SCAN_ERROR_KEYS[code]) ||
-                PUBLIC_SCAN_DEFAULT_ERROR_KEY,
-            ),
-            "error",
-          );
-        },
-      },
-    );
-  }, [repo, scanMutate, showToast, t]);
+    runScan(repo);
+  }, [repo, runScan]);
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const trimmed = repositoryUrl.trim();
     if (trimmed === repo) {
-      scannedRepo.current = null;
+      runScan(trimmed);
+      return;
     }
     navigate({ to: ROUTES.SCAN, search: { repo: trimmed } });
   };

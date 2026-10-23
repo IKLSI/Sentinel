@@ -118,8 +118,16 @@ export const LoginPage: React.FC = () => {
         setShowResend(true);
         showToast(apiError(err, t("auth.login.email_not_verified")), "warning");
       } else {
-        setHasError(true);
-        showToast(t("auth.login.invalid_credentials"), "error");
+        setHasError(status === 401);
+        showToast(
+          apiError(
+            err,
+            status === 401
+              ? t("auth.login.invalid_credentials")
+              : t("auth.login.unexpected_error"),
+          ),
+          "error",
+        );
       }
     } finally {
       setLoading(false);

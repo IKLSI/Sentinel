@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
@@ -71,7 +71,11 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             </Box>
           </AppTooltip>
           <Box
+            component={Link}
+            to={`/tickets/${ticket.id}`}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             sx={{
+              textDecoration: "none",
               fontSize: "13px",
               fontWeight: 600,
               color: "var(--text)",

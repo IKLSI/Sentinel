@@ -30,7 +30,6 @@ export const PasswordTextField: React.FC<PasswordTextFieldProps> = ({
         <IconButton
           size="small"
           edge="end"
-          tabIndex={-1}
           onClick={onToggleShow}
           aria-label={showPassword ? hideLabel : showLabel}
           sx={{

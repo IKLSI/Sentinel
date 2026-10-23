@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -22,12 +22,15 @@ export const VerifyEmailPage: React.FC = () => {
   const [status, setStatus] = useState<Status>("loading");
   const verifyEmailMutation = useVerifyEmailMutation();
   const verify = verifyEmailMutation.mutate;
+  const verifiedToken = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) {
       setStatus("error");
       return;
     }
+    if (verifiedToken.current === token) return;
+    verifiedToken.current = token;
     verify(
       { data: { token } },
       {

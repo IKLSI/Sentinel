@@ -1,6 +1,6 @@
 import type React from "react";
 import { useId } from "react";
-import type { UseFormRegister } from "react-hook-form";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -18,6 +18,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<CreateTicketFormValues>;
+  errors: FieldErrors<CreateTicketFormValues>;
   projects: ProjectOption[];
   users: UserOption[];
   submitting: boolean;
@@ -30,6 +31,7 @@ export const CreateTicketModal: React.FC<Props> = ({
   open,
   onClose,
   register,
+  errors,
   projects,
   users,
   submitting,
@@ -96,6 +98,8 @@ export const CreateTicketModal: React.FC<Props> = ({
           id={`${fieldId}-title`}
           label={t("tickets.list.field_title")}
           registration={register("title")}
+          error={errors.title}
+          t={t}
           autoFocus
           required
           placeholder={t("tickets.list.title_placeholder")}

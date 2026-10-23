@@ -83,7 +83,10 @@ export const FormTextField: React.FC<FormTextFieldProps> = ({
         multiline={multiline}
         rows={rows}
         endAdornment={endAdornment}
-        inputProps={inputProps}
+        inputProps={{
+          ...(error && { "aria-describedby": `${id}-helper` }),
+          ...inputProps,
+        }}
       />
     </FormField>
   );

@@ -50,6 +50,8 @@ export const RowActions: React.FC<{
       sx={{
         opacity: 0,
         transition: "opacity 0.15s",
+        "&:focus-within": { opacity: 1 },
+        "@media (hover: none)": { opacity: 1 },
         display: "inline-flex",
         alignItems: "center",
         gap: "2px",
@@ -61,7 +63,11 @@ export const RowActions: React.FC<{
           <AppTooltip key={action.label} title={action.label}>
             <IconButton
               type="button"
-              onClick={action.disabled ? undefined : action.onClick}
+              onClick={
+                action.disabled
+                  ? (e: React.MouseEvent) => e.stopPropagation()
+                  : action.onClick
+              }
               sx={{
                 p: 0,
                 cursor: action.disabled ? "default" : "pointer",

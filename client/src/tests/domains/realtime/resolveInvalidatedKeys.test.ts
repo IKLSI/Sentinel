@@ -52,6 +52,12 @@ describe("resolveInvalidatedKeys", () => {
     expect(keys).toContainEqual(projectKeys.list());
   });
 
+  it("should refresh project details when projects change", () => {
+    expect(
+      resolveInvalidatedKeys({ resource: REALTIME_RESOURCES.Projects }),
+    ).toContainEqual(projectKeys.details());
+  });
+
   it("should refresh importable repositories when projects or integrations change", () => {
     expect(
       resolveInvalidatedKeys({ resource: REALTIME_RESOURCES.Projects }),

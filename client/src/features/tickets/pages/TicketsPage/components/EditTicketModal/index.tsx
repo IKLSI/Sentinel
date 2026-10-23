@@ -1,6 +1,6 @@
 import type React from "react";
 import { useId } from "react";
-import type { UseFormRegister } from "react-hook-form";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -17,6 +17,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   register: UseFormRegister<EditTicketFormValues>;
+  errors: FieldErrors<EditTicketFormValues>;
   projects: ProjectOption[];
   users: UserOption[];
   saving: boolean;
@@ -27,6 +28,7 @@ export const EditTicketModal: React.FC<Props> = ({
   open,
   onClose,
   register,
+  errors,
   projects,
   users,
   saving,
@@ -71,6 +73,8 @@ export const EditTicketModal: React.FC<Props> = ({
           id={`${fieldId}-title`}
           label={t("tickets.list.field_title")}
           registration={register("title")}
+          error={errors.title}
+          t={t}
           autoFocus
           required
         />

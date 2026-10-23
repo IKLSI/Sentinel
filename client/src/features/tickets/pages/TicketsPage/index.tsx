@@ -117,8 +117,13 @@ export const TicketsPage: React.FC = () => {
   useQueryErrorToast(!!error, "tickets.list.load_error");
 
   useEffect(() => {
-    if (openCreate) openCreateDialog();
-  }, [openCreate, openCreateDialog]);
+    if (!openCreate) return;
+    openCreateDialog();
+    navigate({
+      search: (previous) => ({ ...previous, openCreate: undefined }),
+      replace: true,
+    });
+  }, [openCreate, openCreateDialog, navigate]);
 
   const filtered = tickets?.items ?? [];
 
@@ -190,6 +195,7 @@ export const TicketsPage: React.FC = () => {
         open={createDialog.open}
         onClose={createDialog.closeDialog}
         register={createDialog.register}
+        errors={createDialog.errors}
         projects={projects}
         users={users}
         submitting={createDialog.submitting}
@@ -202,6 +208,7 @@ export const TicketsPage: React.FC = () => {
         open={editDialog.open}
         onClose={editDialog.closeDialog}
         register={editDialog.register}
+        errors={editDialog.errors}
         projects={projects}
         users={users}
         saving={editDialog.saving}

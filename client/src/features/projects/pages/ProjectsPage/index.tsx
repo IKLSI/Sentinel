@@ -24,6 +24,7 @@ import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/componen
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
 import { ProjectSettingsModal } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
+import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useScanFeedback } from "@/features/projects/pages/ProjectsPage/hooks";
 
@@ -34,7 +35,14 @@ export const ProjectsPage: React.FC = () => {
   const t = useT();
   const onDeleteError = useApiErrorToast("projects.toast.delete_error");
   const { openImport } = routeApi.useSearch();
-  const { data: projects = [], isLoading: loading } = useProjectsQuery();
+  const navigate = routeApi.useNavigate();
+  const {
+    data: projects = [],
+    isLoading: loading,
+    isError: loadFailed,
+    isFetching: refetching,
+    refetch,
+  } = useProjectsQuery();
   const deleteProjectMutation = useDeleteProjectMutation();
   const exportProjectsMutation = useExportProjectsExcelMutation();
   const { scanningId, startScan: handleScan } = useScanFeedback(projects);
@@ -44,6 +52,14 @@ export const ProjectsPage: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [editTarget, setEditTarget] = useState<ProjectSummary | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(() => !!openImport);
+
+  useEffect(() => {
+    if (openImport)
+      navigate({
+        search: (previous) => ({ ...previous, openImport: undefined }),
+        replace: true,
+      });
+  }, [openImport, navigate]);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<SectionKey, boolean>
   >({
@@ -139,6 +155,11 @@ export const ProjectsPage: React.FC = () => {
 
         {loading ? (
           <CenteredLoader />
+        ) : loadFailed && projects.length === 0 ? (
+          <LoadErrorState
+            onRetry={() => void refetch()}
+            retrying={refetching}
+          />
         ) : (
           <Box
             sx={{

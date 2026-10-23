@@ -6,6 +6,20 @@ let currentAccessToken: string | null = null;
 
 export const getAccessToken = (): string | null => currentAccessToken;
 
+const USER_ID_CLAIM = "userId";
+
+export const subjectOf = (accessToken: string): string | null => {
+  try {
+    const payload = accessToken.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json) as Record<string, unknown>;
+    const subject = claims[USER_ID_CLAIM];
+    return typeof subject === "string" ? subject : null;
+  } catch {
+    return null;
+  }
+};
+
 export const startSession = (accessToken: string): void => {
   currentAccessToken = accessToken;
   localStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, SESSION_ACTIVE_FLAG);

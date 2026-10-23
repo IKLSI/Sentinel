@@ -179,6 +179,7 @@ export const IntegrationRow: React.FC<Props> = ({
               type="password"
               size="small"
               placeholder={placeholder}
+              inputProps={{ "aria-label": tokenLabel ?? placeholder ?? name }}
               value={token}
               onChange={(e) => onTokenChange(e.target.value)}
               sx={{ flex: 1, minWidth: 0 }}

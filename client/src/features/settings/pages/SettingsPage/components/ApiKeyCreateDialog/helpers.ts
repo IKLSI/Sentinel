@@ -1,10 +1,12 @@
+import { toLocalIsoDate } from "@/formatters/date";
+
 const API_KEY_MAX_LIFETIME_DAYS = 365;
 const API_KEY_DEFAULT_LIFETIME_DAYS = 90;
 
 const isoDateInDays = (days: number): string => {
   const date = new Date();
   date.setDate(date.getDate() + days);
-  return date.toISOString().split("T")[0];
+  return toLocalIsoDate(date);
 };
 
 export const minExpirationDate = (): string => isoDateInDays(1);

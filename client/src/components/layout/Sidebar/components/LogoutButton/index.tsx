@@ -11,7 +11,7 @@ export const LogoutButton: React.FC = () => {
   const t = useT();
 
   const handleLogout = async () => {
-    await logout();
+    await logout().catch(() => undefined);
     window.location.assign(ROUTES.LOGIN);
   };
 

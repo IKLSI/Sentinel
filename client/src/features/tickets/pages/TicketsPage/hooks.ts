@@ -30,7 +30,12 @@ export const useCreateTicketDialog = (onCreated: (ticket: Ticket) => void) => {
   const createTicketMutation = useCreateTicketMutation();
   const [open, setOpen] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
-  const { register, handleSubmit, reset } = useForm<CreateTicketFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateTicketFormValues>({
     resolver: zodResolver(createTicketSchema),
     defaultValues: EMPTY_CREATE_TICKET_FORM,
   });
@@ -78,6 +83,7 @@ export const useCreateTicketDialog = (onCreated: (ticket: Ticket) => void) => {
     openDialog,
     closeDialog,
     register,
+    errors,
     submit,
     submitting: createTicketMutation.isPending,
     createAnother,
@@ -89,7 +95,12 @@ export const useEditTicketDialog = () => {
   const onEditError = useApiErrorToast("tickets.list.edit_error");
   const updateTicketMutation = useUpdateTicketMutation();
   const [target, setTarget] = useState<Ticket | null>(null);
-  const { register, handleSubmit, reset } = useForm<EditTicketFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EditTicketFormValues>({
     resolver: zodResolver(editTicketSchema),
     defaultValues: {
       title: "",
@@ -150,6 +161,7 @@ export const useEditTicketDialog = () => {
     openDialog,
     closeDialog,
     register,
+    errors,
     submit,
     saving: updateTicketMutation.isPending,
   };

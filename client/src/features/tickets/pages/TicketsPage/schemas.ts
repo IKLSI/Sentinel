@@ -2,7 +2,7 @@ import { TicketStatus } from "@/enums";
 import { z } from "zod";
 
 export const createTicketSchema = z.object({
-  title: z.string().trim().min(1),
+  title: z.string().trim().min(1, { message: "tickets.list.title_required" }),
   description: z.string(),
   priority: z.enum(["Critical", "High", "Medium", "Low"]),
   type: z.enum([
@@ -19,7 +19,7 @@ export const createTicketSchema = z.object({
 export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
 
 export const editTicketSchema = z.object({
-  title: z.string().trim().min(1),
+  title: z.string().trim().min(1, { message: "tickets.list.title_required" }),
   description: z.string(),
   priority: z.string(),
   type: z.string(),

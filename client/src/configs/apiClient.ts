@@ -6,7 +6,12 @@ import axios, {
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { API_BASE_URL } from "@/configs/env";
 import { CONTENT_TYPES, HTTP_HEADERS, bearerToken } from "@/constants/http";
-import { endSession, getAccessToken, startSession } from "@/configs/session";
+import {
+  endSession,
+  getAccessToken,
+  startSession,
+  subjectOf,
+} from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
 
 const apiClient: AxiosInstance = axios.create({
@@ -43,7 +48,10 @@ const requestNewAccessToken = async (): Promise<string> => {
     { withCredentials: true },
   );
   const { accessToken } = response.data;
+  const previousToken = getAccessToken();
   startSession(accessToken);
+  if (previousToken && subjectOf(previousToken) !== subjectOf(accessToken))
+    window.location.reload();
   return accessToken;
 };
 

@@ -47,10 +47,14 @@ describe("downloadExcel", () => {
     });
   });
 
-  it("creates and revokes object URL", async () => {
+  it("creates the object URL and revokes it once the download started", async () => {
+    vi.useFakeTimers();
     await downloadExcel("/api/export", "file.xlsx");
     expect(URL.createObjectURL).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:fake-url");
+    vi.useRealTimers();
   });
 
   it("triggers download click", async () => {

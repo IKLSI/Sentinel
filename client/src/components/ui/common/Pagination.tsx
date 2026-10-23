@@ -50,6 +50,7 @@ export const Pagination: React.FC<Props> = ({
       <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <ButtonBase
           sx={navBtnSx(page === 1)}
+          disabled={page === 1}
           onClick={() => onChange(page - 1)}
         >
           {previousLabel}
@@ -86,6 +87,7 @@ export const Pagination: React.FC<Props> = ({
 
         <ButtonBase
           sx={navBtnSx(page === totalPages)}
+          disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
         >
           {nextLabel}

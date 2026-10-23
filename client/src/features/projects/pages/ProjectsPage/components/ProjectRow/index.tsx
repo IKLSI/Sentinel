@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
@@ -72,7 +72,12 @@ export const ProjectRow: React.FC<Props> = React.memo(
           >
             <Box sx={{ minWidth: 0 }}>
               <Box
+                component={Link}
+                to={`/projects/${project.id}`}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 sx={{
+                  display: "block",
+                  textDecoration: "none",
                   fontFamily: "inherit",
                   fontWeight: 700,
                   color: "var(--text)",

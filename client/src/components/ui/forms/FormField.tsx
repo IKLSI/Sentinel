@@ -40,6 +40,8 @@ export const FormField: React.FC<FormFieldProps> = ({
       </FormLabel>
     )}
     {children}
-    {helperText && <FormHelperText>{helperText}</FormHelperText>}
+    {helperText && (
+      <FormHelperText id={`${id}-helper`}>{helperText}</FormHelperText>
+    )}
   </FormControl>
 );

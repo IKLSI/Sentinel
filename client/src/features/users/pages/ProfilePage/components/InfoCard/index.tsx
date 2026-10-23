@@ -1,5 +1,5 @@
 import type React from "react";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,13 @@ export const InfoCard: React.FC = () => {
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
   });
+
+  const firstName = user?.firstName ?? "";
+  const lastName = user?.lastName ?? "";
+
+  useEffect(() => {
+    setPf({ firstName, lastName });
+  }, [firstName, lastName]);
 
   const updateProfile = useUpdateMyProfileMutation();
   const savingPf = updateProfile.isPending;

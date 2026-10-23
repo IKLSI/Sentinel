@@ -41,12 +41,21 @@ export function formatElapsed(iso: string, culture: Language): string {
   }).format(Math.abs(value));
 }
 
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export function toLocalIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export function formatDate(iso: string | null, locale: string): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    ...(DATE_ONLY_PATTERN.test(iso) && { timeZone: "UTC" }),
   });
 }
 

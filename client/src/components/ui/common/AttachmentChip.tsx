@@ -1,4 +1,5 @@
 import type React from "react";
+import { useT } from "@/contexts/I18nContext";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
@@ -48,6 +49,7 @@ export const AttachmentChip: React.FC<Props> = ({
   onClick,
   onRemove,
 }) => {
+  const t = useT();
   const content = (
     <>
       {attachment.isImage ? (
@@ -68,6 +70,9 @@ export const AttachmentChip: React.FC<Props> = ({
       {onRemove && (
         <IconButton
           type="button"
+          aria-label={t("common.remove_attachment", {
+            name: attachment.fileName,
+          })}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onRemove();

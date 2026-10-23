@@ -8,6 +8,7 @@ export const MIME_TYPES = {
   ZIP: "application/zip",
 } as const;
 
+const BLOB_REVOKE_DELAY_MS = 10_000;
 const BLOB_RESPONSE_TYPE = "blob";
 const CONTENT_DISPOSITION_HEADER = "content-disposition";
 const ENCODED_FILENAME_PATTERN = /filename\*=UTF-8''([^;]+)/i;
@@ -36,7 +37,7 @@ function saveBlob(blob: Blob, filename: string): void {
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), BLOB_REVOKE_DELAY_MS);
 }
 
 type BlobErrorResponse = { response?: { data?: unknown } };
