@@ -91,6 +91,8 @@ Un seul process en prod. Rate limiting, `IMemoryCache` (état de compte auth, da
 
 Transverse : `configs/apiClient.ts` (axios, intercepteur 401 → refresh unique avec file d'attente, uniquement pour une requête qui portait un Bearer), `configs/session.ts` (token en mémoire ; le logout vide le cache React Query et recharge la page), `contexts/` (Auth, I18n, Theme, Sidebar, Toast), `components/ui/{common,forms}` à réutiliser avant d'écrire un équivalent local, alias `@/` → `src/`, routing fichier TanStack (`routes/_authenticated/` = zone protégée).
 
+**UI = MUI + thème, pas de CSS maison** : le style des composants vit dans `configs/themes/index.ts` (variantes de boutons, champs, focus, lecture seule) ; `styles/global.css` ne garde que les tokens `--*`, les règles globales (scrollbar, sélection, focus) et l'impression. Jamais de `<input>`/`<select>`/`<textarea>`/`<button>` natifs ni de `Box component="button"` : champs via `components/ui/forms/` (`FormTextField`, `FormSelectField`, `PasswordTextField`, `FormField` — `react-hook-form` ou contrôlés), boutons via `Button` (`color="inherit"` = Annuler), `IconButton` (icône seule) ou `ButtonBase` (design spécifique, sans `all: "unset"` qui écrase ses styles). Animations via `keyframes` de `styles/keyframes.ts`. En-tête de carte : `components/ui/common/CardHeader`. Pages d'auth : `features/auth/components/AuthLayout` + `AuthShowcase`. Landing : couleurs via les tokens de `LANDING_THEME` (`features/landing/constants.ts`), transparences en `color-mix`.
+
 **Fichiers générés, jamais édités à la main** : `routeTree.gen.ts`, `configs/api-routes.gen.ts` + types OpenAPI, `domains/realtime/contract.gen.ts`.
 
 ## Tests
