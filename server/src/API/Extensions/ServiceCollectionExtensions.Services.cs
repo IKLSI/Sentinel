@@ -33,9 +33,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
-        services.AddSingleton<ISystemScope, SystemScope>();
         services.AddSingleton<IContentPathProvider, ContentPathProvider>();
-        services.AddSingleton<ILocalizer, JsonLocalizer>();
         services.AddScoped<IRefreshTokenStore, RefreshTokenCookie>();
 
         return services;
@@ -168,6 +166,8 @@ public static partial class ServiceCollectionExtensions
 
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
+        services.AddSingleton<ISystemScope, SystemScope>();
+        services.AddSingleton<ILocalizer, JsonLocalizer>();
         services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
         services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
