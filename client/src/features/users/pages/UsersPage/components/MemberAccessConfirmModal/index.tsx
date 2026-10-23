@@ -44,7 +44,7 @@ export const MemberAccessConfirmModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={onClose}
             disabled={saving}
           >

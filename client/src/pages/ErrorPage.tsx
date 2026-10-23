@@ -1,8 +1,10 @@
 import type React from "react";
 import { useNavigate } from "@tanstack/react-router";
+import Button from "@mui/material/Button";
 import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
 import { ROUTES } from "@/constants/routes";
+import "./ErrorPage.css";
 
 interface ErrorPageProps {
   status?: number;
@@ -37,47 +39,53 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
 
         <div className="ep-actions">
           {onRetry && (
-            <button type="button" className="ep-btn-ghost" onClick={onRetry}>
+            <Button
+              variant="outlined"
+              onClick={onRetry}
+              startIcon={
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M1.5 6.5a5 5 0 1 0 1.2-3.2M1.5 2v2.5H4"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+            >
+              {t("error.retry")}
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            onClick={() => navigate({ to: ROUTES.HOME })}
+            startIcon={
               <svg
-                width="13"
-                height="13"
-                viewBox="0 0 13 13"
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
               >
                 <path
-                  d="M1.5 6.5a5 5 0 1 0 1.2-3.2M1.5 2v2.5H4"
+                  d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z"
                   stroke="currentColor"
                   strokeWidth="1.4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
-              {t("error.retry")}
-            </button>
-          )}
-          <button
-            type="button"
-            className="ep-btn-primary"
-            onClick={() => navigate({ to: ROUTES.HOME })}
+            }
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M2 6.5L8 2l6 4.5V14a1 1 0 0 1-1 1h-3.5v-3.5h-3V15H3a1 1 0 0 1-1-1V6.5Z"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
             {t("error.back_home")}
-          </button>
+          </Button>
         </div>
 
         {supportEmail && (

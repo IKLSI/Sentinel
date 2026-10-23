@@ -173,6 +173,10 @@ const baseComponents = {
         fontSize: "13px",
         padding: "8px 16px",
       },
+      sizeLarge: {
+        fontSize: "14px",
+        padding: "12px 16px",
+      },
     },
     variants: [
       {
@@ -204,6 +208,19 @@ const baseComponents = {
           background: "var(--red-fill)",
           "&:hover": {
             background: "color-mix(in srgb, var(--red-fill) 88%, white)",
+          },
+        },
+      },
+      {
+        props: { variant: "contained" as const, color: "inherit" as const },
+        style: {
+          background: "var(--s3)",
+          color: "var(--text-secondary)",
+          boxShadow: "inset 0 0 0 1px var(--border)",
+          "&:hover": {
+            background: "var(--border)",
+            color: "var(--text)",
+            boxShadow: "inset 0 0 0 1px var(--border2)",
           },
         },
       },

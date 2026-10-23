@@ -98,7 +98,7 @@ export const SuppressionModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={handleClose}
             disabled={suppressMutation.isPending}
           >

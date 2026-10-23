@@ -13,11 +13,13 @@ import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
+import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
 import { LoginShowcase } from "@/features/auth/components/LoginShowcase";
 import { ForgotPasswordModal } from "@/features/auth/pages/ForgotPasswordModal";
 import { RegisterModal } from "@/features/auth/pages/RegisterModal";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
+import "@/features/auth/auth.css";
 
 const LEGAL_LINKS_SX = {
   mt: "36px",
@@ -165,18 +167,9 @@ export const LoginPage: React.FC = () => {
                 toggleIconSize={19}
               />
 
-              <button
-                type="submit"
-                className="lp-submit"
-                disabled={loading}
-                style={{ fontFamily: "inherit" }}
-              >
-                {loading ? (
-                  <Box className="lp-submit-loader" />
-                ) : (
-                  t("auth.login.submit")
-                )}
-              </button>
+              <AuthSubmitButton loading={loading}>
+                {t("auth.login.submit")}
+              </AuthSubmitButton>
             </form>
 
             <Box className="lp-forgot-wrap">

@@ -7,6 +7,8 @@ import { useVerifyEmailMutation } from "@/domains/auth/mutations";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
+import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
+import "@/features/auth/auth.css";
 
 type Status = "loading" | "success" | "error";
 
@@ -87,14 +89,12 @@ export const VerifyEmailPage: React.FC = () => {
                 <Box component="p" className="aip-success-sub">
                   {t("auth.verify_email.success_sub")}
                 </Box>
-                <button
-                  type="button"
-                  className="lp-submit"
-                  style={{ marginTop: "24px" }}
+                <AuthSubmitButton
+                  spaced
                   onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
                   {t("auth.verify_email.go_to_login")}
-                </button>
+                </AuthSubmitButton>
               </Box>
             )}
 
@@ -128,14 +128,12 @@ export const VerifyEmailPage: React.FC = () => {
                 <Box component="p" className="aip-success-sub">
                   {t("auth.verify_email.error_sub")}
                 </Box>
-                <button
-                  type="button"
-                  className="lp-submit"
-                  style={{ marginTop: "24px" }}
+                <AuthSubmitButton
+                  spaced
                   onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
                   {t("auth.verify_email.go_to_login")}
-                </button>
+                </AuthSubmitButton>
               </Box>
             )}
           </Box>

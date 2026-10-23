@@ -13,10 +13,12 @@ import { useTokenPageLifecycle } from "@/features/auth/useTokenPageLifecycle";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
 import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
+import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from "@/features/auth/schemas";
+import "@/features/auth/auth.css";
 
 const routeApi = getRouteApi("/reset-password");
 
@@ -275,17 +277,9 @@ export const ResetPasswordPage: React.FC = () => {
                     autoComplete="new-password"
                   />
 
-                  <button
-                    type="submit"
-                    className="lp-submit"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Box className="lp-submit-loader" />
-                    ) : (
-                      t("auth.reset_password.submit")
-                    )}
-                  </button>
+                  <AuthSubmitButton loading={loading}>
+                    {t("auth.reset_password.submit")}
+                  </AuthSubmitButton>
                 </form>
               </>
             )}

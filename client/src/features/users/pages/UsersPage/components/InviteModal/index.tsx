@@ -69,7 +69,7 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={handleClose}
           >
             {t("settings.invite.cancel")}

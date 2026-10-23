@@ -81,7 +81,7 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={handleClose}
           >
             {t("settings.api_keys.modal_cancel")}

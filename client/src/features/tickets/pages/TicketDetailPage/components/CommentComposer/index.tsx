@@ -86,7 +86,7 @@ export const CommentComposer: React.FC<Props> = ({
               <Button
                 variant="contained"
                 size="small"
-                className="btn-cancel"
+                color="inherit"
                 onClick={onCancelEdit}
                 disabled={submitting}
               >

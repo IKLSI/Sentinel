@@ -13,11 +13,13 @@ import { useTokenPageLifecycle } from "@/features/auth/useTokenPageLifecycle";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
 import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
+import { AuthSubmitButton } from "@/features/auth/components/AuthSubmitButton";
 import {
   acceptInvitationSchema,
   type AcceptInvitationFormValues,
 } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
+import "@/features/auth/auth.css";
 
 const routeApi = getRouteApi("/accept-invitation");
 
@@ -224,18 +226,9 @@ export const AcceptInvitationPage: React.FC = () => {
                     required
                   />
 
-                  <button
-                    type="submit"
-                    className="lp-submit"
-                    disabled={loading}
-                    style={{ marginTop: "24px" }}
-                  >
-                    {loading ? (
-                      <Box className="lp-submit-loader" />
-                    ) : (
-                      t("auth.accept_invitation.submit")
-                    )}
-                  </button>
+                  <AuthSubmitButton loading={loading} spaced>
+                    {t("auth.accept_invitation.submit")}
+                  </AuthSubmitButton>
                 </form>
 
                 <LegalLinks tone="auth" sx={{ mt: "30px" }} />

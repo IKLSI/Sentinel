@@ -113,7 +113,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             <Button
               variant="contained"
               size="small"
-              className="btn-cancel"
+              color="inherit"
               onClick={handleResend}
               disabled={resendVerificationMutation.isPending}
               sx={{ mr: "auto" }}
@@ -129,7 +129,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             <Button
               variant="contained"
               size="small"
-              className="btn-cancel"
+              color="inherit"
               onClick={onClose}
               disabled={loading}
             >

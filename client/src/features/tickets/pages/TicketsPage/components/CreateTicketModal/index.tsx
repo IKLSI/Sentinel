@@ -99,7 +99,7 @@ export const CreateTicketModal: React.FC<Props> = ({
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={onClose}
           >
             {t("common.cancel")}

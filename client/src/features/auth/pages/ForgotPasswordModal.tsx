@@ -74,7 +74,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             <Button
               variant="contained"
               size="small"
-              className="btn-cancel"
+              color="inherit"
               onClick={onClose}
               disabled={loading}
             >

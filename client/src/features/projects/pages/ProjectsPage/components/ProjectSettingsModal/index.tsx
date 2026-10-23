@@ -103,7 +103,7 @@ export const ProjectSettingsModal: React.FC<Props> = ({ project, onClose }) => {
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={onClose}
             disabled={saving}
           >

@@ -68,7 +68,7 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
           <Button
             variant="contained"
             size="small"
-            className="btn-cancel"
+            color="inherit"
             onClick={closeAndReset}
             disabled={deletingAccount}
           >

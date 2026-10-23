@@ -36,7 +36,7 @@ export const ImportModalActions: React.FC<Props> = ({
       <Button
         variant="contained"
         size="small"
-        className="btn-cancel"
+        color="inherit"
         onClick={onCancel}
         disabled={importing}
       >
