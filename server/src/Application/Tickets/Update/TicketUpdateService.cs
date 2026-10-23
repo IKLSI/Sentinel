@@ -88,6 +88,9 @@ public class TicketUpdateService(
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }
 
+    private static Guid? RequestedValue(Guid? requested, bool clear, Guid? current) =>
+        requested ?? (clear ? null : current);
+
     private static List<TicketHistory> ApplyChanges(Ticket ticket, UpdateTicketDto model, TicketStatus? newStatus,
         Guid userId)
     {
@@ -113,14 +116,18 @@ public class TicketUpdateService(
             ticket.Type = model.Type.Value;
         }
 
-        if (model.ProjectId != ticket.ProjectId)
-            ticket.ProjectId = model.ProjectId;
+        Guid? projectId = RequestedValue(model.ProjectId, model.ClearProject, ticket.ProjectId);
 
-        if (model.AssignedToId != ticket.AssignedToId)
+        if (projectId != ticket.ProjectId)
+            ticket.ProjectId = projectId;
+
+        Guid? assignedToId = RequestedValue(model.AssignedToId, model.ClearAssignee, ticket.AssignedToId);
+
+        if (assignedToId != ticket.AssignedToId)
         {
             changes.Add(TicketQueries.CreateHistory(ticket.Id, userId, "AssignedTo",
-                ticket.AssignedToId?.ToString(), model.AssignedToId?.ToString()));
-            ticket.AssignedToId = model.AssignedToId;
+                ticket.AssignedToId?.ToString(), assignedToId?.ToString()));
+            ticket.AssignedToId = assignedToId;
         }
 
         if (newStatus.HasValue && newStatus.Value != ticket.Status)
