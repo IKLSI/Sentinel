@@ -1,4 +1,5 @@
 import { HealthGrade, SortDirection } from "@/enums";
+import { GRADE_TONES, NO_GRADE_TONE } from "@/constants/grades";
 import DangerousOutlined from "@mui/icons-material/DangerousOutlined";
 import ReportOutlined from "@mui/icons-material/ReportOutlined";
 import TrendingDownOutlined from "@mui/icons-material/TrendingDownOutlined";
@@ -29,17 +30,14 @@ export const GRADE_VISUAL: Record<
   SectionKey,
   { iconColor: string; Icon: SvgIconComponent }
 > = {
-  F: { iconColor: "var(--red)", Icon: DangerousOutlined },
-  E: { iconColor: "var(--orange)", Icon: ReportOutlined },
-  D: { iconColor: "var(--yellow)", Icon: TrendingDownOutlined },
-  C: {
-    iconColor: "color-mix(in srgb, var(--yellow) 70%, var(--orange) 30%)",
-    Icon: LockOpenOutlined,
-  },
-  B: { iconColor: "var(--accent)", Icon: ThumbUpAltOutlined },
-  A: { iconColor: "var(--green)", Icon: WorkspacePremiumOutlined },
+  F: { iconColor: GRADE_TONES.F.color, Icon: DangerousOutlined },
+  E: { iconColor: GRADE_TONES.E.color, Icon: ReportOutlined },
+  D: { iconColor: GRADE_TONES.D.color, Icon: TrendingDownOutlined },
+  C: { iconColor: GRADE_TONES.C.color, Icon: LockOpenOutlined },
+  B: { iconColor: GRADE_TONES.B.color, Icon: ThumbUpAltOutlined },
+  A: { iconColor: GRADE_TONES.A.color, Icon: WorkspacePremiumOutlined },
   [UNTRACKED_SECTION]: {
-    iconColor: "var(--muted2)",
+    iconColor: NO_GRADE_TONE.color,
     Icon: RemoveCircleOutlineOutlined,
   },
 };

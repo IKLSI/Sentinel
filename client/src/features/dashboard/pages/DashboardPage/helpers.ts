@@ -1,30 +1,10 @@
+import { NO_GRADE_TONE, gradeToneOf } from "@/constants/grades";
 import type { NextAction } from "@/domains/dashboard/types";
 import { SCORE_DELTA_NEUTRAL } from "@/features/dashboard/pages/DashboardPage/constants";
 import type { Translate } from "@/contexts/I18nContext";
 
-interface GradeMeta {
-  color: string;
-  subtle: string;
-}
-
-const GRADE_METAS: Record<string, GradeMeta> = {
-  A: { color: "var(--green)", subtle: "var(--green-subtle)" },
-  B: { color: "var(--teal)", subtle: "var(--teal-subtle)" },
-  C: { color: "var(--yellow)", subtle: "var(--yellow-subtle)" },
-  D: { color: "var(--orange)", subtle: "var(--orange-subtle)" },
-  E: { color: "var(--red)", subtle: "var(--red-subtle)" },
-  F: { color: "var(--red)", subtle: "var(--red-subtle)" },
-};
-
-const NOT_AVAILABLE_META: GradeMeta = {
-  color: "var(--muted2)",
-  subtle: "var(--s3)",
-};
-
-export const gradeMeta = (grade?: string | null): GradeMeta =>
-  grade
-    ? (GRADE_METAS[grade.toUpperCase()] ?? NOT_AVAILABLE_META)
-    : NOT_AVAILABLE_META;
+export const gradeMeta = (grade?: string | null) =>
+  gradeToneOf(grade) ?? NO_GRADE_TONE;
 
 export const pluralKey = (base: string, count: number) =>
   `${base}_${count === 1 ? "one" : "other"}`;

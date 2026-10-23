@@ -1,3 +1,4 @@
+import { gradeToneOf } from "@/constants/grades";
 import type { Translate } from "@/contexts/I18nContext";
 import type {
   RuntimeLifecycleItem,
@@ -6,7 +7,6 @@ import type {
 import { pluralKey } from "@/features/dashboard/pages/DashboardPage/helpers";
 import {
   DEFAULT_GRADE_COLOR,
-  GRADE_COLORS,
   LANDING_GRADE_COLORS,
   RUNTIME_STATUSES,
   SCORE_LINE_COLORS,
@@ -36,7 +36,7 @@ const END_OF_LIFE_KINDS: string[] = [
 ];
 
 export const gradeColorOf = (grade: string | null | undefined): string =>
-  (grade && GRADE_COLORS[grade]) || DEFAULT_GRADE_COLOR;
+  gradeToneOf(grade)?.color ?? DEFAULT_GRADE_COLOR;
 
 export const landingGradeColorOf = (grade: string | null | undefined) =>
   (grade && LANDING_GRADE_COLORS[grade]) || "var(--indigo)";

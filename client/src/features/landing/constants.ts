@@ -16,15 +16,6 @@ export const ECOSYSTEMS = [
 
 export const CI_INTEGRATION = "GitHub Actions";
 
-export const GRADE_COLORS: Record<string, string> = {
-  A: "var(--green)",
-  B: "var(--cyan)",
-  C: "var(--yellow)",
-  D: "var(--orange)",
-  E: "color-mix(in srgb, var(--orange) 55%, var(--red))",
-  F: "var(--red)",
-};
-
 export const DEFAULT_GRADE_COLOR = "var(--accent)";
 
 export const LANDING_GRADE_COLORS: Record<string, string> = {
@@ -48,10 +39,10 @@ export const LANDING_THEME = {
   "--indigo": "#5048e5",
   "--indigo-soft": "#f0efff",
   "--grade-a": "#16a34a",
-  "--grade-b": "#0891b2",
+  "--grade-b": "#0d9488",
   "--grade-c": "#d97706",
   "--grade-d": "#ea580c",
-  "--grade-e": "#c2410c",
+  "--grade-e": "#dc2626",
   "--grade-f": "#dc2626",
   "--font-display": '"Bricolage Grotesque", var(--font-ui), sans-serif',
   "--font-text": '"Plus Jakarta Sans", var(--font-ui), sans-serif',
