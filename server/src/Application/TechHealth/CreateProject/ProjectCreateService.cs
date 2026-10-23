@@ -38,24 +38,7 @@ public class ProjectCreateService(
         if (!validationResult.IsSuccess)
             return Result<ProjectDto>.From(validationResult);
 
-        if (!EnumValue.TryParse(model.RepositoryType, out RepositoryType repositoryType))
-            repositoryType = RepositoryType.GitHub;
-
-        if (!EnumValue.TryParse(model.ScanFrequency, out ScanFrequency scanFrequency))
-            scanFrequency = ScanFrequency.Weekly;
-
-        (string? branch, string? rootPath) = RepositoryLocation.ReadTreeReference(model.RepositoryUrl);
-
-        Project project = new Project
-        {
-            OrganizationId = organizationId,
-            Name = model.Name,
-            RepositoryUrl = model.RepositoryUrl,
-            Branch = branch,
-            RootPath = RepositoryScanPaths.NormalizeRootPath(rootPath),
-            RepositoryType = repositoryType,
-            ScanFrequency = scanFrequency
-        };
+        Project project = ProjectFactory.Create(organizationId, model);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {

@@ -7,6 +7,7 @@ using Sentinel.Application.Common;
 using Sentinel.Application.TechHealth.AvailableRepos;
 using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Application.TechHealth.CreateProject;
+using Sentinel.Application.TechHealth.ImportProjects;
 using Sentinel.Application.TechHealth.DeleteProject;
 using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
@@ -107,6 +108,14 @@ public class TechHealthController : BaseController
             ? CreatedAtAction(nameof(GetProject), new { id = result.Value!.Id }, result.Value)
             : ToActionResult(result);
     }
+
+    [HttpPost("projects/import")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<List<ProjectDto>>> ImportProjects(
+        [FromBody] ImportProjectsDto dto,
+        [FromServices] ProjectImportService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(dto, cancellationToken));
 
     [HttpPatch("projects/{id:guid}")]
     [AuthorizeRoles(UserRole.Admin)]
