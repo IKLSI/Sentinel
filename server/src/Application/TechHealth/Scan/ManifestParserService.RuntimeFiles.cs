@@ -161,22 +161,22 @@ public partial class ManifestParserService
             runtimes.Add(new Runtime { ProjectId = projectId, Name = "Go", Version = goVersion.Groups[1].Value });
     }
 
+    private static readonly Dictionary<string, string> RuntimeTxtPlatforms = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["python"] = "Python",
+        ["ruby"] = "Ruby",
+        ["nodejs"] = "Node.js",
+        ["node"] = "Node.js",
+        ["php"] = "PHP",
+        ["dotnet"] = ".NET",
+    };
+
     private static void ParseRuntimeTxt(Guid projectId, string content, List<Runtime> runtimes)
     {
         Match declaration = ToolVersionDeclarationRegex().Match(content.Trim());
         if (!declaration.Success) return;
 
-        Dictionary<string, string> platforms = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["python"] = "Python",
-            ["ruby"] = "Ruby",
-            ["nodejs"] = "Node.js",
-            ["node"] = "Node.js",
-            ["php"] = "PHP",
-            ["dotnet"] = ".NET",
-        };
-
-        if (!platforms.TryGetValue(declaration.Groups[1].Value, out string? runtimeName)) return;
+        if (!RuntimeTxtPlatforms.TryGetValue(declaration.Groups[1].Value, out string? runtimeName)) return;
 
         runtimes.Add(new Runtime
         {

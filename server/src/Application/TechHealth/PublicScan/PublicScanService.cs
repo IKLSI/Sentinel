@@ -107,8 +107,7 @@ public class PublicScanService(
 
         IReadOnlyList<RuntimeEolResult> eolResults = await runtimeEol.ScanAsync(outcome.Runtimes, cancellationToken);
 
-        foreach (RuntimeEolResult result in eolResults)
-            result.Runtime.IsEol = result.IsEol;
+        ProjectInventoryWriter.StageRuntimeChanges(eolResults);
 
         await exploitSignalEnricher.EnrichAsync(outcome.Dependencies, cancellationToken);
 

@@ -128,6 +128,13 @@ public partial class ManifestParserService
         }
     }
 
+    private static readonly Dictionary<string, string> GemFrameworkRuntimes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["rails"] = "Rails",
+        ["sinatra"] = "Sinatra",
+        ["hanami"] = "Hanami",
+    };
+
     private static void ParseGemfile(Guid projectId, string content, List<Dependency> deps, List<Runtime> runtimes)
     {
         Match rubyMatch = RubyVersionRegex().Match(content);
@@ -142,13 +149,6 @@ public partial class ManifestParserService
             });
         }
 
-        Dictionary<string, string> frameworkMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["rails"] = "Rails",
-            ["sinatra"] = "Sinatra",
-            ["hanami"] = "Hanami",
-        };
-
         Stack<bool> blocks = new Stack<bool>();
 
         foreach (string raw in content.Split('\n'))
@@ -159,6 +159,12 @@ public partial class ManifestParserService
             if (line == "end")
             {
                 if (blocks.Count > 0) blocks.Pop();
+                continue;
+            }
+
+            if (GemKeywordBlockOpeningRegex().IsMatch(line))
+            {
+                blocks.Push(false);
                 continue;
             }
 
@@ -178,7 +184,7 @@ public partial class ManifestParserService
             string version = VersionText.Clean(specification);
             bool isDev = blocks.Contains(true) || GemInlineDevGroupRegex().IsMatch(line);
 
-            if (frameworkMap.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
+            if (GemFrameworkRuntimes.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
                 runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = version });
 
             deps.Add(new Dependency
@@ -241,6 +247,9 @@ public partial class ManifestParserService
 
     [GeneratedRegex(@"\bdo(\s*\|[^|]*\|)?$")]
     private static partial Regex GemBlockOpeningRegex();
+
+    [GeneratedRegex(@"^(?:if|unless|case|begin|while|until)\b")]
+    private static partial Regex GemKeywordBlockOpeningRegex();
 
     [GeneratedRegex(@"^group\s*\(?\s*:(?:default|production)\b")]
     private static partial Regex GemProductionGroupRegex();

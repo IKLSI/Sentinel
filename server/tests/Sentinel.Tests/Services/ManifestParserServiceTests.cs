@@ -466,6 +466,48 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParseYarnLock_ResolvesAliasesAndSkipsNonRegistryProtocols()
+    {
+        const string content = """
+        __metadata:
+          version: 8
+
+        "string-width-cjs@npm:string-width@^4.2.0":
+          version: 4.2.3
+
+        "my-app@workspace:.":
+          version: 0.0.0-use.local
+
+        "patched@patch:patched@npm%3A1.0.0#./patches/patched.patch":
+          version: 1.0.0
+
+        classic-alias@npm:@scope/real@^2.0.0:
+          version "2.1.0"
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("yarn.lock", content);
+
+        dependencies.Should().HaveCount(2);
+        SingleDependency(dependencies, "string-width").CurrentVersion.Should().Be("4.2.3");
+        SingleDependency(dependencies, "@scope/real").CurrentVersion.Should().Be("2.1.0");
+    }
+
+    [Fact]
+    public void ParseReportingFailure_RejectsXmlManifestDeclaringDtd()
+    {
+        const string content = """
+        <?xml version="1.0"?>
+        <!DOCTYPE Project [<!ENTITY lol "lol">]>
+        <Project><ItemGroup><PackageReference Include="Serilog" Version="&lol;" /></ItemGroup></Project>
+        """;
+
+        ManifestParseOutcome outcome = new ManifestParserService().ParseReportingFailure(ProjectId, "App.csproj", content);
+
+        outcome.Failure.Should().BeOfType<System.Xml.XmlException>();
+        outcome.Dependencies.Should().BeEmpty();
+    }
+
+    [Fact]
     public void ParsePomXml_ResolvesVersionsDeclaredAsProperties()
     {
         const string content = """
@@ -1287,6 +1329,26 @@ public class ManifestParserServiceTests
         dependencies.Single(d => d.Name == "requests").IsVersionPinned.Should().BeTrue();
         dependencies.Last(d => d.Name == "uvicorn").IsVersionPinned.Should().BeFalse();
         runtimes.Single(r => r.Name == "Python").IsMinimumConstraint.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParseGemfile_KeepsDevGroupAcrossKeywordBlocks()
+    {
+        const string content = """
+        group :development do
+          if RUBY_PLATFORM =~ /darwin/
+            gem "terminal-notifier"
+          end
+          gem "listen"
+        end
+        gem "pg"
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("Gemfile", content);
+
+        SingleDependency(dependencies, "terminal-notifier").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "listen").Type.Should().Be(DependencyType.Dev);
+        SingleDependency(dependencies, "pg").Type.Should().Be(DependencyType.Prod);
     }
 
     [Fact]

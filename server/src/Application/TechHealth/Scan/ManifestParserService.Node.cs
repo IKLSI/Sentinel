@@ -43,31 +43,31 @@ public partial class ManifestParserService
             ExtractNpmDeps(projectId, devDeps, DependencyType.Dev, deps);
     }
 
+    private static readonly Dictionary<string, string> NpmFrameworkRuntimes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["react"] = "React",
+        ["next"] = "Next.js",
+        ["vue"] = "Vue",
+        ["@angular/core"] = "Angular",
+        ["svelte"] = "Svelte",
+        ["@nestjs/core"] = "NestJS",
+        ["express"] = "Express",
+        ["fastify"] = "Fastify",
+        ["@remix-run/react"] = "Remix",
+        ["nuxt"] = "Nuxt",
+        ["gatsby"] = "Gatsby",
+        ["astro"] = "Astro",
+        ["react-native"] = "React Native",
+    };
+
     private static List<(string Name, string Version)> DetectNpmFrameworkRuntimes(JsonElement root)
     {
-        Dictionary<string, string> frameworkMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["react"] = "React",
-            ["next"] = "Next.js",
-            ["vue"] = "Vue",
-            ["@angular/core"] = "Angular",
-            ["svelte"] = "Svelte",
-            ["@nestjs/core"] = "NestJS",
-            ["express"] = "Express",
-            ["fastify"] = "Fastify",
-            ["@remix-run/react"] = "Remix",
-            ["nuxt"] = "Nuxt",
-            ["gatsby"] = "Gatsby",
-            ["astro"] = "Astro",
-            ["react-native"] = "React Native",
-        };
-
         List<(string Name, string Version)> detected = new List<(string, string)>();
 
         foreach (string depsKey in new[] { "dependencies", "devDependencies" })
         {
             if (!root.TryGetProperty(depsKey, out JsonElement deps)) continue;
-            foreach ((string? pkg, string? name) in frameworkMap)
+            foreach ((string? pkg, string? name) in NpmFrameworkRuntimes)
             {
                 if (detected.Any(runtime => runtime.Name == name)) continue;
                 if (!deps.TryGetProperty(pkg, out JsonElement vProp)) continue;
@@ -231,8 +231,7 @@ public partial class ManifestParserService
             if (!line.StartsWith(' ') && line.EndsWith(':'))
             {
                 string firstEntry = line.TrimEnd(':').Split(',')[0].Trim().Trim('"');
-                int atIdx = firstEntry.LastIndexOf('@');
-                currentName = atIdx > 0 ? firstEntry[..atIdx] : null;
+                currentName = YarnRegistryPackageName(firstEntry);
                 continue;
             }
 
@@ -252,6 +251,23 @@ public partial class ManifestParserService
             });
             currentName = null;
         }
+    }
+
+    private static string? YarnRegistryPackageName(string entry)
+    {
+        int nameEnd = entry.IndexOf('@', 1);
+        if (nameEnd < 0) return null;
+
+        string name = entry[..nameEnd];
+        string range = entry[(nameEnd + 1)..];
+
+        int protocolEnd = range.IndexOf(':');
+        if (protocolEnd < 0) return name;
+        if (!range[..protocolEnd].Equals("npm", StringComparison.OrdinalIgnoreCase)) return null;
+
+        string target = range[(protocolEnd + 1)..];
+        int targetNameEnd = target.IndexOf('@', 1);
+        return targetNameEnd > 0 ? target[..targetNameEnd] : name;
     }
 
     private static void ParsePnpmLock(Guid projectId, string content, List<Dependency> deps)
