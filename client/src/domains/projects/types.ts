@@ -23,7 +23,7 @@ export type AvailableRepo = components["schemas"]["AvailableRepoDto"];
 
 export type AvailableRepos = components["schemas"]["AvailableReposResponse"];
 
-export type CreateProject = components["schemas"]["CreateProjectDto"];
+export type ImportProjects = components["schemas"]["ImportProjectsDto"];
 
 export type UpdateProject = components["schemas"]["UpdateProjectDto"];
 

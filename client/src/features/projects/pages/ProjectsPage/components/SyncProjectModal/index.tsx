@@ -95,14 +95,16 @@ export const SyncProjectModal: React.FC<Props> = ({
     if (selected.size === 0) return;
     const toImport = repos.filter((r) => selected.has(r.url));
     try {
-      await importProjectsMutation.mutateAsync(
-        toImport.map((r) => ({
-          name: r.name,
-          repositoryUrl: r.url,
-          repositoryType: r.platform,
-          scanFrequency,
-        })),
-      );
+      await importProjectsMutation.mutateAsync({
+        data: {
+          projects: toImport.map((r) => ({
+            name: r.name,
+            repositoryUrl: r.url,
+            repositoryType: r.platform,
+            scanFrequency,
+          })),
+        },
+      });
       showToast(
         t("projects.toast.import_success", { count: toImport.length }),
         "success",

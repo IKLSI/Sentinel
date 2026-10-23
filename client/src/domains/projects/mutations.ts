@@ -1,6 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
-import apiClient from "@/configs/apiClient";
 import { queryClient } from "@/configs/queryClient";
 import {
   useDeleteMutation,
@@ -10,7 +8,7 @@ import {
 import type { ScanFrequency } from "@/enums";
 import { projectKeys } from "@/domains/projects/constants";
 import type {
-  CreateProject,
+  ImportProjects,
   Project,
   ProjectBadge,
   ProjectScanSettings,
@@ -28,15 +26,10 @@ const updateCachedProjects = (
     update(previous ?? []),
   );
 
-const createProject = (project: CreateProject) =>
-  apiClient
-    .post<Project>(ROUTES_API.api.techHealth.projects.__path, project)
-    .then((response) => response.data);
-
 export const useImportProjectsMutation = () =>
-  useMutation<Project[], Error, CreateProject[]>({
-    mutationFn: (projects) => Promise.all(projects.map(createProject)),
-  });
+  usePostMutation<Project[], Project[], { data: ImportProjects }>(
+    ROUTES_API.api.techHealth.projects.import.__path,
+  );
 
 export const useDeleteProjectMutation = () =>
   useDeleteMutation<void, void, { id: string }>(
