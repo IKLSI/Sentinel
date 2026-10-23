@@ -1,13 +1,12 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/helpers";
 
 interface Props {
-  palette: DetailPalette;
   title: string;
 }
 
-export const TicketHeader: React.FC<Props> = ({ palette, title }) => {
+export const TicketHeader: React.FC<Props> = ({ title }) => {
   return (
     <Box
       sx={{
@@ -25,7 +24,7 @@ export const TicketHeader: React.FC<Props> = ({ palette, title }) => {
           fontSize: { xs: "18px", md: "24px" },
           lineHeight: 1.2,
           letterSpacing: "-0.02em",
-          color: palette.title,
+          color: DETAIL_PALETTE.title,
           fontWeight: 700,
           display: "flex",
           alignItems: "center",

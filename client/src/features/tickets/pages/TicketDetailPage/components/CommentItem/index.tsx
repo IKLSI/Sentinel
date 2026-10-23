@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/common/AttachmentChip";
 import { RowActions } from "@/components/ui/common/RowActions";
 import {
-  type DetailPalette,
+  DETAIL_PALETTE,
   parseCommentContent,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { initialsFromName } from "@/formatters/initials";
@@ -25,7 +25,6 @@ interface Props {
   isLast: boolean;
   isOwn: boolean;
   isEditing: boolean;
-  palette: DetailPalette;
   onEdit: (id: string, content: string) => void;
   onDelete: (id: string) => void;
 }
@@ -35,7 +34,6 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
   isLast,
   isOwn,
   isEditing,
-  palette,
   onEdit,
   onDelete,
 }) {
@@ -72,7 +70,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
             top: "36px",
             height: "calc(100% - 30px)",
             width: "1px",
-            background: palette.threadLine,
+            background: DETAIL_PALETTE.threadLine,
             zIndex: 0,
           }}
         />
@@ -104,18 +102,18 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
           <Box
             sx={{
               fontSize: "13px",
-              color: palette.commentAuthor,
+              color: DETAIL_PALETTE.commentAuthor,
               fontWeight: 700,
             }}
           >
             {c.authorName}
           </Box>
 
-          <Box sx={{ color: palette.chevron, fontSize: "11px" }}>·</Box>
+          <Box sx={{ color: DETAIL_PALETTE.chevron, fontSize: "11px" }}>·</Box>
           <Box
             sx={{
               fontFamily: "var(--font-mono)",
-              color: palette.commentTime,
+              color: DETAIL_PALETTE.commentTime,
               fontSize: "11px",
             }}
           >
@@ -149,12 +147,12 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
             border: `1px solid ${
               isEditing
                 ? "color-mix(in srgb, var(--accent) 45%, transparent)"
-                : palette.commentBorderExternal
+                : DETAIL_PALETTE.commentBorderExternal
             }`,
             borderRadius: "var(--r-lg)",
             background: isEditing
               ? "color-mix(in srgb, var(--accent) 7%, transparent)"
-              : palette.commentBgExternal,
+              : DETAIL_PALETTE.commentBgExternal,
           }}
         >
           {mainText && (
@@ -167,7 +165,7 @@ export const CommentItem: React.FC<Props> = React.memo(function CommentItem({
               <Box
                 sx={{
                   fontSize: "13px",
-                  color: palette.bodyText,
+                  color: DETAIL_PALETTE.bodyText,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
                   lineHeight: 1.6,

@@ -3,13 +3,12 @@ import Box from "@mui/material/Box";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
-import type { DetailPalette } from "@/features/tickets/pages/TicketDetailPage/helpers";
+import { DETAIL_PALETTE } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { CommentItem } from "@/features/tickets/pages/TicketDetailPage/components/CommentItem";
 
 interface Props {
   comments: Ticket["comments"];
   currentUserId?: string;
-  palette: DetailPalette;
   editingCommentId: string | null;
   onEdit: (id: string, content: string) => void;
   onDelete: (id: string) => void;
@@ -18,7 +17,6 @@ interface Props {
 export const CommentThread: React.FC<Props> = ({
   comments,
   currentUserId,
-  palette,
   editingCommentId,
   onEdit,
   onDelete,
@@ -33,7 +31,6 @@ export const CommentThread: React.FC<Props> = ({
           isLast={idx === comments.length - 1}
           isOwn={currentUserId === c.authorId}
           isEditing={editingCommentId === c.id}
-          palette={palette}
           onEdit={onEdit}
           onDelete={onDelete}
         />
@@ -47,14 +44,14 @@ export const CommentThread: React.FC<Props> = ({
             alignItems: "center",
             gap: "8px",
             py: "32px",
-            color: palette.emptyFg,
+            color: DETAIL_PALETTE.emptyFg,
           }}
         >
           <ForumOutlined sx={{ fontSize: 28, opacity: 0.4 }} />
           <Box sx={{ fontSize: "13px", fontWeight: 500 }}>
             {t("tickets.detail.no_comments_title")}
           </Box>
-          <Box sx={{ fontSize: "12px", color: palette.emptySub }}>
+          <Box sx={{ fontSize: "12px", color: DETAIL_PALETTE.emptySub }}>
             {t("tickets.detail.no_comments_subtitle")}
           </Box>
         </Box>

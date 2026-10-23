@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/useToast";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import {
   useAddCommentMutation,
   useDeleteCommentMutation,
@@ -20,8 +19,7 @@ import {
 import { useTicketQuery } from "@/domains/tickets/queries";
 import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
 import {
-  buildPalette,
-  buildPriorityConfig,
+  DETAIL_PALETTE,
   parseCommentContent,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { TicketHeader } from "@/features/tickets/pages/TicketDetailPage/components/TicketHeader";
@@ -31,7 +29,6 @@ import { CommentComposer } from "@/features/tickets/pages/TicketDetailPage/compo
 import { PropertiesCard } from "@/features/tickets/pages/TicketDetailPage/components/PropertiesCard";
 import { HistoryCard } from "@/features/tickets/pages/TicketDetailPage/components/HistoryCard";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { Theme } from "@/enums";
 import { commentContentSchema } from "@/features/tickets/pages/TicketDetailPage/schemas";
 
 const routeApi = getRouteApi("/_authenticated/tickets/$id");
@@ -46,10 +43,6 @@ export const TicketDetailPage: React.FC = () => {
   const { id } = routeApi.useParams();
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { theme } = useTheme();
-  const isDark = theme === Theme.Dark;
-  const palette = useMemo(() => buildPalette(isDark), [isDark]);
-  const priorityConfig = useMemo(() => buildPriorityConfig(isDark), [isDark]);
 
   const ticketQuery = useTicketQuery(id);
   const ticket = ticketQuery.data ?? null;
@@ -215,16 +208,16 @@ export const TicketDetailPage: React.FC = () => {
           sx={{
             flex: 1,
             minWidth: 0,
-            background: palette.panelBg,
-            border: `1px solid ${palette.panelBorder}`,
+            background: DETAIL_PALETTE.panelBg,
+            border: `1px solid ${DETAIL_PALETTE.panelBorder}`,
             borderRadius: "var(--r-xl)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            boxShadow: palette.panelShadow,
+            boxShadow: DETAIL_PALETTE.panelShadow,
           }}
         >
-          <TicketHeader palette={palette} title={ticket.title} />
+          <TicketHeader title={ticket.title} />
 
           <Box
             sx={{
@@ -236,7 +229,6 @@ export const TicketDetailPage: React.FC = () => {
             {ticket.description && (
               <>
                 <SectionDivider
-                  palette={palette}
                   icon={<DescriptionOutlined sx={{ fontSize: 13 }} />}
                   label={t("tickets.detail.section_description")}
                 />
@@ -245,7 +237,7 @@ export const TicketDetailPage: React.FC = () => {
                   <Box
                     sx={{
                       fontSize: "13px",
-                      color: palette.bodyText,
+                      color: DETAIL_PALETTE.bodyText,
                       whiteSpace: "pre-wrap",
                       lineHeight: 1.6,
                     }}
@@ -257,7 +249,6 @@ export const TicketDetailPage: React.FC = () => {
             )}
 
             <SectionDivider
-              palette={palette}
               icon={<ForumOutlined sx={{ fontSize: 13 }} />}
               label={t("tickets.detail.section_conversation")}
               my="28px"
@@ -266,7 +257,6 @@ export const TicketDetailPage: React.FC = () => {
             <CommentThread
               comments={ticket.comments ?? []}
               currentUserId={user?.id}
-              palette={palette}
               editingCommentId={editingCommentId}
               onEdit={startEditComment}
               onDelete={setDeleteCommentTarget}
@@ -296,18 +286,9 @@ export const TicketDetailPage: React.FC = () => {
             minHeight: 0,
           }}
         >
-          <PropertiesCard
-            ticket={ticket}
-            palette={palette}
-            priorityConfig={priorityConfig}
-          />
+          <PropertiesCard ticket={ticket} />
 
-          <HistoryCard
-            ticket={ticket}
-            palette={palette}
-            isDark={isDark}
-            priorityConfig={priorityConfig}
-          />
+          <HistoryCard ticket={ticket} />
         </Box>
       </PageContainer>
 

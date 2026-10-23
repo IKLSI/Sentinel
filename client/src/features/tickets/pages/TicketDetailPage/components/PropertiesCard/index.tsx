@@ -4,8 +4,8 @@ import { useT } from "@/contexts/I18nContext";
 import type { Ticket } from "@/domains/tickets/types";
 import { FindingKind } from "@/enums";
 import {
-  type DetailPalette,
-  type buildPriorityConfig,
+  DETAIL_PALETTE,
+  PRIORITY_CONFIG,
   typeLabelKeys,
 } from "@/features/tickets/pages/TicketDetailPage/helpers";
 import { statusLabel } from "@/features/tickets/constants";
@@ -18,24 +18,18 @@ const findingKindLabelKeys: Record<string, string> = {
 
 interface Props {
   ticket: Ticket;
-  palette: DetailPalette;
-  priorityConfig: ReturnType<typeof buildPriorityConfig>;
 }
 
-export const PropertiesCard: React.FC<Props> = ({
-  ticket,
-  palette,
-  priorityConfig,
-}) => {
+export const PropertiesCard: React.FC<Props> = ({ ticket }) => {
   const t = useT();
-  const priority = priorityConfig[ticket.priority] ?? priorityConfig.medium;
+  const priority = PRIORITY_CONFIG[ticket.priority] ?? PRIORITY_CONFIG.medium;
 
   const valueSx = {
-    color: palette.fieldValue,
+    color: DETAIL_PALETTE.fieldValue,
     fontWeight: 400,
     fontSize: "12px",
   };
-  const emptyValueSx = { ...valueSx, color: palette.muted };
+  const emptyValueSx = { ...valueSx, color: DETAIL_PALETTE.muted };
 
   const rows = [
     {
@@ -95,10 +89,10 @@ export const PropertiesCard: React.FC<Props> = ({
   return (
     <Box
       sx={{
-        border: `1px solid ${palette.panelBorder}`,
+        border: `1px solid ${DETAIL_PALETTE.panelBorder}`,
         borderRadius: "var(--r-xl)",
-        background: palette.panelBg,
-        boxShadow: palette.panelShadow,
+        background: DETAIL_PALETTE.panelBg,
+        boxShadow: DETAIL_PALETTE.panelShadow,
         p: "8px 6px 4px",
       }}
     >
@@ -110,7 +104,7 @@ export const PropertiesCard: React.FC<Props> = ({
           textTransform: "uppercase",
           letterSpacing: "0.12em",
           fontWeight: 800,
-          color: palette.muted,
+          color: DETAIL_PALETTE.muted,
           fontSize: "10px",
         }}
       >
@@ -134,7 +128,7 @@ export const PropertiesCard: React.FC<Props> = ({
           >
             <Box
               sx={{
-                color: palette.fieldLabel,
+                color: DETAIL_PALETTE.fieldLabel,
                 fontSize: "11px",
                 fontWeight: 400,
               }}
@@ -154,7 +148,11 @@ export const PropertiesCard: React.FC<Props> = ({
           </Box>
           {idx < arr.length - 1 && (
             <Box
-              sx={{ mx: "8px", height: "1px", background: palette.fieldSep }}
+              sx={{
+                mx: "8px",
+                height: "1px",
+                background: DETAIL_PALETTE.fieldSep,
+              }}
             />
           )}
         </Box>

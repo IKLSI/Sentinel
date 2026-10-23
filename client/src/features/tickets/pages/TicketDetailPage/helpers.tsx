@@ -77,7 +77,7 @@ export interface DetailPalette {
   bodyText: string;
 }
 
-export const buildPalette = (_isDark: boolean): DetailPalette => ({
+export const DETAIL_PALETTE: DetailPalette = {
   panelBg: "var(--s1)",
   panelBorder: "var(--border)",
   panelShadow: "var(--sh-1)",
@@ -102,11 +102,12 @@ export const buildPalette = (_isDark: boolean): DetailPalette => ({
   historyMsg: "var(--text)",
   historySub: "var(--muted2)",
   bodyText: "var(--text-secondary)",
-});
+};
 
-export const buildPriorityConfig = (
-  _isDark: boolean,
-): Record<string, { labelKey: string; color: string; dot: string }> => ({
+export const PRIORITY_CONFIG: Record<
+  string,
+  { labelKey: string; color: string; dot: string }
+> = {
   critical: {
     labelKey: "tickets.detail.priority_critical",
     color: "var(--red)",
@@ -127,7 +128,7 @@ export const buildPriorityConfig = (
     color: "var(--green)",
     dot: "var(--green)",
   },
-});
+};
 
 export const typeLabelKeys: Record<string, string> = {
   bug: "tickets.detail.type_bug",
@@ -158,25 +159,18 @@ function normalizePriorityKey(value?: string) {
   return value.trim().toLowerCase().replace(/[\s-]/g, "_");
 }
 
-function mapPriorityLabel(
-  value: string | undefined | null,
-  t: Translate,
-  priorityConfig: ReturnType<typeof buildPriorityConfig>,
-) {
+function mapPriorityLabel(value: string | undefined | null, t: Translate) {
   if (!value) return "—";
   const key = normalizePriorityKey(value);
-  const labelKey = priorityConfig[key]?.labelKey;
+  const labelKey = PRIORITY_CONFIG[key]?.labelKey;
   return labelKey ? t(labelKey) : value;
 }
 
 export function historyPresentation(
   entry: TicketHistory,
   t: Translate,
-  isDark: boolean,
-  priorityConfig: ReturnType<typeof buildPriorityConfig>,
   ticket?: Ticket,
 ) {
-  void isDark;
   const tones = {
     created: {
       dot: "var(--red)",
@@ -238,8 +232,8 @@ export function historyPresentation(
     return {
       tone: tones.priority,
       message: t("tickets.detail.history_priority_change", {
-        from: mapPriorityLabel(entry.oldValue, t, priorityConfig),
-        to: mapPriorityLabel(entry.newValue, t, priorityConfig),
+        from: mapPriorityLabel(entry.oldValue, t),
+        to: mapPriorityLabel(entry.newValue, t),
       }),
     };
   }
