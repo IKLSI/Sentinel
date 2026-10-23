@@ -4,6 +4,7 @@ import type {
 } from "@/components/ui/forms/FilterBuilder/types";
 import { UserAccessStatus, UserRole } from "@/enums";
 import { USER_FILTER_FIELDS } from "@/features/users/pages/UsersPage/filterParams";
+import { buildFilterLabels } from "@/components/ui/forms/FilterBuilder/labels";
 import type { Translate } from "@/contexts/I18nContext";
 
 export const buildUserFilterFields = (
@@ -33,13 +34,5 @@ export const buildUserFilterFields = (
   },
 ];
 
-export const buildUserFilterLabels = (t: Translate): FilterBuilderLabels => ({
-  empty: t("settings.members.filter_empty"),
-  fieldPlaceholder: t("settings.members.filter_field_placeholder"),
-  title: t("settings.members.filter_add"),
-  noField: t("settings.members.filter_no_field"),
-  noValue: t("settings.members.filter_no_value"),
-  valuePlaceholder: t("settings.members.filter_value_placeholder"),
-  edit: (label: string) => t("settings.members.filter_edit", { label }),
-  remove: (label: string) => t("settings.members.filter_remove", { label }),
-});
+export const buildUserFilterLabels = (t: Translate): FilterBuilderLabels =>
+  buildFilterLabels(t, "settings.members.filter_");

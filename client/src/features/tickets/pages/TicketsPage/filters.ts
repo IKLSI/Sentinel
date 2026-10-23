@@ -10,6 +10,7 @@ import {
   TICKET_FILTER_FIELDS,
   UNSET_FILTER_VALUE,
 } from "@/features/tickets/pages/TicketsPage/filterParams";
+import { buildFilterLabels } from "@/components/ui/forms/FilterBuilder/labels";
 import type { Translate } from "@/contexts/I18nContext";
 
 export const buildTicketFilterFields = (
@@ -65,13 +66,5 @@ export const buildTicketFilterFields = (
   },
 ];
 
-export const buildTicketFilterLabels = (t: Translate): FilterBuilderLabels => ({
-  empty: t("tickets.list.filter_empty"),
-  fieldPlaceholder: t("tickets.list.filter_field_placeholder"),
-  title: t("tickets.list.filter_add"),
-  noField: t("tickets.list.filter_no_field"),
-  noValue: t("tickets.list.filter_no_value"),
-  valuePlaceholder: t("tickets.list.filter_value_placeholder"),
-  edit: (label: string) => t("tickets.list.filter_edit", { label }),
-  remove: (label: string) => t("tickets.list.filter_remove", { label }),
-});
+export const buildTicketFilterLabels = (t: Translate): FilterBuilderLabels =>
+  buildFilterLabels(t, "tickets.list.filter_");

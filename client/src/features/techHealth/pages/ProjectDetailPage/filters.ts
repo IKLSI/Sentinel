@@ -18,6 +18,7 @@ import {
   SEV_CONFIG,
   getRuntimeUrgency,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+import { buildFilterLabels } from "@/components/ui/forms/FilterBuilder/labels";
 import type { Translate } from "@/contexts/I18nContext";
 
 export type VulnerabilityRow = Vulnerability & {
@@ -220,13 +221,5 @@ export const buildRuntimeFilterFields = (
   },
 ];
 
-export const buildGridFilterLabels = (t: Translate): FilterBuilderLabels => ({
-  empty: t("tech_health.filter.empty"),
-  fieldPlaceholder: t("tech_health.filter.field_placeholder"),
-  title: t("tech_health.filter.add"),
-  noField: t("tech_health.filter.no_field"),
-  noValue: t("tech_health.filter.no_value"),
-  valuePlaceholder: t("tech_health.filter.value_placeholder"),
-  edit: (label: string) => t("tech_health.filter.edit", { label }),
-  remove: (label: string) => t("tech_health.filter.remove", { label }),
-});
+export const buildGridFilterLabels = (t: Translate): FilterBuilderLabels =>
+  buildFilterLabels(t, "tech_health.filter.");
