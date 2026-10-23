@@ -38,5 +38,3 @@ export interface ProjectBadge {
 }
 
 export type Remediation = components["schemas"]["RemediationDto"];
-
-export type StartRemediation = components["schemas"]["StartRemediationDto"];

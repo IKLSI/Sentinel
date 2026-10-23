@@ -15,43 +15,34 @@ namespace Sentinel.Application.TechHealth.Remediation.StartRemediation;
 public class StartRemediationService(
     IProjectRepository projectRepository,
     IOrganizationRepository organizationRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository,
     IVulnerabilityRemediationRepository remediationRepository,
     IRemediationRunner runner,
     IJobScheduler jobs,
     ICommitScopeFactory commitScopeFactory,
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
-    ITenantContext tenant,
-    StartRemediationValidator validator) : IService
+    ITenantContext tenant) : IService
 {
-    public async Task<Result<RemediationDto>> ExecuteAsync(Guid projectId, StartRemediationDto model,
-        CancellationToken cancellationToken)
+    public async Task<Result<RemediationDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
     {
-        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
-
-        if (!validationResult.IsSuccess)
-            return Result<RemediationDto>.From(validationResult);
-
         if (tenant.OrganizationId is not Guid organizationId)
             return Result<RemediationDto>.Unauthorized();
 
         if (!runner.IsConfigured)
             return Result<RemediationDto>.Error(ErrorCodes.RemediationUnavailable);
 
-        string findingKey = model.FindingKey.Trim().ToLowerInvariant();
-
-        Project? project = await projectRepository.GetOrDefaultInOrganizationForFindingAsync(projectId,
-            organizationId, FindingKind.Vulnerability, findingKey, cancellationToken);
+        Project? project = await projectRepository.GetOrDefaultInOrganizationWithHealthDetailsAsync(projectId,
+            organizationId, cancellationToken);
 
         if (project == null)
             return Result<RemediationDto>.NotFound(ErrorCodes.ProjectNotFound);
 
-        (Dependency? dependency, Vulnerability? vulnerability) = FindingOf(project, findingKey);
+        IReadOnlyList<VulnerabilitySuppression> suppressions =
+            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
 
-        if (dependency == null || vulnerability == null)
-            return Result<RemediationDto>.NotFound(ErrorCodes.VulnerabilityNotFound);
-
-        if (!RemediationRules.IsEligible(dependency, vulnerability))
+        if (RemediationRules.RemediableFindings(project.Dependencies,
+                suppressions.Select(suppression => suppression.FindingKey).ToHashSet()).Count == 0)
             return Result<RemediationDto>.Error(ErrorCodes.RemediationNotEligible);
 
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
@@ -60,8 +51,8 @@ public class StartRemediationService(
         if (string.IsNullOrEmpty(organization?.ProtectedTokenFor(project.RepositoryType)))
             return Result<RemediationDto>.Error(ErrorCodes.RemediationTokenMissing);
 
-        VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultByFindingKeyAsync(projectId,
-            findingKey, QueryTracking.Tracked, cancellationToken);
+        VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultByProjectAsync(projectId,
+            QueryTracking.Tracked, cancellationToken);
 
         if (remediation is { IsInProgress: true } && !RemediationRules.IsStale(remediation, DateTime.UtcNow))
             return Result<RemediationDto>.Conflict(ErrorCodes.RemediationInProgress);
@@ -73,25 +64,20 @@ public class StartRemediationService(
                 remediation = new VulnerabilityRemediation
                 {
                     OrganizationId = organizationId,
-                    ProjectId = projectId,
-                    FindingKey = findingKey
+                    ProjectId = projectId
                 };
 
                 await remediationRepository.AddAsync(remediation, cancellationToken);
             }
 
-            string targetVersion = vulnerability.FixedVersion!;
-
-            remediation.Ecosystem = dependency.Ecosystem;
-            remediation.PackageName = dependency.Name;
-            remediation.TargetVersion = targetVersion;
-            remediation.BranchName = RemediationRules.BranchNameFor(dependency.Name, targetVersion);
+            remediation.BranchName = RemediationRules.BranchName;
             remediation.Status = RemediationStatus.Queued;
             remediation.RunnerJobId = null;
             remediation.MergeRequestUrl = null;
             remediation.FailureCode = null;
             remediation.ConfigTicketHash = null;
             remediation.ConfigTicketExpiresAt = null;
+            remediation.CompletionTicketHash = null;
             remediation.RequestedById = tenant.UserId;
             remediation.CreatedAt = DateTime.UtcNow;
             remediation.UpdatedAt = DateTime.UtcNow;
@@ -115,12 +101,4 @@ public class StartRemediationService(
 
         return RemediationMapper.ToDto(remediation);
     }
-
-    private static (Dependency? Dependency, Vulnerability? Vulnerability) FindingOf(Project project,
-        string findingKey) =>
-        project.Dependencies
-            .SelectMany(dependency => dependency.Vulnerabilities
-                .Select(vulnerability => ((Dependency?)dependency, (Vulnerability?)vulnerability)))
-            .FirstOrDefault(pair => FindingKeys.ForVulnerability(pair.Item1!.Ecosystem, pair.Item2!.PackageName,
-                pair.Item2.CveId) == findingKey);
 }

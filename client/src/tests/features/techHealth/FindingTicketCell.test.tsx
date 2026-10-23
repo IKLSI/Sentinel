@@ -26,10 +26,7 @@ describe("FindingTicketCell", () => {
 
   it("affiche le ticket lié et ouvre son détail au clic", async () => {
     const { user } = render(
-      <FindingActionsProvider
-        projectId={PROJECT_ID}
-        remediationAvailable={false}
-      >
+      <FindingActionsProvider projectId={PROJECT_ID}>
         <FindingTicketCell
           kind={FindingKind.Vulnerability}
           findingKey={FINDING_KEY}
@@ -50,10 +47,7 @@ describe("FindingTicketCell", () => {
 
   it("n'affiche aucune action quand le finding n'est pas actionnable", async () => {
     render(
-      <FindingActionsProvider
-        projectId={PROJECT_ID}
-        remediationAvailable={false}
-      >
+      <FindingActionsProvider projectId={PROJECT_ID}>
         <FindingTicketCell
           kind={FindingKind.OutdatedDependency}
           findingKey="npm:express"
@@ -73,10 +67,7 @@ describe("FindingTicketCell", () => {
     );
 
     const { user } = render(
-      <FindingActionsProvider
-        projectId={PROJECT_ID}
-        remediationAvailable={false}
-      >
+      <FindingActionsProvider projectId={PROJECT_ID}>
         <FindingTicketCell
           kind={FindingKind.EolRuntime}
           findingKey="nodejs"

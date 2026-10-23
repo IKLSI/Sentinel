@@ -13,12 +13,13 @@ public static class ProjectMapper
 
     public static ProjectDto ToDto(Project project, IReadOnlyList<FindingTicketRow> findingTickets,
         IReadOnlyList<VulnerabilitySuppression>? suppressions = null,
-        IReadOnlyList<VulnerabilityRemediation>? remediations = null, bool remediationAvailable = false)
+        VulnerabilityRemediation? remediation = null, bool remediationAvailable = false)
     {
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(findingTickets);
-        FindingAnnotations annotations = new(
-            (suppressions ?? []).ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto),
-            (remediations ?? []).ToDictionary(remediation => remediation.FindingKey, RemediationMapper.ToDto));
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = (suppressions ?? [])
+            .ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto);
+        IReadOnlyList<(Dependency Dependency, Vulnerability Vulnerability)> remediableFindings =
+            RemediationRules.RemediableFindings(project.Dependencies ?? [], suppressionsByKey.Keys.ToHashSet());
 
         return new ProjectDto
         {
@@ -35,6 +36,10 @@ public static class ProjectMapper
             Coverage = project.Coverage.ToString(),
             ScanFrequency = project.ScanFrequency.ToString(),
             RemediationAvailable = remediationAvailable,
+            RemediableVulnerabilities = remediableFindings.Count,
+            RemediationIncludesMajorUpgrade = remediableFindings
+                .Any(finding => RemediationRules.IsMajorUpgrade(finding.Dependency, finding.Vulnerability)),
+            Remediation = remediation == null ? null : RemediationMapper.ToDto(remediation),
             TotalDependencies = project.Dependencies?.Count ?? 0,
             CriticalVulnerabilities = project.Dependencies?
                 .SelectMany(dependency => dependency.Vulnerabilities)
@@ -46,7 +51,7 @@ public static class ProjectMapper
                 .SelectMany(dependency => dependency.Vulnerabilities)
                 .Count(vulnerability => vulnerability.IsKnownExploited) ?? 0,
             Dependencies = project.Dependencies?
-                .Select(dependency => ToDto(dependency, links, annotations))
+                .Select(dependency => ToDto(dependency, links, suppressionsByKey))
                 .ToList() ?? [],
             Runtimes = project.Runtimes == null
                 ? []
@@ -77,7 +82,7 @@ public static class ProjectMapper
 
     private static DependencyDto ToDto(Dependency dependency,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
-        FindingAnnotations annotations)
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
     {
         string findingKey = FindingKeys.ForDependency(dependency.Ecosystem, dependency.Name);
 
@@ -97,14 +102,14 @@ public static class ProjectMapper
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.OutdatedDependency, findingKey),
             Vulnerabilities = dependency.Vulnerabilities
-                .Select(vulnerability => ToDto(dependency, vulnerability, links, annotations))
+                .Select(vulnerability => ToDto(dependency, vulnerability, links, suppressionsByKey))
                 .ToList()
         };
     }
 
     private static VulnerabilityDto ToDto(Dependency dependency, Vulnerability vulnerability,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
-        FindingAnnotations annotations)
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
     {
         string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
             vulnerability.CveId);
@@ -125,16 +130,9 @@ public static class ProjectMapper
             Priority = VulnerabilityRiskCalculator.Prioritize(vulnerability, dependency.Type).ToString(),
             FindingKey = findingKey,
             LinkedTicket = LinkOf(links, FindingKind.Vulnerability, findingKey),
-            Suppression = annotations.Suppressions.GetValueOrDefault(findingKey),
-            CanRemediate = RemediationRules.IsEligible(dependency, vulnerability),
-            IsMajorUpgrade = RemediationRules.IsMajorUpgrade(dependency, vulnerability),
-            Remediation = annotations.Remediations.GetValueOrDefault(findingKey)
+            Suppression = suppressionsByKey.GetValueOrDefault(findingKey)
         };
     }
-
-    private sealed record FindingAnnotations(
-        IReadOnlyDictionary<string, SuppressionDto> Suppressions,
-        IReadOnlyDictionary<string, RemediationDto> Remediations);
 
     private static RuntimeDto ToDto(RuntimeGroup group,
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links)

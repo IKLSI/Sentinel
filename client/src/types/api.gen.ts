@@ -579,13 +579,6 @@ export interface paths {
           id: string;
         };
       };
-      requestBody?: {
-        content: {
-          "application/*+json": components["schemas"]["StartRemediationDto"];
-          "application/json": components["schemas"]["StartRemediationDto"];
-          "text/json": components["schemas"]["StartRemediationDto"];
-        };
-      };
       responses: {
         /** @description OK */
         200: {
@@ -1402,7 +1395,11 @@ export interface components {
       lastScanAt: string | null;
       lastScanError: string | null;
       name: string;
+      /** Format: int32 */
+      remediableVulnerabilities: number;
+      remediation: components["schemas"]["RemediationDto"];
       remediationAvailable: boolean;
+      remediationIncludesMajorUpgrade: boolean;
       repositoryType: string;
       repositoryUrl: string | null;
       rootPath: string | null;
@@ -1518,7 +1515,6 @@ export interface components {
       id: string;
       mergeRequestUrl: string | null;
       status: string;
-      targetVersion: string;
       /** Format: date-time */
       updatedAt: string;
     };
@@ -1633,9 +1629,6 @@ export interface components {
     };
     /** @enum {string} */
     SortDirection: "Asc" | "Desc";
-    StartRemediationDto: {
-      findingKey: string;
-    };
     SuppressionDto: {
       /** Format: date-time */
       createdAt: string;
@@ -1833,7 +1826,6 @@ export interface components {
       total: number;
     };
     VulnerabilityDto: {
-      canRemediate: boolean;
       cveAlias: string | null;
       cveId: string;
       /** Format: double */
@@ -1848,11 +1840,9 @@ export interface components {
       /** Format: uuid */
       id: string;
       isKnownExploited: boolean;
-      isMajorUpgrade: boolean;
       isMaliciousPackage: boolean;
       linkedTicket: components["schemas"]["FindingTicketDto"];
       priority: string;
-      remediation: components["schemas"]["RemediationDto"];
       severity: string;
       suppression: components["schemas"]["SuppressionDto"];
     };

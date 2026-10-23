@@ -1,7 +1,6 @@
 import type {
   Dependency,
   FindingTicket,
-  Remediation,
   Runtime,
   Vulnerability,
   VulnerabilitySuppression,
@@ -16,7 +15,6 @@ import { daysUntil } from "@/features/landing/demo/dates";
 
 const NO_TICKET = null as unknown as FindingTicket;
 const NO_SUPPRESSION = null as unknown as VulnerabilitySuppression;
-const NO_REMEDIATION = null as unknown as Remediation;
 
 const NPM = "npm";
 const PRODUCTION = "Prod";
@@ -74,9 +72,6 @@ const toVulnerability = (
   isMaliciousPackage: false,
   linkedTicket: seed.ticket ?? NO_TICKET,
   suppression: NO_SUPPRESSION,
-  canRemediate: false,
-  isMajorUpgrade: false,
-  remediation: NO_REMEDIATION,
 });
 
 export const dependency = (seed: DependencySeed): Dependency => {

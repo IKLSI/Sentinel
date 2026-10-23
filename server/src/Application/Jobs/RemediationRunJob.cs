@@ -27,7 +27,7 @@ public class RemediationRunJob(
     ILogger<RemediationRunJob> logger)
 {
     public static readonly TimeSpan ConfigTicketLifetime = TimeSpan.FromMinutes(15);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan RunLookupMargin = TimeSpan.FromMinutes(1);
 
     [AutomaticRetry(Attempts = 0)]
@@ -41,17 +41,20 @@ public class RemediationRunJob(
         if (remediation is not { Status: RemediationStatus.Queued }) return;
 
         string configTicket = SecureToken.Generate();
+        string completionTicket = SecureToken.Generate();
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
             remediation.ConfigTicketHash = SecureToken.Hash(configTicket);
             remediation.ConfigTicketExpiresAt = DateTime.UtcNow + ConfigTicketLifetime;
+            remediation.CompletionTicketHash = SecureToken.Hash(completionTicket);
             remediation.UpdatedAt = DateTime.UtcNow;
 
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        string? runnerJobId = await runner.StartAsync(remediationId, configTicket, cancellationToken);
+        string? runnerJobId = await runner.StartAsync(remediationId, configTicket, completionTicket,
+            cancellationToken);
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())
         {
@@ -91,6 +94,25 @@ public class RemediationRunJob(
             return;
         }
 
+        await FinalizeAsync(remediation, state, cancellationToken);
+    }
+
+    public async Task CompleteAsync(Guid remediationId, RemediationRunState reportedState,
+        CancellationToken cancellationToken)
+    {
+        using IDisposable elevation = systemScope.Enter();
+
+        VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultWithProjectAsync(
+            remediationId, QueryTracking.Tracked, cancellationToken);
+
+        if (remediation is not { Status: RemediationStatus.Running }) return;
+
+        await FinalizeAsync(remediation, reportedState, cancellationToken);
+    }
+
+    private async Task FinalizeAsync(VulnerabilityRemediation remediation, RemediationRunState state,
+        CancellationToken cancellationToken)
+    {
         string? mergeRequestUrl = state is RemediationRunState.Succeeded or RemediationRunState.Failed
             ? await FindMergeRequestUrlAsync(remediation, cancellationToken)
             : null;
@@ -102,6 +124,7 @@ public class RemediationRunJob(
                 remediation.Status = RemediationStatus.Opened;
                 remediation.MergeRequestUrl = mergeRequestUrl;
                 remediation.FailureCode = null;
+                remediation.CompletionTicketHash = null;
                 remediation.UpdatedAt = DateTime.UtcNow;
             }
             else
@@ -147,6 +170,7 @@ public class RemediationRunJob(
         remediation.FailureCode = failureCode;
         remediation.ConfigTicketHash = null;
         remediation.ConfigTicketExpiresAt = null;
+        remediation.CompletionTicketHash = null;
         remediation.UpdatedAt = DateTime.UtcNow;
     }
 

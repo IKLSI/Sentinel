@@ -55,17 +55,39 @@ public class RemediationRulesTests
     }
 
     [Fact]
-    public void BranchNameFor_ScopedPackage_ProducesSafeBranchName()
+    public void RemediableFindings_SkipsSuppressedAndIneligibleVulnerabilities()
     {
-        RemediationRules.BranchNameFor("@Angular/Core", "17.3.10")
-            .Should().Be("sentinel/fix-angular-core-17.3.10");
+        Dependency lodash = DependencyWith("lodash", "4.17.15", true, ("CVE-1", "4.17.21"), ("CVE-2", "4.17.19"));
+        Dependency minimist = DependencyWith("minimist", "1.2.0", false, ("CVE-3", "1.2.6"));
+        HashSet<string> suppressed = [FindingKeys.ForVulnerability(DependencyEcosystem.Npm, "lodash", "CVE-2")];
+
+        RemediationRules.RemediableFindings([lodash, minimist], suppressed)
+            .Select(finding => finding.Vulnerability.CveId)
+            .Should().Equal("CVE-1");
     }
 
     [Fact]
-    public void BranchNameFor_MavenCoordinates_ReplacesSeparators()
+    public void TargetsFor_SeveralVulnerabilitiesOnOnePackage_TargetsTheHighestFixedVersion()
     {
-        RemediationRules.BranchNameFor("org.apache.logging.log4j:log4j-core", "2.17.1")
-            .Should().Be("sentinel/fix-org.apache.logging.log4j-log4j-core-2.17.1");
+        Dependency lodash = DependencyWith("lodash", "4.17.15", true, ("CVE-1", "4.17.21"), ("CVE-2", "4.17.19"));
+        Dependency axios = DependencyWith("axios", "1.6.0", true, ("CVE-3", "1.7.4"));
+
+        IReadOnlyList<RemediationTarget> targets =
+            RemediationRules.TargetsFor(RemediationRules.RemediableFindings([lodash, axios], new HashSet<string>()));
+
+        targets.Select(target => (target.PackageName, target.TargetVersion))
+            .Should().Equal(("axios", "1.7.4"), ("lodash", "4.17.21"));
+        targets[1].Advisories.Select(advisory => advisory.CveId).Should().Equal("CVE-1", "CVE-2");
+        targets[1].CurrentVersions.Should().Equal("4.17.15");
+    }
+
+    [Fact]
+    public void TargetsFor_FixRequiringMajorUpgrade_FlagsTheTarget()
+    {
+        Dependency express = DependencyWith("express", "4.18.0", true, ("CVE-1", "5.0.1"));
+
+        RemediationRules.TargetsFor(RemediationRules.RemediableFindings([express], new HashSet<string>()))
+            .Single().IsMajorUpgrade.Should().BeTrue();
     }
 
     [Theory]
@@ -86,4 +108,20 @@ public class RemediationRulesTests
 
         RemediationRules.IsStale(remediation, now).Should().Be(expected);
     }
+
+    private static Dependency DependencyWith(string name, string currentVersion, bool isDirect,
+        params (string CveId, string FixedVersion)[] vulnerabilities) => new()
+    {
+        Name = name,
+        CurrentVersion = currentVersion,
+        IsDirect = isDirect,
+        Vulnerabilities = vulnerabilities
+            .Select(vulnerability => new Vulnerability
+            {
+                CveId = vulnerability.CveId,
+                PackageName = name,
+                FixedVersion = vulnerability.FixedVersion
+            })
+            .ToList()
+    };
 }

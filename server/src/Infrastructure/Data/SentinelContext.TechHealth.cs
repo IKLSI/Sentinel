@@ -151,18 +151,15 @@ public partial class SentinelContext
         modelBuilder.Entity<VulnerabilityRemediation>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.FindingKey).HasMaxLength(500).IsRequired();
-            entity.Property(e => e.Ecosystem).HasConversion<string>().HasMaxLength(30).IsRequired();
-            entity.Property(e => e.PackageName).HasMaxLength(500).IsRequired();
-            entity.Property(e => e.TargetVersion).HasMaxLength(100).IsRequired();
             entity.Property(e => e.BranchName).HasMaxLength(250).IsRequired();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.RunnerJobId).HasMaxLength(100);
             entity.Property(e => e.MergeRequestUrl).HasMaxLength(1000);
             entity.Property(e => e.FailureCode).HasMaxLength(100);
             entity.Property(e => e.ConfigTicketHash).HasMaxLength(64);
+            entity.Property(e => e.CompletionTicketHash).HasMaxLength(64);
             entity.Ignore(e => e.IsInProgress);
-            entity.HasIndex(e => new { e.ProjectId, e.FindingKey }).IsUnique();
+            entity.HasIndex(e => e.ProjectId).IsUnique();
             entity.HasIndex(e => e.OrganizationId);
 
             entity.HasOne(e => e.Project)

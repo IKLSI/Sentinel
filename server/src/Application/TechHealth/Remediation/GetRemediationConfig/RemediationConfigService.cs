@@ -10,11 +10,14 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.TechHealth.Remediation.GetRemediationConfig;
 
 public class RemediationConfigService(
     IVulnerabilityRemediationRepository remediationRepository,
+    IProjectRepository projectRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository,
     IOrganizationRepository organizationRepository,
     TokenProtector tokenProtector,
     ICommitScopeFactory commitScopeFactory,
@@ -45,6 +48,11 @@ public class RemediationConfigService(
         if (!RepositoryLocation.TryParse(remediation.Project.RepositoryUrl, out RepositoryLocation location))
             return Result<JsonObject>.Error(ErrorCodes.ProjectInvalidRepositoryUrl);
 
+        IReadOnlyList<RemediationTarget> targets = await TargetsOfAsync(remediation.ProjectId, cancellationToken);
+
+        if (targets.Count == 0)
+            return Result<JsonObject>.Error(ErrorCodes.RemediationNotEligible);
+
         Organization? organization = await organizationRepository.GetOrDefaultAsync(remediation.OrganizationId,
             QueryTracking.NoTracking, cancellationToken);
 
@@ -53,7 +61,22 @@ public class RemediationConfigService(
         if (string.IsNullOrEmpty(access.Token))
             return Result<JsonObject>.Error(ErrorCodes.RemediationTokenMissing);
 
-        return RenovateConfigBuilder.Build(remediation, remediation.Project, location, access);
+        return RenovateConfigBuilder.Build(targets, remediation.Project, location, access);
+    }
+
+    private async Task<IReadOnlyList<RemediationTarget>> TargetsOfAsync(Guid projectId,
+        CancellationToken cancellationToken)
+    {
+        Project? project = await projectRepository.GetOrDefaultWithHealthDetailsAsync(projectId,
+            QueryTracking.NoTracking, cancellationToken);
+
+        if (project == null) return [];
+
+        IReadOnlyList<VulnerabilitySuppression> suppressions =
+            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
+
+        return RemediationRules.TargetsFor(RemediationRules.RemediableFindings(project.Dependencies,
+            suppressions.Select(suppression => suppression.FindingKey).ToHashSet()));
     }
 
     private static bool AcceptsTicket(VulnerabilityRemediation remediation, string configTicket) =>

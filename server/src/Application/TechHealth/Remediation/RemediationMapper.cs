@@ -8,7 +8,6 @@ public static class RemediationMapper
     {
         Id = remediation.Id,
         Status = remediation.Status.ToString(),
-        TargetVersion = remediation.TargetVersion,
         MergeRequestUrl = remediation.MergeRequestUrl,
         FailureCode = remediation.FailureCode,
         CreatedAt = remediation.CreatedAt,

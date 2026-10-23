@@ -1,4 +1,4 @@
-import type { Project } from "@/domains/projects/types";
+import type { Project, Remediation } from "@/domains/projects/types";
 import {
   DependencyStatus,
   RiskPriority,
@@ -17,6 +17,8 @@ import {
   DEMO_TICKET_IDS,
   DEMO_TICKET_REFERENCES,
 } from "@/features/landing/demo/fixtures/ids";
+
+const NO_REMEDIATION = null as unknown as Remediation;
 
 const NUGET = "NuGet";
 const PAYMENTS_MANIFEST = "src/Payments.Api/Payments.Api.csproj";
@@ -40,6 +42,9 @@ const projectBase = {
   rootPath: null,
   scanFrequency: ScanFrequency.Daily,
   remediationAvailable: false,
+  remediableVulnerabilities: 0,
+  remediationIncludesMajorUpgrade: false,
+  remediation: NO_REMEDIATION,
 } as const;
 
 const storefront: Project = {

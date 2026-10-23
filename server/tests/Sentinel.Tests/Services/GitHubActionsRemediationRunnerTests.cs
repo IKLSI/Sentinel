@@ -61,12 +61,12 @@ public class GitHubActionsRemediationRunnerTests
     }
 
     [Fact]
-    public async Task StartAsync_DispatchesWorkflowWithConfigUrlAndTicket()
+    public async Task StartAsync_DispatchesWorkflowWithConfigAndCompletionCallbacks()
     {
         StubHandler handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.NoContent));
         Guid remediationId = Guid.NewGuid();
 
-        string? dispatchId = await Runner(handler).StartAsync(remediationId, "ticket-value",
+        string? dispatchId = await Runner(handler).StartAsync(remediationId, "ticket-value", "completion-value",
             TestContext.Current.CancellationToken);
 
         dispatchId.Should().NotBeNullOrEmpty();
@@ -81,6 +81,9 @@ public class GitHubActionsRemediationRunnerTests
         inputs.GetProperty("ticket").GetString().Should().Be("ticket-value");
         inputs.GetProperty("config_url").GetString()
             .Should().Be($"https://api.sentinel.example/api/remediation-runs/{remediationId}/config");
+        inputs.GetProperty("completion_ticket").GetString().Should().Be("completion-value");
+        inputs.GetProperty("completion_url").GetString()
+            .Should().Be($"https://api.sentinel.example/api/remediation-runs/{remediationId}/completion");
     }
 
     [Fact]
@@ -88,7 +91,7 @@ public class GitHubActionsRemediationRunnerTests
     {
         StubHandler handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
 
-        string? dispatchId = await Runner(handler).StartAsync(Guid.NewGuid(), "ticket-value",
+        string? dispatchId = await Runner(handler).StartAsync(Guid.NewGuid(), "ticket-value", "completion-value",
             TestContext.Current.CancellationToken);
 
         dispatchId.Should().BeNull();

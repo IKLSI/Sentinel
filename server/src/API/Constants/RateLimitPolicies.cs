@@ -16,4 +16,5 @@ public static class RateLimitPolicies
     public const string PublicRuntimeLifecycles = "public-runtime-lifecycles";
     public const string Export = "export";
     public const string RemediationConfig = "remediation-config";
+    public const string RemediationCompletion = "remediation-completion";
 }

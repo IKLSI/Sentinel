@@ -26,14 +26,13 @@ public class GitHubActionsRemediationRunner(
         && Uri.TryCreate(settings.Value.CallbackBaseUrl, UriKind.Absolute, out Uri? callback)
         && callback.Scheme == Uri.UriSchemeHttps;
 
-    public async Task<string?> StartAsync(Guid remediationId, string configTicket,
+    public async Task<string?> StartAsync(Guid remediationId, string configTicket, string completionTicket,
         CancellationToken cancellationToken)
     {
         if (!IsConfigured) return null;
 
         string dispatchId = Guid.NewGuid().ToString("N");
-        string configUrl =
-            $"{settings.Value.CallbackBaseUrl.TrimEnd('/')}/api/remediation-runs/{remediationId}/config";
+        string runUrl = $"{settings.Value.CallbackBaseUrl.TrimEnd('/')}/api/remediation-runs/{remediationId}";
 
         try
         {
@@ -44,8 +43,10 @@ public class GitHubActionsRemediationRunner(
                 inputs = new Dictionary<string, string>
                 {
                     ["dispatch_id"] = dispatchId,
-                    ["config_url"] = configUrl,
-                    ["ticket"] = configTicket
+                    ["config_url"] = $"{runUrl}/config",
+                    ["ticket"] = configTicket,
+                    ["completion_url"] = $"{runUrl}/completion",
+                    ["completion_ticket"] = completionTicket
                 }
             });
 

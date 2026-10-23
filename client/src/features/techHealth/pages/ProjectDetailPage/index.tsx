@@ -17,6 +17,7 @@ import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetail
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
 import { BadgeAction } from "@/features/techHealth/pages/ProjectDetailPage/components/BadgeAction";
 import { ExportActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ExportActions";
+import { RemediateAllAction } from "@/features/techHealth/pages/ProjectDetailPage/components/RemediateAllAction";
 import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
 import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
@@ -80,6 +81,13 @@ export const ProjectDetailPage: React.FC = () => {
         eolRuntimes={eolRuntimes}
         action={
           <Box sx={{ display: "flex", gap: "8px" }}>
+            <RemediateAllAction
+              projectId={project.id}
+              remediationAvailable={project.remediationAvailable}
+              remediableVulnerabilities={project.remediableVulnerabilities}
+              includesMajorUpgrade={project.remediationIncludesMajorUpgrade}
+              remediation={project.remediation}
+            />
             <BadgeAction projectId={project.id} />
             <ExportActions projectId={project.id} />
           </Box>
@@ -94,10 +102,7 @@ export const ProjectDetailPage: React.FC = () => {
         }}
       />
 
-      <FindingActionsProvider
-        projectId={project.id}
-        remediationAvailable={project.remediationAvailable}
-      >
+      <FindingActionsProvider projectId={project.id}>
         <Box
           sx={{
             flex: "1 1 auto",

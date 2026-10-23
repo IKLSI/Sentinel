@@ -16,6 +16,14 @@ on:
         description: Ticket à usage unique pour récupérer la configuration
         required: true
         type: string
+      completion_url:
+        description: URL de l'API Sentinel à notifier en fin de run
+        required: false
+        type: string
+      completion_ticket:
+        description: Ticket à usage unique pour notifier la fin du run
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -29,10 +37,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Masquer le ticket
+      - name: Masquer les tickets
         env:
           TICKET: ${{ inputs.ticket }}
-        run: echo "::add-mask::$TICKET"
+          COMPLETION_TICKET: ${{ inputs.completion_ticket }}
+        run: |
+          echo "::add-mask::$TICKET"
+          echo "::add-mask::$COMPLETION_TICKET"
 
       - name: Récupérer la configuration
         env:
@@ -47,6 +58,7 @@ jobs:
           chmod 644 "$RUNNER_TEMP/renovate-config.json"
 
       - name: Lancer Renovate
+        id: renovate
         env:
           RENOVATE_GITHUB_COM_TOKEN: ${{ github.token }}
         run: |
@@ -60,3 +72,19 @@ jobs:
       - name: Supprimer la configuration
         if: always()
         run: rm -f "$RUNNER_TEMP/renovate-config.json"
+
+      - name: Notifier Sentinel
+        if: always() && inputs.completion_url != ''
+        env:
+          COMPLETION_TICKET: ${{ inputs.completion_ticket }}
+          COMPLETION_URL: ${{ inputs.completion_url }}
+          SUCCEEDED: ${{ steps.renovate.outcome == 'success' }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            --retry 3 --retry-all-errors \
+            -X POST \
+            -H "X-Remediation-Ticket: $COMPLETION_TICKET" \
+            -H "Content-Type: application/json" \
+            -d "{\"succeeded\": $SUCCEEDED}" \
+            "$COMPLETION_URL" \
+            || echo "::warning::Notification Sentinel impossible, le suivi périodique prendra le relais"

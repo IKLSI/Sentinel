@@ -13,7 +13,8 @@ public interface IRemediationRunner
 {
     bool IsConfigured { get; }
 
-    Task<string?> StartAsync(Guid remediationId, string configTicket, CancellationToken cancellationToken);
+    Task<string?> StartAsync(Guid remediationId, string configTicket, string completionTicket,
+        CancellationToken cancellationToken);
 
     Task<RemediationRunState> GetStateAsync(string runnerJobId, DateTime startedAfter,
         CancellationToken cancellationToken);

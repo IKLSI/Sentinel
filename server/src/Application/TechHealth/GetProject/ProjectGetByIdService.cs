@@ -34,10 +34,10 @@ public class ProjectGetByIdService(
         IReadOnlyList<VulnerabilitySuppression> suppressions =
             await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
 
-        IReadOnlyList<VulnerabilityRemediation> remediations =
-            await remediationRepository.ListByProjectAsync(projectId, cancellationToken);
+        VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultByProjectAsync(projectId,
+            QueryTracking.NoTracking, cancellationToken);
 
-        return ProjectMapper.ToDto(project, findingTickets, suppressions, remediations,
+        return ProjectMapper.ToDto(project, findingTickets, suppressions, remediation,
             await IsRemediationAvailableAsync(project, organizationId, cancellationToken));
     }
 

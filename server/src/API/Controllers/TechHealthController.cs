@@ -166,10 +166,9 @@ public class TechHealthController : BaseController
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<RemediationDto>> StartRemediation(
         Guid id,
-        [FromBody] StartRemediationDto dto,
         [FromServices] StartRemediationService service,
         CancellationToken cancellationToken) =>
-        ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpPost("projects/{id:guid}/badge")]
     [AuthorizeRoles(UserRole.Admin)]

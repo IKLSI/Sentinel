@@ -17,9 +17,6 @@ export const DemoFindingActions: React.FC<Props> = ({ children }) => {
       creatingFindingKey: null,
       removeSuppression: () => {},
       removingSuppressionId: null,
-      remediationAvailable: false,
-      startRemediation: () => {},
-      startingRemediationKey: null,
     }),
     [navigate],
   );

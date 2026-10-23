@@ -16,7 +16,6 @@ import type {
   ProjectScanSettings,
   ProjectSummary,
   Remediation,
-  StartRemediation,
   SuppressVulnerability,
   UpdateProject,
   VulnerabilitySuppression,
@@ -90,11 +89,9 @@ export const useRemoveSuppressionMutation = () =>
   );
 
 export const useStartRemediationMutation = () =>
-  usePostMutation<
-    Remediation,
-    Remediation,
-    { id: string; data: StartRemediation }
-  >(ROUTES_API.api.techHealth.projects[":id"].remediations.__path);
+  usePostMutation<Remediation, Remediation, { id: string }>(
+    ROUTES_API.api.techHealth.projects[":id"].remediations.__path,
+  );
 
 export const useEnableProjectBadgeMutation = () =>
   usePostMutation<ProjectBadge, ProjectBadge, { id: string }>(
