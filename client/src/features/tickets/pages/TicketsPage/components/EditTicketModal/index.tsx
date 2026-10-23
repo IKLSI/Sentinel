@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectOption } from "@/domains/projects/types";
-import type { User } from "@/domains/users/types";
+import type { UserOption } from "@/domains/users/types";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import {
   modalInputSx,
@@ -20,7 +20,7 @@ interface Props {
   onClose: () => void;
   register: UseFormRegister<EditTicketFormValues>;
   projects: ProjectOption[];
-  users: User[];
+  users: UserOption[];
   saving: boolean;
   onSubmit: () => void;
 }
@@ -184,7 +184,7 @@ export const EditTicketModal: React.FC<Props> = ({
               <option value="">{t("tickets.list.unassigned")}</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.firstName} {u.lastName}
+                  {u.name}
                 </option>
               ))}
             </Box>

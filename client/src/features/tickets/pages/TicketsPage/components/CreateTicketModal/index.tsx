@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectOption } from "@/domains/projects/types";
-import type { User } from "@/domains/users/types";
+import type { UserOption } from "@/domains/users/types";
 import {
   modalInputSx,
   modalSelectSx,
@@ -19,7 +19,7 @@ interface Props {
   onClose: () => void;
   register: UseFormRegister<CreateTicketFormValues>;
   projects: ProjectOption[];
-  users: User[];
+  users: UserOption[];
   submitting: boolean;
   onSubmit: () => void;
   createAnother: boolean;
@@ -204,7 +204,7 @@ export const CreateTicketModal: React.FC<Props> = ({
               <option value="">{t("tickets.list.unassigned")}</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.firstName} {u.lastName}
+                  {u.name}
                 </option>
               ))}
             </Box>

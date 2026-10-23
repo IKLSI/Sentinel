@@ -5,6 +5,8 @@ export type User = components["schemas"]["UserDto"];
 
 export type UserList = components["schemas"]["UserListDto"];
 
+export type UserOption = components["schemas"]["UserOptionDto"];
+
 export type CreateUser = components["schemas"]["CreateUserDto"];
 
 export type UpdateUser = components["schemas"]["UpdateUserDto"];

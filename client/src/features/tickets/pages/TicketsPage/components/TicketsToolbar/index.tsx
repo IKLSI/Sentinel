@@ -9,7 +9,7 @@ import { FilterBuilder } from "@/components/ui/forms/FilterBuilder";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import { ExportButton } from "@/components/ui/common/ExportButton";
 import type { ProjectOption } from "@/domains/projects/types";
-import type { User } from "@/domains/users/types";
+import type { UserOption } from "@/domains/users/types";
 import {
   buildTicketFilterFields,
   buildTicketFilterLabels,
@@ -20,7 +20,7 @@ interface Props {
   onSearchChange: (v: string) => void;
   criterion: FilterCriterion | null;
   onCriterionChange: (criterion: FilterCriterion | null) => void;
-  users: User[];
+  users: UserOption[];
   projects: ProjectOption[];
   onCreate: () => void;
   onExport: () => void;

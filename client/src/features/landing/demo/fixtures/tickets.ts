@@ -1,15 +1,6 @@
 import type { Ticket } from "@/domains/tickets/types";
-import type { User } from "@/domains/users/types";
-import {
-  FindingKind,
-  Language,
-  Theme,
-  TicketPriority,
-  TicketStatus,
-  TicketType,
-  UserAccessStatus,
-  UserRole,
-} from "@/enums";
+import type { UserOption } from "@/domains/users/types";
+import { FindingKind, TicketPriority, TicketStatus, TicketType } from "@/enums";
 import { daysAgo } from "@/features/landing/demo/dates";
 import {
   DEMO_PROJECT_IDS,
@@ -186,26 +177,13 @@ export const DEMO_TICKETS: Ticket[] = [
   }),
 ];
 
-const demoUser = (
-  key: DemoUserKey,
-  firstName: string,
-  lastName: string,
-  role: UserRole,
-): User => ({
+const demoUser = (key: DemoUserKey, name: string): UserOption => ({
   id: DEMO_USER_IDS[key],
-  firstName,
-  lastName,
-  email: `${key}@example.com`,
-  role,
-  accessStatus: UserAccessStatus.Active,
-  language: Language.Fr,
-  theme: Theme.Light,
-  createdAt: daysAgo(120),
-  lastLoginAt: daysAgo(0),
+  name,
 });
 
-export const DEMO_USERS: User[] = [
-  demoUser("camille", "Camille", "Laurent", UserRole.Admin),
-  demoUser("mathis", "Mathis", "Roux", UserRole.Developer),
-  demoUser("ines", "Inès", "Benali", UserRole.Developer),
+export const DEMO_USERS: UserOption[] = [
+  demoUser("camille", "Camille Laurent"),
+  demoUser("mathis", "Mathis Roux"),
+  demoUser("ines", "Inès Benali"),
 ];

@@ -13,7 +13,7 @@ import { useProjectOptionsQuery } from "@/domains/projects/queries";
 import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
 import { useTicketsQuery } from "@/domains/tickets/queries";
 import type { Ticket, TicketFilters } from "@/domains/tickets/types";
-import { useUsersQuery } from "@/domains/users/queries";
+import { useUserOptionsQuery } from "@/domains/users/queries";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import {
   criterionFromSearch,
@@ -38,7 +38,6 @@ import { useSortState } from "@/hooks/useSortState";
 import { SortDirection, TicketSortField } from "@/enums";
 
 const SEARCH_DEBOUNCE_MS = 300;
-const FILTERABLE_USERS_PAGE_SIZE = 100;
 
 const routeApi = getRouteApi("/_authenticated/tickets/");
 
@@ -71,8 +70,8 @@ export const TicketsPage: React.FC = () => {
   }, []);
   const { data: projectsData } = useProjectOptionsQuery();
   const projects = useMemo(() => projectsData ?? [], [projectsData]);
-  const usersQuery = useUsersQuery({ pageSize: FILTERABLE_USERS_PAGE_SIZE });
-  const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data]);
+  const { data: usersData } = useUserOptionsQuery();
+  const users = useMemo(() => usersData ?? [], [usersData]);
   const [sort, toggleSort] = useSortState<SortState["col"]>(
     { col: TicketSortField.Priority, dir: SortDirection.Desc },
     () => setPage(1),

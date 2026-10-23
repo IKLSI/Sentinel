@@ -3,7 +3,7 @@ import type {
   FilterFieldDefinition,
 } from "@/components/ui/forms/FilterBuilder/types";
 import type { ProjectOption } from "@/domains/projects/types";
-import type { User } from "@/domains/users/types";
+import type { UserOption } from "@/domains/users/types";
 import { TicketPriority, TicketType } from "@/enums";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import {
@@ -15,7 +15,7 @@ import type { Translate } from "@/contexts/I18nContext";
 
 export const buildTicketFilterFields = (
   t: Translate,
-  users: User[],
+  users: UserOption[],
   projects: ProjectOption[],
 ): FilterFieldDefinition[] => [
   {
@@ -49,7 +49,7 @@ export const buildTicketFilterFields = (
       { value: UNSET_FILTER_VALUE, label: t("tickets.list.unassigned") },
       ...users.map((user) => ({
         value: user.id,
-        label: `${user.firstName} ${user.lastName}`,
+        label: user.name,
       })),
     ],
   },
