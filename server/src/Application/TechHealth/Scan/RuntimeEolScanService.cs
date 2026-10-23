@@ -34,9 +34,6 @@ public class RuntimeEolScanService(IRuntimeLifecycleClient runtimeLifecycle)
 
         if (lifecycle == null) return null;
 
-        if (lifecycle.EndOfLifeDate is DateTime eolDate)
-            return new RuntimeEolResult(runtime, eolDate < DateTime.UtcNow, eolDate);
-
-        return new RuntimeEolResult(runtime, lifecycle.IsEndOfLife, null);
+        return new RuntimeEolResult(runtime, lifecycle.IsEolAt(DateTime.UtcNow), lifecycle.EndOfLifeDate);
     }
 }

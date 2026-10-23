@@ -55,7 +55,7 @@ public class RuntimeLifecyclesGetService(IRuntimeLifecycleClient runtimeLifecycl
             Name = entry.RuntimeName,
             Version = entry.Version,
             EolDate = lifecycle.EndOfLifeDate,
-            IsEol = lifecycle.EndOfLifeDate is DateTime eolDate ? eolDate < now : lifecycle.IsEndOfLife
+            IsEol = lifecycle.IsEolAt(now)
         };
 
         return new RuntimeLifecycleItemDto
