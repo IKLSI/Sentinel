@@ -89,20 +89,26 @@ export const OrganisationTab: React.FC = () => {
   });
 
   const resetOrgForm = orgForm.reset;
-  const setGitlabValue = gitlabForm.setValue;
+  const resetGitlabForm = gitlabForm.reset;
 
   useEffect(() => {
     if (!integrationsQuery.data) return;
-    setGitlabValue("baseUrl", integrationsQuery.data.gitlabBaseUrl);
-  }, [integrationsQuery.data, setGitlabValue]);
+    resetGitlabForm(
+      { token: "", baseUrl: integrationsQuery.data.gitlabBaseUrl },
+      { keepDirtyValues: true },
+    );
+  }, [integrationsQuery.data, resetGitlabForm]);
 
   useEffect(() => {
     if (!org) return;
-    resetOrgForm({
-      name: org.name,
-      securityAlertsEnabled: org.securityAlertsEnabled,
-      alertMinSeverity: org.alertMinSeverity,
-    });
+    resetOrgForm(
+      {
+        name: org.name,
+        securityAlertsEnabled: org.securityAlertsEnabled,
+        alertMinSeverity: org.alertMinSeverity,
+      },
+      { keepDirtyValues: true },
+    );
   }, [org, resetOrgForm]);
 
   const warnFirstError = (errors: FieldErrors) => {
@@ -337,14 +343,16 @@ export const OrganisationTab: React.FC = () => {
               placeholder={t("settings.integrations.gitlab_placeholder")}
               tokenLabel={t("settings.integrations.gitlab_token_label")}
               token={gitlabForm.watch("token")}
-              onTokenChange={(value) => gitlabForm.setValue("token", value)}
+              onTokenChange={(value) =>
+                gitlabForm.setValue("token", value, { shouldDirty: true })
+              }
               onConnect={handleConnectGitlab}
               connecting={connectingGitlab}
             >
               <GitlabInstanceFields
                 baseUrl={gitlabForm.watch("baseUrl")}
                 onBaseUrlChange={(value) =>
-                  gitlabForm.setValue("baseUrl", value)
+                  gitlabForm.setValue("baseUrl", value, { shouldDirty: true })
                 }
               />
             </IntegrationRow>
