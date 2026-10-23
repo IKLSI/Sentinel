@@ -53,9 +53,11 @@ export const ApiKeySecretDialog: React.FC<Props> = ({ secretKey, onClose }) => {
           sx={
             copied
               ? {
-                  background:
-                    "linear-gradient(135deg, var(--green-fill) 0%, color-mix(in srgb, var(--green-fill) 85%, black) 100%)",
-                  "&:hover": { background: "var(--green-fill)" },
+                  background: "var(--green-fill)",
+                  "&:hover": {
+                    background:
+                      "color-mix(in srgb, var(--green-fill) 88%, white)",
+                  },
                 }
               : undefined
           }

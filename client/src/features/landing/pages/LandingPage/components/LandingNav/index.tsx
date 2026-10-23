@@ -174,11 +174,10 @@ export const LandingNav: React.FC = () => {
               fontSize: "14px",
               fontWeight: 600,
               color: "#ffffff",
-              background: "linear-gradient(180deg, #2a2c4f, #101124)",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px -8px rgba(16,17,36,.6)",
+              background: "#101124",
+              boxShadow: "0 6px 16px -8px rgba(16,17,36,.6)",
               "&:hover": {
-                background: "linear-gradient(180deg, #34376a, #1a1c38)",
+                background: "#1a1c38",
               },
               "&:focus-visible": FOCUS_RING,
             }}

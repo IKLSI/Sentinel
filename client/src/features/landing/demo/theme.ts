@@ -31,7 +31,6 @@ const GLOBAL_LIGHT_VARIABLES = {
   "--teal-subtle": "rgba(20, 184, 166, 0.12)",
   "--teal-border": "rgba(20, 184, 166, 0.25)",
   "--cta": "#7c6fcd",
-  "--cta-2": "#6a5eb8",
   "--avatar-peer-1": "#fda4af",
   "--avatar-peer-2": "#fb7185",
 };

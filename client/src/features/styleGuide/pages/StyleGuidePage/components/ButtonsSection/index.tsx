@@ -26,14 +26,7 @@ export const ButtonsSection: React.FC = () => {
         </Button>
         <Button variant="outlined">{t("common.edit")}</Button>
         <Button variant="text">{t("common.cancel")}</Button>
-        <Button
-          variant="contained"
-          sx={{
-            background: "var(--red) !important",
-            boxShadow: "none !important",
-            ...NO_HOVER_ELEVATION,
-          }}
-        >
+        <Button variant="contained" color="error" sx={NO_HOVER_ELEVATION}>
           {t("common.delete")}
         </Button>
       </Box>

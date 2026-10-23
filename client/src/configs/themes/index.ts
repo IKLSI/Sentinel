@@ -4,20 +4,19 @@ import type { Shadows } from "@mui/material/styles";
 const darkCssVars = `
   :root {
     color-scheme: dark;
-    --bg: #0a0f1a;
-    --s1: #121a2b;
-    --s2: #182136;
-    --s3: #202b45;
-    --border: #2a3654;
-    --border2: #3b4a6d;
-    --text: #edf1fb;
-    --text-secondary: #b4c0d9;
-    --muted: #7b8db0;
-    --muted2: #9aabc8;
+    --bg: #111111;
+    --s1: #181818;
+    --s2: #1f1f1f;
+    --s3: #272727;
+    --border: #2a2a2a;
+    --border2: #3a3a3a;
+    --text: #f2f2f2;
+    --text-secondary: #c4c4c4;
+    --muted: #909090;
+    --muted2: #a6a6a6;
     --accent: #818cf8;
     --accent2: #a5b4fc;
     --accent-fill: #5457e8;
-    --accent-fill-2: #4245cf;
     --accent-subtle: rgba(129, 140, 248, 0.14);
     --accent-border: rgba(129, 140, 248, 0.36);
     --blue: #818cf8;
@@ -35,9 +34,9 @@ const darkCssVars = `
     --cyan-subtle: rgba(34, 211, 238, 0.14);
     --purple: #c084fc;
     --purple-subtle: rgba(192, 132, 252, 0.14);
-    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-    --sh-2: 0 6px 16px rgba(0, 0, 0, 0.55);
-    --sh-3: 0 20px 48px rgba(0, 0, 0, 0.62);
+    --sh-1: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.35);
+    --sh-2: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.45);
+    --sh-3: 0 16px 40px rgba(0, 0, 0, 0.55);
     --r-xs: 4px;
     --r-sm: 6px;
     --r: 8px;
@@ -66,7 +65,6 @@ const lightCssVars = `
     --accent: #4f46e5;
     --accent2: #3730a3;
     --accent-fill: #4f46e5;
-    --accent-fill-2: #3730a3;
     --accent-subtle: rgba(79, 70, 229, 0.08);
     --accent-border: rgba(79, 70, 229, 0.25);
     --blue: #4f46e5;
@@ -100,11 +98,11 @@ const lightCssVars = `
 `;
 
 const darkShadowSteps = [
-  "0 1px 2px rgba(0, 0, 0, 0.45)",
-  "0 2px 6px rgba(0, 0, 0, 0.5)",
-  "0 6px 16px rgba(0, 0, 0, 0.55)",
-  "0 12px 32px rgba(0, 0, 0, 0.6)",
-  "0 24px 60px rgba(0, 0, 0, 0.65)",
+  "0 1px 2px rgba(0, 0, 0, 0.35)",
+  "0 2px 6px rgba(0, 0, 0, 0.4)",
+  "0 4px 12px rgba(0, 0, 0, 0.45)",
+  "0 10px 28px rgba(0, 0, 0, 0.5)",
+  "0 16px 40px rgba(0, 0, 0, 0.55)",
 ];
 
 const lightShadowSteps = [
@@ -141,9 +139,16 @@ const baseComponents = {
       },
       contained: {
         color: "#fff",
-        boxShadow: "none",
-        "&:hover": { boxShadow: "none" },
-        "&:active": { boxShadow: "none" },
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 0 0 1px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.2)",
+        "&:hover": {
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 0 0 1px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.22)",
+        },
+        "&:active": {
+          boxShadow: "inset 0 1px 2px rgba(0,0,0,0.25)",
+          transform: "translateY(1px)",
+        },
         "&.Mui-disabled": {
           opacity: 0.5,
           background: "var(--s3)",
@@ -173,23 +178,18 @@ const baseComponents = {
       {
         props: { variant: "contained" as const, color: "primary" as const },
         style: {
-          background:
-            "linear-gradient(135deg, var(--accent-fill) 0%, color-mix(in srgb, var(--accent-fill) 88%, white) 100%)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+          background: "var(--accent-fill)",
           "&:hover": {
-            background:
-              "linear-gradient(135deg, var(--accent-fill-2) 0%, var(--accent-fill) 100%)",
+            background: "color-mix(in srgb, var(--accent-fill) 88%, white)",
           },
         },
       },
       {
         props: { variant: "contained" as const, color: "secondary" as const },
         style: {
-          background:
-            "linear-gradient(135deg, var(--cta) 0%, color-mix(in srgb, var(--cta) 92%, white) 100%)",
+          background: "var(--cta)",
           "&:hover": {
-            background:
-              "linear-gradient(135deg, var(--cta-2) 0%, var(--cta) 100%)",
+            background: "color-mix(in srgb, var(--cta) 88%, white)",
           },
           "&.Mui-disabled": {
             color: "#fff",
@@ -201,11 +201,9 @@ const baseComponents = {
       {
         props: { variant: "contained" as const, color: "error" as const },
         style: {
-          background:
-            "linear-gradient(135deg, var(--red-fill) 0%, color-mix(in srgb, var(--red-fill) 88%, white) 100%)",
+          background: "var(--red-fill)",
           "&:hover": {
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--red-fill) 85%, black) 0%, var(--red-fill) 100%)",
+            background: "color-mix(in srgb, var(--red-fill) 88%, white)",
           },
         },
       },
@@ -224,7 +222,7 @@ const baseComponents = {
       root: {
         "& .MuiBackdrop-root": {
           backdropFilter: "blur(4px)",
-          backgroundColor: "rgba(4, 7, 14, 0.62)",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
         },
       },
       paper: {
@@ -488,24 +486,24 @@ const baseComponents = {
 export const darkTheme = createTheme({
   palette: {
     mode: "dark",
-    primary: { main: "#818cf8", dark: "#6366f1", contrastText: "#0a0f1a" },
+    primary: { main: "#818cf8", dark: "#6366f1", contrastText: "#111111" },
     secondary: { main: "#a5a0e8", dark: "#6d5fc4" },
     error: { main: "#f87171" },
     success: { main: "#4ade80" },
     warning: { main: "#fbbf24" },
     info: { main: "#22d3ee" },
-    background: { default: "#0a0f1a", paper: "#121a2b" },
+    background: { default: "#111111", paper: "#181818" },
     text: {
-      primary: "#edf1fb",
-      secondary: "#b4c0d9",
-      disabled: "#7b8db0",
+      primary: "#f2f2f2",
+      secondary: "#c4c4c4",
+      disabled: "#909090",
     },
-    divider: "#2a3654",
+    divider: "#2a2a2a",
     action: {
-      hover: "rgba(255,255,255,0.06)",
+      hover: "rgba(255,255,255,0.05)",
       selected: "rgba(129, 140, 248, 0.16)",
-      disabled: "#7b8db0",
-      disabledBackground: "#202b45",
+      disabled: "#909090",
+      disabledBackground: "#272727",
     },
   },
   shadows: buildShadows(darkShadowSteps),

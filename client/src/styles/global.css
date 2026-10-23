@@ -24,7 +24,6 @@
   --brand-gitlab-3: #fca326;
 
   --cta: #7c6fcd;
-  --cta-2: #6a5eb8;
 
   --prio-bg-1: #f6ced5;
   --prio-bg-2: #eaa8b6;
@@ -64,14 +63,14 @@
   --auth-shadow: #5050a0;
   --auth-photo: url("https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80");
 
-  --preview-dk-bg: #080c14;
-  --preview-dk-surface: #0d1120;
-  --preview-dk-surface2: #1a2340;
-  --preview-dk-bar1: #263352;
-  --preview-dk-bar2: #192036;
+  --preview-dk-bg: #111111;
+  --preview-dk-surface: #181818;
+  --preview-dk-surface2: #272727;
+  --preview-dk-bar1: #3a3a3a;
+  --preview-dk-bar2: #272727;
   --preview-dk-accent: rgba(99, 102, 241, 0.5);
-  --preview-dk-text-soft: rgba(230, 234, 246, 0.4);
-  --preview-dk-text-strong: rgba(230, 234, 246, 0.55);
+  --preview-dk-text-soft: rgba(242, 242, 242, 0.4);
+  --preview-dk-text-strong: rgba(242, 242, 242, 0.55);
   --preview-lt-bg: #f0f2f8;
   --preview-lt-bar1: #dde3f2;
   --preview-lt-bar2: #eaedfa;
@@ -92,9 +91,9 @@
   --emerald: #6ee7b7;
   --emerald-subtle: rgba(110, 231, 183, 0.16);
   --emerald-border: rgba(110, 231, 183, 0.32);
-  --slate: #94a3b8;
-  --slate-subtle: rgba(148, 163, 184, 0.16);
-  --slate-border: rgba(148, 163, 184, 0.3);
+  --slate: #a3a3a3;
+  --slate-subtle: rgba(163, 163, 163, 0.16);
+  --slate-border: rgba(163, 163, 163, 0.3);
   --rose: #fda4af;
   --rose-subtle: rgba(253, 164, 175, 0.16);
   --rose-border: rgba(253, 164, 175, 0.32);
@@ -105,7 +104,6 @@
   --brand-github: #30363d;
 
   --cta: #6d5fc4;
-  --cta-2: #5b4fae;
 
   --prio-bg-1: #4a1f2e;
   --prio-bg-2: #5e2438;
@@ -118,22 +116,22 @@
   --flag-2: #263457;
   --flag-3: #4a2632;
 
-  --auth-bg: #0a0f1a;
-  --auth-surface: #121a2b;
+  --auth-bg: #111111;
+  --auth-surface: #181818;
   --auth-indigo-950: #1e1b6e;
   --auth-indigo-800: #4f46e5;
   --auth-indigo-700: #5457e8;
   --auth-indigo-500: #818cf8;
   --auth-indigo-400: #a5b4fc;
   --auth-indigo-300: #c7d2fe;
-  --auth-indigo-200: #3b4a6d;
+  --auth-indigo-200: #3a3a3a;
   --auth-indigo-50: rgba(129, 140, 248, 0.14);
-  --auth-gray-900: #edf1fb;
-  --auth-gray-500: #9aabc8;
-  --auth-gray-400: #7b8db0;
-  --auth-gray-300: #3b4a6d;
-  --auth-gray-200: #2a3654;
-  --auth-gray-50: #182136;
+  --auth-gray-900: #f2f2f2;
+  --auth-gray-500: #a6a6a6;
+  --auth-gray-400: #8a8a8a;
+  --auth-gray-300: #3a3a3a;
+  --auth-gray-200: #2a2a2a;
+  --auth-gray-50: #1f1f1f;
   --auth-red-600: #f87171;
   --auth-red-500: #f87171;
   --auth-red-300: #b91c1c;
@@ -142,11 +140,11 @@
   --auth-register-hover: #c7d2fe;
   --auth-shadow: #000000;
 
-  --preview-dk-bg: #0a0f1a;
-  --preview-dk-surface: #121a2b;
-  --preview-dk-surface2: #202b45;
-  --preview-dk-bar1: #3b4a6d;
-  --preview-dk-bar2: #202b45;
+  --preview-dk-bg: #111111;
+  --preview-dk-surface: #181818;
+  --preview-dk-surface2: #272727;
+  --preview-dk-bar1: #3a3a3a;
+  --preview-dk-bar2: #272727;
   --preview-dk-accent: rgba(129, 140, 248, 0.55);
   --preview-dk-text-soft: rgba(237, 241, 251, 0.4);
   --preview-dk-text-strong: rgba(237, 241, 251, 0.6);
@@ -398,18 +396,14 @@ a:hover {
 }
 
 .btn-cancel.MuiButton-contained {
-  background: linear-gradient(
-    135deg,
-    var(--s3) 0%,
-    color-mix(in srgb, var(--s3) 92%, white) 100%
-  );
+  background: var(--s3);
   color: var(--text-secondary);
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px var(--border);
   border: none;
 }
 
 .btn-cancel.MuiButton-contained:hover {
-  background: linear-gradient(135deg, var(--border) 0%, var(--border2) 100%);
+  background: var(--border);
   color: var(--text);
   box-shadow: none;
   transform: none;
@@ -577,11 +571,7 @@ a:hover {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(
-    135deg,
-    var(--accent-fill) 0%,
-    color-mix(in srgb, var(--accent-fill) 82%, white) 100%
-  );
+  background: var(--accent-fill);
   border: none;
   border-radius: var(--r);
   color: #fff;
@@ -591,27 +581,27 @@ a:hover {
   letter-spacing: -0.01em;
   cursor: pointer;
   box-shadow:
-    0 4px 18px color-mix(in srgb, var(--accent) 30%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.2);
   transition:
+    background 0.15s,
     transform 0.15s,
     box-shadow 0.15s;
   text-decoration: none;
 }
 .ep-btn-primary:hover {
-  background: linear-gradient(
-    135deg,
-    var(--accent-fill-2) 0%,
-    var(--accent-fill) 100%
-  );
+  background: color-mix(in srgb, var(--accent-fill) 88%, white);
   box-shadow:
-    0 6px 22px color-mix(in srgb, var(--accent) 38%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.22);
   color: #fff;
   text-decoration: none;
 }
 .ep-btn-primary:active {
-  opacity: 0.9;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px);
 }
 
 .ep-btn-ghost {
@@ -1067,11 +1057,7 @@ a:hover {
 .lp-submit {
   width: 100%;
   padding: 13px 16px;
-  background: linear-gradient(
-    135deg,
-    var(--auth-indigo-700) 0%,
-    var(--auth-indigo-500) 100%
-  );
+  background: var(--auth-indigo-700);
   border: none;
   border-radius: var(--r);
   color: #fff;
@@ -1080,8 +1066,10 @@ a:hover {
   font-family: var(--font-ui);
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 14px
-    color-mix(in srgb, var(--auth-indigo-500) 35%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.2);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -1092,17 +1080,15 @@ a:hover {
   animation: lp-up 0.5s 0.66s forwards;
 }
 .lp-submit:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    var(--auth-indigo-800) 0%,
-    var(--auth-indigo-700) 100%
-  );
-  box-shadow: 0 6px 20px
-    color-mix(in srgb, var(--auth-indigo-500) 45%, transparent);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--auth-indigo-700) 88%, white);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.22);
 }
 .lp-submit:active:not(:disabled) {
-  transform: translateY(0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px);
 }
 .lp-submit:disabled {
   filter: opacity(0.5);
