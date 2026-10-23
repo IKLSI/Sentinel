@@ -14,7 +14,7 @@ import { useImportProjectsMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
-import { RepoSearchInput } from "@/features/projects/pages/ProjectsPage/components/RepoSearchInput";
+import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { RepoListHeader } from "@/features/projects/pages/ProjectsPage/components/RepoListHeader";
 import { RepoList } from "@/features/projects/pages/ProjectsPage/components/RepoList";
 import { ImportFrequencyBar } from "@/features/projects/pages/ProjectsPage/components/ImportFrequencyBar";
@@ -170,12 +170,17 @@ export const SyncProjectModal: React.FC<Props> = ({
         {t("projects.import_modal.title")}
       </Box>
 
-      <RepoSearchInput
-        inputRef={inputRef}
-        value={search}
-        onChange={setSearch}
-        onEscape={onClose}
-      />
+      <Box sx={{ px: "20px", pt: "16px", flexShrink: 0 }}>
+        <SearchInput
+          inputRef={inputRef}
+          value={search}
+          onChange={setSearch}
+          onEscape={onClose}
+          placeholder={t("projects.search_placeholder")}
+          width="100%"
+          sx={{ background: "var(--bg)" }}
+        />
+      </Box>
 
       <RepoListHeader
         showSelectAll={!loading && !error && repos.length > 0}

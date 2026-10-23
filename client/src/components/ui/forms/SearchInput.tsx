@@ -9,6 +9,8 @@ interface Props {
   placeholder?: string;
   width?: string | number;
   sx?: SxProps<Theme>;
+  inputRef?: React.Ref<HTMLInputElement>;
+  onEscape?: () => void;
 }
 
 export const SearchInput: React.FC<Props> = ({
@@ -17,6 +19,8 @@ export const SearchInput: React.FC<Props> = ({
   placeholder,
   width = "280px",
   sx,
+  inputRef,
+  onEscape,
 }) => (
   <Box
     sx={{
@@ -43,11 +47,15 @@ export const SearchInput: React.FC<Props> = ({
     <Box
       component="input"
       type="text"
+      ref={inputRef}
       placeholder={placeholder}
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
         onChange(e.target.value)
       }
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === "Escape") onEscape?.();
+      }}
       sx={{
         all: "unset",
         flex: 1,
