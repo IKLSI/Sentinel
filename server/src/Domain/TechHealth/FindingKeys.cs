@@ -5,13 +5,13 @@ namespace Sentinel.Domain.TechHealth;
 public static class FindingKeys
 {
     public static string ForVulnerability(DependencyEcosystem ecosystem, string packageName, string cveId) =>
-        Normalize($"{ecosystem}:{packageName}:{cveId}");
+        Normalize($"{ecosystem}:{DependencyIdentity.NameKey(ecosystem, packageName)}:{cveId}");
 
     public static string ForVulnerability(Dependency dependency, Vulnerability vulnerability) =>
         ForVulnerability(dependency.Ecosystem, vulnerability.PackageName, vulnerability.CveId);
 
     public static string ForDependency(DependencyEcosystem ecosystem, string name) =>
-        Normalize($"{ecosystem}:{name}");
+        Normalize($"{ecosystem}:{DependencyIdentity.NameKey(ecosystem, name)}");
 
     public static string ForRuntime(string name) => Normalize(name);
 

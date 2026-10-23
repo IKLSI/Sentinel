@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Entities;
@@ -9,6 +10,8 @@ namespace Sentinel.Infrastructure.Repositories;
 
 public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRepository
 {
+    private const string PyPiSeparatorPattern = "[-_.]+";
+
     public ProjectRepository(SentinelContext context) : base(context) { }
 
     public Task<Project?> GetOrDefaultInOrganizationAsync(Guid projectId, Guid organizationId,
@@ -51,7 +54,8 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .ThenInclude(d => d.Vulnerabilities.Where(v => v.CveId.ToLower() == advisoryId));
 
     private static IQueryable<Project> WithPackage(IQueryable<Project> query, string packageName) =>
-        query.Include(p => p.Dependencies.Where(d => d.Name.ToLower() == packageName));
+        query.Include(p => p.Dependencies.Where(d => d.Name.ToLower() == packageName
+            || Regex.Replace(d.Name.ToLower(), PyPiSeparatorPattern, "-") == packageName));
 
     public Task<ProjectBadgeRow?> GetOrDefaultBadgeByTokenAcrossTenantsAsync(string badgeToken,
         CancellationToken cancellationToken) =>

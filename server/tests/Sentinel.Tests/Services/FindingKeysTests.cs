@@ -14,6 +14,20 @@ public class FindingKeysTests
     }
 
     [Fact]
+    public void ForVulnerability_NormaliseLesSeparateursPyPi()
+    {
+        FindingKeys.ForVulnerability(DependencyEcosystem.PyPI, "Django_Filter", "CVE-2024-1")
+            .Should().Be(FindingKeys.ForVulnerability(DependencyEcosystem.PyPI, "django.filter", "cve-2024-1"))
+            .And.Be("pypi:django-filter:cve-2024-1");
+    }
+
+    [Fact]
+    public void ForDependency_NormaliseLesSeparateursPyPi()
+    {
+        FindingKeys.ForDependency(DependencyEcosystem.PyPI, "Zope__Interface").Should().Be("pypi:zope-interface");
+    }
+
+    [Fact]
     public void ForDependency_IgnoreLaVersion()
     {
         FindingKeys.ForDependency(DependencyEcosystem.NuGet, "Newtonsoft.Json")
