@@ -355,7 +355,6 @@
   "errors.tickets.attachment_invalid_file_name": "Invalid file name",
   "errors.tickets.attachment_too_large": "File too large (10 MB max)",
   "errors.locales.invalid_culture": "Invalid culture format",
-  "errors.locales.invalid_path": "Invalid path",
   "errors.locales.not_found": "Locale {culture} not found",
   "errors.scan.busy": "Too many public scans in progress, try again shortly",
   "errors.scan.failed": "The scan failed unexpectedly",

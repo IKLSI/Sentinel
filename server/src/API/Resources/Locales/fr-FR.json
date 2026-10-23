@@ -355,7 +355,6 @@
   "errors.tickets.attachment_invalid_file_name": "Nom de fichier invalide",
   "errors.tickets.attachment_too_large": "Fichier trop volumineux (max 10 Mo)",
   "errors.locales.invalid_culture": "Format de culture invalide",
-  "errors.locales.invalid_path": "Chemin invalide",
   "errors.locales.not_found": "Locale {culture} introuvable",
   "errors.scan.busy": "Trop de scans publics en cours, réessayez dans quelques instants",
   "errors.scan.failed": "Le scan a échoué de manière inattendue",
