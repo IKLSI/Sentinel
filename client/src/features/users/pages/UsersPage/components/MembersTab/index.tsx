@@ -7,11 +7,11 @@ import GroupOutlined from "@mui/icons-material/GroupOutlined";
 import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { SortableTh } from "@/components/ui/common/SortableTh";
-import { MemberRow } from "@/features/settings/pages/SettingsPage/components/MemberRow";
+import { MemberRow } from "@/features/users/pages/UsersPage/components/MemberRow";
 import {
   MemberAccessConfirmModal,
   type PendingMemberChange,
-} from "@/features/settings/pages/SettingsPage/components/MemberAccessConfirmModal";
+} from "@/features/users/pages/UsersPage/components/MemberAccessConfirmModal";
 import type { User } from "@/domains/users/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/contexts/I18nContext";

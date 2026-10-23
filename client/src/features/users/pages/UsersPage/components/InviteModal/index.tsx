@@ -15,7 +15,7 @@ import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
-} from "@/features/settings/pages/SettingsPage/components/InviteModal/schemas";
+} from "@/features/users/pages/UsersPage/components/InviteModal/schemas";
 import { resolveFieldError } from "@/helpers/validation/resolveFieldError";
 
 interface Props {

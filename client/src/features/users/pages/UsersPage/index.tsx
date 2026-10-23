@@ -3,8 +3,8 @@ import { useCallback, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { PageContainer } from "@/components/layout/PageContainer";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
-import { MembersTab } from "@/features/settings/pages/SettingsPage/components/MembersTab";
-import { InviteModal } from "@/features/settings/pages/SettingsPage/components/InviteModal";
+import { MembersTab } from "@/features/users/pages/UsersPage/components/MembersTab";
+import { InviteModal } from "@/features/users/pages/UsersPage/components/InviteModal";
 import {
   criterionFromSearch,
   searchFromCriterion,
