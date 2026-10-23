@@ -5,6 +5,7 @@ using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.Exports;
 
@@ -14,6 +15,7 @@ public partial class ExportService(
     ITicketRepository ticketRepository,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
+    IVulnerabilitySuppressionRepository suppressionRepository,
     ILocalizer localizer,
     ILogger<ExportService> logger)
 {
@@ -69,10 +71,33 @@ public partial class ExportService(
                 organizationId, ExportLimits.MaxProjectSheets);
         }
 
+        await ExcludeSuppressedVulnerabilitiesAsync(projects, cancellationToken);
+
         ExportLabels labels = await GetLabelsAsync(currentUserId, cancellationToken);
 
         byte[] bytes = WriteTechHealthExcel(projects, labels, truncated);
         return new ExportResult(bytes, $"{labels.TechHealthSlug}-{DateTime.UtcNow:yyyy-MM-dd}.xlsx");
+    }
+
+    private async Task ExcludeSuppressedVulnerabilitiesAsync(List<Project> projects,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyDictionary<Guid, IReadOnlySet<string>> suppressedKeysByProject = await suppressionRepository
+            .ListActiveFindingKeysByProjectAsync(projects.Select(project => project.Id).ToList(), DateTime.UtcNow,
+                cancellationToken);
+
+        foreach (Project project in projects)
+        {
+            HashSet<Guid> suppressedIds =
+                SuppressedVulnerabilities.IdsIn(project, suppressedKeysByProject[project.Id]);
+
+            foreach (Dependency dependency in project.Dependencies)
+            {
+                dependency.Vulnerabilities = dependency.Vulnerabilities
+                    .Where(vulnerability => !suppressedIds.Contains(vulnerability.Id))
+                    .ToList();
+            }
+        }
     }
 
     private static string ComposeName(string? firstName, string? lastName) =>

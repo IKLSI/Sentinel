@@ -28,8 +28,8 @@ public class ExportServiceTests
         await scope.SeedAsync(scope.NewOrganization(), scope.NewUser(),
             scope.NewTicket("Premier", number: 7), scope.NewTicket("Second", number: 42));
 
-        ExportService sut = new ExportService(scope.Tickets, scope.Projects, scope.Users, TestLocalizer.Create(),
-            NullLogger<ExportService>.Instance);
+        ExportService sut = new ExportService(scope.Tickets, scope.Projects, scope.Users, scope.Suppressions,
+            TestLocalizer.Create(), NullLogger<ExportService>.Instance);
 
         ExportResult export = await sut.ExportTicketsExcelAsync(scope.OrganizationId, new TicketFilter(),
             scope.UserId, TestContext.Current.CancellationToken);

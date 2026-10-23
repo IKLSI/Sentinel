@@ -23,6 +23,7 @@ public sealed class PostgresScope : IAsyncDisposable
         Projects = new ProjectRepository(Context);
         Users = new UserRepository(Context);
         Organizations = new OrganizationRepository(Context);
+        Suppressions = new VulnerabilitySuppressionRepository(Context);
     }
 
     public Guid OrganizationId { get; }
@@ -38,6 +39,7 @@ public sealed class PostgresScope : IAsyncDisposable
     public ProjectRepository Projects { get; }
     public UserRepository Users { get; }
     public OrganizationRepository Organizations { get; }
+    public VulnerabilitySuppressionRepository Suppressions { get; }
 
     public async Task SeedAsync(params object[] entities)
     {
