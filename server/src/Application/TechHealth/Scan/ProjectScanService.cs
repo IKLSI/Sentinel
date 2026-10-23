@@ -71,6 +71,8 @@ public class ProjectScanService(
         Guid projectId = project.Id;
 
         bool isFirstScan = project.LastScanAt == null;
+        (int? scoreBefore, string? gradeBefore, ScanCoverage coverageBefore, string? errorBefore) =
+            (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError);
 
         Dictionary<string, DateTime> previousDetections =
             await vulnerabilityRepository.GetFirstDetectionsByProjectAsync(projectId, cancellationToken);
@@ -119,8 +121,17 @@ public class ProjectScanService(
 
         await inventoryWriter.SaveAsync(cancellationToken);
 
+        bool projectChanged = !acquisition.RepositoryUnchanged
+            || acquisition.InventoryReplaced
+            || (scoreBefore, gradeBefore, coverageBefore, errorBefore)
+                != (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError)
+            || !previousDetections.Keys.ToHashSet().SetEquals(project.Dependencies
+                .SelectMany(dependency => dependency.Vulnerabilities)
+                .Select(vulnerability => vulnerability.CveAlias ?? vulnerability.CveId));
+
         await followUps.RunAsync(project,
-            new ScanFindingsContext(findingsReliable, isFirstScan, previousDetections.Keys.ToHashSet(), suppressedIds),
+            new ScanFindingsContext(findingsReliable, isFirstScan, previousDetections.Keys.ToHashSet(), suppressedIds,
+                projectChanged),
             cancellationToken);
     }
 

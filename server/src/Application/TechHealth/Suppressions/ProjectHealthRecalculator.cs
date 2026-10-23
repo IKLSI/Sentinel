@@ -20,10 +20,10 @@ public class ProjectHealthRecalculator(
         return SuppressedVulnerabilities.IdsIn(project, suppressedKeys);
     }
 
-    public async Task RecalculateAsync(Guid projectId, CancellationToken cancellationToken)
+    public async Task RecalculateAsync(Guid organizationId, Guid projectId, CancellationToken cancellationToken)
     {
-        Project? project = await projectRepository.GetOrDefaultWithHealthDetailsAsync(projectId,
-            QueryTracking.NoTracking, cancellationToken);
+        Project? project = (await projectRepository.ListScoringGraphsByIdsAsync(organizationId, [projectId],
+            cancellationToken)).FirstOrDefault();
 
         if (project == null || project.Coverage != ScanCoverage.Covered) return;
 

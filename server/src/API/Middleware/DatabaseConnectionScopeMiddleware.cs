@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Sentinel.API.Attributes;
 using Sentinel.Infrastructure.Data;
 using Sentinel.API.Options;
 
@@ -38,5 +39,6 @@ public class DatabaseConnectionScopeMiddleware
     }
 
     private static bool IsControllerEndpoint(HttpContext context) =>
-        context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>() is not null;
+        context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>() is not null
+        && context.GetEndpoint()?.Metadata.GetMetadata<SkipConnectionScopeAttribute>() is null;
 }

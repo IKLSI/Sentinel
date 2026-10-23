@@ -11,7 +11,8 @@ public sealed record ScanFindingsContext(
     bool FindingsReliable,
     bool IsFirstScan,
     HashSet<string> PreviousCveIds,
-    HashSet<Guid> SuppressedVulnerabilityIds);
+    HashSet<Guid> SuppressedVulnerabilityIds,
+    bool ProjectChanged = true);
 
 public class ScanFollowUpService(
     FindingTicketSyncService findingTicketSync,
@@ -40,15 +41,18 @@ public class ScanFollowUpService(
             userId: null,
             entityId: project.Id);
 
-        dashboardCache.Invalidate(project.OrganizationId);
+        if (findings.ProjectChanged || ticketsChanged)
+        {
+            dashboardCache.Invalidate(project.OrganizationId);
 
-        if (ticketsChanged)
+            if (ticketsChanged)
+                await realtimeNotifier.NotifyOrganizationAsync(project.OrganizationId,
+                    new RealtimeEvent(RealtimeResources.Tickets,
+                        ProjectIds: RealtimeEvent.AffectedProjects(project.Id)));
+
             await realtimeNotifier.NotifyOrganizationAsync(project.OrganizationId,
-                new RealtimeEvent(RealtimeResources.Tickets,
-                    ProjectIds: RealtimeEvent.AffectedProjects(project.Id)));
-
-        await realtimeNotifier.NotifyOrganizationAsync(project.OrganizationId,
-            new RealtimeEvent(RealtimeResources.Project, project.Id));
+                new RealtimeEvent(RealtimeResources.Project, project.Id));
+        }
 
         if (findings.FindingsReliable)
             await vulnerabilityAlerts.TrySendAsync(project, findings.IsFirstScan, findings.PreviousCveIds,

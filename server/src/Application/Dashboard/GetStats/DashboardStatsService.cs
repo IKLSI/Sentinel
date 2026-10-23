@@ -28,13 +28,27 @@ public class DashboardStatsService(
         if (dashboardCache.TryGet(organizationId, out DashboardStatsDto? cached))
             return cached!;
 
-        long version = dashboardCache.VersionOf(organizationId);
+        SemaphoreSlim buildGate = dashboardCache.BuildGateOf(organizationId);
 
-        DashboardStatsDto stats = await BuildAsync(organizationId, cancellationToken);
+        await buildGate.WaitAsync(cancellationToken);
 
-        dashboardCache.Store(organizationId, version, stats);
+        try
+        {
+            if (dashboardCache.TryGet(organizationId, out cached))
+                return cached!;
 
-        return stats;
+            long version = dashboardCache.VersionOf(organizationId);
+
+            DashboardStatsDto stats = await BuildAsync(organizationId, cancellationToken);
+
+            dashboardCache.Store(organizationId, version, stats);
+
+            return stats;
+        }
+        finally
+        {
+            buildGate.Release();
+        }
     }
 
     private async Task<DashboardStatsDto> BuildAsync(Guid organizationId, CancellationToken cancellationToken)

@@ -33,6 +33,7 @@ namespace Sentinel.API.Controllers;
 [Authorize]
 public class TechHealthController : BaseController
 {
+    [SkipConnectionScope]
     [HttpGet("projects/available-repos")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<AvailableReposResponse>> GetAvailableRepos(
@@ -126,6 +127,7 @@ public class TechHealthController : BaseController
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, dto, cancellationToken));
 
+    [SkipConnectionScope]
     [HttpGet("projects/{id:guid}/repository-options")]
     [AuthorizeRoles(UserRole.Admin)]
     public async Task<ActionResult<ProjectRepositoryOptionsDto>> GetRepositoryOptions(
@@ -171,6 +173,7 @@ public class TechHealthController : BaseController
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, suppressionId, cancellationToken));
 
+    [SkipConnectionScope]
     [HttpPost("projects/{id:guid}/remediations")]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<RemediationDto>> StartRemediation(

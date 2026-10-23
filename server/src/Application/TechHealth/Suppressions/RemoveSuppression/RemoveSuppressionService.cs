@@ -42,7 +42,7 @@ public class RemoveSuppressionService(
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        await healthRecalculator.RecalculateAsync(projectId, cancellationToken);
+        await healthRecalculator.RecalculateAsync(organizationId, projectId, cancellationToken);
 
         await realtimeNotifier.NotifyOrganizationAsync(organizationId,
             new RealtimeEvent(RealtimeResources.Project, projectId));

@@ -1,3 +1,4 @@
+using Sentinel.API.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Constants;
@@ -10,6 +11,7 @@ namespace Sentinel.API.Controllers;
 public class PublicScanController : BaseController
 {
     [HttpPost]
+    [SkipConnectionScope]
     [EnableRateLimiting(RateLimitPolicies.PublicScan)]
     public async Task<ActionResult<PublicScanResponse>> Scan(
         [FromBody] PublicScanRequest request,

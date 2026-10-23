@@ -10,6 +10,9 @@ public class DashboardCache(IMemoryCache cache)
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(10);
 
     private readonly ConcurrentDictionary<Guid, long> _versions = new();
+    private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _buildGates = new();
+
+    public SemaphoreSlim BuildGateOf(Guid organizationId) => _buildGates.GetOrAdd(organizationId, _ => new SemaphoreSlim(1, 1));
 
     public bool TryGet(Guid organizationId, out DashboardStatsDto? stats) =>
         cache.TryGetValue(CacheKeys.Dashboard(organizationId), out stats) && stats != null;
