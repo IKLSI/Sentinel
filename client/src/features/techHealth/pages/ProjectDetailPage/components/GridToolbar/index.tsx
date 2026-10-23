@@ -16,6 +16,7 @@ interface Props {
   onCriterionChange: (criterion: FilterCriterion | null) => void;
   fields: FilterFieldDefinition[];
   labels: FilterBuilderLabels;
+  action?: React.ReactNode;
 }
 
 export const GridToolbar: React.FC<Props> = ({
@@ -25,6 +26,7 @@ export const GridToolbar: React.FC<Props> = ({
   onCriterionChange,
   fields,
   labels,
+  action,
 }) => {
   const t = useT();
 
@@ -53,6 +55,19 @@ export const GridToolbar: React.FC<Props> = ({
         onChange={onCriterionChange}
         labels={labels}
       />
+
+      {action && (
+        <Box
+          sx={{
+            ml: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {action}
+        </Box>
+      )}
     </Box>
   );
 };

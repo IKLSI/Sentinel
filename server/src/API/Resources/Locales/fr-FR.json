@@ -1253,7 +1253,8 @@
   "legal_notice.hosting.backend_address.value": "525 Brannan St, Suite 300, San Francisco, CA 94107, États-Unis",
   "legal_notice.hosting.backend_contact.label": "Contact",
   "legal_notice.hosting.backend_contact.value": "support@render.com",
-  "tech_health.export.menu": "Exporter",
+  "tech_health.actions.menu": "Actions",
+  "tech_health.actions.share_group": "Partage",
   "tech_health.export.sbom_group": "Nomenclature logicielle (SBOM)",
   "tech_health.export.report_group": "Traçabilité",
   "tech_health.export.sbom_cyclonedx": "SBOM · CycloneDX",
@@ -1332,7 +1333,10 @@
   "tech_health.remediation.failed": "Échec de la correction",
   "tech_health.remediation.started": "Correction lancée, la merge request sera ouverte dans quelques minutes",
   "tech_health.remediation.error": "Impossible de lancer la correction",
-  "tech_health.remediation.fix_all": "Tout corriger",
   "tech_health.remediation.fix_all_hint": "Ouvre une seule merge request corrigeant {count} vulnérabilité(s)",
-  "tech_health.remediation.major_warning": "Inclut des montées de version majeure : breaking changes possibles"
+  "tech_health.remediation.major_warning": "Inclut des montées de version majeure : breaking changes possibles",
+  "tech_health.remediation.fix_all_plural": "Corriger les {count} vulnérabilités",
+  "tech_health.remediation.fix_all_singular": "Corriger la vulnérabilité",
+  "tech_health.remediation.update_mr": "Mettre à jour la MR",
+  "tech_health.remediation.mr_opened": "MR ouverte"
 }

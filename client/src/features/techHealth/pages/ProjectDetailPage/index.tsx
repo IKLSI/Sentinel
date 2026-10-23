@@ -15,8 +15,7 @@ import { toVulnerabilityRows } from "@/features/techHealth/pages/ProjectDetailPa
 import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
-import { BadgeAction } from "@/features/techHealth/pages/ProjectDetailPage/components/BadgeAction";
-import { ExportActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ExportActions";
+import { ProjectActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectActions";
 import { RemediateAllAction } from "@/features/techHealth/pages/ProjectDetailPage/components/RemediateAllAction";
 import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
@@ -79,19 +78,7 @@ export const ProjectDetailPage: React.FC = () => {
       <ProjectHeaderCard
         project={project}
         eolRuntimes={eolRuntimes}
-        action={
-          <Box sx={{ display: "flex", gap: "8px" }}>
-            <RemediateAllAction
-              projectId={project.id}
-              remediationAvailable={project.remediationAvailable}
-              remediableVulnerabilities={project.remediableVulnerabilities}
-              includesMajorUpgrade={project.remediationIncludesMajorUpgrade}
-              remediation={project.remediation}
-            />
-            <BadgeAction projectId={project.id} />
-            <ExportActions projectId={project.id} />
-          </Box>
-        }
+        action={<ProjectActions projectId={project.id} />}
       />
 
       <TabBar
@@ -113,7 +100,19 @@ export const ProjectDetailPage: React.FC = () => {
           }}
         >
           {activeTab === TAB_INDEX.vulnerabilities && (
-            <VulnerabilitiesTab projectId={project.id} vulns={allVulns} />
+            <VulnerabilitiesTab
+              projectId={project.id}
+              vulns={allVulns}
+              toolbarAction={
+                <RemediateAllAction
+                  projectId={project.id}
+                  remediationAvailable={project.remediationAvailable}
+                  remediableVulnerabilities={project.remediableVulnerabilities}
+                  includesMajorUpgrade={project.remediationIncludesMajorUpgrade}
+                  remediation={project.remediation}
+                />
+              }
+            />
           )}
           {activeTab === TAB_INDEX.dependencies && (
             <DependenciesTab dependencies={project.dependencies} />

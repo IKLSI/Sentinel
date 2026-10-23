@@ -61,9 +61,14 @@ const searchableValues = (vuln: VulnerabilityRow) => [
 interface Props {
   projectId: string;
   vulns: VulnerabilityRow[];
+  toolbarAction?: React.ReactNode;
 }
 
-export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
+export const VulnerabilitiesTab: React.FC<Props> = ({
+  projectId,
+  vulns,
+  toolbarAction,
+}) => {
   const t = useT();
 
   const fields = useMemo(
@@ -165,6 +170,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({ projectId, vulns }) => {
         onCriterionChange={setCriterion}
         fields={fields}
         labels={buildGridFilterLabels(t)}
+        action={toolbarAction}
       />
 
       <VirtualTable<VulnerabilityRow>

@@ -6,28 +6,47 @@ import MenuItem from "@mui/material/MenuItem";
 import ListSubheader from "@mui/material/ListSubheader";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import CircularProgress from "@mui/material/CircularProgress";
-import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
 import PictureAsPdfOutlined from "@mui/icons-material/PictureAsPdfOutlined";
+import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useT } from "@/contexts/I18nContext";
 import { SBOM_FORMAT, type SbomFormat } from "@/domains/projects/constants";
 import {
   useDownloadComplianceReportMutation,
   useDownloadSbomMutation,
 } from "@/domains/projects/downloads";
+import { useEnableProjectBadgeMutation } from "@/domains/projects/mutations";
+import { BadgeModal } from "@/features/techHealth/pages/ProjectDetailPage/components/BadgeModal";
+
+const groupHeaderSx = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "9px",
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: "var(--muted)",
+  lineHeight: "28px",
+  background: "transparent",
+} as const;
+
+const menuIconSx = { fontSize: 17 };
 
 interface Props {
   projectId: string;
 }
 
-export const ExportActions: React.FC<Props> = ({ projectId }) => {
+export const ProjectActions: React.FC<Props> = ({ projectId }) => {
   const t = useT();
+  const isAdmin = useIsAdmin();
   const onExportError = useApiErrorToast("tech_health.export.error");
+  const onBadgeError = useApiErrorToast("tech_health.badge.error");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [badgeOpen, setBadgeOpen] = useState(false);
   const downloadSbomMutation = useDownloadSbomMutation();
   const downloadReportMutation = useDownloadComplianceReportMutation();
+  const enableBadgeMutation = useEnableProjectBadgeMutation();
   const busy =
     downloadSbomMutation.isPending || downloadReportMutation.isPending;
 
@@ -46,24 +65,29 @@ export const ExportActions: React.FC<Props> = ({ projectId }) => {
     downloadReportMutation.mutate({ projectId }, { onError: onExportError });
   };
 
+  const handleBadge = () => {
+    setAnchorEl(null);
+    setBadgeOpen(true);
+    if (!enableBadgeMutation.data && !enableBadgeMutation.isPending) {
+      enableBadgeMutation.mutate({ id: projectId }, { onError: onBadgeError });
+    }
+  };
+
   return (
     <>
       <Button
-        variant="contained"
-        color="secondary"
+        variant="outlined"
         size="small"
         disabled={busy}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         startIcon={
           busy ? (
             <CircularProgress size={13} thickness={5} color="inherit" />
-          ) : (
-            <FileDownloadOutlined sx={{ fontSize: 14 }} />
-          )
+          ) : undefined
         }
         endIcon={<KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />}
       >
-        {t("tech_health.export.menu")}
+        {t("tech_health.actions.menu")}
       </Button>
 
       <Menu
@@ -94,58 +118,59 @@ export const ExportActions: React.FC<Props> = ({ projectId }) => {
           },
         }}
       >
-        <ListSubheader
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "9px",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
-            lineHeight: "28px",
-            background: "transparent",
-          }}
-        >
+        <ListSubheader sx={groupHeaderSx}>
           {t("tech_health.export.sbom_group")}
         </ListSubheader>
         <MenuItem onClick={() => handleSbom(SBOM_FORMAT.CycloneDx)}>
           <ListItemIcon>
-            <DataObjectOutlined sx={{ fontSize: 17 }} />
+            <DataObjectOutlined sx={menuIconSx} />
           </ListItemIcon>
           {t("tech_health.export.sbom_cyclonedx")}
         </MenuItem>
         <MenuItem onClick={() => handleSbom(SBOM_FORMAT.Spdx)}>
           <ListItemIcon>
-            <DataObjectOutlined sx={{ fontSize: 17 }} />
+            <DataObjectOutlined sx={menuIconSx} />
           </ListItemIcon>
           {t("tech_health.export.sbom_spdx")}
         </MenuItem>
         <MenuItem onClick={() => handleSbom(SBOM_FORMAT.Vex)}>
           <ListItemIcon>
-            <DataObjectOutlined sx={{ fontSize: 17 }} />
+            <DataObjectOutlined sx={menuIconSx} />
           </ListItemIcon>
           {t("tech_health.export.sbom_vex")}
         </MenuItem>
 
-        <ListSubheader
-          sx={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "9px",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
-            lineHeight: "28px",
-            background: "transparent",
-          }}
-        >
+        <ListSubheader sx={groupHeaderSx}>
           {t("tech_health.export.report_group")}
         </ListSubheader>
         <MenuItem onClick={handleReport}>
           <ListItemIcon>
-            <PictureAsPdfOutlined sx={{ fontSize: 17 }} />
+            <PictureAsPdfOutlined sx={menuIconSx} />
           </ListItemIcon>
           {t("tech_health.export.compliance_report")}
         </MenuItem>
+
+        {isAdmin && (
+          <ListSubheader sx={groupHeaderSx}>
+            {t("tech_health.actions.share_group")}
+          </ListSubheader>
+        )}
+        {isAdmin && (
+          <MenuItem onClick={handleBadge}>
+            <ListItemIcon>
+              <WorkspacePremiumOutlined sx={menuIconSx} />
+            </ListItemIcon>
+            {t("tech_health.badge.action")}
+          </MenuItem>
+        )}
       </Menu>
+
+      <BadgeModal
+        open={badgeOpen}
+        onClose={() => setBadgeOpen(false)}
+        token={enableBadgeMutation.data?.token}
+        loading={enableBadgeMutation.isPending}
+      />
     </>
   );
 };

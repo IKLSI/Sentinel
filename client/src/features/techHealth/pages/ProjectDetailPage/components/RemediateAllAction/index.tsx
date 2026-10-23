@@ -2,8 +2,8 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import AutoFixHighOutlined from "@mui/icons-material/AutoFixHighOutlined";
 import CallMergeOutlined from "@mui/icons-material/CallMergeOutlined";
+import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import { useStartRemediationMutation } from "@/domains/projects/mutations";
@@ -22,7 +22,33 @@ const tooltipLinesSx = {
   gap: "3px",
 } as const;
 
-const iconSx = { fontSize: 14 };
+const mergeRequestChipSx = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  height: 30,
+  px: "10px",
+  borderRadius: "999px",
+  fontSize: "12px",
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+  textDecoration: "none",
+  color: "var(--green)",
+  background: "var(--green-subtle)",
+  transition: "background 0.15s ease",
+  "&:hover": {
+    background: "color-mix(in srgb, var(--green) 22%, transparent)",
+  },
+};
+
+const failedLabelSx = {
+  fontSize: "12px",
+  fontWeight: 600,
+  color: "var(--red)",
+  whiteSpace: "nowrap",
+};
+
+const chipIconSx = { fontSize: 14 };
 
 interface Props {
   projectId: string;
@@ -50,7 +76,8 @@ export const RemediateAllAction: React.FC<Props> = ({
   const failed = remediation?.status === "Failed";
   const mergeRequestUrl =
     remediation?.status === "Opened" ? remediation.mergeRequestUrl : null;
-  const canStart = remediationAvailable && remediableVulnerabilities > 0;
+  const canStart =
+    remediationAvailable && remediableVulnerabilities > 0 && !inProgress;
 
   const handleStart = () =>
     startMutation.mutate(
@@ -62,27 +89,36 @@ export const RemediateAllAction: React.FC<Props> = ({
       },
     );
 
+  const startLabel = failed
+    ? t("tech_health.remediation.retry")
+    : mergeRequestUrl
+      ? t("tech_health.remediation.update_mr")
+      : remediableVulnerabilities > 1
+        ? t("tech_health.remediation.fix_all_plural", {
+            count: remediableVulnerabilities,
+          })
+        : t("tech_health.remediation.fix_all_singular");
+
   return (
     <>
-      {mergeRequestUrl && (
-        <Button
-          variant="contained"
-          color="secondary"
-          size="small"
+      {mergeRequestUrl && !inProgress && (
+        <Box
           component="a"
           href={mergeRequestUrl}
           target="_blank"
           rel="noopener noreferrer"
-          startIcon={<CallMergeOutlined sx={iconSx} />}
+          aria-label={t("tech_health.remediation.open_mr")}
+          sx={mergeRequestChipSx}
         >
-          {t("tech_health.remediation.open_mr")}
-        </Button>
+          <CallMergeOutlined sx={chipIconSx} />
+          {t("tech_health.remediation.mr_opened")}
+          <OpenInNewOutlined sx={chipIconSx} />
+        </Box>
       )}
 
       {inProgress && (
         <Button
           variant="contained"
-          color="secondary"
           size="small"
           disabled
           startIcon={
@@ -93,14 +129,22 @@ export const RemediateAllAction: React.FC<Props> = ({
         </Button>
       )}
 
-      {!inProgress && canStart && (
+      {canStart && failed && (
+        <AppTooltip
+          title={t(
+            remediation?.failureCode ?? "tech_health.remediation.failed",
+          )}
+        >
+          <Box component="span" sx={failedLabelSx}>
+            {t("tech_health.remediation.failed")}
+          </Box>
+        </AppTooltip>
+      )}
+
+      {canStart && (
         <AppTooltip
           title={
             <Box sx={tooltipLinesSx}>
-              {failed && <span>{t("tech_health.remediation.failed")}</span>}
-              {failed && remediation?.failureCode && (
-                <span>{t(remediation.failureCode)}</span>
-              )}
               <span>
                 {t("tech_health.remediation.fix_all_hint", {
                   count: remediableVulnerabilities,
@@ -117,13 +161,8 @@ export const RemediateAllAction: React.FC<Props> = ({
             color="primary"
             size="small"
             onClick={handleStart}
-            startIcon={<AutoFixHighOutlined sx={iconSx} />}
           >
-            {t(
-              failed
-                ? "tech_health.remediation.retry"
-                : "tech_health.remediation.fix_all",
-            )}
+            {startLabel}
           </Button>
         </AppTooltip>
       )}
