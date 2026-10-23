@@ -49,25 +49,17 @@ public partial class EmailService : IEmailService
             ["{{ACCEPT_URL}}"]   = acceptUrl
         });
 
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _email.FromName,
-            _email.FromAddress
-        ));
-        message.To.Add(new MailboxAddress(invitation.Email, invitation.Email));
-        message.Subject = Text(culture, "emails.invitation.subject",
-            new Dictionary<string, string> { ["organization"] = organizationName });
-        message.Body = new BodyBuilder
-        {
-            HtmlBody = html,
-            TextBody = Text(culture, "emails.invitation.text_body", new Dictionary<string, string>
+        MimeMessage message = BuildMessage(invitation.Email,
+            Text(culture, "emails.invitation.subject",
+                new Dictionary<string, string> { ["organization"] = organizationName }),
+            html,
+            Text(culture, "emails.invitation.text_body", new Dictionary<string, string>
             {
                 ["organization"] = organizationName,
                 ["invitedBy"] = invitedByName,
                 ["role"] = roleLabel,
                 ["url"] = acceptUrl
-            })
-        }.ToMessageBody();
+            }));
 
         await SendAsync(message, cancellationToken);
 
@@ -85,22 +77,12 @@ public partial class EmailService : IEmailService
             ["{{LOGIN_URL}}"] = loginUrl
         });
 
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _email.FromName,
-            _email.FromAddress
-        ));
-        message.To.Add(new MailboxAddress(email, email));
-        message.Subject = Text(culture, "emails.existing_account.subject");
-        message.Body = new BodyBuilder
-        {
-            HtmlBody = html,
-            TextBody = Text(culture, "emails.existing_account.text_body", new Dictionary<string, string>
+        MimeMessage message = BuildMessage(email, Text(culture, "emails.existing_account.subject"), html,
+            Text(culture, "emails.existing_account.text_body", new Dictionary<string, string>
             {
                 ["email"] = email,
                 ["url"] = loginUrl
-            })
-        }.ToMessageBody();
+            }));
 
         await SendAsync(message, cancellationToken);
 
@@ -118,19 +100,8 @@ public partial class EmailService : IEmailService
             ["{{RESET_URL}}"] = resetUrl
         });
 
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _email.FromName,
-            _email.FromAddress
-        ));
-        message.To.Add(new MailboxAddress(email, email));
-        message.Subject = Text(culture, "emails.password_reset.subject");
-        message.Body = new BodyBuilder
-        {
-            HtmlBody = html,
-            TextBody = Text(culture, "emails.password_reset.text_body",
-                new Dictionary<string, string> { ["url"] = resetUrl })
-        }.ToMessageBody();
+        MimeMessage message = BuildMessage(email, Text(culture, "emails.password_reset.subject"), html,
+            Text(culture, "emails.password_reset.text_body", new Dictionary<string, string> { ["url"] = resetUrl }));
 
         await SendAsync(message, cancellationToken);
 
@@ -148,19 +119,8 @@ public partial class EmailService : IEmailService
             ["{{VERIFY_URL}}"] = verifyUrl
         });
 
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _email.FromName,
-            _email.FromAddress
-        ));
-        message.To.Add(new MailboxAddress(email, email));
-        message.Subject = Text(culture, "emails.verification.subject");
-        message.Body = new BodyBuilder
-        {
-            HtmlBody = html,
-            TextBody = Text(culture, "emails.verification.text_body",
-                new Dictionary<string, string> { ["url"] = verifyUrl })
-        }.ToMessageBody();
+        MimeMessage message = BuildMessage(email, Text(culture, "emails.verification.subject"), html,
+            Text(culture, "emails.verification.text_body", new Dictionary<string, string> { ["url"] = verifyUrl }));
 
         await SendAsync(message, cancellationToken);
 
@@ -175,20 +135,10 @@ public partial class EmailService : IEmailService
             ["{{ORGANIZATION}}"] = organizationName
         });
 
-        MimeMessage message = new MimeMessage();
-        message.From.Add(new MailboxAddress(
-            _email.FromName,
-            _email.FromAddress
-        ));
-        message.To.Add(new MailboxAddress(email, email));
-        message.Subject = Text(culture, "emails.account_suspended.subject",
-            new Dictionary<string, string> { ["organization"] = organizationName });
-        message.Body = new BodyBuilder
-        {
-            HtmlBody = html,
-            TextBody = Text(culture, "emails.account_suspended.text_body",
-                new Dictionary<string, string> { ["organization"] = organizationName })
-        }.ToMessageBody();
+        Dictionary<string, string> organizationValues = new() { ["organization"] = organizationName };
+
+        MimeMessage message = BuildMessage(email, Text(culture, "emails.account_suspended.subject", organizationValues),
+            html, Text(culture, "emails.account_suspended.text_body", organizationValues));
 
         await SendAsync(message, cancellationToken);
 
@@ -240,19 +190,21 @@ public partial class EmailService : IEmailService
                     ["count"] = newVulns.Count.ToString()
                 });
 
-            MimeMessage message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                _email.FromName,
-                _email.FromAddress
-            ));
-            message.To.Add(new MailboxAddress(recipient.Email, recipient.Email));
-            message.Subject = subject;
-            message.Body = new BodyBuilder { HtmlBody = html }.ToMessageBody();
-
-            await SendAsync(message, cancellationToken);
+            await SendAsync(BuildMessage(recipient.Email, subject, html), cancellationToken);
 
             _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", MaskEmail(recipient.Email), projectName);
         }
+    }
+
+    private MimeMessage BuildMessage(string recipient, string subject, string htmlBody, string? textBody = null)
+    {
+        MimeMessage message = new MimeMessage();
+        message.From.Add(new MailboxAddress(_email.FromName, _email.FromAddress));
+        message.To.Add(new MailboxAddress(recipient, recipient));
+        message.Subject = subject;
+        message.Body = new BodyBuilder { HtmlBody = htmlBody, TextBody = textBody }.ToMessageBody();
+
+        return message;
     }
 
     private string BuildVulnerabilityRows(IReadOnlyList<VulnerabilityAlertEntry> newVulns, string culture)
