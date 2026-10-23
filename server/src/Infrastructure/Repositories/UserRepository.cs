@@ -158,6 +158,13 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => new EmailRecipient(u.Email, u.Language))
             .ToListAsync(cancellationToken);
 
+    public Task<UserAccountStateRow?> GetAccountStateOrDefaultAsync(Guid userId,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(u => u.Id == userId)
+            .Select(u => new UserAccountStateRow(u.AccessStatus, u.TokenVersion))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<bool> ExistsInOrganizationAsync(Guid userId, Guid organizationId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)

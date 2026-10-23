@@ -4,6 +4,7 @@ using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Auth.AccountState;
 using Sentinel.Application.Auth.Login;
 using Sentinel.Application.Dashboard;
 using Sentinel.Application.Exports;
@@ -131,6 +132,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<UserSessionCache>();
         services.AddScoped<TicketLinkChecker>();
         services.AddScoped<LastAdminGuard>();
+        services.AddScoped<AccountSessionValidator>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<RegistryMetadataApplier>();

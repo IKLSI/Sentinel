@@ -6,15 +6,11 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Constants;
-using Sentinel.Domain.Entities;
-using Sentinel.Infrastructure.Data;
 using Sentinel.API.Options;
+using Sentinel.Application.Auth.AccountState;
 using Sentinel.Application.Options;
 
 namespace Sentinel.API.Extensions;
@@ -83,31 +79,9 @@ public static partial class ServiceCollectionExtensions
             return;
         }
 
-        IMemoryCache cache = sp.GetRequiredService<IMemoryCache>();
-        string cacheKey = CacheKeys.AuthAccount(userId);
+        AccountSessionValidator sessionValidator = sp.GetRequiredService<AccountSessionValidator>();
 
-        if (!cache.TryGetValue(cacheKey, out (UserAccessStatus AccessStatus, int TokenVersion) account))
-        {
-            SentinelContext db = sp.GetRequiredService<SentinelContext>();
-            ISystemScope systemScope = sp.GetRequiredService<ISystemScope>();
-
-            (UserAccessStatus AccessStatus, int TokenVersion)? found = await ReadAccountStateAsync(db, systemScope, userId);
-
-            if (found == null)
-            {
-                context.Fail("Expired session");
-                return;
-            }
-
-            account = found.Value;
-            cache.Set(cacheKey, account, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = CacheKeys.AuthAccountTtl,
-                Size = 1
-            });
-        }
-
-        if (account.AccessStatus != UserAccessStatus.Active || account.TokenVersion != tokenVersion)
+        if (!await sessionValidator.IsSessionValidAsync(userId, tokenVersion, context.HttpContext.RequestAborted))
         {
             context.Fail("Expired session");
             return;
@@ -115,19 +89,6 @@ public static partial class ServiceCollectionExtensions
 
         if (long.TryParse(context.Principal?.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expSeconds))
             context.Properties.ExpiresUtc = DateTimeOffset.FromUnixTimeSeconds(expSeconds);
-    }
-
-    private static async Task<(UserAccessStatus AccessStatus, int TokenVersion)?> ReadAccountStateAsync(
-        SentinelContext db, ISystemScope systemScope, Guid userId)
-    {
-        using IDisposable elevation = systemScope.Enter();
-
-        var found = await db.Users
-            .Where(u => u.Id == userId)
-            .Select(u => new { u.AccessStatus, u.TokenVersion })
-            .FirstOrDefaultAsync();
-
-        return found == null ? null : (found.AccessStatus, found.TokenVersion);
     }
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
