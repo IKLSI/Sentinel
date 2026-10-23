@@ -19,9 +19,10 @@ const TITLE_ID = "landing-deliverables-title";
 const cardSx = {
   width: "100%",
   boxSizing: "border-box",
-  background: "#ffffff",
+  background: "var(--page)",
   borderRadius: "14px",
-  boxShadow: "0 0 0 1px var(--line), 0 12px 30px -16px rgba(16,17,36,.18)",
+  boxShadow:
+    "0 0 0 1px var(--line), 0 12px 30px -16px color-mix(in srgb, var(--ink) 18%, transparent)",
   fontSize: "13px",
 } as const;
 
@@ -122,8 +123,8 @@ export const Deliverables: React.FC = () => {
                       fontStyle: "normal",
                       fontSize: "11.5px",
                       fontWeight: 600,
-                      color: "#15803d",
-                      background: "#eaf7ef",
+                      color: "var(--success)",
+                      background: "var(--success-soft)",
                       px: "8px",
                       py: "2px",
                       borderRadius: "999px",
@@ -164,8 +165,8 @@ export const Deliverables: React.FC = () => {
                 component="span"
                 sx={{
                   ...tagSx,
-                  background: "#fdecec",
-                  color: "#b91c1c",
+                  background: "var(--danger-soft)",
+                  color: "var(--danger)",
                   fontWeight: 500,
                 }}
               >
@@ -195,7 +196,7 @@ export const Deliverables: React.FC = () => {
                   width: 22,
                   height: 22,
                   borderRadius: "50%",
-                  background: "#c7c4ff",
+                  background: "var(--indigo-300)",
                 }}
               />
               {t("landing.deliverables.ticket.assignee", {
@@ -237,7 +238,7 @@ export const Deliverables: React.FC = () => {
                     borderRadius: "10px",
                     display: "grid",
                     placeItems: "center",
-                    color: "#ffffff",
+                    color: "var(--on-dark)",
                     fontWeight: 600,
                     fontSize: "17px",
                     background: landingGradeColorOf(SHOWCASE.stepGrade),
@@ -382,7 +383,7 @@ export const Deliverables: React.FC = () => {
                   display: "grid",
                   placeItems: "center",
                   background: "var(--ink)",
-                  color: "#ffffff",
+                  color: "var(--on-dark)",
                 }}
               >
                 <svg

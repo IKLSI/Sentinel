@@ -53,8 +53,8 @@ export const StepRepositories: React.FC = () => {
             sx={{
               fontSize: "11.5px",
               fontWeight: 600,
-              color: "#15803d",
-              background: "#eaf7ef",
+              color: "var(--success)",
+              background: "var(--success-soft)",
               px: "8px",
               py: "2px",
               borderRadius: "999px",

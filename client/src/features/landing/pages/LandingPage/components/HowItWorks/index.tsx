@@ -63,7 +63,7 @@ export const HowItWorks: React.FC = () => {
                   width: "calc(100% - 68px + 48px)",
                   height: "1px",
                   background:
-                    "repeating-linear-gradient(90deg, #cfcdf5 0 6px, transparent 6px 12px)",
+                    "repeating-linear-gradient(90deg, var(--indigo-300) 0 6px, transparent 6px 12px)",
                 },
               },
             }}
@@ -79,9 +79,9 @@ export const HowItWorks: React.FC = () => {
                 width: 44,
                 height: 44,
                 borderRadius: "50%",
-                background: "#ffffff",
+                background: "var(--page)",
                 boxShadow:
-                  "0 0 0 1px var(--line), 0 6px 16px -8px rgba(80,72,229,.35)",
+                  "0 0 0 1px var(--line), 0 6px 16px -8px color-mix(in srgb, var(--indigo) 35%, transparent)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 fontSize: "18px",

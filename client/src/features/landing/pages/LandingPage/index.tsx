@@ -24,7 +24,15 @@ export const LandingPage = () => {
   const { ready } = useI18n();
 
   if (!ready)
-    return <Box sx={{ minHeight: "100dvh", background: "#ffffff" }} />;
+    return (
+      <Box
+        sx={{
+          ...LANDING_THEME,
+          minHeight: "100dvh",
+          background: "var(--page)",
+        }}
+      />
+    );
 
   return (
     <Box

@@ -33,7 +33,7 @@ export const LandingFooter: React.FC = () => {
       sx={{
         mt: "120px",
         borderTop: "1px solid var(--line)",
-        background: "#fcfcfe",
+        background: "var(--page-alt)",
       }}
     >
       <Box sx={{ ...LANDING_WRAP_SX, pt: "64px" }}>

@@ -37,15 +37,23 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
         maxWidth: isDark ? 520 : 540,
         borderRadius: "999px",
         border: "1px solid",
-        borderColor: isDark ? "rgba(255,255,255,.16)" : "var(--line)",
-        background: isDark ? "rgba(255,255,255,.08)" : "#ffffff",
-        boxShadow: isDark ? "none" : "0 8px 30px -12px rgba(16,17,36,.14)",
+        borderColor: isDark
+          ? "color-mix(in srgb, var(--on-dark) 16%, transparent)"
+          : "var(--line)",
+        background: isDark
+          ? "color-mix(in srgb, var(--on-dark) 8%, transparent)"
+          : "var(--page)",
+        boxShadow: isDark
+          ? "none"
+          : "0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
         transition: "border-color .2s, box-shadow .2s",
         "&:focus-within": {
-          borderColor: isDark ? "rgba(255,255,255,.4)" : "#c9c6ff",
+          borderColor: isDark
+            ? "color-mix(in srgb, var(--on-dark) 40%, transparent)"
+            : "var(--indigo-300)",
           boxShadow: isDark
-            ? "0 0 0 4px rgba(255,255,255,.08)"
-            : "0 0 0 4px var(--indigo-soft), 0 8px 30px -12px rgba(16,17,36,.14)",
+            ? "0 0 0 4px color-mix(in srgb, var(--on-dark) 8%, transparent)"
+            : "0 0 0 4px var(--indigo-soft), 0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
         },
         "@media (max-width:560px)": {
           flexDirection: "column",
@@ -71,9 +79,9 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
           height: 46,
           px: "18px",
           font: "400 15px var(--font-text)",
-          color: isDark ? "#ffffff" : "var(--ink)",
+          color: isDark ? "var(--on-dark)" : "var(--ink)",
           "& .MuiInputBase-input::placeholder": {
-            color: isDark ? "#9d9bd6" : "var(--ink-3)",
+            color: isDark ? "var(--night-muted)" : "var(--ink-3)",
             opacity: 1,
           },
           "@media (max-width:560px)": {
@@ -95,12 +103,14 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
           cursor: "pointer",
           whiteSpace: "nowrap",
           font: "500 15px/1 var(--font-text)",
-          color: isDark ? "#121236" : "#ffffff",
-          background: isDark ? "#ffffff" : "var(--ink)",
+          color: isDark ? "var(--night)" : "var(--on-dark)",
+          background: isDark ? "var(--page)" : "var(--ink)",
           transition: "background .15s",
-          "&:hover": { background: isDark ? "#e8e7ff" : "#2a2c48" },
+          "&:hover": {
+            background: isDark ? "var(--indigo-100)" : "var(--ink-hover)",
+          },
           "&:focus-visible": {
-            outline: `2px solid ${isDark ? "#ffffff" : "var(--indigo)"}`,
+            outline: `2px solid ${isDark ? "var(--on-dark)" : "var(--indigo)"}`,
             outlineOffset: "3px",
           },
           "@media (max-width:560px)": { width: "100%" },

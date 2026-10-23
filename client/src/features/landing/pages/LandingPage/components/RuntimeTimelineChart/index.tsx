@@ -16,29 +16,29 @@ interface RuntimeTimelineChartProps {
 }
 
 const ENDED_PATTERN =
-  "repeating-linear-gradient(-45deg, #fbd0d0 0 5px, #fdeaea 5px 10px)";
+  "repeating-linear-gradient(-45deg, var(--danger-tint) 0 5px, var(--danger-soft) 5px 10px)";
 
 const SPAN_BACKGROUNDS: Record<string, string> = {
-  [RUNTIME_STATUSES.supported]: "#dedcff",
-  [RUNTIME_STATUSES.approaching]: "#fdc893",
+  [RUNTIME_STATUSES.supported]: "var(--indigo-200)",
+  [RUNTIME_STATUSES.approaching]: "var(--warning-tint)",
   [RUNTIME_STATUSES.ended]: ENDED_PATTERN,
   [RUNTIME_STATUSES.unknown]: "var(--line)",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   [RUNTIME_STATUSES.supported]: "var(--ink-2)",
-  [RUNTIME_STATUSES.approaching]: "#c2410c",
-  [RUNTIME_STATUSES.ended]: "#b91c1c",
+  [RUNTIME_STATUSES.approaching]: "var(--warning)",
+  [RUNTIME_STATUSES.ended]: "var(--danger)",
   [RUNTIME_STATUSES.unknown]: "var(--ink-3)",
 };
 
 const LEGEND = [
-  { key: "supported", background: "#dedcff" },
-  { key: "approaching", background: "#fdc893" },
+  { key: "supported", background: "var(--indigo-200)" },
+  { key: "approaching", background: "var(--warning-tint)" },
   {
     key: "ended",
     background:
-      "repeating-linear-gradient(-45deg, #fbd0d0 0 3px, #fdeaea 3px 6px)",
+      "repeating-linear-gradient(-45deg, var(--danger-tint) 0 3px, var(--danger-soft) 3px 6px)",
   },
 ] as const;
 
@@ -64,11 +64,11 @@ export const RuntimeTimelineChart: React.FC<RuntimeTimelineChartProps> = ({
   return (
     <Box
       sx={{
-        background: "#ffffff",
+        background: "var(--page)",
         borderRadius: "24px",
         p: "28px 32px 24px",
         boxShadow:
-          "0 0 0 1px var(--line), 0 30px 60px -40px rgba(16,17,36,.25)",
+          "0 0 0 1px var(--line), 0 30px 60px -40px color-mix(in srgb, var(--ink) 25%, transparent)",
         "@media (max-width:640px)": { p: "20px 16px" },
       }}
     >
@@ -99,7 +99,7 @@ export const RuntimeTimelineChart: React.FC<RuntimeTimelineChartProps> = ({
               left: `${today}%`,
               transform: "translateX(-50%)",
               background: "var(--ink)",
-              color: "#ffffff",
+              color: "var(--on-dark)",
               fontSize: "12px",
               fontWeight: 500,
               px: "10px",

@@ -42,7 +42,7 @@ export const DemoFullscreen: React.FC<Props> = ({ router, onClose }) => {
       slotProps={{
         backdrop: {
           sx: {
-            background: "rgba(16, 17, 36, 0.55)",
+            background: "color-mix(in srgb, var(--ink) 55%, transparent)",
             backdropFilter: "blur(6px)",
           },
         },
@@ -74,10 +74,11 @@ export const DemoFullscreen: React.FC<Props> = ({ router, onClose }) => {
             width: 40,
             height: 40,
             borderRadius: "50%",
-            background: "#ffffff",
-            color: "#101124",
-            boxShadow: "0 4px 14px rgba(0, 0, 0, 0.2)",
-            "&.Mui-focusVisible": { outline: "2px solid #5048e5" },
+            background: "var(--page)",
+            color: "var(--ink)",
+            boxShadow:
+              "0 4px 14px color-mix(in srgb, var(--ink) 20%, transparent)",
+            "&.Mui-focusVisible": { outline: "2px solid var(--indigo)" },
           }}
         >
           <CloseOutlined sx={{ fontSize: 22 }} />
@@ -87,7 +88,8 @@ export const DemoFullscreen: React.FC<Props> = ({ router, onClose }) => {
             sx={{
               overflow: "hidden",
               borderRadius: "15px",
-              boxShadow: "0 30px 80px rgba(0, 0, 0, 0.4)",
+              boxShadow:
+                "0 30px 80px color-mix(in srgb, var(--ink) 40%, transparent)",
             }}
             style={{
               width: DEMO_CANVAS_WIDTH * scale,

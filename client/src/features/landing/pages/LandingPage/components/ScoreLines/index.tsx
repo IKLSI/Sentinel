@@ -108,8 +108,8 @@ export const ScoreLines: React.FC<ScoreLinesProps> = ({
                       px: "8px",
                       py: "2px",
                       borderRadius: "999px",
-                      background: "#fdecec",
-                      color: "#b91c1c",
+                      background: "var(--danger-soft)",
+                      color: "var(--danger)",
                       verticalAlign: "1px",
                     }}
                   >

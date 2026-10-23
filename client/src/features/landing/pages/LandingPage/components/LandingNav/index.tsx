@@ -73,12 +73,12 @@ export const LandingNav: React.FC = () => {
           boxSizing: "border-box",
           borderRadius: "22px",
           background:
-            "linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.74))",
+            "linear-gradient(180deg, color-mix(in srgb, var(--on-dark) 92%, transparent), color-mix(in srgb, var(--on-dark) 74%, transparent))",
           backdropFilter: "saturate(1.8) blur(16px)",
           WebkitBackdropFilter: "saturate(1.8) blur(16px)",
           boxShadow: scrolled
-            ? "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(16,17,36,.07), 0 18px 40px -18px rgba(40,36,120,.32)"
-            : "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(16,17,36,.06), 0 1px 2px rgba(16,17,36,.04), 0 12px 32px -16px rgba(40,36,120,.22)",
+            ? "inset 0 1px 0 color-mix(in srgb, var(--on-dark) 90%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink) 7%, transparent), 0 18px 40px -18px color-mix(in srgb, var(--night) 32%, transparent)"
+            : "inset 0 1px 0 color-mix(in srgb, var(--on-dark) 90%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent), 0 12px 32px -16px color-mix(in srgb, var(--night) 22%, transparent)",
           transition: "box-shadow .3s",
           [LINKS_BREAKPOINT]: { gridTemplateColumns: "1fr auto 1fr" },
           "@media (prefers-reduced-motion: reduce)": { transition: "none" },
@@ -173,11 +173,12 @@ export const LandingNav: React.FC = () => {
               whiteSpace: "nowrap",
               fontSize: "14px",
               fontWeight: 600,
-              color: "#ffffff",
-              background: "#101124",
-              boxShadow: "0 6px 16px -8px rgba(16,17,36,.6)",
+              color: "var(--on-dark)",
+              background: "var(--ink)",
+              boxShadow:
+                "0 6px 16px -8px color-mix(in srgb, var(--ink) 60%, transparent)",
               "&:hover": {
-                background: "#1a1c38",
+                background: "var(--ink-hover)",
               },
               "&:focus-visible": FOCUS_RING,
             }}

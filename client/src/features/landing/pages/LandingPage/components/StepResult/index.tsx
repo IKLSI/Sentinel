@@ -8,12 +8,12 @@ export const StepResult: React.FC = () => {
   const t = useT();
   const chips = [
     {
-      color: "#4f46e5",
+      color: "var(--indigo)",
       label: t("landing.steps.ticket_created", {
         reference: SHOWCASE.stepTicket,
       }),
     },
-    { color: "#16a34a", label: t("landing.steps.alert_sent") },
+    { color: "var(--grade-a)", label: t("landing.steps.alert_sent") },
   ];
 
   return (
@@ -36,7 +36,7 @@ export const StepResult: React.FC = () => {
             height: 52,
             borderRadius: "12px",
             background: landingGradeColorOf(SHOWCASE.stepGrade),
-            color: "#ffffff",
+            color: "var(--on-dark)",
             display: "grid",
             placeItems: "center",
             fontFamily: "var(--font-display)",

@@ -11,7 +11,7 @@ export const StepSources: React.FC = () => (
     <Box
       sx={{
         background: "var(--ink)",
-        color: "#e4e3ff",
+        color: "var(--indigo-100)",
         font: "400 12.5px var(--font-code)",
         px: "14px",
         py: "8px",
@@ -25,7 +25,7 @@ export const StepSources: React.FC = () => (
       sx={{
         width: "70%",
         height: 18,
-        border: "1.5px dashed #cfcdf5",
+        border: "1.5px dashed var(--indigo-300)",
         borderBottom: 0,
         borderRadius: "10px 10px 0 0",
         boxSizing: "border-box",

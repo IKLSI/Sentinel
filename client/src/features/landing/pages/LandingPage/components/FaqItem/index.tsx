@@ -85,13 +85,14 @@ export const FaqItem: React.FC<FaqItemProps> = ({ question, answer }) => {
       sx={{
         border: "1px solid var(--line)",
         borderRadius: "14px",
-        background: "#ffffff",
+        background: "var(--page)",
         overflow: "hidden",
         transition: "border-color .2s, box-shadow .2s",
-        "&:hover": { borderColor: "#d9d8f3" },
+        "&:hover": { borderColor: "var(--indigo-200)" },
         "&[open]": {
-          borderColor: "#d9d8f3",
-          boxShadow: "0 10px 30px -18px rgba(80,72,229,.35)",
+          borderColor: "var(--indigo-200)",
+          boxShadow:
+            "0 10px 30px -18px color-mix(in srgb, var(--indigo) 35%, transparent)",
         },
         "& > summary::after": {
           content: '""',

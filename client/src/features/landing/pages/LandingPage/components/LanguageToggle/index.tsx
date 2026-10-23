@@ -53,8 +53,10 @@ export const LanguageToggle: React.FC<LanguageToggleProps> = ({ size }) => {
               fontSize: isLarge ? "13.5px" : "12px",
               fontWeight: 500,
               color: active ? "var(--ink)" : "var(--ink-3)",
-              background: active ? "#ffffff" : "transparent",
-              boxShadow: active ? "0 1px 3px rgba(16,17,36,.1)" : "none",
+              background: active ? "var(--page)" : "transparent",
+              boxShadow: active
+                ? "0 1px 3px color-mix(in srgb, var(--ink) 10%, transparent)"
+                : "none",
               transition: "background .2s, color .2s",
               "&:hover": { color: "var(--ink)" },
               "&.Mui-focusVisible": {

@@ -18,9 +18,10 @@ const cardSx = {
   width: "100%",
   display: "grid",
   gridTemplateColumns: "1fr",
-  background: "#ffffff",
+  background: "var(--page)",
   borderRadius: "28px",
-  boxShadow: "0 0 0 1px var(--line), 0 40px 80px -50px rgba(16,17,36,.35)",
+  boxShadow:
+    "0 0 0 1px var(--line), 0 40px 80px -50px color-mix(in srgb, var(--ink) 35%, transparent)",
   overflow: "hidden",
   "@media (min-width:860px)": { gridTemplateColumns: "320px 1fr" },
 } as const;
@@ -129,9 +130,9 @@ export const ScoreReport: React.FC = () => {
                       fontSize: "14px",
                       fontWeight: isSelected ? 500 : 400,
                       color: isSelected ? "var(--ink)" : "var(--ink-2)",
-                      background: isSelected ? "#ffffff" : "transparent",
+                      background: isSelected ? "var(--page)" : "transparent",
                       boxShadow: isSelected
-                        ? "0 1px 3px rgba(16,17,36,.08)"
+                        ? "0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent)"
                         : "none",
                       "&:hover": { color: "var(--ink)" },
                       "&:focus-visible": {

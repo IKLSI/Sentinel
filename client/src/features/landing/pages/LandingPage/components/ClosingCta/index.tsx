@@ -28,8 +28,8 @@ export const ClosingCta: React.FC = () => {
           position: "relative",
           overflow: "hidden",
           isolation: "isolate",
-          background: "#121236",
-          color: "#ffffff",
+          background: "var(--night)",
+          color: "var(--on-dark)",
           borderRadius: "32px",
           p: "80px 72px",
           display: "grid",
@@ -42,7 +42,7 @@ export const ClosingCta: React.FC = () => {
             inset: "-40% -10% auto 30%",
             height: "140%",
             background:
-              "radial-gradient(closest-side, rgba(99,91,255,.45), transparent)",
+              "radial-gradient(closest-side, color-mix(in srgb, var(--indigo) 45%, transparent), transparent)",
           },
           "@media (min-width:960px)": { gridTemplateColumns: "1.25fr 1fr" },
           "@media (max-width:700px)": { p: "56px 24px", textAlign: "center" },
@@ -74,7 +74,7 @@ export const ClosingCta: React.FC = () => {
               mb: "32px",
               maxWidth: 480,
               fontSize: "18px",
-              color: "#b9b8e6",
+              color: "var(--night-muted)",
               "@media (max-width:700px)": { mx: "auto" },
             }}
           >
@@ -116,13 +116,13 @@ export const ClosingCta: React.FC = () => {
                     fontFamily: "var(--font-display)",
                     fontWeight: 700,
                     fontSize: "clamp(22px, 2.8vw, 34px)",
-                    color: "#ffffff",
+                    color: "var(--on-dark)",
                     background: color,
                     transform: active
                       ? `translateY(${lowered ? 12 : -6}px)`
                       : `translateY(${lowered ? 18 : 0}px)`,
                     boxShadow: active
-                      ? `0 22px 34px -14px ${color}, 0 0 0 3px rgba(255,255,255,.85)`
+                      ? `0 22px 34px -14px ${color}, 0 0 0 3px color-mix(in srgb, var(--on-dark) 85%, transparent)`
                       : `0 18px 30px -16px ${color}`,
                     transition: `transform .25s ${LANDING_EASING}, box-shadow .25s`,
                     "&:focus-visible": { outline: "none" },
@@ -143,13 +143,13 @@ export const ClosingCta: React.FC = () => {
               m: 0,
               minHeight: 24,
               fontSize: "15.5px",
-              color: "#c9c8f0",
+              color: "var(--night-text)",
               textAlign: "center",
             }}
           >
             <Box
               component="b"
-              sx={{ color: "#ffffff", fontWeight: 600, mr: "6px" }}
+              sx={{ color: "var(--on-dark)", fontWeight: 600, mr: "6px" }}
             >
               {t("landing.closing.grade_label", { grade })}
             </Box>

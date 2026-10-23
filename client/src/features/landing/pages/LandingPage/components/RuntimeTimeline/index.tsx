@@ -61,7 +61,7 @@ export const RuntimeTimeline: React.FC = () => {
         <Skeleton
           variant="rounded"
           height={480}
-          sx={{ borderRadius: "24px", background: "#ffffff" }}
+          sx={{ borderRadius: "24px", background: "var(--page)" }}
         />
       )}
       {isError && (

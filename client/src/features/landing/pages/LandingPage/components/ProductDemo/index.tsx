@@ -58,7 +58,7 @@ export const ProductDemo: React.FC<Props> = ({
           p: "8px",
           background: "var(--tint)",
           boxShadow:
-            "0 0 0 1px var(--line), 0 50px 90px -50px rgba(80, 72, 229, 0.35)",
+            "0 0 0 1px var(--line), 0 50px 90px -50px color-mix(in srgb, var(--indigo) 35%, transparent)",
         }}
       >
         <DemoScope>
@@ -92,7 +92,7 @@ export const ProductDemo: React.FC<Props> = ({
             fontSize: "14px",
             fontWeight: 500,
             color: "var(--ink)",
-            background: "#ffffff",
+            background: "var(--page)",
             boxShadow: "0 0 0 1px var(--line)",
             "&:hover": { background: "var(--tint)" },
             "&.Mui-focusVisible": { outline: "2px solid var(--indigo)" },

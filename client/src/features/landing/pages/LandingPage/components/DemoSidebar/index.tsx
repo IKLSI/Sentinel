@@ -41,7 +41,8 @@ export const DemoSidebar: React.FC = () => {
         background: "var(--s1)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r-lg)",
-        boxShadow: "var(--sh-2), inset 0 1px 0 rgba(255,255,255,0.04)",
+        boxShadow:
+          "var(--sh-2), inset 0 1px 0 color-mix(in srgb, var(--on-dark) 4%, transparent)",
         overflow: "hidden",
       }}
     >
