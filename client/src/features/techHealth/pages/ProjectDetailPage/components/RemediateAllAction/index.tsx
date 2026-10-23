@@ -2,8 +2,6 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import CallMergeOutlined from "@mui/icons-material/CallMergeOutlined";
-import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import { useStartRemediationMutation } from "@/domains/projects/mutations";
@@ -22,33 +20,12 @@ const tooltipLinesSx = {
   gap: "3px",
 } as const;
 
-const mergeRequestChipSx = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "6px",
-  height: 30,
-  px: "10px",
-  borderRadius: "999px",
-  fontSize: "12px",
-  fontWeight: 600,
-  whiteSpace: "nowrap",
-  textDecoration: "none",
-  color: "var(--green)",
-  background: "var(--green-subtle)",
-  transition: "background 0.15s ease",
-  "&:hover": {
-    background: "color-mix(in srgb, var(--green) 22%, transparent)",
-  },
-};
-
 const failedLabelSx = {
   fontSize: "12px",
   fontWeight: 600,
   color: "var(--red)",
   whiteSpace: "nowrap",
 };
-
-const chipIconSx = { fontSize: 14 };
 
 interface Props {
   projectId: string;
@@ -74,8 +51,8 @@ export const RemediateAllAction: React.FC<Props> = ({
     startMutation.isPending ||
     (remediation != null && IN_PROGRESS_STATUSES.has(remediation.status));
   const failed = remediation?.status === "Failed";
-  const mergeRequestUrl =
-    remediation?.status === "Opened" ? remediation.mergeRequestUrl : null;
+  const mergeRequestOpened =
+    remediation?.status === "Opened" && remediation.mergeRequestUrl != null;
   const canStart =
     remediationAvailable && remediableVulnerabilities > 0 && !inProgress;
 
@@ -91,7 +68,7 @@ export const RemediateAllAction: React.FC<Props> = ({
 
   const startLabel = failed
     ? t("tech_health.remediation.retry")
-    : mergeRequestUrl
+    : mergeRequestOpened
       ? t("tech_health.remediation.update_mr")
       : remediableVulnerabilities > 1
         ? t("tech_health.remediation.fix_all_plural", {
@@ -101,21 +78,6 @@ export const RemediateAllAction: React.FC<Props> = ({
 
   return (
     <>
-      {mergeRequestUrl && !inProgress && (
-        <Box
-          component="a"
-          href={mergeRequestUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={t("tech_health.remediation.open_mr")}
-          sx={mergeRequestChipSx}
-        >
-          <CallMergeOutlined sx={chipIconSx} />
-          {t("tech_health.remediation.mr_opened")}
-          <OpenInNewOutlined sx={chipIconSx} />
-        </Box>
-      )}
-
       {inProgress && (
         <Button
           variant="contained"

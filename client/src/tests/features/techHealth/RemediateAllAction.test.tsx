@@ -68,19 +68,7 @@ describe("RemediateAllAction", () => {
     expect(screen.getByRole("button")).toBeDisabled();
   });
 
-  it("propose le lien vers la merge request ouverte", () => {
-    renderAction({
-      remediableVulnerabilities: 0,
-      remediation: remediationWith({
-        status: "Opened",
-        mergeRequestUrl: MERGE_REQUEST_URL,
-      }),
-    });
-
-    expect(screen.getByRole("link")).toHaveAttribute("href", MERGE_REQUEST_URL);
-  });
-
-  it("garde l'action principale à côté du lien vers la merge request", () => {
+  it("n'affiche pas de lien vers la merge request ouverte", () => {
     renderAction({
       remediation: remediationWith({
         status: "Opened",
@@ -88,7 +76,7 @@ describe("RemediateAllAction", () => {
       }),
     });
 
-    expect(screen.getByRole("link")).toHaveAttribute("href", MERGE_REQUEST_URL);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("button")).toBeEnabled();
   });
 
