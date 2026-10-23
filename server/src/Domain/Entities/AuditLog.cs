@@ -10,6 +10,7 @@ public enum AuditAction
     PasswordResetRequested,
     PasswordReset,
     TokenRefreshed,
+    RefreshTokenReplayed,
 
     OrganizationRegistered,
     EmailVerified,

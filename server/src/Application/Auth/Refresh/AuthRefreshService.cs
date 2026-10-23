@@ -65,24 +65,6 @@ public class AuthRefreshService : IService
         {
             user = await _userRepository.GetOrDefaultByRefreshTokenHashAsync(tokenHash, cancellationToken);
 
-            if (user == null && _cache.TryGetValue(CacheKeys.RefreshGrace(tokenHash), out string? rotatedToken)
-                && rotatedToken != null)
-            {
-                user = await _userRepository.GetOrDefaultByRefreshTokenHashAsync(
-                    _tokenService.HashRefreshToken(rotatedToken), cancellationToken);
-
-                if (user != null)
-                {
-                    _refreshTokenStore.Write(rotatedToken);
-
-                    return new LoginResponse
-                    {
-                        AccessToken = _tokenService.GenerateAccessToken(user),
-                        User = UserProfileMapper.ToProfile(user)
-                    };
-                }
-            }
-
             if (user == null)
             {
                 await RevokeOnReplayAsync(tokenHash, cancellationToken);
@@ -102,12 +84,6 @@ public class AuthRefreshService : IService
 
             await commitScope.CommitAsync(cancellationToken);
         }
-
-        _cache.Set(CacheKeys.RefreshGrace(tokenHash), newRefreshToken, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = CacheKeys.RefreshGraceTtl,
-            Size = 1
-        });
 
         _refreshTokenStore.Write(newRefreshToken);
 
@@ -143,5 +119,12 @@ public class AuthRefreshService : IService
         _cache.Remove(CacheKeys.AuthAccount(replayUser.Id));
 
         _logger.LogWarning("Token replay detected for userId {UserId}", replayUser.Id);
+
+        await _auditLog.LogAsync(
+            AuditAction.RefreshTokenReplayed,
+            entityType: AuditEntityTypes.User,
+            organizationId: replayUser.OrganizationId,
+            userId: replayUser.Id,
+            entityId: replayUser.Id);
     }
 }

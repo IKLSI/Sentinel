@@ -17,7 +17,6 @@ public static class CacheKeys
     private const string PublicScanLatestPrefix = "public-scan-latest";
     private const string ProjectBadgePrefix = "project-badge";
     private const string AvailableReposPrefix = "available-repos";
-    private const string RefreshGracePrefix = "auth:refresh-grace";
     private const string GitHubPublicRepositoryPrefix = "github:public";
 
     public const string KnownExploitedCatalog = "kev:catalog";
@@ -40,7 +39,6 @@ public static class CacheKeys
     public static readonly TimeSpan PublicScanUnpinnedTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan PublicScanLatestTtl = TimeSpan.FromMinutes(5);
     public static readonly TimeSpan AvailableReposTtl = TimeSpan.FromMinutes(3);
-    public static readonly TimeSpan RefreshGraceTtl = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan GitHubPublicRepositoryTtl = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan PublicRuntimeLifecyclesTtl = TimeSpan.FromMinutes(10);
 
@@ -72,7 +70,6 @@ public static class CacheKeys
 
     public static string ProjectBadge(string token) => $"{ProjectBadgePrefix}:{token}";
 
-    public static string RefreshGrace(string previousTokenHash) => $"{RefreshGracePrefix}:{previousTokenHash}";
 
     public static string GitHubPublicRepository(string owner, string repository) =>
         $"{GitHubPublicRepositoryPrefix}:{owner}/{repository}".ToLowerInvariant();
