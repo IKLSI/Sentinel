@@ -1,15 +1,15 @@
 import type React from "react";
 import { useCallback, useMemo } from "react";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
-import KeyboardArrowUpOutlined from "@mui/icons-material/KeyboardArrowUpOutlined";
 import MailOutlineOutlined from "@mui/icons-material/MailOutlineOutlined";
 import { Link } from "@tanstack/react-router";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
+import { BackToTopButton } from "@/features/legal/components/BackToTopButton";
 import { LegalSectionCard } from "@/features/legal/components/LegalSectionCard";
 import { LegalSummary } from "@/features/legal/components/LegalSummary";
+import { ReadingProgressBar } from "@/features/legal/components/ReadingProgressBar";
 import {
   LEGAL_DOCUMENTS,
   LEGAL_HEADER_HEIGHT,
@@ -17,7 +17,6 @@ import {
 } from "@/features/legal/constants";
 import type { LegalSection } from "@/features/legal/types";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useToast } from "@/hooks/useToast";
 
 interface Props {
@@ -34,8 +33,6 @@ const CONTENT_SX = {
   px: { xs: "18px", md: "28px" },
 } as const;
 
-const SCROLLED_THRESHOLD = 320;
-
 export const LegalDocument: React.FC<Props> = ({
   documentId,
   titleKey,
@@ -51,7 +48,6 @@ export const LegalDocument: React.FC<Props> = ({
     [sections],
   );
   const activeId = useActiveSection(sectionIds, LEGAL_SCROLL_OFFSET + 20);
-  const { progress, scrolled } = useReadingProgress(SCROLLED_THRESHOLD);
 
   const copyAnchor = useCallback(
     (id: string) => {
@@ -126,18 +122,7 @@ export const LegalDocument: React.FC<Props> = ({
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            bottom: "-1px",
-            height: "2px",
-            width: `${progress}%`,
-            background:
-              "linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 55%, white) 100%)",
-            transition: "width 0.08s linear",
-          }}
-        />
+        <ReadingProgressBar />
       </Box>
 
       <Box
@@ -406,39 +391,7 @@ export const LegalDocument: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Tooltip title={t("legal.shell.back_to_top")} arrow placement="left">
-        <Box
-          component="button"
-          type="button"
-          className="legal-no-print"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          sx={{
-            position: "fixed",
-            right: { xs: "16px", md: "28px" },
-            bottom: { xs: "16px", md: "28px" },
-            zIndex: 25,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            border: "1px solid var(--border)",
-            background: "color-mix(in srgb, var(--s1) 88%, transparent)",
-            backdropFilter: "blur(10px)",
-            boxShadow: "var(--sh-2)",
-            color: "var(--muted2)",
-            cursor: "pointer",
-            opacity: scrolled ? 1 : 0,
-            pointerEvents: scrolled ? "auto" : "none",
-            transform: scrolled ? "translateY(0)" : "translateY(8px)",
-            transition: "opacity 0.2s, transform 0.2s, color 0.15s",
-            "&:hover": { color: "var(--accent)" },
-          }}
-        >
-          <KeyboardArrowUpOutlined sx={{ fontSize: 20 }} />
-        </Box>
-      </Tooltip>
+      <BackToTopButton />
     </Box>
   );
 };
