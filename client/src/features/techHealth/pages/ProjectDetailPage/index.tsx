@@ -41,9 +41,11 @@ export const ProjectDetailPage: React.FC = () => {
 
   useQueryErrorToast(error, "tech_health.error.load_failed");
 
+  const loadFailed = error && !project;
+
   useEffect(() => {
-    if (error) navigate({ to: ROUTES.PROJECTS });
-  }, [error, navigate]);
+    if (loadFailed) navigate({ to: ROUTES.PROJECTS });
+  }, [loadFailed, navigate]);
 
   const allVulns = useMemo(
     () => toVulnerabilityRows(project?.dependencies ?? []),
