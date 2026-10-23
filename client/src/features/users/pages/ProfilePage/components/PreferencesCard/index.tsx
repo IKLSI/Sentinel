@@ -6,7 +6,7 @@ import { useUpdatePreferencesMutation } from "@/domains/users/mutations";
 import { useT, useI18n } from "@/contexts/I18nContext";
 import type { Theme, Language } from "@/enums";
 import { CARD_SX } from "@/features/users/pages/ProfilePage/constants";
-import { InnerDivider } from "@/features/users/pages/ProfilePage/components/InnerDivider";
+import { CardHeader } from "@/components/ui/common/CardHeader";
 import { LanguagePicker } from "@/features/users/pages/ProfilePage/components/LanguagePicker";
 import { AppearancePicker } from "@/features/users/pages/ProfilePage/components/AppearancePicker";
 
@@ -32,7 +32,7 @@ export const PreferencesCard: React.FC = () => {
 
   return (
     <Box sx={CARD_SX}>
-      <InnerDivider label={t("profile.section.preferences")} />
+      <CardHeader label={t("profile.section.preferences")} />
 
       <Box
         sx={{

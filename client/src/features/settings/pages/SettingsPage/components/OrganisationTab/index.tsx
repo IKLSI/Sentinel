@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useToast } from "@/hooks/useToast";
+import { CardHeader } from "@/components/ui/common/CardHeader";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
@@ -22,7 +23,6 @@ import {
 } from "@/domains/settings/queries";
 import {
   CARD_SX,
-  CardHeader,
   SEVERITY_VALUES,
 } from "@/features/settings/pages/SettingsPage/helpers";
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";

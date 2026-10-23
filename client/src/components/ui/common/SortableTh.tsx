@@ -1,5 +1,6 @@
 import type React from "react";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import ArrowDownwardOutlined from "@mui/icons-material/ArrowDownwardOutlined";
 import type { CellAlign } from "@/components/ui/common/VirtualTable/TableCells";
 
@@ -20,6 +21,13 @@ const JUSTIFY_BY_ALIGN: Record<CellAlign, string> = {
 };
 
 const IDLE_ARROW_OPACITY = 0.45;
+
+const SORTABLE_LABEL_SX = {
+  textAlign: "inherit",
+  transition: "color 0.12s",
+  "&:hover": { color: "var(--text-secondary)" },
+  "&:focus-visible": { color: "var(--accent)" },
+} as const;
 const ARROW_CLASS = "SortableTh-arrow";
 
 export const SortableTh: React.FC<SortableThProps> = ({
@@ -32,6 +40,22 @@ export const SortableTh: React.FC<SortableThProps> = ({
   width,
 }) => {
   const sorted = sortable && active;
+  const labelSx = {
+    boxSizing: "border-box",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: JUSTIFY_BY_ALIGN[align],
+    gap: "5px",
+    width: "100%",
+    padding: "10px 16px",
+    fontFamily: "var(--font-mono)",
+    fontSize: "10px",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: sorted ? "var(--accent)" : "var(--muted)",
+    userSelect: "none",
+  } as const;
 
   return (
     <Box
@@ -57,34 +81,9 @@ export const SortableTh: React.FC<SortableThProps> = ({
         },
       }}
     >
-      <Box
-        component={sortable ? "button" : "div"}
-        type={sortable ? "button" : undefined}
-        onClick={sortable ? onSort : undefined}
-        sx={{
-          all: "unset",
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: JUSTIFY_BY_ALIGN[align],
-          gap: "5px",
-          width: "100%",
-          padding: "10px 16px",
-          fontFamily: "var(--font-mono)",
-          fontSize: "10px",
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: sorted ? "var(--accent)" : "var(--muted)",
-          cursor: sortable ? "pointer" : "default",
-          userSelect: "none",
-          transition: "color 0.12s",
-          "&:hover": sortable ? { color: "var(--text-secondary)" } : {},
-          "&:focus-visible": { color: "var(--accent)" },
-        }}
-      >
-        {children}
-        {sortable && (
+      {sortable ? (
+        <ButtonBase onClick={onSort} sx={{ ...labelSx, ...SORTABLE_LABEL_SX }}>
+          {children}
           <ArrowDownwardOutlined
             className={ARROW_CLASS}
             sx={{
@@ -95,8 +94,10 @@ export const SortableTh: React.FC<SortableThProps> = ({
               transition: "opacity 0.12s, transform 0.12s",
             }}
           />
-        )}
-      </Box>
+        </ButtonBase>
+      ) : (
+        <Box sx={labelSx}>{children}</Box>
+      )}
     </Box>
   );
 };

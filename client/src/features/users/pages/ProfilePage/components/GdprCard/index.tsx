@@ -9,7 +9,7 @@ import {
   CARD_SX,
   GDPR_ACTION_SX,
 } from "@/features/users/pages/ProfilePage/constants";
-import { InnerDivider } from "@/features/users/pages/ProfilePage/components/InnerDivider";
+import { CardHeader } from "@/components/ui/common/CardHeader";
 
 interface Props {
   onDeleteRequest: () => void;
@@ -27,7 +27,7 @@ export const GdprCard: React.FC<Props> = ({ onDeleteRequest }) => {
 
   return (
     <Box sx={CARD_SX}>
-      <InnerDivider label={t("profile.section.gdpr")} />
+      <CardHeader label={t("profile.section.gdpr")} />
 
       <Box
         sx={{

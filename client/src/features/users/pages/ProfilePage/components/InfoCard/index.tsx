@@ -13,7 +13,7 @@ import {
   CARD_SX,
   ROLE_LABEL_KEYS,
 } from "@/features/users/pages/ProfilePage/constants";
-import { InnerDivider } from "@/features/users/pages/ProfilePage/components/InnerDivider";
+import { CardHeader } from "@/components/ui/common/CardHeader";
 
 export const InfoCard: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -58,7 +58,7 @@ export const InfoCard: React.FC = () => {
 
   return (
     <Box sx={CARD_SX}>
-      <InnerDivider label={t("profile.section.info")} />
+      <CardHeader label={t("profile.section.info")} />
 
       <Box
         sx={{
