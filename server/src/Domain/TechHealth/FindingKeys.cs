@@ -7,6 +7,9 @@ public static class FindingKeys
     public static string ForVulnerability(DependencyEcosystem ecosystem, string packageName, string cveId) =>
         Normalize($"{ecosystem}:{packageName}:{cveId}");
 
+    public static string ForVulnerability(Dependency dependency, Vulnerability vulnerability) =>
+        ForVulnerability(dependency.Ecosystem, vulnerability.PackageName, vulnerability.CveId);
+
     public static string ForDependency(DependencyEcosystem ecosystem, string name) =>
         Normalize($"{ecosystem}:{name}");
 

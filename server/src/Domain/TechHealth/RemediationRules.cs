@@ -32,8 +32,7 @@ public static class RemediationRules
             .SelectMany(dependency => dependency.Vulnerabilities
                 .Select(vulnerability => (Dependency: dependency, Vulnerability: vulnerability)))
             .Where(finding => IsEligible(finding.Dependency, finding.Vulnerability)
-                && !suppressedFindingKeys.Contains(FindingKeys.ForVulnerability(finding.Dependency.Ecosystem,
-                    finding.Vulnerability.PackageName, finding.Vulnerability.CveId)))
+                && !suppressedFindingKeys.Contains(FindingKeys.ForVulnerability(finding.Dependency, finding.Vulnerability)))
             .ToList();
 
     public static IReadOnlyList<RemediationTarget> TargetsFor(

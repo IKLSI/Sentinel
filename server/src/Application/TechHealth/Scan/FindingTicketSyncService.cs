@@ -91,8 +91,7 @@ public class FindingTicketSyncService(
             foreach (Vulnerability vulnerability in dependency.Vulnerabilities)
             {
                 findings.Add((FindingKind.Vulnerability,
-                    FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
-                        vulnerability.CveId)));
+                    FindingKeys.ForVulnerability(dependency, vulnerability)));
             }
 
             if (FindingRules.IsOutdated(dependency))

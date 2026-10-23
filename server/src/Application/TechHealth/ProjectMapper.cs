@@ -111,8 +111,7 @@ public static class ProjectMapper
         IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
         IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey)
     {
-        string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
-            vulnerability.CveId);
+        string findingKey = FindingKeys.ForVulnerability(dependency, vulnerability);
 
         return new VulnerabilityDto
         {

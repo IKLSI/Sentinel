@@ -110,8 +110,7 @@ public class TicketCreateFromFindingService(
                 foreach (Dependency dependency in project.Dependencies)
                 {
                     Vulnerability? vulnerability = dependency.Vulnerabilities.FirstOrDefault(candidate =>
-                        FindingKeys.ForVulnerability(dependency.Ecosystem, candidate.PackageName,
-                            candidate.CveId) == findingKey);
+                        FindingKeys.ForVulnerability(dependency, candidate) == findingKey);
 
                     if (vulnerability != null) return builder.ForVulnerability(dependency, vulnerability);
                 }

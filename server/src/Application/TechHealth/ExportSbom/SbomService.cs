@@ -166,8 +166,7 @@ public class SbomService(
     private static CycloneVulnerability ToCycloneVulnerability(Dependency dependency, Vulnerability vulnerability,
         Dictionary<string, VulnerabilitySuppression> suppressionsByKey)
     {
-        string findingKey = FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
-            vulnerability.CveId);
+        string findingKey = FindingKeys.ForVulnerability(dependency, vulnerability);
 
         return new CycloneVulnerability
         {

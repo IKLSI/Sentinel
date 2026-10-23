@@ -8,8 +8,7 @@ public static class SuppressedVulnerabilities
         project.Dependencies
             .SelectMany(dependency => dependency.Vulnerabilities
                 .Where(vulnerability => suppressedFindingKeys.Contains(
-                    FindingKeys.ForVulnerability(dependency.Ecosystem, vulnerability.PackageName,
-                        vulnerability.CveId)))
+                    FindingKeys.ForVulnerability(dependency, vulnerability)))
                 .Select(vulnerability => vulnerability.Id))
             .ToHashSet();
 }
