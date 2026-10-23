@@ -26,6 +26,7 @@ public class AuthLoginService : IService
     private readonly ILogger<AuthLoginService> _logger;
     private readonly AuthLoginValidator _validator;
     private readonly LoginAttemptTracker _loginAttempts;
+    private readonly IClientAddressProvider _clientAddress;
 
     public AuthLoginService(
         IUserRepository userRepository,
@@ -38,7 +39,8 @@ public class AuthLoginService : IService
         IRefreshTokenStore refreshTokenStore,
         ILogger<AuthLoginService> logger,
         AuthLoginValidator validator,
-        LoginAttemptTracker loginAttempts)
+        LoginAttemptTracker loginAttempts,
+        IClientAddressProvider clientAddress)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -51,6 +53,7 @@ public class AuthLoginService : IService
         _logger = logger;
         _validator = validator;
         _loginAttempts = loginAttempts;
+        _clientAddress = clientAddress;
     }
 
     public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest model, CancellationToken cancellationToken)
@@ -61,8 +64,9 @@ public class AuthLoginService : IService
             return Result<LoginResponse>.From(validationResult);
 
         string email = model.Email.Trim();
+        string attemptKey = $"{email}|{_clientAddress.Current}";
 
-        if (_loginAttempts.IsLockedOut(email))
+        if (_loginAttempts.IsLockedOut(attemptKey))
             return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthTooManyAttempts);
 
         User? user;
@@ -78,7 +82,7 @@ public class AuthLoginService : IService
 
             if (user == null)
             {
-                bool lockedOut = _loginAttempts.RecordFailure(email);
+                bool lockedOut = _loginAttempts.RecordFailure(attemptKey);
 
                 await _auditLog.LogAsync(
                     AuditAction.LoginFailed,
@@ -92,7 +96,7 @@ public class AuthLoginService : IService
                     : ErrorCodes.AuthInvalidCredentials);
             }
 
-            _loginAttempts.Reset(email);
+            _loginAttempts.Reset(attemptKey);
 
             if (!user.IsEmailVerified)
                 return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);

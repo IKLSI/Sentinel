@@ -34,6 +34,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IClientAddressProvider, ClientAddressProvider>();
         services.AddSingleton<IContentPathProvider, ContentPathProvider>();
         services.AddScoped<IRefreshTokenStore, RefreshTokenCookie>();
 
@@ -87,6 +88,7 @@ public static partial class ServiceCollectionExtensions
     }
 
     private const string HttpRetryPipelineName = "retry";
+    private const long MaxBufferedResponseBytes = 16 * 1024 * 1024;
 
     private static IServiceCollection AddResilientHttpClient(
         this IServiceCollection services,
@@ -99,6 +101,7 @@ public static partial class ServiceCollectionExtensions
         {
             configure(client);
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            client.MaxResponseContentBufferSize = MaxBufferedResponseBytes;
         })
         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
         {

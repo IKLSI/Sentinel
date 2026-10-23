@@ -31,7 +31,14 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
-appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+*.pem
+*.pfx
+*.p12
+*.key
+*.dump
+*.gpg
 
 # ------------------------------
 

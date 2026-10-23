@@ -84,12 +84,22 @@ export async function downloadExcel(
   await downloadFile(endpoint, fallbackFilename, MIME_TYPES.XLSX, params);
 }
 
+const TICKET_ATTACHMENT_PATH_PATTERN =
+  /^\/api\/tickets\/[0-9a-f-]{36}\/attachments\/[0-9a-f-]{36}$/i;
+
 export async function downloadFromAbsoluteUrl(
   url: string,
   fallbackFilename: string,
 ): Promise<void> {
-  const path = url.startsWith(API_BASE_URL)
-    ? url.slice(API_BASE_URL.length)
-    : url;
-  await downloadFile(path, fallbackFilename);
+  const target = new URL(url, window.location.origin);
+  const apiOrigin = new URL(
+    API_BASE_URL || window.location.origin,
+    window.location.origin,
+  ).origin;
+  if (
+    target.origin !== apiOrigin ||
+    !TICKET_ATTACHMENT_PATH_PATTERN.test(target.pathname)
+  )
+    throw new Error("Pièce jointe invalide");
+  await downloadFile(target.pathname, fallbackFilename);
 }

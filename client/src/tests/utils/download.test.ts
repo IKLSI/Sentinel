@@ -7,7 +7,7 @@ vi.mock("@/configs/apiClient", () => ({
 }));
 
 import apiClient from "@/configs/apiClient";
-import { downloadExcel } from "@/helpers/download";
+import { downloadExcel, downloadFromAbsoluteUrl } from "@/helpers/download";
 
 type AnchorStub = {
   click: ReturnType<typeof vi.fn>;
@@ -101,5 +101,38 @@ describe("downloadExcel", () => {
     await downloadExcel("/api/export", "fallback.xlsx");
 
     expect(anchor.download).toBe("fallback.xlsx");
+  });
+});
+
+describe("downloadFromAbsoluteUrl", () => {
+  const attachmentId = "123e4567-e89b-12d3-a456-426614174000";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(apiClient.get).mockResolvedValue({ data: new Blob(["fake"]) });
+    URL.createObjectURL = vi.fn(() => "blob:fake-url");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  it("rejects an external origin", async () => {
+    await expect(
+      downloadFromAbsoluteUrl("https://evil.example/x", "x.pdf"),
+    ).rejects.toThrow();
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
+  it("rejects a path outside ticket attachments", async () => {
+    await expect(
+      downloadFromAbsoluteUrl("/api/users", "x.pdf"),
+    ).rejects.toThrow();
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
+  it("downloads a ticket attachment of the API origin", async () => {
+    await downloadFromAbsoluteUrl(
+      `/api/tickets/${attachmentId}/attachments/${attachmentId}`,
+      "x.pdf",
+    );
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
   });
 });

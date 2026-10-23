@@ -16,9 +16,18 @@ const apiClient: AxiosInstance = axios.create({
   paramsSerializer: { indexes: null },
 });
 
+const API_ORIGIN = new URL(
+  API_BASE_URL || window.location.origin,
+  window.location.origin,
+).origin;
+
+const targetsApiOrigin = (config: InternalAxiosRequestConfig): boolean =>
+  new URL(config.url ?? "", config.baseURL ?? window.location.origin).origin ===
+  API_ORIGIN;
+
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAccessToken();
-  if (token && config.headers)
+  if (token && config.headers && targetsApiOrigin(config))
     config.headers.Authorization = bearerToken(token);
   return config;
 });
