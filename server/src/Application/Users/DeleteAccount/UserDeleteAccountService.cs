@@ -14,7 +14,7 @@ namespace Sentinel.Application.Users.DeleteAccount;
 
 public class UserDeleteAccountService(
     IUserRepository userRepository,
-    IOrganizationRepository organizationRepository,
+    LastAdminGuard lastAdminGuard,
     IPasswordHasher passwordHasher,
     IAuditLogRepository auditLogRepository,
     IApiKeyRepository apiKeyRepository,
@@ -49,18 +49,11 @@ public class UserDeleteAccountService(
 
             if (tracked == null) return;
 
-            if (tracked.Role == UserRole.Admin && tracked.AccessStatus == UserAccessStatus.Active)
+            if (tracked.Role == UserRole.Admin && tracked.AccessStatus == UserAccessStatus.Active
+                && await lastAdminGuard.IsLastActiveAdminAsync(organizationId, currentUserId, token))
             {
-                await organizationRepository.LockForUpdateAsync(organizationId, token);
-
-                int remainingAdmins = await userRepository
-                    .CountActiveAdminsExcludingAsync(organizationId, currentUserId, token);
-
-                if (remainingAdmins == 0)
-                {
-                    lastAdminBlocked = true;
-                    return;
-                }
+                lastAdminBlocked = true;
+                return;
             }
 
             await auditLogRepository.DetachUserAsync(currentUserId, token);

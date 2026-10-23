@@ -15,6 +15,7 @@ using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.PublicScan;
 using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.TechHealth.Scan;
+using Sentinel.Application.Users;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Infrastructure.Data;
 using Sentinel.Infrastructure.Email;
@@ -131,6 +132,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ApiKeyPrincipalCache>();
         services.AddScoped<UserSessionCache>();
         services.AddScoped<TicketLinkChecker>();
+        services.AddScoped<LastAdminGuard>();
         services.AddScoped<ManifestParserService>();
         services.AddScoped<RepositoryScannerService>();
         services.AddScoped<RegistryMetadataApplier>();

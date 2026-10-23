@@ -15,7 +15,7 @@ namespace Sentinel.Application.Users.Update;
 
 public class UserUpdateService(
     IUserRepository userRepository,
-    IOrganizationRepository organizationRepository,
+    LastAdminGuard lastAdminGuard,
     IApiKeyRepository apiKeyRepository,
     IPasswordResetTokenRepository passwordResetTokenRepository,
     ICommitScopeFactory commitScopeFactory,
@@ -91,18 +91,11 @@ public class UserUpdateService(
             bool staysActiveAdmin = (newRole ?? tracked.Role) == UserRole.Admin
                 && (newAccessStatus ?? tracked.AccessStatus) == UserAccessStatus.Active;
 
-            if (wasActiveAdmin && !staysActiveAdmin)
+            if (wasActiveAdmin && !staysActiveAdmin
+                && await lastAdminGuard.IsLastActiveAdminAsync(organizationId, userId, token))
             {
-                await organizationRepository.LockForUpdateAsync(organizationId, token);
-
-                int remainingAdmins = await userRepository
-                    .CountActiveAdminsExcludingAsync(organizationId, userId, token);
-
-                if (remainingAdmins == 0)
-                {
-                    lastAdminBlocked = true;
-                    return;
-                }
+                lastAdminBlocked = true;
+                return;
             }
 
             if (!string.IsNullOrEmpty(model.FirstName)) tracked.FirstName = model.FirstName;
