@@ -100,9 +100,6 @@ public partial class ExportService(
         }
     }
 
-    private static string ComposeName(string? firstName, string? lastName) =>
-        firstName == null && lastName == null ? string.Empty : $"{firstName} {lastName}".Trim();
-
     private byte[] WriteTicketsExcel(List<TicketExportRow> tickets, ExportLabels L, bool truncated)
     {
         string[] headers = L.TicketHeaders;
@@ -133,9 +130,9 @@ public partial class ExportService(
             ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
 
             ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L);
-            ws.Cell(row, 6).Value = ComposeName(t.AssignedToFirstName, t.AssignedToLastName);
+            ws.Cell(row, 6).Value = PersonName.Format(t.AssignedToFirstName, t.AssignedToLastName) ?? string.Empty;
             ws.Cell(row, 7).Value = t.ProjectName ?? string.Empty;
-            ws.Cell(row, 8).Value = ComposeName(t.CreatedByFirstName, t.CreatedByLastName);
+            ws.Cell(row, 8).Value = PersonName.Format(t.CreatedByFirstName, t.CreatedByLastName) ?? string.Empty;
 
             SetDateCell(ws.Cell(row, 9), t.CreatedAt, L.DateFormat);
             SetDateCell(ws.Cell(row, 10), t.UpdatedAt, L.DateFormat);

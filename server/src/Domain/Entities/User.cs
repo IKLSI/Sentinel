@@ -48,5 +48,5 @@ public class User : IEntityWithId
 
     public Organization Organization { get; set; } = null!;
 
-    public string FullName => $"{FirstName} {LastName}".Trim();
+    public string FullName => PersonName.Format(FirstName, LastName) ?? string.Empty;
 }

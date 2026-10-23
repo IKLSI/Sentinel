@@ -146,11 +146,8 @@ public class DashboardStatsService(
         foreach (ClosedTicketActivityRow ticket in closedTickets)
         {
             string reference = TicketReference.For(ticket.Number);
-            string? userName = ticket.AssigneeFirstName is not null
-                ? $"{ticket.AssigneeFirstName} {ticket.AssigneeLastName}"
-                : ticket.CreatedByFirstName is not null
-                    ? $"{ticket.CreatedByFirstName} {ticket.CreatedByLastName}"
-                    : null;
+            string? userName = PersonName.Format(ticket.AssigneeFirstName, ticket.AssigneeLastName)
+                ?? PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName);
 
             List<string> detailParts = [];
             if (ticket.ProjectName is string projectName) detailParts.Add(projectName);
@@ -177,8 +174,8 @@ public class DashboardStatsService(
 
             List<string> detailParts = [];
             if (ticket.ProjectName is string projectName) detailParts.Add(projectName);
-            if (ticket.CreatedByFirstName is not null)
-                detailParts.Add($"{ticket.CreatedByFirstName} {ticket.CreatedByLastName}");
+            if (PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName) is string createdByName)
+                detailParts.Add(createdByName);
 
             items.Add(new ActivityItemDto
             {

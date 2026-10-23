@@ -17,8 +17,8 @@ public static class TicketMapper
         Type = ticket.Type.ToString().ToLower(),
         Status = ticket.Status.ToString().ToLower(),
         AssignedToId = ticket.AssignedToId,
-        AssignedToName = FullName(ticket.AssignedToFirstName, ticket.AssignedToLastName),
-        CreatedByName = FullName(ticket.CreatedByFirstName, ticket.CreatedByLastName) ?? string.Empty,
+        AssignedToName = PersonName.Format(ticket.AssignedToFirstName, ticket.AssignedToLastName),
+        CreatedByName = PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName) ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
         CommentCount = ticket.Comments.Count,
         FindingKind = ticket.FindingKind?.ToString(),
@@ -39,14 +39,11 @@ public static class TicketMapper
         Type = row.Type.ToString().ToLower(),
         Status = row.Status.ToString().ToLower(),
         AssignedToId = row.AssignedToId,
-        AssignedToName = FullName(row.AssignedToFirstName, row.AssignedToLastName),
-        CreatedByName = FullName(row.CreatedByFirstName, row.CreatedByLastName) ?? string.Empty,
+        AssignedToName = PersonName.Format(row.AssignedToFirstName, row.AssignedToLastName),
+        CreatedByName = PersonName.Format(row.CreatedByFirstName, row.CreatedByLastName) ?? string.Empty,
         CreatedAt = row.CreatedAt,
         CommentCount = row.CommentCount
     };
-
-    private static string? FullName(string? firstName, string? lastName) =>
-        firstName == null && lastName == null ? null : $"{firstName} {lastName}".Trim();
 
     public static TicketCommentDto ToDto(TicketComment comment) => new()
     {
@@ -61,7 +58,7 @@ public static class TicketMapper
     {
         Id = comment.Id,
         AuthorId = comment.AuthorId,
-        AuthorName = FullName(comment.AuthorFirstName, comment.AuthorLastName) ?? string.Empty,
+        AuthorName = PersonName.Format(comment.AuthorFirstName, comment.AuthorLastName) ?? string.Empty,
         Content = comment.Content,
         CreatedAt = comment.CreatedAt
     };
@@ -69,7 +66,7 @@ public static class TicketMapper
     private static TicketHistoryDto ToDto(TicketHistoryRow history) => new()
     {
         Id = history.Id,
-        UserName = FullName(history.UserFirstName, history.UserLastName) ?? string.Empty,
+        UserName = PersonName.Format(history.UserFirstName, history.UserLastName) ?? string.Empty,
         Field = history.Field,
         OldValue = history.OldValue,
         NewValue = history.NewValue,
