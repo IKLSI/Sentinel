@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useEffect, useId } from "react";
+import { useCallback, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRouteApi } from "@tanstack/react-router";
@@ -9,6 +9,7 @@ import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { ROUTES } from "@/constants/routes";
+import { useTokenPageLifecycle } from "@/features/auth/useTokenPageLifecycle";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthPasswordField } from "@/features/auth/components/AuthPasswordField";
 import { AuthPageSuccess } from "@/features/auth/components/AuthSuccessPanel";
@@ -38,29 +39,27 @@ export const ResetPasswordPage: React.FC = () => {
   const resetPasswordMutation = useResetPasswordMutation();
   const loading = resetPasswordMutation.isPending;
   const [done, setDone] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const glowId = useId();
   const passwordId = useId();
   const confirmId = useId();
 
-  useEffect(() => {
-    if (!token) navigate({ to: ROUTES.LOGIN, replace: true });
-    const id = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(id);
-  }, [token, navigate]);
-
-  useEffect(() => {
-    if (mounted) setTimeout(() => setFocus("password"), 700);
-  }, [mounted, setFocus]);
+  const redirectToLogin = useCallback(
+    () => navigate({ to: ROUTES.LOGIN, replace: true }),
+    [navigate],
+  );
+  const focusFirstField = useCallback(() => setFocus("password"), [setFocus]);
+  useTokenPageLifecycle({
+    token,
+    done,
+    focusFirstField,
+    redirectToLogin,
+  });
 
   const onSubmit = handleFormSubmit((data) => {
     resetPasswordMutation.mutate(
       { data: { token, password: data.password } },
       {
-        onSuccess: () => {
-          setDone(true);
-          setTimeout(() => navigate({ to: ROUTES.LOGIN, replace: true }), 3500);
-        },
+        onSuccess: () => setDone(true),
         onError,
       },
     );
