@@ -1,11 +1,6 @@
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import type { Ticket } from "@/domains/tickets/types";
-import {
-  SortDirection,
-  TicketPriority,
-  TicketSortField,
-  type TicketStatus,
-} from "@/enums";
+import { SortDirection, TicketPriority, TicketSortField } from "@/enums";
 import { TICKET_STATUSES } from "@/features/tickets/constants";
 import {
   TICKET_FILTER_FIELDS,
@@ -35,8 +30,7 @@ const comparators: Record<TicketSortField, (a: Ticket, b: Ticket) => number> = {
   [TicketSortField.Priority]: (a, b) =>
     PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority),
   [TicketSortField.Status]: (a, b) =>
-    TICKET_STATUSES.indexOf(a.status as TicketStatus) -
-    TICKET_STATUSES.indexOf(b.status as TicketStatus),
+    TICKET_STATUSES.indexOf(a.status) - TICKET_STATUSES.indexOf(b.status),
   [TicketSortField.Assignee]: (a, b) =>
     (a.assignedToName ?? "").localeCompare(b.assignedToName ?? ""),
   [TicketSortField.Comments]: (a, b) => a.commentCount - b.commentCount,

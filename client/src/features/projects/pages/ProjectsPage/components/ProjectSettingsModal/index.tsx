@@ -9,7 +9,6 @@ import { ScanFrequencyPicker } from "@/components/ui/forms/ScanFrequencyPicker";
 import { useT } from "@/contexts/I18nContext";
 import { useUpdateProjectSettingsMutation } from "@/domains/projects/mutations";
 import type { ProjectSummary } from "@/domains/projects/types";
-import type { ScanFrequency } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { RepositoryScopeFields } from "@/features/projects/pages/ProjectsPage/components/RepositoryScopeFields";
 import {
@@ -62,7 +61,7 @@ export const ProjectSettingsModal: React.FC<Props> = ({ project, onClose }) => {
   const { control, handleSubmit } = useForm<ProjectSettingsFormValues>({
     resolver: zodResolver(projectSettingsSchema),
     defaultValues: {
-      scanFrequency: project.scanFrequency as ScanFrequency,
+      scanFrequency: project.scanFrequency,
       branch: project.branch ?? "",
       rootPath: project.rootPath ?? "",
     },

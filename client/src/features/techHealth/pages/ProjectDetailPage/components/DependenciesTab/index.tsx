@@ -14,7 +14,7 @@ import {
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
-import { type DependencyStatus, FindingKind } from "@/enums";
+import { FindingKind } from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
 import {
   DEP_STATUS,
@@ -44,7 +44,7 @@ const COLUMN_KEYS = {
 const DEFAULT_SORT = { key: COLUMN_KEYS.vulns, direction: "desc" } as const;
 
 const statusOf = (dependency: Dependency) =>
-  DEP_STATUS[dependency.status as DependencyStatus] ?? DEP_STATUS.UpToDate;
+  DEP_STATUS[dependency.status] ?? DEP_STATUS.UpToDate;
 
 const comparators = {
   [COLUMN_KEYS.library]: (a: Dependency, b: Dependency) =>

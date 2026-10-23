@@ -6,7 +6,7 @@ import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
 import { NO_VALUE } from "@/constants/display";
 import { type Translate, useT } from "@/contexts/I18nContext";
-import { FindingKind, type VulnerabilitySeverity } from "@/enums";
+import { FindingKind } from "@/enums";
 import {
   SEVERITY_REASON_LABEL_KEYS,
   riskConfigOf,
@@ -49,8 +49,7 @@ const formatPercent = (value: number) => `${Math.round(value * 100)} %`;
 
 const severityReason = (vuln: VulnerabilityRow, t: Translate) =>
   t(
-    SEVERITY_REASON_LABEL_KEYS[vuln.severity as VulnerabilitySeverity] ??
-      SEVERITY_REASON_LABEL_KEYS.Low,
+    SEVERITY_REASON_LABEL_KEYS[vuln.severity] ?? SEVERITY_REASON_LABEL_KEYS.Low,
   );
 
 const riskDetails = (vuln: VulnerabilityRow, t: Translate) =>

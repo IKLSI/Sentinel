@@ -34,9 +34,11 @@ describe("getRuntimeUrgency", () => {
   });
 
   it("falls back to unknown for an unexpected status", () => {
-    expect(getRuntimeUrgency(runtime({ eolStatus: "Later" }))).toBe(
-      RuntimeEolStatus.Unknown,
-    );
+    expect(
+      getRuntimeUrgency(
+        runtime({ eolStatus: "Later" as Runtime["eolStatus"] }),
+      ),
+    ).toBe(RuntimeEolStatus.Unknown);
   });
 });
 

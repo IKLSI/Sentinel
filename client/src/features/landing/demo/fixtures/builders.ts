@@ -16,7 +16,7 @@ import { daysUntil } from "@/features/landing/demo/dates";
 const NO_TICKET = null as unknown as FindingTicket;
 const NO_SUPPRESSION = null as unknown as VulnerabilitySuppression;
 
-const NPM = "npm";
+const NPM: Dependency["ecosystem"] = "Npm";
 const PRODUCTION = "Prod";
 const DEVELOPMENT = "Dev";
 const ROOT_MANIFEST = "package.json";
@@ -37,7 +37,7 @@ interface DependencySeed {
   current: string;
   latest?: string;
   status: DependencyStatus;
-  ecosystem?: string;
+  ecosystem?: Dependency["ecosystem"];
   dev?: boolean;
   transitive?: boolean;
   manifestPath?: string;
@@ -76,7 +76,7 @@ const toVulnerability = (
 
 export const dependency = (seed: DependencySeed): Dependency => {
   const ecosystem = seed.ecosystem ?? NPM;
-  const findingKey = `${ecosystem}:${seed.name}`;
+  const findingKey = `${ecosystem.toLowerCase()}:${seed.name}`;
   return {
     id: findingKey,
     name: seed.name,
