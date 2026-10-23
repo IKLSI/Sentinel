@@ -8,6 +8,7 @@ using Sentinel.Application.Users.DeleteAccount;
 using Sentinel.Application.Users.ExportData;
 using Sentinel.Application.Users.Grid;
 using Sentinel.Application.Users.Invite;
+using Sentinel.Application.Users.Options;
 using Sentinel.Application.Users.Update;
 using Sentinel.Application.Users.UpdatePreferences;
 using Sentinel.Application.Users.UpdateProfile;
@@ -28,6 +29,12 @@ public class UsersController : BaseController
         [FromServices] UserGridService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(query, cancellationToken));
+
+    [HttpGet("options")]
+    public async Task<ActionResult<List<UserOptionDto>>> GetUserOptions(
+        [FromServices] UserOptionListService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpPost]
     [AuthorizeRoles(UserRole.Admin)]

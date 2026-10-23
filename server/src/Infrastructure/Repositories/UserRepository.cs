@@ -158,6 +158,16 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
             .Select(u => new EmailRecipient(u.Email, u.Language))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<UserOptionRow>> ListOptionsByNameAsync(Guid organizationId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .Where(u => u.OrganizationId == organizationId)
+            .OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName)
+            .ThenBy(u => u.Email)
+            .Select(u => new UserOptionRow(u.Id, u.FirstName, u.LastName, u.Email))
+            .ToListAsync(cancellationToken);
+
     public Task<UserAccountStateRow?> GetAccountStateOrDefaultAsync(Guid userId,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
