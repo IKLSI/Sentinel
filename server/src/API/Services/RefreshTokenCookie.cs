@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Sentinel.Domain.Abstractions;
 using Sentinel.API.Options;
+using Sentinel.Application.Auth;
 using Sentinel.Application.Options;
 
 namespace Sentinel.API.Services;
@@ -8,7 +9,6 @@ namespace Sentinel.API.Services;
 public class RefreshTokenCookie : IRefreshTokenStore
 {
     private const string Path = "/api/auth";
-    private const int FallbackExpirationDays = 30;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly CookieSettings _cookieSettings;
@@ -31,9 +31,7 @@ public class RefreshTokenCookie : IRefreshTokenStore
 
     public void Write(string token)
     {
-        int expirationDays = _jwtSettings.RefreshTokenExpirationDays > 0
-            ? _jwtSettings.RefreshTokenExpirationDays
-            : FallbackExpirationDays;
+        int expirationDays = RefreshTokenLifetime.DaysFor(_jwtSettings);
 
         CookieOptions options = BuildOptions();
         options.Expires = DateTime.UtcNow.AddDays(expirationDays);

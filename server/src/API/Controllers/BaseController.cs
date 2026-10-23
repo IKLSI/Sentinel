@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Sentinel.API.Contracts;
 using Sentinel.API.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -71,22 +72,11 @@ public abstract class BaseController : ControllerBase
         Code = ErrorCodes.ValidationFailed,
         Status = StatusCodes.Status400BadRequest,
         Errors = result.ValidationErrors
-            .GroupBy(error => ToCamelCase(error.Identifier))
+            .GroupBy(error => JsonNamingPolicy.CamelCase.ConvertName(error.Identifier))
             .ToDictionary(
                 group => group.Key,
                 group => group
                     .Select(error => new ValidationErrorItem { Code = error.Code, Params = error.Params })
                     .ToArray())
     };
-
-    private static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name) || char.IsLower(name[0])) return name;
-
-        return string.Create(name.Length, name, static (span, source) =>
-        {
-            source.AsSpan().CopyTo(span);
-            span[0] = char.ToLowerInvariant(span[0]);
-        });
-    }
 }

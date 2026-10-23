@@ -69,7 +69,7 @@ public static partial class ServiceCollectionExtensions
         Dictionary<string, ValidationErrorItem[]> errors = context.ModelState
             .Where(kv => kv.Value != null && kv.Value.Errors.Count > 0)
             .ToDictionary(
-                kv => ToCamelCase(kv.Key),
+                kv => JsonNamingPolicy.CamelCase.ConvertName(kv.Key),
                 kv => kv.Value!.Errors
                     .Select(_ => new ValidationErrorItem { Code = ValidationCodes.InvalidValue })
                     .ToArray());
@@ -79,18 +79,6 @@ public static partial class ServiceCollectionExtensions
             Code = ErrorCodes.ValidationFailed,
             Status = StatusCodes.Status400BadRequest,
             Errors = errors
-        });
-    }
-
-    private static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return name;
-        if (char.IsLower(name[0])) return name;
-
-        return string.Create(name.Length, name, static (span, source) =>
-        {
-            source.AsSpan().CopyTo(span);
-            span[0] = char.ToLowerInvariant(span[0]);
         });
     }
 
