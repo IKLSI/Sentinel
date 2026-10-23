@@ -300,6 +300,8 @@ public partial class ManifestParserService
 
         bool inDev = false;
         bool inDeps = false;
+        string? subTableName = null;
+        bool subTableIsDev = false;
 
         foreach (string raw in content.Split('\n'))
         {
@@ -307,11 +309,37 @@ public partial class ManifestParserService
 
             if (line.StartsWith('['))
             {
+                Match subTable = CargoDependencySubTableRegex().Match(line);
+                subTableName = subTable.Success ? subTable.Groups["name"].Value.Trim('"') : null;
+                subTableIsDev = subTable.Success && subTable.Groups["kind"].Value != "dependencies";
+
                 bool isTargetSection = line.StartsWith("[target.", StringComparison.Ordinal);
                 inDeps = line is "[dependencies]" or "[workspace.dependencies]"
                     || (isTargetSection && line.EndsWith(".dependencies]", StringComparison.Ordinal));
                 inDev = line is "[dev-dependencies]" or "[build-dependencies]"
                     || (isTargetSection && line.EndsWith("-dependencies]", StringComparison.Ordinal));
+                continue;
+            }
+
+            if (subTableName != null)
+            {
+                Match subTableVersion = CargoSubTableVersionRegex().Match(line);
+
+                if (subTableVersion.Success)
+                {
+                    deps.Add(new Dependency
+                    {
+                        ProjectId = projectId,
+                        Name = subTableName,
+                        CurrentVersion = VersionText.Clean(subTableVersion.Groups[1].Value),
+                        IsVersionPinned = IsExactCargoRequirement(subTableVersion.Groups[1].Value),
+                        Type = subTableIsDev ? DependencyType.Dev : DependencyType.Prod,
+                        Ecosystem = DependencyEcosystem.Cargo,
+                        Status = DependencyStatus.UpToDate,
+                    });
+                    subTableName = null;
+                }
+
                 continue;
             }
 
@@ -417,6 +445,12 @@ public partial class ManifestParserService
             }
         }
     }
+
+    [GeneratedRegex(@"^\[(?:target\.[^\]]+\.)?(?:workspace\.)?(?<kind>dependencies|dev-dependencies|build-dependencies)\.(?<name>[^\]]+)\]$")]
+    private static partial Regex CargoDependencySubTableRegex();
+
+    [GeneratedRegex(@"^version\s*=\s*[""']([^""']+)[""']")]
+    private static partial Regex CargoSubTableVersionRegex();
 
     [GeneratedRegex(@"^ruby\s+['""]([^'""]+)['""]", RegexOptions.Multiline)]
     private static partial Regex RubyVersionRegex();

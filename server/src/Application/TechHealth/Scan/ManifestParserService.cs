@@ -20,6 +20,12 @@ public partial class ManifestParserService
     [GeneratedRegex(@"^([A-Za-z0-9][A-Za-z0-9._-]*)")]
     private static partial Regex RequirementNameRegex();
 
+    [GeneratedRegex(@"^(?:[A-Za-z][A-Za-z0-9+.\-]*://|git\+)")]
+    private static partial Regex RequirementUrlRegex();
+
+    [GeneratedRegex(@"#egg=([A-Za-z0-9][A-Za-z0-9._-]*)")]
+    private static partial Regex RequirementEggRegex();
+
     [GeneratedRegex(@"==\s*([A-Za-z0-9][A-Za-z0-9.*\-_+!]*)")]
     private static partial Regex RequirementPinnedVersionRegex();
 

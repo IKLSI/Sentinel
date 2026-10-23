@@ -66,8 +66,9 @@ public class DashboardStatsService(
             await dashboardRepository.GetVulnerabilityTotalsAsync(organizationId, cancellationToken);
         DependencyTotalsRow dependencyTotals =
             await dashboardRepository.GetDependencyTotalsAsync(organizationId, cancellationToken);
+        List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
         IReadOnlyList<OpenTicketRow> openTickets = await dashboardRepository.GetOpenTicketsAsync(organizationId,
-            cancellationToken);
+            priorityIds, cancellationToken);
         IReadOnlyList<ScoreSnapshotRow> snapshots = await LoadSnapshotsAsync(organizationId, projects, windowStart,
             today, cancellationToken);
         VulnerabilityFlowCountsRow flowCounts = await dashboardRepository
@@ -76,7 +77,6 @@ public class DashboardStatsService(
         List<UrgentTicketDto> urgentTickets = await BuildUrgentTicketsAsync(organizationId, cancellationToken);
 
         IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(runtimes, today);
-        List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
         IReadOnlyList<Project> priorityProjects = await projectRepository.ListScoringGraphsByIdsAsync(
             organizationId, priorityIds, cancellationToken);
         Dictionary<Guid, HashSet<Guid>> suppressedIdsByProject =

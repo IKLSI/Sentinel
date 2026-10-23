@@ -115,7 +115,9 @@ public class RepositoryScannerService(
         await registryMetadata.ApplyAsync(RegistryCandidates(dependencies), cancellationToken);
 
         foreach (Dependency dependency in dependencies)
-            dependency.Status = DependencyStatusCalculator.For(dependency);
+            dependency.Status = dependency.Vulnerabilities.Count > 0
+                ? DependencyStatus.Vulnerable
+                : DependencyStatusCalculator.For(dependency);
     }
 
     public async Task<ScanOutcome> ScanRepositoryAsync(Guid projectId, string repoUrl, RepositoryAccess? access,
@@ -244,7 +246,12 @@ public class RepositoryScannerService(
             List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
                 .Concat(unlockedManifestDeps)
                 .GroupBy(d => (Identity: DependencyIdentity.Of(d), d.CurrentVersion))
-                .Select(g => g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First())
+                .Select(g =>
+                {
+                    Dependency kept = g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First();
+                    kept.IsDirect = g.Any(d => d.IsDirect);
+                    return kept;
+                })
                 .ToList();
 
             List<Runtime> dedupedRuntimes = manifests.SelectMany(manifest => manifest.Runtimes)

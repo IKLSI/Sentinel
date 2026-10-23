@@ -17,6 +17,7 @@ public class GitHubActionsRemediationRunner(
     public const string RunNamePrefix = "Sentinel remediation ";
     private const string GitHubApiBaseUrl = "https://api.github.com";
     private const string GitHubJsonMediaType = "application/vnd.github+json";
+    private const int MaxRunLookupPages = 5;
     private const int RunLookupPageSize = 50;
 
     public bool IsConfigured =>
@@ -76,26 +77,33 @@ public class GitHubActionsRemediationRunner(
             string created = Uri.EscapeDataString(
                 $">={startedAfter.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)}");
 
-            using HttpRequestMessage request = BuildRequest(HttpMethod.Get,
-                $"{WorkflowUrl()}/runs?event=workflow_dispatch&created={created}&per_page={RunLookupPageSize}");
+            for (int page = 1; page <= MaxRunLookupPages; page++)
+            {
+                using HttpRequestMessage request = BuildRequest(HttpMethod.Get,
+                    $"{WorkflowUrl()}/runs?event=workflow_dispatch&created={created}&per_page={RunLookupPageSize}&page={page}");
 
-            using HttpResponseMessage response = await httpClientFactory
-                .CreateClient(HttpClientNames.RemediationRunner)
-                .SendAsync(request, cancellationToken);
+                using HttpResponseMessage response = await httpClientFactory
+                    .CreateClient(HttpClientNames.RemediationRunner)
+                    .SendAsync(request, cancellationToken);
 
-            if (response.StatusCode != HttpStatusCode.OK) return RemediationRunState.Unknown;
+                if (response.StatusCode != HttpStatusCode.OK) return RemediationRunState.Unknown;
 
-            JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+                JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
 
-            if (!payload.TryGetProperty("workflow_runs", out JsonElement runs)) return RemediationRunState.Unknown;
+                if (!payload.TryGetProperty("workflow_runs", out JsonElement runs)) return RemediationRunState.Unknown;
 
-            JsonElement? run = runs.EnumerateArray()
-                .Where(item => item.TryGetProperty("display_title", out JsonElement title)
-                    && title.GetString() == $"{RunNamePrefix}{runnerJobId}")
-                .Select(item => (JsonElement?)item)
-                .FirstOrDefault();
+                JsonElement? run = runs.EnumerateArray()
+                    .Where(item => item.TryGetProperty("display_title", out JsonElement title)
+                        && title.GetString() == $"{RunNamePrefix}{runnerJobId}")
+                    .Select(item => (JsonElement?)item)
+                    .FirstOrDefault();
 
-            return run is JsonElement found ? StateOf(found) : RemediationRunState.Pending;
+                if (run is JsonElement found) return StateOf(found);
+
+                if (runs.GetArrayLength() < RunLookupPageSize) break;
+            }
+
+            return RemediationRunState.Pending;
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {

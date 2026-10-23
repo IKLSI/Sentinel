@@ -142,6 +142,8 @@ public partial class ExportService
         return cleaned.Length > 28 ? cleaned[..28] : cleaned;
     }
 
+    private const int AutoFitRowLimit = 300;
+
     private static void FinalizeSheet(IXLWorksheet ws, int colCount, int freezeRow, int filterHeaderRow, int filterLastRow, int repeatTop)
     {
         IXLRange? used = ws.RangeUsed();
@@ -149,7 +151,7 @@ public partial class ExportService
 
         for (int col = 1; col <= colCount; col++)
         {
-            ws.Column(col).AdjustToContents();
+            ws.Column(col).AdjustToContents(1, AutoFitRowLimit);
             if (ws.Column(col).Width < 12) ws.Column(col).Width = 12;
             if (ws.Column(col).Width > 60) ws.Column(col).Width = 60;
         }

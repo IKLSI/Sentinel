@@ -823,6 +823,7 @@
   "settings.jobs.empty": "Aucune automatisation",
   "settings.jobs.empty_subtitle": "Aucun job récurrent planifié",
   "settings.jobs.job.data-retention": "Purge des données expirées",
+  "settings.jobs.job.suppression-expiry": "Recalcul des suppressions expirées",
   "settings.jobs.job.tech-health-scan": "Analyse des vulnérabilités des projets",
   "settings.jobs.status.enqueued": "En attente",
   "settings.jobs.status.failed": "Échec",

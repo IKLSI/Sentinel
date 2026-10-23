@@ -22,7 +22,7 @@ public sealed record RuntimeEolAssessment(RuntimeEolStatus Status, int? DaysRema
     public static RuntimeEolAssessment Of(Runtime runtime, DateTime now)
     {
         int? daysRemaining = runtime.EolDate is DateTime eolDate
-            ? (int)Math.Round((eolDate - now).TotalDays, MidpointRounding.AwayFromZero)
+            ? (int)(eolDate.Date - now.Date).TotalDays
             : null;
 
         RuntimeEolStatus status = StatusOf(runtime.IsEol, daysRemaining);

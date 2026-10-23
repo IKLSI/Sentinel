@@ -19,6 +19,11 @@ public static class WebApplicationExtensions
             job => job.ExecuteAsync(CancellationToken.None),
             Cron.Daily(3));
 
+        recurringJobs.AddOrUpdate<SuppressionExpiryJob>(
+            RecurringJobIds.SuppressionExpiry,
+            job => job.ExecuteAsync(CancellationToken.None),
+            Cron.Hourly());
+
         return app;
     }
 }

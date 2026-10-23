@@ -20,7 +20,8 @@ public interface IDashboardRepository
     Task<IReadOnlyList<ScoreSnapshotRow>> GetScoreSnapshotsAsync(Guid organizationId, DateOnly windowStart,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId, IReadOnlyCollection<Guid> projectIds,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DashboardProjectRow>> GetProjectsAsync(Guid organizationId,
         CancellationToken cancellationToken);

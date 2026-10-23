@@ -248,6 +248,81 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParsePnpmLock_V5_DropsThePeerSuffixFromTheVersion()
+    {
+        const string content = """
+        lockfileVersion: 5.4
+
+        packages:
+
+          /react-dom/18.2.0_react@18.2.0:
+            resolution: {integrity: sha512-aaa}
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("pnpm-lock.yaml", content);
+
+        SingleDependency(dependencies, "react-dom").CurrentVersion.Should().Be("18.2.0");
+    }
+
+    [Fact]
+    public void ParseRequirementsTxt_IgnoresBareUrlsAndKeepsTheEggName()
+    {
+        const string content = """
+        https://example.org/pkg/archive/main.zip
+        git+https://github.com/acme/lib.git#egg=lib
+        requests==2.31.0
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("requirements.txt", content);
+
+        dependencies.Select(dependency => dependency.Name).Should().BeEquivalentTo("lib", "requests");
+    }
+
+    [Fact]
+    public void ParseCargoToml_ReadsDependencySubTables()
+    {
+        const string content = """
+        [dependencies.tokio]
+        version = "1.38.0"
+        features = ["full"]
+
+        [dev-dependencies.insta]
+        version = "1.39.0"
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("Cargo.toml", content);
+
+        SingleDependency(dependencies, "tokio").CurrentVersion.Should().Be("1.38.0");
+        SingleDependency(dependencies, "tokio").Type.Should().Be(DependencyType.Prod);
+        SingleDependency(dependencies, "insta").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
+    public void ParseNuGetLockJson_KeepsEachResolvedVersionAndMergesDirectness()
+    {
+        const string content = """
+        {
+          "version": 1,
+          "dependencies": {
+            "net8.0": { "Newtonsoft.Json": { "type": "Transitive", "resolved": "13.0.1" } },
+            "net48": {
+              "Newtonsoft.Json": { "type": "Direct", "resolved": "13.0.1" },
+              "Serilog": { "type": "Direct", "resolved": "3.0.0" }
+            },
+            "net9.0": { "Serilog": { "type": "Direct", "resolved": "4.0.0" } }
+          }
+        }
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("packages.lock.json", content);
+
+        dependencies.Should().HaveCount(3);
+        dependencies.Single(d => d.Name == "Newtonsoft.Json").IsDirect.Should().BeTrue();
+        dependencies.Where(d => d.Name == "Serilog").Select(d => d.CurrentVersion)
+            .Should().BeEquivalentTo("3.0.0", "4.0.0");
+    }
+
+    [Fact]
     public void ParseRequirementsTxt_UsesTheLowerBoundNotTheUpperBound()
     {
         const string content = """

@@ -347,6 +347,9 @@ public partial class ManifestParserService
             if (slash <= 0) return (null, null);
             name = key[..slash];
             version = key[(slash + 1)..];
+
+            int peerSuffix = version.IndexOf('_');
+            if (peerSuffix >= 0) version = version[..peerSuffix];
         }
         else
         {

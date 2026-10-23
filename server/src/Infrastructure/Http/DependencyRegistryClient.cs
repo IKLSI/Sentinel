@@ -176,9 +176,13 @@ public partial class DependencyRegistryClient(
         return new RegistryPackage(version, doc.Root?.Element("groupId")?.Value ?? parts[0]);
     }
 
+    private static string EncodeGoModulePath(string module) =>
+        string.Concat(module.Select(character =>
+            char.IsAsciiLetterUpper(character) ? $"!{char.ToLowerInvariant(character)}" : character.ToString()));
+
     private static async Task<RegistryPackage> FetchGoAsync(HttpClient client, string module)
     {
-        using HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(module)}/@latest");
+        using HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(EncodeGoModulePath(module))}/@latest");
         if (!response.IsSuccessStatusCode) return Unsuccessful(response);
         using JsonDocument doc = await ParseJsonAsync(response);
         string? version = Text(doc.RootElement, "Version");

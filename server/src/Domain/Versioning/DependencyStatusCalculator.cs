@@ -40,7 +40,9 @@ public static class DependencyStatusCalculator
 
     private static int[] CoreOf(string version)
     {
-        string[] parts = version.TrimStart('v', 'V').Split('.', '-', '+');
+        int epochEnd = version.IndexOf('!');
+        string withoutEpoch = epochEnd >= 0 ? version[(epochEnd + 1)..] : version;
+        string[] parts = withoutEpoch.TrimStart('v', 'V').Split('.', '-', '+');
 
         return Enumerable.Range(0, SemverCoreLength)
             .Select(index => index < parts.Length && int.TryParse(parts[index], out int value) ? value : 0)

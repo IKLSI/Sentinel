@@ -329,7 +329,7 @@ public partial class ManifestParserService
         using JsonDocument doc = JsonDocument.Parse(content);
         if (!doc.RootElement.TryGetProperty("dependencies", out JsonElement frameworks)) return;
 
-        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<(string Name, string Version), Dependency> seen = new(new NuGetIdentityComparer());
 
         foreach (JsonProperty framework in frameworks.EnumerateObject())
         {
@@ -339,20 +339,41 @@ public partial class ManifestParserService
                 if (type.Equals("Project", StringComparison.OrdinalIgnoreCase)) continue;
 
                 string version = pkg.Value.TryGetProperty("resolved", out JsonElement r) ? r.GetString() ?? "" : "";
-                if (string.IsNullOrEmpty(version) || !seen.Add(pkg.Name)) continue;
+                if (string.IsNullOrEmpty(version)) continue;
 
-                deps.Add(new Dependency
+                bool isDirect = type.Equals(NuGetDirectDependencyType, StringComparison.OrdinalIgnoreCase);
+
+                if (seen.TryGetValue((pkg.Name, version), out Dependency? existing))
+                {
+                    existing.IsDirect |= isDirect;
+                    continue;
+                }
+
+                Dependency dependency = new Dependency
                 {
                     ProjectId = projectId,
                     Name = pkg.Name,
                     CurrentVersion = version,
                     Type = DependencyType.Prod,
-                    IsDirect = type.Equals(NuGetDirectDependencyType, StringComparison.OrdinalIgnoreCase),
+                    IsDirect = isDirect,
                     Ecosystem = DependencyEcosystem.NuGet,
                     Status = DependencyStatus.UpToDate,
-                });
+                };
+
+                seen[(pkg.Name, version)] = dependency;
+                deps.Add(dependency);
             }
         }
+    }
+
+    private sealed class NuGetIdentityComparer : IEqualityComparer<(string Name, string Version)>
+    {
+        public bool Equals((string Name, string Version) x, (string Name, string Version) y) =>
+            string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(x.Version, y.Version, StringComparison.OrdinalIgnoreCase);
+
+        public int GetHashCode((string Name, string Version) obj) =>
+            HashCode.Combine(obj.Name.ToLowerInvariant(), obj.Version.ToLowerInvariant());
     }
 
     private static void ParseGradleLockfile(Guid projectId, string content, List<Dependency> deps)

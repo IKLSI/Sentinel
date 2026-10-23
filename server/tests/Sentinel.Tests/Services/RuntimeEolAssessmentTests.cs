@@ -50,4 +50,23 @@ public class RuntimeEolAssessmentTests
         Assess(eolInDays: 400).ProgressPercent.Should().Be(4);
         Assess(eolInDays: 73).ProgressPercent.Should().Be(80);
     }
+
+    [Fact]
+    public void Of_OnTheEolDayDuringTheDay_StaysInDangerAndAgreesWithTheLifecycle()
+    {
+        DateTime eolDay = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime duringTheDay = eolDay.AddHours(10);
+
+        RuntimeEolAssessment assessment = RuntimeEolAssessment.Of(new Runtime
+        {
+            Name = "Node.js",
+            Version = "20",
+            EolDate = eolDay
+        }, duringTheDay);
+
+        assessment.Status.Should().Be(RuntimeEolStatus.Danger);
+        assessment.DaysRemaining.Should().Be(0);
+        new RuntimeLifecycle(null, eolDay).IsEolAt(duringTheDay).Should().BeFalse();
+        new RuntimeLifecycle(null, eolDay).IsEolAt(eolDay.AddDays(1)).Should().BeTrue();
+    }
 }

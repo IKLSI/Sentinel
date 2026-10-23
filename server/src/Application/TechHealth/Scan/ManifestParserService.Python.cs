@@ -68,6 +68,13 @@ public partial class ManifestParserService
 
     private static (string Name, string Version, bool Pinned) ParseRequirementLine(string line)
     {
+        if (RequirementUrlRegex().IsMatch(line))
+        {
+            Match egg = RequirementEggRegex().Match(line);
+
+            return egg.Success ? (egg.Groups[1].Value, string.Empty, false) : (string.Empty, string.Empty, false);
+        }
+
         int comment = line.IndexOf('#');
         if (comment >= 0) line = line[..comment];
 

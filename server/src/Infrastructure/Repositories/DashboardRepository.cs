@@ -135,9 +135,9 @@ public class DashboardRepository : IDashboardRepository
     }
 
     public async Task<IReadOnlyList<OpenTicketRow>> GetOpenTicketsAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
+        IReadOnlyCollection<Guid> projectIds, CancellationToken cancellationToken) =>
         await Tickets(organizationId)
-            .Where(t => OpenStatuses.Contains(t.Status))
+            .Where(t => OpenStatuses.Contains(t.Status) && projectIds.Contains(t.ProjectId!.Value))
             .Select(t => new OpenTicketRow(
                 t.Id,
                 t.Number,

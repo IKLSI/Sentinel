@@ -1,6 +1,7 @@
 using Sentinel.API.Contracts;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
+using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 
 namespace Sentinel.API.Middleware;
@@ -45,6 +46,7 @@ public class ErrorHandlingMiddleware
     private static (HttpStatusCode StatusCode, string Code) Map(Exception exception) => exception switch
     {
         DbUpdateConcurrencyException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency),
+        UniqueConstraintViolationException => (HttpStatusCode.Conflict, ErrorCodes.Concurrency),
         BadHttpRequestException badRequest => ((HttpStatusCode)badRequest.StatusCode, ErrorCodes.InvalidRequest),
         _ => (HttpStatusCode.InternalServerError, ErrorCodes.Unexpected)
     };

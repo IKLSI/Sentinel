@@ -4,4 +4,5 @@ public static class RecurringJobIds
 {
     public const string TechHealthScan = "tech-health-scan";
     public const string DataRetention = "data-retention";
+    public const string SuppressionExpiry = "suppression-expiry";
 }

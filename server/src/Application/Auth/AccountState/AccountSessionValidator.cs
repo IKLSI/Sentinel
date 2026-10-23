@@ -33,6 +33,7 @@ public class AccountSessionValidator(IUserRepository userRepository, ISystemScop
         cache.Set(cacheKey, account, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = CacheKeys.AuthAccountTtl,
+            Priority = CacheItemPriority.High,
             Size = 1
         });
 

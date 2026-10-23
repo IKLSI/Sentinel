@@ -63,6 +63,8 @@ Au démarrage hors Development, l'API refuse aussi un rôle Postgres superuser o
 | `Database__MaxPoolSize`, `Database__CommandTimeoutSeconds`, `Database__RetryCount` | 40 / 30 / 3 | Réglages Npgsql |
 | `PORT` | 8080 | Port d'écoute dans l'image Docker |
 
+Le cookie du refresh token est `Secure` hors développement. Avec `SameSite=Lax` (défaut), le front et l'API doivent appartenir au même site (domaine parent commun, à renseigner dans `Cookie__Domain`). Si le front et l'API sont sur des sites distincts (par exemple Vercel et Render), définir `Cookie__SameSite=None` et lister l'origine du front dans `Frontend__BaseUrl` / `Cors__AllowedOrigins__0`.
+
 Côté front, `VITE_API_URL` indique l'URL de l'API au build. Vide en développement : le serveur Vite proxifie `/api` et `/hubs` vers `http://localhost:5000`.
 
 ### Générer le certificat Data Protection
@@ -124,7 +126,7 @@ L'application tourne en **mono-instance** : rate limiting, caches et diffusion S
   ```
 - **Front** : déployé sur Vercel depuis `client/` (`pnpm build`, sortie `dist`). `client/vercel.json` gère les rewrites SPA ainsi que la CSP et les en-têtes de sécurité. Définir `VITE_API_URL` sur l'URL publique de l'API.
 - **Reverse-proxy** : masquer le paramètre `access_token` des URL `/hubs/sync` dans les logs (jeton SignalR passé en query string).
-- **Sauvegardes** : le workflow `backup-database.yml` réalise chaque nuit un dump chiffré, vérifie sa restauration et le conserve 7 jours en artifact GitHub.
+- **Sauvegardes** : le workflow `backup-database.yml` réalise chaque nuit un dump chiffré, vérifie sa restauration et le conserve 7 jours en artifact GitHub. GitHub désactive les workflows planifiés après 60 jours sans activité sur le dépôt : vérifier régulièrement que le cron tourne, ou le relancer manuellement (`workflow_dispatch`). Les artifacts sont chiffrés (AES256) mais restent téléchargeables par toute personne ayant accès aux artifacts du dépôt.
 - **Versions** : `pnpm release` incrémente la version de `client/package.json`, crée le tag et pousse.
 
 ### Correction automatique

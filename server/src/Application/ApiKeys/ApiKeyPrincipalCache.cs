@@ -16,6 +16,7 @@ public class ApiKeyPrincipalCache(IMemoryCache cache, IApiKeyRepository apiKeyRe
         cache.Set(CacheKeys.ApiKeyPrincipal(keyHash), cached, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = CacheKeys.ApiKeyPrincipalTtl,
+            Priority = CacheItemPriority.High,
             Size = 1
         });
 

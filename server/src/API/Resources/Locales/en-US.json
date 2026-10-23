@@ -823,6 +823,7 @@
   "settings.jobs.empty": "No automation",
   "settings.jobs.empty_subtitle": "No recurring job scheduled",
   "settings.jobs.job.data-retention": "Expired data purge",
+  "settings.jobs.job.suppression-expiry": "Expired suppression recalculation",
   "settings.jobs.job.tech-health-scan": "Technology health scan",
   "settings.jobs.status.enqueued": "Enqueued",
   "settings.jobs.status.failed": "Failed",

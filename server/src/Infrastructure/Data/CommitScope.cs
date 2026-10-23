@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Npgsql;
 using Sentinel.Domain.Abstractions.Persistence;
 
 namespace Sentinel.Infrastructure.Data;
@@ -27,6 +28,10 @@ public class CommitScope : ICommitScope
         {
             affectedRows = await _context.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            throw new UniqueConstraintViolationException(exception);
+        }
         catch (DbUpdateException exception) when (exception is not DbUpdateConcurrencyException)
         {
             throw new PersistenceException("The database save was rejected", exception);
@@ -36,6 +41,9 @@ public class CommitScope : ICommitScope
 
         return affectedRows;
     }
+
+    internal static bool IsUniqueViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 
     public void Dispose()
     {
@@ -71,8 +79,16 @@ public class CommitScopeFactory : ICommitScopeFactory
             await using IDbContextTransaction transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            await operation(cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await operation(cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (CommitScope.IsUniqueViolation(exception))
+            {
+                throw new UniqueConstraintViolationException(exception);
+            }
+
             await transaction.CommitAsync(cancellationToken);
         });
     }

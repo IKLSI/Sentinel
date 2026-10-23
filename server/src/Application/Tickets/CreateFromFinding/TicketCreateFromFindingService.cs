@@ -78,11 +78,23 @@ public class TicketCreateFromFindingService(
             UpdatedAt = DateTime.UtcNow
         };
 
-        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
+        try
         {
-            ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
-            await ticketRepository.AddAsync(ticket, token);
-        }, cancellationToken);
+            await commitScopeFactory.ExecuteInTransactionAsync(async token =>
+            {
+                ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
+                await ticketRepository.AddAsync(ticket, token);
+            }, cancellationToken);
+        }
+        catch (UniqueConstraintViolationException)
+        {
+            Ticket? concurrent = await ticketRepository.GetOpenForFindingAsync(model.ProjectId, model.Kind, findingKey,
+                cancellationToken);
+
+            if (concurrent == null) throw;
+
+            return await LoadDtoAsync(concurrent.Id, cancellationToken);
+        }
 
         dashboardCache.Invalidate(organizationId);
 

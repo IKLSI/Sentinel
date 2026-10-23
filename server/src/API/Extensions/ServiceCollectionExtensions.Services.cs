@@ -160,6 +160,7 @@ public static partial class ServiceCollectionExtensions
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<DataRetentionJob>();
+        services.AddTransient<SuppressionExpiryJob>();
         services.AddTransient<SendInvitationEmailJob>();
         services.AddTransient<SendPasswordResetEmailJob>();
         services.AddTransient<SendEmailVerificationJob>();
