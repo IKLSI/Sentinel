@@ -12,11 +12,13 @@ namespace Sentinel.Tests.Services;
 
 public class TokenServiceTests
 {
+    private static readonly string SigningKey = new('k', 48);
+
     private static TokenService BuildService()
     {
         var settings = new JwtSettings
         {
-            Secret = "test-secret-key-with-sufficient-length-1234567890",
+            Secret = SigningKey,
             Issuer = "test-issuer",
             Audience = "test-audience",
             AccessTokenExpirationMinutes = 60,
@@ -101,7 +103,7 @@ public class TokenServiceTests
                 ValidIssuer = "test-issuer",
                 ValidAudience = "test-audience",
                 IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes("test-secret-key-with-sufficient-length-1234567890")),
+                    Encoding.UTF8.GetBytes(SigningKey)),
                 ClockSkew = TimeSpan.Zero
             });
 
