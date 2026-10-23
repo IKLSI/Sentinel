@@ -52,32 +52,8 @@ public static class HealthScoreCalculator
 
     public static HealthScoreLedger Itemize(Project project, Func<Vulnerability, bool> isResolved, DateTime now)
     {
-        List<PenaltyCharge> charges = [];
-        double penalty = OutdatedPenalty(project);
-
-        if (penalty > 0) charges.Add(VersionLagCharge(project, penalty));
-
-        foreach (Dependency dependency in project.Dependencies)
-        {
-            double weight = WeightOf(dependency);
-
-            if (dependency.IsDeprecated)
-            {
-                penalty += EolDependencyPenalty * weight;
-                charges.Add(DeprecationCharge(dependency, weight));
-            }
-
-            List<Vulnerability> openVulnerabilities = OpenVulnerabilities(dependency, isResolved);
-
-            penalty += openVulnerabilities.Sum(VulnerabilityPenalty) * weight;
-            charges.AddRange(openVulnerabilities.Select(vulnerability =>
-                VulnerabilityCharge(dependency, vulnerability, weight)));
-        }
-
-        List<PenaltyCharge> runtimeCharges = RuntimeCharges(project, now);
-
-        penalty += runtimeCharges.Sum(charge => charge.Points);
-        charges.AddRange(runtimeCharges);
+        List<PenaltyCharge> charges = Charges(project, isResolved, now);
+        double penalty = charges.Sum(charge => charge.Points);
 
         int rawScore = ToScore(penalty);
         (int? ceiling, string? ceilingReason) = ScoreCeiling(project, isResolved);
@@ -107,22 +83,49 @@ public static class HealthScoreCalculator
 
     public static HealthScoreBreakdown Breakdown(Project project, Func<Vulnerability, bool> isResolved)
     {
-        double securityPenalty = 0;
-        double freshnessPenalty = OutdatedPenalty(project);
+        ILookup<ScoreArea, double> pointsByArea = Charges(project, isResolved, DateTime.UtcNow)
+            .ToLookup(charge => AreaOf(charge.Kind), charge => charge.Points);
+
+        return new HealthScoreBreakdown(
+            ToScore(pointsByArea[ScoreArea.Security].Sum()),
+            ToScore(pointsByArea[ScoreArea.Runtimes].Sum()),
+            ToScore(pointsByArea[ScoreArea.Freshness].Sum()));
+    }
+
+    private static List<PenaltyCharge> Charges(Project project, Func<Vulnerability, bool> isResolved, DateTime now)
+    {
+        List<PenaltyCharge> charges = [];
+        double versionLagPenalty = OutdatedPenalty(project);
+
+        if (versionLagPenalty > 0) charges.Add(VersionLagCharge(project, versionLagPenalty));
 
         foreach (Dependency dependency in project.Dependencies)
         {
             double weight = WeightOf(dependency);
 
-            if (dependency.IsDeprecated) freshnessPenalty += EolDependencyPenalty * weight;
+            if (dependency.IsDeprecated) charges.Add(DeprecationCharge(dependency, weight));
 
-            securityPenalty += OpenVulnerabilities(dependency, isResolved).Sum(VulnerabilityPenalty) * weight;
+            charges.AddRange(OpenVulnerabilities(dependency, isResolved).Select(vulnerability =>
+                VulnerabilityCharge(dependency, vulnerability, weight)));
         }
 
-        return new HealthScoreBreakdown(
-            ToScore(securityPenalty),
-            ToScore(RuntimeCharges(project, DateTime.UtcNow).Sum(charge => charge.Points)),
-            ToScore(freshnessPenalty));
+        charges.AddRange(RuntimeCharges(project, now));
+
+        return charges;
+    }
+
+    private static ScoreArea AreaOf(string kind) => kind switch
+    {
+        ScorePenaltyKinds.EolRuntime or ScorePenaltyKinds.ApproachingEolRuntime => ScoreArea.Runtimes,
+        ScorePenaltyKinds.VersionLag or ScorePenaltyKinds.EolDependency => ScoreArea.Freshness,
+        _ => ScoreArea.Security
+    };
+
+    private enum ScoreArea
+    {
+        Security,
+        Runtimes,
+        Freshness
     }
 
     public static string ToGrade(int score) =>
