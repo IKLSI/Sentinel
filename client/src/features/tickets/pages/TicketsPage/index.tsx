@@ -72,10 +72,10 @@ export const TicketsPage: React.FC = () => {
   const projects = useMemo(() => projectsData ?? [], [projectsData]);
   const { data: usersData } = useUserOptionsQuery();
   const users = useMemo(() => usersData ?? [], [usersData]);
-  const [sort, toggleSort] = useSortState<SortState["col"]>(
-    { col: TicketSortField.Priority, dir: SortDirection.Desc },
-    () => setPage(1),
-  );
+  const [sort, toggleSort] = useSortState<SortState["col"]>({
+    col: TicketSortField.Priority,
+    dir: SortDirection.Desc,
+  });
 
   const pageSize = 25;
 

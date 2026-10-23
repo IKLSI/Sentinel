@@ -6,29 +6,22 @@ export interface SortState<TCol extends string> {
   dir: SortDirection;
 }
 
-export function useSortState<TCol extends string>(
-  initial: SortState<TCol>,
-  onChange?: () => void,
-) {
+export function useSortState<TCol extends string>(initial: SortState<TCol>) {
   const [sort, setSort] = useState<SortState<TCol>>(initial);
 
-  const toggleSort = useCallback(
-    (col: TCol) => {
-      setSort((s) =>
-        s.col === col
-          ? {
-              col,
-              dir:
-                s.dir === SortDirection.Asc
-                  ? SortDirection.Desc
-                  : SortDirection.Asc,
-            }
-          : { col, dir: SortDirection.Asc },
-      );
-      onChange?.();
-    },
-    [onChange],
-  );
+  const toggleSort = useCallback((col: TCol) => {
+    setSort((s) =>
+      s.col === col
+        ? {
+            col,
+            dir:
+              s.dir === SortDirection.Asc
+                ? SortDirection.Desc
+                : SortDirection.Asc,
+          }
+        : { col, dir: SortDirection.Asc },
+    );
+  }, []);
 
   return [sort, toggleSort] as const;
 }

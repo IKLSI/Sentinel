@@ -70,10 +70,10 @@ export const MembersTab: React.FC<Props> = ({
   const [memberSearch, setMemberSearch] = useState("");
   const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
   const [page, setPage] = useState(1);
-  const [sort, toggleSort] = useSortState<UserSortField>(
-    { col: UserSortField.Member, dir: SortDirection.Asc },
-    () => setPage(1),
-  );
+  const [sort, toggleSort] = useSortState<UserSortField>({
+    col: UserSortField.Member,
+    dir: SortDirection.Asc,
+  });
 
   const handleSearchChange = useCallback((v: string) => {
     setMemberSearch(v);
