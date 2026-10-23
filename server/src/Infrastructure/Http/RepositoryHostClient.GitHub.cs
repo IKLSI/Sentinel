@@ -272,7 +272,8 @@ public partial class RepositoryHostClient
             if (IsInSkippedDirectory(path)) continue;
 
             string fileName = Path.GetFileName(path);
-            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}", path));
+            string encodedPath = string.Join('/', path.Split('/').Select(Uri.EscapeDataString));
+            result.Add((fileName, $"https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{encodedPath}", path));
         }
 
         return new RepositoryFileListing(result, isTruncated);

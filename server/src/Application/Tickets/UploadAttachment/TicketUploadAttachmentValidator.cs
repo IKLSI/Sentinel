@@ -42,7 +42,8 @@ public class TicketUploadAttachmentValidator : IValidator
         if (MagicByteChecks.TryGetValue(model.ContentType, out Func<byte[], bool>? matchesSignature))
         {
             byte[] header = new byte[12];
-            int read = await model.Content.ReadAsync(header, cancellationToken);
+            int read = await model.Content.ReadAtLeastAsync(header, header.Length, throwOnEndOfStream: false,
+                cancellationToken);
             model.Content.Seek(0, SeekOrigin.Begin);
 
             if (read < header.Length || !matchesSignature(header))
