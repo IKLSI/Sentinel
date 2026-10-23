@@ -365,6 +365,90 @@ public class RepositoryScannerServiceTests
     }
 
     [Fact]
+    public async Task ScanRepository_MalformedManifest_IsIncomplete()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = "{ not json",
+        });
+
+        outcome.IsComplete.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ScanRepository_NoCommitSha_FallsBackToTheProjectBranch()
+    {
+        FakeRepositoryHost host = new FakeRepositoryHost(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """{ "dependencies": { "axios": "1.6.8" } }""",
+        });
+
+        RepositoryScannerService scanner = new RepositoryScannerService(host, new ManifestParserService(),
+            new RegistryMetadataApplier(new NoopRegistry()), NullLogger<RepositoryScannerService>.Instance);
+
+        await scanner.ScanRepositoryAsync(Guid.NewGuid(), "https://github.com/acme/app", null, null,
+            new RepositoryScanScope("develop", null), TestContext.Current.CancellationToken);
+
+        host.RequestedCommitSha.Should().Be("develop");
+    }
+
+    [Fact]
+    public async Task ScanRepository_YarnLock_MarksPackagesReachableOnlyFromDevDependenciesAsDev()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """
+            { "dependencies": { "axios": "1.6.8" }, "devDependencies": { "jest": "29.7.0" } }
+            """,
+            ["https://host/yarn.lock"] = """
+            axios@1.6.8:
+              version "1.6.8"
+              dependencies:
+                follow-redirects "^1.15.0"
+
+            follow-redirects@^1.15.0:
+              version "1.15.6"
+
+            jest@29.7.0:
+              version "29.7.0"
+              dependencies:
+                jest-util "^29.0.0"
+
+            jest-util@^29.0.0:
+              version "29.7.1"
+            """,
+        });
+
+        outcome.Dependencies.Single(d => d.Name == "follow-redirects").Type.Should().Be(DependencyType.Prod);
+        outcome.Dependencies.Single(d => d.Name == "jest-util").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
+    public async Task ScanRepository_BunLock_MarksPackagesReachableOnlyFromDevDependenciesAsDev()
+    {
+        ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>
+        {
+            ["https://host/package.json"] = """
+            { "dependencies": { "axios": "1.6.8" }, "devDependencies": { "jest": "29.7.0" } }
+            """,
+            ["https://host/bun.lock"] = """
+            {
+              "lockfileVersion": 1,
+              "packages": {
+                "axios": ["axios@1.6.8", "", { "dependencies": { "follow-redirects": "^1.15.0" } }, "sha"],
+                "follow-redirects": ["follow-redirects@1.15.6", "", {}, "sha"],
+                "jest": ["jest@29.7.0", "", { "dependencies": { "jest-util": "^29.0.0" } }, "sha"],
+                "jest-util": ["jest-util@29.7.1", "", {}, "sha"]
+              }
+            }
+            """,
+        });
+
+        outcome.Dependencies.Single(d => d.Name == "follow-redirects").Type.Should().Be(DependencyType.Prod);
+        outcome.Dependencies.Single(d => d.Name == "jest-util").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
     public async Task ScanRepository_EveryManifestRead_IsComplete()
     {
         ScanOutcome outcome = await ScanAsync(new Dictionary<string, string>

@@ -225,7 +225,11 @@ public partial class RepositoryHostClient(
             ArrayPool<byte>.Shared.Return(chunk);
         }
 
-        return Encoding.UTF8.GetString(buffer.GetBuffer(), 0, (int)buffer.Length);
+        ReadOnlySpan<byte> bytes = buffer.GetBuffer().AsSpan(0, (int)buffer.Length);
+
+        if (bytes.StartsWith(Encoding.UTF8.Preamble)) bytes = bytes[Encoding.UTF8.Preamble.Length..];
+
+        return Encoding.UTF8.GetString(bytes);
     }
 
     private static bool IsInSkippedDirectory(string filePath)

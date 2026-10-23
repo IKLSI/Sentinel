@@ -88,10 +88,22 @@ public partial class ManifestParserService
                 }
 
                 if (prop.Name.Equals("laravel/framework", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(version))
-                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Laravel", Version = version });
+                    runtimes.Add(new Runtime
+                    {
+                        ProjectId = projectId,
+                        Name = "Laravel",
+                        Version = version,
+                        IsMinimumConstraint = !VersionText.IsExact(specification)
+                    });
 
                 if (SymfonyRuntimePackages.Contains(prop.Name) && !string.IsNullOrEmpty(version))
-                    runtimes.Add(new Runtime { ProjectId = projectId, Name = "Symfony", Version = version });
+                    runtimes.Add(new Runtime
+                    {
+                        ProjectId = projectId,
+                        Name = "Symfony",
+                        Version = version,
+                        IsMinimumConstraint = !VersionText.IsExact(specification)
+                    });
 
                 if (string.IsNullOrEmpty(version)) continue;
                 deps.Add(new Dependency
@@ -185,7 +197,13 @@ public partial class ManifestParserService
             bool isDev = blocks.Contains(true) || GemInlineDevGroupRegex().IsMatch(line);
 
             if (GemFrameworkRuntimes.TryGetValue(name, out string? fw) && !string.IsNullOrEmpty(version))
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = fw, Version = version });
+                runtimes.Add(new Runtime
+                {
+                    ProjectId = projectId,
+                    Name = fw,
+                    Version = version,
+                    IsMinimumConstraint = !VersionText.IsExact(specification)
+                });
 
             deps.Add(new Dependency
             {

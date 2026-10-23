@@ -55,7 +55,13 @@ public partial class ManifestParserService
             if (PythonFrameworkIndicators.TryGetValue(dep.Name, out string? framework)
                 && !string.IsNullOrEmpty(dep.CurrentVersion))
             {
-                runtimes.Add(new Runtime { ProjectId = projectId, Name = framework, Version = dep.CurrentVersion });
+                runtimes.Add(new Runtime
+                {
+                    ProjectId = projectId,
+                    Name = framework,
+                    Version = dep.CurrentVersion,
+                    IsMinimumConstraint = !dep.IsVersionPinned
+                });
             }
         }
     }

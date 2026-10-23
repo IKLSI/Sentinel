@@ -17,7 +17,7 @@ public sealed record RepositoryScanScope(string? Branch, string? RootPath)
 }
 
 internal record ParsedManifest(string FileName, string Directory, bool IsLockFile, List<Dependency> Dependencies,
-    List<Runtime> Runtimes);
+    List<Runtime> Runtimes, LockGraph? Graph = null);
 
 public class RepositoryScannerService(
     IRepositoryHostClient hostClient,
@@ -48,6 +48,37 @@ public class RepositoryScannerService(
             }
         }
     }
+
+    private static void ApplyTransitiveDevTypes(ParsedManifest lockFile, List<Dependency> manifestDeps)
+    {
+        if (lockFile.Graph == null || manifestDeps.Count == 0) return;
+
+        HashSet<string> productionRoots = RootNames(manifestDeps, DependencyType.Prod);
+        HashSet<string> developmentRoots = RootNames(manifestDeps, DependencyType.Dev);
+
+        HashSet<string> productionReachable = lockFile.Graph.ReachableFrom(SeedsOf(lockFile, productionRoots));
+        HashSet<string> developmentReachable = lockFile.Graph.ReachableFrom(SeedsOf(lockFile, developmentRoots));
+
+        if (productionRoots.Count > 0 && productionReachable.Count == 0) return;
+
+        foreach (Dependency dependency in lockFile.Dependencies)
+        {
+            string node = LockGraph.NodeId(dependency.Name, dependency.CurrentVersion);
+
+            if (developmentReachable.Contains(node) && !productionReachable.Contains(node))
+                dependency.Type = DependencyType.Dev;
+        }
+    }
+
+    private static HashSet<string> RootNames(List<Dependency> manifestDeps, DependencyType type) => manifestDeps
+        .Where(d => d.Ecosystem == DependencyEcosystem.Npm && d.Type == type)
+        .Select(d => d.Name)
+        .ToHashSet(StringComparer.Ordinal);
+
+    private static List<string> SeedsOf(ParsedManifest lockFile, HashSet<string> rootNames) => lockFile.Dependencies
+        .Where(d => rootNames.Contains(d.Name))
+        .Select(d => LockGraph.NodeId(d.Name, d.CurrentVersion))
+        .ToList();
 
     private static void ApplyDirectness(ParsedManifest lockFile, List<Dependency> manifestDeps)
     {
@@ -102,8 +133,9 @@ public class RepositoryScannerService(
             }
 
             (string host, string owner, string repo) = (location.Host, location.Owner, location.Repository);
+            string? reference = string.IsNullOrEmpty(commitSha) ? effectiveScope.Branch : commitSha;
             RepositoryFileListing listing = await hostClient.ListFilesAsync(host, owner, repo, access,
-                commitSha, cancellationToken);
+                reference, cancellationToken);
 
             if (listing.Files.Count == 0)
             {
@@ -152,16 +184,24 @@ public class RepositoryScannerService(
                     ManifestParseOutcome outcome = parser.ParseReportingFailure(projectId, file.Name, content);
 
                     if (outcome.Failure != null)
+                    {
+                        Interlocked.Increment(ref unreadableFiles);
                         logger.LogWarning(outcome.Failure, "Manifest {Path} is malformed, only its readable part is kept",
                             file.Path);
+                    }
 
                     foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
 
+                    LockGraph? graph = ManifestParserService.HasLockGraph(file.Name)
+                        ? parser.ParseLockGraph(file.Name, content)
+                        : null;
+
                     return new ParsedManifest(file.Name, RepositoryScanPaths.DirectoryOf(file.Path),
-                        ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes);
+                        ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes, graph);
                 }
                 catch (Exception ex)
                 {
+                    Interlocked.Increment(ref unreadableFiles);
                     logger.LogWarning(ex, "Manifest {File} could not be parsed and is ignored", file.Name);
                     return null;
                 }
@@ -190,6 +230,7 @@ public class RepositoryScannerService(
                     .ToList();
 
                 ApplyDeclaredTypes(lockFile.Dependencies, coveredManifestDeps);
+                ApplyTransitiveDevTypes(lockFile, coveredManifestDeps);
                 ApplyDirectness(lockFile, coveredManifestDeps);
             }
 

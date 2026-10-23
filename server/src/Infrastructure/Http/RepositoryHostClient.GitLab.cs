@@ -210,7 +210,7 @@ public partial class RepositoryHostClient
             if (type != "blob") continue;
             if (IsInSkippedDirectory(path)) continue;
 
-            string rawUrl = $"{projectApiUrl}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={reference}";
+            string rawUrl = $"{projectApiUrl}/repository/files/{Uri.EscapeDataString(path)}/raw?ref={Uri.EscapeDataString(reference)}";
             result.Add((name, rawUrl, path));
         }
 
@@ -268,7 +268,7 @@ public partial class RepositoryHostClient
         try
         {
             using HttpRequestMessage request = BuildGitLabRequest(
-                $"{projectApiUrl}/repository/tree?recursive=true&per_page={GitLabTreePageSize}&page={page}&ref={reference}",
+                $"{projectApiUrl}/repository/tree?recursive=true&per_page={GitLabTreePageSize}&page={page}&ref={Uri.EscapeDataString(reference)}",
                 access.Token);
             using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode) return null;

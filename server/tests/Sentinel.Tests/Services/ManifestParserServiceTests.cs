@@ -193,6 +193,61 @@ public class ManifestParserServiceTests
     }
 
     [Fact]
+    public void ParsePnpmLock_MarksDevFlaggedPackagesAsDev()
+    {
+        const string content = """
+        lockfileVersion: 5.4
+
+        packages:
+
+          /axios/1.6.8:
+            resolution: {integrity: sha512-aaa}
+            dev: false
+
+          /jest/29.7.0:
+            resolution: {integrity: sha512-bbb}
+            dev: true
+        """;
+
+        (List<Dependency> dependencies, _) = Parse("pnpm-lock.yaml", content);
+
+        SingleDependency(dependencies, "axios").Type.Should().Be(DependencyType.Prod);
+        SingleDependency(dependencies, "jest").Type.Should().Be(DependencyType.Dev);
+    }
+
+    [Fact]
+    public void ParsePackageJson_FrameworkRuntimeFromRangeIsAMinimumConstraint()
+    {
+        const string content = """
+        { "dependencies": { "react": "^16.14.0" } }
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("package.json", content);
+
+        SingleRuntime(runtimes, "React").IsMinimumConstraint.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ParsePackageJson_FrameworkRuntimeFromExactVersionIsNotAMinimumConstraint()
+    {
+        const string content = """
+        { "dependencies": { "react": "19.0.0" } }
+        """;
+
+        (_, List<Runtime> runtimes) = Parse("package.json", content);
+
+        SingleRuntime(runtimes, "React").IsMinimumConstraint.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ParseRequirementsTxt_FrameworkRuntimeFromLowerBoundIsAMinimumConstraint()
+    {
+        (_, List<Runtime> runtimes) = Parse("requirements.txt", "Django>=3.2\n");
+
+        SingleRuntime(runtimes, "Django").IsMinimumConstraint.Should().BeTrue();
+    }
+
+    [Fact]
     public void ParseRequirementsTxt_UsesTheLowerBoundNotTheUpperBound()
     {
         const string content = """

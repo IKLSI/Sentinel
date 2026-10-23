@@ -33,8 +33,14 @@ public partial class ManifestParserService
             }
         }
 
-        foreach ((string name, string version) in DetectNpmFrameworkRuntimes(root))
-            runtimes.Add(new Runtime { ProjectId = projectId, Name = name, Version = version });
+        foreach ((string name, string version, bool isMinimumConstraint) in DetectNpmFrameworkRuntimes(root))
+            runtimes.Add(new Runtime
+            {
+                ProjectId = projectId,
+                Name = name,
+                Version = version,
+                IsMinimumConstraint = isMinimumConstraint
+            });
 
         if (root.TryGetProperty("dependencies", out JsonElement prodDeps))
             ExtractNpmDeps(projectId, prodDeps, DependencyType.Prod, deps);
@@ -60,9 +66,9 @@ public partial class ManifestParserService
         ["react-native"] = "React Native",
     };
 
-    private static List<(string Name, string Version)> DetectNpmFrameworkRuntimes(JsonElement root)
+    private static List<(string Name, string Version, bool IsMinimumConstraint)> DetectNpmFrameworkRuntimes(JsonElement root)
     {
-        List<(string Name, string Version)> detected = new List<(string, string)>();
+        List<(string Name, string Version, bool IsMinimumConstraint)> detected = new List<(string, string, bool)>();
 
         foreach (string depsKey in new[] { "dependencies", "devDependencies" })
         {
@@ -72,7 +78,10 @@ public partial class ManifestParserService
                 if (detected.Any(runtime => runtime.Name == name)) continue;
                 if (!deps.TryGetProperty(pkg, out JsonElement vProp)) continue;
 
-                if (TryReadNpmVersion(vProp.GetString() ?? "", out string v, out bool _)) detected.Add((name, v));
+                string specification = vProp.GetString() ?? "";
+
+                if (TryReadNpmVersion(specification, out string v, out bool _))
+                    detected.Add((name, v, !VersionText.IsExact(specification)));
             }
         }
 
@@ -276,6 +285,7 @@ public partial class ManifestParserService
         int major = versionMatch.Success ? int.Parse(versionMatch.Groups[1].Value) : 9;
 
         bool inPackages = false;
+        Dependency? current = null;
 
         foreach (string raw in content.Split('\n'))
         {
@@ -285,18 +295,30 @@ public partial class ManifestParserService
             if (!line.StartsWith(' '))
             {
                 inPackages = line.StartsWith("packages:", StringComparison.Ordinal);
+                current = null;
                 continue;
             }
 
             if (!inPackages) continue;
+
+            if (current != null && line.Trim() == "dev: true")
+            {
+                current.Type = DependencyType.Dev;
+                continue;
+            }
+
             if (!PnpmTopLevelKeyRegex().IsMatch(line)) continue;
             if (!line.EndsWith(':')) continue;
 
             string key = line.Trim().TrimEnd(':').Trim().Trim('\'', '"');
             (string? name, string? version) = ParsePnpmPackageKey(key, major);
-            if (name == null || version == null) continue;
+            if (name == null || version == null)
+            {
+                current = null;
+                continue;
+            }
 
-            deps.Add(new Dependency
+            current = new Dependency
             {
                 ProjectId = projectId,
                 Name = name,
@@ -304,7 +326,8 @@ public partial class ManifestParserService
                 Type = DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Npm,
                 Status = DependencyStatus.UpToDate,
-            });
+            };
+            deps.Add(current);
         }
     }
 
