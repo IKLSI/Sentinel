@@ -189,4 +189,12 @@ public class TechHealthController : BaseController
         [FromServices] ProjectBadgeEnableService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
+
+    [HttpDelete("projects/{id:guid}/badge")]
+    [AuthorizeRoles(UserRole.Admin)]
+    public async Task<IActionResult> DisableProjectBadge(
+        Guid id,
+        [FromServices] ProjectBadgeDisableService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 }

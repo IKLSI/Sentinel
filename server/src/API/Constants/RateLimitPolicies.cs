@@ -10,6 +10,7 @@ public static class RateLimitPolicies
     public const string ResendVerification = "resend-verification";
     public const string Register = "register";
     public const string Invitation = "invitation";
+    public const string InviteUser = "invite-user";
     public const string Scan = "scan";
     public const string PublicScan = "public-scan";
     public const string PublicBadge = "public-badge";

@@ -1,4 +1,5 @@
 using Sentinel.Application.Common;
+using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Git;
 using Sentinel.Domain.TechHealth;
@@ -9,8 +10,10 @@ public static class ProjectFactory
 {
     public static Project Create(Guid organizationId, CreateProjectDto model)
     {
-        if (!EnumValue.TryParse(model.RepositoryType, out RepositoryType repositoryType))
-            repositoryType = RepositoryType.GitHub;
+        RepositoryType repositoryType = RepositoryLocation.TryParse(model.RepositoryUrl, out RepositoryLocation location)
+            && !RepositoryHosts.IsGitHub(location.Host)
+                ? RepositoryType.GitLab
+                : RepositoryType.GitHub;
 
         if (!EnumValue.TryParse(model.ScanFrequency, out ScanFrequency scanFrequency))
             scanFrequency = ScanFrequency.Weekly;

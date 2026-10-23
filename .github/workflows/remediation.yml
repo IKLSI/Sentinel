@@ -29,7 +29,7 @@ permissions:
   contents: read
 
 env:
-  RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.176.4
+  RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.176.4@sha256:3b6282518fe27fcac812eeb04fa40d7f3b11651f8133e6dc8ce4ad8fdfe3d5ad
 
 jobs:
   renovate:

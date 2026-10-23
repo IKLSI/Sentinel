@@ -8,6 +8,8 @@ public interface IDataRetentionRepository
 
     Task<int> DeleteExpiredInvitationsAsync(DateTime expiredBefore, CancellationToken cancellationToken);
 
+    Task<int> DeleteUnverifiedOrganizationsAsync(DateTime createdBefore, CancellationToken cancellationToken);
+
     Task<int> DeleteAuditLogsAsync(DateTime createdBefore, CancellationToken cancellationToken);
 
     Task<int> DeleteHealthSnapshotsAsync(DateOnly dayBefore, CancellationToken cancellationToken);

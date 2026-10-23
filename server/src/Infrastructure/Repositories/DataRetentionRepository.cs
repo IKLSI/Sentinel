@@ -24,6 +24,14 @@ public class DataRetentionRepository(SentinelContext context) : IDataRetentionRe
             .Where(invitation => invitation.ExpiresAt < expiredBefore)
             .ExecuteDeleteAsync(cancellationToken);
 
+    public Task<int> DeleteUnverifiedOrganizationsAsync(DateTime createdBefore, CancellationToken cancellationToken) =>
+        context.Set<Organization>()
+            .IgnoreQueryFilters()
+            .Where(organization => organization.CreatedAt < createdBefore
+                && organization.Users.Any()
+                && !organization.Users.Any(user => user.IsEmailVerified))
+            .ExecuteDeleteAsync(cancellationToken);
+
     public Task<int> DeleteAuditLogsAsync(DateTime createdBefore, CancellationToken cancellationToken) =>
         context.Set<AuditLog>()
             .Where(log => log.CreatedAt < createdBefore)

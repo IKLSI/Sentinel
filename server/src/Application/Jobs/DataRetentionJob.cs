@@ -12,6 +12,7 @@ public class DataRetentionJob(
     ILogger<DataRetentionJob> logger)
 {
     private static readonly TimeSpan TokenRetention = TimeSpan.FromDays(7);
+    private static readonly TimeSpan UnverifiedAccountRetention = TimeSpan.FromHours(48);
     private static readonly TimeSpan InvitationRetention = TimeSpan.FromDays(30);
     private static readonly TimeSpan AuditLogRetention = TimeSpan.FromDays(365);
     private static readonly TimeSpan HealthHistoryRetention = TimeSpan.FromDays(730);
@@ -26,6 +27,8 @@ public class DataRetentionJob(
         int tokens = await retention.DeleteExpiredPasswordResetTokensAsync(now - TokenRetention, cancellationToken)
             + await retention.DeleteExpiredEmailVerificationTokensAsync(now - TokenRetention, cancellationToken);
         int invitations = await retention.DeleteExpiredInvitationsAsync(now - InvitationRetention, cancellationToken);
+        int unverifiedOrganizations = await retention.DeleteUnverifiedOrganizationsAsync(
+            now - UnverifiedAccountRetention, cancellationToken);
         int auditLogs = await retention.DeleteAuditLogsAsync(now - AuditLogRetention, cancellationToken);
         int snapshots = await retention.DeleteHealthSnapshotsAsync(
             DateOnly.FromDateTime(now - HealthHistoryRetention), cancellationToken);
@@ -33,8 +36,8 @@ public class DataRetentionJob(
             cancellationToken);
 
         logger.LogInformation(
-            "Data retention purge: {Tokens} tokens, {Invitations} invitations, {AuditLogs} audit logs, " +
+            "Data retention purge: {Tokens} tokens, {Invitations} invitations, {UnverifiedOrganizations} unverified organizations, {AuditLogs} audit logs, " +
             "{Snapshots} health snapshots, {Resolutions} vulnerability resolutions deleted",
-            tokens, invitations, auditLogs, snapshots, resolutions);
+            tokens, invitations, unverifiedOrganizations, auditLogs, snapshots, resolutions);
     }
 }

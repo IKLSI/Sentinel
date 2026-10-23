@@ -38,6 +38,7 @@ public class UsersController : BaseController
 
     [HttpPost]
     [AuthorizeRoles(UserRole.Admin)]
+    [EnableRateLimiting(RateLimitPolicies.InviteUser)]
     public async Task<ActionResult<ApiMessageResponse>> InviteUser(
         [FromBody] CreateUserDto dto,
         [FromServices] UserInviteService service,

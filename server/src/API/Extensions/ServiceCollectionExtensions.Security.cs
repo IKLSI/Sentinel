@@ -169,14 +169,20 @@ public static partial class ServiceCollectionExtensions
 
             foreach (string proxy in settings.KnownProxies)
             {
-                if (IPAddress.TryParse(proxy, out IPAddress? address))
-                    options.KnownProxies.Add(address);
+                if (!IPAddress.TryParse(proxy, out IPAddress? address))
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownProxies contains an invalid IP address: '{proxy}'");
+
+                options.KnownProxies.Add(address);
             }
 
             foreach (string network in settings.KnownNetworks)
             {
-                if (System.Net.IPNetwork.TryParse(network, out System.Net.IPNetwork parsed))
-                    options.KnownIPNetworks.Add(parsed);
+                if (!System.Net.IPNetwork.TryParse(network, out System.Net.IPNetwork parsed))
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownNetworks contains an invalid network: '{network}'");
+
+                options.KnownIPNetworks.Add(parsed);
             }
         });
 
@@ -195,6 +201,7 @@ public static partial class ServiceCollectionExtensions
                 .AddFixedWindowPolicy(RateLimitPolicies.VerifyEmail, 20, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.ResendVerification, 5, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Invitation, 10, TimeSpan.FromMinutes(15))
+                .AddFixedWindowPolicy(RateLimitPolicies.InviteUser, 20, TimeSpan.FromMinutes(60), ResolveUserOrClientKey)
                 .AddFixedWindowPolicy(RateLimitPolicies.Register, 5, TimeSpan.FromMinutes(60))
                 .AddFixedWindowPolicy(RateLimitPolicies.Scan, 10, TimeSpan.FromMinutes(1), ResolveUserOrClientKey)
                 .AddFixedWindowPolicy(RateLimitPolicies.PublicScan, 5, TimeSpan.FromMinutes(10))
