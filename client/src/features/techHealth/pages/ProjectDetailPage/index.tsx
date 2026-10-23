@@ -10,14 +10,14 @@ import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import { useProjectQuery } from "@/domains/projects/queries";
-import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+
 import { toVulnerabilityRows } from "@/features/techHealth/pages/ProjectDetailPage/filters";
 import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 import { ProjectDetailSkeleton } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDetailSkeleton";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
 import { ProjectActions } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectActions";
 import { RemediateAllAction } from "@/features/techHealth/pages/ProjectDetailPage/components/RemediateAllAction";
-import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
+import { TabBar, type TabBarItem } from "@/components/ui/common/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
 import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
 import { RuntimesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/RuntimesTab";
@@ -60,7 +60,7 @@ export const ProjectDetailPage: React.FC = () => {
   if (loading) return <ProjectDetailSkeleton />;
   if (!project) return null;
 
-  const tabDefs: TabDef[] = [
+  const tabDefs: TabBarItem[] = [
     {
       icon: <GppBadOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.vulnerabilities"),

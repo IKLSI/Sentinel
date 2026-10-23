@@ -10,11 +10,11 @@ import { useT } from "@/contexts/I18nContext";
 import { findDemoProject } from "@/features/landing/demo/fixtures/projects";
 import { DemoFindingActions } from "@/features/landing/pages/LandingPage/components/DemoFindingActions";
 import { toVulnerabilityRows } from "@/features/techHealth/pages/ProjectDetailPage/filters";
-import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+
 import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
 import { ProjectHeaderCard } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectHeaderCard";
 import { RuntimesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/RuntimesTab";
-import { TabBar } from "@/features/techHealth/pages/ProjectDetailPage/components/TabBar";
+import { TabBar, type TabBarItem } from "@/components/ui/common/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
 
 const TAB_INDEX = { vulnerabilities: 0, dependencies: 1, runtimes: 2 } as const;
@@ -31,7 +31,7 @@ export const DemoProject: React.FC = () => {
   );
   const eolRuntimes = project.runtimes.filter((r) => r.isEol).length;
 
-  const tabDefs: TabDef[] = [
+  const tabDefs: TabBarItem[] = [
     {
       icon: <GppBadOutlined sx={{ fontSize: 16 }} />,
       label: t("tech_health.tab.vulnerabilities"),

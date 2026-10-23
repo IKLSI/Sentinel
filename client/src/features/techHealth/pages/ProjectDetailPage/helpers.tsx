@@ -1,4 +1,3 @@
-import type React from "react";
 import type { Runtime } from "@/domains/projects/types";
 import {
   type DependencyStatus,
@@ -6,11 +5,6 @@ import {
   type VulnerabilitySeverity,
   RuntimeEolStatus,
 } from "@/enums";
-
-export interface TabDef {
-  icon: React.ReactNode;
-  label: string;
-}
 
 export type StatusVariant = "green" | "blue" | "orange" | "red" | "gray";
 

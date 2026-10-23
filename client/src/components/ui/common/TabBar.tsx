@@ -1,9 +1,13 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import type { TabDef } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
+
+export interface TabBarItem {
+  icon: React.ReactNode;
+  label: string;
+}
 
 interface Props {
-  tabs: TabDef[];
+  tabs: TabBarItem[];
   active: number;
   onChange: (i: number) => void;
 }
