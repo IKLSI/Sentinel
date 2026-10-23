@@ -74,7 +74,6 @@ public static class ErrorCodes
     public const string TicketAttachmentTooLarge = "errors.tickets.attachment_too_large";
 
     public const string LocaleInvalidCulture = "errors.locales.invalid_culture";
-    public const string LocaleInvalidPath = "errors.locales.invalid_path";
     public const string LocaleNotFound = "errors.locales.not_found";
 
     public const string ScanInvalidRepositoryUrl = "errors.scan.invalid_repository_url";

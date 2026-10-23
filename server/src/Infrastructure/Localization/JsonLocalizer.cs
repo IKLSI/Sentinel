@@ -39,9 +39,7 @@ public sealed class JsonLocalizer(IContentPathProvider contentPath) : ILocalizer
 
     private IReadOnlyDictionary<string, string> ReadCatalog(string culture)
     {
-        string path = Path.Combine(contentPath.ContentRootPath, "Resources", "Locales", $"{culture}.json");
-
-        if (!File.Exists(path))
+        if (LocaleFiles.PathOf(contentPath.ContentRootPath, culture) is not { } path)
             return new Dictionary<string, string>();
 
         using FileStream stream = File.OpenRead(path);

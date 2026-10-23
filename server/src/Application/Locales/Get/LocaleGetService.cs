@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
@@ -8,7 +7,7 @@ using Sentinel.Domain.Constants;
 namespace Sentinel.Application.Locales.Get;
 
 public class LocaleGetService(
-    IContentPathProvider contentPath,
+    ILocaleCatalogSource catalogSource,
     IMemoryCache cache,
     LocaleGetValidator validator) : IService
 {
@@ -27,24 +26,16 @@ public class LocaleGetService(
         if (cache.TryGetValue(cacheKey, out VersionedContent? cached) && cached is not null)
             return Result<VersionedContent>.Success(cached);
 
-        string baseDirectory = Path.GetFullPath(Path.Combine(contentPath.ContentRootPath, "Resources", "Locales"));
-        string fullPath = Path.GetFullPath(Path.Combine(baseDirectory, $"{normalizedCulture}.json"));
+        byte[]? content = await catalogSource.ReadAsync(normalizedCulture, cancellationToken);
 
-        if (!fullPath.StartsWith(baseDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            return Result<VersionedContent>.Error(ErrorCodes.LocaleInvalidPath);
-
-        if (!File.Exists(fullPath))
+        if (content == null)
         {
             return Result<VersionedContent>.NotFound(
                 ErrorCodes.LocaleNotFound,
                 new Dictionary<string, string> { ["culture"] = culture });
         }
 
-        await using FileStream stream = File.OpenRead(fullPath);
-        using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-
-        VersionedContent catalog = VersionedContent.FromBytes(
-            JsonSerializer.SerializeToUtf8Bytes(document.RootElement), JsonContentType);
+        VersionedContent catalog = VersionedContent.FromBytes(content, JsonContentType);
 
         cache.Set(cacheKey, catalog, new MemoryCacheEntryOptions
         {

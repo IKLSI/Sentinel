@@ -170,6 +170,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddSingleton<ISystemScope, SystemScope>();
         services.AddSingleton<ILocalizer, JsonLocalizer>();
+        services.AddSingleton<ILocaleCatalogSource, JsonLocaleCatalogSource>();
         services.AddScoped<IRepositoryHostClient, RepositoryHostClient>();
         services.AddScoped<IDependencyRegistryClient, DependencyRegistryClient>();
         services.AddScoped<IVulnerabilityFeedClient, OsvVulnerabilityFeedClient>();
