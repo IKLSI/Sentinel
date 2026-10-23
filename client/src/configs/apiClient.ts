@@ -27,7 +27,7 @@ const API_ORIGIN = new URL(
 ).origin;
 
 const targetsApiOrigin = (config: InternalAxiosRequestConfig): boolean =>
-  new URL(config.url ?? "", config.baseURL ?? window.location.origin).origin ===
+  new URL(config.url ?? "", config.baseURL || window.location.origin).origin ===
   API_ORIGIN;
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
