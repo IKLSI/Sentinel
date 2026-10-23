@@ -5,26 +5,26 @@ namespace Sentinel.Application.Tickets;
 
 public static class TicketMapper
 {
-    public static TicketDto ToDto(Ticket ticket) => new()
+    public static TicketDto ToDto(TicketDetailRow ticket) => new()
     {
         Id = ticket.Id,
         Reference = TicketReference.For(ticket.Number),
         ProjectId = ticket.ProjectId,
-        ProjectName = ticket.Project?.Name,
+        ProjectName = ticket.ProjectName,
         Title = ticket.Title,
         Description = ticket.Description,
         Priority = ticket.Priority.ToString().ToLower(),
         Type = ticket.Type.ToString().ToLower(),
         Status = ticket.Status.ToString().ToLower(),
         AssignedToId = ticket.AssignedToId,
-        AssignedToName = ticket.AssignedTo?.FullName,
-        CreatedByName = ticket.CreatedBy?.FullName ?? string.Empty,
+        AssignedToName = FullName(ticket.AssignedToFirstName, ticket.AssignedToLastName),
+        CreatedByName = FullName(ticket.CreatedByFirstName, ticket.CreatedByLastName) ?? string.Empty,
         CreatedAt = ticket.CreatedAt,
-        CommentCount = ticket.Comments?.Count ?? 0,
+        CommentCount = ticket.Comments.Count,
         FindingKind = ticket.FindingKind?.ToString(),
         FindingKey = ticket.FindingKey,
-        Comments = ticket.Comments?.Select(ToDto).OrderBy(c => c.CreatedAt).ToList() ?? [],
-        History = ticket.History?.Select(ToDto).OrderByDescending(h => h.CreatedAt).ToList() ?? []
+        Comments = ticket.Comments.Select(ToDto).ToList(),
+        History = ticket.History.Select(ToDto).ToList()
     };
 
     public static TicketDto ToDto(TicketGridRow row) => new()
@@ -57,10 +57,19 @@ public static class TicketMapper
         CreatedAt = comment.CreatedAt
     };
 
-    public static TicketHistoryDto ToDto(TicketHistory history) => new()
+    private static TicketCommentDto ToDto(TicketCommentRow comment) => new()
+    {
+        Id = comment.Id,
+        AuthorId = comment.AuthorId,
+        AuthorName = FullName(comment.AuthorFirstName, comment.AuthorLastName) ?? string.Empty,
+        Content = comment.Content,
+        CreatedAt = comment.CreatedAt
+    };
+
+    private static TicketHistoryDto ToDto(TicketHistoryRow history) => new()
     {
         Id = history.Id,
-        UserName = history.User?.FullName ?? string.Empty,
+        UserName = FullName(history.UserFirstName, history.UserLastName) ?? string.Empty,
         Field = history.Field,
         OldValue = history.OldValue,
         NewValue = history.NewValue,

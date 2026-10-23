@@ -138,7 +138,7 @@ public class TicketCreateFromFindingService(
 
     private async Task<Result<TicketDto>> LoadDtoAsync(Guid ticketId, CancellationToken cancellationToken)
     {
-        Ticket? ticket = await ticketRepository.GetOrDefaultWithDetailsAsync(ticketId, cancellationToken);
+        TicketDetailRow? ticket = await ticketRepository.GetOrDefaultDetailAsync(ticketId, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(ticket!));
     }

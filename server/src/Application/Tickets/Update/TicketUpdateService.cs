@@ -83,7 +83,7 @@ public class TicketUpdateService(
             entityId: ticketId,
             jti: tenant.Jti);
 
-        Ticket? updated = await ticketRepository.GetOrDefaultWithDetailsAsync(ticketId, cancellationToken);
+        TicketDetailRow? updated = await ticketRepository.GetOrDefaultDetailAsync(ticketId, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(updated!));
     }

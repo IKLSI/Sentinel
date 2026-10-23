@@ -71,7 +71,7 @@ public class TicketCreateService(
             entityId: ticket.Id,
             jti: tenant.Jti);
 
-        Ticket? created = await ticketRepository.GetOrDefaultWithDetailsAsync(ticket.Id, cancellationToken);
+        TicketDetailRow? created = await ticketRepository.GetOrDefaultDetailAsync(ticket.Id, cancellationToken);
 
         return Result<TicketDto>.Success(TicketMapper.ToDto(created!));
     }

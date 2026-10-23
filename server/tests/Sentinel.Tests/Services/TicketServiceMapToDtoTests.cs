@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Sentinel.Application.Tickets;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Tests.Services;
 
@@ -10,24 +11,14 @@ public class TicketServiceMapToDtoTests
     public void MapToDto_BasicTicket_MapsAllScalarFields()
     {
         Guid ticketId = Guid.NewGuid();
-        DateTime now = DateTime.UtcNow;
 
-        Ticket ticket = new Ticket
+        TicketDto dto = TicketMapper.ToDto(NewDetail(ticketId, comments: []) with
         {
-            Id = ticketId,
-            OrganizationId = Guid.NewGuid(),
             Title = "Bug critique",
             Description = "Détails",
             Priority = TicketPriority.Critical,
             Type = TicketType.Bug,
-            CreatedById = Guid.NewGuid(),
-            CreatedAt = now,
-            UpdatedAt = now,
-            Comments = new List<TicketComment>(),
-            History = new List<TicketHistory>(),
-        };
-
-        var dto = TicketMapper.ToDto(ticket);
+        });
 
         dto.Id.Should().Be(ticketId);
         dto.Title.Should().Be("Bug critique");
@@ -39,28 +30,24 @@ public class TicketServiceMapToDtoTests
     }
 
     [Fact]
-    public void MapToDto_OrdersCommentsByCreatedAtAscending()
+    public void MapToDto_KeepsCommentOrderAndComposesNames()
     {
         Guid authorId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        Ticket ticket = new Ticket
-        {
-            Id = Guid.NewGuid(),
-            Title = "T",
-            CreatedById = authorId,
-            Comments = new List<TicketComment>
-            {
-                new() { Id = Guid.NewGuid(), AuthorId = authorId, Content = "deuxième", CreatedAt = now.AddMinutes(2) },
-                new() { Id = Guid.NewGuid(), AuthorId = authorId, Content = "premier", CreatedAt = now.AddMinutes(1) },
-            },
-            History = new List<TicketHistory>(),
-        };
+        TicketDto dto = TicketMapper.ToDto(NewDetail(Guid.NewGuid(), comments:
+        [
+            new TicketCommentRow(Guid.NewGuid(), authorId, "Ada", "Lovelace", "premier", now.AddMinutes(1)),
+            new TicketCommentRow(Guid.NewGuid(), authorId, "Ada", "", "deuxième", now.AddMinutes(2)),
+        ]));
 
-        var dto = TicketMapper.ToDto(ticket);
-
-        dto.Comments.Should().HaveCount(2);
-        dto.Comments[0].Content.Should().Be("premier");
-        dto.Comments[1].Content.Should().Be("deuxième");
+        dto.CommentCount.Should().Be(2);
+        dto.Comments.Select(comment => comment.Content).Should().Equal("premier", "deuxième");
+        dto.Comments.Select(comment => comment.AuthorName).Should().Equal("Ada Lovelace", "Ada");
+        dto.CreatedByName.Should().Be(string.Empty);
     }
+
+    private static TicketDetailRow NewDetail(Guid id, IReadOnlyList<TicketCommentRow> comments) => new(
+        id, 1, null, null, "T", string.Empty, TicketPriority.Medium, TicketType.Bug, TicketStatus.New,
+        null, null, null, null, null, DateTime.UtcNow, null, null, comments, []);
 }

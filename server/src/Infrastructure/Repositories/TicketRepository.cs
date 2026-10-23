@@ -11,15 +11,12 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 {
     public TicketRepository(SentinelContext context) : base(context) { }
 
-    public Task<Ticket?> GetOrDefaultWithDetailsAsync(Guid ticketId, CancellationToken cancellationToken) =>
+    public Task<TicketDetailRow?> GetOrDefaultDetailAsync(Guid ticketId, CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
             .AsSplitQuery()
-            .Include(t => t.Project)
-            .Include(t => t.AssignedTo)
-            .Include(t => t.CreatedBy)
-            .Include(t => t.Comments).ThenInclude(c => c.Author)
-            .Include(t => t.History).ThenInclude(h => h.User)
-            .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+            .Where(t => t.Id == ticketId)
+            .Select(ToDetailRow)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<PagedList<TicketGridRow>> SearchAsync(Guid organizationId, TicketFilter filter,
         TicketSortField sortBy, SortDirection sortDirection, int page, int pageSize,
@@ -107,6 +104,41 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
         t.CreatedAt,
         t.UpdatedAt,
         t.Comments.Count);
+
+    private static readonly Expression<Func<Ticket, TicketDetailRow>> ToDetailRow = t => new TicketDetailRow(
+        t.Id,
+        t.Number,
+        t.ProjectId,
+        t.Project != null ? t.Project.Name : null,
+        t.Title,
+        t.Description,
+        t.Priority,
+        t.Type,
+        t.Status,
+        t.AssignedToId,
+        t.AssignedTo != null ? t.AssignedTo.FirstName : null,
+        t.AssignedTo != null ? t.AssignedTo.LastName : null,
+        t.CreatedBy != null ? t.CreatedBy.FirstName : null,
+        t.CreatedBy != null ? t.CreatedBy.LastName : null,
+        t.CreatedAt,
+        t.FindingKind,
+        t.FindingKey,
+        t.Comments
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new TicketCommentRow(c.Id, c.AuthorId, c.Author.FirstName, c.Author.LastName, c.Content,
+                c.CreatedAt))
+            .ToList(),
+        t.History
+            .OrderByDescending(h => h.CreatedAt)
+            .Select(h => new TicketHistoryRow(
+                h.Id,
+                h.User != null ? h.User.FirstName : null,
+                h.User != null ? h.User.LastName : null,
+                h.Field,
+                h.OldValue,
+                h.NewValue,
+                h.CreatedAt))
+            .ToList());
 
     private static readonly Expression<Func<Ticket, TicketExportRow>> ToExportRow = t => new TicketExportRow(
         t.Number,

@@ -126,7 +126,7 @@ public class TicketRepositoryTests
     }
 
     [Fact]
-    public async Task GetOrDefaultWithDetailsAsync_ChargeLesRelationsEnRequetesSeparees()
+    public async Task GetOrDefaultDetailAsync_ProjetteAuteurEtCommentaires()
     {
         _fixture.EnsureAvailable();
 
@@ -142,12 +142,12 @@ public class TicketRepositoryTests
             Content = "Premier commentaire"
         });
 
-        Ticket? loaded = await scope.Tickets.GetOrDefaultWithDetailsAsync(ticket.Id, CancellationToken.None);
+        TicketDetailRow? loaded = await scope.Tickets.GetOrDefaultDetailAsync(ticket.Id, CancellationToken.None);
 
         loaded.Should().NotBeNull();
-        loaded!.CreatedBy.Should().NotBeNull();
-        loaded.Comments.Should().ContainSingle();
-        loaded.Comments.Single().Author.Should().NotBeNull();
+        loaded!.CreatedByFirstName.Should().Be("Auteur");
+        loaded.Comments.Should().ContainSingle()
+            .Which.Should().Match<TicketCommentRow>(comment => comment.AuthorLastName == "Test");
     }
 
     [Fact]
