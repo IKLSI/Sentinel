@@ -6,7 +6,7 @@ import { render, screen } from "@/tests/test-utils";
 
 describe("LanguageToggle", () => {
   it("marque la langue active", async () => {
-    render(<LanguageToggle size="sm" />, { language: Language.Fr });
+    render(<LanguageToggle />, { language: Language.Fr });
 
     expect(
       await screen.findByRole("button", { name: "landing.footer.language_fr" }),
@@ -17,12 +17,23 @@ describe("LanguageToggle", () => {
   });
 
   it("bascule vers l'anglais et mémorise le choix", async () => {
-    const { user } = render(<LanguageToggle size="lg" />, {
-      language: Language.Fr,
-    });
+    const { user } = render(<LanguageToggle />, { language: Language.Fr });
 
     await user.click(
       await screen.findByRole("button", { name: "landing.footer.language_en" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "landing.footer.language_en" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(localStorage.getItem(STORAGE_KEYS.LANGUAGE)).toBe(Language.En);
+  });
+
+  it("bascule vers l'autre langue en recliquant sur la langue active", async () => {
+    const { user } = render(<LanguageToggle />, { language: Language.Fr });
+
+    await user.click(
+      await screen.findByRole("button", { name: "landing.footer.language_fr" }),
     );
 
     expect(
