@@ -117,7 +117,7 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
         <RowActions
           actions={[
             {
-              icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />,
+              icon: <DeleteOutlineOutlined sx={{ fontSize: 15 }} />,
               label: t("settings.api_keys.revoke"),
               onClick: () => onRevoke(apiKey),
               color: "red",

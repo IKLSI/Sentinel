@@ -50,8 +50,13 @@ export const RepoList: React.FC<Props> = ({
         overflowY: "auto",
         px: "12px",
         pb: "8px",
-        scrollbarWidth: "none",
-        "&::-webkit-scrollbar": { display: "none" },
+        "&::-webkit-scrollbar-thumb": { background: "var(--border)" },
+        "&:hover::-webkit-scrollbar-thumb": { background: "var(--border2)" },
+        "@supports not selector(::-webkit-scrollbar)": {
+          scrollbarWidth: "thin",
+          scrollbarColor: "var(--border) transparent",
+          "&:hover": { scrollbarColor: "var(--border2) transparent" },
+        },
       }}
     >
       {loading ? (

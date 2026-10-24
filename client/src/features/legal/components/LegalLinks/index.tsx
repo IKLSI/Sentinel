@@ -43,7 +43,7 @@ export const LegalLinks: React.FC<Props> = ({ tone, sx }) => {
     color: palette.color,
     textDecoration: "none",
     transition: "color 0.15s",
-    "&:hover": { color: palette.hover },
+    "&:hover": { color: palette.hover, textDecoration: "none" },
   };
   const rootSx = [
     BASE_SX,

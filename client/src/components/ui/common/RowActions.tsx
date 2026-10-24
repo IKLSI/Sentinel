@@ -71,8 +71,8 @@ export const RowActions: React.FC<{
               sx={{
                 p: 0,
                 cursor: action.disabled ? "default" : "pointer",
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

@@ -87,6 +87,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  "&:hover": { textDecoration: "none" },
                 }}
               >
                 {project.name}
@@ -213,7 +214,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
               ...(isAdmin
                 ? [
                     {
-                      icon: <EditOutlined sx={{ fontSize: 12 }} />,
+                      icon: <EditOutlined sx={{ fontSize: 14 }} />,
                       label: t("projects.action.edit"),
                       onClick: openModal,
                       color: "accent" as const,
@@ -224,7 +225,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
                 icon: (
                   <RefreshOutlined
                     sx={{
-                      fontSize: 12,
+                      fontSize: 14,
                       animation: isScanning
                         ? `${spin} 1s linear infinite`
                         : "none",
@@ -242,7 +243,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
               ...(isAdmin
                 ? [
                     {
-                      icon: <DeleteOutlineOutlined sx={{ fontSize: 12 }} />,
+                      icon: <DeleteOutlineOutlined sx={{ fontSize: 14 }} />,
                       label: t("projects.action.delete"),
                       onClick: (e: React.MouseEvent) => {
                         e.stopPropagation();

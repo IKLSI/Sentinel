@@ -138,9 +138,9 @@ export const MemberRow: React.FC<Props> = ({
               actions={[
                 {
                   icon: isActive ? (
-                    <BlockOutlined sx={{ fontSize: 13 }} />
+                    <BlockOutlined sx={{ fontSize: 15 }} />
                   ) : (
-                    <CheckCircleOutlineOutlined sx={{ fontSize: 13 }} />
+                    <CheckCircleOutlineOutlined sx={{ fontSize: 15 }} />
                   ),
                   label: isActive
                     ? t("settings.members.suspend")
