@@ -32,21 +32,25 @@ export const ChartTooltip: React.FC<Props> = ({
   return (
     <Box
       sx={{
-        background: "var(--s2)",
-        border: "1px solid var(--accent-border)",
-        borderRadius: "var(--r-sm)",
-        boxShadow: "var(--sh-2)",
-        px: "10px",
-        py: "6px",
+        background: "var(--s1)",
+        borderRadius: "8px",
+        boxShadow:
+          "0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent), 0 8px 24px -6px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08)",
+        px: "12px",
+        py: "9px",
+        minWidth: 120,
         fontFamily: "var(--font-mono)",
       }}
     >
       <Box
         sx={{
-          fontSize: "9.5px",
-          fontWeight: 700,
+          fontSize: "11px",
+          fontWeight: 600,
           color: "var(--text-secondary)",
           textTransform: "capitalize",
+          pb: "6px",
+          mb: "6px",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         {label}
@@ -55,14 +59,26 @@ export const ChartTooltip: React.FC<Props> = ({
         <Box
           key={String(entry.dataKey)}
           sx={{
-            mt: "2px",
-            fontSize: "12px",
-            fontWeight: 700,
-            color: entry.color,
-            fontVariantNumeric: "tabular-nums",
+            display: "flex",
+            alignItems: "baseline",
+            gap: "6px",
+            "& + &": { mt: "4px" },
+            fontSize: "12.5px",
+            color: "var(--text-secondary)",
           }}
         >
-          {entry.value} {labels[String(entry.dataKey)]}
+          <Box
+            sx={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: entry.color ?? "var(--text)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {entry.value}
+          </Box>
+          {labels[String(entry.dataKey)]}
         </Box>
       ))}
     </Box>

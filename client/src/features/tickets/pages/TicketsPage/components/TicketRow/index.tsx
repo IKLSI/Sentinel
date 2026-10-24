@@ -4,6 +4,7 @@ import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
+import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { useT } from "@/contexts/I18nContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -76,15 +77,11 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             sx={{
               textDecoration: "none",
-              fontSize: "13px",
-              fontWeight: 600,
+              minWidth: 0,
               color: "var(--text)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
             }}
           >
-            {ticket.title}
+            <TruncatedText text={ticket.title} fontSize="13px" strong />
           </Box>
         </Box>
         <Box
@@ -160,17 +157,8 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         }}
       >
         {ticket.assignedToName ? (
-          <Box
-            sx={{
-              fontSize: "13px",
-              lineHeight: 1.25,
-              color: "var(--text)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {ticket.assignedToName}
+          <Box sx={{ lineHeight: 1.25, color: "var(--text)" }}>
+            <TruncatedText text={ticket.assignedToName} fontSize="13px" />
           </Box>
         ) : (
           <Box
@@ -218,7 +206,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
         <RowActions
           actions={[
             {
-              icon: <EditOutlined sx={{ fontSize: 13 }} />,
+              icon: <EditOutlined sx={{ fontSize: 15 }} />,
               label: t("common.edit"),
               onClick: (e) => {
                 e.stopPropagation();
@@ -229,7 +217,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
             ...(isAdmin
               ? [
                   {
-                    icon: <DeleteOutlineOutlined sx={{ fontSize: 13 }} />,
+                    icon: <DeleteOutlineOutlined sx={{ fontSize: 15 }} />,
                     label: t("common.delete"),
                     onClick: (e: React.MouseEvent) => {
                       e.stopPropagation();

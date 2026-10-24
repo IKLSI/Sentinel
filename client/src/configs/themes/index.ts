@@ -265,26 +265,30 @@ const baseComponents = {
       enterNextDelay: 250,
       leaveDelay: 0,
       slotProps: {
-        transition: { timeout: 120 },
+        transition: { timeout: 140 },
+        popper: {
+          modifiers: [{ name: "offset", options: { offset: [0, 6] } }],
+        },
       },
     },
     styleOverrides: {
       tooltip: {
-        fontSize: "11px",
-        fontWeight: 600,
-        letterSpacing: "0.01em",
+        fontSize: "13px",
+        fontWeight: 400,
+        lineHeight: 1.4,
         fontFamily: "Inter, sans-serif",
-        borderRadius: "var(--r-sm)",
-        padding: "6px 10px",
-        background: "var(--s2)",
+        borderRadius: "8px",
+        padding: "8px 12px",
+        maxWidth: 280,
+        background: "var(--s1)",
         color: "var(--text-secondary)",
-        border: "1px solid var(--border)",
-        boxShadow: "var(--sh-2)",
+        boxShadow:
+          "0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent), 0 8px 24px -6px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08)",
       },
       arrow: {
-        color: "var(--s2)",
+        color: "var(--s1)",
         "&::before": {
-          border: "1px solid var(--border)",
+          boxShadow: "0 3px 8px -2px rgba(0, 0, 0, 0.18)",
         },
       },
     },
