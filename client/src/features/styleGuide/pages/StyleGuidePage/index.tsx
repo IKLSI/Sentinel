@@ -11,6 +11,8 @@ import { AvatarsSection } from "@/features/styleGuide/pages/StyleGuidePage/compo
 import { SwitchSection } from "@/features/styleGuide/pages/StyleGuidePage/components/SwitchSection";
 import { ModalsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/ModalsSection";
 import { IconsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/IconsSection";
+import { TooltipsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/TooltipsSection";
+import { RowActionsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/RowActionsSection";
 import { RadiusSection } from "@/features/styleGuide/pages/StyleGuidePage/components/RadiusSection";
 import { SpacingSection } from "@/features/styleGuide/pages/StyleGuidePage/components/SpacingSection";
 
@@ -51,6 +53,8 @@ export const StyleGuidePage: React.FC = () => {
         <AvatarsSection />
         <SwitchSection />
         <ModalsSection />
+        <TooltipsSection />
+        <RowActionsSection />
         <IconsSection />
         <RadiusSection />
         <SpacingSection />

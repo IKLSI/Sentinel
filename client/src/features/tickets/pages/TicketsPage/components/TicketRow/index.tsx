@@ -79,6 +79,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
               textDecoration: "none",
               minWidth: 0,
               color: "var(--text)",
+              "&:hover": { textDecoration: "none" },
             }}
           >
             <TruncatedText text={ticket.title} fontSize="13px" strong />
