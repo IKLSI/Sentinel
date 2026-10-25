@@ -3,13 +3,13 @@ import { useCallback, useMemo } from "react";
 import Box from "@mui/material/Box";
 import MailOutlineOutlined from "@mui/icons-material/MailOutlineOutlined";
 import { Link } from "@tanstack/react-router";
+import { ROUTES } from "@/constants/routes";
 import { SentinelWordmark } from "@/components/layout/SentinelWordmark";
 import { useT } from "@/contexts/I18nContext";
 import { useAppConfigQuery } from "@/domains/settings/queries";
 import { BackToTopButton } from "@/features/legal/components/BackToTopButton";
 import { LegalSectionCard } from "@/features/legal/components/LegalSectionCard";
 import { LegalSummary } from "@/features/legal/components/LegalSummary";
-import { ReadingProgressBar } from "@/features/legal/components/ReadingProgressBar";
 import {
   LEGAL_DOCUMENTS,
   LEGAL_HEADER_HEIGHT,
@@ -102,11 +102,17 @@ export const LegalDocument: React.FC<Props> = ({
             gap: "12px",
           }}
         >
-          <Box
-            sx={{ display: "flex", alignItems: "center", color: "var(--text)" }}
+          <Link
+            to={ROUTES.HOME}
+            aria-label={t("legal.shell.back_home")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              color: "var(--text)",
+            }}
           >
             <SentinelWordmark height={18} />
-          </Box>
+          </Link>
 
           <Box
             sx={{
@@ -121,8 +127,6 @@ export const LegalDocument: React.FC<Props> = ({
             {t("legal.shell.eyebrow")}
           </Box>
         </Box>
-
-        <ReadingProgressBar />
       </Box>
 
       <Box
@@ -304,7 +308,7 @@ export const LegalDocument: React.FC<Props> = ({
                 <Box
                   sx={{
                     mt: "5px",
-                    maxWidth: "460px",
+                    whiteSpace: { md: "nowrap" },
                     fontSize: "12px",
                     lineHeight: 1.65,
                     color: "var(--muted2)",
