@@ -2,7 +2,8 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import Skeleton from "@mui/material/Skeleton";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import ForumOutlined from "@mui/icons-material/ForumOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
@@ -147,15 +148,15 @@ export const TicketDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress size={28} />
+      <Box sx={{ p: "24px 32px", maxWidth: 960 }}>
+        <Skeleton
+          variant="rounded"
+          width={220}
+          height={20}
+          sx={{ mb: "16px" }}
+        />
+        <Skeleton variant="rounded" height={36} sx={{ mb: "24px" }} />
+        <ListSkeleton rows={4} rowHeight={72} />
       </Box>
     );
   }

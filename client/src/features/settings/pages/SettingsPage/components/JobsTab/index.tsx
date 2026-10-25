@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
-import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
@@ -43,7 +43,7 @@ export const JobsTab: React.FC = () => {
     [t],
   );
 
-  if (loading) return <CenteredLoader />;
+  if (loading) return <ListSkeleton />;
 
   if (jobs.length === 0)
     return (

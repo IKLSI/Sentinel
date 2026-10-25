@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
-import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
@@ -89,7 +89,7 @@ export const ApiKeysTab: React.FC = () => {
         }}
       >
         {loading ? (
-          <CenteredLoader />
+          <ListSkeleton />
         ) : keys.length === 0 ? (
           <EmptyState
             icon={KeyOutlined}

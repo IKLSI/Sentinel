@@ -6,7 +6,7 @@ import { useDeleteProjectMutation } from "@/domains/projects/mutations";
 import { useProjectsQuery } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -154,7 +154,7 @@ export const ProjectsPage: React.FC = () => {
         />
 
         {loading ? (
-          <CenteredLoader />
+          <ListSkeleton />
         ) : loadFailed && projects.length === 0 ? (
           <LoadErrorState
             onRetry={() => void refetch()}

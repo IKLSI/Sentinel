@@ -1,5 +1,8 @@
 import { NO_GRADE_TONE, gradeToneOf } from "@/constants/grades";
-import type { NextAction } from "@/domains/dashboard/types";
+import type {
+  NextAction,
+  VulnerabilityFlowPoint,
+} from "@/domains/dashboard/types";
 import { SCORE_DELTA_NEUTRAL } from "@/features/dashboard/pages/DashboardPage/constants";
 import type { Translate } from "@/contexts/I18nContext";
 
@@ -64,3 +67,8 @@ export const nextActionLabel = (t: Translate, action: NextAction) => {
     reference: action.ticketReference ?? "",
   });
 };
+
+export const flowSeries = (
+  flow: ReadonlyArray<VulnerabilityFlowPoint>,
+  key: "detected" | "resolved",
+) => flow.map((point) => point[key]);

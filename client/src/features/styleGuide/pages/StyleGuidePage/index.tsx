@@ -7,6 +7,7 @@ import { ButtonsSection } from "@/features/styleGuide/pages/StyleGuidePage/compo
 import { InputsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/InputsSection";
 import { ChipsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/ChipsSection";
 import { CardsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/CardsSection";
+import { SkeletonsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/SkeletonsSection";
 import { AvatarsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/AvatarsSection";
 import { SwitchSection } from "@/features/styleGuide/pages/StyleGuidePage/components/SwitchSection";
 import { ModalsSection } from "@/features/styleGuide/pages/StyleGuidePage/components/ModalsSection";
@@ -50,6 +51,7 @@ export const StyleGuidePage: React.FC = () => {
         <InputsSection />
         <ChipsSection />
         <CardsSection />
+        <SkeletonsSection />
         <AvatarsSection />
         <SwitchSection />
         <ModalsSection />

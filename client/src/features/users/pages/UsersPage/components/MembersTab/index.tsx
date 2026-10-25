@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import GroupOutlined from "@mui/icons-material/GroupOutlined";
-import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { MemberRow } from "@/features/users/pages/UsersPage/components/MemberRow";
@@ -209,7 +209,7 @@ export const MembersTab: React.FC<Props> = ({
         }}
       >
         {loadingMembers ? (
-          <CenteredLoader />
+          <ListSkeleton />
         ) : members.length === 0 ? (
           <EmptyState
             icon={GroupOutlined}

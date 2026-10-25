@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import { CenteredLoader } from "@/components/ui/common/CenteredLoader";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -147,7 +147,7 @@ export const TicketsPage: React.FC = () => {
         />
 
         {loading && !tickets ? (
-          <CenteredLoader />
+          <ListSkeleton />
         ) : error && !tickets ? (
           <LoadErrorState
             onRetry={() => ticketsQuery.refetch()}

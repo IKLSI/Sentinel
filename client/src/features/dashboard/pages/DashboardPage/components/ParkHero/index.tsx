@@ -1,20 +1,25 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
-import type { ParkOverview } from "@/domains/dashboard/types";
+import type {
+  ParkOverview,
+  VulnerabilityFlowPoint,
+} from "@/domains/dashboard/types";
 import { DependencyDonut } from "@/features/dashboard/pages/DashboardPage/components/DependencyDonut";
 import { RiskTile } from "@/features/dashboard/pages/DashboardPage/components/RiskTile";
 import { ScoreGauge } from "@/features/dashboard/pages/DashboardPage/components/ScoreGauge";
 import {
+  flowSeries,
   formatDelta,
   pluralKey,
 } from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
   overview: ParkOverview;
+  vulnerabilityFlow: VulnerabilityFlowPoint[];
 }
 
-export const ParkHero: React.FC<Props> = ({ overview }) => {
+export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
   const { t } = useI18n();
   const { vulnerabilities } = overview;
   const delta = formatDelta(t, overview.scoreDelta);
@@ -103,6 +108,7 @@ export const ParkHero: React.FC<Props> = ({ overview }) => {
         <RiskTile
           value={vulnerabilities.high}
           color="var(--orange)"
+          trend={flowSeries(vulnerabilityFlow, "detected")}
           label={t(pluralKey("dashboard.hero.high", vulnerabilities.high))}
           hint={t(
             pluralKey("dashboard.hero.total_hint", vulnerabilities.total),

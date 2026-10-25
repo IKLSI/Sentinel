@@ -31,14 +31,27 @@ export const EmptyState: React.FC<Props> = ({
       ...sx,
     }}
   >
-    <Icon
+    <Box
       sx={{
-        fontSize: iconSize,
-        mb: "20px",
-        color: "var(--muted)",
-        opacity: 0.4,
+        width: iconSize * 2,
+        height: iconSize * 2,
+        mb: "16px",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+        border: "1px dashed var(--border2)",
       }}
-    />
+    >
+      <Icon
+        sx={{
+          fontSize: iconSize,
+          color: "var(--muted)",
+          opacity: 0.7,
+        }}
+      />
+    </Box>
     <Box
       sx={{
         mb: "6px",

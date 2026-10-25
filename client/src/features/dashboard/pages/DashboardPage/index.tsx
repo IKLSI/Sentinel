@@ -1,12 +1,12 @@
 import type React from "react";
 import { Suspense, lazy } from "react";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useI18n } from "@/contexts/I18nContext";
 import { useDashboard } from "@/domains/dashboard/queries";
 import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
+import { DashboardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/DashboardSkeleton";
 import { ParkHero } from "@/features/dashboard/pages/DashboardPage/components/ParkHero";
 import { ProjectsSection } from "@/features/dashboard/pages/DashboardPage/components/ProjectsSection";
 import { RecentActivityCard } from "@/features/dashboard/pages/DashboardPage/components/RecentActivityCard";
@@ -30,7 +30,9 @@ export const DashboardPage: React.FC = () => {
 
   useQueryErrorToast(!!error, "dashboard.toast.stats_load_error");
 
-  if (isLoading || !stats) {
+  if (isLoading) return <DashboardSkeleton />;
+
+  if (!stats) {
     return (
       <Box
         sx={{
@@ -40,15 +42,7 @@ export const DashboardPage: React.FC = () => {
           height: "100vh",
         }}
       >
-        {isLoading ? (
-          <CircularProgress
-            size={36}
-            thickness={3}
-            sx={{ color: "var(--accent)" }}
-          />
-        ) : (
-          <LoadErrorState onRetry={() => refetch()} retrying={isFetching} />
-        )}
+        <LoadErrorState onRetry={() => refetch()} retrying={isFetching} />
       </Box>
     );
   }
@@ -69,7 +63,10 @@ export const DashboardPage: React.FC = () => {
         gap: "14px",
       }}
     >
-      <ParkHero overview={stats.overview} />
+      <ParkHero
+        overview={stats.overview}
+        vulnerabilityFlow={stats.vulnerabilityFlow}
+      />
 
       <Box
         sx={{

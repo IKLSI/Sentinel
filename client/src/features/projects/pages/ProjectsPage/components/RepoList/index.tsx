@@ -1,13 +1,13 @@
 import type React from "react";
 import { useRef } from "react";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
 import type { AvailableRepo } from "@/domains/projects/types";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
 import { RepoRow } from "@/features/projects/pages/ProjectsPage/components/RepoRow";
 import { EmptyState } from "@/components/ui/common/EmptyState";
+import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 
 const REPO_ROW_ESTIMATED_HEIGHT_PX = 56;
 
@@ -60,8 +60,8 @@ export const RepoList: React.FC<Props> = ({
       }}
     >
       {loading ? (
-        <Box sx={{ py: "40px", display: "flex", justifyContent: "center" }}>
-          <CircularProgress size={24} />
+        <Box sx={{ py: "12px", display: "flex" }}>
+          <ListSkeleton rows={5} rowHeight={48} />
         </Box>
       ) : error ? (
         <Box
