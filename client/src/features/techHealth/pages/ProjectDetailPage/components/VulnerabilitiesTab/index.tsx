@@ -2,13 +2,14 @@ import type React from "react";
 import { useMemo } from "react";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { GridFooter } from "@/components/ui/common/GridFooter";
+import { Pagination } from "@/components/ui/common/Pagination";
 import {
   VirtualTable,
   type VirtualTableColumn,
 } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
 import { useGridControls } from "@/hooks/useGridControls";
+import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   EMPTY_STATE_SX,
   GRID_ROW_HEIGHT,
@@ -84,6 +85,8 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
     sort,
     toggleSort,
     visibleRows,
+    pagedRows,
+    pagination,
   } = useGridControls<VulnerabilityRow>({
     rows: vulns,
     searchableValues,
@@ -174,7 +177,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
       />
 
       <VirtualTable<VulnerabilityRow>
-        rows={visibleRows}
+        rows={pagedRows}
         getRowId={(vuln) => vuln.id}
         columns={columns}
         estimateRowHeight={GRID_ROW_HEIGHT}
@@ -182,9 +185,15 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
         onSortChange={toggleSort}
         noResultsLabel={t("tech_health.no_results")}
         footer={
-          <GridFooter
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
             total={visibleRows.length}
-            label={t(
+            onChange={pagination.setPage}
+            pageSize={pagination.pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={pagination.setPageSize}
+            countLabel={t(
               visibleRows.length > 1
                 ? "tech_health.count.vulns_plural"
                 : "tech_health.count.vulns_singular",

@@ -29,10 +29,10 @@ import {
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSortState } from "@/hooks/useSortState";
+import { PAGE_SIZE_OPTIONS, usePagination } from "@/hooks/usePagination";
 import { SortDirection, UserAccessStatus, UserSortField } from "@/enums";
 
 const ACTIONS_COLUMN_KEY = "actions";
-const DEFAULT_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 
 interface Props {
@@ -69,28 +69,31 @@ export const MembersTab: React.FC<Props> = ({
     useState<PendingMemberChange | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const debouncedSearch = useDebouncedValue(memberSearch, SEARCH_DEBOUNCE_MS);
-  const [page, setPage] = useState(1);
+  const { page, pageSize, setPage, setPageSize, resetPage } = usePagination();
   const [sort, toggleSort] = useSortState<UserSortField>({
     col: UserSortField.Member,
     dir: SortDirection.Asc,
   });
 
-  const handleSearchChange = useCallback((v: string) => {
-    setMemberSearch(v);
-    setPage(1);
-  }, []);
+  const handleSearchChange = useCallback(
+    (v: string) => {
+      setMemberSearch(v);
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const handleCriterionChange = useCallback(
     (next: FilterCriterion | null) => {
-      setPage(1);
+      resetPage();
       onCriterionChange(next);
     },
-    [onCriterionChange],
+    [onCriterionChange, resetPage],
   );
 
   const usersQuery = useUsersQuery({
     page,
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize,
     sortBy: sort.col,
     sortDirection: sort.dir,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -280,8 +283,9 @@ export const MembersTab: React.FC<Props> = ({
               totalPages={totalPages}
               total={totalMembers}
               onChange={setPage}
-              previousLabel={t("settings.pagination.previous")}
-              nextLabel={t("settings.pagination.next")}
+              pageSize={pageSize}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              onPageSizeChange={setPageSize}
               countLabel={
                 totalMembers > 1
                   ? t("settings.members.count_plural")

@@ -1,4 +1,5 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { usePagination } from "@/hooks/usePagination";
 import type {
   FilterCriterion,
   FilterFieldDefinition,
@@ -26,17 +27,38 @@ export function useGridControls<T>({
   comparators,
   defaultSort,
 }: Options<T>) {
-  const [search, setSearch] = useState("");
-  const [criterion, setCriterion] = useState<FilterCriterion | null>(null);
+  const [search, setSearchState] = useState("");
+  const [criterion, setCriterionState] = useState<FilterCriterion | null>(null);
   const [sort, setSort] = useState<VirtualTableSort>(defaultSort);
+  const { page, pageSize, setPage, setPageSize, resetPage } = usePagination();
 
-  const toggleSort = useCallback((key: string) => {
-    setSort((current) =>
-      current.key === key
-        ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
-        : { key, direction: "desc" },
-    );
-  }, []);
+  const setSearch = useCallback(
+    (value: string) => {
+      setSearchState(value);
+      resetPage();
+    },
+    [resetPage],
+  );
+
+  const setCriterion = useCallback(
+    (value: FilterCriterion | null) => {
+      setCriterionState(value);
+      resetPage();
+    },
+    [resetPage],
+  );
+
+  const toggleSort = useCallback(
+    (key: string) => {
+      setSort((current) =>
+        current.key === key
+          ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+          : { key, direction: "desc" },
+      );
+      resetPage();
+    },
+    [resetPage],
+  );
 
   const deferredSearch = useDeferredValue(search);
 
@@ -70,6 +92,15 @@ export function useGridControls<T>({
     });
   }, [sortedRows, deferredSearch, criterion, fields, searchableValues]);
 
+  const totalPages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  const pagedRows = useMemo(
+    () =>
+      visibleRows.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [visibleRows, currentPage, pageSize],
+  );
+
   return {
     search,
     setSearch,
@@ -78,5 +109,13 @@ export function useGridControls<T>({
     sort,
     toggleSort,
     visibleRows,
+    pagedRows,
+    pagination: {
+      page: currentPage,
+      pageSize,
+      totalPages,
+      setPage,
+      setPageSize,
+    },
   };
 }

@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { GridFooter } from "@/components/ui/common/GridFooter";
+import { Pagination } from "@/components/ui/common/Pagination";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
@@ -17,6 +17,7 @@ import type { Runtime } from "@/domains/projects/types";
 import { FindingKind } from "@/enums";
 import { formatDate } from "@/formatters/date";
 import { useGridControls } from "@/hooks/useGridControls";
+import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   EMPTY_STATE_SX,
   EOL_COLOR,
@@ -191,6 +192,8 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
     sort,
     toggleSort,
     visibleRows,
+    pagedRows,
+    pagination,
   } = useGridControls<Runtime>({
     rows: runtimes,
     searchableValues,
@@ -261,7 +264,7 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
       />
 
       <VirtualTable<Runtime>
-        rows={visibleRows}
+        rows={pagedRows}
         getRowId={(runtime) => runtime.id}
         columns={columns}
         estimateRowHeight={GRID_ROW_HEIGHT}
@@ -269,9 +272,15 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
         onSortChange={toggleSort}
         noResultsLabel={t("tech_health.no_results")}
         footer={
-          <GridFooter
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
             total={visibleRows.length}
-            label={t(
+            onChange={pagination.setPage}
+            pageSize={pagination.pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={pagination.setPageSize}
+            countLabel={t(
               visibleRows.length > 1
                 ? "tech_health.count.runtimes_plural"
                 : "tech_health.count.runtimes_singular",

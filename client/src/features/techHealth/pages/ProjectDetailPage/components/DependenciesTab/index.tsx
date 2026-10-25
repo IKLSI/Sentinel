@@ -3,7 +3,7 @@ import { memo, useMemo } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { GridFooter } from "@/components/ui/common/GridFooter";
+import { Pagination } from "@/components/ui/common/Pagination";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
@@ -16,6 +16,7 @@ import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
 import { FindingKind } from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
+import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   DEP_STATUS,
   EMPTY_STATE_SX,
@@ -220,6 +221,8 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
     sort,
     toggleSort,
     visibleRows,
+    pagedRows,
+    pagination,
   } = useGridControls<Dependency>({
     rows: dependencies,
     searchableValues,
@@ -303,7 +306,7 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
       />
 
       <VirtualTable<Dependency>
-        rows={visibleRows}
+        rows={pagedRows}
         getRowId={(dependency) => dependency.id}
         columns={columns}
         estimateRowHeight={GRID_ROW_HEIGHT}
@@ -311,9 +314,15 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
         onSortChange={toggleSort}
         noResultsLabel={t("tech_health.no_results")}
         footer={
-          <GridFooter
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
             total={visibleRows.length}
-            label={t(
+            onChange={pagination.setPage}
+            pageSize={pagination.pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={pagination.setPageSize}
+            countLabel={t(
               visibleRows.length > 1
                 ? "tech_health.count.deps_plural"
                 : "tech_health.count.deps_singular",

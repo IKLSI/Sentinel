@@ -81,8 +81,6 @@ export const DemoTickets: React.FC = () => {
           totalPages={hasFiltersApplied ? FIRST_PAGE : DEMO_TICKETS_TOTAL_PAGES}
           total={total}
           onChange={noop}
-          previousLabel={t("tickets.list.previous")}
-          nextLabel={t("tickets.list.next")}
           countLabel={
             total > 1
               ? t("tickets.list.count_plural")

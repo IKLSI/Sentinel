@@ -35,6 +35,7 @@ import { CreateTicketModal } from "@/features/tickets/pages/TicketsPage/componen
 import { EditTicketModal } from "@/features/tickets/pages/TicketsPage/components/EditTicketModal";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSortState } from "@/hooks/useSortState";
+import { PAGE_SIZE_OPTIONS, usePagination } from "@/hooks/usePagination";
 import { SortDirection, TicketSortField } from "@/enums";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -53,21 +54,24 @@ export const TicketsPage: React.FC = () => {
     () => criterionFromSearch(searchParams),
     [searchParams],
   );
-  const [page, setPage] = useState(1);
+  const { page, pageSize, setPage, setPageSize, resetPage } = usePagination();
   const handleCriterionChange = useCallback(
     (next: FilterCriterion | null) => {
-      setPage(1);
+      resetPage();
       navigate({
         search: (previous) => ({ ...previous, ...searchFromCriterion(next) }),
         replace: true,
       });
     },
-    [navigate],
+    [navigate, resetPage],
   );
-  const handleSearchChange = useCallback((v: string) => {
-    setSearch(v);
-    setPage(1);
-  }, []);
+  const handleSearchChange = useCallback(
+    (v: string) => {
+      setSearch(v);
+      resetPage();
+    },
+    [resetPage],
+  );
   const { data: projectsData } = useProjectOptionsQuery();
   const projects = useMemo(() => projectsData ?? [], [projectsData]);
   const { data: usersData } = useUserOptionsQuery();
@@ -76,8 +80,6 @@ export const TicketsPage: React.FC = () => {
     col: TicketSortField.Priority,
     dir: SortDirection.Desc,
   });
-
-  const pageSize = 25;
 
   const createDialog = useCreateTicketDialog((created: Ticket) =>
     navigate({ to: "/tickets/$id", params: { id: created.id } }),
@@ -179,8 +181,9 @@ export const TicketsPage: React.FC = () => {
               totalPages={tickets?.totalPages ?? 1}
               total={tickets?.totalCount ?? 0}
               onChange={setPage}
-              previousLabel={t("tickets.list.previous")}
-              nextLabel={t("tickets.list.next")}
+              pageSize={pageSize}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              onPageSizeChange={setPageSize}
               countLabel={
                 (tickets?.totalCount ?? 0) > 1
                   ? t("tickets.list.count_plural")
