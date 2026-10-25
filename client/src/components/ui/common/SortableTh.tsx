@@ -57,6 +57,26 @@ export const SortableTh: React.FC<SortableThProps> = ({
     userSelect: "none",
   } as const;
 
+  const arrow = (
+    <ArrowDownwardOutlined
+      className={ARROW_CLASS}
+      sx={{
+        fontSize: 12,
+        flexShrink: 0,
+        opacity: sorted ? 1 : 0,
+        transform: sorted && ascending ? "rotate(180deg)" : "none",
+        transition: "opacity 0.12s, transform 0.12s",
+        ...(align === "center" && {
+          position: "absolute",
+          left: "100%",
+          top: "50%",
+          ml: "5px",
+          mt: "-6px",
+        }),
+      }}
+    />
+  );
+
   return (
     <Box
       component="th"
@@ -83,17 +103,17 @@ export const SortableTh: React.FC<SortableThProps> = ({
     >
       {sortable ? (
         <ButtonBase onClick={onSort} sx={{ ...labelSx, ...SORTABLE_LABEL_SX }}>
-          {children}
-          <ArrowDownwardOutlined
-            className={ARROW_CLASS}
-            sx={{
-              fontSize: 12,
-              flexShrink: 0,
-              opacity: sorted ? 1 : 0,
-              transform: sorted && ascending ? "rotate(180deg)" : "none",
-              transition: "opacity 0.12s, transform 0.12s",
-            }}
-          />
+          {align === "center" ? (
+            <Box component="span" sx={{ position: "relative" }}>
+              {children}
+              {arrow}
+            </Box>
+          ) : (
+            <>
+              {children}
+              {arrow}
+            </>
+          )}
         </ButtonBase>
       ) : (
         <Box sx={labelSx}>{children}</Box>

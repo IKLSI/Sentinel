@@ -80,6 +80,11 @@ export const sortProjects = (
               (b.criticalVulnerabilities ?? 0)) ||
           (b.totalVulnerabilities ?? 0) - (a.totalVulnerabilities ?? 0)
         );
+      case "score":
+        return (
+          mul * ((a.healthScore ?? -1) - (b.healthScore ?? -1)) ||
+          a.name.localeCompare(b.name)
+        );
       case "tickets":
         return mul * ((a.totalTickets ?? 0) - (b.totalTickets ?? 0));
       default:

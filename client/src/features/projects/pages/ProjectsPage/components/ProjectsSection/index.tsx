@@ -19,7 +19,8 @@ import { SortDirection } from "@/enums";
 
 const COLUMN_WIDTHS = [
   { id: "name", width: "auto" },
-  { id: "vulnerabilities", width: "130px" },
+  { id: "score", width: "110px" },
+  { id: "vulnerabilities", width: "110px" },
   { id: "critical", width: "110px" },
   { id: "tickets", width: "100px" },
   { id: "actions", width: "110px" },
@@ -223,6 +224,15 @@ export const ProjectsSection: React.FC<Props> = ({
                   onSort={() => toggleSort("name")}
                 >
                   {t("projects.table.project")}
+                </SortableTh>
+                <SortableTh
+                  align="center"
+                  sortable
+                  active={sort.col === "score"}
+                  ascending={sort.dir === SortDirection.Asc}
+                  onSort={() => toggleSort("score")}
+                >
+                  {t("projects.table.score")}
                 </SortableTh>
                 <SortableTh
                   align="center"

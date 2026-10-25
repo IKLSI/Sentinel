@@ -169,12 +169,6 @@ export const ProjectsPage: React.FC = () => {
               overflowX: "hidden",
               pr: "4px",
               pb: "2px",
-              "&::-webkit-scrollbar": { width: "6px" },
-              "&::-webkit-scrollbar-thumb": {
-                background: "var(--border2)",
-                borderRadius: "50%",
-              },
-              "&::-webkit-scrollbar-track": { background: "transparent" },
             }}
           >
             {filtered.length === 0 ? (

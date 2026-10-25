@@ -5,6 +5,7 @@ import RefreshOutlined from "@mui/icons-material/RefreshOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
+import { gradeToneOf } from "@/constants/grades";
 import { useT } from "@/contexts/I18nContext";
 import type { ProjectSummary } from "@/domains/projects/types";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -108,6 +109,30 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   : "—"}
               </Box>
             </Box>
+          </Box>
+        </Box>
+
+        <Box
+          component="td"
+          sx={{
+            padding: "8px 12px",
+            borderBottom: "1px solid var(--border)",
+            textAlign: "center",
+          }}
+        >
+          <Box
+            sx={{
+              color:
+                project.healthScore === null
+                  ? "var(--muted2)"
+                  : gradeToneOf(project.healthGrade)?.color,
+              fontWeight: project.healthScore === null ? 500 : 700,
+              fontSize: "13px",
+              lineHeight: 1.25,
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            {project.healthScore ?? "—"}
           </Box>
         </Box>
 
