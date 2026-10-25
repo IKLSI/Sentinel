@@ -16,6 +16,7 @@ public sealed record ClosedTicketActivityRow(
     Guid Id,
     int Number,
     DateTime UpdatedAt,
+    Guid? ProjectId,
     string? ProjectName,
     string? AssigneeFirstName,
     string? AssigneeLastName,
@@ -26,6 +27,7 @@ public sealed record CreatedTicketActivityRow(
     Guid Id,
     int Number,
     DateTime CreatedAt,
+    Guid? ProjectId,
     string? ProjectName,
     string? CreatedByFirstName,
     string? CreatedByLastName);

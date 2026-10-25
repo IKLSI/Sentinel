@@ -45,6 +45,7 @@ public class DashboardRepository : IDashboardRepository
                 t.Id,
                 t.Number,
                 t.UpdatedAt,
+                t.ProjectId,
                 t.Project != null ? t.Project.Name : null,
                 t.AssignedTo != null ? t.AssignedTo.FirstName : null,
                 t.AssignedTo != null ? t.AssignedTo.LastName : null,
@@ -62,6 +63,7 @@ public class DashboardRepository : IDashboardRepository
                 t.Id,
                 t.Number,
                 t.CreatedAt,
+                t.ProjectId,
                 t.Project != null ? t.Project.Name : null,
                 t.CreatedBy != null ? t.CreatedBy.FirstName : null,
                 t.CreatedBy != null ? t.CreatedBy.LastName : null))

@@ -16,6 +16,7 @@ public class DashboardStatsService(
     ITenantContext tenant) : IService
 {
     private const int ActivityCount = 8;
+    private const int TicketActivityFetchCount = ActivityCount * 4;
     private const int ProjectRowCount = 5;
     private const int UrgentTicketCount = 8;
     private const int WindowDays = 30;
@@ -155,7 +156,7 @@ public class DashboardStatsService(
         List<ActivityItemDto> items = [];
 
         IReadOnlyList<ClosedTicketActivityRow> closedTickets = await dashboardRepository
-            .GetClosedTicketActivityAsync(organizationId, since, ActivityCount, cancellationToken);
+            .GetClosedTicketActivityAsync(organizationId, since, TicketActivityFetchCount, cancellationToken);
 
         foreach (ClosedTicketActivityRow ticket in closedTickets)
         {
@@ -173,6 +174,7 @@ public class DashboardStatsService(
                 Timestamp = ticket.UpdatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = ticket.Id.ToString(),
+                ProjectId = ticket.ProjectId?.ToString(),
                 Type = "resolved",
                 Reference = reference,
                 ProjectName = ticket.ProjectName,
@@ -180,7 +182,7 @@ public class DashboardStatsService(
         }
 
         IReadOnlyList<CreatedTicketActivityRow> createdTickets = await dashboardRepository
-            .GetCreatedTicketActivityAsync(organizationId, since, ActivityCount, cancellationToken);
+            .GetCreatedTicketActivityAsync(organizationId, since, TicketActivityFetchCount, cancellationToken);
 
         foreach (CreatedTicketActivityRow ticket in createdTickets)
         {
@@ -197,6 +199,7 @@ public class DashboardStatsService(
                 Timestamp = ticket.CreatedAt,
                 Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
                 TicketId = ticket.Id.ToString(),
+                ProjectId = ticket.ProjectId?.ToString(),
                 Type = "created",
                 Reference = reference,
                 ProjectName = ticket.ProjectName,
@@ -205,7 +208,7 @@ public class DashboardStatsService(
 
         items.AddRange(await BuildVulnerabilityActivityAsync(organizationId, since, cancellationToken));
 
-        return [.. items.OrderByDescending(a => a.Timestamp).Take(ActivityCount)];
+        return [.. ActivityGrouper.Group(items.OrderByDescending(a => a.Timestamp).ToList()).Take(ActivityCount)];
     }
 
     private async Task<List<ActivityItemDto>> BuildVulnerabilityActivityAsync(Guid organizationId, DateTime since,

@@ -43,8 +43,14 @@ export const ActivityRow: React.FC<Props> = ({ item }) => {
   const isPlural = count > 1;
 
   const emphasis = (() => {
-    if (item.type === "resolved") return t("dashboard.activity.bold_resolved");
-    if (item.type === "created") return t("dashboard.activity.bold_created");
+    if (item.type === "resolved")
+      return isPlural
+        ? t("dashboard.activity.bold_resolved_plural", { count })
+        : t("dashboard.activity.bold_resolved");
+    if (item.type === "created")
+      return isPlural
+        ? t("dashboard.activity.bold_created_plural", { count })
+        : t("dashboard.activity.bold_created");
     if (item.type === "vuln")
       return isPlural
         ? `${count} ${t("dashboard.activity.bold_critical_plural")}`
@@ -56,9 +62,13 @@ export const ActivityRow: React.FC<Props> = ({ item }) => {
     const reference = item.reference ?? "";
     const project = item.projectName ?? "";
     if (item.type === "resolved")
-      return t("dashboard.activity.suffix_resolved", { reference });
+      return isPlural
+        ? ""
+        : t("dashboard.activity.suffix_resolved", { reference });
     if (item.type === "created")
-      return t("dashboard.activity.suffix_created", { reference });
+      return isPlural
+        ? ""
+        : t("dashboard.activity.suffix_created", { reference });
     if (item.type === "vuln")
       return t(
         isPlural
