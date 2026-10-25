@@ -1476,7 +1476,6 @@ export interface components {
       totalVulnerabilities: number;
     };
     ProjectHealthDto: {
-      breakdown: components["schemas"]["ScoreBreakdownDto"];
       /** @enum {string} */
       coverage:
         | "NotScanned"
@@ -1484,8 +1483,14 @@ export interface components {
         | "NoManifest"
         | "NoDependencies"
         | "Covered";
+      /** Format: int32 */
+      criticalVulnerabilityCount: number;
+      /** Format: int32 */
+      eolRuntimeCount: number;
       grade: string | null;
       hasScanError: boolean;
+      /** Format: int32 */
+      highVulnerabilityCount: number;
       /** Format: uuid */
       id: string;
       /** Format: date-time */
@@ -1643,17 +1648,6 @@ export interface components {
       upcomingNames: string[];
       /** Format: int32 */
       warningWindowDays: number;
-    };
-    ScoreBreakdownDto: {
-      /** Format: int32 */
-      freshness: number;
-      freshnessGrade: string;
-      /** Format: int32 */
-      runtimes: number;
-      runtimesGrade: string;
-      /** Format: int32 */
-      security: number;
-      securityGrade: string;
     };
     ScorePenaltyDto: {
       kind: string;

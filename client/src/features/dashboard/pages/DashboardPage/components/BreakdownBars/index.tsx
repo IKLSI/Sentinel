@@ -2,63 +2,57 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useI18n } from "@/contexts/I18nContext";
-import type { ProjectHealth } from "@/domains/dashboard/types";
-import { gradeMeta } from "@/features/dashboard/pages/DashboardPage/helpers";
 
 interface Props {
-  breakdown: NonNullable<ProjectHealth["breakdown"]>;
+  criticalVulnerabilityCount: number;
+  highVulnerabilityCount: number;
+  eolRuntimeCount: number;
 }
 
-export const BreakdownBars: React.FC<Props> = ({ breakdown }) => {
+export const BreakdownBars: React.FC<Props> = ({
+  criticalVulnerabilityCount,
+  highVulnerabilityCount,
+  eolRuntimeCount,
+}) => {
   const { t } = useI18n();
 
   const axes = [
-    {
-      key: "security",
-      value: breakdown.security,
-      grade: breakdown.securityGrade,
-    },
-    {
-      key: "runtimes",
-      value: breakdown.runtimes,
-      grade: breakdown.runtimesGrade,
-    },
-    {
-      key: "freshness",
-      value: breakdown.freshness,
-      grade: breakdown.freshnessGrade,
-    },
-  ];
+    { key: "critical", count: criticalVulnerabilityCount, color: "var(--red)" },
+    { key: "high", count: highVulnerabilityCount, color: "var(--orange)" },
+    { key: "runtimes", count: eolRuntimeCount, color: "var(--purple)" },
+  ].map((axis) => ({
+    ...axis,
+    color: axis.count > 0 ? axis.color : "var(--border)",
+  }));
 
   return (
     <AppTooltip
       title={
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "8px 1fr auto",
+            alignItems: "center",
+            gap: "4px 8px",
+            fontSize: "11px",
+          }}
+        >
           {axes.map((axis) => (
-            <Box
-              key={axis.key}
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "8px 1fr auto auto",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "11px",
-              }}
-            >
+            <Box key={axis.key} sx={{ display: "contents" }}>
               <Box
                 sx={{
                   width: 6,
                   height: 6,
                   borderRadius: "50%",
-                  background: gradeMeta(axis.grade).color,
+                  background: axis.color,
                 }}
               />
               <span>{t(`dashboard.axis.${axis.key}`)}</span>
-              <Box component="b" sx={{ fontVariantNumeric: "tabular-nums" }}>
-                {axis.value}
-              </Box>
-              <Box component="span" sx={{ opacity: 0.7, minWidth: 10 }}>
-                {axis.grade}
+              <Box
+                component="b"
+                sx={{ fontVariantNumeric: "tabular-nums", textAlign: "right" }}
+              >
+                {axis.count}
               </Box>
             </Box>
           ))}
@@ -73,7 +67,7 @@ export const BreakdownBars: React.FC<Props> = ({ breakdown }) => {
               flex: 1,
               height: 3,
               borderRadius: "2px",
-              background: gradeMeta(axis.grade).color,
+              background: axis.color,
             }}
           />
         ))}

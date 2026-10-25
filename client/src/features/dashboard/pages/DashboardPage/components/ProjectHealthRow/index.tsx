@@ -25,7 +25,7 @@ export const ProjectHealthRow: React.FC<Props> = ({ project }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const meta = gradeMeta(project.grade);
-  const { breakdown, nextAction } = project;
+  const { nextAction } = project;
   const actionLabel = nextAction
     ? nextActionLabel(t, nextAction)
     : t("dashboard.projects.no_action");
@@ -109,7 +109,13 @@ export const ProjectHealthRow: React.FC<Props> = ({ project }) => {
             {project.score ?? "–"}
           </Box>
         </Box>
-        {breakdown && <BreakdownBars breakdown={breakdown} />}
+        {project.score !== null && (
+          <BreakdownBars
+            criticalVulnerabilityCount={project.criticalVulnerabilityCount}
+            highVulnerabilityCount={project.highVulnerabilityCount}
+            eolRuntimeCount={project.eolRuntimeCount}
+          />
+        )}
       </Box>
     </ButtonBase>
   );

@@ -79,19 +79,6 @@ public static class HealthScoreCalculator
             : (null, null);
     }
 
-    public static HealthScoreBreakdown Breakdown(Project project) => Breakdown(project, _ => false);
-
-    public static HealthScoreBreakdown Breakdown(Project project, Func<Vulnerability, bool> isResolved)
-    {
-        ILookup<ScoreArea, double> pointsByArea = Charges(project, isResolved, DateTime.UtcNow)
-            .ToLookup(charge => AreaOf(charge.Kind), charge => charge.Points);
-
-        return new HealthScoreBreakdown(
-            ToScore(pointsByArea[ScoreArea.Security].Sum()),
-            ToScore(pointsByArea[ScoreArea.Runtimes].Sum()),
-            ToScore(pointsByArea[ScoreArea.Freshness].Sum()));
-    }
-
     private static List<PenaltyCharge> Charges(Project project, Func<Vulnerability, bool> isResolved, DateTime now)
     {
         List<PenaltyCharge> charges = [];
@@ -112,20 +99,6 @@ public static class HealthScoreCalculator
         charges.AddRange(RuntimeCharges(project, now));
 
         return charges;
-    }
-
-    private static ScoreArea AreaOf(string kind) => kind switch
-    {
-        ScorePenaltyKinds.EolRuntime or ScorePenaltyKinds.ApproachingEolRuntime => ScoreArea.Runtimes,
-        ScorePenaltyKinds.VersionLag or ScorePenaltyKinds.EolDependency => ScoreArea.Freshness,
-        _ => ScoreArea.Security
-    };
-
-    private enum ScoreArea
-    {
-        Security,
-        Runtimes,
-        Freshness
     }
 
     public static string ToGrade(int score) =>

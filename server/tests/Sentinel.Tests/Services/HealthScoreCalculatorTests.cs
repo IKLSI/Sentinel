@@ -358,28 +358,6 @@ public class HealthScoreCalculatorTests
             .Should().BeLessThan(HealthScoreCalculator.Calculate(unlikely));
     }
 
-    [Fact]
-    public void Breakdown_IsoleChaqueAxeDuScore()
-    {
-        Project project = ProjectWithDependencies(4, DependencyStatus.MajorUpdate);
-        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
-        project.Runtimes.Add(new Runtime { Name = "Node", Version = "16", IsEol = true });
-
-        HealthScoreBreakdown breakdown = HealthScoreCalculator.Breakdown(project);
-
-        breakdown.Security.Should().BeLessThan(100);
-        breakdown.Runtimes.Should().BeLessThan(100);
-        breakdown.Freshness.Should().BeLessThan(100);
-    }
-
-    [Fact]
-    public void Breakdown_ProjetSain_ToutEstAuMaximum()
-    {
-        HealthScoreBreakdown breakdown = HealthScoreCalculator.Breakdown(ProjectWithDependencies(3, DependencyStatus.UpToDate));
-
-        breakdown.Should().Be(new HealthScoreBreakdown(100, 100, 100));
-    }
-
     [Theory]
     [InlineData(100, "A")]
     [InlineData(90, "A")]
@@ -392,16 +370,6 @@ public class HealthScoreCalculatorTests
     public void ToGrade_AppliqueLesSeuilsPublies(int score, string expected)
     {
         HealthScoreCalculator.ToGrade(score).Should().Be(expected);
-    }
-
-    [Fact]
-    public void Breakdown_FaillesSupprimees_NePenalisentPasLaSecurite()
-    {
-        Project project = ProjectWithDependencies(2, DependencyStatus.UpToDate);
-        AddVulnerability(project.Dependencies.First(), VulnerabilitySeverity.Critical);
-
-        HealthScoreCalculator.Breakdown(project, _ => true).Security.Should().Be(100);
-        HealthScoreCalculator.Breakdown(project, _ => false).Security.Should().BeLessThan(100);
     }
 
     [Fact]

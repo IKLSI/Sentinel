@@ -15,6 +15,8 @@ public class ProjectHealthDto
     public int? Score { get; set; }
     public string? Grade { get; set; }
     public int? ScoreDelta { get; set; }
-    public ScoreBreakdownDto? Breakdown { get; set; }
+    public int CriticalVulnerabilityCount { get; set; }
+    public int HighVulnerabilityCount { get; set; }
+    public int EolRuntimeCount { get; set; }
     public NextActionDto? NextAction { get; set; }
 }

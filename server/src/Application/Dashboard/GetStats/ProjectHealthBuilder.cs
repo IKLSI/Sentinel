@@ -49,21 +49,17 @@ public static class ProjectHealthBuilder
             ScoreDelta = isScored && baselineScores.TryGetValue(project.Id, out int baseline)
                 ? project.HealthScore!.Value - baseline
                 : null,
-            Breakdown = isScored
-                ? ToBreakdownDto(HealthScoreCalculator.Breakdown(project,
-                    vulnerability => suppressedIds.Contains(vulnerability.Id)))
-                : null,
+            CriticalVulnerabilityCount =
+                CountOpenVulnerabilities(project, suppressedIds, VulnerabilitySeverity.Critical),
+            HighVulnerabilityCount = CountOpenVulnerabilities(project, suppressedIds, VulnerabilitySeverity.High),
+            EolRuntimeCount = RuntimeGrouping.ByName(project.Runtimes).Count(FindingRules.IsEol),
             NextAction = NextActionResolver.Resolve(project, projectTickets, deadlines),
         };
     }
 
-    private static ScoreBreakdownDto ToBreakdownDto(HealthScoreBreakdown breakdown) => new()
-    {
-        Security = breakdown.Security,
-        SecurityGrade = HealthScoreCalculator.ToGrade(breakdown.Security),
-        Runtimes = breakdown.Runtimes,
-        RuntimesGrade = HealthScoreCalculator.ToGrade(breakdown.Runtimes),
-        Freshness = breakdown.Freshness,
-        FreshnessGrade = HealthScoreCalculator.ToGrade(breakdown.Freshness),
-    };
+    private static int CountOpenVulnerabilities(Project project, HashSet<Guid> suppressedIds,
+        VulnerabilitySeverity severity) =>
+        project.Dependencies
+            .SelectMany(dependency => dependency.Vulnerabilities)
+            .Count(vulnerability => vulnerability.Severity == severity && !suppressedIds.Contains(vulnerability.Id));
 }
