@@ -12,6 +12,10 @@ public static class FindingRules
     public static bool IsOutdated(Dependency dependency) =>
         dependency.IsDeprecated || UpdateStatusOf(dependency) != DependencyStatus.UpToDate;
 
+    public static bool IsMajorUpdateInProduction(Dependency dependency) =>
+        dependency.Status == DependencyStatus.MajorUpdate && dependency.IsDirect
+        && dependency.Type == DependencyType.Prod;
+
     public static DependencyStatus UpdateStatusOf(Dependency dependency) =>
         DependencyStatusCalculator.UpdateOf(dependency);
 

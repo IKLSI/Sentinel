@@ -10,7 +10,7 @@ import { useQueryErrorToast } from "@/hooks/useQueryErrorToast";
 import { useT } from "@/contexts/I18nContext";
 import { ROUTES } from "@/constants/routes";
 import {
-  useProjectQuery,
+  useProjectOverviewQuery,
   useScanProgressQuery,
 } from "@/domains/projects/queries";
 
@@ -22,7 +22,7 @@ import { ProjectActions } from "@/features/techHealth/pages/ProjectDetailPage/co
 import { RemediateAllAction } from "@/features/techHealth/pages/ProjectDetailPage/components/RemediateAllAction";
 import { TabBar, type TabBarItem } from "@/components/ui/common/TabBar";
 import { VulnerabilitiesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnerabilitiesTab";
-import { DependenciesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/DependenciesTab";
+import { ProjectDependencies } from "@/features/techHealth/pages/ProjectDetailPage/components/ProjectDependencies";
 import { RuntimesTab } from "@/features/techHealth/pages/ProjectDetailPage/components/RuntimesTab";
 
 const routeApi = getRouteApi("/_authenticated/projects/$id");
@@ -37,7 +37,7 @@ export const ProjectDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number>(TAB_INDEX.vulnerabilities);
   const [, startTransition] = useTransition();
 
-  const projectQuery = useProjectQuery(id);
+  const projectQuery = useProjectOverviewQuery(id);
   const { data: scanProgress } = useScanProgressQuery();
   const project = projectQuery.data ?? null;
   const loading = projectQuery.isLoading;
@@ -52,7 +52,7 @@ export const ProjectDetailPage: React.FC = () => {
   }, [loadFailed, navigate]);
 
   const allVulns = useMemo(
-    () => toVulnerabilityRows(project?.dependencies ?? []),
+    () => toVulnerabilityRows(project?.vulnerableDependencies ?? []),
     [project],
   );
 
@@ -124,7 +124,10 @@ export const ProjectDetailPage: React.FC = () => {
             />
           )}
           {activeTab === TAB_INDEX.dependencies && (
-            <DependenciesTab dependencies={project.dependencies} />
+            <ProjectDependencies
+              projectId={project.id}
+              vulnerableDependencies={project.vulnerableDependencies}
+            />
           )}
           {activeTab === TAB_INDEX.runtimes && (
             <RuntimesTab runtimes={project.runtimes} />

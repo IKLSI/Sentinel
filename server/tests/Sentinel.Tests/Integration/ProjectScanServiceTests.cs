@@ -155,6 +155,7 @@ public class ProjectScanServiceTests
 
             Service = new ProjectScanService(
                 scope.Projects,
+                new DependencyRepository(scope.Context),
                 vulnerabilities,
                 new ProjectInventoryAcquirer(repositoryScanner, inventoryWriter, scope.Organizations,
                     new TokenProtector(new EphemeralDataProtectionProvider(), NullLogger<TokenProtector>.Instance),

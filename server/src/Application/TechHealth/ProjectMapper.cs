@@ -1,3 +1,4 @@
+using Sentinel.Application.TechHealth.GetProjectOverview;
 using Sentinel.Application.TechHealth.Remediation;
 using Sentinel.Application.TechHealth.Suppressions;
 using Sentinel.Application.Tickets;
@@ -9,19 +10,48 @@ namespace Sentinel.Application.TechHealth;
 
 public static class ProjectMapper
 {
-    public static ProjectDto ToDto(Project project) => ToDto(project, []);
+    private static readonly ProjectDetailContext EmptyContext = new([], [], null, false);
 
-    public static ProjectDto ToDto(Project project, IReadOnlyList<FindingTicketRow> findingTickets,
-        IReadOnlyList<VulnerabilitySuppression>? suppressions = null,
-        VulnerabilityRemediation? remediation = null, bool remediationAvailable = false)
+    public static ProjectDto ToDto(Project project) => ToDto(project, EmptyContext);
+
+    public static ProjectDto ToDto(Project project, ProjectDetailContext context)
     {
-        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(findingTickets);
-        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = (suppressions ?? [])
-            .ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto);
-        IReadOnlyList<(Dependency Dependency, Vulnerability Vulnerability)> remediableFindings =
-            RemediationRules.RemediableFindings(project.Dependencies ?? [], suppressionsByKey.Keys.ToHashSet());
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(context.FindingTickets);
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = IndexSuppressions(context.Suppressions);
+        ProjectDto dto = ToHeaderDto<ProjectDto>(project, links, suppressionsByKey, context,
+            ProjectInventoryCounts.Of(project.Dependencies));
 
-        return new ProjectDto
+        dto.Dependencies = ToDependencyDtos(project.Dependencies, links, suppressionsByKey);
+
+        return dto;
+    }
+
+    public static ProjectOverviewDto ToOverviewDto(Project project, ProjectDetailContext context)
+    {
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links = IndexLinks(context.FindingTickets);
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey = IndexSuppressions(context.Suppressions);
+        ProjectInventoryCounts counts = ProjectInventoryCounts.Of(project.Dependencies);
+        counts.Dependencies = project.InventoryCounts.Dependencies;
+        ProjectOverviewDto dto = ToHeaderDto<ProjectOverviewDto>(project, links, suppressionsByKey, context, counts);
+
+        dto.VulnerableDependencies = ToDependencyDtos(project.Dependencies, links, suppressionsByKey);
+
+        return dto;
+    }
+
+    public static List<DependencyDto> ToDependencyDtos(IEnumerable<Dependency> dependencies,
+        IReadOnlyList<FindingTicketRow> findingTickets) =>
+        ToDependencyDtos(dependencies, IndexLinks(findingTickets), IndexSuppressions([]));
+
+    private static TDto ToHeaderDto<TDto>(Project project,
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey, ProjectDetailContext context,
+        ProjectInventoryCounts counts) where TDto : ProjectHeaderDto, new()
+    {
+        IReadOnlyList<(Dependency Dependency, Vulnerability Vulnerability)> remediableFindings =
+            RemediationRules.RemediableFindings(project.Dependencies, suppressionsByKey.Keys.ToHashSet());
+
+        return new TDto
         {
             Id = project.Id,
             Name = project.Name,
@@ -36,29 +66,27 @@ public static class ProjectMapper
             HealthGrade = project.HealthGrade,
             Coverage = project.Coverage.ToString(),
             ScanFrequency = project.ScanFrequency.ToString(),
-            RemediationAvailable = remediationAvailable,
+            RemediationAvailable = context.RemediationAvailable,
             RemediableVulnerabilities = remediableFindings.Count,
             RemediationIncludesMajorUpgrade = remediableFindings
                 .Any(finding => RemediationRules.IsMajorUpgrade(finding.Dependency, finding.Vulnerability)),
-            Remediation = remediation == null ? null : RemediationMapper.ToDto(remediation),
-            TotalDependencies = project.Dependencies?.Count ?? 0,
-            CriticalVulnerabilities = project.Dependencies?
-                .SelectMany(dependency => dependency.Vulnerabilities)
-                .Count(vulnerability => vulnerability.Severity == VulnerabilitySeverity.Critical) ?? 0,
-            TotalVulnerabilities = project.Dependencies?
-                .SelectMany(dependency => dependency.Vulnerabilities)
-                .Count() ?? 0,
-            KnownExploitedVulnerabilities = project.Dependencies?
-                .SelectMany(dependency => dependency.Vulnerabilities)
-                .Count(vulnerability => vulnerability.IsKnownExploited) ?? 0,
-            Dependencies = project.Dependencies?
-                .Select(dependency => ToDto(dependency, links, suppressionsByKey))
-                .ToList() ?? [],
-            Runtimes = project.Runtimes == null
-                ? []
-                : RuntimeGrouping.ByName(project.Runtimes).Select(group => ToDto(group, links)).ToList()
+            Remediation = context.Remediation == null ? null : RemediationMapper.ToDto(context.Remediation),
+            TotalDependencies = counts.Dependencies,
+            CriticalVulnerabilities = counts.CriticalVulnerabilities,
+            TotalVulnerabilities = counts.Vulnerabilities,
+            KnownExploitedVulnerabilities = counts.KnownExploitedVulnerabilities,
+            Runtimes = RuntimeGrouping.ByName(project.Runtimes).Select(group => ToDto(group, links)).ToList()
         };
     }
+
+    private static List<DependencyDto> ToDependencyDtos(IEnumerable<Dependency> dependencies,
+        IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> links,
+        IReadOnlyDictionary<string, SuppressionDto> suppressionsByKey) =>
+        dependencies.Select(dependency => ToDto(dependency, links, suppressionsByKey)).ToList();
+
+    private static IReadOnlyDictionary<string, SuppressionDto> IndexSuppressions(
+        IReadOnlyList<VulnerabilitySuppression> suppressions) =>
+        suppressions.ToDictionary(suppression => suppression.FindingKey, SuppressionMapper.ToDto);
 
     private static IReadOnlyDictionary<(FindingKind, string), FindingTicketDto> IndexLinks(
         IReadOnlyList<FindingTicketRow> findingTickets) =>

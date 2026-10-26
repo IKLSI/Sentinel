@@ -28,9 +28,4 @@ public interface IDashboardRepository
 
     Task<IReadOnlyList<DashboardRuntimeRow>> GetRuntimesAsync(Guid organizationId,
         CancellationToken cancellationToken);
-
-    Task<VulnerabilityTotalsRow> GetVulnerabilityTotalsAsync(Guid organizationId,
-        CancellationToken cancellationToken);
-
-    Task<DependencyTotalsRow> GetDependencyTotalsAsync(Guid organizationId, CancellationToken cancellationToken);
 }

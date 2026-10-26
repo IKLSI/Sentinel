@@ -13,6 +13,7 @@ namespace Sentinel.Application.TechHealth.Scan;
 
 public class ProjectScanService(
     IProjectRepository projectRepository,
+    IDependencyRepository dependencyRepository,
     IVulnerabilityRepository vulnerabilityRepository,
     ProjectInventoryAcquirer inventoryAcquirer,
     ProjectFindingsRefresher findingsRefresher,
@@ -63,7 +64,13 @@ public class ProjectScanService(
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
             await MarkScanFailedAsync(projectId);
+            await RefreshInventoryCountsAsync(projectId);
             await NotifyProjectChangedAsync(project.OrganizationId, projectId);
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            await RefreshInventoryCountsAsync(projectId);
             throw;
         }
     }
@@ -128,6 +135,8 @@ public class ProjectScanService(
         if (findingsReliable)
             await healthHistoryWriter.StageResolutionsAsync(project, previousDetections, scannedAt, cancellationToken);
 
+        project.InventoryCounts = ProjectInventoryCounts.Of(project.Dependencies);
+
         await inventoryWriter.SaveAsync(cancellationToken);
 
         bool projectChanged = !acquisition.RepositoryUnchanged
@@ -136,7 +145,7 @@ public class ProjectScanService(
                 != (project.HealthScore, project.HealthGrade, project.Coverage, project.LastScanError)
             || !previousDetections.Keys.ToHashSet().SetEquals(project.Dependencies
                 .SelectMany(dependency => dependency.Vulnerabilities)
-                .Select(vulnerability => vulnerability.CveAlias ?? vulnerability.CveId));
+                .Select(VulnerabilityIdentity.Of));
 
         await followUps.RunAsync(project,
             new ScanFindingsContext(findingsReliable, alertBaseline, suppressedIds,
@@ -154,6 +163,22 @@ public class ProjectScanService(
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Unable to record the scan failure of project {ProjectId}", projectId);
+        }
+    }
+
+    private async Task RefreshInventoryCountsAsync(Guid projectId)
+    {
+        try
+        {
+            IReadOnlyList<Dependency> inventory =
+                await dependencyRepository.ListCountableByProjectAsync(projectId, CancellationToken.None);
+
+            await projectRepository.UpdateInventoryCountsAsync(projectId, ProjectInventoryCounts.Of(inventory),
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Unable to refresh the inventory counts of project {ProjectId}", projectId);
         }
     }
 

@@ -25,6 +25,8 @@ public partial class SentinelContext
             entity.HasIndex(e => e.OrganizationId);
             entity.HasAlternateKey(e => new { e.Id, e.OrganizationId });
             entity.HasIndex(e => new { e.ScanFrequency, e.LastScanAt });
+            entity.OwnsOne(e => e.InventoryCounts);
+            entity.Navigation(e => e.InventoryCounts).IsRequired();
 
             entity.HasOne(e => e.Organization)
                 .WithMany()

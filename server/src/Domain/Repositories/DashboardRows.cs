@@ -52,7 +52,8 @@ public sealed record DashboardProjectRow(
     ScanCoverage Coverage,
     string? LastScanError,
     int? HealthScore,
-    string? HealthGrade);
+    string? HealthGrade,
+    ProjectInventoryCounts InventoryCounts);
 
 public sealed record DashboardRuntimeRow(
     Guid ProjectId,
@@ -61,29 +62,6 @@ public sealed record DashboardRuntimeRow(
     DateTime? EolDate,
     bool? IsEol,
     bool IsMinimumConstraint);
-
-public sealed record VulnerabilityTotalsRow(
-    int Total,
-    int Critical,
-    int High,
-    int Medium,
-    int Low,
-    int KnownExploited)
-{
-    public static readonly VulnerabilityTotalsRow Empty = new(0, 0, 0, 0, 0, 0);
-}
-
-public sealed record DependencyTotalsRow(
-    int Total,
-    int UpToDate,
-    int MinorUpdate,
-    int MajorUpdate,
-    int Deprecated,
-    int Vulnerable,
-    int MajorUpdatesInProduction)
-{
-    public static readonly DependencyTotalsRow Empty = new(0, 0, 0, 0, 0, 0, 0);
-}
 
 public sealed record OpenTicketRow(
     Guid Id,

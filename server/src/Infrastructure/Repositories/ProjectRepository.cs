@@ -20,16 +20,29 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
 
     public Task<Project?> GetOrDefaultWithHealthDetailsAsync(Guid projectId, QueryTracking tracking,
-        CancellationToken cancellationToken)
-    {
-        IQueryable<Project> query = Query(tracking).AsSplitQuery();
-
-        return WithHealthDetails(query).FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        WithHealthDetails(Query(tracking).AsSplitQuery())
+            .FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
 
     public Task<Project?> GetOrDefaultInOrganizationWithHealthDetailsAsync(Guid projectId, Guid organizationId,
         CancellationToken cancellationToken) =>
         WithHealthDetails(Query(QueryTracking.NoTracking).AsSplitQuery())
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+
+    public Task<Project?> GetOrDefaultInOrganizationWithVulnerableDependenciesAsync(Guid projectId,
+        Guid organizationId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .AsSplitQuery()
+            .Include(p => p.Dependencies.Where(d => d.Vulnerabilities.Any()))
+            .ThenInclude(d => d.Vulnerabilities)
+            .Include(p => p.Runtimes)
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
+
+    public Task<Project?> GetOrDefaultInOrganizationWithDependenciesWithoutVulnerabilitiesAsync(Guid projectId,
+        Guid organizationId, CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .AsSplitQuery()
+            .Include(p => p.Dependencies.Where(d => !d.Vulnerabilities.Any()))
             .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == organizationId, cancellationToken);
 
     public Task<Project?> GetOrDefaultInOrganizationForFindingAsync(Guid projectId, Guid organizationId,
@@ -70,63 +83,31 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
         CancellationToken cancellationToken) =>
         await SummariesByHealthRank(organizationId).ToListAsync(cancellationToken);
 
-    internal IQueryable<ProjectSummaryRow> SummariesByHealthRank(Guid organizationId)
-    {
-        IQueryable<ProjectVulnerabilityStats> vulnerabilityStats =
-            from vulnerability in Context.Vulnerabilities
-            join dependency in Context.Dependencies on vulnerability.DependencyId equals dependency.Id
-            group vulnerability by dependency.ProjectId into perProject
-            select new ProjectVulnerabilityStats
-            {
-                ProjectId = perProject.Key,
-                Critical = perProject.Count(v => v.Severity == VulnerabilitySeverity.Critical),
-                Total = perProject.Count(),
-                KnownExploited = perProject.Count(v => v.IsKnownExploited)
-            };
-
-        IQueryable<ProjectCount> dependencyCounts =
-            from dependency in Context.Dependencies
-            group dependency by dependency.ProjectId into perProject
-            select new ProjectCount { ProjectId = perProject.Key, Total = perProject.Count() };
-
-        IQueryable<ProjectCount> ticketCounts =
-            from ticket in Context.Tickets
-            where ticket.ProjectId != null
-            group ticket by ticket.ProjectId!.Value into perProject
-            select new ProjectCount { ProjectId = perProject.Key, Total = perProject.Count() };
-
-        return
-            from project in Query(QueryTracking.NoTracking)
-            where project.OrganizationId == organizationId
-            join stats in vulnerabilityStats on project.Id equals stats.ProjectId into statsGroup
-            from stats in statsGroup.DefaultIfEmpty()
-            join dependencies in dependencyCounts on project.Id equals dependencies.ProjectId into dependencyGroup
-            from dependencies in dependencyGroup.DefaultIfEmpty()
-            join tickets in ticketCounts on project.Id equals tickets.ProjectId into ticketGroup
-            from tickets in ticketGroup.DefaultIfEmpty()
-            orderby ((int?)stats.Critical ?? 0) > 0 descending,
-                project.Coverage == ScanCoverage.Covered ? 0 : 1,
-                project.HealthScore,
-                project.Name
-            select new ProjectSummaryRow(
-                project.Id,
-                project.Name,
-                project.RepositoryUrl,
-                project.Branch,
-                project.RootPath,
-                project.RepositoryType,
-                project.LastScanAt,
-                project.LastScanError,
-                project.HealthScore,
-                project.HealthGrade,
-                project.Coverage,
-                project.ScanFrequency,
-                (int?)dependencies.Total ?? 0,
-                (int?)stats.Critical ?? 0,
-                (int?)stats.Total ?? 0,
-                (int?)stats.KnownExploited ?? 0,
-                (int?)tickets.Total ?? 0);
-    }
+    internal IQueryable<ProjectSummaryRow> SummariesByHealthRank(Guid organizationId) =>
+        from project in Query(QueryTracking.NoTracking)
+        where project.OrganizationId == organizationId
+        orderby project.InventoryCounts.CriticalVulnerabilities > 0 descending,
+            project.Coverage == ScanCoverage.Covered ? 0 : 1,
+            project.HealthScore,
+            project.Name
+        select new ProjectSummaryRow(
+            project.Id,
+            project.Name,
+            project.RepositoryUrl,
+            project.Branch,
+            project.RootPath,
+            project.RepositoryType,
+            project.LastScanAt,
+            project.LastScanError,
+            project.HealthScore,
+            project.HealthGrade,
+            project.Coverage,
+            project.ScanFrequency,
+            project.InventoryCounts.Dependencies,
+            project.InventoryCounts.CriticalVulnerabilities,
+            project.InventoryCounts.Vulnerabilities,
+            project.InventoryCounts.KnownExploitedVulnerabilities,
+            project.Tickets.Count);
 
     public async Task<IReadOnlyList<Project>> ListWithHealthDetailsByNameAsync(Guid organizationId, int take,
         CancellationToken cancellationToken) =>
@@ -229,6 +210,25 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
                 .SetProperty(p => p.LastScanError, errorCode)
                 .SetProperty(p => p.LastScanErrorDetail, (string?)null), cancellationToken);
 
+    public Task<int> UpdateInventoryCountsAsync(Guid projectId, ProjectInventoryCounts inventoryCounts,
+        CancellationToken cancellationToken) =>
+        Query(QueryTracking.NoTracking)
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.InventoryCounts.Dependencies, inventoryCounts.Dependencies)
+                .SetProperty(p => p.InventoryCounts.UpToDateDependencies, inventoryCounts.UpToDateDependencies)
+                .SetProperty(p => p.InventoryCounts.MinorUpdates, inventoryCounts.MinorUpdates)
+                .SetProperty(p => p.InventoryCounts.MajorUpdates, inventoryCounts.MajorUpdates)
+                .SetProperty(p => p.InventoryCounts.MajorUpdatesInProduction, inventoryCounts.MajorUpdatesInProduction)
+                .SetProperty(p => p.InventoryCounts.DeprecatedDependencies, inventoryCounts.DeprecatedDependencies)
+                .SetProperty(p => p.InventoryCounts.VulnerableDependencies, inventoryCounts.VulnerableDependencies)
+                .SetProperty(p => p.InventoryCounts.Vulnerabilities, inventoryCounts.Vulnerabilities)
+                .SetProperty(p => p.InventoryCounts.CriticalVulnerabilities, inventoryCounts.CriticalVulnerabilities)
+                .SetProperty(p => p.InventoryCounts.HighVulnerabilities, inventoryCounts.HighVulnerabilities)
+                .SetProperty(p => p.InventoryCounts.MediumVulnerabilities, inventoryCounts.MediumVulnerabilities)
+                .SetProperty(p => p.InventoryCounts.LowVulnerabilities, inventoryCounts.LowVulnerabilities)
+                .SetProperty(p => p.InventoryCounts.KnownExploitedVulnerabilities, inventoryCounts.KnownExploitedVulnerabilities), cancellationToken);
+
     public Task<int> UpdateHealthAsync(Guid projectId, int healthScore, string healthGrade,
         CancellationToken cancellationToken) =>
         Query(QueryTracking.NoTracking)
@@ -248,18 +248,4 @@ public class ProjectRepository : CrudEntityWithIdRepository<Project>, IProjectRe
     private static IQueryable<Project> WithHealthDetails(IQueryable<Project> query) => query
         .Include(p => p.Dependencies).ThenInclude(d => d.Vulnerabilities)
         .Include(p => p.Runtimes);
-
-    private sealed class ProjectVulnerabilityStats
-    {
-        public Guid ProjectId { get; init; }
-        public int Critical { get; init; }
-        public int Total { get; init; }
-        public int KnownExploited { get; init; }
-    }
-
-    private sealed class ProjectCount
-    {
-        public Guid ProjectId { get; init; }
-        public int Total { get; init; }
-    }
 }

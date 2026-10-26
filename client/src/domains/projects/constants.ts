@@ -8,6 +8,8 @@ export const projectKeys = {
   availableRepos: () => [...projectKeys.all, "available-repos"] as const,
   details: () => [...projectKeys.all, "detail"] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,
+  dependencies: (id: string) =>
+    [...projectKeys.detail(id), "dependencies"] as const,
   repositoryOptions: (id: string, branch: string | null) =>
     [...projectKeys.all, "repository-options", id, branch] as const,
 };

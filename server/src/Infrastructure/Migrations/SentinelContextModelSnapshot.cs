@@ -1095,6 +1095,61 @@ namespace Sentinel.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("Sentinel.Domain.Entities.ProjectInventoryCounts", "InventoryCounts", b1 =>
+                        {
+                            b1.Property<Guid>("ProjectId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("CriticalVulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("Dependencies")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("DeprecatedDependencies")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("HighVulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("KnownExploitedVulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("LowVulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("MajorUpdates")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("MajorUpdatesInProduction")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("MediumVulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("MinorUpdates")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("UpToDateDependencies")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("Vulnerabilities")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("VulnerableDependencies")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("ProjectId");
+
+                            b1.ToTable("Projects");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProjectId");
+                        });
+
+                    b.Navigation("InventoryCounts")
+                        .IsRequired();
+
                     b.Navigation("Organization");
                 });
 

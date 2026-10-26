@@ -16,6 +16,23 @@ public class DependencyRepository : CrudEntityWithIdRepository<Dependency>, IDep
             .Where(d => d.ProjectId == projectId)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Dependency>> ListCountableByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken) =>
+        await Query(QueryTracking.NoTracking)
+            .AsSplitQuery()
+            .Where(d => d.ProjectId == projectId)
+            .Select(d => new Dependency
+            {
+                Status = d.Status,
+                IsDeprecated = d.IsDeprecated,
+                IsDirect = d.IsDirect,
+                Type = d.Type,
+                Vulnerabilities = d.Vulnerabilities
+                    .Select(v => new Vulnerability { Severity = v.Severity, IsKnownExploited = v.IsKnownExploited })
+                    .ToList()
+            })
+            .ToListAsync(cancellationToken);
+
     public async Task<int> DeleteByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
     {
         if (ids.Count == 0) return 0;

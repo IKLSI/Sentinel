@@ -6,7 +6,12 @@ using Sentinel.Application.TechHealth.Suppressions;
 
 namespace Sentinel.Application.TechHealth;
 
-public class ProjectDto
+public class ProjectDto : ProjectHeaderDto
+{
+    public List<DependencyDto> Dependencies { get; set; } = new();
+}
+
+public class ProjectHeaderDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -28,12 +33,10 @@ public class ProjectDto
     public int CriticalVulnerabilities { get; set; }
     public int TotalVulnerabilities { get; set; }
     public int KnownExploitedVulnerabilities { get; set; }
-    public int TotalTickets { get; set; }
     public bool RemediationAvailable { get; set; }
     public int RemediableVulnerabilities { get; set; }
     public bool RemediationIncludesMajorUpgrade { get; set; }
     public RemediationDto? Remediation { get; set; }
-    public List<DependencyDto> Dependencies { get; set; } = new();
     public List<RuntimeDto> Runtimes { get; set; } = new();
 }
 

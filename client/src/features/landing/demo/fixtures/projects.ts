@@ -60,7 +60,6 @@ const storefront: Project = {
   criticalVulnerabilities: 1,
   knownExploitedVulnerabilities: 1,
   totalVulnerabilities: 15,
-  totalTickets: 3,
   dependencies: [
     dependency({
       name: "react-server-dom-webpack",
@@ -322,7 +321,6 @@ const payments: Project = {
   criticalVulnerabilities: 2,
   knownExploitedVulnerabilities: 0,
   totalVulnerabilities: 4,
-  totalTickets: 2,
   dependencies: [
     dependency({
       name: "minimist",
@@ -454,7 +452,6 @@ const portal: Project = {
   criticalVulnerabilities: 0,
   knownExploitedVulnerabilities: 0,
   totalVulnerabilities: 0,
-  totalTickets: 2,
   dependencies: [
     dependency({
       name: "shell-quote",
@@ -497,7 +494,6 @@ const mobile: Project = {
   criticalVulnerabilities: 0,
   knownExploitedVulnerabilities: 0,
   totalVulnerabilities: 0,
-  totalTickets: 2,
   dependencies: [
     dependency({
       name: "source-map-js",

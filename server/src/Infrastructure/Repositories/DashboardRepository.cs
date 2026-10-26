@@ -161,7 +161,8 @@ public class DashboardRepository : IDashboardRepository
                 p.Coverage,
                 p.LastScanError,
                 p.HealthScore,
-                p.HealthGrade))
+                p.HealthGrade,
+                p.InventoryCounts))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<DashboardRuntimeRow>> GetRuntimesAsync(Guid organizationId,
@@ -171,35 +172,6 @@ public class DashboardRepository : IDashboardRepository
             .Select(r => new DashboardRuntimeRow(r.ProjectId, r.Name, r.Version, r.EolDate, r.IsEol,
                 r.IsMinimumConstraint))
             .ToListAsync(cancellationToken);
-
-    public async Task<VulnerabilityTotalsRow> GetVulnerabilityTotalsAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await Vulnerabilities(organizationId)
-            .GroupBy(_ => 1)
-            .Select(g => new VulnerabilityTotalsRow(
-                g.Count(),
-                g.Count(v => v.Severity == VulnerabilitySeverity.Critical),
-                g.Count(v => v.Severity == VulnerabilitySeverity.High),
-                g.Count(v => v.Severity == VulnerabilitySeverity.Medium),
-                g.Count(v => v.Severity == VulnerabilitySeverity.Low),
-                g.Count(v => v.IsKnownExploited)))
-            .FirstOrDefaultAsync(cancellationToken) ?? VulnerabilityTotalsRow.Empty;
-
-    public async Task<DependencyTotalsRow> GetDependencyTotalsAsync(Guid organizationId,
-        CancellationToken cancellationToken) =>
-        await _context.Dependencies.AsNoTracking()
-            .Where(d => d.OrganizationId == organizationId)
-            .GroupBy(_ => 1)
-            .Select(g => new DependencyTotalsRow(
-                g.Count(),
-                g.Count(d => d.Status == DependencyStatus.UpToDate),
-                g.Count(d => d.Status == DependencyStatus.MinorUpdate),
-                g.Count(d => d.Status == DependencyStatus.MajorUpdate),
-                g.Count(d => d.IsDeprecated),
-                g.Count(d => d.Status == DependencyStatus.Vulnerable),
-                g.Count(d => d.Status == DependencyStatus.MajorUpdate && d.IsDirect
-                    && d.Type == DependencyType.Prod)))
-            .FirstOrDefaultAsync(cancellationToken) ?? DependencyTotalsRow.Empty;
 
     private IQueryable<Ticket> Tickets(Guid organizationId) =>
         _context.Tickets.AsNoTracking().Where(t => t.OrganizationId == organizationId);

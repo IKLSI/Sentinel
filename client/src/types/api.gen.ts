@@ -572,6 +572,44 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/{id}/dependencies/without-vulnerabilities": {
+    get: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["DependencyDto"][];
+            "text/json": components["schemas"]["DependencyDto"][];
+            "text/plain": components["schemas"]["DependencyDto"][];
+          };
+        };
+      };
+    };
+  };
+  "/api/tech-health/projects/{id}/overview": {
+    get: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectOverviewDto"];
+            "text/json": components["schemas"]["ProjectOverviewDto"];
+            "text/plain": components["schemas"]["ProjectOverviewDto"];
+          };
+        };
+      };
+    };
+  };
   "/api/tech-health/projects/{id}/remediations": {
     post: {
       parameters: {
@@ -1511,8 +1549,6 @@ export interface components {
       /** Format: int32 */
       totalDependencies: number;
       /** Format: int32 */
-      totalTickets: number;
-      /** Format: int32 */
       totalVulnerabilities: number;
     };
     ProjectHealthDto: {
@@ -1548,6 +1584,47 @@ export interface components {
       /** Format: uuid */
       id: string;
       name: string;
+    };
+    ProjectOverviewDto: {
+      branch: string | null;
+      /** @enum {string} */
+      coverage:
+        | "NotScanned"
+        | "Failed"
+        | "NoManifest"
+        | "NoDependencies"
+        | "Covered";
+      /** Format: int32 */
+      criticalVulnerabilities: number;
+      healthGrade: string | null;
+      /** Format: int32 */
+      healthScore: number | null;
+      /** Format: uuid */
+      id: string;
+      /** Format: int32 */
+      knownExploitedVulnerabilities: number;
+      /** Format: date-time */
+      lastScanAt: string | null;
+      lastScanError: string | null;
+      lastScanErrorDetail: string | null;
+      name: string;
+      /** Format: int32 */
+      remediableVulnerabilities: number;
+      remediation: components["schemas"]["RemediationDto"];
+      remediationAvailable: boolean;
+      remediationIncludesMajorUpgrade: boolean;
+      /** @enum {string} */
+      repositoryType: "GitHub" | "GitLab";
+      repositoryUrl: string | null;
+      rootPath: string | null;
+      runtimes: components["schemas"]["RuntimeDto"][];
+      /** @enum {string} */
+      scanFrequency: "Daily" | "Weekly" | "Monthly" | "Manual";
+      /** Format: int32 */
+      totalDependencies: number;
+      /** Format: int32 */
+      totalVulnerabilities: number;
+      vulnerableDependencies: components["schemas"]["DependencyDto"][];
     };
     ProjectRepositoryOptionsDto: {
       available: boolean;

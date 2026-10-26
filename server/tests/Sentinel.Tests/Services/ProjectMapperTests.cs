@@ -145,13 +145,13 @@ public class ProjectMapperTests
         string findingKey = FindingKeys.ForVulnerability(DependencyEcosystem.Npm, "lodash", "GHSA-1");
         Guid openTicketId = Guid.NewGuid();
 
-        ProjectDto dto = ProjectMapper.ToDto(project,
+        ProjectDto dto = ProjectMapper.ToDto(project, new ProjectDetailContext(
         [
             new FindingTicketRow(FindingKind.Vulnerability, findingKey, Guid.NewGuid(), 1, TicketStatus.Resolved,
                 DateTime.UtcNow),
             new FindingTicketRow(FindingKind.Vulnerability, findingKey, openTicketId, 2, TicketStatus.InProgress,
                 DateTime.UtcNow.AddDays(-1))
-        ]);
+        ], [], null, false));
 
         VulnerabilityDto vulnerability = dto.Dependencies.Single().Vulnerabilities.Single();
         vulnerability.FindingKey.Should().Be(findingKey);

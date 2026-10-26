@@ -12,6 +12,8 @@ using Sentinel.Application.TechHealth.DeleteProject;
 using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
+using Sentinel.Application.TechHealth.GetProjectOverview;
+using Sentinel.Application.TechHealth.ListProjectDependencies;
 using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.ProjectSearch;
 using Sentinel.Application.TechHealth.ScanProgress;
@@ -113,6 +115,22 @@ public class TechHealthController : BaseController
     public async Task<ActionResult<ProjectDto>> GetProject(
         Guid id,
         [FromServices] ProjectGetByIdService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
+
+    [HttpGet("projects/{id:guid}/overview")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<ProjectOverviewDto>> GetProjectOverview(
+        Guid id,
+        [FromServices] ProjectOverviewGetService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(id, cancellationToken));
+
+    [HttpGet("projects/{id:guid}/dependencies/without-vulnerabilities")]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<List<DependencyDto>>> ListProjectDependenciesWithoutVulnerabilities(
+        Guid id,
+        [FromServices] ProjectDependenciesListService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 

@@ -15,7 +15,7 @@ public class ProjectSummaryQueryTests
         "Host=localhost;Database=sentinel_translation_check;Username=none;Password=none";
 
     [Fact]
-    public void SummariesByHealthRank_SeTraduitEnSqlAvecDesAgregationsGroupees()
+    public void SummariesByHealthRank_LitLesCompteursSansAgregerLInventaire()
     {
         using SentinelContext context = new SentinelContext(
             new DbContextOptionsBuilder<SentinelContext>().UseNpgsql(UnusedConnectionString).Options,
@@ -24,8 +24,9 @@ public class ProjectSummaryQueryTests
 
         string sql = new ProjectRepository(context).SummariesByHealthRank(Guid.NewGuid()).ToQueryString();
 
-        sql.Should().Contain("GROUP BY");
-        sql.Should().Contain("LEFT JOIN");
+        sql.Should().Contain("\"InventoryCounts_CriticalVulnerabilities\"");
+        sql.Should().NotContain("\"Vulnerabilities\"");
+        sql.Should().NotContain("\"Dependencies\"");
         sql.Should().Contain("ORDER BY");
     }
 
@@ -43,6 +44,8 @@ public class ProjectSummaryQueryTests
         critical.Dependencies.Add(criticalDependency);
         critical.Dependencies.Add(NewDependency(critical));
         healthy.Dependencies.Add(NewDependency(healthy));
+        foreach (Project project in new[] { healthy, critical, empty })
+            project.InventoryCounts = ProjectInventoryCounts.Of(project.Dependencies);
 
         await scope.SeedAsync(scope.NewOrganization(), healthy, critical, empty,
             NewTicket(scope, critical.Id), NewTicket(scope, critical.Id), NewTicket(scope, projectId: null));

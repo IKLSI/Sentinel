@@ -14,6 +14,12 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<Project?> GetOrDefaultInOrganizationWithHealthDetailsAsync(Guid projectId, Guid organizationId,
         CancellationToken cancellationToken);
 
+    Task<Project?> GetOrDefaultInOrganizationWithVulnerableDependenciesAsync(Guid projectId, Guid organizationId,
+        CancellationToken cancellationToken);
+
+    Task<Project?> GetOrDefaultInOrganizationWithDependenciesWithoutVulnerabilitiesAsync(Guid projectId,
+        Guid organizationId, CancellationToken cancellationToken);
+
     Task<Project?> GetOrDefaultInOrganizationForFindingAsync(Guid projectId, Guid organizationId, FindingKind kind,
         string findingKey, CancellationToken cancellationToken);
 
@@ -36,6 +42,9 @@ public interface IProjectRepository : ICrudEntityWithIdRepository<Project>
     Task<bool> ExistsInOrganizationAsync(Guid projectId, Guid organizationId, CancellationToken cancellationToken);
 
     Task<int> MarkScanFailedAsync(Guid projectId, string errorCode, DateTime scannedAt,
+        CancellationToken cancellationToken);
+
+    Task<int> UpdateInventoryCountsAsync(Guid projectId, ProjectInventoryCounts inventoryCounts,
         CancellationToken cancellationToken);
 
     Task<int> UpdateHealthAsync(Guid projectId, int healthScore, string healthGrade,

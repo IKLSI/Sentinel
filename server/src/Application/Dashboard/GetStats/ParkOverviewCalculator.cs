@@ -1,3 +1,4 @@
+using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Domain.TechHealth;
 
@@ -10,9 +11,10 @@ public static class ParkOverviewCalculator
     private static readonly string[] GradeOrder = ["A", "B", "C", "D", "E", "F"];
 
     public static ParkOverviewDto Build(IReadOnlyList<DashboardProjectRow> projects,
-        VulnerabilityTotalsRow vulnerabilities, DependencyTotalsRow dependencies,
         IReadOnlyList<RuntimeDeadline> deadlines, int? scoreDelta)
     {
+        ProjectInventoryCounts totals = ProjectInventoryCounts.Sum(projects.Select(p => p.InventoryCounts));
+
         List<int> scores = projects.Where(p => p.HealthScore != null).Select(p => p.HealthScore!.Value).ToList();
         int? averageScore = scores.Count > 0 ? (int)Math.Round(scores.Average()) : null;
 
@@ -27,25 +29,25 @@ public static class ParkOverviewCalculator
             GradeDistribution = BuildGradeDistribution(projects),
             Vulnerabilities = new VulnerabilityCountsDto
             {
-                Total = vulnerabilities.Total,
-                Critical = vulnerabilities.Critical,
-                High = vulnerabilities.High,
-                Medium = vulnerabilities.Medium,
-                Low = vulnerabilities.Low,
-                KnownExploited = vulnerabilities.KnownExploited,
+                Total = totals.Vulnerabilities,
+                Critical = totals.CriticalVulnerabilities,
+                High = totals.HighVulnerabilities,
+                Medium = totals.MediumVulnerabilities,
+                Low = totals.LowVulnerabilities,
+                KnownExploited = totals.KnownExploitedVulnerabilities,
             },
             Dependencies = new DependencyCountsDto
             {
-                Total = dependencies.Total,
-                UpToDate = dependencies.UpToDate,
-                MinorUpdate = dependencies.MinorUpdate,
-                MajorUpdate = dependencies.MajorUpdate,
-                EndOfLife = dependencies.Deprecated,
-                Vulnerable = dependencies.Vulnerable,
+                Total = totals.Dependencies,
+                UpToDate = totals.UpToDateDependencies,
+                MinorUpdate = totals.MinorUpdates,
+                MajorUpdate = totals.MajorUpdates,
+                EndOfLife = totals.DeprecatedDependencies,
+                Vulnerable = totals.VulnerableDependencies,
             },
             RuntimesEndingSoon = endingSoon.Count,
             NextRuntimeEolInDays = endingSoon.Count > 0 ? endingSoon.Min(d => d.DaysLeft) : null,
-            MajorUpdatesInProduction = dependencies.MajorUpdatesInProduction,
+            MajorUpdatesInProduction = totals.MajorUpdatesInProduction,
         };
     }
 

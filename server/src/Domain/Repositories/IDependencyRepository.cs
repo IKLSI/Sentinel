@@ -7,6 +7,9 @@ public interface IDependencyRepository : ICrudEntityWithIdRepository<Dependency>
 {
     Task<IReadOnlyList<Dependency>> ListTrackedByProjectAsync(Guid projectId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Dependency>> ListCountableByProjectAsync(Guid projectId,
+        CancellationToken cancellationToken);
+
     Task<int> DeleteByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PackageMetadataRow>> ListPackageMetadataByProjectAsync(Guid projectId,

@@ -4,8 +4,9 @@ import { getQueryOptions, useGetQuery } from "@/domains/helpers";
 import { projectKeys } from "@/domains/projects/constants";
 import type {
   AvailableRepos,
-  Project,
+  Dependency,
   ProjectOption,
+  ProjectOverview,
   ProjectRepositoryOptions,
   ProjectSearchMatch,
   ProjectSummary,
@@ -17,9 +18,9 @@ export const projectsQueryOptions = getQueryOptions<ProjectSummary[]>(
   projectKeys.list(),
 );
 
-export const projectQueryOptions = (id: string) =>
-  getQueryOptions<Project>(
-    ROUTES_API.api.techHealth.projects[":id"].__path,
+export const projectOverviewQueryOptions = (id: string) =>
+  getQueryOptions<ProjectOverview>(
+    ROUTES_API.api.techHealth.projects[":id"].overview.__path,
     projectKeys.detail(id),
     { id },
   );
@@ -61,14 +62,22 @@ export const useProjectOptionsQuery = () =>
     { queryKey: projectKeys.options() },
   );
 
-export const useProjectQuery = (id: string | undefined) =>
-  useGetQuery<Project>(
-    ROUTES_API.api.techHealth.projects[":id"].__path,
+export const useProjectOverviewQuery = (id: string | undefined) =>
+  useGetQuery<ProjectOverview>(
+    ROUTES_API.api.techHealth.projects[":id"].overview.__path,
     { id },
     {
       queryKey: projectKeys.detail(id ?? ""),
       enabled: !!id,
     },
+  );
+
+export const useDependenciesWithoutVulnerabilitiesQuery = (id: string) =>
+  useGetQuery<Dependency[]>(
+    ROUTES_API.api.techHealth.projects[":id"].dependencies
+      .withoutVulnerabilities.__path,
+    { id },
+    { queryKey: projectKeys.dependencies(id) },
   );
 
 export const useAvailableReposQuery = (enabled: boolean) =>

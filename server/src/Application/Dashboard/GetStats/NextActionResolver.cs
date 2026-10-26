@@ -94,7 +94,7 @@ public static class NextActionResolver
     private static NextActionDto? MajorUpdate(Project project)
     {
         Dependency? dependency = project.Dependencies
-            .Where(d => d.Status == DependencyStatus.MajorUpdate && d.IsDirect && d.Type == DependencyType.Prod)
+            .Where(FindingRules.IsMajorUpdateInProduction)
             .OrderBy(d => d.Name)
             .FirstOrDefault();
 

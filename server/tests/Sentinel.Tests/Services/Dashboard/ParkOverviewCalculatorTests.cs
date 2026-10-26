@@ -9,14 +9,30 @@ public class ParkOverviewCalculatorTests
 {
     private static readonly DateOnly Today = new(2026, 10, 19);
 
-    private static DashboardProjectRow ProjectRow(string name, int? score, string? grade) =>
-        new(Guid.NewGuid(), name, RepositoryType.GitHub, null, ScanCoverage.Covered, null, score, grade);
+    private static DashboardProjectRow ProjectRow(string name, int? score, string? grade,
+        ProjectInventoryCounts? counts = null) =>
+        new(Guid.NewGuid(), name, RepositoryType.GitHub, null, ScanCoverage.Covered, null, score, grade,
+            counts ?? new ProjectInventoryCounts());
 
     [Fact]
     public void Build_AgregeScoresFaillesDependancesEtFinsDeVie()
     {
-        DashboardProjectRow tily = ProjectRow("Tily", 62, "C");
-        DashboardProjectRow sentinel = ProjectRow("Sentinel", 96, "A");
+        DashboardProjectRow tily = ProjectRow("Tily", 62, "C", new ProjectInventoryCounts
+        {
+            Dependencies = 3,
+            UpToDateDependencies = 1,
+            MajorUpdates = 1,
+            MajorUpdatesInProduction = 1,
+            VulnerableDependencies = 1,
+            Vulnerabilities = 1,
+            CriticalVulnerabilities = 1,
+            KnownExploitedVulnerabilities = 1
+        });
+        DashboardProjectRow sentinel = ProjectRow("Sentinel", 96, "A", new ProjectInventoryCounts
+        {
+            Dependencies = 1,
+            MajorUpdates = 1
+        });
         DashboardProjectRow neverScanned = ProjectRow("Nouveau", null, null);
 
         IReadOnlyList<RuntimeDeadline> deadlines = RuntimeDeadlineCalculator.Compute(
@@ -27,10 +43,7 @@ public class ParkOverviewCalculatorTests
                 false),
         ], Today);
 
-        ParkOverviewDto overview = ParkOverviewCalculator.Build([tily, sentinel, neverScanned],
-            new VulnerabilityTotalsRow(1, 1, 0, 0, 0, 1),
-            new DependencyTotalsRow(4, 1, 0, 2, 0, 1, 1),
-            deadlines, 5);
+        ParkOverviewDto overview = ParkOverviewCalculator.Build([tily, sentinel, neverScanned], deadlines, 5);
 
         overview.ProjectCount.Should().Be(3);
         overview.AverageScore.Should().Be(79);
@@ -48,8 +61,7 @@ public class ParkOverviewCalculatorTests
     [Fact]
     public void Build_AucunProjetEvalue_ScoreIndisponible()
     {
-        ParkOverviewDto overview = ParkOverviewCalculator.Build([ProjectRow("Nouveau", null, null)],
-            VulnerabilityTotalsRow.Empty, DependencyTotalsRow.Empty, [], null);
+        ParkOverviewDto overview = ParkOverviewCalculator.Build([ProjectRow("Nouveau", null, null)], [], null);
 
         overview.AverageScore.Should().BeNull();
         overview.Grade.Should().BeNull();

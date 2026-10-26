@@ -43,6 +43,7 @@ public class Project : IEntityWithId
     public string? HealthGrade { get; set; }
     public ScanCoverage Coverage { get; set; } = ScanCoverage.NotScanned;
     public ScanFrequency ScanFrequency { get; set; } = ScanFrequency.Weekly;
+    public ProjectInventoryCounts InventoryCounts { get; set; } = new();
 
     public Organization Organization { get; set; } = null!;
     public ICollection<Dependency> Dependencies { get; set; } = new List<Dependency>();

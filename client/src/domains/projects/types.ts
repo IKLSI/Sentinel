@@ -2,6 +2,10 @@ import type { components } from "@/types/api.gen";
 
 export type Project = components["schemas"]["ProjectDto"];
 
+export type ProjectHeader = Omit<Project, "dependencies">;
+
+export type ProjectOverview = components["schemas"]["ProjectOverviewDto"];
+
 export type ProjectSummary = components["schemas"]["ProjectSummaryDto"];
 
 export type ProjectOption = components["schemas"]["ProjectOptionDto"];

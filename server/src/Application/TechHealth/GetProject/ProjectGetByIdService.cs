@@ -1,7 +1,6 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
@@ -10,11 +9,7 @@ namespace Sentinel.Application.TechHealth.GetProject;
 
 public class ProjectGetByIdService(
     IProjectRepository projectRepository,
-    ITicketRepository ticketRepository,
-    IVulnerabilitySuppressionRepository suppressionRepository,
-    IVulnerabilityRemediationRepository remediationRepository,
-    IOrganizationRepository organizationRepository,
-    IRemediationRunner remediationRunner,
+    ProjectDetailContextLoader detailContextLoader,
     ITenantContext tenant) : IService
 {
     public async Task<Result<ProjectDto>> ExecuteAsync(Guid projectId, CancellationToken cancellationToken)
@@ -28,27 +23,6 @@ public class ProjectGetByIdService(
         if (project == null)
             return Result<ProjectDto>.NotFound(ErrorCodes.ProjectNotFound);
 
-        IReadOnlyList<FindingTicketRow> findingTickets =
-            await ticketRepository.ListFindingLinksByProjectAsync(projectId, cancellationToken);
-
-        IReadOnlyList<VulnerabilitySuppression> suppressions =
-            await suppressionRepository.ListActiveByProjectAsync(projectId, DateTime.UtcNow, cancellationToken);
-
-        VulnerabilityRemediation? remediation = await remediationRepository.GetOrDefaultByProjectAsync(projectId,
-            QueryTracking.NoTracking, cancellationToken);
-
-        return ProjectMapper.ToDto(project, findingTickets, suppressions, remediation,
-            await IsRemediationAvailableAsync(project, organizationId, cancellationToken));
-    }
-
-    private async Task<bool> IsRemediationAvailableAsync(Project project, Guid organizationId,
-        CancellationToken cancellationToken)
-    {
-        if (!remediationRunner.IsConfigured) return false;
-
-        Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
-            QueryTracking.NoTracking, cancellationToken);
-
-        return !string.IsNullOrEmpty(organization?.ProtectedTokenFor(project.RepositoryType));
+        return ProjectMapper.ToDto(project, await detailContextLoader.LoadAsync(project, cancellationToken));
     }
 }

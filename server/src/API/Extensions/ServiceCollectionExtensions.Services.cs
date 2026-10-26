@@ -11,6 +11,7 @@ using Sentinel.Application.Exports;
 using Sentinel.Application.Jobs;
 using Sentinel.Application.Security;
 using Sentinel.Application.Tickets;
+using Sentinel.Application.TechHealth;
 using Sentinel.Application.TechHealth.ComplianceReport;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.PublicScan;
@@ -158,6 +159,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<SbomService>();
         services.AddScoped<ComplianceReportService>();
         services.AddScoped<ProjectHealthRecalculator>();
+        services.AddScoped<ProjectDetailContextLoader>();
 
         services.AddTransient<TechHealthScanJob>();
         services.AddTransient<DataRetentionJob>();

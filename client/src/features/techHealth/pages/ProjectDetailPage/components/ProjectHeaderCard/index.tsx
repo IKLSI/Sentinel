@@ -8,7 +8,7 @@ import GppMaybeOutlined from "@mui/icons-material/GppMaybeOutlined";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
 import { useI18n } from "@/contexts/I18nContext";
-import type { Project, ScanProgress } from "@/domains/projects/types";
+import type { ProjectHeader, ScanProgress } from "@/domains/projects/types";
 import { ScanProgressBar } from "@/components/ui/common/ScanProgressBar";
 import {
   GRADE_VISUAL,
@@ -19,7 +19,7 @@ import { GRADE_NOT_AVAILABLE, isCovered } from "@/formatters/coverage";
 import { formatShortDateTime } from "@/formatters/date";
 
 interface Props {
-  project: Project;
+  project: ProjectHeader;
   eolRuntimes: number;
   scanProgress?: ScanProgress;
   action?: React.ReactNode;

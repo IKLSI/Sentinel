@@ -63,10 +63,6 @@ public class DashboardStatsService(
             await dashboardRepository.GetProjectsAsync(organizationId, cancellationToken);
         IReadOnlyList<DashboardRuntimeRow> runtimes =
             await dashboardRepository.GetRuntimesAsync(organizationId, cancellationToken);
-        VulnerabilityTotalsRow vulnerabilityTotals =
-            await dashboardRepository.GetVulnerabilityTotalsAsync(organizationId, cancellationToken);
-        DependencyTotalsRow dependencyTotals =
-            await dashboardRepository.GetDependencyTotalsAsync(organizationId, cancellationToken);
         List<Guid> priorityIds = ProjectHealthBuilder.SelectPriorityIds(projects, ProjectRowCount);
         IReadOnlyList<OpenTicketRow> openTickets = await dashboardRepository.GetOpenTicketsAsync(organizationId,
             priorityIds, cancellationToken);
@@ -86,8 +82,7 @@ public class DashboardStatsService(
 
         return new DashboardStatsDto
         {
-            Overview = ParkOverviewCalculator.Build(projects, vulnerabilityTotals, dependencyTotals, deadlines,
-                ScoreHistoryBuilder.Delta(scoreHistory)),
+            Overview = ParkOverviewCalculator.Build(projects, deadlines, ScoreHistoryBuilder.Delta(scoreHistory)),
             ScoreHistory = scoreHistory,
             VulnerabilityFlow = VulnerabilityFlowBuilder.Build(flowCounts.Opened, flowCounts.ResolvedDetections,
                 flowCounts.Resolutions, windowStart, today),
@@ -158,57 +153,41 @@ public class DashboardStatsService(
         IReadOnlyList<ClosedTicketActivityRow> closedTickets = await dashboardRepository
             .GetClosedTicketActivityAsync(organizationId, since, TicketActivityFetchCount, cancellationToken);
 
-        foreach (ClosedTicketActivityRow ticket in closedTickets)
-        {
-            string reference = TicketReference.For(ticket.Number);
-            string? userName = PersonName.Format(ticket.AssigneeFirstName, ticket.AssigneeLastName)
-                ?? PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName);
-
-            List<string> detailParts = [];
-            if (ticket.ProjectName is string projectName) detailParts.Add(projectName);
-            if (userName is not null) detailParts.Add(userName);
-
-            items.Add(new ActivityItemDto
-            {
-                Color = "accent",
-                Timestamp = ticket.UpdatedAt,
-                Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
-                TicketId = ticket.Id.ToString(),
-                ProjectId = ticket.ProjectId?.ToString(),
-                Type = "resolved",
-                Reference = reference,
-                ProjectName = ticket.ProjectName,
-            });
-        }
+        items.AddRange(closedTickets.Select(ticket => TicketActivity("resolved", "accent", ticket.Id, ticket.Number,
+            ticket.UpdatedAt, ticket.ProjectId, ticket.ProjectName,
+            PersonName.Format(ticket.AssigneeFirstName, ticket.AssigneeLastName)
+                ?? PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName))));
 
         IReadOnlyList<CreatedTicketActivityRow> createdTickets = await dashboardRepository
             .GetCreatedTicketActivityAsync(organizationId, since, TicketActivityFetchCount, cancellationToken);
 
-        foreach (CreatedTicketActivityRow ticket in createdTickets)
-        {
-            string reference = TicketReference.For(ticket.Number);
-
-            List<string> detailParts = [];
-            if (ticket.ProjectName is string projectName) detailParts.Add(projectName);
-            if (PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName) is string createdByName)
-                detailParts.Add(createdByName);
-
-            items.Add(new ActivityItemDto
-            {
-                Color = "green",
-                Timestamp = ticket.CreatedAt,
-                Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
-                TicketId = ticket.Id.ToString(),
-                ProjectId = ticket.ProjectId?.ToString(),
-                Type = "created",
-                Reference = reference,
-                ProjectName = ticket.ProjectName,
-            });
-        }
+        items.AddRange(createdTickets.Select(ticket => TicketActivity("created", "green", ticket.Id, ticket.Number,
+            ticket.CreatedAt, ticket.ProjectId, ticket.ProjectName,
+            PersonName.Format(ticket.CreatedByFirstName, ticket.CreatedByLastName))));
 
         items.AddRange(await BuildVulnerabilityActivityAsync(organizationId, since, cancellationToken));
 
         return [.. ActivityGrouper.Group(items.OrderByDescending(a => a.Timestamp).ToList()).Take(ActivityCount)];
+    }
+
+    private static ActivityItemDto TicketActivity(string type, string color, Guid ticketId, int number,
+        DateTime timestamp, Guid? projectId, string? projectName, string? userName)
+    {
+        List<string> detailParts = [];
+        if (projectName is not null) detailParts.Add(projectName);
+        if (userName is not null) detailParts.Add(userName);
+
+        return new ActivityItemDto
+        {
+            Color = color,
+            Timestamp = timestamp,
+            Detail = detailParts.Count > 0 ? string.Join(" · ", detailParts) : null,
+            TicketId = ticketId.ToString(),
+            ProjectId = projectId?.ToString(),
+            Type = type,
+            Reference = TicketReference.For(number),
+            ProjectName = projectName,
+        };
     }
 
     private async Task<List<ActivityItemDto>> BuildVulnerabilityActivityAsync(Guid organizationId, DateTime since,
