@@ -143,7 +143,7 @@ export const IntegrationRow: React.FC<Props> = ({
                           alignSelf: "center",
                         }}
                       >
-                        et
+                        {t("common.and")}
                       </Box>
                     )}
                   </React.Fragment>

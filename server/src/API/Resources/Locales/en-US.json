@@ -118,6 +118,7 @@
   "common.action_irreversible_after": "!",
   "common.action_irreversible_before": "This action is ",
   "common.action_irreversible_word": "irreversible",
+  "common.and": "and",
   "common.cancel": "Cancel",
   "common.close": "Close",
   "common.delete": "Delete",
