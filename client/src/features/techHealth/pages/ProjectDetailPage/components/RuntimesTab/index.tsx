@@ -4,35 +4,26 @@ import Box from "@mui/material/Box";
 import StorageOutlined from "@mui/icons-material/StorageOutlined";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { Pagination } from "@/components/ui/common/Pagination";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
-import {
-  VirtualTable,
-  type VirtualTableColumn,
-} from "@/components/ui/common/VirtualTable";
+import type { VirtualTableColumn } from "@/components/ui/common/VirtualTable";
 import { useI18n, useT } from "@/contexts/I18nContext";
 import type { Runtime } from "@/domains/projects/types";
 import { FindingKind } from "@/enums";
 import { formatDate } from "@/formatters/date";
 import { useGridControls } from "@/hooks/useGridControls";
-import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   EMPTY_STATE_SX,
   EOL_COLOR,
-  GRID_ROW_HEIGHT,
   RUNTIME_STATUS,
   getDaysLabel,
   getRuntimeDaysRemaining,
   getRuntimeProgress,
   getRuntimeUrgency,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
-import {
-  buildGridFilterLabels,
-  buildRuntimeFilterFields,
-} from "@/features/techHealth/pages/ProjectDetailPage/filters";
-import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { buildRuntimeFilterFields } from "@/features/techHealth/pages/ProjectDetailPage/filters";
+import { FindingGrid } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingGrid";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 
 const COLUMN_KEYS = {
@@ -184,17 +175,7 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
 
   const fields = useMemo(() => buildRuntimeFilterFields(t), [t]);
 
-  const {
-    search,
-    setSearch,
-    criterion,
-    setCriterion,
-    sort,
-    toggleSort,
-    visibleRows,
-    pagedRows,
-    pagination,
-  } = useGridControls<Runtime>({
+  const controls = useGridControls<Runtime>({
     rows: runtimes,
     searchableValues,
     fields,
@@ -253,49 +234,23 @@ export const RuntimesTab: React.FC<Props> = ({ runtimes }) => {
   ];
 
   return (
-    <>
-      <GridToolbar
-        search={search}
-        onSearchChange={setSearch}
-        criterion={criterion}
-        onCriterionChange={setCriterion}
-        fields={fields}
-        labels={buildGridFilterLabels(t)}
-      />
-
-      <VirtualTable<Runtime>
-        rows={pagedRows}
-        getRowId={(runtime) => runtime.id}
-        columns={columns}
-        estimateRowHeight={GRID_ROW_HEIGHT}
-        sort={sort}
-        onSortChange={toggleSort}
-        noResultsLabel={t("tech_health.no_results")}
-        footer={
-          <Pagination
-            page={pagination.page}
-            totalPages={pagination.totalPages}
-            total={visibleRows.length}
-            onChange={pagination.setPage}
-            pageSize={pagination.pageSize}
-            pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onPageSizeChange={pagination.setPageSize}
-            countLabel={t(
-              visibleRows.length > 1
-                ? "tech_health.count.runtimes_plural"
-                : "tech_health.count.runtimes_singular",
-            )}
-          />
-        }
-        renderRow={(runtime, index) => (
-          <RuntimeRow
-            key={runtime.id}
-            runtime={runtime}
-            index={index}
-            locale={culture}
-          />
-        )}
-      />
-    </>
+    <FindingGrid<Runtime>
+      controls={controls}
+      fields={fields}
+      columns={columns}
+      getRowId={(runtime) => runtime.id}
+      countKeys={{
+        singular: "tech_health.count.runtimes_singular",
+        plural: "tech_health.count.runtimes_plural",
+      }}
+      renderRow={(runtime, index) => (
+        <RuntimeRow
+          key={runtime.id}
+          runtime={runtime}
+          index={index}
+          locale={culture}
+        />
+      )}
+    />
   );
 };

@@ -4,7 +4,7 @@ import type {
   RuntimeLifecycleItem,
   ScoringExampleLine,
 } from "@/domains/publicScan/types";
-import { pluralKey } from "@/features/dashboard/pages/DashboardPage/helpers";
+import { pluralKey } from "@/helpers/plural";
 import {
   DEFAULT_GRADE_COLOR,
   LANDING_GRADE_COLORS,

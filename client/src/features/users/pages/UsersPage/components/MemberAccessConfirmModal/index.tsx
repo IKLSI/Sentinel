@@ -1,7 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { useT } from "@/contexts/I18nContext";
 import type { User } from "@/domains/users/types";
 
@@ -40,28 +40,15 @@ export const MemberAccessConfirmModal: React.FC<Props> = ({
       }
       maxWidth="xs"
       actions={
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={onClose}
-            disabled={saving}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            color={change?.kind === "suspend" ? "error" : "primary"}
-            onClick={onConfirm}
-            disabled={saving}
-          >
-            {saving
-              ? t("settings.members.confirming")
-              : t("settings.members.confirm")}
-          </Button>
-        </>
+        <ModalActions
+          onCancel={onClose}
+          cancelDisabled={saving}
+          confirmLabel={t("settings.members.confirm")}
+          pendingLabel={t("settings.members.confirming")}
+          pending={saving}
+          onConfirm={onConfirm}
+          color={change?.kind === "suspend" ? "error" : "primary"}
+        />
       }
     >
       <Box

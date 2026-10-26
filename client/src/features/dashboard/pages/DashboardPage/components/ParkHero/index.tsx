@@ -12,8 +12,8 @@ import { ScoreGauge } from "@/features/dashboard/pages/DashboardPage/components/
 import {
   flowSeries,
   formatDelta,
-  pluralKey,
 } from "@/features/dashboard/pages/DashboardPage/helpers";
+import { pluralKey } from "@/helpers/plural";
 
 interface Props {
   overview: ParkOverview;

@@ -7,6 +7,11 @@ import { useI18n } from "@/contexts/I18nContext";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
 import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
+import {
+  DASHBOARD_BOTTOM_ROW_SX,
+  DASHBOARD_LAYOUT_SX,
+  DASHBOARD_TOP_ROW_SX,
+} from "@/features/dashboard/pages/DashboardPage/constants";
 
 const TILES = ["critical", "high", "eol", "major"];
 
@@ -24,17 +29,7 @@ export const DashboardSkeleton: React.FC = () => {
       aria-busy="true"
       sx={{
         position: "relative",
-        height: { xs: "auto", lg: "100vh" },
-        minHeight: "100vh",
-        overflowY: { xs: "auto", lg: "hidden" },
-        boxSizing: "border-box",
-        p: "16px 20px",
-        display: "grid",
-        gridTemplateRows: {
-          xs: "auto",
-          lg: "auto minmax(0, 1fr) minmax(0, 1fr)",
-        },
-        gap: "14px",
+        ...DASHBOARD_LAYOUT_SX,
         ...DELAYED_REVEAL_SX,
       }}
     >
@@ -80,32 +75,12 @@ export const DashboardSkeleton: React.FC = () => {
         />
       </Box>
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: "minmax(0, 2fr) minmax(0, 1fr)",
-          },
-          gap: "14px",
-          minHeight: 0,
-        }}
-      >
+      <Box sx={DASHBOARD_TOP_ROW_SX}>
         <ChartCardSkeleton title={t("dashboard.trend.title")} variant="trend" />
         <ListCardSkeleton title={t("dashboard.tickets.title")} />
       </Box>
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: "repeat(3, minmax(0, 1fr))",
-          },
-          gap: "14px",
-          minHeight: 0,
-        }}
-      >
+      <Box sx={DASHBOARD_BOTTOM_ROW_SX}>
         <ListCardSkeleton title={t("dashboard.projects.title")} />
         <ChartCardSkeleton title={t("dashboard.flow.title")} variant="flow" />
         <ListCardSkeleton title={t("dashboard.activity.title")} />

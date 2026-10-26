@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { PasswordTextField } from "@/components/ui/forms/PasswordTextField";
 import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
@@ -64,7 +64,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     resolver: zodResolver(registerSchema),
     defaultValues: EMPTY_FORM,
   });
-  const [showPassword, setShowPassword] = useState(false);
   const registerMutation = useRegisterMutation();
   const resendVerificationMutation = useResendVerificationMutation();
   const loading = registerMutation.isPending;
@@ -79,7 +78,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   useEffect(() => {
     if (open) {
       reset(EMPTY_FORM);
-      setShowPassword(false);
       setDone(false);
       setTimeout(() => setFocus("organizationName"), 150);
     }
@@ -125,30 +123,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </Button>
           </>
         ) : (
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              color="inherit"
-              onClick={onClose}
-              disabled={loading}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              type="submit"
-              form={formId}
-              disabled={loading}
-            >
-              {loading ? (
-                <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
-              ) : (
-                t("auth.register.submit")
-              )}
-            </Button>
-          </>
+          <ModalActions
+            onCancel={onClose}
+            cancelDisabled={loading}
+            confirmLabel={t("auth.register.submit")}
+            pending={loading}
+            formId={formId}
+          />
         )
       }
     >
@@ -222,8 +203,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             placeholder={t("auth.register.password_placeholder")}
             autoComplete="new-password"
             required
-            showPassword={showPassword}
-            onToggleShow={() => setShowPassword((v) => !v)}
             showLabel={t("auth.register.password_show")}
             hideLabel={t("auth.register.password_hide")}
           />

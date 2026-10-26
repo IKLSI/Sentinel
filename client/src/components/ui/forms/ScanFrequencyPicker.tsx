@@ -4,7 +4,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { useT } from "@/contexts/I18nContext";
 import { ScanFrequency } from "@/enums";
 
-const LABEL_KEYS: Record<ScanFrequency, string> = {
+export const LABEL_KEYS: Record<ScanFrequency, string> = {
   [ScanFrequency.Daily]: "tech_health.scan_frequency.daily",
   [ScanFrequency.Weekly]: "tech_health.scan_frequency.weekly",
   [ScanFrequency.Monthly]: "tech_health.scan_frequency.monthly",

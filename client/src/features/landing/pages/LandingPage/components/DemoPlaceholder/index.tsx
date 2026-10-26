@@ -1,17 +1,18 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
-import OpenInFullOutlined from "@mui/icons-material/OpenInFullOutlined";
 import { useT } from "@/contexts/I18nContext";
 import {
   DEMO_CANVAS_HEIGHT,
   DEMO_CANVAS_WIDTH,
+  DEMO_FRAME_SX,
   DEMO_MODES,
   DEMO_POSTER_SIZES,
   DEMO_POSTER_SRC,
   DEMO_POSTER_SRCSET,
+  DEMO_SECTION_SX,
   type DemoMode,
 } from "@/features/landing/demo/constants";
+import { DemoFullscreenButton } from "@/features/landing/pages/LandingPage/components/DemoFullscreenButton";
 
 const ACTIVATION_KEYS = ["Enter", " "];
 
@@ -27,24 +28,9 @@ export const DemoPlaceholder: React.FC<Props> = ({ onActivate }) => {
     <Box
       component="section"
       aria-label={t("landing.demo.label")}
-      sx={{
-        width: "100%",
-        maxWidth: "1240px",
-        boxSizing: "border-box",
-        mx: "auto",
-        mt: { xs: "48px", md: "72px" },
-        px: { xs: "20px", md: "40px" },
-      }}
+      sx={DEMO_SECTION_SX}
     >
-      <Box
-        sx={{
-          borderRadius: "22px",
-          p: "8px",
-          background: "var(--tint)",
-          boxShadow:
-            "0 0 0 1px var(--line), 0 50px 90px -50px color-mix(in srgb, var(--indigo) 35%, transparent)",
-        }}
-      >
+      <Box sx={DEMO_FRAME_SX}>
         <Box
           role={onActivate ? "button" : undefined}
           tabIndex={onActivate ? 0 : undefined}
@@ -81,30 +67,9 @@ export const DemoPlaceholder: React.FC<Props> = ({ onActivate }) => {
         </Box>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mt: "20px" }}>
-        <ButtonBase
-          onClick={() => onActivate?.(DEMO_MODES.fullscreen)}
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            px: "14px",
-            py: "7px",
-            borderRadius: "999px",
-            fontFamily: "inherit",
-            fontSize: "14px",
-            fontWeight: 500,
-            color: "var(--ink)",
-            background: "var(--page)",
-            boxShadow: "0 0 0 1px var(--line)",
-            "&:hover": { background: "var(--tint)" },
-            "&.Mui-focusVisible": { outline: "2px solid var(--indigo)" },
-          }}
-        >
-          <OpenInFullOutlined aria-hidden sx={{ fontSize: 16 }} />
-          {t("landing.demo.open_fullscreen")}
-        </ButtonBase>
-      </Box>
+      <DemoFullscreenButton
+        onClick={() => onActivate?.(DEMO_MODES.fullscreen)}
+      />
     </Box>
   );
 };

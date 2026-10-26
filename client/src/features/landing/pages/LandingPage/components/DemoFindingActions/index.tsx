@@ -5,20 +5,25 @@ import { DEMO_PATHS } from "@/features/landing/demo/constants";
 import { FindingActionsContext } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 
 interface Props {
+  projectId: string;
   children: React.ReactNode;
 }
 
-export const DemoFindingActions: React.FC<Props> = ({ children }) => {
+export const DemoFindingActions: React.FC<Props> = ({
+  projectId,
+  children,
+}) => {
   const navigate = useNavigate();
 
   const value = useMemo(
     () => ({
+      projectId,
       createTicket: () => navigate({ to: DEMO_PATHS.tickets }),
       creatingFindingKey: null,
       removeSuppression: () => {},
       removingSuppressionId: null,
     }),
-    [navigate],
+    [projectId, navigate],
   );
 
   return (

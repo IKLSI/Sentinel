@@ -26,7 +26,6 @@ export const ProfileButton: React.FC<Props> = ({ collapsed }) => {
         sx={{
           font: "inherit",
           textAlign: "inherit",
-          cursor: "pointer",
           flex: collapsed ? "none" : 1,
           minWidth: 0,
           display: "flex",

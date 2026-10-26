@@ -8,7 +8,7 @@ import {
   TableSkeletonRows,
 } from "@/components/ui/common/TableSkeletonRows";
 import { useT } from "@/contexts/I18nContext";
-import { PROJECT_COLUMN_WIDTHS } from "@/features/projects/pages/ProjectsPage/constants";
+import { PROJECT_COLUMNS } from "@/features/projects/pages/ProjectsPage/constants";
 
 const SKELETON_CELLS: readonly SkeletonCell[] = [
   "title",
@@ -26,13 +26,6 @@ const SECTIONS = [
 
 export const ProjectsSkeleton: React.FC = () => {
   const t = useT();
-  const headers = [
-    t("projects.table.project"),
-    t("projects.table.score"),
-    t("projects.table.vulnerabilities"),
-    t("projects.table.critical"),
-    t("projects.table.tickets"),
-  ];
 
   return (
     <LoadingRegion label={t("projects.loading")}>
@@ -74,21 +67,17 @@ export const ProjectsSkeleton: React.FC = () => {
               }}
             >
               <Box component="colgroup">
-                {PROJECT_COLUMN_WIDTHS.map(({ id: column, width }) => (
+                {PROJECT_COLUMNS.map(({ id: column, width }) => (
                   <Box key={column} component="col" sx={{ width }} />
                 ))}
               </Box>
               <Box component="thead">
                 <Box component="tr">
-                  {headers.map((label, position) => (
-                    <SortableTh
-                      key={label}
-                      align={position === 0 ? "left" : "center"}
-                    >
-                      {label}
+                  {PROJECT_COLUMNS.map(({ id, labelKey, align }) => (
+                    <SortableTh key={id} align={align}>
+                      {labelKey && t(labelKey)}
                     </SortableTh>
                   ))}
-                  <SortableTh />
                 </Box>
               </Box>
               <Box component="tbody">

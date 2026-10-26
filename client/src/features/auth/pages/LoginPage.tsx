@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useEffect, useId } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +22,7 @@ import { ForgotPasswordModal } from "@/features/auth/pages/ForgotPasswordModal";
 import { RegisterModal } from "@/features/auth/pages/RegisterModal";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
-import { riseInSx } from "@/features/auth/styles";
+import { AUTH_FORM_SX, riseInSx } from "@/features/auth/styles";
 
 const LEGAL_LINKS_SX = {
   mt: "36px",
@@ -35,12 +35,7 @@ const LEGAL_LINKS_SX = {
   },
 } as const;
 
-const FORM_SX = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-  ...riseInSx(0.52),
-} as const;
+const LOGIN_FOCUS_DELAY_MS = 750;
 
 const LINKS_SX = {
   mt: "20px",
@@ -83,28 +78,29 @@ export const LoginPage: React.FC = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
-  const emailField = register("email");
-  const passwordField = register("password");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showResend, setShowResend] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const emailId = useId();
   const passwordId = useId();
 
   useEffect(() => {
-    const id = setTimeout(() => setMounted(true), 50);
+    const id = setTimeout(() => setFocus("email"), LOGIN_FOCUS_DELAY_MS);
     return () => clearTimeout(id);
-  }, []);
+  }, [setFocus]);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const id = setTimeout(() => setFocus("email"), 700);
-    return () => clearTimeout(id);
-  }, [mounted, setFocus]);
+  const clearErrorOnChange = (
+    field: UseFormRegisterReturn,
+  ): UseFormRegisterReturn => ({
+    ...field,
+    onChange: async (e) => {
+      const result = await field.onChange(e);
+      setHasError(false);
+      return result;
+    },
+  });
 
   const onSubmit = handleFormSubmit(async (data) => {
     setLoading(true);
@@ -159,18 +155,11 @@ export const LoginPage: React.FC = () => {
         subtitle={t("auth.login.form_sub")}
       />
 
-      <Box component="form" onSubmit={onSubmit} noValidate sx={FORM_SX}>
+      <Box component="form" onSubmit={onSubmit} noValidate sx={AUTH_FORM_SX}>
         <FormTextField
           id={emailId}
           label={t("auth.login.email_label")}
-          registration={{
-            ...emailField,
-            onChange: async (e) => {
-              const result = await emailField.onChange(e);
-              setHasError(false);
-              return result;
-            },
-          }}
+          registration={clearErrorOnChange(register("email"))}
           error={errors.email}
           t={t}
           type="email"
@@ -182,21 +171,12 @@ export const LoginPage: React.FC = () => {
         <PasswordTextField
           id={passwordId}
           label={t("auth.login.password_label")}
-          registration={{
-            ...passwordField,
-            onChange: async (e) => {
-              const result = await passwordField.onChange(e);
-              setHasError(false);
-              return result;
-            },
-          }}
+          registration={clearErrorOnChange(register("password"))}
           error={errors.password}
           invalid={hasError || !!errors.password}
           t={t}
           placeholder="••••••••••"
           autoComplete="current-password"
-          showPassword={showPassword}
-          onToggleShow={() => setShowPassword((v) => !v)}
           showLabel={t("auth.login.password_show")}
           hideLabel={t("auth.login.password_hide")}
         />

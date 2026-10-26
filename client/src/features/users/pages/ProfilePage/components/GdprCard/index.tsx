@@ -10,6 +10,7 @@ import {
   GDPR_ACTION_SX,
 } from "@/features/users/pages/ProfilePage/constants";
 import { CardHeader } from "@/components/ui/common/CardHeader";
+import { GdprRow } from "@/features/users/pages/ProfilePage/components/GdprRow";
 
 interface Props {
   onDeleteRequest: () => void;
@@ -29,31 +30,12 @@ export const GdprCard: React.FC<Props> = ({ onDeleteRequest }) => {
     <Box sx={CARD_SX}>
       <CardHeader label={t("profile.section.gdpr")} />
 
-      <Box
-        sx={{
-          px: "16px",
-          py: "11px",
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          borderBottom: "1px solid var(--border)",
-        }}
+      <GdprRow
+        label={t("profile.gdpr.export_label")}
+        labelColor="var(--text)"
+        help={t("profile.gdpr.export_help")}
+        bordered
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text)",
-              mb: "2px",
-            }}
-          >
-            {t("profile.gdpr.export_label")}
-          </Box>
-          <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-            {t("profile.gdpr.export_help")}
-          </Box>
-        </Box>
         <ExportButton
           onClick={handleExportGdpr}
           exporting={exportingGdpr}
@@ -61,33 +43,13 @@ export const GdprCard: React.FC<Props> = ({ onDeleteRequest }) => {
           showIcon={false}
           sx={GDPR_ACTION_SX}
         />
-      </Box>
+      </GdprRow>
 
-      <Box
-        sx={{
-          px: "16px",
-          py: "11px",
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          background: "transparent",
-        }}
+      <GdprRow
+        label={t("profile.gdpr.delete_label")}
+        labelColor="var(--red)"
+        help={t("profile.gdpr.delete_help")}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box
-            sx={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--red)",
-              mb: "2px",
-            }}
-          >
-            {t("profile.gdpr.delete_label")}
-          </Box>
-          <Box sx={{ fontSize: "11px", color: "var(--muted)" }}>
-            {t("profile.gdpr.delete_help")}
-          </Box>
-        </Box>
         <Button
           variant="contained"
           color="error"
@@ -97,7 +59,7 @@ export const GdprCard: React.FC<Props> = ({ onDeleteRequest }) => {
         >
           {t("profile.gdpr.delete_button")}
         </Button>
-      </Box>
+      </GdprRow>
     </Box>
   );
 };

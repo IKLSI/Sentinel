@@ -4,6 +4,12 @@ import Skeleton from "@mui/material/Skeleton";
 import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
 import { titleWidthAt } from "@/components/ui/common/skeletonShapes";
 import { useT } from "@/contexts/I18nContext";
+import {
+  JOBS_GRID_SX,
+  JOB_CARD_SX,
+  JOB_SCHEDULE_SLOT_SX,
+  JOB_SCHEDULE_SX,
+} from "@/features/settings/pages/SettingsPage/constants";
 
 const CARDS = [0, 1, 2];
 const SCHEDULE = ["last", "next"];
@@ -13,26 +19,9 @@ export const JobsSkeleton: React.FC = () => {
 
   return (
     <LoadingRegion label={t("settings.jobs.loading")}>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "16px",
-        }}
-      >
+      <Box sx={JOBS_GRID_SX}>
         {CARDS.map((position) => (
-          <Box
-            key={position}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              p: "20px",
-              background: "var(--s1)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r-lg)",
-            }}
-          >
+          <Box key={position} sx={JOB_CARD_SX}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <Skeleton
                 variant="rounded"
@@ -46,25 +35,16 @@ export const JobsSkeleton: React.FC = () => {
                 sx={{ borderRadius: "999px" }}
               />
             </Box>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                background: "var(--s2)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--r-md)",
-              }}
-            >
+            <Box sx={JOB_SCHEDULE_SX}>
               {SCHEDULE.map((slot) => (
                 <Box
                   key={slot}
                   sx={{
+                    ...JOB_SCHEDULE_SLOT_SX,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     gap: "6px",
-                    p: "12px 10px",
-                    "& + &": { borderLeft: "1px solid var(--border)" },
                   }}
                 >
                   <Skeleton variant="rounded" width={64} height={10} />

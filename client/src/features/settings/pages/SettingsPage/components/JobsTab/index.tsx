@@ -1,5 +1,4 @@
 import type React from "react";
-import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
 import { EmptyState } from "@/components/ui/common/EmptyState";
@@ -10,6 +9,7 @@ import { useRecurringJobsQuery } from "@/domains/jobs/queries";
 import { JobCard } from "@/features/settings/pages/SettingsPage/components/JobCard";
 import { JobsSkeleton } from "@/features/settings/pages/SettingsPage/components/JobsSkeleton";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { JOBS_GRID_SX } from "@/features/settings/pages/SettingsPage/constants";
 
 const TECH_HEALTH_SCAN_JOB_ID = "tech-health-scan";
 
@@ -20,7 +20,7 @@ export const JobsTab: React.FC = () => {
 
   const jobsQuery = useRecurringJobsQuery();
   const jobs = jobsQuery.data ?? [];
-  const loading = jobsQuery.isLoading && !jobsQuery.data;
+  const loading = jobsQuery.isLoading;
   const triggerScan = useTriggerTechHealthScanMutation();
 
   const handleTrigger = () => {
@@ -34,14 +34,11 @@ export const JobsTab: React.FC = () => {
     );
   };
 
-  const jobName = useCallback(
-    (id: string) => {
-      const key = `settings.jobs.job.${id}`;
-      const val = t(key);
-      return val === key ? id : val;
-    },
-    [t],
-  );
+  const jobName = (id: string) => {
+    const key = `settings.jobs.job.${id}`;
+    const val = t(key);
+    return val === key ? id : val;
+  };
 
   if (loading) return <JobsSkeleton />;
 
@@ -75,13 +72,7 @@ export const JobsTab: React.FC = () => {
         transition: "opacity 0.15s",
       }}
     >
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "16px",
-        }}
-      >
+      <Box sx={JOBS_GRID_SX}>
         {jobs.map((job) => {
           const triggerable = job.id === TECH_HEALTH_SCAN_JOB_ID;
           return (

@@ -14,6 +14,7 @@ import type {
 } from "@/domains/projects/types";
 import { ScanProgressBar } from "@/components/ui/common/ScanProgressBar";
 import { DependencyMatchList } from "@/features/projects/pages/ProjectsPage/components/DependencyMatchList";
+import { MetricCell } from "@/features/projects/pages/ProjectsPage/components/MetricCell";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { spin } from "@/styles/keyframes";
 
@@ -42,6 +43,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
     const t = useT();
     const isAdmin = useIsAdmin();
     const ticketCount = project.totalTickets;
+    const unscanned = !project.lastScanAt || project.totalDependencies === 0;
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
       onEdit(project);
@@ -135,116 +137,26 @@ export const ProjectRow: React.FC<Props> = React.memo(
           </Box>
         </Box>
 
-        <Box
-          component="td"
-          sx={{
-            padding: "6px 12px",
-            borderBottom: "1px solid var(--border)",
-            textAlign: "center",
-          }}
-        >
-          <Box
-            sx={{
-              color:
-                project.healthScore === null
-                  ? "var(--muted2)"
-                  : gradeToneOf(project.healthGrade)?.color,
-              fontWeight: project.healthScore === null ? 500 : 700,
-              fontSize: "13px",
-              lineHeight: 1.25,
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {project.healthScore ?? "—"}
-          </Box>
-        </Box>
-
-        <Box
-          component="td"
-          sx={{
-            padding: "6px 12px",
-            borderBottom: "1px solid var(--border)",
-            textAlign: "center",
-          }}
-        >
-          <Box
-            sx={{
-              color:
-                !project.lastScanAt ||
-                project.totalDependencies === 0 ||
-                project.totalVulnerabilities === 0
-                  ? "var(--muted2)"
-                  : "var(--orange)",
-              fontWeight:
-                !project.lastScanAt ||
-                project.totalDependencies === 0 ||
-                project.totalVulnerabilities === 0
-                  ? 500
-                  : 700,
-              fontSize: "13px",
-              lineHeight: 1.25,
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {!project.lastScanAt || project.totalDependencies === 0
-              ? "—"
-              : project.totalVulnerabilities}
-          </Box>
-        </Box>
-
-        <Box
-          component="td"
-          sx={{
-            padding: "6px 12px",
-            borderBottom: "1px solid var(--border)",
-            textAlign: "center",
-          }}
-        >
-          <Box
-            sx={{
-              color:
-                !project.lastScanAt ||
-                project.totalDependencies === 0 ||
-                project.criticalVulnerabilities === 0
-                  ? "var(--muted2)"
-                  : "var(--red)",
-              fontWeight:
-                !project.lastScanAt ||
-                project.totalDependencies === 0 ||
-                project.criticalVulnerabilities === 0
-                  ? 500
-                  : 700,
-              fontSize: "13px",
-              lineHeight: 1.25,
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {!project.lastScanAt || project.totalDependencies === 0
-              ? "—"
-              : project.criticalVulnerabilities}
-          </Box>
-        </Box>
-
-        <Box
-          component="td"
-          sx={{
-            padding: "6px 12px",
-            borderBottom: "1px solid var(--border)",
-            textAlign: "center",
-          }}
-        >
-          <Box
-            sx={{
-              color: ticketCount > 0 ? "var(--text)" : "var(--muted2)",
-              fontWeight: ticketCount > 0 ? 700 : 500,
-              fontSize: "13px",
-              fontFamily: "var(--font-mono)",
-              lineHeight: 1.25,
-            }}
-          >
-            {ticketCount}
-          </Box>
-        </Box>
+        <MetricCell
+          value={project.healthScore ?? "—"}
+          emphasized={project.healthScore !== null}
+          accent={gradeToneOf(project.healthGrade)?.color}
+        />
+        <MetricCell
+          value={unscanned ? "—" : project.totalVulnerabilities}
+          emphasized={!unscanned && project.totalVulnerabilities !== 0}
+          accent="var(--orange)"
+        />
+        <MetricCell
+          value={unscanned ? "—" : project.criticalVulnerabilities}
+          emphasized={!unscanned && project.criticalVulnerabilities !== 0}
+          accent="var(--red)"
+        />
+        <MetricCell
+          value={ticketCount}
+          emphasized={ticketCount > 0}
+          accent="var(--text)"
+        />
 
         <Box
           component="td"

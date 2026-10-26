@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { useGetQuery } from "@/domains/helpers";
 import { userOptionsQueryKey, usersQueryKey } from "@/domains/users/constants";
@@ -9,7 +10,7 @@ export const useUsersQuery = (filters: UsersFilters = {}) =>
     {},
     {
       queryKey: usersQueryKey(filters),
-      placeholderData: (previous) => previous,
+      placeholderData: keepPreviousData,
     },
     filters,
   );

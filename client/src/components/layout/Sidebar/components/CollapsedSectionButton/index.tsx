@@ -3,10 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import ButtonBase from "@mui/material/ButtonBase";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
-import {
-  isItemActive,
-  isSectionActive,
-} from "@/components/layout/Sidebar/helpers";
+import { isItemActive } from "@/components/layout/Sidebar/helpers";
 import type { NavSection } from "@/components/layout/Sidebar/types";
 
 interface Props {
@@ -21,15 +18,14 @@ export const CollapsedSectionButton: React.FC<Props> = ({
   const navigate = useNavigate();
   const t = useT();
 
-  const sectionActive = isSectionActive(section, pathname);
-  const activeItem =
-    section.items.find((i) => isItemActive(i, pathname)) ?? section.items[0];
-  const ItemIcon = activeItem.icon ?? section.icon;
+  const [item] = section.items;
+  const sectionActive = isItemActive(item, pathname);
+  const ItemIcon = item.icon;
 
   return (
     <AppTooltip title={t(section.titleKey)} placement="right">
       <ButtonBase
-        onClick={() => navigate({ to: activeItem.to })}
+        onClick={() => navigate({ to: item.to })}
         sx={{
           font: "inherit",
           textAlign: "inherit",
@@ -40,7 +36,6 @@ export const CollapsedSectionButton: React.FC<Props> = ({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "var(--r)",
-          cursor: "pointer",
           transition: "background 0.12s",
           position: "relative",
           background: sectionActive ? "var(--accent-subtle)" : "transparent",

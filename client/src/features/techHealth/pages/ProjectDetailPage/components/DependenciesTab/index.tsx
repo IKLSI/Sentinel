@@ -3,31 +3,24 @@ import { memo, useMemo } from "react";
 import Box from "@mui/material/Box";
 import InventoryOutlined from "@mui/icons-material/InventoryOutlined";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { Pagination } from "@/components/ui/common/Pagination";
 import { StatusChip } from "@/components/ui/common/StatusChip";
 import { TruncatedText } from "@/components/ui/common/TruncatedText";
 import { TD, TR } from "@/components/ui/common/VirtualTable/TableCells";
-import {
-  VirtualTable,
-  type VirtualTableColumn,
-} from "@/components/ui/common/VirtualTable";
+import type { VirtualTableColumn } from "@/components/ui/common/VirtualTable";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useT } from "@/contexts/I18nContext";
 import type { Dependency } from "@/domains/projects/types";
 import { FindingKind } from "@/enums";
 import { useGridControls } from "@/hooks/useGridControls";
-import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   DEP_STATUS,
   EMPTY_STATE_SX,
-  GRID_ROW_HEIGHT,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 import {
   DEPENDENCY_TYPE_PROD,
   buildDependencyFilterFields,
-  buildGridFilterLabels,
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
-import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { FindingGrid } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingGrid";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 import { NO_VALUE } from "@/constants/display";
 
@@ -106,99 +99,94 @@ const mutedSx = { color: "var(--muted)" } as const;
 
 interface RowProps {
   dependency: Dependency;
-  typeProd: string;
-  typeDev: string;
-  relationDirect: string;
-  relationTransitive: string;
   index: number;
 }
 
-const DependencyRow = memo<RowProps>(
-  ({
-    dependency,
-    typeProd,
-    typeDev,
-    relationDirect,
-    relationTransitive,
-    index,
-  }) => {
-    const t = useT();
-    const status = statusOf(dependency);
-    const vulnCount = dependency.vulnerabilities.length;
+const DependencyRow = memo<RowProps>(({ dependency, index }) => {
+  const t = useT();
+  const status = statusOf(dependency);
+  const vulnCount = dependency.vulnerabilities.length;
 
-    return (
-      <TR index={index}>
-        <TD>
-          <TruncatedText mono strong text={dependency.name} />
-          {dependency.manifestPath && (
-            <Box sx={manifestPathSx}>
-              <TruncatedText text={dependency.manifestPath} />
-            </Box>
+  return (
+    <TR index={index}>
+      <TD>
+        <TruncatedText mono strong text={dependency.name} />
+        {dependency.manifestPath && (
+          <Box sx={manifestPathSx}>
+            <TruncatedText text={dependency.manifestPath} />
+          </Box>
+        )}
+      </TD>
+      <TD>
+        <Box component="span" sx={ecosystemSx}>
+          {dependency.ecosystem}
+        </Box>
+      </TD>
+      <TD>
+        <StatusChip variant="gray">
+          {t(
+            dependency.type === DEPENDENCY_TYPE_PROD
+              ? "tech_health.dep.type_prod"
+              : "tech_health.dep.type_dev",
           )}
-        </TD>
-        <TD>
-          <Box component="span" sx={ecosystemSx}>
-            {dependency.ecosystem}
-          </Box>
-        </TD>
-        <TD>
-          <StatusChip variant="gray">
-            {dependency.type === DEPENDENCY_TYPE_PROD ? typeProd : typeDev}
-          </StatusChip>
-        </TD>
-        <TD>
-          <StatusChip variant="gray">
-            {dependency.isDirect ? relationDirect : relationTransitive}
-          </StatusChip>
-        </TD>
-        <TD muted>
-          <Box sx={versionSx}>
-            {dependency.isVersionPinned ? (
-              <span>{dependency.currentVersion}</span>
-            ) : (
-              <AppTooltip title={t("tech_health.version.range_hint")}>
-                <span>{`≥ ${dependency.currentVersion}`}</span>
-              </AppTooltip>
-            )}
-            {dependency.latestVersion &&
-              dependency.latestVersion !== dependency.currentVersion && (
-                <>
-                  <Box component="span" sx={mutedSx}>
-                    →
-                  </Box>
-                  <Box component="span" sx={latestVersionSx}>
-                    {dependency.latestVersion}
-                  </Box>
-                </>
-              )}
-          </Box>
-        </TD>
-        <TD>
-          <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
-        </TD>
-        <TD align="center">
-          {vulnCount > 0 ? (
-            <Box component="span" sx={vulnCountSx}>
-              {vulnCount}
-            </Box>
+        </StatusChip>
+      </TD>
+      <TD>
+        <StatusChip variant="gray">
+          {t(
+            dependency.isDirect
+              ? "tech_health.dep.relation_direct"
+              : "tech_health.dep.relation_transitive",
+          )}
+        </StatusChip>
+      </TD>
+      <TD muted>
+        <Box sx={versionSx}>
+          {dependency.isVersionPinned ? (
+            <span>{dependency.currentVersion}</span>
           ) : (
-            <Box component="span" sx={mutedSx}>
-              {NO_VALUE}
-            </Box>
+            <AppTooltip title={t("tech_health.version.range_hint")}>
+              <span>{`≥ ${dependency.currentVersion}`}</span>
+            </AppTooltip>
           )}
-        </TD>
-        <TD align="center">
-          <FindingTicketCell
-            kind={FindingKind.OutdatedDependency}
-            findingKey={dependency.findingKey}
-            linkedTicket={dependency.linkedTicket}
-            actionable={dependency.isOutdated}
-          />
-        </TD>
-      </TR>
-    );
-  },
-);
+          {dependency.latestVersion &&
+            dependency.latestVersion !== dependency.currentVersion && (
+              <>
+                <Box component="span" sx={mutedSx}>
+                  →
+                </Box>
+                <Box component="span" sx={latestVersionSx}>
+                  {dependency.latestVersion}
+                </Box>
+              </>
+            )}
+        </Box>
+      </TD>
+      <TD>
+        <StatusChip variant={status.variant}>{t(status.labelKey)}</StatusChip>
+      </TD>
+      <TD align="center">
+        {vulnCount > 0 ? (
+          <Box component="span" sx={vulnCountSx}>
+            {vulnCount}
+          </Box>
+        ) : (
+          <Box component="span" sx={mutedSx}>
+            {NO_VALUE}
+          </Box>
+        )}
+      </TD>
+      <TD align="center">
+        <FindingTicketCell
+          kind={FindingKind.OutdatedDependency}
+          findingKey={dependency.findingKey}
+          linkedTicket={dependency.linkedTicket}
+          actionable={dependency.isOutdated}
+        />
+      </TD>
+    </TR>
+  );
+});
 DependencyRow.displayName = "DependencyRow";
 
 interface Props {
@@ -213,17 +201,7 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
     [t, dependencies],
   );
 
-  const {
-    search,
-    setSearch,
-    criterion,
-    setCriterion,
-    sort,
-    toggleSort,
-    visibleRows,
-    pagedRows,
-    pagination,
-  } = useGridControls<Dependency>({
+  const controls = useGridControls<Dependency>({
     rows: dependencies,
     searchableValues,
     fields,
@@ -295,52 +273,22 @@ export const DependenciesTab: React.FC<Props> = ({ dependencies }) => {
   ];
 
   return (
-    <>
-      <GridToolbar
-        search={search}
-        onSearchChange={setSearch}
-        criterion={criterion}
-        onCriterionChange={setCriterion}
-        fields={fields}
-        labels={buildGridFilterLabels(t)}
-      />
-
-      <VirtualTable<Dependency>
-        rows={pagedRows}
-        getRowId={(dependency) => dependency.id}
-        columns={columns}
-        estimateRowHeight={GRID_ROW_HEIGHT}
-        sort={sort}
-        onSortChange={toggleSort}
-        noResultsLabel={t("tech_health.no_results")}
-        footer={
-          <Pagination
-            page={pagination.page}
-            totalPages={pagination.totalPages}
-            total={visibleRows.length}
-            onChange={pagination.setPage}
-            pageSize={pagination.pageSize}
-            pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onPageSizeChange={pagination.setPageSize}
-            countLabel={t(
-              visibleRows.length > 1
-                ? "tech_health.count.deps_plural"
-                : "tech_health.count.deps_singular",
-            )}
-          />
-        }
-        renderRow={(dependency, index) => (
-          <DependencyRow
-            key={dependency.id}
-            dependency={dependency}
-            typeProd={t("tech_health.dep.type_prod")}
-            typeDev={t("tech_health.dep.type_dev")}
-            relationDirect={t("tech_health.dep.relation_direct")}
-            relationTransitive={t("tech_health.dep.relation_transitive")}
-            index={index}
-          />
-        )}
-      />
-    </>
+    <FindingGrid<Dependency>
+      controls={controls}
+      fields={fields}
+      columns={columns}
+      getRowId={(dependency) => dependency.id}
+      countKeys={{
+        singular: "tech_health.count.deps_singular",
+        plural: "tech_health.count.deps_plural",
+      }}
+      renderRow={(dependency, index) => (
+        <DependencyRow
+          key={dependency.id}
+          dependency={dependency}
+          index={index}
+        />
+      )}
+    />
   );
 };

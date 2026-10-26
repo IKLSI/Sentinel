@@ -1,6 +1,7 @@
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { FieldStep } from "@/components/ui/forms/FilterBuilder/FieldStep";
 import { FilterControl } from "@/components/ui/forms/FilterBuilder/FilterControl";
 import { ValueStep } from "@/components/ui/forms/FilterBuilder/ValueStep";
@@ -45,7 +46,6 @@ export const FilterBuilder: React.FC<Props> = ({
   onChange,
   labels,
 }) => {
-  const rootRef = useRef<HTMLDivElement>(null);
   const [popover, setPopover] = useState<PopoverState>(CLOSED);
 
   const close = useCallback(() => setPopover(CLOSED), []);
@@ -53,21 +53,13 @@ export const FilterBuilder: React.FC<Props> = ({
   useEffect(() => {
     if (popover.step === "closed") return;
 
-    const handleClick = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node))
-        close();
-    };
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
     };
 
-    document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKey);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKey);
-    };
+    return () => document.removeEventListener("keydown", handleKey);
   }, [popover.step, close]);
 
   const fieldOf = (key: string | undefined) =>
@@ -128,24 +120,29 @@ export const FilterBuilder: React.FC<Props> = ({
   };
 
   return (
-    <Box
-      ref={rootRef}
-      role="group"
-      aria-label={labels.title}
-      sx={{ position: "relative", display: "inline-flex", flexShrink: 0 }}
+    <ClickAwayListener
+      mouseEvent={popover.step === "closed" ? false : "onMouseDown"}
+      touchEvent={false}
+      onClickAway={close}
     >
-      <FilterControl
-        field={fieldOf(value?.field)}
-        criterion={value}
-        labels={labels}
-        onEditField={openField}
-        onEditValues={openValues}
-        onClear={() => {
-          close();
-          onChange(null);
-        }}
-      />
-      {renderPopover()}
-    </Box>
+      <Box
+        role="group"
+        aria-label={labels.title}
+        sx={{ position: "relative", display: "inline-flex", flexShrink: 0 }}
+      >
+        <FilterControl
+          field={fieldOf(value?.field)}
+          criterion={value}
+          labels={labels}
+          onEditField={openField}
+          onEditValues={openValues}
+          onClear={() => {
+            close();
+            onChange(null);
+          }}
+        />
+        {renderPopover()}
+      </Box>
+    </ClickAwayListener>
   );
 };

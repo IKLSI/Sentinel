@@ -2,25 +2,18 @@ import type React from "react";
 import { useMemo } from "react";
 import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
 import { EmptyState } from "@/components/ui/common/EmptyState";
-import { Pagination } from "@/components/ui/common/Pagination";
-import {
-  VirtualTable,
-  type VirtualTableColumn,
-} from "@/components/ui/common/VirtualTable";
+import type { VirtualTableColumn } from "@/components/ui/common/VirtualTable";
 import { useT } from "@/contexts/I18nContext";
 import { useGridControls } from "@/hooks/useGridControls";
-import { PAGE_SIZE_OPTIONS } from "@/hooks/usePagination";
 import {
   EMPTY_STATE_SX,
-  GRID_ROW_HEIGHT,
   riskConfigOf,
 } from "@/features/techHealth/pages/ProjectDetailPage/helpers";
 import {
   type VulnerabilityRow,
-  buildGridFilterLabels,
   buildVulnerabilityFilterFields,
 } from "@/features/techHealth/pages/ProjectDetailPage/filters";
-import { GridToolbar } from "@/features/techHealth/pages/ProjectDetailPage/components/GridToolbar";
+import { FindingGrid } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingGrid";
 import { VulnRow } from "@/features/techHealth/pages/ProjectDetailPage/components/VulnRow";
 
 const COLUMN_KEYS = {
@@ -60,13 +53,11 @@ const searchableValues = (vuln: VulnerabilityRow) => [
 ];
 
 interface Props {
-  projectId: string;
   vulns: VulnerabilityRow[];
   toolbarAction?: React.ReactNode;
 }
 
 export const VulnerabilitiesTab: React.FC<Props> = ({
-  projectId,
   vulns,
   toolbarAction,
 }) => {
@@ -77,17 +68,7 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
     [t, vulns],
   );
 
-  const {
-    search,
-    setSearch,
-    criterion,
-    setCriterion,
-    sort,
-    toggleSort,
-    visibleRows,
-    pagedRows,
-    pagination,
-  } = useGridControls<VulnerabilityRow>({
+  const controls = useGridControls<VulnerabilityRow>({
     rows: vulns,
     searchableValues,
     fields,
@@ -165,50 +146,19 @@ export const VulnerabilitiesTab: React.FC<Props> = ({
   ];
 
   return (
-    <>
-      <GridToolbar
-        search={search}
-        onSearchChange={setSearch}
-        criterion={criterion}
-        onCriterionChange={setCriterion}
-        fields={fields}
-        labels={buildGridFilterLabels(t)}
-        action={toolbarAction}
-      />
-
-      <VirtualTable<VulnerabilityRow>
-        rows={pagedRows}
-        getRowId={(vuln) => vuln.id}
-        columns={columns}
-        estimateRowHeight={GRID_ROW_HEIGHT}
-        sort={sort}
-        onSortChange={toggleSort}
-        noResultsLabel={t("tech_health.no_results")}
-        footer={
-          <Pagination
-            page={pagination.page}
-            totalPages={pagination.totalPages}
-            total={visibleRows.length}
-            onChange={pagination.setPage}
-            pageSize={pagination.pageSize}
-            pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onPageSizeChange={pagination.setPageSize}
-            countLabel={t(
-              visibleRows.length > 1
-                ? "tech_health.count.vulns_plural"
-                : "tech_health.count.vulns_singular",
-            )}
-          />
-        }
-        renderRow={(vuln, index) => (
-          <VulnRow
-            key={vuln.id}
-            vuln={vuln}
-            projectId={projectId}
-            index={index}
-          />
-        )}
-      />
-    </>
+    <FindingGrid<VulnerabilityRow>
+      controls={controls}
+      fields={fields}
+      columns={columns}
+      getRowId={(vuln) => vuln.id}
+      countKeys={{
+        singular: "tech_health.count.vulns_singular",
+        plural: "tech_health.count.vulns_plural",
+      }}
+      action={toolbarAction}
+      renderRow={(vuln, index) => (
+        <VulnRow key={vuln.id} vuln={vuln} index={index} />
+      )}
+    />
   );
 };

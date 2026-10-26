@@ -9,6 +9,11 @@ import { useI18n } from "@/contexts/I18nContext";
 import type { RecurringJobStatus } from "@/domains/jobs/types";
 import { JobState } from "@/enums";
 import { formatDateTime } from "@/formatters/date";
+import {
+  JOB_CARD_SX,
+  JOB_SCHEDULE_SLOT_SX,
+  JOB_SCHEDULE_SX,
+} from "@/features/settings/pages/SettingsPage/constants";
 
 const STATUS_VARIANTS: Partial<
   Record<JobState, "green" | "red" | "blue" | "yellow">
@@ -40,16 +45,16 @@ export const JobCard: React.FC<Props> = ({
     ? job.lastJobState.charAt(0).toUpperCase() +
       job.lastJobState.slice(1).toLowerCase()
     : null;
-  const statusVariant = stateKey
-    ? (STATUS_VARIANTS[stateKey as JobState] ?? "gray")
-    : "gray";
+  const statusVariant =
+    (stateKey && STATUS_VARIANTS[stateKey as JobState]) || "gray";
   const statusLabelKey = job.lastJobState
     ? `settings.jobs.status.${job.lastJobState.toLowerCase()}`
     : "settings.jobs.status.never_run";
+  const translatedStatus = t(statusLabelKey);
   const statusLabel =
-    t(statusLabelKey) === statusLabelKey
+    translatedStatus === statusLabelKey
       ? (job.lastJobState ?? "")
-      : t(statusLabelKey);
+      : translatedStatus;
 
   const schedule = [
     { label: t("settings.jobs.col_last_run"), value: job.lastExecution },
@@ -57,18 +62,7 @@ export const JobCard: React.FC<Props> = ({
   ];
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        p: "20px",
-        background: "var(--s1)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r-lg)",
-        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-      }}
-    >
+    <Box sx={{ ...JOB_CARD_SX, boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)" }}>
       <Box>
         <Box
           sx={{
@@ -108,23 +102,14 @@ export const JobCard: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          background: "var(--s2)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--r-md)",
-        }}
-      >
+      <Box sx={JOB_SCHEDULE_SX}>
         {schedule.map(({ label, value }) => (
           <Box
             key={label}
             sx={{
+              ...JOB_SCHEDULE_SLOT_SX,
               textAlign: "center",
               minWidth: 0,
-              p: "12px 10px",
-              "& + &": { borderLeft: "1px solid var(--border)" },
             }}
           >
             <Box

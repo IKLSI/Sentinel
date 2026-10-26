@@ -6,6 +6,10 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { useT } from "@/contexts/I18nContext";
+import {
+  MODAL_ACTIONS_SX,
+  MODAL_TITLE_SX,
+} from "@/components/ui/common/modalSx";
 
 interface DeleteModalProps {
   open: boolean;
@@ -16,6 +20,7 @@ interface DeleteModalProps {
   children: React.ReactNode;
   confirmLabel?: string;
   confirmingLabel?: string;
+  irreversible?: boolean;
 }
 
 export const DeleteModal: React.FC<DeleteModalProps> = ({
@@ -27,6 +32,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
   children,
   confirmLabel,
   confirmingLabel,
+  irreversible = false,
 }) => {
   const t = useT();
   return (
@@ -38,26 +44,13 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
       slotProps={{
         paper: {
           sx: {
-            bgcolor: "var(--s1)",
-            border: "1px solid",
-            borderColor: "divider",
             borderRadius: "10px",
             overflow: "hidden",
           },
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          fontSize: "14px",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          p: "16px 20px",
-          borderBottom: "1px solid var(--border)",
-          background:
-            "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
-        }}
-      >
+      <DialogTitle sx={{ ...MODAL_TITLE_SX, p: "16px 20px" }}>
         {title}
       </DialogTitle>
 
@@ -85,17 +78,18 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           }}
         >
           {children}
+          {irreversible && (
+            <>
+              <br />
+              {t("common.action_irreversible_before")}
+              <b>{t("common.action_irreversible_word")}</b>
+              {t("common.action_irreversible_after")}
+            </>
+          )}
         </Box>
       </DialogContent>
 
-      <DialogActions
-        sx={{
-          p: "12px 20px",
-          borderTop: "1px solid var(--border)",
-          background: "var(--s2)",
-          gap: "8px",
-        }}
-      >
+      <DialogActions sx={{ ...MODAL_ACTIONS_SX, p: "12px 20px" }}>
         <Button
           variant="contained"
           size="small"

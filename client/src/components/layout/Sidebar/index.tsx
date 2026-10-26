@@ -1,10 +1,9 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { UserRole } from "@/enums";
 import { CollapsedSectionButton } from "@/components/layout/Sidebar/components/CollapsedSectionButton";
 import { Footer } from "@/components/layout/Sidebar/components/Footer";
 import { Header } from "@/components/layout/Sidebar/components/Header";
@@ -13,46 +12,18 @@ import {
   NAV_GROUPS,
   NAV_SECTIONS,
 } from "@/components/layout/Sidebar/constants";
-import {
-  isSectionActive,
-  sectionKey,
-} from "@/components/layout/Sidebar/helpers";
 
 export const Sidebar: React.FC = () => {
-  const { user } = useAuth();
   const pathname = useLocation({ select: (location) => location.pathname });
   const { isOpen, isMobile, isCollapsed, close, toggleCollapse } = useSidebar();
 
   const collapsed = isCollapsed && !isMobile;
 
-  const isAdmin = user?.role === UserRole.Admin;
-  const filteredSections = useMemo(() => {
-    return NAV_SECTIONS.filter((s) => !s.adminOnly || isAdmin)
-      .map((s) => ({
-        ...s,
-        items: s.items.filter((item) => !item.adminOnly || isAdmin),
-      }))
-      .filter((s) => s.items.length > 0);
-  }, [isAdmin]);
-
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {};
-    for (const s of NAV_SECTIONS.filter((s) => s.items.length > 1))
-      init[sectionKey(s)] = isSectionActive(s, pathname);
-    return init;
-  });
-
-  const toggleGroup = (key: string) =>
-    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  useEffect(() => {
-    for (const s of filteredSections) {
-      if (s.items.length > 1 && isSectionActive(s, pathname))
-        setOpenGroups((prev) =>
-          prev[sectionKey(s)] ? prev : { ...prev, [sectionKey(s)]: true },
-        );
-    }
-  }, [pathname, filteredSections]);
+  const isAdmin = useIsAdmin();
+  const filteredSections = useMemo(
+    () => NAV_SECTIONS.filter((s) => !s.adminOnly || isAdmin),
+    [isAdmin],
+  );
 
   useEffect(() => {
     if (isMobile && pathname) close();
@@ -140,9 +111,6 @@ export const Sidebar: React.FC = () => {
                   key={group.groupKey}
                   group={group}
                   sections={filteredSections}
-                  pathname={pathname}
-                  openGroups={openGroups}
-                  onToggleGroup={toggleGroup}
                 />
               ))}
         </Box>

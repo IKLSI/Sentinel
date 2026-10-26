@@ -303,12 +303,9 @@ export const TicketDetailPage: React.FC = () => {
         onConfirm={handleDeleteComment}
         loading={deleteCommentLoading}
         title={t("tickets.detail.delete_comment_title")}
+        irreversible
       >
         {t("tickets.detail.delete_comment_message")}
-        <br />
-        {t("common.action_irreversible_before")}
-        <b>{t("common.action_irreversible_word")}</b>
-        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

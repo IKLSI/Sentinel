@@ -114,7 +114,7 @@ export const MembersTab: React.FC<Props> = ({
   const members = usersQuery.data?.items ?? [];
   const totalMembers = usersQuery.data?.total ?? 0;
   const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1);
-  const loadingMembers = usersQuery.isLoading && !usersQuery.data;
+  const loadingMembers = usersQuery.isLoading;
 
   const columns: MemberColumn[] = [
     {

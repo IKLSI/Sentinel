@@ -18,7 +18,7 @@ import {
   sortProjects,
 } from "@/features/projects/pages/ProjectsPage/helpers";
 import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
-import { PROJECT_COLUMN_WIDTHS } from "@/features/projects/pages/ProjectsPage/constants";
+import { PROJECT_COLUMNS } from "@/features/projects/pages/ProjectsPage/constants";
 import { useSortState } from "@/hooks/useSortState";
 import { SortDirection } from "@/enums";
 import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
@@ -223,57 +223,24 @@ export const ProjectsSection: React.FC<Props> = ({
             }}
           >
             <Box component="colgroup">
-              {PROJECT_COLUMN_WIDTHS.map(({ id, width }) => (
+              {PROJECT_COLUMNS.map(({ id, width }) => (
                 <Box key={id} component="col" sx={{ width }} />
               ))}
             </Box>
             <Box component="thead">
               <Box component="tr">
-                <SortableTh
-                  sortable
-                  active={sort.col === "name"}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => toggleSort("name")}
-                >
-                  {t("projects.table.project")}
-                </SortableTh>
-                <SortableTh
-                  align="center"
-                  sortable
-                  active={sort.col === "score"}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => toggleSort("score")}
-                >
-                  {t("projects.table.score")}
-                </SortableTh>
-                <SortableTh
-                  align="center"
-                  sortable
-                  active={sort.col === "vulnerabilities"}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => toggleSort("vulnerabilities")}
-                >
-                  {t("projects.table.vulnerabilities")}
-                </SortableTh>
-                <SortableTh
-                  align="center"
-                  sortable
-                  active={sort.col === "critical"}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => toggleSort("critical")}
-                >
-                  {t("projects.table.critical")}
-                </SortableTh>
-                <SortableTh
-                  align="center"
-                  sortable
-                  active={sort.col === "tickets"}
-                  ascending={sort.dir === SortDirection.Asc}
-                  onSort={() => toggleSort("tickets")}
-                >
-                  {t("projects.table.tickets")}
-                </SortableTh>
-                <SortableTh />
+                {PROJECT_COLUMNS.map(({ id, labelKey, align }) => (
+                  <SortableTh
+                    key={id}
+                    align={align}
+                    sortable={labelKey !== null}
+                    active={labelKey !== null && sort.col === id}
+                    ascending={sort.dir === SortDirection.Asc}
+                    onSort={() => toggleSort(id)}
+                  >
+                    {labelKey && t(labelKey)}
+                  </SortableTh>
+                ))}
               </Box>
             </Box>
             <Box component="tbody">

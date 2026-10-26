@@ -15,5 +15,12 @@ export const riseInSx = (delay: number, duration = 0.5, offset = 0) => ({
   animation: `${riseIn} ${duration}s ${delay}s ${EASE_OUT} forwards`,
 });
 
+export const AUTH_FORM_SX = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+  ...riseInSx(0.52),
+} as const;
+
 export const tint = (color: string, percent: number) =>
   `color-mix(in srgb, ${color} ${percent}%, transparent)`;

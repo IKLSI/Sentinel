@@ -24,6 +24,20 @@ const pillShadow = (scrolled: boolean) =>
     ? "inset 0 1px 0 color-mix(in srgb, var(--on-dark) 90%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink) 7%, transparent), 0 18px 40px -18px color-mix(in srgb, var(--night) 32%, transparent)"
     : "inset 0 1px 0 color-mix(in srgb, var(--on-dark) 90%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent), 0 12px 32px -16px color-mix(in srgb, var(--night) 22%, transparent)";
 
+const pillSx = (scrolled: boolean) =>
+  ({
+    pointerEvents: "auto",
+    height: 56,
+    boxSizing: "border-box",
+    borderRadius: "22px",
+    background: PILL_BACKGROUND,
+    backdropFilter: "saturate(1.8) blur(16px)",
+    WebkitBackdropFilter: "saturate(1.8) blur(16px)",
+    boxShadow: pillShadow(scrolled),
+    transition: "box-shadow .3s",
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+  }) as const;
+
 export const LandingNav: React.FC = () => {
   const t = useT();
   const [scrolled, setScrolled] = useState(false);
@@ -80,27 +94,18 @@ export const LandingNav: React.FC = () => {
       >
         <Box
           sx={{
-            pointerEvents: "auto",
+            ...pillSx(scrolled),
             width: "100%",
             maxWidth: 960,
             justifySelf: "center",
             [WIDE_BREAKPOINT]: { gridColumn: 2 },
-            height: 56,
             display: "grid",
             gridTemplateColumns: "1fr auto",
             alignItems: "center",
             gap: "16px",
             pl: "10px",
             pr: "8px",
-            boxSizing: "border-box",
-            borderRadius: "22px",
-            background: PILL_BACKGROUND,
-            backdropFilter: "saturate(1.8) blur(16px)",
-            WebkitBackdropFilter: "saturate(1.8) blur(16px)",
-            boxShadow: pillShadow(scrolled),
-            transition: "box-shadow .3s",
             [LINKS_BREAKPOINT]: { gridTemplateColumns: "1fr auto 1fr" },
-            "@media (prefers-reduced-motion: reduce)": { transition: "none" },
           }}
         >
           <Box
@@ -208,22 +213,13 @@ export const LandingNav: React.FC = () => {
         </Box>
         <Box
           sx={{
-            pointerEvents: "auto",
+            ...pillSx(scrolled),
             justifySelf: "end",
             [WIDE_BREAKPOINT]: { gridColumn: 3 },
-            height: 56,
             p: "6px",
-            boxSizing: "border-box",
             alignItems: "center",
-            borderRadius: "22px",
-            background: PILL_BACKGROUND,
-            backdropFilter: "saturate(1.8) blur(16px)",
-            WebkitBackdropFilter: "saturate(1.8) blur(16px)",
-            boxShadow: pillShadow(scrolled),
-            transition: "box-shadow .3s",
             display: "flex",
             "@media (max-width:420px)": { display: "none" },
-            "@media (prefers-reduced-motion: reduce)": { transition: "none" },
           }}
         >
           <LanguageToggle />

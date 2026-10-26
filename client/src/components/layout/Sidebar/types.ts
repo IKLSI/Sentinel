@@ -11,13 +11,11 @@ export interface NavItem {
   labelKey: string;
   end?: boolean;
   activeFor?: RegExp;
-  adminOnly?: boolean;
 }
 
 export interface NavSection {
   titleKey: string;
-  icon: React.ElementType;
-  items: NavItem[];
+  items: [NavItem];
   adminOnly?: boolean;
   group?: NavGroupKey;
 }

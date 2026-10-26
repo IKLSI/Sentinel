@@ -40,6 +40,13 @@ interface Props {
 }
 
 const COLS = ["auto", "110px", "130px", "170px", "100px", "120px"] as const;
+const COLGROUP = (
+  <Box component="colgroup">
+    {COLS.map((w) => (
+      <Box key={w} component="col" sx={{ width: w }} />
+    ))}
+  </Box>
+);
 const ACTIONS_COLUMN_KEY = "actions";
 const SKELETON_CELLS: readonly SkeletonCell[] = [
   "title",
@@ -129,11 +136,7 @@ const TicketsTableComponent: React.FC<Props> = ({
         }}
       >
         <Box component="table" sx={TABLE_SX}>
-          <Box component="colgroup">
-            {COLS.map((w) => (
-              <Box key={w} component="col" sx={{ width: w }} />
-            ))}
-          </Box>
+          {COLGROUP}
           <Box component="thead">
             <Box component="tr">
               {columns.map(({ col, label }) => {
@@ -169,11 +172,7 @@ const TicketsTableComponent: React.FC<Props> = ({
         }}
       >
         <Box component="table" sx={TABLE_SX}>
-          <Box component="colgroup">
-            {COLS.map((w) => (
-              <Box key={w} component="col" sx={{ width: w }} />
-            ))}
-          </Box>
+          {COLGROUP}
           <Box component="tbody" sx={loading ? DELAYED_REVEAL_SX : undefined}>
             {loading ? (
               <TableSkeletonRows cells={SKELETON_CELLS} />

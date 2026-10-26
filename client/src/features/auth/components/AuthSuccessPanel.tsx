@@ -4,13 +4,11 @@ import Box from "@mui/material/Box";
 interface AuthModalSuccessProps {
   title: string;
   subtitle: string;
-  children?: React.ReactNode;
 }
 
 export const AuthModalSuccess: React.FC<AuthModalSuccessProps> = ({
   title,
   subtitle,
-  children,
 }) => (
   <Box sx={{ textAlign: "center", py: "8px" }}>
     <Box
@@ -59,7 +57,6 @@ export const AuthModalSuccess: React.FC<AuthModalSuccessProps> = ({
     >
       {subtitle}
     </Box>
-    {children}
   </Box>
 );
 

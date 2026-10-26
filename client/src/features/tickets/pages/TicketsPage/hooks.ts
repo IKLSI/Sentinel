@@ -1,6 +1,5 @@
 import { TicketStatus } from "@/enums";
 import { useCallback, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/useToast";
@@ -23,11 +22,10 @@ import {
   type EditTicketFormValues,
 } from "@/features/tickets/pages/TicketsPage/schemas";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useTicketCreatedToast } from "@/features/tickets/hooks/useTicketCreatedToast";
 
 export const useCreateTicketDialog = () => {
-  const t = useT();
-  const navigate = useNavigate();
-  const { showToast } = useToast();
+  const showTicketCreatedToast = useTicketCreatedToast();
   const onCreateError = useApiErrorToast("tickets.list.create_error");
   const createTicketMutation = useCreateTicketMutation();
   const [open, setOpen] = useState(false);
@@ -64,15 +62,7 @@ export const useCreateTicketDialog = () => {
         onSuccess: (created) => {
           if (createAnother) reset(EMPTY_CREATE_TICKET_FORM);
           else setOpen(false);
-          showToast(
-            t("tickets.list.create_success", { reference: created.reference }),
-            "success",
-            {
-              label: t("common.view"),
-              onClick: () =>
-                navigate({ to: "/tickets/$id", params: { id: created.id } }),
-            },
-          );
+          showTicketCreatedToast(created);
         },
         onError: onCreateError,
       },

@@ -11,17 +11,20 @@ import { numbered } from "@/features/legal/helpers";
 import type { LegalSection } from "@/features/legal/types";
 
 interface Props {
+  prefix: string;
   section: LegalSection;
   index: number;
   onCopyAnchor: (id: string) => void;
 }
 
 export const LegalSectionCard: React.FC<Props> = ({
+  prefix,
   section,
   index,
   onCopyAnchor,
 }) => {
   const t = useT();
+  const sectionKey = `${prefix}.${section.id}`;
 
   return (
     <Box
@@ -56,7 +59,7 @@ export const LegalSectionCard: React.FC<Props> = ({
             letterSpacing: "-0.02em",
           }}
         >
-          {t(section.titleKey)}
+          {t(`${sectionKey}.title`)}
         </Box>
         <Tooltip title={t("legal.shell.copy_anchor")} arrow>
           <IconButton
@@ -86,19 +89,17 @@ export const LegalSectionCard: React.FC<Props> = ({
         </Tooltip>
       </Box>
 
-      {section.bodyKey && (
-        <Box
-          component="p"
-          sx={{
-            m: "14px 0 0",
-            fontSize: "13px",
-            lineHeight: 1.8,
-            color: "var(--text-secondary)",
-          }}
-        >
-          {t(section.bodyKey)}
-        </Box>
-      )}
+      <Box
+        component="p"
+        sx={{
+          m: "14px 0 0",
+          fontSize: "13px",
+          lineHeight: 1.8,
+          color: "var(--text-secondary)",
+        }}
+      >
+        {t(`${sectionKey}.body`)}
+      </Box>
 
       {section.bulletKeys && (
         <Box

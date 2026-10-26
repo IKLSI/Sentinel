@@ -4,7 +4,7 @@ import Skeleton from "@mui/material/Skeleton";
 import { useT } from "@/contexts/I18nContext";
 import { useRuntimeLifecyclesQuery } from "@/domains/publicScan/queries";
 import type { RuntimeLifecycles } from "@/domains/publicScan/types";
-import { pluralKey } from "@/features/dashboard/pages/DashboardPage/helpers";
+import { pluralKey } from "@/helpers/plural";
 import { LANDING_SECTION_IDS } from "@/features/landing/constants";
 import { joinNames } from "@/features/landing/helpers";
 import { LandingSection } from "@/features/landing/pages/LandingPage/components/LandingSection";

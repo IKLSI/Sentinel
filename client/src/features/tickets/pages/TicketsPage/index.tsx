@@ -223,14 +223,11 @@ export const TicketsPage: React.FC = () => {
         onConfirm={deleteDialog.confirm}
         loading={deleteDialog.deleting}
         title={t("tickets.list.delete_title")}
+        irreversible
       >
         {t("tickets.list.delete_prefix")}
         <strong>{deleteDialog.target?.reference}</strong>
         {t("tickets.list.delete_suffix")}
-        <br />
-        {t("common.action_irreversible_before")}
-        <b>{t("common.action_irreversible_word")}</b>
-        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

@@ -21,9 +21,7 @@ import { useToast } from "@/hooks/useToast";
 
 interface Props {
   documentId: string;
-  titleKey: string;
-  subtitleKey: string;
-  updatedKey: string;
+  prefix: string;
   sections: LegalSection[];
 }
 
@@ -35,9 +33,7 @@ const CONTENT_SX = {
 
 export const LegalDocument: React.FC<Props> = ({
   documentId,
-  titleKey,
-  subtitleKey,
-  updatedKey,
+  prefix,
   sections,
 }) => {
   const t = useT();
@@ -148,7 +144,7 @@ export const LegalDocument: React.FC<Props> = ({
             textAlign: "center",
           }}
         >
-          {t(titleKey)}
+          {t(`${prefix}.title`)}
         </Box>
 
         <Box
@@ -162,7 +158,7 @@ export const LegalDocument: React.FC<Props> = ({
             textAlign: "center",
           }}
         >
-          {t(subtitleKey)}
+          {t(`${prefix}.subtitle`)}
         </Box>
 
         <Box
@@ -178,7 +174,7 @@ export const LegalDocument: React.FC<Props> = ({
           }}
         >
           <Box component="span">
-            {t("legal.shell.updated", { date: t(updatedKey) })}
+            {t("legal.shell.updated", { date: t(`${prefix}.updated`) })}
           </Box>
           <Box
             sx={{
@@ -263,7 +259,11 @@ export const LegalDocument: React.FC<Props> = ({
             alignItems: "start",
           }}
         >
-          <LegalSummary sections={sections} activeId={activeId} />
+          <LegalSummary
+            prefix={prefix}
+            sections={sections}
+            activeId={activeId}
+          />
 
           <Box>
             <Box
@@ -279,6 +279,7 @@ export const LegalDocument: React.FC<Props> = ({
               {sections.map((section, index) => (
                 <LegalSectionCard
                   key={section.id}
+                  prefix={prefix}
                   section={section}
                   index={index}
                   onCopyAnchor={copyAnchor}

@@ -52,7 +52,7 @@ export const DemoProject: React.FC = () => {
 
       <TabBar tabs={tabDefs} active={activeTab} onChange={setActiveTab} />
 
-      <DemoFindingActions>
+      <DemoFindingActions projectId={project.id}>
         <Box
           sx={{
             flex: "1 1 auto",
@@ -63,10 +63,7 @@ export const DemoProject: React.FC = () => {
           }}
         >
           {activeTab === TAB_INDEX.vulnerabilities && (
-            <VulnerabilitiesTab
-              projectId={project.id}
-              vulns={vulnerabilities}
-            />
+            <VulnerabilitiesTab vulns={vulnerabilities} />
           )}
           {activeTab === TAB_INDEX.dependencies && (
             <DependenciesTab dependencies={project.dependencies} />

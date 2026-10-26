@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { AuthModalSuccess } from "@/features/auth/components/AuthSuccessPanel";
 import { useForgotPasswordMutation } from "@/domains/auth/mutations";
@@ -70,30 +70,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             {t("common.close")}
           </Button>
         ) : (
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              color="inherit"
-              onClick={onClose}
-              disabled={loading}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              type="submit"
-              form={formId}
-              disabled={loading}
-            >
-              {loading ? (
-                <CircularProgress size={14} sx={{ color: "var(--s1)" }} />
-              ) : (
-                t("auth.forgot_password.submit")
-              )}
-            </Button>
-          </>
+          <ModalActions
+            onCancel={onClose}
+            cancelDisabled={loading}
+            confirmLabel={t("auth.forgot_password.submit")}
+            pending={loading}
+            formId={formId}
+          />
         )
       }
     >

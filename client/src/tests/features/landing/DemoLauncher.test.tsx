@@ -11,12 +11,22 @@ class ResizeObserverStub {
 
 const defaultAdapter = apiClient.defaults.adapter;
 const LAZY_DEMO_TIMEOUT_MS = 5000;
+const LAZY_MODULES_PRELOAD_TIMEOUT_MS = 60_000;
 
-beforeAll(() => {
+beforeAll(async () => {
   vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   apiClient.defaults.adapter = (config) =>
     Promise.reject(new Error(`Unmocked HTTP call: ${config.url}`));
-});
+  await Promise.all([
+    import("@/features/landing/pages/LandingPage/components/ProductDemo"),
+    import(
+      "@/features/dashboard/pages/DashboardPage/components/ScoreTrendCard"
+    ),
+    import(
+      "@/features/dashboard/pages/DashboardPage/components/VulnerabilityFlowCard"
+    ),
+  ]);
+}, LAZY_MODULES_PRELOAD_TIMEOUT_MS);
 
 afterAll(() => {
   vi.unstubAllGlobals();

@@ -17,6 +17,8 @@ import {
 } from "@/features/projects/pages/ProjectsPage/helpers";
 import { GRADE_NOT_AVAILABLE, isCovered } from "@/formatters/coverage";
 import { formatShortDateTime } from "@/formatters/date";
+import { LABEL_KEYS } from "@/components/ui/forms/ScanFrequencyPicker";
+import { ScanFrequency } from "@/enums";
 
 interface Props {
   project: ProjectHeader;
@@ -38,12 +40,11 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   const gradeCfg = GRADE_VISUAL[grade];
   const score = covered ? project.healthScore : null;
 
-  const freqLabel = (f: string) => {
-    if (f === "Daily") return t("tech_health.scan_frequency.daily");
-    if (f === "Weekly") return t("tech_health.scan_frequency.weekly");
-    if (f === "Monthly") return t("tech_health.scan_frequency.monthly");
-    return t("tech_health.scan_frequency.manual");
-  };
+  const freqLabel = (frequency: string) =>
+    t(
+      LABEL_KEYS[frequency as ScanFrequency] ??
+        LABEL_KEYS[ScanFrequency.Manual],
+    );
 
   return (
     <Box
@@ -263,87 +264,69 @@ export const ProjectHeaderCard: React.FC<Props> = ({
             value: project.totalDependencies,
             icon: <InventoryOutlined sx={{ fontSize: 15 }} />,
             alert: null,
-            dash: !covered,
           },
           {
             label: t("tech_health.stats.critical"),
             value: project.criticalVulnerabilities,
             icon: <GppBadOutlined sx={{ fontSize: 15 }} />,
-            alert: project.criticalVulnerabilities > 0 ? "red" : null,
-            dash: !covered,
+            alert: project.criticalVulnerabilities > 0 ? "var(--red)" : null,
           },
           {
             label: t("tech_health.stats.vulnerabilities"),
             value: project.totalVulnerabilities,
             icon: <GppMaybeOutlined sx={{ fontSize: 15 }} />,
-            alert: project.totalVulnerabilities > 0 ? "orange" : null,
-            dash: !covered,
+            alert: project.totalVulnerabilities > 0 ? "var(--orange)" : null,
           },
           {
             label: t("tech_health.stats.eol"),
             value: eolRuntimes,
             icon: <StorageOutlined sx={{ fontSize: 15 }} />,
-            alert: eolRuntimes > 0 ? "red" : null,
-            dash: !covered,
+            alert: eolRuntimes > 0 ? "var(--red)" : null,
           },
-        ].map((s, i) => {
-          const accent =
-            s.alert === "red"
-              ? "var(--red)"
-              : s.alert === "orange"
-                ? "var(--orange)"
-                : "var(--muted)";
-          return (
+        ].map((s, i) => (
+          <Box
+            key={s.label}
+            sx={{
+              p: "14px 20px",
+              borderRight: i < 3 ? "1px solid var(--border)" : "none",
+            }}
+          >
             <Box
-              key={s.label}
               sx={{
-                p: "14px 20px",
-                borderRight: i < 3 ? "1px solid var(--border)" : "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                color: s.alert ?? "var(--muted)",
+                mb: "8px",
               }}
             >
+              {s.icon}
               <Box
+                component="span"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  color: accent,
-                  mb: "8px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "9px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--muted)",
                 }}
               >
-                {s.icon}
-                <Box
-                  component="span"
-                  sx={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "9px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "var(--muted)",
-                  }}
-                >
-                  {s.label}
-                </Box>
-              </Box>
-              <Box
-                sx={{
-                  fontSize: "28px",
-                  fontWeight: s.dash ? 400 : 800,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                  color: s.dash
-                    ? "var(--muted)"
-                    : s.alert === "red"
-                      ? "var(--red)"
-                      : s.alert === "orange"
-                        ? "var(--orange)"
-                        : "var(--text)",
-                }}
-              >
-                {s.dash ? "—" : s.value}
+                {s.label}
               </Box>
             </Box>
-          );
-        })}
+            <Box
+              sx={{
+                fontSize: "28px",
+                fontWeight: covered ? 800 : 400,
+                letterSpacing: "-0.03em",
+                lineHeight: 1,
+                color: covered ? (s.alert ?? "var(--text)") : "var(--muted)",
+              }}
+            >
+              {covered ? s.value : "—"}
+            </Box>
+          </Box>
+        ))}
       </Box>
     </Box>
   );

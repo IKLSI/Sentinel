@@ -6,8 +6,8 @@ import {
   formatDelta,
   gradeMeta,
   nextActionLabel,
-  pluralKey,
 } from "@/features/dashboard/pages/DashboardPage/helpers";
+import { pluralKey } from "@/helpers/plural";
 
 const EMPTY_ACTION = {
   target: null,

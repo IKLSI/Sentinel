@@ -1,45 +1,32 @@
 import type React from "react";
-import { useContext, useMemo, useState } from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { TabBar, type TabBarItem } from "@/components/ui/common/TabBar";
 import TerminalOutlined from "@mui/icons-material/TerminalOutlined";
 import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import { useT } from "@/contexts/I18nContext";
-import { AuthContext } from "@/contexts/AuthContext";
-import { UserRole } from "@/enums";
-import {
-  type Tab,
-  SettingsTab,
-} from "@/features/settings/pages/SettingsPage/helpers";
+import { SettingsTab } from "@/enums";
 import { JobsTab } from "@/features/settings/pages/SettingsPage/components/JobsTab";
 import { ApiKeysTab } from "@/features/settings/pages/SettingsPage/components/ApiKeysTab";
 
 export const SettingsPage: React.FC = () => {
   const t = useT();
-  const { user } = useContext(AuthContext);
-  const isAdmin = user?.role === UserRole.Admin;
 
-  const tabs: (TabBarItem & { id: Tab })[] = useMemo(
-    () =>
-      isAdmin
-        ? [
-            {
-              id: SettingsTab.Jobs,
-              label: t("settings.tab.jobs"),
-              icon: <TerminalOutlined sx={{ fontSize: 16 }} />,
-            },
-            {
-              id: SettingsTab.ApiKeys,
-              label: t("settings.tab.api_keys"),
-              icon: <KeyOutlined sx={{ fontSize: 16 }} />,
-            },
-          ]
-        : [],
-    [t, isAdmin],
-  );
+  const tabs: (TabBarItem & { id: SettingsTab })[] = [
+    {
+      id: SettingsTab.Jobs,
+      label: t("settings.tab.jobs"),
+      icon: <TerminalOutlined sx={{ fontSize: 16 }} />,
+    },
+    {
+      id: SettingsTab.ApiKeys,
+      label: t("settings.tab.api_keys"),
+      icon: <KeyOutlined sx={{ fontSize: 16 }} />,
+    },
+  ];
 
-  const [activeTab, setActiveTab] = useState<Tab>(SettingsTab.Jobs);
+  const [activeTab, setActiveTab] = useState<SettingsTab>(SettingsTab.Jobs);
 
   return (
     <PageContainer sx={{ p: 0 }}>

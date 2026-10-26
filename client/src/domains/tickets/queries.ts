@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { getQueryOptions, useGetQuery } from "@/domains/helpers";
 import { ticketKeys } from "@/domains/tickets/constants";
@@ -14,7 +15,7 @@ export const useTicketsQuery = (filters: TicketFilters, enabled = true) =>
     {
       queryKey: ticketKeys.list(filters),
       enabled,
-      placeholderData: (previous) => previous,
+      placeholderData: keepPreviousData,
     },
     filters,
   );

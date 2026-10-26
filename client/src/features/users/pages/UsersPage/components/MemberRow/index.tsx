@@ -43,37 +43,29 @@ export const MemberRow: React.FC<Props> = ({
       }}
     >
       <Box component="td" sx={{ px: "16px", py: "8px" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                fontWeight: 600,
-                color: "var(--text)",
-                lineHeight: 1.3,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {member.firstName} {member.lastName}
-            </Box>
-            <Box
-              sx={{
-                color: "var(--muted2)",
-                fontSize: "11px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {member.email}
-            </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Box
+            sx={{
+              fontWeight: 600,
+              color: "var(--text)",
+              lineHeight: 1.3,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {member.firstName} {member.lastName}
+          </Box>
+          <Box
+            sx={{
+              color: "var(--muted2)",
+              fontSize: "11px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {member.email}
           </Box>
         </Box>
       </Box>

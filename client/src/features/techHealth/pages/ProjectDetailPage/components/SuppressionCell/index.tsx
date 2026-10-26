@@ -15,14 +15,13 @@ import { NO_VALUE } from "@/constants/display";
 const suppressedIconSx = { fontSize: 15, color: "var(--accent)" } as const;
 
 interface Props {
-  projectId: string;
   findingKey: string;
   vulnerabilityLabel: string;
   suppression?: VulnerabilitySuppression | null;
 }
 
 export const SuppressionCell = memo<Props>(
-  ({ projectId, findingKey, vulnerabilityLabel, suppression }) => {
+  ({ findingKey, vulnerabilityLabel, suppression }) => {
     const { t, culture } = useI18n();
     const isAdmin = useIsAdmin();
     const [modalOpen, setModalOpen] = useState(false);
@@ -92,8 +91,7 @@ export const SuppressionCell = memo<Props>(
         </AppTooltip>
         {modalOpen && (
           <SuppressionModal
-            open={modalOpen}
-            projectId={projectId}
+            open
             findingKey={findingKey}
             vulnerabilityLabel={vulnerabilityLabel}
             onClose={() => setModalOpen(false)}

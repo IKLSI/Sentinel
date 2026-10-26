@@ -56,13 +56,10 @@ export const ProjectDetailPage: React.FC = () => {
     [project],
   );
 
-  const eolRuntimes = useMemo(
-    () => project?.runtimes.filter((r) => r.isEol).length ?? 0,
-    [project],
-  );
-
   if (loading) return <ProjectDetailSkeleton />;
   if (!project) return null;
+
+  const eolRuntimes = project.runtimes.filter((r) => r.isEol).length;
 
   const tabDefs: TabBarItem[] = [
     {
@@ -110,7 +107,6 @@ export const ProjectDetailPage: React.FC = () => {
         >
           {activeTab === TAB_INDEX.vulnerabilities && (
             <VulnerabilitiesTab
-              projectId={project.id}
               vulns={allVulns}
               toolbarAction={
                 <RemediateAllAction

@@ -32,7 +32,7 @@ export const ApiKeysTab: React.FC = () => {
     sortDirection: sort.dir,
   });
   const keys = apiKeysQuery.data ?? [];
-  const loading = apiKeysQuery.isLoading && !apiKeysQuery.data;
+  const loading = apiKeysQuery.isLoading;
   const revokeKeyMutation = useRevokeApiKeyMutation();
   const revoking = revokeKeyMutation.isPending;
 

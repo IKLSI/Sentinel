@@ -1,16 +1,28 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { LanguageFlag } from "@/components/ui/common/LanguageFlag";
 import { useT } from "@/contexts/I18nContext";
 import { Language } from "@/enums";
+import { PreviewOptionCard } from "@/features/users/pages/ProfilePage/components/PreviewOptionCard";
 
 interface Props {
   culture: Language;
   onChange: (lang: Language) => void;
 }
+
+const LANGUAGE_OPTIONS = [
+  {
+    code: Language.Fr,
+    labelKey: "profile.language.fr",
+    bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)",
+  },
+  {
+    code: Language.En,
+    labelKey: "profile.language.en",
+    bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
+  },
+] as const;
 
 export const LanguagePicker: React.FC<Props> = ({ culture, onChange }) => {
   const t = useT();
@@ -27,98 +39,26 @@ export const LanguagePicker: React.FC<Props> = ({ culture, onChange }) => {
         {t("profile.field.language")}
       </Box>
       <Box sx={{ display: "flex", gap: "8px" }}>
-        {[
-          {
-            code: Language.Fr,
-            label: t("profile.language.fr"),
-            bg: "linear-gradient(150deg,var(--flag-1) 55%,var(--flag-2) 100%)",
-          },
-          {
-            code: Language.En,
-            label: t("profile.language.en"),
-            bg: "linear-gradient(150deg,var(--flag-1) 45%,var(--flag-3) 100%)",
-          },
-        ].map(({ code, label, bg }) => (
-          <ButtonBase
+        {LANGUAGE_OPTIONS.map(({ code, labelKey, bg }) => (
+          <PreviewOptionCard
             key={code}
-            type="button"
+            selected={culture === code}
             onClick={() => onChange(code)}
-            sx={{
-              font: "inherit",
-              textAlign: "inherit",
-              display: "block",
-              cursor: "pointer",
-              width: 100,
-              boxSizing: "border-box",
-              borderRadius: "var(--r-sm)",
-              overflow: "hidden",
-              border:
-                culture === code
-                  ? "2px solid var(--accent)"
-                  : "2px solid var(--border)",
-              boxShadow:
-                culture === code ? "0 0 0 2px var(--accent-subtle)" : "none",
-              transition: "all 0.15s",
+            previewSx={{
+              height: 40,
+              background: bg,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          >
-            <Box
-              sx={{
-                height: 40,
-                background: bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <LanguageFlag language={code} />
-            </Box>
-            <Box
-              sx={{
-                px: "8px",
-                py: "4px",
-                background: "var(--s2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "3px",
-                }}
-              >
-                <TranslateOutlined
-                  sx={{ fontSize: 8, color: "var(--muted)" }}
-                />
-                <Box
-                  sx={{
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    color: "var(--muted)",
-                  }}
-                >
-                  {label}
-                </Box>
-              </Box>
-              {culture === code && (
-                <Box
-                  sx={{
-                    width: 11,
-                    height: 11,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <CheckOutlined sx={{ fontSize: 7, color: "var(--s1)" }} />
-                </Box>
-              )}
-            </Box>
-          </ButtonBase>
+            preview={<LanguageFlag language={code} />}
+            footerBackground="var(--s2)"
+            icon={
+              <TranslateOutlined sx={{ fontSize: 8, color: "var(--muted)" }} />
+            }
+            label={t(labelKey)}
+            labelColor="var(--muted)"
+          />
         ))}
       </Box>
     </Box>

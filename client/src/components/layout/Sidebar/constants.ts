@@ -10,7 +10,6 @@ import type { NavGroup, NavSection } from "@/components/layout/Sidebar/types";
 export const NAV_SECTIONS: NavSection[] = [
   {
     titleKey: "sidebar.section.dashboard",
-    icon: DashboardOutlined,
     items: [
       {
         to: ROUTES.DASHBOARD,
@@ -22,7 +21,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     titleKey: "sidebar.section.tickets",
-    icon: ConfirmationNumberOutlined,
     items: [
       {
         to: ROUTES.TICKETS,
@@ -34,7 +32,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     titleKey: "sidebar.section.projects",
-    icon: AccountTreeOutlined,
     items: [
       {
         to: ROUTES.PROJECTS,
@@ -45,7 +42,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     titleKey: "sidebar.item.organisation",
-    icon: BusinessOutlined,
     adminOnly: true,
     group: "admin",
     items: [
@@ -58,7 +54,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     titleKey: "sidebar.section.users",
-    icon: PersonOutlined,
     adminOnly: true,
     group: "admin",
     items: [
@@ -71,7 +66,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     titleKey: "sidebar.item.settings",
-    icon: SettingsOutlined,
     adminOnly: true,
     group: "admin",
     items: [

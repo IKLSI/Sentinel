@@ -20,14 +20,7 @@ import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from "@/features/auth/schemas";
-import { riseInSx } from "@/features/auth/styles";
-
-const FORM_SX = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-  ...riseInSx(0.52),
-} as const;
+import { AUTH_FORM_SX } from "@/features/auth/styles";
 
 const routeApi = getRouteApi("/reset-password");
 
@@ -95,7 +88,12 @@ export const ResetPasswordPage: React.FC = () => {
             subtitle={t("auth.reset_password.form_sub")}
           />
 
-          <Box component="form" onSubmit={onSubmit} noValidate sx={FORM_SX}>
+          <Box
+            component="form"
+            onSubmit={onSubmit}
+            noValidate
+            sx={AUTH_FORM_SX}
+          >
             <PasswordTextField
               id={passwordId}
               label={t("auth.reset_password.password_label")}

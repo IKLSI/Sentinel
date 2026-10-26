@@ -21,7 +21,6 @@ export const LogoutButton: React.FC = () => {
         onClick={handleLogout}
         sx={{
           p: 0,
-          cursor: "pointer",
           width: 26,
           height: 26,
           display: "flex",

@@ -107,9 +107,8 @@ const riskBarStyle = (level: number, filledColor: string | null) => ({
 
 export const VulnRow = memo<{
   vuln: VulnerabilityRow;
-  projectId: string;
   index: number;
-}>(({ vuln, projectId, index }) => {
+}>(({ vuln, index }) => {
   const t = useT();
   const riskConfig = riskConfigOf(vuln);
 
@@ -192,7 +191,6 @@ export const VulnRow = memo<{
       </TD>
       <TD align="center">
         <SuppressionCell
-          projectId={projectId}
           findingKey={vuln.findingKey}
           vulnerabilityLabel={vuln.cveAlias ?? vuln.cveId}
           suppression={vuln.suppression}

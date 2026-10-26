@@ -3,10 +3,10 @@ import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import { useDeleteMyAccountMutation } from "@/domains/users/mutations";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { useT } from "@/contexts/I18nContext";
 import { endSession } from "@/configs/session";
 import { ROUTES } from "@/constants/routes";
@@ -64,29 +64,17 @@ export const DeleteAccountModal: React.FC<Props> = ({ open, onClose }) => {
       title={t("profile.gdpr.delete_confirm_title")}
       maxWidth="xs"
       actions={
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={closeAndReset}
-            disabled={deletingAccount}
-          >
-            {t("profile.gdpr.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            type="submit"
-            form={formId}
-            disabled={deletingAccount || !hasPassword}
-          >
-            {deletingAccount
-              ? t("profile.gdpr.deleting")
-              : t("profile.gdpr.delete_confirm")}
-          </Button>
-        </>
+        <ModalActions
+          onCancel={closeAndReset}
+          cancelLabel={t("profile.gdpr.cancel")}
+          cancelDisabled={deletingAccount}
+          confirmLabel={t("profile.gdpr.delete_confirm")}
+          pendingLabel={t("profile.gdpr.deleting")}
+          pending={deletingAccount}
+          disabled={!hasPassword}
+          formId={formId}
+          color="error"
+        />
       }
     >
       <Box

@@ -6,13 +6,9 @@ import type { LegalSection } from "@/features/legal/types";
 const SECTIONS: LegalSection[] = [
   {
     id: "roles",
-    titleKey: "privacy.roles.title",
-    bodyKey: "privacy.roles.body",
   },
   {
     id: "purposes",
-    titleKey: "privacy.purposes.title",
-    bodyKey: "privacy.purposes.body",
     bulletKeys: [
       "privacy.purposes.item.service",
       "privacy.purposes.item.account",
@@ -22,8 +18,6 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "recipients",
-    titleKey: "privacy.recipients.title",
-    bodyKey: "privacy.recipients.body",
     bulletKeys: [
       "privacy.recipients.item.hosting",
       "privacy.recipients.item.email",
@@ -33,8 +27,6 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "retention",
-    titleKey: "privacy.retention.title",
-    bodyKey: "privacy.retention.body",
     entryKeys: [
       "privacy.retention.account",
       "privacy.retention.activity",
@@ -44,8 +36,6 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "rights",
-    titleKey: "privacy.rights.title",
-    bodyKey: "privacy.rights.body",
     bulletKeys: [
       "privacy.rights.item.self_service",
       "privacy.rights.item.request",
@@ -56,17 +46,9 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "contact",
-    titleKey: "privacy.contact.title",
-    bodyKey: "privacy.contact.body",
   },
 ];
 
 export const PrivacyPage: React.FC = () => (
-  <LegalDocument
-    documentId="privacy"
-    titleKey="privacy.title"
-    subtitleKey="privacy.subtitle"
-    updatedKey="privacy.updated"
-    sections={SECTIONS}
-  />
+  <LegalDocument documentId="privacy" prefix="privacy" sections={SECTIONS} />
 );

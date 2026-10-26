@@ -1,16 +1,45 @@
 import type React from "react";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
-import CheckOutlined from "@mui/icons-material/CheckOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { Theme } from "@/enums";
+import { PreviewOptionCard } from "@/features/users/pages/ProfilePage/components/PreviewOptionCard";
 
 interface Props {
   theme: Theme;
   onChange: (mode: Theme) => void;
 }
+
+const THEME_PREVIEW = {
+  [Theme.Light]: {
+    background: "linear-gradient(150deg,#fff 55%,var(--preview-lt-bg) 100%)",
+    bars: [
+      { width: "60%", color: "var(--preview-lt-bar1)" },
+      { width: "80%", color: "var(--preview-lt-bar2)" },
+      { width: "40%", color: "var(--preview-lt-accent)" },
+    ],
+    footerBackground: "var(--preview-lt-bg)",
+    Icon: LightModeOutlined,
+    iconColor: "var(--preview-lt-text-soft)",
+    labelColor: "var(--preview-lt-text-strong)",
+    labelKey: "profile.theme.light",
+  },
+  [Theme.Dark]: {
+    background:
+      "linear-gradient(150deg,var(--preview-dk-surface) 55%,var(--preview-dk-surface2) 100%)",
+    bars: [
+      { width: "60%", color: "var(--preview-dk-bar1)" },
+      { width: "80%", color: "var(--preview-dk-bar2)" },
+      { width: "40%", color: "var(--preview-dk-accent)" },
+    ],
+    footerBackground: "var(--preview-dk-bg)",
+    Icon: DarkModeOutlined,
+    iconColor: "var(--preview-dk-text-soft)",
+    labelColor: "var(--preview-dk-text-strong)",
+    labelKey: "profile.theme.dark",
+  },
+} as const;
 
 export const AppearancePicker: React.FC<Props> = ({ theme, onChange }) => {
   const t = useT();
@@ -27,144 +56,41 @@ export const AppearancePicker: React.FC<Props> = ({ theme, onChange }) => {
         {t("profile.field.appearance")}
       </Box>
       <Box sx={{ display: "flex", gap: "8px" }}>
-        {([Theme.Light, Theme.Dark] as const).map((mode) => (
-          <ButtonBase
-            key={mode}
-            type="button"
-            onClick={() => onChange(mode)}
-            sx={{
-              font: "inherit",
-              textAlign: "inherit",
-              display: "block",
-              cursor: "pointer",
-              width: 100,
-              boxSizing: "border-box",
-              borderRadius: "var(--r-sm)",
-              overflow: "hidden",
-              border:
-                theme === mode
-                  ? "2px solid var(--accent)"
-                  : "2px solid var(--border)",
-              boxShadow:
-                theme === mode ? "0 0 0 2px var(--accent-subtle)" : "none",
-              transition: "all 0.15s",
-            }}
-          >
-            <Box
-              sx={{
+        {([Theme.Light, Theme.Dark] as const).map((mode) => {
+          const preview = THEME_PREVIEW[mode];
+          return (
+            <PreviewOptionCard
+              key={mode}
+              selected={theme === mode}
+              onClick={() => onChange(mode)}
+              previewSx={{
                 height: 40,
-                background:
-                  mode === Theme.Dark
-                    ? "linear-gradient(150deg,var(--preview-dk-surface) 55%,var(--preview-dk-surface2) 100%)"
-                    : "linear-gradient(150deg,#fff 55%,var(--preview-lt-bg) 100%)",
+                background: preview.background,
                 p: "6px 8px",
                 display: "flex",
                 flexDirection: "column",
                 gap: "3px",
               }}
-            >
-              <Box
-                sx={{
-                  height: 3,
-                  width: "60%",
-                  borderRadius: "var(--r-xs)",
-                  background:
-                    mode === "dark"
-                      ? "var(--preview-dk-bar1)"
-                      : "var(--preview-lt-bar1)",
-                }}
-              />
-              <Box
-                sx={{
-                  height: 3,
-                  width: "80%",
-                  borderRadius: "var(--r-xs)",
-                  background:
-                    mode === "dark"
-                      ? "var(--preview-dk-bar2)"
-                      : "var(--preview-lt-bar2)",
-                }}
-              />
-              <Box
-                sx={{
-                  height: 3,
-                  width: "40%",
-                  borderRadius: "var(--r-xs)",
-                  background:
-                    mode === "dark"
-                      ? "var(--preview-dk-accent)"
-                      : "var(--preview-lt-accent)",
-                }}
-              />
-            </Box>
-            <Box
-              sx={{
-                px: "8px",
-                py: "4px",
-                background:
-                  mode === "dark"
-                    ? "var(--preview-dk-bg)"
-                    : "var(--preview-lt-bg)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "3px",
-                }}
-              >
-                {mode === "dark" ? (
-                  <DarkModeOutlined
-                    sx={{
-                      fontSize: 8,
-                      color: "var(--preview-dk-text-soft)",
-                    }}
-                  />
-                ) : (
-                  <LightModeOutlined
-                    sx={{
-                      fontSize: 8,
-                      color: "var(--preview-lt-text-soft)",
-                    }}
-                  />
-                )}
+              preview={preview.bars.map((bar) => (
                 <Box
+                  key={bar.width}
                   sx={{
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    color:
-                      mode === "dark"
-                        ? "var(--preview-dk-text-strong)"
-                        : "var(--preview-lt-text-strong)",
+                    height: 3,
+                    width: bar.width,
+                    borderRadius: "var(--r-xs)",
+                    background: bar.color,
                   }}
-                >
-                  {mode === "dark"
-                    ? t("profile.theme.dark")
-                    : t("profile.theme.light")}
-                </Box>
-              </Box>
-              {theme === mode && (
-                <Box
-                  sx={{
-                    width: 11,
-                    height: 11,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <CheckOutlined sx={{ fontSize: 7, color: "var(--s1)" }} />
-                </Box>
-              )}
-            </Box>
-          </ButtonBase>
-        ))}
+                />
+              ))}
+              footerBackground={preview.footerBackground}
+              icon={
+                <preview.Icon sx={{ fontSize: 8, color: preview.iconColor }} />
+              }
+              label={t(preview.labelKey)}
+              labelColor={preview.labelColor}
+            />
+          );
+        })}
       </Box>
     </Box>
   );

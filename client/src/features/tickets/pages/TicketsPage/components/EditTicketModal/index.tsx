@@ -12,6 +12,10 @@ import type { ProjectOption } from "@/domains/projects/types";
 import type { UserOption } from "@/domains/users/types";
 import { TICKET_STATUSES, statusLabelKeys } from "@/features/tickets/constants";
 import type { EditTicketFormValues } from "@/features/tickets/pages/TicketsPage/schemas";
+import {
+  priorityLabelKeys,
+  typeTooltipKeys,
+} from "@/features/tickets/pages/TicketsPage/helpers";
 
 interface Props {
   open: boolean;
@@ -90,12 +94,11 @@ export const EditTicketModal: React.FC<Props> = ({
             label={t("tickets.list.field_priority")}
             registration={register("priority")}
           >
-            <option value="critical">
-              {t("tickets.list.priority_critical")}
-            </option>
-            <option value="high">{t("tickets.list.priority_high")}</option>
-            <option value="medium">{t("tickets.list.priority_medium")}</option>
-            <option value="low">{t("tickets.list.priority_low")}</option>
+            {Object.entries(priorityLabelKeys).map(([priority, labelKey]) => (
+              <option key={priority} value={priority}>
+                {t(labelKey)}
+              </option>
+            ))}
           </FormSelectField>
           <FormSelectField
             id={`${fieldId}-status`}
@@ -113,16 +116,11 @@ export const EditTicketModal: React.FC<Props> = ({
             label={t("tickets.list.field_type")}
             registration={register("type")}
           >
-            <option value="bug">{t("tickets.list.type_bug")}</option>
-            <option value="feature">{t("tickets.list.type_feature")}</option>
-            <option value="security">{t("tickets.list.type_security")}</option>
-            <option value="performance">
-              {t("tickets.list.type_performance")}
-            </option>
-            <option value="maintenance">
-              {t("tickets.list.type_maintenance")}
-            </option>
-            <option value="question">{t("tickets.list.type_question")}</option>
+            {Object.entries(typeTooltipKeys).map(([type, labelKey]) => (
+              <option key={type} value={type}>
+                {t(labelKey)}
+              </option>
+            ))}
           </FormSelectField>
         </Box>
         <Box

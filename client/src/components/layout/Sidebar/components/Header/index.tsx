@@ -29,7 +29,6 @@ export const Header: React.FC<Props> = ({
           sx={{
             font: "inherit",
             textAlign: "inherit",
-            cursor: "pointer",
             height: "56px",
             flexShrink: 0,
             display: "flex",
@@ -77,7 +76,6 @@ export const Header: React.FC<Props> = ({
             onClick={onToggleCollapse}
             sx={{
               p: 0,
-              cursor: "pointer",
               width: 22,
               height: 22,
               display: "flex",

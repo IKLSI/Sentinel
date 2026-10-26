@@ -1,14 +1,15 @@
 import type React from "react";
 import { createContext, useCallback, useContext, useMemo } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useRemoveSuppressionMutation } from "@/domains/projects/mutations";
 import { useCreateTicketFromFindingMutation } from "@/domains/tickets/mutations";
 import type { FindingKind } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
+import { useTicketCreatedToast } from "@/features/tickets/hooks/useTicketCreatedToast";
 
 interface FindingActions {
+  projectId: string;
   createTicket: (kind: FindingKind, findingKey: string) => void;
   creatingFindingKey: string | null;
   removeSuppression: (suppressionId: string) => void;
@@ -22,8 +23,8 @@ export const FindingActionsProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ projectId, children }) => {
   const t = useT();
-  const navigate = useNavigate();
   const { showToast } = useToast();
+  const showTicketCreatedToast = useTicketCreatedToast();
   const createMutation = useCreateTicketFromFindingMutation();
   const removeMutation = useRemoveSuppressionMutation();
   const onCreateError = useApiErrorToast("tech_health.ticket.create_error");
@@ -37,20 +38,11 @@ export const FindingActionsProvider: React.FC<{
       createTicketMutate(
         { data: { projectId, kind, findingKey } },
         {
-          onSuccess: (ticket) =>
-            showToast(
-              t("tickets.list.create_success", { reference: ticket.reference }),
-              "success",
-              {
-                label: t("common.view"),
-                onClick: () =>
-                  navigate({ to: "/tickets/$id", params: { id: ticket.id } }),
-              },
-            ),
+          onSuccess: showTicketCreatedToast,
           onError: onCreateError,
         },
       ),
-    [createTicketMutate, projectId, navigate, onCreateError, showToast, t],
+    [createTicketMutate, projectId, onCreateError, showTicketCreatedToast],
   );
 
   const removeSuppression = useCallback(
@@ -75,12 +67,14 @@ export const FindingActionsProvider: React.FC<{
 
   const value = useMemo(
     () => ({
+      projectId,
       createTicket,
       creatingFindingKey,
       removeSuppression,
       removingSuppressionId,
     }),
     [
+      projectId,
       createTicket,
       creatingFindingKey,
       removeSuppression,

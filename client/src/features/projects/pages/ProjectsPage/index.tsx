@@ -269,7 +269,6 @@ export const ProjectsPage: React.FC = () => {
       <SyncProjectModal
         open={showSyncModal}
         onClose={() => setShowSyncModal(false)}
-        showToast={showToast}
       />
 
       {editTarget && (
@@ -286,14 +285,11 @@ export const ProjectsPage: React.FC = () => {
         onConfirm={handleDelete}
         loading={deleting}
         title={t("projects.delete.title")}
+        irreversible
       >
         {t("projects.delete.prefix")}
         <strong>{deleteTarget?.name}</strong>
         {t("projects.delete.suffix")}
-        <br />
-        {t("common.action_irreversible_before")}
-        <b>{t("common.action_irreversible_word")}</b>
-        {t("common.action_irreversible_after")}
       </DeleteModal>
     </>
   );

@@ -22,13 +22,9 @@ export const InfoCard: React.FC = () => {
   const fieldId = useId();
   const onUpdateError = useApiErrorToast("profile.toast.update_error");
 
-  const [pf, setPf] = useState({
-    firstName: user?.firstName ?? "",
-    lastName: user?.lastName ?? "",
-  });
-
   const firstName = user?.firstName ?? "";
   const lastName = user?.lastName ?? "";
+  const [pf, setPf] = useState({ firstName, lastName });
 
   useEffect(() => {
     setPf({ firstName, lastName });

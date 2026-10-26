@@ -7,11 +7,16 @@ import { numbered, scrollToSection } from "@/features/legal/helpers";
 import type { LegalSection } from "@/features/legal/types";
 
 interface Props {
+  prefix: string;
   sections: LegalSection[];
   activeId: string;
 }
 
-export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
+export const LegalSummary: React.FC<Props> = ({
+  prefix,
+  sections,
+  activeId,
+}) => {
   const t = useT();
 
   return (
@@ -85,7 +90,7 @@ export const LegalSummary: React.FC<Props> = ({ sections, activeId }) => {
               >
                 {numbered(index)}
               </Box>
-              <Box component="span">{t(section.titleKey)}</Box>
+              <Box component="span">{t(`${prefix}.${section.id}.title`)}</Box>
             </ButtonBase>
           );
         })}

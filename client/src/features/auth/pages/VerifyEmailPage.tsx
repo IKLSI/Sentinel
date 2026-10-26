@@ -40,12 +40,6 @@ export const VerifyEmailPage: React.FC = () => {
     );
   }, [token, verify]);
 
-  const goToLogin = (
-    <AuthSubmitButton spaced onClick={() => navigate({ to: ROUTES.LOGIN })}>
-      {t("auth.verify_email.go_to_login")}
-    </AuthSubmitButton>
-  );
-
   return (
     <AuthLayout>
       <Box sx={{ mb: "32px", color: "var(--text)" }}>
@@ -72,22 +66,26 @@ export const VerifyEmailPage: React.FC = () => {
         </Box>
       )}
 
-      {status === "success" && (
+      {status !== "loading" && (
         <AuthPageSuccess
-          title={t("auth.verify_email.success_title")}
-          subtitle={t("auth.verify_email.success_sub")}
+          failed={status === "error"}
+          title={
+            status === "error"
+              ? t("auth.verify_email.error_title")
+              : t("auth.verify_email.success_title")
+          }
+          subtitle={
+            status === "error"
+              ? t("auth.verify_email.error_sub")
+              : t("auth.verify_email.success_sub")
+          }
         >
-          {goToLogin}
-        </AuthPageSuccess>
-      )}
-
-      {status === "error" && (
-        <AuthPageSuccess
-          failed
-          title={t("auth.verify_email.error_title")}
-          subtitle={t("auth.verify_email.error_sub")}
-        >
-          {goToLogin}
+          <AuthSubmitButton
+            spaced
+            onClick={() => navigate({ to: ROUTES.LOGIN })}
+          >
+            {t("auth.verify_email.go_to_login")}
+          </AuthSubmitButton>
         </AuthPageSuccess>
       )}
     </AuthLayout>

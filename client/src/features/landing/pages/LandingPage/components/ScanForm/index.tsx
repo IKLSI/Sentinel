@@ -7,6 +7,40 @@ import InputBase from "@mui/material/InputBase";
 import { ROUTES } from "@/constants/routes";
 import { useT } from "@/contexts/I18nContext";
 
+const TONES = {
+  light: {
+    mx: "auto",
+    maxWidth: 540,
+    border: "var(--line)",
+    background: "var(--page)",
+    shadow: "0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
+    focusBorder: "var(--indigo-300)",
+    focusShadow:
+      "0 0 0 4px var(--indigo-soft), 0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
+    text: "var(--ink)",
+    placeholder: "var(--ink-3)",
+    buttonColor: "var(--on-dark)",
+    buttonBackground: "var(--ink)",
+    buttonHover: "var(--ink-hover)",
+    buttonOutline: "var(--indigo)",
+  },
+  dark: {
+    mx: 0,
+    maxWidth: 520,
+    border: "color-mix(in srgb, var(--on-dark) 16%, transparent)",
+    background: "color-mix(in srgb, var(--on-dark) 8%, transparent)",
+    shadow: "none",
+    focusBorder: "color-mix(in srgb, var(--on-dark) 40%, transparent)",
+    focusShadow: "0 0 0 4px color-mix(in srgb, var(--on-dark) 8%, transparent)",
+    text: "var(--on-dark)",
+    placeholder: "var(--night-muted)",
+    buttonColor: "var(--night)",
+    buttonBackground: "var(--page)",
+    buttonHover: "var(--indigo-100)",
+    buttonOutline: "var(--on-dark)",
+  },
+} as const;
+
 interface ScanFormProps {
   tone: "light" | "dark";
 }
@@ -15,7 +49,7 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
   const t = useT();
   const navigate = useNavigate();
   const [repository, setRepository] = useState("");
-  const isDark = tone === "dark";
+  const palette = TONES[tone];
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -33,27 +67,17 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
         display: "flex",
         gap: "6px",
         p: "6px",
-        mx: isDark ? 0 : "auto",
-        maxWidth: isDark ? 520 : 540,
+        mx: palette.mx,
+        maxWidth: palette.maxWidth,
         borderRadius: "999px",
         border: "1px solid",
-        borderColor: isDark
-          ? "color-mix(in srgb, var(--on-dark) 16%, transparent)"
-          : "var(--line)",
-        background: isDark
-          ? "color-mix(in srgb, var(--on-dark) 8%, transparent)"
-          : "var(--page)",
-        boxShadow: isDark
-          ? "none"
-          : "0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
+        borderColor: palette.border,
+        background: palette.background,
+        boxShadow: palette.shadow,
         transition: "border-color .2s, box-shadow .2s",
         "&:focus-within": {
-          borderColor: isDark
-            ? "color-mix(in srgb, var(--on-dark) 40%, transparent)"
-            : "var(--indigo-300)",
-          boxShadow: isDark
-            ? "0 0 0 4px color-mix(in srgb, var(--on-dark) 8%, transparent)"
-            : "0 0 0 4px var(--indigo-soft), 0 8px 30px -12px color-mix(in srgb, var(--ink) 14%, transparent)",
+          borderColor: palette.focusBorder,
+          boxShadow: palette.focusShadow,
         },
         "@media (max-width:560px)": {
           flexDirection: "column",
@@ -79,9 +103,9 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
           height: 46,
           px: "18px",
           font: "400 15px var(--font-text)",
-          color: isDark ? "var(--on-dark)" : "var(--ink)",
+          color: palette.text,
           "& .MuiInputBase-input::placeholder": {
-            color: isDark ? "var(--night-muted)" : "var(--ink-3)",
+            color: palette.placeholder,
             opacity: 1,
           },
           "@media (max-width:560px)": {
@@ -103,14 +127,12 @@ export const ScanForm: React.FC<ScanFormProps> = ({ tone }) => {
           cursor: "pointer",
           whiteSpace: "nowrap",
           font: "500 15px/1 var(--font-text)",
-          color: isDark ? "var(--night)" : "var(--on-dark)",
-          background: isDark ? "var(--page)" : "var(--ink)",
+          color: palette.buttonColor,
+          background: palette.buttonBackground,
           transition: "background .15s",
-          "&:hover": {
-            background: isDark ? "var(--indigo-100)" : "var(--ink-hover)",
-          },
+          "&:hover": { background: palette.buttonHover },
           "&:focus-visible": {
-            outline: `2px solid ${isDark ? "var(--on-dark)" : "var(--indigo)"}`,
+            outline: `2px solid ${palette.buttonOutline}`,
             outlineOffset: "3px",
           },
           "@media (max-width:560px)": { width: "100%" },

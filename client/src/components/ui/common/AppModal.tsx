@@ -3,6 +3,10 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import {
+  MODAL_ACTIONS_SX,
+  MODAL_TITLE_SX,
+} from "@/components/ui/common/modalSx";
 
 interface AppModalProps {
   open: boolean;
@@ -21,44 +25,13 @@ export const AppModal: React.FC<AppModalProps> = ({
   actions,
   maxWidth = "sm",
 }) => (
-  <Dialog
-    open={open}
-    onClose={onClose}
-    maxWidth={maxWidth}
-    fullWidth
-    slotProps={{
-      paper: {
-        sx: {
-          bgcolor: "var(--s1)",
-          border: "1px solid",
-          borderColor: "divider",
-        },
-      },
-    }}
-  >
-    <DialogTitle
-      sx={{
-        fontSize: "14px",
-        fontWeight: 700,
-        letterSpacing: "-0.02em",
-        p: "16px 24px",
-        borderBottom: "1px solid var(--border)",
-        background:
-          "linear-gradient(135deg, var(--accent-subtle) 0%, var(--s2) 60%)",
-      }}
-    >
+  <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth>
+    <DialogTitle sx={{ ...MODAL_TITLE_SX, p: "16px 24px" }}>
       {title}
     </DialogTitle>
     <DialogContent sx={{ pt: "20px !important" }}>{children}</DialogContent>
     {actions && (
-      <DialogActions
-        sx={{
-          p: "14px 20px",
-          borderTop: "1px solid var(--border)",
-          background: "var(--s2)",
-          gap: "8px",
-        }}
-      >
+      <DialogActions sx={{ ...MODAL_ACTIONS_SX, p: "14px 20px" }}>
         {actions}
       </DialogActions>
     )}

@@ -16,10 +16,10 @@ import {
   type SuppressionFormValues,
   suppressionSchema,
 } from "@/features/techHealth/pages/ProjectDetailPage/components/SuppressionModal/schemas";
+import { useFindingActions } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
 
 interface Props {
   open: boolean;
-  projectId: string;
   findingKey: string;
   vulnerabilityLabel: string;
   onClose: () => void;
@@ -38,12 +38,12 @@ const tomorrow = () => {
 
 export const SuppressionModal: React.FC<Props> = ({
   open,
-  projectId,
   findingKey,
   vulnerabilityLabel,
   onClose,
 }) => {
   const t = useT();
+  const { projectId } = useFindingActions();
   const formId = useId();
   const [dateFocused, setDateFocused] = useState(false);
   const suppressMutation = useSuppressVulnerabilityMutation();

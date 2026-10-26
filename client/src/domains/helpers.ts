@@ -18,14 +18,6 @@ import type {
   QueryWrapperOptions,
 } from "@/domains/types";
 
-const HTTP_METHODS = {
-  GET: "GET",
-  POST: "POST",
-  PATCH: "PATCH",
-  PUT: "PUT",
-  DELETE: "DELETE",
-} as const satisfies Record<HttpMethod, HttpMethod>;
-
 async function apiRequest<TResponse>(
   method: HttpMethod,
   url: string,
@@ -51,30 +43,10 @@ export const getQueryOptions = <TResponse>(
   queryOptions<TResponse, Error, TResponse, QueryKey>({
     queryKey,
     queryFn: ({ signal }) =>
-      apiRequest<TResponse>(HTTP_METHODS.GET, buildUrl(urlTemplate, params), {
+      apiRequest<TResponse>("GET", buildUrl(urlTemplate, params), {
         signal,
       }),
   });
-
-function useQueryWrapper<TResponse, TResult = TResponse>(
-  method: HttpMethod,
-  urlTemplate: string,
-  params: UrlParams = {},
-  options: QueryWrapperOptions<TResponse, TResult> = {},
-  filtersPaginationAndSort: FilterPaginationAndSortType = {},
-): UseQueryResult<TResult> {
-  const { queryKey, ...queryOptions } = options;
-
-  return useQuery<TResponse, Error, TResult, QueryKey>({
-    queryKey: queryKey ?? [urlTemplate, params, filtersPaginationAndSort],
-    queryFn: ({ signal }) =>
-      apiRequest<TResponse>(method, buildUrl(urlTemplate, params), {
-        params: filtersPaginationAndSort,
-        signal,
-      }),
-    ...queryOptions,
-  });
-}
 
 export function useMutationWrapper<
   TResponse,
@@ -101,72 +73,42 @@ export function useMutationWrapper<
   });
 }
 
-export const useGetQuery = <TResponse, TResult = TResponse>(
+export function useGetQuery<TResponse, TResult = TResponse>(
   urlTemplate: string,
-  params?: UrlParams,
-  options?: QueryWrapperOptions<TResponse, TResult>,
-  filtersPaginationAndSort?: FilterPaginationAndSortType,
-) =>
-  useQueryWrapper<TResponse, TResult>(
-    HTTP_METHODS.GET,
-    urlTemplate,
-    params,
-    options,
-    filtersPaginationAndSort,
-  );
+  params: UrlParams = {},
+  options: QueryWrapperOptions<TResponse, TResult> = {},
+  filtersPaginationAndSort: FilterPaginationAndSortType = {},
+): UseQueryResult<TResult> {
+  const { queryKey, ...queryOptions } = options;
 
-export const usePostMutation = <
-  TResponse,
-  TResult = TResponse,
-  TVariables extends MutationFunctionVariables = MutationFunctionVariables,
->(
-  urlTemplate: string,
-  options?: MutationWrapperOptions<TResponse, TResult, TVariables>,
-) =>
-  useMutationWrapper<TResponse, TResult, TVariables>(
-    HTTP_METHODS.POST,
-    urlTemplate,
-    options,
-  );
+  return useQuery<TResponse, Error, TResult, QueryKey>({
+    queryKey: queryKey ?? [urlTemplate, params, filtersPaginationAndSort],
+    queryFn: ({ signal }) =>
+      apiRequest<TResponse>("GET", buildUrl(urlTemplate, params), {
+        params: filtersPaginationAndSort,
+        signal,
+      }),
+    ...queryOptions,
+  });
+}
 
-export const usePutMutation = <
-  TResponse,
-  TResult = TResponse,
-  TVariables extends MutationFunctionVariables = MutationFunctionVariables,
->(
-  urlTemplate: string,
-  options?: MutationWrapperOptions<TResponse, TResult, TVariables>,
-) =>
-  useMutationWrapper<TResponse, TResult, TVariables>(
-    HTTP_METHODS.PUT,
-    urlTemplate,
-    options,
-  );
+const createMutationHook =
+  (method: Exclude<HttpMethod, "GET">) =>
+  <
+    TResponse,
+    TResult = TResponse,
+    TVariables extends MutationFunctionVariables = MutationFunctionVariables,
+  >(
+    urlTemplate: string,
+    options?: MutationWrapperOptions<TResponse, TResult, TVariables>,
+  ) =>
+    useMutationWrapper<TResponse, TResult, TVariables>(
+      method,
+      urlTemplate,
+      options,
+    );
 
-export const usePatchMutation = <
-  TResponse,
-  TResult = TResponse,
-  TVariables extends MutationFunctionVariables = MutationFunctionVariables,
->(
-  urlTemplate: string,
-  options?: MutationWrapperOptions<TResponse, TResult, TVariables>,
-) =>
-  useMutationWrapper<TResponse, TResult, TVariables>(
-    HTTP_METHODS.PATCH,
-    urlTemplate,
-    options,
-  );
-
-export const useDeleteMutation = <
-  TResponse,
-  TResult = TResponse,
-  TVariables extends MutationFunctionVariables = MutationFunctionVariables,
->(
-  urlTemplate: string,
-  options?: MutationWrapperOptions<TResponse, TResult, TVariables>,
-) =>
-  useMutationWrapper<TResponse, TResult, TVariables>(
-    HTTP_METHODS.DELETE,
-    urlTemplate,
-    options,
-  );
+export const usePostMutation = createMutationHook("POST");
+export const usePutMutation = createMutationHook("PUT");
+export const usePatchMutation = createMutationHook("PATCH");
+export const useDeleteMutation = createMutationHook("DELETE");

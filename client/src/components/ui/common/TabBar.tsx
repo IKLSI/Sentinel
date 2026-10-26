@@ -31,7 +31,6 @@ export const TabBar: React.FC<Props> = ({ tabs, active, onChange }) => (
           sx={{
             font: "inherit",
             textAlign: "inherit",
-            cursor: "pointer",
             display: "flex",
             alignItems: "center",
             gap: "6px",

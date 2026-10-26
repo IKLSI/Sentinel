@@ -29,7 +29,6 @@ const segmentSx = {
   gap: "6px",
   alignSelf: "stretch",
   px: "10px",
-  cursor: "pointer",
   fontSize: "12.5px",
   lineHeight: "16px",
   letterSpacing: "-0.01em",

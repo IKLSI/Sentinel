@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "@/constants/storage";
+import { decodeJwtPayload } from "@/helpers/accessToken";
 
 const SESSION_ACTIVE_FLAG = "true";
 
@@ -9,15 +10,8 @@ export const getAccessToken = (): string | null => currentAccessToken;
 const USER_ID_CLAIM = "userId";
 
 export const subjectOf = (accessToken: string): string | null => {
-  try {
-    const payload = accessToken.split(".")[1];
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    const claims = JSON.parse(json) as Record<string, unknown>;
-    const subject = claims[USER_ID_CLAIM];
-    return typeof subject === "string" ? subject : null;
-  } catch {
-    return null;
-  }
+  const subject = decodeJwtPayload(accessToken)?.[USER_ID_CLAIM];
+  return typeof subject === "string" ? subject : null;
 };
 
 export const startSession = (accessToken: string): void => {

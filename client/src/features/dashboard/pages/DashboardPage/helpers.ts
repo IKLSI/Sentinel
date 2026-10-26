@@ -9,9 +9,6 @@ import type { Translate } from "@/contexts/I18nContext";
 export const gradeMeta = (grade?: string | null) =>
   gradeToneOf(grade) ?? NO_GRADE_TONE;
 
-export const pluralKey = (base: string, count: number) =>
-  `${base}_${count === 1 ? "one" : "other"}`;
-
 export const formatDayLabel = (isoDate: string, locale: string) =>
   new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(
     new Date(`${isoDate}T12:00:00`),

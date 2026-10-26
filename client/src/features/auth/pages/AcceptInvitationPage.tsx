@@ -21,14 +21,7 @@ import {
   type AcceptInvitationFormValues,
 } from "@/features/auth/schemas";
 import { LegalLinks } from "@/features/legal/components/LegalLinks";
-import { riseInSx } from "@/features/auth/styles";
-
-const FORM_SX = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-  ...riseInSx(0.52),
-} as const;
+import { AUTH_FORM_SX } from "@/features/auth/styles";
 
 const NAME_ROW_SX = {
   display: "grid",
@@ -113,7 +106,12 @@ export const AcceptInvitationPage: React.FC = () => {
             subtitle={t("auth.accept_invitation.form_sub")}
           />
 
-          <Box component="form" onSubmit={onSubmit} noValidate sx={FORM_SX}>
+          <Box
+            component="form"
+            onSubmit={onSubmit}
+            noValidate
+            sx={AUTH_FORM_SX}
+          >
             <Box sx={NAME_ROW_SX}>
               <FormTextField
                 id={firstNameId}

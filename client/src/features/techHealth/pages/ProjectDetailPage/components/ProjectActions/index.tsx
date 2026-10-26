@@ -33,6 +33,15 @@ const groupHeaderSx = {
 
 const menuIconSx = { fontSize: 17 };
 
+const SBOM_OPTIONS: { format: SbomFormat; labelKey: string }[] = [
+  {
+    format: SBOM_FORMAT.CycloneDx,
+    labelKey: "tech_health.export.sbom_cyclonedx",
+  },
+  { format: SBOM_FORMAT.Spdx, labelKey: "tech_health.export.sbom_spdx" },
+  { format: SBOM_FORMAT.Vex, labelKey: "tech_health.export.sbom_vex" },
+];
+
 interface Props {
   projectId: string;
 }
@@ -121,24 +130,14 @@ export const ProjectActions: React.FC<Props> = ({ projectId }) => {
         <ListSubheader sx={groupHeaderSx}>
           {t("tech_health.export.sbom_group")}
         </ListSubheader>
-        <MenuItem onClick={() => handleSbom(SBOM_FORMAT.CycloneDx)}>
-          <ListItemIcon>
-            <DataObjectOutlined sx={menuIconSx} />
-          </ListItemIcon>
-          {t("tech_health.export.sbom_cyclonedx")}
-        </MenuItem>
-        <MenuItem onClick={() => handleSbom(SBOM_FORMAT.Spdx)}>
-          <ListItemIcon>
-            <DataObjectOutlined sx={menuIconSx} />
-          </ListItemIcon>
-          {t("tech_health.export.sbom_spdx")}
-        </MenuItem>
-        <MenuItem onClick={() => handleSbom(SBOM_FORMAT.Vex)}>
-          <ListItemIcon>
-            <DataObjectOutlined sx={menuIconSx} />
-          </ListItemIcon>
-          {t("tech_health.export.sbom_vex")}
-        </MenuItem>
+        {SBOM_OPTIONS.map(({ format, labelKey }) => (
+          <MenuItem key={format} onClick={() => handleSbom(format)}>
+            <ListItemIcon>
+              <DataObjectOutlined sx={menuIconSx} />
+            </ListItemIcon>
+            {t(labelKey)}
+          </MenuItem>
+        ))}
 
         <ListSubheader sx={groupHeaderSx}>
           {t("tech_health.export.report_group")}

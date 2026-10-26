@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { ROUTES_API } from "@/configs/api-routes.gen";
 import { useGetQuery } from "@/domains/helpers";
 import { jobsQueryKey } from "@/domains/jobs/constants";
@@ -10,7 +11,7 @@ export const useRecurringJobsQuery = (filters: JobsFilters = {}) =>
     {
       queryKey: jobsQueryKey(filters),
       refetchOnMount: "always",
-      placeholderData: (previous) => previous,
+      placeholderData: keepPreviousData,
     },
     filters,
   );

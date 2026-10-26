@@ -1,8 +1,21 @@
 import { createTheme } from "@mui/material/styles";
-import type { Shadows } from "@mui/material/styles";
+import type { Shadows, ThemeOptions } from "@mui/material/styles";
 
-const darkCssVars = `
-  :root {
+const withSharedCssVars = (themeVars: string) => `
+  :root {${themeVars}
+    --r-xs: 4px;
+    --r-sm: 6px;
+    --r: 8px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 20px;
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  }
+  body { scrollbar-width: thin; }
+`;
+
+const darkCssVars = withSharedCssVars(`
     color-scheme: dark;
     --bg: #111111;
     --s1: #181818;
@@ -36,21 +49,9 @@ const darkCssVars = `
     --purple-subtle: rgba(192, 132, 252, 0.14);
     --sh-1: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.35);
     --sh-2: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.45);
-    --sh-3: 0 16px 40px rgba(0, 0, 0, 0.55);
-    --r-xs: 4px;
-    --r-sm: 6px;
-    --r: 8px;
-    --r-md: 12px;
-    --r-lg: 16px;
-    --r-xl: 20px;
-    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-  }
-  body { scrollbar-width: thin; }
-`;
+    --sh-3: 0 16px 40px rgba(0, 0, 0, 0.55);`);
 
-const lightCssVars = `
-  :root {
+const lightCssVars = withSharedCssVars(`
     color-scheme: light;
     --bg: #f0f2f8;
     --s1: #ffffff;
@@ -84,18 +85,7 @@ const lightCssVars = `
     --purple-subtle: rgba(147, 51, 234, 0.08);
     --sh-1: 0 1px 2px rgba(16, 24, 40, 0.05);
     --sh-2: 0 6px 16px rgba(16, 24, 40, 0.09);
-    --sh-3: 0 20px 48px rgba(16, 24, 40, 0.13);
-    --r-xs: 4px;
-    --r-sm: 6px;
-    --r: 8px;
-    --r-md: 12px;
-    --r-lg: 16px;
-    --r-xl: 20px;
-    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-  }
-  body { scrollbar-width: thin; }
-`;
+    --sh-3: 0 20px 48px rgba(16, 24, 40, 0.13);`);
 
 const darkShadowSteps = [
   "0 1px 2px rgba(0, 0, 0, 0.35)",
@@ -119,6 +109,28 @@ const buildShadows = (steps: string[]) =>
   Array.from({ length: MUI_SHADOW_LEVELS }, (_, level) =>
     level === 0 ? "none" : steps[Math.min(level - 1, steps.length - 1)],
   ) as unknown as Shadows;
+
+const containedFill = (token: string) => ({
+  background: `var(${token})`,
+  "&:hover": {
+    background: `color-mix(in srgb, var(${token}) 88%, white)`,
+  },
+});
+
+const selectedItem = {
+  background: "var(--accent-subtle)",
+  color: "var(--accent)",
+  "&:hover": { background: "var(--accent-subtle)" },
+};
+
+const alertTone = (
+  token: string,
+  borderColor = `color-mix(in srgb, var(--${token}) 32%, transparent)`,
+) => ({
+  background: `var(--${token}-subtle)`,
+  borderColor,
+  color: `var(--${token})`,
+});
 
 const baseComponents = {
   MuiButton: {
@@ -181,20 +193,12 @@ const baseComponents = {
     variants: [
       {
         props: { variant: "contained" as const, color: "primary" as const },
-        style: {
-          background: "var(--accent-fill)",
-          "&:hover": {
-            background: "color-mix(in srgb, var(--accent-fill) 88%, white)",
-          },
-        },
+        style: containedFill("--accent-fill"),
       },
       {
         props: { variant: "contained" as const, color: "secondary" as const },
         style: {
-          background: "var(--cta)",
-          "&:hover": {
-            background: "color-mix(in srgb, var(--cta) 88%, white)",
-          },
+          ...containedFill("--cta"),
           "&.Mui-disabled": {
             color: "#fff",
             opacity: 0.7,
@@ -204,12 +208,7 @@ const baseComponents = {
       },
       {
         props: { variant: "contained" as const, color: "error" as const },
-        style: {
-          background: "var(--red-fill)",
-          "&:hover": {
-            background: "color-mix(in srgb, var(--red-fill) 88%, white)",
-          },
-        },
+        style: containedFill("--red-fill"),
       },
       {
         props: { variant: "contained" as const, color: "inherit" as const },
@@ -326,11 +325,7 @@ const baseComponents = {
         borderRadius: "var(--r-sm)",
         transition: "all 0.12s ease",
         "&:hover": { background: "var(--s2)" },
-        "&.Mui-selected": {
-          background: "var(--accent-subtle)",
-          color: "var(--accent)",
-          "&:hover": { background: "var(--accent-subtle)" },
-        },
+        "&.Mui-selected": selectedItem,
       },
     },
   },
@@ -442,26 +437,10 @@ const baseComponents = {
         borderRadius: "var(--r)",
         border: "1px solid",
       },
-      standardError: {
-        background: "var(--red-subtle)",
-        borderColor: "color-mix(in srgb, var(--red) 32%, transparent)",
-        color: "var(--red)",
-      },
-      standardSuccess: {
-        background: "var(--green-subtle)",
-        borderColor: "color-mix(in srgb, var(--green) 32%, transparent)",
-        color: "var(--green)",
-      },
-      standardWarning: {
-        background: "var(--yellow-subtle)",
-        borderColor: "color-mix(in srgb, var(--yellow) 32%, transparent)",
-        color: "var(--yellow)",
-      },
-      standardInfo: {
-        background: "var(--accent-subtle)",
-        borderColor: "var(--accent-border)",
-        color: "var(--accent)",
-      },
+      standardError: alertTone("red"),
+      standardSuccess: alertTone("green"),
+      standardWarning: alertTone("yellow"),
+      standardInfo: alertTone("accent", "var(--accent-border)"),
     },
   },
   MuiAvatar: {
@@ -492,11 +471,7 @@ const baseComponents = {
         transition: "background 0.1s",
         color: "var(--text-secondary)",
         "&:hover": { background: "var(--s3)", color: "var(--text)" },
-        "&.Mui-selected": {
-          background: "var(--accent-subtle)",
-          color: "var(--accent)",
-          "&:hover": { background: "var(--accent-subtle)" },
-        },
+        "&.Mui-selected": selectedItem,
       },
     },
   },
@@ -524,6 +499,14 @@ const baseComponents = {
   },
 };
 
+const sharedThemeOptions: Pick<ThemeOptions, "shape" | "typography"> = {
+  shape: { borderRadius: 8 },
+  typography: {
+    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+    button: { textTransform: "none", fontWeight: 600 },
+  },
+};
+
 export const darkTheme = createTheme({
   palette: {
     mode: "dark",
@@ -548,11 +531,7 @@ export const darkTheme = createTheme({
     },
   },
   shadows: buildShadows(darkShadowSteps),
-  shape: { borderRadius: 8 },
-  typography: {
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
-    button: { textTransform: "none", fontWeight: 600 },
-  },
+  ...sharedThemeOptions,
   components: {
     ...baseComponents,
     MuiCssBaseline: { styleOverrides: darkCssVars },
@@ -576,11 +555,7 @@ export const lightTheme = createTheme({
     },
   },
   shadows: buildShadows(lightShadowSteps),
-  shape: { borderRadius: 8 },
-  typography: {
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
-    button: { textTransform: "none", fontWeight: 600 },
-  },
+  ...sharedThemeOptions,
   components: {
     ...baseComponents,
     MuiCssBaseline: { styleOverrides: lightCssVars },

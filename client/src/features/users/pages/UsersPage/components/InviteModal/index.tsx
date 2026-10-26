@@ -3,8 +3,8 @@ import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useToast } from "@/hooks/useToast";
@@ -64,27 +64,14 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
       onClose={handleClose}
       title={t("settings.invite.title")}
       actions={
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={handleClose}
-          >
-            {t("settings.invite.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            type="submit"
-            form={formId}
-            disabled={submitting}
-          >
-            {submitting
-              ? t("settings.invite.sending")
-              : t("settings.invite.send")}
-          </Button>
-        </>
+        <ModalActions
+          onCancel={handleClose}
+          cancelLabel={t("settings.invite.cancel")}
+          confirmLabel={t("settings.invite.send")}
+          pendingLabel={t("settings.invite.sending")}
+          pending={submitting}
+          formId={formId}
+        />
       }
     >
       <Box
@@ -92,31 +79,29 @@ export const InviteModal: React.FC<Props> = ({ open, onClose }) => {
         id={formId}
         onSubmit={handleInvite}
         noValidate
-        sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
+        sx={{ display: "flex", flexDirection: "column", gap: "14px" }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <FormTextField
-            id={`${formId}-email`}
-            label={t("settings.invite.email_label")}
-            registration={register("email")}
-            error={errors.email}
-            t={t}
-            type="email"
-            placeholder={t("settings.invite.email_placeholder")}
-            required
-          />
+        <FormTextField
+          id={`${formId}-email`}
+          label={t("settings.invite.email_label")}
+          registration={register("email")}
+          error={errors.email}
+          t={t}
+          type="email"
+          placeholder={t("settings.invite.email_placeholder")}
+          required
+        />
 
-          <FormSelectField
-            id={`${formId}-role`}
-            label={t("settings.invite.role_label")}
-            registration={register("role")}
-          >
-            <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
-            <option value={UserRole.Developer}>
-              {t("settings.role.developer")}
-            </option>
-          </FormSelectField>
-        </Box>
+        <FormSelectField
+          id={`${formId}-role`}
+          label={t("settings.invite.role_label")}
+          registration={register("role")}
+        >
+          <option value={UserRole.Admin}>{t("settings.role.admin")}</option>
+          <option value={UserRole.Developer}>
+            {t("settings.role.developer")}
+          </option>
+        </FormSelectField>
       </Box>
     </AppModal>
   );

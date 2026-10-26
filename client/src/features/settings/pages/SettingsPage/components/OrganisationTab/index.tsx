@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useId, useMemo } from "react";
+import { useEffect, useId } from "react";
 import { type FieldErrors, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
@@ -22,10 +22,8 @@ import {
   useIntegrationSettingsQuery,
   useOrganizationSettingsQuery,
 } from "@/domains/settings/queries";
-import {
-  CARD_SX,
-  SEVERITY_VALUES,
-} from "@/features/settings/pages/SettingsPage/helpers";
+import { CARD_SX } from "@/helpers/cardSx";
+import { SEVERITY_VALUES } from "@/features/settings/pages/SettingsPage/helpers";
 import { IntegrationRow } from "@/features/settings/pages/SettingsPage/components/IntegrationRow";
 import { GitlabInstanceFields } from "@/features/settings/pages/SettingsPage/components/GitlabInstanceFields";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
@@ -48,6 +46,21 @@ const DEFAULT_ORGANIZATION_FORM: OrganizationFormValues = {
 
 const ALERTS_DISABLED_VALUE = "None";
 
+const ORGANIZATION_FIELDS_SX = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  px: "16px",
+  py: "12px",
+} as const;
+
+const ORGANIZATION_FOOTER_SX = {
+  px: "16px",
+  py: "10px",
+  display: "flex",
+  justifyContent: "flex-end",
+} as const;
+
 export const OrganisationTab: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
@@ -56,13 +69,8 @@ export const OrganisationTab: React.FC = () => {
   const onGithubError = useApiErrorToast("settings.toast.github_error");
   const onGitlabError = useApiErrorToast("settings.toast.gitlab_error");
 
-  const SEVERITIES = useMemo(
-    () =>
-      [ALERTS_DISABLED_VALUE, ...SEVERITY_VALUES].map((value) => ({
-        value,
-        label: t(`settings.severity.${value}`),
-      })),
-    [t],
+  const severities = [ALERTS_DISABLED_VALUE, ...SEVERITY_VALUES].map(
+    (value) => ({ value, label: t(`settings.severity.${value}`) }),
   );
 
   const organizationQuery = useOrganizationSettingsQuery();
@@ -185,15 +193,7 @@ export const OrganisationTab: React.FC = () => {
           <CardHeader label={t("settings.org.identity")} />
           {loadingOrg ? (
             <LoadingRegion label={t("settings.org.loading")}>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "8px",
-                  px: "16px",
-                  py: "12px",
-                }}
-              >
+              <Box sx={ORGANIZATION_FIELDS_SX}>
                 {ORGANIZATION_FIELD_SKELETONS.map((field) => (
                   <Box
                     key={field}
@@ -208,28 +208,13 @@ export const OrganisationTab: React.FC = () => {
                   </Box>
                 ))}
               </Box>
-              <Box
-                sx={{
-                  px: "16px",
-                  py: "10px",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <Box sx={ORGANIZATION_FOOTER_SX}>
                 <Skeleton variant="rounded" width={110} height={30} />
               </Box>
             </LoadingRegion>
           ) : (
             <>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "8px",
-                  px: "16px",
-                  py: "12px",
-                }}
-              >
+              <Box sx={ORGANIZATION_FIELDS_SX}>
                 <FormTextField
                   id={`${fieldId}-name`}
                   label={t("settings.org.name_label")}
@@ -245,7 +230,7 @@ export const OrganisationTab: React.FC = () => {
                   }
                   onValueChange={handleSeverityChange}
                 >
-                  {SEVERITIES.map((s) => (
+                  {severities.map((s) => (
                     <option key={s.value} value={s.value}>
                       {s.label}
                     </option>
@@ -253,14 +238,7 @@ export const OrganisationTab: React.FC = () => {
                 </FormSelectField>
               </Box>
 
-              <Box
-                sx={{
-                  px: "16px",
-                  py: "10px",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <Box sx={ORGANIZATION_FOOTER_SX}>
                 <Button
                   variant="contained"
                   size="small"

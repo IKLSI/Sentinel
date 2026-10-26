@@ -5,13 +5,9 @@ import type { LegalSection } from "@/features/legal/types";
 const SECTIONS: LegalSection[] = [
   {
     id: "publisher",
-    titleKey: "legal_notice.publisher.title",
-    bodyKey: "legal_notice.publisher.body",
   },
   {
     id: "hosting",
-    titleKey: "legal_notice.hosting.title",
-    bodyKey: "legal_notice.hosting.body",
     entryKeys: [
       "legal_notice.hosting.provider",
       "legal_notice.hosting.address",
@@ -29,9 +25,7 @@ const SECTIONS: LegalSection[] = [
 export const LegalNoticePage: React.FC = () => (
   <LegalDocument
     documentId="legal-notice"
-    titleKey="legal_notice.title"
-    subtitleKey="legal_notice.subtitle"
-    updatedKey="legal_notice.updated"
+    prefix="legal_notice"
     sections={SECTIONS}
   />
 );

@@ -34,3 +34,20 @@ export const DEMO_SIDEBAR_WIDTH = 200;
 export const DEMO_SIDEBAR_GAP = 12;
 
 export const DEMO_SIDEBAR_TOP = 20;
+
+export const DEMO_SECTION_SX = {
+  width: "100%",
+  maxWidth: "1240px",
+  boxSizing: "border-box",
+  mx: "auto",
+  mt: { xs: "48px", md: "72px" },
+  px: { xs: "20px", md: "40px" },
+} as const;
+
+export const DEMO_FRAME_SX = {
+  borderRadius: "22px",
+  p: "8px",
+  background: "var(--tint)",
+  boxShadow:
+    "0 0 0 1px var(--line), 0 50px 90px -50px color-mix(in srgb, var(--indigo) 35%, transparent)",
+} as const;

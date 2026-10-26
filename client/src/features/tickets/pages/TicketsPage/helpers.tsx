@@ -15,7 +15,7 @@ export const EMPTY_CREATE_TICKET_FORM: CreateTicketFormValues = {
   type: "Bug",
 };
 
-const priorityLabelKeys: Record<TicketPriority, string> = {
+export const priorityLabelKeys: Record<TicketPriority, string> = {
   critical: "tickets.list.priority_critical",
   high: "tickets.list.priority_high",
   medium: "tickets.list.priority_medium",
@@ -55,7 +55,7 @@ const typeIcons: Record<TicketType, React.ReactElement> = {
   question: <HelpOutlineOutlined sx={{ fontSize: 12 }} />,
 };
 
-const typeTooltipKeys: Record<TicketType, string> = {
+export const typeTooltipKeys: Record<TicketType, string> = {
   bug: "tickets.list.type_bug",
   feature: "tickets.list.type_feature",
   security: "tickets.list.type_security",

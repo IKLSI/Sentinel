@@ -14,6 +14,7 @@ import {
   PUBLIC_SCAN_ERROR_KEYS,
 } from "@/domains/publicScan/constants";
 import { usePublicScanMutation } from "@/domains/publicScan/mutations";
+import { pluralKey } from "@/helpers/plural";
 import { gradeColorOf } from "@/features/landing/helpers";
 import { extractApiErrorCode } from "@/helpers/apiError";
 import { useToast } from "@/hooks/useToast";
@@ -175,21 +176,19 @@ export const ScanPage: React.FC = () => {
                   sx={{ fontSize: "13.5px", color: "var(--text-secondary)" }}
                 >
                   {t(
-                    result.vulnerableDependencyCount === 1
-                      ? "landing.cta.vulnerable_one"
-                      : "landing.cta.vulnerable_other",
+                    pluralKey(
+                      "landing.cta.vulnerable",
+                      result.vulnerableDependencyCount,
+                    ),
                     {
                       count: result.vulnerableDependencyCount,
                       total: result.dependencyCount,
                     },
                   )}
                   {result.eolRuntimeCount > 0 &&
-                    t(
-                      result.eolRuntimeCount === 1
-                        ? "landing.cta.eol_one"
-                        : "landing.cta.eol_other",
-                      { count: result.eolRuntimeCount },
-                    )}
+                    t(pluralKey("landing.cta.eol", result.eolRuntimeCount), {
+                      count: result.eolRuntimeCount,
+                    })}
                 </Box>
               </Box>
             </Box>

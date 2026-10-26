@@ -45,20 +45,13 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
         "&:hover": { background: "var(--s2)" },
         "&:hover .row-actions": { opacity: "1 !important" },
         transition: "background 0.1s",
+        "& > td": { px: "16px", py: "8px" },
       }}
     >
-      <Box
-        component="td"
-        sx={{
-          px: "16px",
-          py: "8px",
-          fontWeight: 500,
-          color: "var(--text)",
-        }}
-      >
+      <Box component="td" sx={{ fontWeight: 500, color: "var(--text)" }}>
         {apiKey.name}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "8px" }}>
+      <Box component="td">
         <Box
           component="span"
           sx={{
@@ -77,34 +70,16 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
           {apiKey.prefix}…
         </Box>
       </Box>
-      <Box
-        component="td"
-        sx={{
-          px: "16px",
-          py: "8px",
-          color: "var(--text-secondary)",
-        }}
-      >
+      <Box component="td" sx={{ color: "var(--text-secondary)" }}>
         {apiKey.createdByName}
       </Box>
-      <Box
-        component="td"
-        sx={{
-          px: "16px",
-          py: "8px",
-          color: "var(--text-secondary)",
-        }}
-      >
+      <Box component="td" sx={{ color: "var(--text-secondary)" }}>
         {fmtDate(apiKey.createdAt, culture)}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "8px" }}>
-        {renderExpiry()}
-      </Box>
+      <Box component="td">{renderExpiry()}</Box>
       <Box
         component="td"
         sx={{
-          px: "16px",
-          py: "8px",
           color: apiKey.lastUsedAt ? "var(--text-secondary)" : "var(--muted)",
           fontSize: "11px",
         }}
@@ -113,7 +88,7 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
           ? fmtDate(apiKey.lastUsedAt, culture)
           : t("settings.api_keys.never_used")}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "8px", textAlign: "right" }}>
+      <Box component="td" sx={{ textAlign: "right" }}>
         <RowActions
           actions={[
             {

@@ -47,3 +47,37 @@ export const DEPENDENCY_STATUS_COLORS = {
 } as const;
 
 export const SCORE_DELTA_NEUTRAL = 0;
+
+export const DASHBOARD_LAYOUT_SX = {
+  height: { xs: "auto", lg: "100vh" },
+  minHeight: "100vh",
+  overflowY: { xs: "auto", lg: "hidden" },
+  boxSizing: "border-box",
+  p: "16px 20px",
+  display: "grid",
+  gridTemplateRows: {
+    xs: "auto",
+    lg: "auto minmax(0, 1fr) minmax(0, 1fr)",
+  },
+  gap: "14px",
+} as const;
+
+export const DASHBOARD_TOP_ROW_SX = {
+  display: "grid",
+  gridTemplateColumns: {
+    xs: "1fr",
+    lg: "minmax(0, 2fr) minmax(0, 1fr)",
+  },
+  gap: "14px",
+  minHeight: 0,
+} as const;
+
+export const DASHBOARD_BOTTOM_ROW_SX = {
+  display: "grid",
+  gridTemplateColumns: {
+    xs: "1fr",
+    lg: "repeat(3, minmax(0, 1fr))",
+  },
+  gap: "14px",
+  minHeight: 0,
+} as const;

@@ -14,6 +14,7 @@ import { useImportProjectsMutation } from "@/domains/projects/mutations";
 import { useAvailableReposQuery } from "@/domains/projects/queries";
 import { ScanFrequency } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useToast } from "@/hooks/useToast";
 import { SearchInput } from "@/components/ui/forms/SearchInput";
 import { RepoListHeader } from "@/features/projects/pages/ProjectsPage/components/RepoListHeader";
 import { RepoList } from "@/features/projects/pages/ProjectsPage/components/RepoList";
@@ -23,18 +24,11 @@ import { ImportModalActions } from "@/features/projects/pages/ProjectsPage/compo
 interface Props {
   open: boolean;
   onClose: () => void;
-  showToast: (
-    msg: string,
-    type: "success" | "error" | "info" | "warning",
-  ) => void;
 }
 
-export const SyncProjectModal: React.FC<Props> = ({
-  open,
-  onClose,
-  showToast,
-}) => {
+export const SyncProjectModal: React.FC<Props> = ({ open, onClose }) => {
   const t = useT();
+  const { showToast } = useToast();
   const onImportError = useApiErrorToast("projects.toast.import_error");
   const availableReposQuery = useAvailableReposQuery(open);
   const repos = useMemo(

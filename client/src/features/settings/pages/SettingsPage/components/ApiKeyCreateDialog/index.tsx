@@ -3,8 +3,8 @@ import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import { AppModal } from "@/components/ui/common/AppModal";
+import { ModalActions } from "@/components/ui/common/ModalActions";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
@@ -74,27 +74,15 @@ export const ApiKeyCreateDialog: React.FC<Props> = ({
       title={t("settings.api_keys.modal_title")}
       maxWidth="xs"
       actions={
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="inherit"
-            onClick={handleClose}
-          >
-            {t("settings.api_keys.modal_cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            type="submit"
-            form={formId}
-            disabled={creating || !isValid}
-          >
-            {creating
-              ? t("settings.api_keys.modal_creating")
-              : t("settings.api_keys.modal_create")}
-          </Button>
-        </>
+        <ModalActions
+          onCancel={handleClose}
+          cancelLabel={t("settings.api_keys.modal_cancel")}
+          confirmLabel={t("settings.api_keys.modal_create")}
+          pendingLabel={t("settings.api_keys.modal_creating")}
+          pending={creating}
+          disabled={!isValid}
+          formId={formId}
+        />
       }
     >
       <Box
