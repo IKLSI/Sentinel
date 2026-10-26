@@ -14,17 +14,9 @@ import {
   sortProjects,
 } from "@/features/projects/pages/ProjectsPage/helpers";
 import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/ProjectRow";
+import { PROJECT_COLUMN_WIDTHS } from "@/features/projects/pages/ProjectsPage/constants";
 import { useSortState } from "@/hooks/useSortState";
 import { SortDirection } from "@/enums";
-
-const COLUMN_WIDTHS = [
-  { id: "name", width: "auto" },
-  { id: "score", width: "110px" },
-  { id: "vulnerabilities", width: "110px" },
-  { id: "critical", width: "110px" },
-  { id: "tickets", width: "100px" },
-  { id: "actions", width: "110px" },
-] as const;
 
 interface Props {
   grade: SectionKey;
@@ -211,7 +203,7 @@ export const ProjectsSection: React.FC<Props> = ({
             }}
           >
             <Box component="colgroup">
-              {COLUMN_WIDTHS.map(({ id, width }) => (
+              {PROJECT_COLUMN_WIDTHS.map(({ id, width }) => (
                 <Box key={id} component="col" sx={{ width }} />
               ))}
             </Box>

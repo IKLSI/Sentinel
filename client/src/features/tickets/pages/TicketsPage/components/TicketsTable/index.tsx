@@ -7,6 +7,12 @@ import type { Ticket } from "@/domains/tickets/types";
 import { TicketRow } from "@/features/tickets/pages/TicketsPage/components/TicketRow";
 import { SortDirection, TicketSortField } from "@/enums";
 import { SortableTh } from "@/components/ui/common/SortableTh";
+import { LoadingStatus } from "@/components/ui/common/LoadingStatus";
+import {
+  type SkeletonCell,
+  TableSkeletonRows,
+} from "@/components/ui/common/TableSkeletonRows";
+import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
 
 export interface SortState {
   col: TicketSortField;
@@ -25,10 +31,19 @@ interface Props {
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string, reference: string) => void;
   hasFiltersApplied: boolean;
+  loading?: boolean;
 }
 
 const COLS = ["auto", "110px", "130px", "170px", "100px", "120px"] as const;
 const ACTIONS_COLUMN_KEY = "actions";
+const SKELETON_CELLS: readonly SkeletonCell[] = [
+  "title",
+  "chip",
+  "chip",
+  "avatar",
+  "count",
+  "empty",
+];
 
 const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
   col !== ACTIONS_COLUMN_KEY;
@@ -40,6 +55,7 @@ const TicketsTableComponent: React.FC<Props> = ({
   onEdit,
   onDelete,
   hasFiltersApplied,
+  loading = false,
 }) => {
   const t = useT();
 
@@ -52,7 +68,7 @@ const TicketsTableComponent: React.FC<Props> = ({
     { col: ACTIONS_COLUMN_KEY, label: "" },
   ];
 
-  if (tickets.length === 0) {
+  if (!loading && tickets.length === 0) {
     return (
       <Box
         sx={{
@@ -130,7 +146,15 @@ const TicketsTableComponent: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: "auto", scrollbarGutter: "stable" }}>
+      <Box
+        aria-busy={loading || undefined}
+        sx={{
+          position: "relative",
+          flex: 1,
+          overflowY: loading ? "hidden" : "auto",
+          scrollbarGutter: "stable",
+        }}
+      >
         <Box
           component="table"
           sx={{
@@ -144,17 +168,22 @@ const TicketsTableComponent: React.FC<Props> = ({
               <Box key={w} component="col" sx={{ width: w }} />
             ))}
           </Box>
-          <Box component="tbody">
-            {tickets.map((ticket) => (
-              <TicketRow
-                key={ticket.id}
-                ticket={ticket}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
+          <Box component="tbody" sx={loading ? DELAYED_REVEAL_SX : undefined}>
+            {loading ? (
+              <TableSkeletonRows cells={SKELETON_CELLS} />
+            ) : (
+              tickets.map((ticket) => (
+                <TicketRow
+                  key={ticket.id}
+                  ticket={ticket}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ))
+            )}
           </Box>
         </Box>
+        {loading && <LoadingStatus label={t("tickets.list.loading")} />}
       </Box>
     </Box>
   );

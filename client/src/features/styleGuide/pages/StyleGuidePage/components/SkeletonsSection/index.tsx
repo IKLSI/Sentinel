@@ -4,6 +4,7 @@ import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useT } from "@/contexts/I18nContext";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
+import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
 import { ChartCardSkeleton } from "@/features/dashboard/pages/DashboardPage/components/ChartCardSkeleton";
 import { Section } from "@/features/styleGuide/pages/StyleGuidePage/components/Section";
 import { SubLabel } from "@/features/styleGuide/pages/StyleGuidePage/components/SubLabel";
@@ -17,8 +18,18 @@ export const SkeletonsSection: React.FC = () => {
       desc={t("style_guide.section.skeletons_desc")}
     >
       <SubLabel>{t("style_guide.skeletons.list")}</SubLabel>
-      <Box sx={{ mb: "24px" }}>
-        <ListSkeleton rows={4} />
+      <Box
+        sx={{
+          mb: "24px",
+          background: "var(--s1)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--r)",
+          overflow: "hidden",
+        }}
+      >
+        <LoadingRegion label={t("projects.loading")}>
+          <ListSkeleton rows={4} />
+        </LoadingRegion>
       </Box>
 
       <SubLabel>{t("style_guide.skeletons.charts")}</SubLabel>

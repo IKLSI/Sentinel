@@ -2,7 +2,6 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -114,6 +113,7 @@ export const TicketsPage: React.FC = () => {
   const ticketsQuery = useTicketsQuery(ticketsFilters);
   const tickets = ticketsQuery.data ?? null;
   const loading = ticketsQuery.isLoading;
+  const initialLoading = loading && !tickets;
   const error = ticketsQuery.error;
 
   useQueryErrorToast(!!error, "tickets.list.load_error");
@@ -146,9 +146,7 @@ export const TicketsPage: React.FC = () => {
           exporting={exporting}
         />
 
-        {loading && !tickets ? (
-          <ListSkeleton />
-        ) : error && !tickets ? (
+        {!initialLoading && error && !tickets ? (
           <LoadErrorState
             onRetry={() => ticketsQuery.refetch()}
             retrying={ticketsQuery.isFetching}
@@ -163,7 +161,7 @@ export const TicketsPage: React.FC = () => {
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              opacity: loading ? 0.6 : 1,
+              opacity: loading && !initialLoading ? 0.6 : 1,
               transition: "opacity 0.15s",
             }}
           >
@@ -174,22 +172,25 @@ export const TicketsPage: React.FC = () => {
               onEdit={editDialog.openDialog}
               onDelete={deleteDialog.openDialog}
               hasFiltersApplied={hasFiltersApplied}
+              loading={initialLoading}
             />
 
-            <Pagination
-              page={page}
-              totalPages={tickets?.totalPages ?? 1}
-              total={tickets?.totalCount ?? 0}
-              onChange={setPage}
-              pageSize={pageSize}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
-              onPageSizeChange={setPageSize}
-              countLabel={
-                (tickets?.totalCount ?? 0) > 1
-                  ? t("tickets.list.count_plural")
-                  : t("tickets.list.count_singular")
-              }
-            />
+            {!initialLoading && (
+              <Pagination
+                page={page}
+                totalPages={tickets?.totalPages ?? 1}
+                total={tickets?.totalCount ?? 0}
+                onChange={setPage}
+                pageSize={pageSize}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageSizeChange={setPageSize}
+                countLabel={
+                  (tickets?.totalCount ?? 0) > 1
+                    ? t("tickets.list.count_plural")
+                    : t("tickets.list.count_singular")
+                }
+              />
+            )}
           </Box>
         )}
       </PageContainer>

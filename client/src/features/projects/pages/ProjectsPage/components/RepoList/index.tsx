@@ -8,6 +8,7 @@ import { useVirtualRows } from "@/hooks/useVirtualRows";
 import { RepoRow } from "@/features/projects/pages/ProjectsPage/components/RepoRow";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
+import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
 
 const REPO_ROW_ESTIMATED_HEIGHT_PX = 56;
 
@@ -60,9 +61,12 @@ export const RepoList: React.FC<Props> = ({
       }}
     >
       {loading ? (
-        <Box sx={{ py: "12px", display: "flex" }}>
+        <LoadingRegion
+          label={t("projects.sync_modal.loading")}
+          sx={{ py: "12px" }}
+        >
           <ListSkeleton rows={5} rowHeight={48} />
-        </Box>
+        </LoadingRegion>
       ) : error ? (
         <Box
           sx={{

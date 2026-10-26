@@ -4,9 +4,10 @@ import { type FieldErrors, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
+import Skeleton from "@mui/material/Skeleton";
 import { useToast } from "@/hooks/useToast";
 import { CardHeader } from "@/components/ui/common/CardHeader";
+import { LoadingRegion } from "@/components/ui/common/LoadingRegion";
 import { FormSelectField } from "@/components/ui/forms/FormSelectField";
 import { FormTextField } from "@/components/ui/forms/FormTextField";
 import { useT } from "@/contexts/I18nContext";
@@ -36,6 +37,8 @@ import {
   gitlabIntegrationSchema,
   organizationSchema,
 } from "@/features/settings/pages/SettingsPage/components/OrganisationTab/schemas";
+
+const ORGANIZATION_FIELD_SKELETONS = ["name", "severity"];
 
 const DEFAULT_ORGANIZATION_FORM: OrganizationFormValues = {
   name: "",
@@ -181,9 +184,41 @@ export const OrganisationTab: React.FC = () => {
         <Box sx={CARD_SX}>
           <CardHeader label={t("settings.org.identity")} />
           {loadingOrg ? (
-            <Box sx={{ p: "24px", display: "flex", justifyContent: "center" }}>
-              <CircularProgress size={20} />
-            </Box>
+            <LoadingRegion label={t("settings.org.loading")}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "8px",
+                  px: "16px",
+                  py: "12px",
+                }}
+              >
+                {ORGANIZATION_FIELD_SKELETONS.map((field) => (
+                  <Box
+                    key={field}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <Skeleton variant="rounded" width={140} height={12} />
+                    <Skeleton variant="rounded" height={38} />
+                  </Box>
+                ))}
+              </Box>
+              <Box
+                sx={{
+                  px: "16px",
+                  py: "10px",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Skeleton variant="rounded" width={110} height={30} />
+              </Box>
+            </LoadingRegion>
           ) : (
             <>
               <Box

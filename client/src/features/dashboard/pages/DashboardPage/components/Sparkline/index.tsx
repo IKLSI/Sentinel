@@ -9,6 +9,7 @@ interface Props {
 
 const PADDING = 3;
 const MIN_POINTS = 2;
+const MIN_SPAN_RATIO_OF_MAX = 1;
 
 export const Sparkline: React.FC<Props> = ({
   values,
@@ -24,12 +25,13 @@ export const Sparkline: React.FC<Props> = ({
 
   const min = Math.min(...known.map((point) => point.value));
   const max = Math.max(...known.map((point) => point.value));
-  const span = max - min || 1;
+  const span = Math.max(max - min, max * MIN_SPAN_RATIO_OF_MAX) || 1;
+  const floor = (max + min) / 2 - span / 2;
   const lastIndex = values.length - 1;
 
   const project = (index: number, value: number) => ({
     x: PADDING + (index / lastIndex) * (width - PADDING * 2),
-    y: height - PADDING - ((value - min) / span) * (height - PADDING * 2),
+    y: height - PADDING - ((value - floor) / span) * (height - PADDING * 2),
   });
 
   const points = known.map(({ index, value }) => project(index, value));

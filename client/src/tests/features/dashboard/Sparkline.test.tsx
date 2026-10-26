@@ -19,4 +19,13 @@ describe("Sparkline", () => {
 
     expect(container.querySelector("svg")).toBeNull();
   });
+
+  it("garde une variation faible discrète au lieu de l'étirer sur toute la hauteur", () => {
+    const { container } = render(
+      <Sparkline values={[7, 8]} color="red" height={28} />,
+    );
+    const circle = container.querySelector("circle");
+
+    expect(Number(circle?.getAttribute("cy"))).toBeGreaterThan(3);
+  });
 });

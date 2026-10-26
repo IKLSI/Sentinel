@@ -1,19 +1,14 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import { keyframes } from "@mui/material/styles";
 import { DashboardCard } from "@/features/dashboard/pages/DashboardPage/components/DashboardCard";
 import { RESPONSIVE_CHART_MIN_HEIGHT } from "@/features/dashboard/pages/DashboardPage/constants";
+import { skeletonPulse } from "@/styles/keyframes";
 
 interface Props {
   title: string;
   variant: "trend" | "flow";
 }
-
-const pulse = keyframes`
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-`;
 
 const GRID_LINES = ["top", "upper", "lower", "bottom"];
 
@@ -32,7 +27,7 @@ const HEADER_PLACEHOLDERS = {
 } as const;
 
 const shimmerSx = {
-  animation: `${pulse} 1.6s ease-in-out infinite`,
+  animation: `${skeletonPulse} 1.6s ease-in-out infinite`,
 } as const;
 
 export const ChartCardSkeleton: React.FC<Props> = ({ title, variant }) => (

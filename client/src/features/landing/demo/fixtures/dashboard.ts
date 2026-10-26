@@ -27,15 +27,9 @@ const SCORE_TREND = [
   64, 64, 65, 64, 65, 65, 65, 66, 65, 66, 66,
 ];
 
-const DETECTED_PER_DAY = [
-  4, 6, 3, 10, 5, 7, 2, 6, 9, 4, 5, 7, 3, 6, 8, 5, 4, 7, 6, 3, 9, 5, 6, 4, 7, 5,
-  8, 6, 4, 12,
-];
+const DETECTED_PER_DAY = [6, 7, 6, 7, 8, 7, 8, 7, 8, 9, 8, 9];
 
-const RESOLVED_PER_DAY = [
-  2, 4, 3, 5, 2, 4, 1, 3, 6, 2, 4, 5, 2, 3, 5, 4, 3, 4, 4, 2, 6, 3, 4, 3, 5, 3,
-  5, 4, 3, 8,
-];
+const RESOLVED_PER_DAY = [4, 4, 3, 5, 5, 4, 5, 5, 6, 5, 6, 7];
 
 const lastDayOffset = (values: number[], index: number) =>
   values.length - 1 - index;

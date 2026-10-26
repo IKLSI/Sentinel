@@ -1,6 +1,12 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { SortableTh } from "@/components/ui/common/SortableTh";
+import { LoadingStatus } from "@/components/ui/common/LoadingStatus";
+import {
+  type SkeletonCell,
+  TableSkeletonRows,
+} from "@/components/ui/common/TableSkeletonRows";
+import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
 import { useT } from "@/contexts/I18nContext";
 import type { SortState } from "@/hooks/useSortState";
 import { ApiKeySortField, SortDirection } from "@/enums";
@@ -13,7 +19,18 @@ interface Props {
   sort: SortState<ApiKeySortField>;
   onSort: (col: ApiKeySortField) => void;
   onRevoke: (apiKey: ApiKey) => void;
+  loading?: boolean;
 }
+
+const SKELETON_CELLS: readonly SkeletonCell[] = [
+  "text",
+  "chip",
+  "text",
+  "text",
+  "text",
+  "text",
+  "empty",
+];
 
 export const ApiKeyTable: React.FC<Props> = ({
   keys,
@@ -21,6 +38,7 @@ export const ApiKeyTable: React.FC<Props> = ({
   sort,
   onSort,
   onRevoke,
+  loading = false,
 }) => {
   const t = useT();
 
@@ -72,9 +90,10 @@ export const ApiKeyTable: React.FC<Props> = ({
   return (
     <Box
       sx={{
+        position: "relative",
         flex: 1,
-        overflow: "auto",
-        opacity: fetching ? 0.6 : 1,
+        overflow: loading ? "hidden" : "auto",
+        opacity: fetching && !loading ? 0.6 : 1,
         transition: "opacity 0.15s",
       }}
     >
@@ -105,12 +124,21 @@ export const ApiKeyTable: React.FC<Props> = ({
             })}
           </Box>
         </Box>
-        <Box component="tbody">
-          {keys.map((key) => (
-            <ApiKeyRow key={key.id} apiKey={key} onRevoke={onRevoke} />
-          ))}
+        <Box
+          component="tbody"
+          aria-busy={loading || undefined}
+          sx={loading ? DELAYED_REVEAL_SX : undefined}
+        >
+          {loading ? (
+            <TableSkeletonRows cells={SKELETON_CELLS} rows={4} />
+          ) : (
+            keys.map((key) => (
+              <ApiKeyRow key={key.id} apiKey={key} onRevoke={onRevoke} />
+            ))
+          )}
         </Box>
       </Box>
+      {loading && <LoadingStatus label={t("settings.api_keys.loading")} />}
     </Box>
   );
 };

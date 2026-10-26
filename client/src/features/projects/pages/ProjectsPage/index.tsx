@@ -6,7 +6,6 @@ import { useDeleteProjectMutation } from "@/domains/projects/mutations";
 import { useProjectsQuery } from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -22,6 +21,7 @@ import {
 } from "@/features/projects/pages/ProjectsPage/helpers";
 import { ProjectsToolbar } from "@/features/projects/pages/ProjectsPage/components/ProjectsToolbar";
 import { ProjectsSection } from "@/features/projects/pages/ProjectsPage/components/ProjectsSection";
+import { ProjectsSkeleton } from "@/features/projects/pages/ProjectsPage/components/ProjectsSkeleton";
 import { ProjectSettingsModal } from "@/features/projects/pages/ProjectsPage/components/ProjectSettingsModal";
 import { SyncProjectModal } from "@/features/projects/pages/ProjectsPage/components/SyncProjectModal";
 import { LoadErrorState } from "@/components/ui/common/LoadErrorState";
@@ -154,7 +154,7 @@ export const ProjectsPage: React.FC = () => {
         />
 
         {loading ? (
-          <ListSkeleton />
+          <ProjectsSkeleton />
         ) : loadFailed && projects.length === 0 ? (
           <LoadErrorState
             onRetry={() => void refetch()}

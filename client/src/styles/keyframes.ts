@@ -61,3 +61,26 @@ export const pageProgress = keyframes`
 export const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)";
 
 export const EASE_OUT_EXPO = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+export const skeletonPulse = keyframes`
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+`;
+
+const delayedReveal = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+export const DELAYED_REVEAL_SX = {
+  animation: `${delayedReveal} 0.25s ease-out 0.3s both`,
+  [REDUCED_MOTION]: { animationDuration: "0.01s" },
+} as const;

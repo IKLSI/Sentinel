@@ -4,7 +4,12 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
 import GroupOutlined from "@mui/icons-material/GroupOutlined";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
+import { LoadingStatus } from "@/components/ui/common/LoadingStatus";
+import {
+  type SkeletonCell,
+  TableSkeletonRows,
+} from "@/components/ui/common/TableSkeletonRows";
+import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { MemberRow } from "@/features/users/pages/UsersPage/components/MemberRow";
@@ -33,6 +38,13 @@ import { PAGE_SIZE_OPTIONS, usePagination } from "@/hooks/usePagination";
 import { SortDirection, UserAccessStatus, UserSortField } from "@/enums";
 
 const ACTIONS_COLUMN_KEY = "actions";
+const SKELETON_CELLS: readonly SkeletonCell[] = [
+  "avatar",
+  "chip",
+  "chip",
+  "text",
+  "empty",
+];
 const SEARCH_DEBOUNCE_MS = 300;
 
 interface Props {
@@ -208,9 +220,7 @@ export const MembersTab: React.FC<Props> = ({
           borderRadius: "var(--r)",
         }}
       >
-        {loadingMembers ? (
-          <ListSkeleton />
-        ) : members.length === 0 ? (
+        {!loadingMembers && members.length === 0 ? (
           <EmptyState
             icon={GroupOutlined}
             title={t("settings.members.empty")}
@@ -225,11 +235,11 @@ export const MembersTab: React.FC<Props> = ({
               flexDirection: "column",
               flex: 1,
               minHeight: 0,
-              opacity: usersQuery.isFetching ? 0.6 : 1,
+              opacity: usersQuery.isFetching && !loadingMembers ? 0.6 : 1,
               transition: "opacity 0.15s",
             }}
           >
-            <Box sx={{ flex: 1, overflow: "hidden" }}>
+            <Box sx={{ position: "relative", flex: 1, overflow: "hidden" }}>
               <Box
                 component="table"
                 sx={{
@@ -260,38 +270,51 @@ export const MembersTab: React.FC<Props> = ({
                     })}
                   </Box>
                 </Box>
-                <Box component="tbody">
-                  {members.map((m) => (
-                    <MemberRow
-                      key={m.id}
-                      member={m}
-                      roleLabels={ROLE_LABELS}
-                      isCurrentUser={m.id === user?.id}
-                      busy={
-                        updateAccessStatus.isPending &&
-                        updateAccessStatus.variables?.id === m.id
-                      }
-                      onToggleAccessStatus={handleToggleAccessStatus}
-                      onRoleChange={handleRoleChange}
-                    />
-                  ))}
+                <Box
+                  component="tbody"
+                  aria-busy={loadingMembers || undefined}
+                  sx={loadingMembers ? DELAYED_REVEAL_SX : undefined}
+                >
+                  {loadingMembers ? (
+                    <TableSkeletonRows cells={SKELETON_CELLS} />
+                  ) : (
+                    members.map((m) => (
+                      <MemberRow
+                        key={m.id}
+                        member={m}
+                        roleLabels={ROLE_LABELS}
+                        isCurrentUser={m.id === user?.id}
+                        busy={
+                          updateAccessStatus.isPending &&
+                          updateAccessStatus.variables?.id === m.id
+                        }
+                        onToggleAccessStatus={handleToggleAccessStatus}
+                        onRoleChange={handleRoleChange}
+                      />
+                    ))
+                  )}
                 </Box>
               </Box>
+              {loadingMembers && (
+                <LoadingStatus label={t("settings.members.loading")} />
+              )}
             </Box>
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              total={totalMembers}
-              onChange={setPage}
-              pageSize={pageSize}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
-              onPageSizeChange={setPageSize}
-              countLabel={
-                totalMembers > 1
-                  ? t("settings.members.count_plural")
-                  : t("settings.members.count_singular")
-              }
-            />
+            {!loadingMembers && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={totalMembers}
+                onChange={setPage}
+                pageSize={pageSize}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageSizeChange={setPageSize}
+                countLabel={
+                  totalMembers > 1
+                    ? t("settings.members.count_plural")
+                    : t("settings.members.count_singular")
+                }
+              />
+            )}
           </Box>
         )}
       </Box>

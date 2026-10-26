@@ -2,13 +2,13 @@ import type React from "react";
 import { useCallback } from "react";
 import Box from "@mui/material/Box";
 import AutoModeOutlined from "@mui/icons-material/AutoModeOutlined";
-import { ListSkeleton } from "@/components/ui/common/ListSkeleton";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
 import { useTriggerTechHealthScanMutation } from "@/domains/jobs/mutations";
 import { useRecurringJobsQuery } from "@/domains/jobs/queries";
 import { JobCard } from "@/features/settings/pages/SettingsPage/components/JobCard";
+import { JobsSkeleton } from "@/features/settings/pages/SettingsPage/components/JobsSkeleton";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 
 const TECH_HEALTH_SCAN_JOB_ID = "tech-health-scan";
@@ -43,7 +43,7 @@ export const JobsTab: React.FC = () => {
     [t],
   );
 
-  if (loading) return <ListSkeleton />;
+  if (loading) return <JobsSkeleton />;
 
   if (jobs.length === 0)
     return (

@@ -408,10 +408,17 @@ const baseComponents = {
     },
   },
   MuiSkeleton: {
+    defaultProps: { animation: "wave" },
     styleOverrides: {
       root: {
-        backgroundColor: "var(--s3)",
+        backgroundColor: "color-mix(in srgb, var(--s3) 75%, var(--s1))",
         borderRadius: "var(--r-sm)",
+      },
+      wave: {
+        "&::after": {
+          background:
+            "linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 7%, transparent), transparent)",
+        },
       },
     },
   },

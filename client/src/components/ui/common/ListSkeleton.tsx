@@ -1,44 +1,67 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import { keyframes } from "@mui/material/styles";
+import {
+  chipWidthAt,
+  skeletonRowIds,
+  subtitleWidthAt,
+  titleWidthAt,
+} from "@/components/ui/common/skeletonShapes";
 
 interface Props {
   rows?: number;
   rowHeight?: number;
 }
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-`;
-
-export const ListSkeleton: React.FC<Props> = ({ rows = 6, rowHeight = 56 }) => {
-  const rowIds = Array.from(
-    { length: rows },
-    (_, position) => `row-${position}`,
-  );
-
-  return (
-    <Box
-      aria-busy="true"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        flex: 1,
-        animation: `${pulse} 1.6s ease-in-out infinite`,
-      }}
-    >
-      {rowIds.map((id) => (
+export const ListSkeleton: React.FC<Props> = ({ rows = 6, rowHeight = 56 }) => (
+  <Box sx={{ display: "flex", flexDirection: "column" }}>
+    {skeletonRowIds(rows).map(({ id, position }) => (
+      <Box
+        key={id}
+        sx={{
+          height: rowHeight,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          px: "14px",
+          borderBottom: "1px solid var(--border)",
+          "&:last-of-type": { borderBottom: "none" },
+        }}
+      >
         <Skeleton
-          key={id}
           variant="rounded"
-          height={rowHeight}
-          animation={false}
+          width={28}
+          height={28}
           sx={{ flexShrink: 0 }}
         />
-      ))}
-    </Box>
-  );
-};
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px",
+          }}
+        >
+          <Skeleton
+            variant="rounded"
+            width={titleWidthAt(position)}
+            height={12}
+          />
+          <Skeleton
+            variant="rounded"
+            width={subtitleWidthAt(position)}
+            height={10}
+          />
+        </Box>
+        <Skeleton
+          variant="rounded"
+          width={chipWidthAt(position)}
+          height={20}
+          sx={{ flexShrink: 0, borderRadius: "999px" }}
+        />
+      </Box>
+    ))}
+  </Box>
+);
