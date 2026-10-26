@@ -26,8 +26,7 @@ public partial class ExportService
 
             ws.Cell(row, 1).Value = p.Name;
 
-            (_, XLColor grFg) = GradeColor(p.HealthGrade);
-            ApplyStatusCell(ws.Cell(row, 2), p.HealthGrade ?? L.GradeNotAvailable, grFg);
+            ApplyStatusCell(ws.Cell(row, 2), p.HealthGrade ?? L.GradeNotAvailable, GradeColor(p.HealthGrade));
 
             IXLCell scoreCell = ws.Cell(row, 3);
             scoreCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -35,8 +34,7 @@ public partial class ExportService
             {
                 scoreCell.Value = score;
                 scoreCell.Style.NumberFormat.Format = "0";
-                (_, XLColor scoreFg) = ScoreColor(score);
-                scoreCell.Style.Font.FontColor = scoreFg;
+                scoreCell.Style.Font.FontColor = ScoreColor(score);
                 scoreCell.Style.Font.Bold = true;
             }
             else
@@ -45,9 +43,10 @@ public partial class ExportService
                 scoreCell.Style.Font.FontColor = GrayFg;
             }
 
-            int toUpdate = p.Dependencies.Count(d => d.Status == DependencyStatus.MinorUpdate || d.Status == DependencyStatus.MajorUpdate);
+            ProjectInventoryCounts counts = ProjectInventoryCounts.Of(p.Dependencies);
+            int toUpdate = counts.MinorUpdates + counts.MajorUpdates;
             int vulnerableDeps = p.Dependencies.Count(d => d.Vulnerabilities.Any());
-            int criticals = p.Dependencies.SelectMany(d => d.Vulnerabilities).Count(v => v.Severity == VulnerabilitySeverity.Critical);
+            int criticals = counts.CriticalVulnerabilities;
             int eolRuntimes = RuntimeGrouping.ByName(p.Runtimes).Count(FindingRules.IsEol);
 
             sumDeps += p.Dependencies.Count;
@@ -56,37 +55,16 @@ public partial class ExportService
             sumCrit += criticals;
             sumEol += eolRuntimes;
 
-            ws.Cell(row, 4).Value = p.Dependencies.Count;
-            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-            IXLCell updateCell = ws.Cell(row, 5);
-            updateCell.Value = toUpdate;
-            updateCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (toUpdate > 0) { updateCell.Style.Font.FontColor = OrangeFg; updateCell.Style.Font.Bold = true; }
-
-            IXLCell vulnCell = ws.Cell(row, 6);
-            vulnCell.Value = vulnerableDeps;
-            vulnCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (vulnerableDeps > 0) { vulnCell.Style.Font.FontColor = OrangeFg; vulnCell.Style.Font.Bold = true; }
-
-            IXLCell critCell = ws.Cell(row, 7);
-            critCell.Value = criticals;
-            critCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (criticals > 0) { critCell.Style.Font.FontColor = RedFg; critCell.Style.Font.Bold = true; }
-
-            IXLCell eolCell = ws.Cell(row, 8);
-            eolCell.Value = eolRuntimes;
-            eolCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (eolRuntimes > 0) { eolCell.Style.Font.FontColor = RedFg; eolCell.Style.Font.Bold = true; }
+            SetCountCell(ws.Cell(row, 4), p.Dependencies.Count);
+            SetCountCell(ws.Cell(row, 5), toUpdate, OrangeFg);
+            SetCountCell(ws.Cell(row, 6), vulnerableDeps, OrangeFg);
+            SetCountCell(ws.Cell(row, 7), criticals, RedFg);
+            SetCountCell(ws.Cell(row, 8), eolRuntimes, RedFg);
 
             if (p.LastScanAt.HasValue)
                 SetDateCell(ws.Cell(row, 9), p.LastScanAt.Value, L.DateFormat);
             else
-            {
-                ws.Cell(row, 9).Value = "—";
-                ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                ws.Cell(row, 9).Style.Font.FontColor = GrayFg;
-            }
+                SetPlaceholderCell(ws.Cell(row, 9));
         }
 
         int lastDataRow = projects.Count > 0 ? projects.Count + FirstDataRow - 1 : HeaderRow;
@@ -133,11 +111,7 @@ public partial class ExportService
             if (r.EolDate.HasValue)
                 SetDateCell(ws.Cell(currentRow, 3), r.EolDate.Value, L.DateFormat);
             else
-            {
-                ws.Cell(currentRow, 3).Value = "—";
-                ws.Cell(currentRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                ws.Cell(currentRow, 3).Style.Font.FontColor = GrayFg;
-            }
+                SetPlaceholderCell(ws.Cell(currentRow, 3));
 
             (string rtLabel, XLColor rtFg) = RuntimeStatus(r, L);
             IXLCell statusCell = ws.Cell(currentRow, 4);
@@ -153,13 +127,7 @@ public partial class ExportService
 
         if (runtimes.Count == 0)
         {
-            IXLCell emptyCell = ws.Cell(currentRow, 1);
-            emptyCell.Value = L.NoRuntimes;
-            ws.Range(currentRow, 1, currentRow, runtimeHeaders.Length).Merge();
-            emptyCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            emptyCell.Style.Font.FontColor = GrayFg;
-            emptyCell.Style.Font.Italic = true;
-            ws.Row(currentRow).Height = 18;
+            ApplyEmptyRow(ws, currentRow, runtimeHeaders.Length, L.NoRuntimes);
             currentRow++;
         }
 
@@ -188,23 +156,14 @@ public partial class ExportService
             if (!string.IsNullOrEmpty(d.LatestVersion))
                 ws.Cell(currentRow, 3).Value = d.LatestVersion;
             else
-            {
-                ws.Cell(currentRow, 3).Value = "—";
-                ws.Cell(currentRow, 3).Style.Font.FontColor = GrayFg;
-                ws.Cell(currentRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            }
+                SetPlaceholderCell(ws.Cell(currentRow, 3));
 
             ws.Cell(currentRow, 4).Value = d.Ecosystem.ToString();
-            ws.Cell(currentRow, 5).Value = TranslateDependencyType(d.Type.ToString(), L);
+            ws.Cell(currentRow, 5).Value = TranslateDependencyType(d.Type, L);
 
-            (_, XLColor dsFg) = DepStatusColor(d.Status.ToString());
-            ApplyStatusCell(ws.Cell(currentRow, 6), TranslateDependencyStatus(d.Status.ToString(), L), dsFg);
+            ApplyStatusCell(ws.Cell(currentRow, 6), TranslateDependencyStatus(d.Status, L), DepStatusColor(d.Status));
 
-            int vulnCount = d.Vulnerabilities.Count;
-            IXLCell vulnCountCell = ws.Cell(currentRow, 7);
-            vulnCountCell.Value = vulnCount;
-            vulnCountCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            if (vulnCount > 0) { vulnCountCell.Style.Font.FontColor = RedFg; vulnCountCell.Style.Font.Bold = true; }
+            SetCountCell(ws.Cell(currentRow, 7), d.Vulnerabilities.Count, RedFg);
 
             currentRow++;
         }
@@ -213,13 +172,7 @@ public partial class ExportService
 
         if (deps.Count == 0)
         {
-            IXLCell emptyCell = ws.Cell(currentRow, 1);
-            emptyCell.Value = L.NoDependencies;
-            ws.Range(currentRow, 1, currentRow, depHeaders.Length).Merge();
-            emptyCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            emptyCell.Style.Font.FontColor = GrayFg;
-            emptyCell.Style.Font.Italic = true;
-            ws.Row(currentRow).Height = 18;
+            ApplyEmptyRow(ws, currentRow, depHeaders.Length, L.NoDependencies);
             currentRow++;
         }
 
@@ -234,10 +187,11 @@ public partial class ExportService
             .OrderByDescending(x => x.vuln.CvssScore)
             .ToList();
 
+        ApplyHeadersAtRow(ws, vulnHeaders, currentRow);
+        currentRow++;
+
         if (vulnPairs.Count == 0)
         {
-            ApplyHeadersAtRow(ws, vulnHeaders, currentRow);
-            currentRow++;
             IXLCell noVulnCell = ws.Cell(currentRow, 1);
             noVulnCell.Value = L.NoVulnerabilities;
             ws.Range(currentRow, 1, currentRow, vulnHeaders.Length).Merge();
@@ -248,38 +202,31 @@ public partial class ExportService
         }
         else
         {
-            ApplyHeadersAtRow(ws, vulnHeaders, currentRow);
-            currentRow++;
-
             int firstVulnerabilityRow = currentRow;
             for (int i = 0; i < vulnPairs.Count; i++)
             {
                 (Dependency dep, Vulnerability v) = vulnPairs[i];
                 SetRowBackground(ws, currentRow, vulnHeaders.Length, i % 2 == 1 ? AltRowColor : XLColor.White, autoHeight: true);
 
-                ws.Cell(currentRow, 1).Value = v.CveAlias ?? v.CveId;
+                ws.Cell(currentRow, 1).Value = VulnerabilityIdentity.Of(v);
                 ws.Cell(currentRow, 1).Style.Font.FontColor = LinkColor;
 
                 IXLCell cvssCell = ws.Cell(currentRow, 2);
                 cvssCell.Value = (double)v.CvssScore;
                 cvssCell.Style.NumberFormat.Format = "0.0";
                 cvssCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                (_, XLColor sevFg) = SeverityColor(v.Severity);
+                XLColor sevFg = SeverityColor(v.Severity);
                 cvssCell.Style.Font.FontColor = sevFg;
                 cvssCell.Style.Font.Bold = true;
 
-                ApplyStatusCell(ws.Cell(currentRow, 3), TranslateSeverity(v.Severity.ToString(), L), sevFg);
+                ApplyStatusCell(ws.Cell(currentRow, 3), TranslateSeverity(v.Severity, L), sevFg);
 
                 ws.Cell(currentRow, 4).Value = dep.Name;
 
                 if (!string.IsNullOrEmpty(v.FixedVersion))
                     ws.Cell(currentRow, 5).Value = v.FixedVersion;
                 else
-                {
-                    ws.Cell(currentRow, 5).Value = "—";
-                    ws.Cell(currentRow, 5).Style.Font.FontColor = GrayFg;
-                    ws.Cell(currentRow, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                }
+                    SetPlaceholderCell(ws.Cell(currentRow, 5));
 
                 ws.Cell(currentRow, 6).Value = v.Description;
                 ws.Cell(currentRow, 6).Style.Alignment.WrapText = true;

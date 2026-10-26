@@ -33,15 +33,7 @@ public partial class ManifestParserService
                 ?? "";
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.Contains('$')) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.NuGet,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version, DependencyEcosystem.NuGet));
         }
     }
 
@@ -95,15 +87,8 @@ public partial class ManifestParserService
             if (string.IsNullOrEmpty(artifactId) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
 
             string name = string.IsNullOrEmpty(groupId) ? artifactId : $"{groupId}:{artifactId}";
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = scope == "test" ? DependencyType.Dev : DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Maven,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version,
+                DependencyEcosystem.Maven, scope == "test" ? DependencyType.Dev : DependencyType.Prod));
         }
     }
 
@@ -154,15 +139,7 @@ public partial class ManifestParserService
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version) || version.StartsWith('$')) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.NuGet,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version, DependencyEcosystem.NuGet));
         }
     }
 
@@ -204,15 +181,7 @@ public partial class ManifestParserService
             (string? name, string? version) = ResolveCatalogLibrary(value, versions);
             if (name == null || version == null) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Maven,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version, DependencyEcosystem.Maven));
         }
     }
 
@@ -278,28 +247,14 @@ public partial class ManifestParserService
             string config = m.Value.TrimStart();
             bool isTest = config.StartsWith("test", StringComparison.OrdinalIgnoreCase);
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = isTest ? DependencyType.Dev : DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Maven,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version,
+                DependencyEcosystem.Maven, isTest ? DependencyType.Dev : DependencyType.Prod));
         }
 
         foreach (Match m in NamedPatternRegex().Matches(content))
         {
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = $"{m.Groups[1].Value}:{m.Groups[2].Value}",
-                CurrentVersion = m.Groups[3].Value,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Maven,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, $"{m.Groups[1].Value}:{m.Groups[2].Value}", m.Groups[3].Value,
+                DependencyEcosystem.Maven));
         }
     }
 
@@ -354,10 +309,8 @@ public partial class ManifestParserService
                     ProjectId = projectId,
                     Name = pkg.Name,
                     CurrentVersion = version,
-                    Type = DependencyType.Prod,
                     IsDirect = isDirect,
                     Ecosystem = DependencyEcosystem.NuGet,
-                    Status = DependencyStatus.UpToDate,
                 };
 
                 seen[(pkg.Name, version)] = dependency;
@@ -393,15 +346,8 @@ public partial class ManifestParserService
 
             bool isTest = configs.Contains("test", StringComparison.OrdinalIgnoreCase);
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = $"{parts[0]}:{parts[1]}",
-                CurrentVersion = parts[2],
-                Type = isTest ? DependencyType.Dev : DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Maven,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, $"{parts[0]}:{parts[1]}", parts[2],
+                DependencyEcosystem.Maven, isTest ? DependencyType.Dev : DependencyType.Prod));
         }
     }
 
@@ -418,15 +364,8 @@ public partial class ManifestParserService
             bool isDevelopment = string.Equals(package.Attribute("developmentDependency")?.Value, "true",
                 StringComparison.OrdinalIgnoreCase);
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = isDevelopment ? DependencyType.Dev : DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.NuGet,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version,
+                DependencyEcosystem.NuGet, isDevelopment ? DependencyType.Dev : DependencyType.Prod));
         }
     }
 

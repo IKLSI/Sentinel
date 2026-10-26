@@ -65,7 +65,8 @@ public class UserUpdateService(
             newAccessStatus = parsedAccessStatus;
         }
 
-        bool changesAccess = (newRole.HasValue && newRole.Value != originalRole)
+        bool roleChanges = newRole.HasValue && newRole.Value != originalRole;
+        bool changesAccess = roleChanges
             || (newAccessStatus.HasValue && newAccessStatus.Value != user.AccessStatus);
 
         if (userId == currentUserId && changesAccess)
@@ -75,7 +76,7 @@ public class UserUpdateService(
 
         bool suspensionTransition = willSuspend && user.AccessStatus == UserAccessStatus.Active;
 
-        bool invalidatesSessions = (newRole.HasValue && newRole.Value != originalRole) || willSuspend;
+        bool invalidatesSessions = roleChanges || willSuspend;
 
         User? updatedUser = null;
         bool lastAdminBlocked = false;

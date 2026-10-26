@@ -1,12 +1,9 @@
 using Sentinel.Application.Abstractions;
-using Sentinel.Application.Audit;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
-using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 using Sentinel.Domain.TechHealth;
 
@@ -16,11 +13,8 @@ public class TicketCreateFromFindingService(
     ITicketRepository ticketRepository,
     IProjectRepository projectRepository,
     IUserRepository userRepository,
-    IOrganizationRepository organizationRepository,
-    ICommitScopeFactory commitScopeFactory,
     ILocalizer localizer,
-    DashboardCache dashboardCache,
-    IAuditLogService auditLog,
+    TicketCreator ticketCreator,
     IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     TicketCreateFromFindingValidator validator) : IService
@@ -45,7 +39,7 @@ public class TicketCreateFromFindingService(
             cancellationToken);
 
         if (existing != null)
-            return await LoadDtoAsync(existing.Id, cancellationToken);
+            return await ticketCreator.LoadDtoAsync(existing.Id, cancellationToken);
 
         Project? project = await projectRepository.GetOrDefaultInOrganizationForFindingAsync(model.ProjectId,
             organizationId, model.Kind, findingKey, cancellationToken);
@@ -80,11 +74,7 @@ public class TicketCreateFromFindingService(
 
         try
         {
-            await commitScopeFactory.ExecuteInTransactionAsync(async token =>
-            {
-                ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
-                await ticketRepository.AddAsync(ticket, token);
-            }, cancellationToken);
+            await ticketCreator.InsertAsync(ticket, cancellationToken);
         }
         catch (UniqueConstraintViolationException)
         {
@@ -93,24 +83,12 @@ public class TicketCreateFromFindingService(
 
             if (concurrent == null) throw;
 
-            return await LoadDtoAsync(concurrent.Id, cancellationToken);
+            return await ticketCreator.LoadDtoAsync(concurrent.Id, cancellationToken);
         }
 
-        dashboardCache.Invalidate(organizationId);
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId, TicketCreator.CreatedEvent(ticket));
 
-        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets,
-                ProjectIds: RealtimeEvent.AffectedProjects(ticket.ProjectId)));
-
-        await auditLog.LogAsync(
-            AuditAction.TicketCreated,
-            entityType: AuditEntityTypes.Ticket,
-            organizationId: organizationId,
-            userId: userId,
-            entityId: ticket.Id,
-            jti: tenant.Jti);
-
-        return await LoadDtoAsync(ticket.Id, cancellationToken);
+        return await ticketCreator.AuditAndLoadAsync(ticket, cancellationToken);
     }
 
     private static FindingTicketDraft? BuildDraft(Project project, FindingKind kind, string findingKey,
@@ -145,12 +123,5 @@ public class TicketCreateFromFindingService(
             default:
                 return null;
         }
-    }
-
-    private async Task<Result<TicketDto>> LoadDtoAsync(Guid ticketId, CancellationToken cancellationToken)
-    {
-        TicketDetailRow? ticket = await ticketRepository.GetOrDefaultDetailAsync(ticketId, cancellationToken);
-
-        return Result<TicketDto>.Success(TicketMapper.ToDto(ticket!));
     }
 }

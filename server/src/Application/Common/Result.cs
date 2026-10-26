@@ -65,8 +65,6 @@ public sealed class Result<T> : Result
 
     public static Result<T> Accepted(T value) => new(value, ResultStatus.Accepted);
 
-    public new static Result<T> NoContent() => new(default, ResultStatus.NoContent);
-
     public new static Result<T> Invalid(IReadOnlyList<ValidationError> validationErrors) =>
         new(default, ResultStatus.Invalid, ErrorCodes.ValidationFailed, null, validationErrors);
 

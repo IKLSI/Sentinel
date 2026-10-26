@@ -51,10 +51,8 @@ public partial class ManifestParserService
                 ProjectId = projectId,
                 Name = module,
                 CurrentVersion = version,
-                Type = DependencyType.Prod,
                 IsDirect = !line.Contains("// indirect"),
                 Ecosystem = DependencyEcosystem.Go,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }
@@ -112,9 +110,7 @@ public partial class ManifestParserService
                     Name = prop.Name,
                     CurrentVersion = version,
                     IsVersionPinned = VersionText.IsExact(specification),
-                    Type = DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.Composer,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
         }
@@ -134,7 +130,6 @@ public partial class ManifestParserService
                     IsVersionPinned = VersionText.IsExact(specification),
                     Type = DependencyType.Dev,
                     Ecosystem = DependencyEcosystem.Composer,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
         }
@@ -213,7 +208,6 @@ public partial class ManifestParserService
                 IsVersionPinned = VersionText.IsExact(specification),
                 Type = isDev ? DependencyType.Dev : DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Gem,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }
@@ -239,15 +233,8 @@ public partial class ManifestParserService
                 Match spec = GemLockSpecRegex().Match(line);
                 if (!spec.Success) continue;
 
-                lockedGems.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = spec.Groups[1].Value,
-                    CurrentVersion = GemLockPlatformRegex().Replace(spec.Groups[2].Value, string.Empty),
-                    Type = DependencyType.Prod,
-                    Ecosystem = DependencyEcosystem.Gem,
-                    Status = DependencyStatus.UpToDate,
-                });
+                lockedGems.Add(NewDependency(projectId, spec.Groups[1].Value, GemLockPlatformRegex().Replace(spec.Groups[2].Value, string.Empty),
+                    DependencyEcosystem.Gem));
             }
             else if (section == "DEPENDENCIES")
             {
@@ -335,7 +322,6 @@ public partial class ManifestParserService
                         IsVersionPinned = IsExactCargoRequirement(subTableVersion.Groups[1].Value),
                         Type = subTableIsDev ? DependencyType.Dev : DependencyType.Prod,
                         Ecosystem = DependencyEcosystem.Cargo,
-                        Status = DependencyStatus.UpToDate,
                     });
                     subTableName = null;
                 }
@@ -363,7 +349,6 @@ public partial class ManifestParserService
                     IsVersionPinned = IsExactCargoRequirement(simpleMatch.Groups[1].Value),
                     Type = inDev ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.Cargo,
-                    Status = DependencyStatus.UpToDate,
                 });
                 continue;
             }
@@ -379,7 +364,6 @@ public partial class ManifestParserService
                     IsVersionPinned = IsExactCargoRequirement(tableVersionMatch.Groups[1].Value),
                     Type = inDev ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.Cargo,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
         }
@@ -405,15 +389,8 @@ public partial class ManifestParserService
             if (!nameMatch.Success || !versionMatch.Success) continue;
             if (!TomlSourceRegex().IsMatch(b)) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = nameMatch.Groups[1].Value,
-                CurrentVersion = versionMatch.Groups[1].Value,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Cargo,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, nameMatch.Groups[1].Value, versionMatch.Groups[1].Value,
+                DependencyEcosystem.Cargo));
         }
     }
 
@@ -433,15 +410,7 @@ public partial class ManifestParserService
 
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version)) continue;
 
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = name,
-                    CurrentVersion = version,
-                    Type = type,
-                    Ecosystem = DependencyEcosystem.Composer,
-                    Status = DependencyStatus.UpToDate,
-                });
+                deps.Add(NewDependency(projectId, name, version, DependencyEcosystem.Composer, type));
             }
         }
     }

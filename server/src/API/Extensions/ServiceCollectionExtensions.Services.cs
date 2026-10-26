@@ -4,6 +4,7 @@ using Sentinel.API.Services;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.ApiKeys;
 using Sentinel.Application.Audit;
+using Sentinel.Application.Auth;
 using Sentinel.Application.Auth.AccountState;
 using Sentinel.Application.Auth.Login;
 using Sentinel.Application.Dashboard;
@@ -127,6 +128,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<AuditLogBatchWriter>();
         services.AddHostedService<AuditLogBackgroundWriter>();
         services.AddScoped<TokenService>();
+        services.AddScoped<SessionTokenIssuer>();
+        services.AddScoped<ExistingAccountNotifier>();
         services.AddSingleton<LoginAttemptTracker>();
         services.AddScoped<TokenProtector>();
         services.AddScoped<QueuedTokenProtector>();
@@ -135,6 +138,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ApiKeyPrincipalCache>();
         services.AddScoped<UserSessionCache>();
         services.AddScoped<TicketLinkChecker>();
+        services.AddScoped<TicketCreator>();
         services.AddScoped<LastAdminGuard>();
         services.AddScoped<AccountSessionValidator>();
         services.AddScoped<ManifestParserService>();

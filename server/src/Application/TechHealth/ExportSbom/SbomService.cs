@@ -171,7 +171,7 @@ public class SbomService(
         return new CycloneVulnerability
         {
             BomRef = $"sentinel:vulnerability:{vulnerability.Id}",
-            Id = vulnerability.CveAlias ?? vulnerability.CveId,
+            Id = VulnerabilityIdentity.Of(vulnerability),
             Source = new Source { Name = OsvSourceName, Url = OsvAdvisoryUrl + vulnerability.CveId },
             Description = string.IsNullOrWhiteSpace(vulnerability.Description) ? null : vulnerability.Description,
             Recommendation = vulnerability.FixedVersion == null ? null : $"Upgrade to {vulnerability.FixedVersion}",

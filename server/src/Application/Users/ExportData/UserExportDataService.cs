@@ -19,10 +19,10 @@ public class UserExportDataService(
 {
     public async Task<Result<StreamedFileDownload>> ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (tenant.UserId is not Guid currentUserId)
+        if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid currentUserId)
             return Result<StreamedFileDownload>.Unauthorized();
 
-        Result<UserDataExportDto> export = await BuildExportAsync(cancellationToken);
+        Result<UserDataExportDto> export = await BuildExportAsync(organizationId, currentUserId, cancellationToken);
 
         if (!export.IsSuccess)
             return Result<StreamedFileDownload>.From(export);
@@ -36,11 +36,9 @@ public class UserExportDataService(
             UserDataArchive.FileName(data.ExportedAt));
     }
 
-    private async Task<Result<UserDataExportDto>> BuildExportAsync(CancellationToken cancellationToken)
+    private async Task<Result<UserDataExportDto>> BuildExportAsync(Guid organizationId, Guid currentUserId,
+        CancellationToken cancellationToken)
     {
-        if (tenant.OrganizationId is not Guid organizationId || tenant.UserId is not Guid currentUserId)
-            return Result<UserDataExportDto>.Unauthorized();
-
         User? user = await userRepository.GetOrDefaultInOrganizationAsync(currentUserId, organizationId,
             QueryTracking.NoTracking, cancellationToken);
 
@@ -61,6 +59,15 @@ public class UserExportDataService(
         IReadOnlyList<UserExportAuditLogRow> auditLogRows = await auditLogRepository
             .ListForUserExportAsync(currentUserId, fetchSize, cancellationToken);
 
+        (List<UserExportTicketRow> tickets, bool ticketsTruncated) =
+            ExportLimits.Cap(ticketRows, ExportLimits.MaxUserExportRows);
+        (List<UserExportTicketCommentRow> comments, bool commentsTruncated) =
+            ExportLimits.Cap(commentRows, ExportLimits.MaxUserExportRows);
+        (List<UserExportTicketAttachmentRow> attachments, bool attachmentsTruncated) =
+            ExportLimits.Cap(attachmentRows, ExportLimits.MaxUserExportRows);
+        (List<UserExportAuditLogRow> auditLogs, bool auditLogsTruncated) =
+            ExportLimits.Cap(auditLogRows, ExportLimits.MaxUserExportRows);
+
         return new UserDataExportDto
         {
             ExportedAt = DateTime.UtcNow,
@@ -75,7 +82,7 @@ public class UserExportDataService(
                 LastLoginAt = user.LastLoginAt,
                 Language = user.Language
             },
-            Tickets = Page(ticketRows).Select(row => new UserExportTicketDto
+            Tickets = tickets.Select(row => new UserExportTicketDto
             {
                 Id = row.Id,
                 Number = row.Number,
@@ -90,7 +97,7 @@ public class UserExportDataService(
                 CreatedAt = row.CreatedAt,
                 UpdatedAt = row.UpdatedAt
             }).ToList(),
-            Comments = Page(commentRows).Select(row => new UserExportCommentDto
+            Comments = comments.Select(row => new UserExportCommentDto
             {
                 Id = row.Id,
                 TicketId = row.TicketId,
@@ -99,7 +106,7 @@ public class UserExportDataService(
                 CreatedAt = row.CreatedAt,
                 UpdatedAt = row.UpdatedAt
             }).ToList(),
-            Attachments = Page(attachmentRows).Select(row => new UserExportAttachmentDto
+            Attachments = attachments.Select(row => new UserExportAttachmentDto
             {
                 Id = row.Id,
                 TicketId = row.TicketId,
@@ -109,7 +116,7 @@ public class UserExportDataService(
                 SizeBytes = row.ContentLength,
                 CreatedAt = row.CreatedAt
             }).ToList(),
-            AuditLogs = Page(auditLogRows).Select(row => new UserExportAuditLogDto
+            AuditLogs = auditLogs.Select(row => new UserExportAuditLogDto
             {
                 Id = row.Id,
                 Action = row.Action,
@@ -121,10 +128,10 @@ public class UserExportDataService(
             {
                 MaxRowsPerCollection = ExportLimits.MaxUserExportRows,
                 MaxAttachmentBytes = ExportLimits.MaxUserExportAttachmentBytes,
-                Tickets = IsTruncated(ticketRows),
-                Comments = IsTruncated(commentRows),
-                Attachments = IsTruncated(attachmentRows),
-                AuditLogs = IsTruncated(auditLogRows)
+                Tickets = ticketsTruncated,
+                Comments = commentsTruncated,
+                Attachments = attachmentsTruncated,
+                AuditLogs = auditLogsTruncated
             }
         };
     }
@@ -205,10 +212,6 @@ public class UserExportDataService(
 
         if (batch.Count > 0) yield return batch;
     }
-
-    private static IEnumerable<T> Page<T>(IReadOnlyList<T> rows) => rows.Take(ExportLimits.MaxUserExportRows);
-
-    private static bool IsTruncated<T>(IReadOnlyList<T> rows) => rows.Count > ExportLimits.MaxUserExportRows;
 
     private sealed record AttachmentPlan(IReadOnlyList<UserExportAttachmentDto> Included, bool SkippedOverBudget);
 }

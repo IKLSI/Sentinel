@@ -64,25 +64,13 @@ public class TicketRepository : CrudEntityWithIdRepository<Ticket>, ITicketRepos
 
         return sortBy switch
         {
-            TicketSortField.Title => descending
-                ? query.OrderByDescending(t => t.Title)
-                : query.OrderBy(t => t.Title),
-            TicketSortField.Status => descending
-                ? query.OrderByDescending(StatusRank)
-                : query.OrderBy(StatusRank),
-            TicketSortField.Assignee => descending
-                ? query.OrderBy(t => t.AssignedTo == null)
-                    .ThenByDescending(t => t.AssignedTo!.FirstName)
-                    .ThenByDescending(t => t.AssignedTo!.LastName)
-                : query.OrderBy(t => t.AssignedTo == null)
-                    .ThenBy(t => t.AssignedTo!.FirstName)
-                    .ThenBy(t => t.AssignedTo!.LastName),
-            TicketSortField.Comments => descending
-                ? query.OrderByDescending(t => t.Comments.Count)
-                : query.OrderBy(t => t.Comments.Count),
-            _ => descending
-                ? query.OrderByDescending(t => t.PriorityRank)
-                : query.OrderBy(t => t.PriorityRank)
+            TicketSortField.Title => query.OrderBy(t => t.Title, descending),
+            TicketSortField.Status => query.OrderBy(StatusRank, descending),
+            TicketSortField.Assignee => query.OrderBy(t => t.AssignedTo == null)
+                .ThenBy(t => t.AssignedTo!.FirstName, descending)
+                .ThenBy(t => t.AssignedTo!.LastName, descending),
+            TicketSortField.Comments => query.OrderBy(t => t.Comments.Count, descending),
+            _ => query.OrderBy(t => t.PriorityRank, descending)
         };
     }
 

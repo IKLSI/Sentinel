@@ -10,7 +10,4 @@ public class ApiMessageResponse
     public IReadOnlyDictionary<string, string>? Params { get; init; }
 
     public static ApiMessageResponse Create(string code) => new() { Code = code };
-
-    public static ApiMessageResponse Create(string code, IReadOnlyDictionary<string, string> parameters) =>
-        new() { Code = code, Params = parameters };
 }

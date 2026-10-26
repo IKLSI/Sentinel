@@ -11,4 +11,15 @@ public static class ExportLimits
     public const int MaxArchiveFileNameLength = 120;
     public const int MaxComplianceVulnerabilityRows = 200;
     public const int MaxComplianceAuditLogRows = 25;
+
+    public static (List<T> Rows, bool Truncated) Cap<T>(IEnumerable<T> rows, int max)
+    {
+        List<T> capped = rows.ToList();
+        bool truncated = capped.Count > max;
+
+        if (truncated)
+            capped.RemoveRange(max, capped.Count - max);
+
+        return (capped, truncated);
+    }
 }

@@ -34,9 +34,6 @@ public class IntegrationConnectService(
         if (tenant.OrganizationId is not Guid organizationId)
             return Result.Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(model.Token))
-            return Result.Error(ErrorCodes.SettingsTokenRequired);
-
         Organization? organization = await organizationRepository.GetOrDefaultAsync(organizationId,
             QueryTracking.Tracked, cancellationToken);
 

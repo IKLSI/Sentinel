@@ -101,6 +101,35 @@ public partial class ExportService
         cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
     }
 
+    private static void SetCountCell(IXLCell cell, int value, XLColor? alertColor = null)
+    {
+        cell.Value = value;
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+        if (alertColor == null || value <= 0) return;
+
+        cell.Style.Font.FontColor = alertColor;
+        cell.Style.Font.Bold = true;
+    }
+
+    private static void SetPlaceholderCell(IXLCell cell)
+    {
+        cell.Value = "—";
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        cell.Style.Font.FontColor = GrayFg;
+    }
+
+    private static void ApplyEmptyRow(IXLWorksheet ws, int row, int colCount, string text)
+    {
+        IXLCell cell = ws.Cell(row, 1);
+        cell.Value = text;
+        ws.Range(row, 1, row, colCount).Merge();
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        cell.Style.Font.FontColor = GrayFg;
+        cell.Style.Font.Italic = true;
+        ws.Row(row).Height = 18;
+    }
+
     private static void ApplySectionTitle(IXLWorksheet ws, int row, int colCount, string title)
     {
         ws.Range(row, 1, row, colCount).Merge();

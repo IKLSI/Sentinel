@@ -110,18 +110,11 @@ public class UserRepository : CrudEntityWithIdRepository<User>, IUserRepository
 
         return sortBy switch
         {
-            UserSortField.Role => descending
-                ? query.OrderByDescending(RoleRank)
-                : query.OrderBy(RoleRank),
-            UserSortField.Status => descending
-                ? query.OrderByDescending(u => u.AccessStatus == UserAccessStatus.Active)
-                : query.OrderBy(u => u.AccessStatus == UserAccessStatus.Active),
-            UserSortField.LastLogin => descending
-                ? query.OrderBy(u => u.LastLoginAt == null).ThenByDescending(u => u.LastLoginAt)
-                : query.OrderBy(u => u.LastLoginAt == null).ThenBy(u => u.LastLoginAt),
-            _ => descending
-                ? query.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName)
-                : query.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
+            UserSortField.Role => query.OrderBy(RoleRank, descending),
+            UserSortField.Status => query.OrderBy(u => u.AccessStatus == UserAccessStatus.Active, descending),
+            UserSortField.LastLogin => query.OrderBy(u => u.LastLoginAt == null)
+                .ThenBy(u => u.LastLoginAt, descending),
+            _ => query.OrderBy(u => u.LastName, descending).ThenBy(u => u.FirstName, descending)
         };
     }
 

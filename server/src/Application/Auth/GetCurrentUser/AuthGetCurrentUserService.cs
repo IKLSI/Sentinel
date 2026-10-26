@@ -16,7 +16,7 @@ public class AuthGetCurrentUserService(IUserRepository userRepository, ITenantCo
 
         User? user = await userRepository.GetOrDefaultActiveWithOrganizationAsync(userId, cancellationToken);
 
-        if (user == null || user.Id == Guid.Empty)
+        if (user == null)
             return Result<UserProfile>.NotFound(ErrorCodes.UserNotFound);
 
         return UserProfileMapper.ToProfile(user);

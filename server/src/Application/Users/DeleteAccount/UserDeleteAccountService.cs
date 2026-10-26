@@ -89,10 +89,8 @@ public class UserDeleteAccountService(
         user.FirstName = "Utilisateur";
         user.LastName = "Supprimé";
         user.PasswordHash = string.Empty;
-        user.RefreshToken = null;
-        user.RefreshTokenExpiry = null;
         user.PreviousRefreshTokenHash = null;
         user.AccessStatus = UserAccessStatus.Suspended;
-        user.TokenVersion++;
+        user.RevokeSessions();
     }
 }

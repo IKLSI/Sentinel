@@ -102,7 +102,6 @@ public partial class ManifestParserService
                 IsVersionPinned = pinned,
                 Type = type,
                 Ecosystem = DependencyEcosystem.Npm,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }
@@ -169,7 +168,6 @@ public partial class ManifestParserService
                     Type = IsDevOnly(pkg.Value) ? DependencyType.Dev : DependencyType.Prod,
                     IsDirect = segment == 0 && rootDependencyNames.Contains(installedName),
                     Ecosystem = DependencyEcosystem.Npm,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
         }
@@ -194,7 +192,6 @@ public partial class ManifestParserService
                 Type = IsDevOnly(pkg.Value) ? DependencyType.Dev : DependencyType.Prod,
                 IsDirect = false,
                 Ecosystem = DependencyEcosystem.Npm,
-                Status = DependencyStatus.UpToDate,
             });
 
             if (pkg.Value.TryGetProperty("dependencies", out JsonElement nested))
@@ -249,15 +246,7 @@ public partial class ManifestParserService
             Match vMatch = YarnLockVersionRegex().Match(line.Trim());
             if (!vMatch.Success) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = currentName,
-                CurrentVersion = vMatch.Groups[1].Value,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Npm,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, currentName, vMatch.Groups[1].Value, DependencyEcosystem.Npm));
             currentName = null;
         }
     }
@@ -318,15 +307,7 @@ public partial class ManifestParserService
                 continue;
             }
 
-            current = new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Npm,
-                Status = DependencyStatus.UpToDate,
-            };
+            current = NewDependency(projectId, name, version, DependencyEcosystem.Npm);
             deps.Add(current);
         }
     }
@@ -387,15 +368,7 @@ public partial class ManifestParserService
             string version = identifier[(at + 1)..];
             if (!VersionText.StartsWithDigit(version)) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = name,
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Npm,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, name, version, DependencyEcosystem.Npm));
         }
     }
 

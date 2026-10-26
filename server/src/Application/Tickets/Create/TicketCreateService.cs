@@ -1,23 +1,13 @@
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
-using Sentinel.Application.Dashboard;
-using Sentinel.Application.Audit;
 using Sentinel.Domain.Abstractions;
-using Sentinel.Domain.Abstractions.Persistence;
-using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
-using Sentinel.Domain.Realtime;
-using Sentinel.Domain.Repositories;
 
 namespace Sentinel.Application.Tickets.Create;
 
 public class TicketCreateService(
-    ITicketRepository ticketRepository,
     TicketLinkChecker linkChecker,
-    IOrganizationRepository organizationRepository,
-    ICommitScopeFactory commitScopeFactory,
-    DashboardCache dashboardCache,
-    IAuditLogService auditLog,
+    TicketCreator ticketCreator,
     IRealtimeNotifier realtimeNotifier,
     ITenantContext tenant,
     TicketCreateValidator validator) : IService
@@ -51,28 +41,10 @@ public class TicketCreateService(
             UpdatedAt = DateTime.UtcNow
         };
 
-        await commitScopeFactory.ExecuteInTransactionAsync(async token =>
-        {
-            ticket.Number = await organizationRepository.AllocateTicketNumbersAsync(organizationId, 1, token);
-            await ticketRepository.AddAsync(ticket, token);
-        }, cancellationToken);
+        await ticketCreator.InsertAsync(ticket, cancellationToken);
 
-        dashboardCache.Invalidate(organizationId);
+        await realtimeNotifier.NotifyOrganizationAsync(organizationId, TicketCreator.CreatedEvent(ticket));
 
-        await realtimeNotifier.NotifyOrganizationAsync(organizationId,
-            new RealtimeEvent(RealtimeResources.Tickets,
-                ProjectIds: RealtimeEvent.AffectedProjects(ticket.ProjectId)));
-
-        await auditLog.LogAsync(
-            AuditAction.TicketCreated,
-            entityType: AuditEntityTypes.Ticket,
-            organizationId: organizationId,
-            userId: userId,
-            entityId: ticket.Id,
-            jti: tenant.Jti);
-
-        TicketDetailRow? created = await ticketRepository.GetOrDefaultDetailAsync(ticket.Id, cancellationToken);
-
-        return Result<TicketDto>.Success(TicketMapper.ToDto(created!));
+        return await ticketCreator.AuditAndLoadAsync(ticket, cancellationToken);
     }
 }

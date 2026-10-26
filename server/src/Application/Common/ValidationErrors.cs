@@ -38,10 +38,10 @@ public sealed partial class ValidationErrors
             ? Add(identifier, code, new Dictionary<string, string> { ["minLength"] = minLength.ToString() })
             : this;
 
-    public ValidationErrors Email(string identifier, string? value, string code) =>
+    private ValidationErrors Email(string identifier, string? value, string code) =>
         !string.IsNullOrWhiteSpace(value) && !EmailPattern().IsMatch(value) ? Add(identifier, code) : this;
 
-    public ValidationErrors Matches(string identifier, string? value, string pattern, string code) =>
+    private ValidationErrors Matches(string identifier, string? value, string pattern, string code) =>
         !string.IsNullOrEmpty(value) && !Regex.IsMatch(value, pattern) ? Add(identifier, code) : this;
 
     public ValidationErrors ParsableEnum<TEnum>(string identifier, string? value, string code)

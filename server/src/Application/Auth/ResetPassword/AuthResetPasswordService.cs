@@ -51,9 +51,7 @@ public class AuthResetPasswordService(
             using ICommitScope commitScope = commitScopeFactory.Begin();
 
             user.PasswordHash = passwordHasher.Hash(model.Password);
-            user.RefreshToken = null;
-            user.RefreshTokenExpiry = null;
-            user.TokenVersion++;
+            user.RevokeSessions();
 
             resetToken.IsUsed = true;
 

@@ -211,4 +211,14 @@ public partial class ManifestParserService
         else if (VersionFileRuntimes.ContainsKey(lower)) ParseVersionFile(projectId, lower, content, runtimes);
     }
 
+    private static Dependency NewDependency(Guid projectId, string name, string version,
+        DependencyEcosystem ecosystem, DependencyType type = DependencyType.Prod) => new()
+    {
+        ProjectId = projectId,
+        Name = name,
+        CurrentVersion = version,
+        Type = type,
+        Ecosystem = ecosystem,
+    };
+
 }

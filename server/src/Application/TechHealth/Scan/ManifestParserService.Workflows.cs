@@ -41,7 +41,6 @@ public partial class ManifestParserService
                 IsVersionPinned = version.Count(c => c == '.') >= 2,
                 Type = DependencyType.Dev,
                 Ecosystem = DependencyEcosystem.GitHubActions,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }

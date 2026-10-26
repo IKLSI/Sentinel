@@ -61,9 +61,7 @@ public partial class EmailService : IEmailService
                 ["url"] = acceptUrl
             }));
 
-        await SendAsync(message, cancellationToken);
-
-        _logger.LogInformation("Invitation email sent to {Email}", MaskEmail(invitation.Email));
+        await SendAsync(message, invitation.Email, "Invitation email", cancellationToken);
     }
 
     public async Task SendExistingAccountNoticeAsync(string email, string frontendBaseUrl, string culture,
@@ -84,9 +82,7 @@ public partial class EmailService : IEmailService
                 ["url"] = loginUrl
             }));
 
-        await SendAsync(message, cancellationToken);
-
-        _logger.LogInformation("Existing account notification sent to {Email}", MaskEmail(email));
+        await SendAsync(message, email, "Existing account notification", cancellationToken);
     }
 
     public async Task SendPasswordResetAsync(string email, string resetToken, string frontendBaseUrl, string culture,
@@ -103,9 +99,7 @@ public partial class EmailService : IEmailService
         MimeMessage message = BuildMessage(email, Text(culture, "emails.password_reset.subject"), html,
             Text(culture, "emails.password_reset.text_body", new Dictionary<string, string> { ["url"] = resetUrl }));
 
-        await SendAsync(message, cancellationToken);
-
-        _logger.LogInformation("Password reset email sent to {Email}", MaskEmail(email));
+        await SendAsync(message, email, "Password reset email", cancellationToken);
     }
 
     public async Task SendEmailVerificationAsync(string email, string verificationToken, string frontendBaseUrl, string culture,
@@ -122,9 +116,7 @@ public partial class EmailService : IEmailService
         MimeMessage message = BuildMessage(email, Text(culture, "emails.verification.subject"), html,
             Text(culture, "emails.verification.text_body", new Dictionary<string, string> { ["url"] = verifyUrl }));
 
-        await SendAsync(message, cancellationToken);
-
-        _logger.LogInformation("Verification email sent to {Email}", MaskEmail(email));
+        await SendAsync(message, email, "Verification email", cancellationToken);
     }
 
     public async Task SendAccountSuspendedAsync(string email, string organizationName, string culture,
@@ -140,9 +132,7 @@ public partial class EmailService : IEmailService
         MimeMessage message = BuildMessage(email, Text(culture, "emails.account_suspended.subject", organizationValues),
             html, Text(culture, "emails.account_suspended.text_body", organizationValues));
 
-        await SendAsync(message, cancellationToken);
-
-        _logger.LogInformation("Account suspension email sent to {Email}", MaskEmail(email));
+        await SendAsync(message, email, "Account suspension email", cancellationToken);
     }
 
     public async Task SendVulnerabilityAlertAsync(IReadOnlyList<EmailRecipient> recipients, string projectName, string organizationName, string projectUrl, bool isFirstScan, IReadOnlyList<VulnerabilityAlertEntry> newVulns,
@@ -190,7 +180,7 @@ public partial class EmailService : IEmailService
                     ["count"] = newVulns.Count.ToString()
                 });
 
-            await SendAsync(BuildMessage(recipient.Email, subject, html), cancellationToken);
+            await DeliverAsync(BuildMessage(recipient.Email, subject, html), cancellationToken);
 
             _logger.LogInformation("Vulnerability alert sent to {Email} for project {Project}", MaskEmail(recipient.Email), projectName);
         }
@@ -258,19 +248,24 @@ public partial class EmailService : IEmailService
         return rows;
     }
 
-    private async Task SendAsync(MimeMessage message, CancellationToken cancellationToken)
+    private async Task SendAsync(MimeMessage message, string recipient, string logLabel,
+        CancellationToken cancellationToken)
     {
-        string host     = string.IsNullOrEmpty(_email.Host) ? throw new InvalidOperationException("Email:Host is missing") : _email.Host;
-        int    port     = _email.Port;
-        string username = _email.Username;
-        string password = _email.Password;
+        await DeliverAsync(message, cancellationToken);
+
+        _logger.LogInformation("{EmailKind:l} sent to {Email}", logLabel, MaskEmail(recipient));
+    }
+
+    private async Task DeliverAsync(MimeMessage message, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(_email.Host)) throw new InvalidOperationException("Email:Host is missing");
 
         using SmtpClient client = new SmtpClient();
 
-        await client.ConnectAsync(host, port, SocketOptionsFor(port), cancellationToken);
+        await client.ConnectAsync(_email.Host, _email.Port, SocketOptionsFor(_email.Port), cancellationToken);
 
-        if (!string.IsNullOrEmpty(username))
-            await client.AuthenticateAsync(username, password, cancellationToken);
+        if (!string.IsNullOrEmpty(_email.Username))
+            await client.AuthenticateAsync(_email.Username, _email.Password, cancellationToken);
 
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);

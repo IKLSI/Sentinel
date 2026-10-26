@@ -36,15 +36,12 @@ public partial class ExportService(
     public async Task<ExportResult> ExportTicketsExcelAsync(
         Guid organizationId, TicketFilter filter, Guid currentUserId, CancellationToken cancellationToken)
     {
-        List<TicketExportRow> tickets = (await ticketRepository.ListForExportAsync(
-            organizationId, filter, ExportLimits.MaxTicketRows + 1, cancellationToken)).ToList();
-
-        bool truncated = tickets.Count > ExportLimits.MaxTicketRows;
+        IReadOnlyList<TicketExportRow> rows = await ticketRepository.ListForExportAsync(
+            organizationId, filter, ExportLimits.MaxTicketRows + 1, cancellationToken);
+        (List<TicketExportRow> tickets, bool truncated) = ExportLimits.Cap(rows, ExportLimits.MaxTicketRows);
 
         if (truncated)
         {
-            tickets.RemoveRange(ExportLimits.MaxTicketRows, tickets.Count - ExportLimits.MaxTicketRows);
-
             logger.LogWarning("Ticket export for {OrganizationId} truncated at {MaxRows} rows",
                 organizationId, ExportLimits.MaxTicketRows);
         }
@@ -58,15 +55,12 @@ public partial class ExportService(
     public async Task<ExportResult> ExportTechHealthExcelAsync(Guid organizationId, Guid currentUserId,
         CancellationToken cancellationToken)
     {
-        List<Project> projects = (await projectRepository.ListWithHealthDetailsByNameAsync(
-            organizationId, ExportLimits.MaxProjectSheets + 1, cancellationToken)).ToList();
-
-        bool truncated = projects.Count > ExportLimits.MaxProjectSheets;
+        IReadOnlyList<Project> rows = await projectRepository.ListWithHealthDetailsByNameAsync(
+            organizationId, ExportLimits.MaxProjectSheets + 1, cancellationToken);
+        (List<Project> projects, bool truncated) = ExportLimits.Cap(rows, ExportLimits.MaxProjectSheets);
 
         if (truncated)
         {
-            projects.RemoveRange(ExportLimits.MaxProjectSheets, projects.Count - ExportLimits.MaxProjectSheets);
-
             logger.LogWarning("Tech health export for {OrganizationId} truncated at {MaxProjects} projects",
                 organizationId, ExportLimits.MaxProjectSheets);
         }
@@ -123,13 +117,10 @@ public partial class ExportService(
             ws.Cell(row, 1).Value = TicketReference.For(t.Number);
             ws.Cell(row, 2).Value = t.Title;
 
-            (_, XLColor stFg) = TicketStatusColor(t.Status);
-            ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status.ToString(), L), stFg);
+            ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status, L), TicketStatusColor(t.Status));
+            ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority, L), TicketPriorityColor(t.Priority));
 
-            (_, XLColor prFg) = TicketPriorityColor(t.Priority);
-            ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
-
-            ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L);
+            ws.Cell(row, 5).Value = TranslateTicketType(t.Type, L);
             ws.Cell(row, 6).Value = PersonName.Format(t.AssignedToFirstName, t.AssignedToLastName) ?? string.Empty;
             ws.Cell(row, 7).Value = t.ProjectName ?? string.Empty;
             ws.Cell(row, 8).Value = PersonName.Format(t.CreatedByFirstName, t.CreatedByLastName) ?? string.Empty;

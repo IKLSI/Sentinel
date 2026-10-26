@@ -10,27 +10,21 @@ using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Security;
 
-public class TokenService
+public class TokenService(IOptions<JwtSettings> options)
 {
     private const int RefreshTokenByteLength = 64;
 
-    private readonly JwtSettings _jwt;
-
-    public TokenService(IOptions<JwtSettings> options)
-    {
-        _jwt = options.Value;
-    }
-
     public string GenerateAccessToken(User user)
     {
-        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
+        JwtSettings jwt = options.Value;
+        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret));
         SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
         {
-            Issuer = _jwt.Issuer,
-            Audience = _jwt.Audience,
-            Expires = DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpirationMinutes),
+            Issuer = jwt.Issuer,
+            Audience = jwt.Audience,
+            Expires = DateTime.UtcNow.AddMinutes(jwt.AccessTokenExpirationMinutes),
             SigningCredentials = credentials,
             Claims = new Dictionary<string, object>
             {

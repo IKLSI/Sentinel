@@ -63,15 +63,11 @@ public partial class ComplianceReportService(
             .Select(group => group.MostAtRisk)
             .ToList();
 
-        bool vulnerabilitiesTruncated = vulnerabilities.Count > ExportLimits.MaxComplianceVulnerabilityRows;
-        List<Vulnerability> renderedVulnerabilities = vulnerabilities
-            .Take(ExportLimits.MaxComplianceVulnerabilityRows)
-            .ToList();
+        (List<Vulnerability> renderedVulnerabilities, bool vulnerabilitiesTruncated) =
+            ExportLimits.Cap(vulnerabilities, ExportLimits.MaxComplianceVulnerabilityRows);
 
-        bool auditTrailTruncated = auditTrail.Count > ExportLimits.MaxComplianceAuditLogRows;
-        List<ComplianceAuditLogRow> renderedAuditTrail = auditTrail
-            .Take(ExportLimits.MaxComplianceAuditLogRows)
-            .ToList();
+        (List<ComplianceAuditLogRow> renderedAuditTrail, bool auditTrailTruncated) =
+            ExportLimits.Cap(auditTrail, ExportLimits.MaxComplianceAuditLogRows);
 
         Guid reportId = Guid.CreateVersion7();
         DateTime generatedAt = DateTime.UtcNow;

@@ -37,54 +37,19 @@ public static class UserFilterParser
 
     public static UserFilter Build(UserFilterRequest request) => new()
     {
-        Roles = BuildValues<UserRole>(request.Role),
+        Roles = FilterValues.ParseDistinct<UserRole>(request.Role),
         Statuses = BuildStatuses(request.Status),
         Search = string.IsNullOrWhiteSpace(request.Search) ? null : request.Search
     };
 
     private static List<UserAccessStatus> BuildStatuses(string[] values)
     {
-        List<UserAccessStatus> statuses = BuildValues<UserAccessStatus>(values);
+        List<UserAccessStatus> statuses = FilterValues.ParseDistinct<UserAccessStatus>(values);
 
         return statuses.Count > 0 ? statuses : [.. DefaultStatuses];
     }
 
-    private static Result ValidateValues<TValue>(string[] values, string field) where TValue : struct, Enum
-    {
-        if (values.Length > UserFilterRequest.MaxValuesPerField)
-        {
-            return Result.Error(ErrorCodes.UserFilterTooManyValues, new Dictionary<string, string>
-            {
-                ["field"] = field,
-                ["maxValues"] = UserFilterRequest.MaxValuesPerField.ToString()
-            });
-        }
-
-        foreach (string value in values)
-        {
-            if (!EnumValue.TryParse(value, out TValue _))
-            {
-                return Result.Error(ErrorCodes.UserFilterValueInvalid, new Dictionary<string, string>
-                {
-                    ["field"] = field,
-                    ["value"] = value
-                });
-            }
-        }
-
-        return Result.Success();
-    }
-
-    private static List<TValue> BuildValues<TValue>(string[] values) where TValue : struct, Enum
-    {
-        List<TValue> parsed = [];
-
-        foreach (string value in values)
-        {
-            if (EnumValue.TryParse(value, out TValue result) && !parsed.Contains(result))
-                parsed.Add(result);
-        }
-
-        return parsed;
-    }
+    private static Result ValidateValues<TValue>(string[] values, string field) where TValue : struct, Enum =>
+        FilterValues.Validate<TValue>(values, field, UserFilterRequest.MaxValuesPerField,
+            ErrorCodes.UserFilterTooManyValues, ErrorCodes.UserFilterValueInvalid);
 }

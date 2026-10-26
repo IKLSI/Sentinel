@@ -1,3 +1,4 @@
+using Sentinel.Application.Common;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Repositories;
 
@@ -13,12 +14,7 @@ public class TicketGridModel : TicketFilterRequest
     public TicketSortField SortBy { get; set; } = TicketSortField.Priority;
     public SortDirection SortDirection { get; set; } = SortDirection.Desc;
 
-    public int NormalizedPage => Page < 1 ? 1 : Page;
+    public int NormalizedPage => Paging.NormalizePage(Page);
 
-    public int NormalizedPageSize => PageSize switch
-    {
-        < 1 => DefaultPageSize,
-        > MaxPageSize => MaxPageSize,
-        _ => PageSize
-    };
+    public int NormalizedPageSize => Paging.NormalizePageSize(PageSize, DefaultPageSize, MaxPageSize);
 }

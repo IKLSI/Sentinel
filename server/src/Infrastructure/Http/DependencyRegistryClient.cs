@@ -102,48 +102,40 @@ public partial class DependencyRegistryClient(
             ? RegistryPackage.Unresolved
             : RegistryPackage.Failure;
 
-    private static async Task<RegistryPackage> FetchNpmAsync(HttpClient client, string package)
-    {
-        using HttpResponseMessage response = await client.GetAsync($"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        JsonElement root = doc.RootElement;
+    private static Task<RegistryPackage> FetchNpmAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client, $"https://registry.npmjs.org/{Uri.EscapeDataString(package)}/latest", root =>
+        {
+            string? version = Text(root, "version");
+            string? publisher = PersonName(root, "author")
+                ?? FirstPersonName(root, "maintainers")
+                ?? PersonName(root, "_npmUser");
+            string? license = Text(root, "license");
+            bool isDeprecated = root.TryGetProperty("deprecated", out JsonElement deprecated)
+                && deprecated.ValueKind == JsonValueKind.String;
 
-        string? version = Text(root, "version");
-        string? publisher = PersonName(root, "author")
-            ?? FirstPersonName(root, "maintainers")
-            ?? PersonName(root, "_npmUser");
-        string? license = Text(root, "license");
-        bool isDeprecated = root.TryGetProperty("deprecated", out JsonElement deprecated)
-            && deprecated.ValueKind == JsonValueKind.String;
+            return new RegistryPackage(version, publisher, license, IsDeprecated: isDeprecated);
+        });
 
-        return new RegistryPackage(version, publisher, license, IsDeprecated: isDeprecated);
-    }
+    private static Task<RegistryPackage> FetchNuGetAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client,
+            $"https://azuresearch-usnc.nuget.org/query?q=packageid:{Uri.EscapeDataString(package)}&prerelease=false&take=1", root =>
+        {
+            if (!root.TryGetProperty("data", out JsonElement data)) return RegistryPackage.Unresolved;
+            List<JsonElement> items = data.EnumerateArray().ToList();
+            if (items.Count == 0) return RegistryPackage.Unresolved;
 
-    private static async Task<RegistryPackage> FetchNuGetAsync(HttpClient client, string package)
-    {
-        using HttpResponseMessage response = await client.GetAsync(
-            $"https://azuresearch-usnc.nuget.org/query?q=packageid:{Uri.EscapeDataString(package)}&prerelease=false&take=1");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("data", out JsonElement data)) return RegistryPackage.Unresolved;
-        List<JsonElement> items = data.EnumerateArray().ToList();
-        if (items.Count == 0) return RegistryPackage.Unresolved;
+            return new RegistryPackage(Text(items[0], "version"), StringOrFirst(items[0], "authors"));
+        });
 
-        return new RegistryPackage(Text(items[0], "version"), StringOrFirst(items[0], "authors"));
-    }
+    private static Task<RegistryPackage> FetchPyPIAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client, $"https://pypi.org/pypi/{Uri.EscapeDataString(package)}/json", root =>
+        {
+            if (!root.TryGetProperty("info", out JsonElement info)) return RegistryPackage.Unresolved;
 
-    private static async Task<RegistryPackage> FetchPyPIAsync(HttpClient client, string package)
-    {
-        using HttpResponseMessage response = await client.GetAsync($"https://pypi.org/pypi/{Uri.EscapeDataString(package)}/json");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("info", out JsonElement info)) return RegistryPackage.Unresolved;
+            string? license = Text(info, "license") ?? ClassifierLicense(info);
 
-        string? license = Text(info, "license") ?? ClassifierLicense(info);
-
-        return new RegistryPackage(Text(info, "version"), Text(info, "author") ?? Text(info, "maintainer"), license);
-    }
+            return new RegistryPackage(Text(info, "version"), Text(info, "author") ?? Text(info, "maintainer"), license);
+        });
 
     private static string? ClassifierLicense(JsonElement info)
     {
@@ -180,74 +172,66 @@ public partial class DependencyRegistryClient(
         string.Concat(module.Select(character =>
             char.IsAsciiLetterUpper(character) ? $"!{char.ToLowerInvariant(character)}" : character.ToString()));
 
-    private static async Task<RegistryPackage> FetchGoAsync(HttpClient client, string module)
-    {
-        using HttpResponseMessage response = await client.GetAsync($"https://proxy.golang.org/{Uri.EscapeDataString(EncodeGoModulePath(module))}/@latest");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        string? version = Text(doc.RootElement, "Version");
+    private static Task<RegistryPackage> FetchGoAsync(HttpClient client, string module) =>
+        FetchJsonAsync(client,
+            $"https://proxy.golang.org/{Uri.EscapeDataString(EncodeGoModulePath(module))}/@latest", root =>
+        {
+            string? version = Text(root, "Version");
 
-        return new RegistryPackage(version?.TrimStart('v'), null);
-    }
+            return new RegistryPackage(version?.TrimStart('v'), null);
+        });
 
     [GeneratedRegex(@"-(dev|alpha|beta|rc)(\.|\d|$)", RegexOptions.IgnoreCase)]
     private static partial Regex PackagistPrereleaseTag();
 
-    private static async Task<RegistryPackage> FetchPackagistAsync(HttpClient client, string package)
-    {
-        using HttpResponseMessage response = await client.GetAsync(
-            $"https://repo.packagist.org/p2/{Uri.EscapeDataString(package).Replace("%2F", "/")}.json");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("packages", out JsonElement packages)
-            || !packages.TryGetProperty(package, out JsonElement releases)
-            || releases.ValueKind != JsonValueKind.Array)
+    private static Task<RegistryPackage> FetchPackagistAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client,
+            $"https://repo.packagist.org/p2/{Uri.EscapeDataString(package).Replace("%2F", "/")}.json", root =>
         {
-            return RegistryPackage.Unresolved;
-        }
+            if (!root.TryGetProperty("packages", out JsonElement packages)
+                || !packages.TryGetProperty(package, out JsonElement releases)
+                || releases.ValueKind != JsonValueKind.Array)
+            {
+                return RegistryPackage.Unresolved;
+            }
 
-        List<JsonElement> entries = releases.EnumerateArray().ToList();
-        if (entries.Count == 0) return RegistryPackage.Unresolved;
+            List<JsonElement> entries = releases.EnumerateArray().ToList();
+            if (entries.Count == 0) return RegistryPackage.Unresolved;
 
-        string? version = entries
-            .Select(entry => Text(entry, "version"))
-            .OfType<string>()
-            .Where(v => !PackagistPrereleaseTag().IsMatch(v))
-            .Select(VersionText.Clean)
-            .OrderByDescending(v => v, VersionComparer.Instance)
-            .FirstOrDefault();
+            string? version = entries
+                .Select(entry => Text(entry, "version"))
+                .OfType<string>()
+                .Where(v => !PackagistPrereleaseTag().IsMatch(v))
+                .Select(VersionText.Clean)
+                .OrderByDescending(v => v, VersionComparer.Instance)
+                .FirstOrDefault();
 
-        JsonElement newest = entries[0];
-        bool isAbandoned = newest.TryGetProperty("abandoned", out JsonElement abandoned)
-            && abandoned.ValueKind is JsonValueKind.True or JsonValueKind.String;
+            JsonElement newest = entries[0];
+            bool isAbandoned = newest.TryGetProperty("abandoned", out JsonElement abandoned)
+                && abandoned.ValueKind is JsonValueKind.True or JsonValueKind.String;
 
-        return new RegistryPackage(version, FirstPersonName(newest, "authors"), StringOrFirst(newest, "license"),
-            IsDeprecated: isAbandoned);
-    }
+            return new RegistryPackage(version, FirstPersonName(newest, "authors"), StringOrFirst(newest, "license"),
+                IsDeprecated: isAbandoned);
+        });
 
-    private static async Task<RegistryPackage> FetchRubyGemsAsync(HttpClient client, string gem)
-    {
-        using HttpResponseMessage response = await client.GetAsync($"https://rubygems.org/api/v1/gems/{Uri.EscapeDataString(gem)}.json");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
+    private static Task<RegistryPackage> FetchRubyGemsAsync(HttpClient client, string gem) =>
+        FetchJsonAsync(client, $"https://rubygems.org/api/v1/gems/{Uri.EscapeDataString(gem)}.json", root =>
+        {
+            return new RegistryPackage(Text(root, "version"), Text(root, "authors"),
+                StringOrFirst(root, "licenses"));
+        });
 
-        return new RegistryPackage(Text(doc.RootElement, "version"), Text(doc.RootElement, "authors"),
-            StringOrFirst(doc.RootElement, "licenses"));
-    }
+    private static Task<RegistryPackage> FetchCratesAsync(HttpClient client, string crate) =>
+        FetchJsonAsync(client,
+            $"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}?include=default_version", root =>
+        {
+            if (!root.TryGetProperty("crate", out JsonElement crateObj)) return RegistryPackage.Unresolved;
 
-    private static async Task<RegistryPackage> FetchCratesAsync(HttpClient client, string crate)
-    {
-        using HttpResponseMessage response = await client.GetAsync(
-            $"https://crates.io/api/v1/crates/{Uri.EscapeDataString(crate)}?include=default_version");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("crate", out JsonElement crateObj)) return RegistryPackage.Unresolved;
+            string? defaultVersion = Text(crateObj, "default_version") ?? Text(crateObj, "newest_version");
+            string? license = CrateVersionLicense(root, defaultVersion);
 
-        string? defaultVersion = Text(crateObj, "default_version") ?? Text(crateObj, "newest_version");
-        string? license = CrateVersionLicense(doc.RootElement, defaultVersion);
-
-        return new RegistryPackage(defaultVersion, null, license);
-    }
+            return new RegistryPackage(defaultVersion, null, license);
+        });
 
     private static string? CrateVersionLicense(JsonElement root, string? version)
     {
@@ -261,36 +245,41 @@ public partial class DependencyRegistryClient(
         return Text(target, "license");
     }
 
-    private static async Task<RegistryPackage> FetchHexAsync(HttpClient client, string package)
+    private static Task<RegistryPackage> FetchHexAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client, $"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}", root =>
+        {
+            bool hasMeta = root.TryGetProperty("meta", out JsonElement meta);
+
+            string? publisher = FirstPersonName(root, "owners")
+                ?? (hasMeta ? StringOrFirst(meta, "maintainers") : null);
+            string? license = hasMeta ? StringOrFirst(meta, "licenses") : null;
+
+            return new RegistryPackage(Text(root, "latest_stable_version"), publisher, license);
+        });
+
+    private static Task<RegistryPackage> FetchPubAsync(HttpClient client, string package) =>
+        FetchJsonAsync(client, $"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}", root =>
+        {
+            if (!root.TryGetProperty("latest", out JsonElement latest)) return RegistryPackage.Unresolved;
+
+            string? publisher = latest.TryGetProperty("pubspec", out JsonElement pubspec)
+                ? Text(pubspec, "publisher") ?? StringOrFirst(pubspec, "authors")
+                : null;
+
+            bool isDiscontinued = root.TryGetProperty("isDiscontinued", out JsonElement discontinued)
+                && discontinued.ValueKind == JsonValueKind.True;
+
+            return new RegistryPackage(Text(latest, "version"), publisher, IsDeprecated: isDiscontinued);
+        });
+
+    private static async Task<RegistryPackage> FetchJsonAsync(HttpClient client, string url,
+        Func<JsonElement, RegistryPackage> map)
     {
-        using HttpResponseMessage response = await client.GetAsync($"https://hex.pm/api/packages/{Uri.EscapeDataString(package)}");
+        using HttpResponseMessage response = await client.GetAsync(url);
         if (!response.IsSuccessStatusCode) return Unsuccessful(response);
         using JsonDocument doc = await ParseJsonAsync(response);
-        JsonElement root = doc.RootElement;
-        bool hasMeta = root.TryGetProperty("meta", out JsonElement meta);
 
-        string? publisher = FirstPersonName(root, "owners")
-            ?? (hasMeta ? StringOrFirst(meta, "maintainers") : null);
-        string? license = hasMeta ? StringOrFirst(meta, "licenses") : null;
-
-        return new RegistryPackage(Text(root, "latest_stable_version"), publisher, license);
-    }
-
-    private static async Task<RegistryPackage> FetchPubAsync(HttpClient client, string package)
-    {
-        using HttpResponseMessage response = await client.GetAsync($"https://pub.dev/api/packages/{Uri.EscapeDataString(package)}");
-        if (!response.IsSuccessStatusCode) return Unsuccessful(response);
-        using JsonDocument doc = await ParseJsonAsync(response);
-        if (!doc.RootElement.TryGetProperty("latest", out JsonElement latest)) return RegistryPackage.Unresolved;
-
-        string? publisher = latest.TryGetProperty("pubspec", out JsonElement pubspec)
-            ? Text(pubspec, "publisher") ?? StringOrFirst(pubspec, "authors")
-            : null;
-
-        bool isDiscontinued = doc.RootElement.TryGetProperty("isDiscontinued", out JsonElement discontinued)
-            && discontinued.ValueKind == JsonValueKind.True;
-
-        return new RegistryPackage(Text(latest, "version"), publisher, IsDeprecated: isDiscontinued);
+        return map(doc.RootElement);
     }
 
     private static async Task<JsonDocument> ParseJsonAsync(HttpResponseMessage response)

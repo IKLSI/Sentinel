@@ -343,7 +343,6 @@
   "validation.suppression.reason_invalid": "Motif invalide",
   "errors.projects.invalid_repository_url": "URL de dépôt invalide. Hôtes autorisés : github.com et l'instance GitLab configurée dans l'organisation",
   "errors.projects.invalid_scan_frequency": "Fréquence invalide ({values})",
-  "errors.settings.token_required": "Le token est requis",
   "errors.settings.gitlab_instance_in_use": "Des projets de l'organisation pointent encore vers l'instance GitLab actuelle : supprimez-les avant de changer d'instance",
   "errors.settings.invalid_github_token": "Le token GitHub est invalide ou ne peut pas être vérifié auprès du fournisseur",
   "errors.settings.invalid_gitlab_token": "Le token GitLab est invalide, ou l'instance est injoignable ou présente un certificat non reconnu",

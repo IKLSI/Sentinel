@@ -1,59 +1,61 @@
+using Sentinel.Domain.Entities;
+
 namespace Sentinel.Application.Exports;
 public partial class ExportService
 {
     private string Text(ExportLabels labels, string key) => localizer.Get(labels.Culture, key);
 
-    private string TranslateTicketPriority(string priority, ExportLabels labels) => priority switch
+    private string TranslateTicketPriority(TicketPriority priority, ExportLabels labels) => priority switch
     {
-        "Low" => Text(labels, "exports.ticket_priority.low"),
-        "Medium" => Text(labels, "exports.ticket_priority.medium"),
-        "High" => Text(labels, "exports.ticket_priority.high"),
-        "Critical" => Text(labels, "exports.ticket_priority.critical"),
-        _ => priority,
+        TicketPriority.Low => Text(labels, "exports.ticket_priority.low"),
+        TicketPriority.Medium => Text(labels, "exports.ticket_priority.medium"),
+        TicketPriority.High => Text(labels, "exports.ticket_priority.high"),
+        TicketPriority.Critical => Text(labels, "exports.ticket_priority.critical"),
+        _ => priority.ToString(),
     };
 
-    private string TranslateTicketStatus(string status, ExportLabels labels) => status switch
+    private string TranslateTicketStatus(TicketStatus status, ExportLabels labels) => status switch
     {
-        "New" => Text(labels, "exports.ticket_status.new"),
-        "InProgress" => Text(labels, "exports.ticket_status.in_progress"),
-        "Testing" => Text(labels, "exports.ticket_status.testing"),
-        "Resolved" => Text(labels, "exports.ticket_status.resolved"),
-        "Closed" => Text(labels, "exports.ticket_status.closed"),
-        _ => status,
+        TicketStatus.New => Text(labels, "exports.ticket_status.new"),
+        TicketStatus.InProgress => Text(labels, "exports.ticket_status.in_progress"),
+        TicketStatus.Testing => Text(labels, "exports.ticket_status.testing"),
+        TicketStatus.Resolved => Text(labels, "exports.ticket_status.resolved"),
+        TicketStatus.Closed => Text(labels, "exports.ticket_status.closed"),
+        _ => status.ToString(),
     };
 
-    private string TranslateTicketType(string type, ExportLabels labels) => type switch
+    private string TranslateTicketType(TicketType type, ExportLabels labels) => type switch
     {
-        "Feature" => Text(labels, "exports.ticket_type.feature"),
-        "Security" => Text(labels, "exports.ticket_type.security"),
-        "Bug" => Text(labels, "exports.ticket_type.bug"),
-        _ => type,
+        TicketType.Feature => Text(labels, "exports.ticket_type.feature"),
+        TicketType.Security => Text(labels, "exports.ticket_type.security"),
+        TicketType.Bug => Text(labels, "exports.ticket_type.bug"),
+        _ => type.ToString(),
     };
 
-    private string TranslateDependencyStatus(string status, ExportLabels labels) => status switch
+    private string TranslateDependencyStatus(DependencyStatus status, ExportLabels labels) => status switch
     {
-        "UpToDate" => Text(labels, "exports.dependency_status.up_to_date"),
-        "MinorUpdate" => Text(labels, "exports.dependency_status.minor_update"),
-        "MajorUpdate" => Text(labels, "exports.dependency_status.major_update"),
-        "EOL" => Text(labels, "exports.dependency_status.eol"),
-        "Vulnerable" => Text(labels, "exports.dependency_status.vulnerable"),
-        _ => status,
+        DependencyStatus.UpToDate => Text(labels, "exports.dependency_status.up_to_date"),
+        DependencyStatus.MinorUpdate => Text(labels, "exports.dependency_status.minor_update"),
+        DependencyStatus.MajorUpdate => Text(labels, "exports.dependency_status.major_update"),
+        DependencyStatus.EOL => Text(labels, "exports.dependency_status.eol"),
+        DependencyStatus.Vulnerable => Text(labels, "exports.dependency_status.vulnerable"),
+        _ => status.ToString(),
     };
 
-    private string TranslateSeverity(string severity, ExportLabels labels) => severity switch
+    private string TranslateSeverity(VulnerabilitySeverity severity, ExportLabels labels) => severity switch
     {
-        "Critical" => Text(labels, "exports.severity.critical"),
-        "High" => Text(labels, "exports.severity.high"),
-        "Medium" => Text(labels, "exports.severity.medium"),
-        "Low" => Text(labels, "exports.severity.low"),
-        _ => severity,
+        VulnerabilitySeverity.Critical => Text(labels, "exports.severity.critical"),
+        VulnerabilitySeverity.High => Text(labels, "exports.severity.high"),
+        VulnerabilitySeverity.Medium => Text(labels, "exports.severity.medium"),
+        VulnerabilitySeverity.Low => Text(labels, "exports.severity.low"),
+        _ => severity.ToString(),
     };
 
-    private string TranslateDependencyType(string type, ExportLabels labels) => type switch
+    private string TranslateDependencyType(DependencyType type, ExportLabels labels) => type switch
     {
-        "Prod" => Text(labels, "exports.dependency_type.prod"),
-        "Dev" => Text(labels, "exports.dependency_type.dev"),
-        _ => type,
+        DependencyType.Prod => Text(labels, "exports.dependency_type.prod"),
+        DependencyType.Dev => Text(labels, "exports.dependency_type.dev"),
+        _ => type.ToString(),
     };
 
 }

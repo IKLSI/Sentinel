@@ -12,7 +12,7 @@ public sealed class FindingTicketDraftBuilder(ILocalizer localizer, string cultu
 
     public FindingTicketDraft ForVulnerability(Dependency dependency, Vulnerability vulnerability)
     {
-        string reference = vulnerability.CveAlias ?? vulnerability.CveId;
+        string reference = VulnerabilityIdentity.Of(vulnerability);
 
         Dictionary<string, string> parameters = new()
         {

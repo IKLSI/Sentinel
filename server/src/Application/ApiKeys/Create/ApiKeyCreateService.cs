@@ -37,9 +37,7 @@ public class ApiKeyCreateService(
             Name = model.Name.Trim(),
             KeyHash = keyHash,
             Prefix = displayPrefix,
-            ExpiresAt = model.ExpiresAt.HasValue
-                ? DateTime.SpecifyKind(model.ExpiresAt.Value, DateTimeKind.Utc)
-                : null,
+            ExpiresAt = DateTime.SpecifyKind(model.ExpiresAt!.Value, DateTimeKind.Utc),
         };
 
         using (ICommitScope commitScope = commitScopeFactory.Begin())

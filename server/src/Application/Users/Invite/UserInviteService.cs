@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
@@ -11,7 +10,7 @@ using Sentinel.Domain.Entities;
 using Sentinel.Domain.Realtime;
 using Sentinel.Domain.Repositories;
 using Sentinel.Application.Common.Contracts;
-using Sentinel.Application.Options;
+using Sentinel.Application.Auth;
 
 namespace Sentinel.Application.Users.Invite;
 
@@ -23,7 +22,7 @@ public class UserInviteService(
     IAuditLogService auditLog,
     IRealtimeNotifier realtimeNotifier,
     ISystemScope systemScope,
-    IOptions<FrontendSettings> frontendOptions,
+    ExistingAccountNotifier existingAccountNotifier,
     ITenantContext tenant,
     QueuedTokenProtector tokenProtector,
     UserInviteValidator validator) : IService
@@ -40,34 +39,18 @@ public class UserInviteService(
         if (!validationResult.IsSuccess)
             return Result<ApiMessageResponse>.From(validationResult);
 
-        Result roleResult = validator.ValidateRole(model, out UserRole role);
-
-        if (!roleResult.IsSuccess)
-            return Result<ApiMessageResponse>.From(roleResult);
-
+        UserRole role = Enum.Parse<UserRole>(model.Role, ignoreCase: true);
         string email = model.Email.ToLowerInvariant();
-
-        bool accountExistsElsewhere;
-        string? existingAccountLanguage;
 
         using (systemScope.Enter())
         {
-            accountExistsElsewhere = await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken);
-            existingAccountLanguage = accountExistsElsewhere
-                ? await userRepository.GetLanguageByEmailOrDefaultAsync(email, cancellationToken)
-                : null;
-        }
+            if (await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken))
+            {
+                await existingAccountNotifier.NotifyAsync(email, cancellationToken);
 
-        if (accountExistsElsewhere)
-        {
-            string frontendBaseUrl = frontendOptions.Value.BaseUrl;
-            string culture = existingAccountLanguage ?? LanguageValues.Fr;
-
-            jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture,
-                CancellationToken.None));
-
-            return Result<ApiMessageResponse>.Accepted(
-                ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
+                return Result<ApiMessageResponse>.Accepted(
+                    ApiMessageResponse.Create(SuccessCodes.UserInvitationSent));
+            }
         }
 
         string rawToken = SecureToken.Generate();

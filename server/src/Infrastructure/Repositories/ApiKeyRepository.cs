@@ -36,24 +36,13 @@ public class ApiKeyRepository : CrudEntityWithIdRepository<ApiKey>, IApiKeyRepos
 
         return sortBy switch
         {
-            ApiKeySortField.Name => descending
-                ? query.OrderByDescending(k => k.Name)
-                : query.OrderBy(k => k.Name),
-            ApiKeySortField.Prefix => descending
-                ? query.OrderByDescending(k => k.Prefix)
-                : query.OrderBy(k => k.Prefix),
-            ApiKeySortField.CreatedBy => descending
-                ? query.OrderByDescending(k => k.CreatedBy.FullName)
-                : query.OrderBy(k => k.CreatedBy.FullName),
-            ApiKeySortField.Expires => descending
-                ? query.OrderBy(k => k.ExpiresAt == null).ThenByDescending(k => k.ExpiresAt)
-                : query.OrderBy(k => k.ExpiresAt == null).ThenBy(k => k.ExpiresAt),
-            ApiKeySortField.LastUsed => descending
-                ? query.OrderByDescending(k => k.LastUsedAt)
-                : query.OrderBy(k => k.LastUsedAt),
-            _ => descending
-                ? query.OrderByDescending(k => k.CreatedAt)
-                : query.OrderBy(k => k.CreatedAt)
+            ApiKeySortField.Name => query.OrderBy(k => k.Name, descending),
+            ApiKeySortField.Prefix => query.OrderBy(k => k.Prefix, descending),
+            ApiKeySortField.CreatedBy => query.OrderBy(k => k.CreatedBy.FullName, descending),
+            ApiKeySortField.Expires => query.OrderBy(k => k.ExpiresAt == null)
+                .ThenBy(k => k.ExpiresAt, descending),
+            ApiKeySortField.LastUsed => query.OrderBy(k => k.LastUsedAt, descending),
+            _ => query.OrderBy(k => k.CreatedAt, descending)
         };
     }
 

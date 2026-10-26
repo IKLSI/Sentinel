@@ -174,9 +174,10 @@ public class RepositoryScannerService(
             progress?.Report(ScanStage.Manifests);
 
             List<(string Name, string Url, string Path)> discoveredManifests = listing.Files
-                .Where(f => RepositoryScanPaths.IsInScope(f.Path, rootPath)
-                    || (rootPath != null && ManifestParserService.IsWorkflowFile(f.Url)))
-                .Select(f => (Name: ManifestParserService.IsWorkflowFile(f.Url) ? ManifestParserService.WorkflowFileName : f.Name, f.Url, f.Path))
+                .Select(f => (File: f, IsWorkflow: ManifestParserService.IsWorkflowFile(f.Url)))
+                .Where(f => RepositoryScanPaths.IsInScope(f.File.Path, rootPath) || (rootPath != null && f.IsWorkflow))
+                .Select(f => (Name: f.IsWorkflow ? ManifestParserService.WorkflowFileName : f.File.Name, f.File.Url,
+                    f.File.Path))
                 .Where(f => f.Name == ManifestParserService.WorkflowFileName || ManifestParserService.IsManifest(f.Name))
                 .OrderBy(f => ManifestParserService.ScanPriority(f.Name))
                 .ToList();
@@ -195,47 +196,8 @@ public class RepositoryScannerService(
             using SemaphoreSlim throttle = new SemaphoreSlim(MaxConcurrentDownloads);
             ConcurrentQueue<string> unreadableFiles = new();
 
-            ParsedManifest?[] parsedManifests = await Task.WhenAll(manifestFiles.Select(async file =>
-            {
-                string? content;
-
-                await throttle.WaitAsync(cancellationToken);
-                try { content = await hostClient.FetchTextAsync(host, file.Url, access, cancellationToken); }
-                finally { throttle.Release(); }
-
-                if (content == null)
-                {
-                    unreadableFiles.Enqueue(file.Path);
-                    return null;
-                }
-
-                try
-                {
-                    ManifestParseOutcome outcome = parser.ParseReportingFailure(projectId, file.Name, content);
-
-                    if (outcome.Failure != null)
-                    {
-                        unreadableFiles.Enqueue(file.Path);
-                        logger.LogWarning(outcome.Failure, "Manifest {Path} is malformed, only its readable part is kept",
-                            file.Path);
-                    }
-
-                    foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
-
-                    LockGraph? graph = ManifestParserService.HasLockGraph(file.Name)
-                        ? parser.ParseLockGraph(file.Name, content)
-                        : null;
-
-                    return new ParsedManifest(file.Name, RepositoryScanPaths.DirectoryOf(file.Path),
-                        ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes, graph);
-                }
-                catch (Exception ex)
-                {
-                    unreadableFiles.Enqueue(file.Path);
-                    logger.LogWarning(ex, "Manifest {File} could not be parsed and is ignored", file.Name);
-                    return null;
-                }
-            }));
+            ParsedManifest?[] parsedManifests = await Task.WhenAll(manifestFiles.Select(file =>
+                ParseManifestAsync(projectId, host, file, access, throttle, unreadableFiles, cancellationToken)));
 
             InventoryGap? gap = InventoryGapOf(listing.Truncated, discoveredManifests.Count, unreadableFiles);
 
@@ -247,46 +209,7 @@ public class RepositoryScannerService(
             }
 
             List<ParsedManifest> parsed = parsedManifests.OfType<ParsedManifest>().ToList();
-            List<ParsedManifest> lockFiles = parsed.Where(manifest => manifest.IsLockFile).ToList();
-            List<ParsedManifest> manifests = parsed.Where(manifest => !manifest.IsLockFile).ToList();
-
-            foreach (ParsedManifest lockFile in lockFiles)
-            {
-                List<Dependency> coveredManifestDeps = manifests
-                    .Where(manifest => RepositoryScanPaths.Covers(lockFile.Directory, manifest.Directory))
-                    .SelectMany(manifest => manifest.Dependencies)
-                    .ToList();
-
-                ApplyDeclaredTypes(lockFile.Dependencies, coveredManifestDeps);
-                ApplyTransitiveDevTypes(lockFile, coveredManifestDeps);
-                ApplyDirectness(lockFile, coveredManifestDeps);
-            }
-
-            List<LockedPackages> lockedPackages = lockFiles.Select(LockedPackages.Of).ToList();
-
-            List<Dependency> unlockedManifestDeps = manifests
-                .SelectMany(manifest => manifest.Dependencies
-                    .Where(dependency => !IsLocked(dependency, manifest.Directory, lockedPackages)))
-                .ToList();
-
-            List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
-                .Concat(unlockedManifestDeps)
-                .GroupBy(d => (Identity: DependencyIdentity.Of(d), d.CurrentVersion))
-                .Select(g =>
-                {
-                    Dependency kept = g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First();
-                    kept.IsDirect = g.Any(d => d.IsDirect);
-                    return kept;
-                })
-                .ToList();
-
-            List<Runtime> dedupedRuntimes = manifests.SelectMany(manifest => manifest.Runtimes)
-                .Where(r => !string.IsNullOrWhiteSpace(r.Version))
-                .GroupBy(r => (Name: r.Name.ToLowerInvariant(), Version: r.Version.Trim()))
-                .Select(g => g.OrderBy(r => r.IsMinimumConstraint).First())
-                .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            (List<Dependency> dedupedDeps, List<Runtime> dedupedRuntimes) = MergeInventory(parsed);
 
             progress?.Report(ScanStage.Registries);
             await registryMetadata.ApplyAsync(RegistryCandidates(dedupedDeps), cancellationToken);
@@ -302,6 +225,96 @@ public class RepositoryScannerService(
             return new ScanOutcome(new List<Dependency>(), new List<Runtime>(),
                 ErrorCodes.ScanFailed);
         }
+    }
+
+    private async Task<ParsedManifest?> ParseManifestAsync(Guid projectId, string host,
+        (string Name, string Url, string Path) file, RepositoryAccess? access, SemaphoreSlim throttle,
+        ConcurrentQueue<string> unreadableFiles, CancellationToken cancellationToken)
+    {
+        string? content;
+
+        await throttle.WaitAsync(cancellationToken);
+        try { content = await hostClient.FetchTextAsync(host, file.Url, access, cancellationToken); }
+        finally { throttle.Release(); }
+
+        if (content == null)
+        {
+            unreadableFiles.Enqueue(file.Path);
+            return null;
+        }
+
+        try
+        {
+            ManifestParseOutcome outcome = parser.ParseReportingFailure(projectId, file.Name, content);
+
+            if (outcome.Failure != null)
+            {
+                unreadableFiles.Enqueue(file.Path);
+                logger.LogWarning(outcome.Failure, "Manifest {Path} is malformed, only its readable part is kept",
+                    file.Path);
+            }
+
+            foreach (Dependency dependency in outcome.Dependencies) dependency.ManifestPath = file.Path;
+
+            LockGraph? graph = ManifestParserService.HasLockGraph(file.Name)
+                ? parser.ParseLockGraph(file.Name, content)
+                : null;
+
+            return new ParsedManifest(file.Name, RepositoryScanPaths.DirectoryOf(file.Path),
+                ManifestParserService.IsLockFile(file.Name), outcome.Dependencies, outcome.Runtimes, graph);
+        }
+        catch (Exception ex)
+        {
+            unreadableFiles.Enqueue(file.Path);
+            logger.LogWarning(ex, "Manifest {File} could not be parsed and is ignored", file.Name);
+            return null;
+        }
+    }
+
+    private static (List<Dependency> Dependencies, List<Runtime> Runtimes) MergeInventory(List<ParsedManifest> parsed)
+    {
+        List<ParsedManifest> lockFiles = parsed.Where(manifest => manifest.IsLockFile).ToList();
+        List<ParsedManifest> manifests = parsed.Where(manifest => !manifest.IsLockFile).ToList();
+
+        foreach (ParsedManifest lockFile in lockFiles)
+        {
+            List<Dependency> coveredManifestDeps = manifests
+                .Where(manifest => RepositoryScanPaths.Covers(lockFile.Directory, manifest.Directory))
+                .SelectMany(manifest => manifest.Dependencies)
+                .ToList();
+
+            ApplyDeclaredTypes(lockFile.Dependencies, coveredManifestDeps);
+            ApplyTransitiveDevTypes(lockFile, coveredManifestDeps);
+            ApplyDirectness(lockFile, coveredManifestDeps);
+        }
+
+        List<LockedPackages> lockedPackages = lockFiles.Select(LockedPackages.Of).ToList();
+
+        List<Dependency> unlockedManifestDeps = manifests
+            .SelectMany(manifest => manifest.Dependencies
+                .Where(dependency => !IsLocked(dependency, manifest.Directory, lockedPackages)))
+            .ToList();
+
+        List<Dependency> dedupedDeps = lockFiles.SelectMany(lockFile => lockFile.Dependencies)
+            .Concat(unlockedManifestDeps)
+            .GroupBy(d => (Identity: DependencyIdentity.Of(d), d.CurrentVersion))
+            .Select(g =>
+            {
+                Dependency kept = g.OrderBy(d => d.Type).ThenByDescending(d => d.IsDirect).First();
+                kept.IsDirect = g.Any(d => d.IsDirect);
+                return kept;
+            })
+            .ToList();
+
+        List<Runtime> dedupedRuntimes = manifests.SelectMany(manifest => manifest.Runtimes)
+            .Where(r => !string.IsNullOrWhiteSpace(r.Version))
+            .GroupBy(r => (Name: r.Name.ToLowerInvariant(), Version: r.Version.Trim()))
+            .Select(g => g.OrderBy(r => r.IsMinimumConstraint).First())
+            .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(r => r.Version, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return (dedupedDeps, dedupedRuntimes);
     }
 
     private static List<Dependency> RegistryCandidates(IEnumerable<Dependency> dependencies) =>

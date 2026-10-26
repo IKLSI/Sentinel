@@ -63,25 +63,14 @@ public static class TicketFilterParser
         Search = string.IsNullOrWhiteSpace(request.Search) ? null : request.Search
     };
 
-    private static Result ValidateValues<TValue>(string[] values, string field) where TValue : struct, Enum
-    {
-        Result countResult = ValidateCount(values, field);
-
-        if (!countResult.IsSuccess)
-            return countResult;
-
-        foreach (string value in values)
-        {
-            if (!EnumValue.TryParse(value, out TValue _))
-                return InvalidValue(field, value);
-        }
-
-        return Result.Success();
-    }
+    private static Result ValidateValues<TValue>(string[] values, string field) where TValue : struct, Enum =>
+        FilterValues.Validate<TValue>(values, field, TicketFilterRequest.MaxValuesPerField,
+            ErrorCodes.TicketFilterTooManyValues, ErrorCodes.TicketFilterValueInvalid);
 
     private static Result ValidateReferences(string[] values, string field)
     {
-        Result countResult = ValidateCount(values, field);
+        Result countResult = FilterValues.ValidateCount(values, field, TicketFilterRequest.MaxValuesPerField,
+            ErrorCodes.TicketFilterTooManyValues);
 
         if (!countResult.IsSuccess)
             return countResult;
@@ -89,43 +78,14 @@ public static class TicketFilterParser
         foreach (string value in values)
         {
             if (!IsUnset(value) && !Guid.TryParse(value, out Guid _))
-                return InvalidValue(field, value);
+                return FilterValues.Invalid(field, value, ErrorCodes.TicketFilterValueInvalid);
         }
 
         return Result.Success();
     }
 
-    private static Result ValidateCount(string[] values, string field)
-    {
-        if (values.Length <= TicketFilterRequest.MaxValuesPerField)
-            return Result.Success();
-
-        return Result.Error(ErrorCodes.TicketFilterTooManyValues, new Dictionary<string, string>
-        {
-            ["field"] = field,
-            ["maxValues"] = TicketFilterRequest.MaxValuesPerField.ToString()
-        });
-    }
-
-    private static Result InvalidValue(string field, string value) =>
-        Result.Error(ErrorCodes.TicketFilterValueInvalid, new Dictionary<string, string>
-        {
-            ["field"] = field,
-            ["value"] = value
-        });
-
-    private static TicketValueFilter<TValue> BuildValues<TValue>(string[] values) where TValue : struct, Enum
-    {
-        List<TValue> parsed = [];
-
-        foreach (string value in values)
-        {
-            if (EnumValue.TryParse(value, out TValue result) && !parsed.Contains(result))
-                parsed.Add(result);
-        }
-
-        return new TicketValueFilter<TValue> { Values = parsed };
-    }
+    private static TicketValueFilter<TValue> BuildValues<TValue>(string[] values) where TValue : struct, Enum =>
+        new() { Values = FilterValues.ParseDistinct<TValue>(values) };
 
     private static TicketReferenceFilter BuildReferences(string[] values)
     {

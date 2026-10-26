@@ -51,9 +51,7 @@ public partial class ManifestParserService
                 Name = m.Groups[1].Value,
                 CurrentVersion = version,
                 IsVersionPinned = VersionText.IsExact(m.Groups[2].Value),
-                Type = DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Hex,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }
@@ -62,15 +60,7 @@ public partial class ManifestParserService
     {
         foreach (Match m in MixLockHexEntryRegex().Matches(content))
         {
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = m.Groups[1].Value,
-                CurrentVersion = m.Groups[2].Value,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Hex,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, m.Groups[1].Value, m.Groups[2].Value, DependencyEcosystem.Hex));
         }
     }
 
@@ -139,7 +129,6 @@ public partial class ManifestParserService
                 IsVersionPinned = VersionText.IsExact(specification),
                 Type = section == "dev" ? DependencyType.Dev : DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.Pub,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }
@@ -162,7 +151,6 @@ public partial class ManifestParserService
                     IsDirect = dependency == null || dependency.StartsWith("direct", StringComparison.Ordinal),
                     Type = isDev ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.Pub,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
             name = version = dependency = source = null;
@@ -226,15 +214,7 @@ public partial class ManifestParserService
                 ? v.GetString() : null;
             if (string.IsNullOrEmpty(version)) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = NormalizeSwiftUrl(location),
-                CurrentVersion = version,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.Swift,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, NormalizeSwiftUrl(location), version, DependencyEcosystem.Swift));
         }
     }
 
@@ -280,9 +260,7 @@ public partial class ManifestParserService
                 Name = name,
                 CurrentVersion = version,
                 IsDirect = directPods.Count == 0 || directPods.Contains(name),
-                Type = DependencyType.Prod,
                 Ecosystem = DependencyEcosystem.CocoaPods,
-                Status = DependencyStatus.UpToDate,
             });
         }
     }

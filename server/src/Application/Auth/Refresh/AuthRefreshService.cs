@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
@@ -10,84 +9,56 @@ using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth.Refresh;
 
-public class AuthRefreshService : IService
+public class AuthRefreshService(
+    IUserRepository userRepository,
+    ICommitScopeFactory commitScopeFactory,
+    TokenService tokenService,
+    SessionTokenIssuer sessionTokenIssuer,
+    ISystemScope systemScope,
+    IAuditLogService auditLog,
+    IRefreshTokenStore refreshTokenStore,
+    IMemoryCache cache,
+    ILogger<AuthRefreshService> logger) : IService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ICommitScopeFactory _commitScopeFactory;
-    private readonly TokenService _tokenService;
-    private readonly JwtSettings _jwt;
-    private readonly ISystemScope _systemScope;
-    private readonly IAuditLogService _auditLog;
-    private readonly IRefreshTokenStore _refreshTokenStore;
-    private readonly IMemoryCache _cache;
-    private readonly ILogger<AuthRefreshService> _logger;
-
-    public AuthRefreshService(
-        IUserRepository userRepository,
-        ICommitScopeFactory commitScopeFactory,
-        TokenService tokenService,
-        IOptions<JwtSettings> jwtOptions,
-        ISystemScope systemScope,
-        IAuditLogService auditLog,
-        IRefreshTokenStore refreshTokenStore,
-        IMemoryCache cache,
-        ILogger<AuthRefreshService> logger)
-    {
-        _userRepository = userRepository;
-        _commitScopeFactory = commitScopeFactory;
-        _tokenService = tokenService;
-        _jwt = jwtOptions.Value;
-        _systemScope = systemScope;
-        _auditLog = auditLog;
-        _refreshTokenStore = refreshTokenStore;
-        _cache = cache;
-        _logger = logger;
-    }
-
     public async Task<Result<LoginResponse>> ExecuteAsync(CancellationToken cancellationToken)
     {
-        string? refreshToken = _refreshTokenStore.Read();
+        string? refreshToken = refreshTokenStore.Read();
 
         if (string.IsNullOrEmpty(refreshToken))
             return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidRefreshToken);
 
-        string tokenHash = _tokenService.HashRefreshToken(refreshToken);
+        string tokenHash = tokenService.HashRefreshToken(refreshToken);
 
         User? user;
         string newAccessToken;
         string newRefreshToken;
 
-        using (_systemScope.Enter())
+        using (systemScope.Enter())
         {
-            user = await _userRepository.GetOrDefaultByRefreshTokenHashAsync(tokenHash, cancellationToken);
+            user = await userRepository.GetOrDefaultByRefreshTokenHashAsync(tokenHash, cancellationToken);
 
             if (user == null)
             {
                 await RevokeOnReplayAsync(tokenHash, cancellationToken);
-                _refreshTokenStore.Clear();
+                refreshTokenStore.Clear();
 
                 return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthInvalidRefreshToken);
             }
 
-            newAccessToken = _tokenService.GenerateAccessToken(user);
-            newRefreshToken = _tokenService.GenerateRefreshToken();
-
-            using ICommitScope commitScope = _commitScopeFactory.Begin();
+            using ICommitScope commitScope = commitScopeFactory.Begin();
 
             user.PreviousRefreshTokenHash = user.RefreshToken;
-            user.RefreshToken = _tokenService.HashRefreshToken(newRefreshToken);
-            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
+            (newAccessToken, newRefreshToken) = sessionTokenIssuer.Issue(user);
 
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        _refreshTokenStore.Write(newRefreshToken);
+        refreshTokenStore.Write(newRefreshToken);
 
-        await _auditLog.LogAsync(
+        await auditLog.LogAsync(
             AuditAction.TokenRefreshed,
             entityType: AuditEntityTypes.User,
             organizationId: user.OrganizationId,
@@ -103,24 +74,22 @@ public class AuthRefreshService : IService
 
     private async Task RevokeOnReplayAsync(string tokenHash, CancellationToken cancellationToken)
     {
-        User? replayUser = await _userRepository
+        User? replayUser = await userRepository
             .GetOrDefaultByPreviousRefreshTokenHashAsync(tokenHash, cancellationToken);
 
         if (replayUser == null) return;
 
-        using ICommitScope commitScope = _commitScopeFactory.Begin();
+        using ICommitScope commitScope = commitScopeFactory.Begin();
 
-        replayUser.RefreshToken = null;
-        replayUser.RefreshTokenExpiry = null;
-        replayUser.TokenVersion++;
+        replayUser.RevokeSessions();
 
         await commitScope.CommitAsync(cancellationToken);
 
-        _cache.Remove(CacheKeys.AuthAccount(replayUser.Id));
+        cache.Remove(CacheKeys.AuthAccount(replayUser.Id));
 
-        _logger.LogWarning("Token replay detected for userId {UserId}", replayUser.Id);
+        logger.LogWarning("Token replay detected for userId {UserId}", replayUser.Id);
 
-        await _auditLog.LogAsync(
+        await auditLog.LogAsync(
             AuditAction.RefreshTokenReplayed,
             entityType: AuditEntityTypes.User,
             organizationId: replayUser.OrganizationId,

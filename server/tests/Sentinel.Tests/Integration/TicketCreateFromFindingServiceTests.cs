@@ -86,11 +86,14 @@ public class TicketCreateFromFindingServiceTests
         scope.Tickets,
         scope.Projects,
         scope.Users,
-        scope.Organizations,
-        scope.CommitScopeFactory,
         TestLocalizer.Create(),
-        new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
-        new FakeAuditLogService(),
+        new TicketCreator(
+            scope.Tickets,
+            scope.Organizations,
+            scope.CommitScopeFactory,
+            new DashboardCache(new MemoryCache(new MemoryCacheOptions())),
+            new FakeAuditLogService(),
+            scope.Tenant),
         new NoopRealtimeNotifier(),
         scope.Tenant,
         new TicketCreateFromFindingValidator());

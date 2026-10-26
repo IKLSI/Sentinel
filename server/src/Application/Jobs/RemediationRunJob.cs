@@ -26,7 +26,7 @@ public class RemediationRunJob(
     ISystemScope systemScope,
     ILogger<RemediationRunJob> logger)
 {
-    public static readonly TimeSpan ConfigTicketLifetime = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan ConfigTicketLifetime = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan RunLookupMargin = TimeSpan.FromMinutes(1);
 

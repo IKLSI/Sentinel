@@ -8,58 +8,41 @@ using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Jobs;
 
-public class SendInvitationEmailJob
+public class SendInvitationEmailJob(
+    IUserInvitationRepository invitationRepository,
+    IEmailService emailService,
+    IOptions<FrontendSettings> frontendOptions,
+    ILogger<SendInvitationEmailJob> logger,
+    ISystemScope systemScope,
+    QueuedTokenProtector tokenProtector)
 {
-    private readonly IUserInvitationRepository _invitationRepository;
-    private readonly IEmailService _emailService;
-    private readonly FrontendSettings _frontend;
-    private readonly ILogger<SendInvitationEmailJob> _logger;
-    private readonly ISystemScope _systemScope;
-    private readonly QueuedTokenProtector _tokenProtector;
-
-    public SendInvitationEmailJob(
-        IUserInvitationRepository invitationRepository,
-        IEmailService emailService,
-        IOptions<FrontendSettings> frontendOptions,
-        ILogger<SendInvitationEmailJob> logger,
-        ISystemScope systemScope,
-        QueuedTokenProtector tokenProtector)
-    {
-        _invitationRepository = invitationRepository;
-        _emailService = emailService;
-        _frontend = frontendOptions.Value;
-        _logger = logger;
-        _systemScope = systemScope;
-        _tokenProtector = tokenProtector;
-    }
-
     public async Task ExecuteAsync(Guid invitationId, string protectedToken, CancellationToken cancellationToken)
     {
-        string? rawToken = _tokenProtector.Unprotect(protectedToken);
+        string? rawToken = tokenProtector.Unprotect(protectedToken);
 
         if (string.IsNullOrEmpty(rawToken))
             throw new UndecryptableQueuedTokenException(nameof(SendInvitationEmailJob));
 
         UserInvitation? invitation;
 
-        using (_systemScope.Enter())
+        using (systemScope.Enter())
         {
-            invitation = await _invitationRepository
+            invitation = await invitationRepository
                 .GetOrDefaultWithOrganizationAndInviterAsync(invitationId, cancellationToken);
         }
 
         if (invitation == null)
         {
-            _logger.LogWarning("Invitation {InvitationId} not found", invitationId);
+            logger.LogWarning("Invitation {InvitationId} not found", invitationId);
             return;
         }
 
-        await _emailService.SendInvitationAsync(
+        await emailService.SendInvitationAsync(
             invitation,
             rawToken,
             invitation.Organization.Name,
             invitation.InvitedBy.FullName,
-            _frontend.BaseUrl,
+            frontendOptions.Value.BaseUrl,
             invitation.InvitedBy.Language,
             cancellationToken
         );

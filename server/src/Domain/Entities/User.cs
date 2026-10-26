@@ -49,4 +49,11 @@ public class User : IEntityWithId
     public Organization Organization { get; set; } = null!;
 
     public string FullName => PersonName.Format(FirstName, LastName) ?? string.Empty;
+
+    public void RevokeSessions()
+    {
+        RefreshToken = null;
+        RefreshTokenExpiry = null;
+        TokenVersion++;
+    }
 }

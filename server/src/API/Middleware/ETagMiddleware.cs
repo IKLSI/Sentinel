@@ -45,8 +45,7 @@ public class ETagMiddleware
             context.Response.Headers.ETag = etag;
             context.Response.Headers.CacheControl = "private, no-cache";
 
-            string? ifNoneMatch = context.Request.Headers.IfNoneMatch.ToString();
-            if (!string.IsNullOrEmpty(ifNoneMatch) && ifNoneMatch == etag)
+            if (context.Request.Headers.IfNoneMatch.ToString() == etag)
             {
                 context.Response.StatusCode = StatusCodes.Status304NotModified;
                 context.Response.ContentLength = 0;
@@ -110,9 +109,9 @@ public class ETagMiddleware
 
         public async Task FlushBufferedAsync(CancellationToken cancellationToken)
         {
-            if (_buffer is null || _buffer.Length == 0) return;
+            if (CapturedBody is not { Length: > 0 } body) return;
 
-            await _target.WriteAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), cancellationToken);
+            await _target.WriteAsync(body, cancellationToken);
         }
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> source,

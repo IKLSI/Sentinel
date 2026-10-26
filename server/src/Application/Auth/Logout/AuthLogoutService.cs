@@ -30,9 +30,7 @@ public class AuthLogoutService(
         {
             using ICommitScope commitScope = commitScopeFactory.Begin();
 
-            user.RefreshToken = null;
-            user.RefreshTokenExpiry = null;
-            user.TokenVersion++;
+            user.RevokeSessions();
 
             await commitScope.CommitAsync(cancellationToken);
 

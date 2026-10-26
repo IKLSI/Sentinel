@@ -3,12 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Sentinel.Application.Security;
 
-public class QueuedTokenProtector : ProtectedTokenBase
+public class QueuedTokenProtector(IDataProtectionProvider provider, ILogger<QueuedTokenProtector> logger)
+    : ProtectedTokenBase(provider, logger, Purpose)
 {
     private const string Purpose = "Sentinel.QueuedEmailTokens.v1";
-
-    public QueuedTokenProtector(IDataProtectionProvider provider, ILogger<QueuedTokenProtector> logger)
-        : base(provider, logger, Purpose)
-    {
-    }
 }

@@ -44,7 +44,6 @@ public partial class ManifestParserService
             IsVersionPinned = pinned,
             Type = type,
             Ecosystem = DependencyEcosystem.PyPI,
-            Status = DependencyStatus.UpToDate,
         });
     }
 
@@ -137,7 +136,6 @@ public partial class ManifestParserService
                     IsVersionPinned = VersionText.IsExact(specification),
                     Type = isDevBlock ? DependencyType.Dev : DependencyType.Prod,
                     Ecosystem = DependencyEcosystem.PyPI,
-                    Status = DependencyStatus.UpToDate,
                 });
             }
         }
@@ -226,15 +224,8 @@ public partial class ManifestParserService
             Match categoryMatch = PoetryCategoryRegex().Match(b);
             bool isDev = categoryMatch.Success && categoryMatch.Groups[1].Value.Equals("dev", StringComparison.OrdinalIgnoreCase);
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = nameMatch.Groups[1].Value,
-                CurrentVersion = versionMatch.Groups[1].Value,
-                Type = isDev ? DependencyType.Dev : DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.PyPI,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, nameMatch.Groups[1].Value, versionMatch.Groups[1].Value,
+                DependencyEcosystem.PyPI, isDev ? DependencyType.Dev : DependencyType.Prod));
         }
     }
 
@@ -248,15 +239,8 @@ public partial class ManifestParserService
             if (!nameMatch.Success || !versionMatch.Success) continue;
             if (UvLocalSourceRegex().IsMatch(b)) continue;
 
-            deps.Add(new Dependency
-            {
-                ProjectId = projectId,
-                Name = nameMatch.Groups[1].Value,
-                CurrentVersion = versionMatch.Groups[1].Value,
-                Type = DependencyType.Prod,
-                Ecosystem = DependencyEcosystem.PyPI,
-                Status = DependencyStatus.UpToDate,
-            });
+            deps.Add(NewDependency(projectId, nameMatch.Groups[1].Value, versionMatch.Groups[1].Value,
+                DependencyEcosystem.PyPI));
         }
     }
 
@@ -277,15 +261,7 @@ public partial class ManifestParserService
 
                 if (string.IsNullOrEmpty(version)) continue;
 
-                deps.Add(new Dependency
-                {
-                    ProjectId = projectId,
-                    Name = pkg.Name,
-                    CurrentVersion = version,
-                    Type = type,
-                    Ecosystem = DependencyEcosystem.PyPI,
-                    Status = DependencyStatus.UpToDate,
-                });
+                deps.Add(NewDependency(projectId, pkg.Name, version, DependencyEcosystem.PyPI, type));
             }
         }
     }

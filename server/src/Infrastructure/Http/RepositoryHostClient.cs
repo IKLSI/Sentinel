@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers;
-using System.Net.Http.Headers;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -45,18 +45,11 @@ public partial class RepositoryHostClient(
     {
         if (platform.Contains("github", StringComparison.OrdinalIgnoreCase))
         {
-            HttpClient client = httpClientFactory.CreateClient(HttpClientNames.Registry);
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            using HttpRequestMessage request = BuildGitHubRequest(HttpMethod.Get, "https://api.github.com/user", token);
             try
             {
-                using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
-                if (!response.IsSuccessStatusCode) return null;
-                JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
-                string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
-                string login = payload.TryGetProperty("login", out JsonElement l) ? l.GetString() ?? "" : "";
-                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(login)) return null;
-                return (id, login);
+                return await ReadAccountAsync(httpClientFactory.CreateClient(HttpClientNames.Registry), request,
+                    "login", cancellationToken);
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
@@ -70,14 +63,8 @@ public partial class RepositoryHostClient(
             using HttpRequestMessage request = BuildGitLabRequest($"{gitLab.ApiBaseUrl}/user", token);
             try
             {
-                using HttpResponseMessage response =
-                    await httpClientFactory.CreateClient(HttpClientNames.GitLab).SendAsync(request, cancellationToken);
-                if (!response.IsSuccessStatusCode) return null;
-                JsonElement payload = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
-                string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
-                string login = payload.TryGetProperty("username", out JsonElement u) ? u.GetString() ?? "" : "";
-                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(login)) return null;
-                return (id, login);
+                return await ReadAccountAsync(httpClientFactory.CreateClient(HttpClientNames.GitLab), request,
+                    "username", cancellationToken);
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
@@ -164,6 +151,95 @@ public partial class RepositoryHostClient(
             return await FindGitLabMergeRequestUrlAsync(owner, repo, access, sourceBranch, cancellationToken);
         return null;
     }
+
+    private static async Task<(string Id, string Login)?> ReadAccountAsync(HttpClient client,
+        HttpRequestMessage request, string loginProperty, CancellationToken cancellationToken)
+    {
+        (HttpStatusCode status, JsonElement payload) =
+            await TryGetJsonAsync<JsonElement>(client, request, cancellationToken);
+        if (!IsSuccess(status)) return null;
+
+        string id = payload.TryGetProperty("id", out JsonElement i) ? i.GetRawText() : "";
+        string login = payload.TryGetProperty(loginProperty, out JsonElement l) ? l.GetString() ?? "" : "";
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(login)) return null;
+        return (id, login);
+    }
+
+    private async Task<RepositoryListing> ListRepositoriesAsync(HttpClient client,
+        Func<int, HttpRequestMessage> pageRequest, string urlProperty, string hostLabel,
+        CancellationToken cancellationToken)
+    {
+        List<(string, string)> result = new();
+        bool truncated = false;
+
+        for (int page = 1; page <= RepositoryPageLimit; page++)
+        {
+            using HttpRequestMessage request = pageRequest(page);
+
+            HttpResponseMessage? response = null;
+            List<JsonElement>? repositories;
+
+            try
+            {
+                try { response = await client.SendAsync(request, cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    logger.LogWarning(ex, "Failed to fetch {Host:l} repositories", hostLabel);
+                    return new RepositoryListing(false, null, result, false);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Failed to fetch {Host:l} repositories: status {Status}", hostLabel,
+                        response.StatusCode);
+                    return new RepositoryListing(false, (int)response.StatusCode, result, false);
+                }
+
+                try { repositories = await response.Content.ReadFromJsonAsync<List<JsonElement>>(cancellationToken); }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    logger.LogWarning(ex, "Failed to read {Host:l} repositories", hostLabel);
+                    return new RepositoryListing(false, null, result, false);
+                }
+            }
+            finally
+            {
+                response?.Dispose();
+            }
+
+            if (repositories == null || repositories.Count == 0) break;
+
+            foreach (JsonElement repository in repositories)
+            {
+                string name = repository.TryGetProperty("name", out JsonElement n) ? n.GetString() ?? "" : "";
+                string url = repository.TryGetProperty(urlProperty, out JsonElement u) ? u.GetString() ?? "" : "";
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(url))
+                    result.Add((name, url));
+            }
+
+            if (repositories.Count < RepositoryPageSize) break;
+
+            if (page == RepositoryPageLimit)
+            {
+                truncated = true;
+                logger.LogWarning("{Host:l} repository listing truncated after {PageLimit} pages", hostLabel,
+                    RepositoryPageLimit);
+            }
+        }
+
+        return new RepositoryListing(true, null, result, truncated);
+    }
+
+    private static async Task<(HttpStatusCode Status, T? Body)> TryGetJsonAsync<T>(HttpClient client,
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode) return (response.StatusCode, default);
+
+        return (response.StatusCode, await response.Content.ReadFromJsonAsync<T>(cancellationToken));
+    }
+
+    private static bool IsSuccess(HttpStatusCode status) => (int)status is >= 200 and <= 299;
 
     private static HttpRequestMessage BuildGitLabRequest(string url, string? token)
     {

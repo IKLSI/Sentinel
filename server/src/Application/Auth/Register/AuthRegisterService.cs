@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Jobs;
@@ -11,7 +10,6 @@ using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
 using Sentinel.Application.Common.Contracts;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth.Register;
 
@@ -26,7 +24,7 @@ public class AuthRegisterService(
     IAuditLogService auditLog,
     QueuedTokenProtector tokenProtector,
     AuthRegisterValidator validator,
-    IOptions<FrontendSettings> frontendOptions,
+    ExistingAccountNotifier existingAccountNotifier,
     ILogger<AuthRegisterService> logger) : IService
 {
     private const int VerificationValidityHours = 48;
@@ -50,7 +48,11 @@ public class AuthRegisterService(
         using (systemScope.Enter())
         {
             if (await userRepository.ExistsByEmailAcrossTenantsAsync(email, cancellationToken))
-                return await NotifyExistingAccountAsync(email, cancellationToken);
+            {
+                await existingAccountNotifier.NotifyAsync(email, cancellationToken);
+
+                return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
+            }
 
             organization = new Organization
             {
@@ -103,19 +105,6 @@ public class AuthRegisterService(
             organizationId: organization.Id,
             userId: admin.Id,
             entityId: organization.Id);
-
-        return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
-    }
-
-    private async Task<Result<ApiMessageResponse>> NotifyExistingAccountAsync(string email,
-        CancellationToken cancellationToken)
-    {
-        string? language = await userRepository.GetLanguageByEmailOrDefaultAsync(email, cancellationToken);
-        string frontendBaseUrl = frontendOptions.Value.BaseUrl;
-        string culture = language ?? LanguageValues.Fr;
-
-        jobs.Enqueue<IEmailService>(JobQueues.Emails, s => s.SendExistingAccountNoticeAsync(email, frontendBaseUrl, culture,
-            CancellationToken.None));
 
         return Result<ApiMessageResponse>.Accepted(ApiMessageResponse.Create(SuccessCodes.AuthAccountCreated));
     }

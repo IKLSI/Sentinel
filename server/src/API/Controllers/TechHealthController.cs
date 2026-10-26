@@ -1,5 +1,4 @@
 using Sentinel.API.Constants;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sentinel.API.Attributes;
@@ -12,8 +11,6 @@ using Sentinel.Application.TechHealth.DeleteProject;
 using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
-using Sentinel.Application.TechHealth.GetProjectOverview;
-using Sentinel.Application.TechHealth.ListProjectDependencies;
 using Sentinel.Application.TechHealth.ProjectOptions;
 using Sentinel.Application.TechHealth.ProjectSearch;
 using Sentinel.Application.TechHealth.ScanProgress;
@@ -27,6 +24,8 @@ using Sentinel.Application.TechHealth.Suppressions.RemoveSuppression;
 using Sentinel.Application.TechHealth.Suppressions.SuppressVulnerability;
 using Sentinel.Application.TechHealth.TriggerScan;
 using Sentinel.Application.TechHealth.UpdateProject;
+using Sentinel.Application.TechHealth.GetProjectOverview;
+using Sentinel.Application.TechHealth.ListProjectDependencies;
 using Sentinel.Domain.Entities;
 using Sentinel.Application.TechHealth;
 
@@ -34,12 +33,11 @@ namespace Sentinel.API.Controllers;
 
 [ApiController]
 [Route("api/tech-health")]
-[Authorize]
+[AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
 public class TechHealthController : BaseController
 {
     [SkipConnectionScope]
     [HttpGet("projects/available-repos")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<AvailableReposResponse>> GetAvailableRepos(
         [FromServices] AvailableReposService service,
         CancellationToken cancellationToken) =>
@@ -47,7 +45,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/export/excel")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportExcel(
         [FromServices] TechHealthExportExcelService service,
@@ -56,7 +53,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}/sbom")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportSbom(
         Guid id,
@@ -67,7 +63,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}/compliance-report")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Export)]
     public async Task<IActionResult> ExportComplianceReport(
         Guid id,
@@ -77,7 +72,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectSummaryDto>>> GetProjects(
         [FromServices] ProjectListService service,
         CancellationToken cancellationToken) =>
@@ -86,7 +80,6 @@ public class TechHealthController : BaseController
     [HttpGet("projects/scan-progress")]
     [SkipConnectionScope]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ScanProgressDto>>> GetScanProgress(
         [FromServices] ScanProgressListService service,
         CancellationToken cancellationToken) =>
@@ -94,7 +87,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/search")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectSearchMatchDto>>> SearchProjects(
         [FromQuery] ProjectSearchModel query,
         [FromServices] ProjectSearchService service,
@@ -103,7 +95,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/options")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectOptionDto>>> GetProjectOptions(
         [FromServices] ProjectOptionListService service,
         CancellationToken cancellationToken) =>
@@ -111,7 +102,6 @@ public class TechHealthController : BaseController
 
     [HttpGet("projects/{id:guid}")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<ProjectDto>> GetProject(
         Guid id,
         [FromServices] ProjectGetByIdService service,
@@ -119,7 +109,6 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpGet("projects/{id:guid}/overview")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<ProjectOverviewDto>> GetProjectOverview(
         Guid id,
         [FromServices] ProjectOverviewGetService service,
@@ -127,7 +116,6 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpGet("projects/{id:guid}/dependencies/without-vulnerabilities")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<DependencyDto>>> ListProjectDependenciesWithoutVulnerabilities(
         Guid id,
         [FromServices] ProjectDependenciesListService service,
@@ -135,7 +123,6 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(id, cancellationToken));
 
     [HttpPost("projects")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<ProjectDto>> CreateProject(
         [FromBody] CreateProjectDto dto,
         [FromServices] ProjectCreateService service,
@@ -149,7 +136,6 @@ public class TechHealthController : BaseController
     }
 
     [HttpPost("projects/import")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ProjectDto>>> ImportProjects(
         [FromBody] ImportProjectsDto dto,
         [FromServices] ProjectImportService service,
@@ -185,7 +171,6 @@ public class TechHealthController : BaseController
 
     [HttpPost("projects/{id:guid}/scan")]
     [AllowApiKey]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     [EnableRateLimiting(RateLimitPolicies.Scan)]
     public async Task<IActionResult> TriggerScan(
         Guid id,
@@ -213,7 +198,6 @@ public class TechHealthController : BaseController
 
     [SkipConnectionScope]
     [HttpPost("projects/{id:guid}/remediations")]
-    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<RemediationDto>> StartRemediation(
         Guid id,
         [FromServices] StartRemediationService service,

@@ -117,12 +117,7 @@ public class PublicScanService(
         string grade = HealthScoreCalculator.ToGrade(score);
 
         int vulnerableDependencyCount = outcome.Dependencies.Count(d => d.Vulnerabilities.Count > 0);
-        int criticalCount = outcome.Dependencies
-            .SelectMany(d => d.Vulnerabilities)
-            .Count(v => v.Severity == VulnerabilitySeverity.Critical);
-        int highCount = outcome.Dependencies
-            .SelectMany(d => d.Vulnerabilities)
-            .Count(v => v.Severity == VulnerabilitySeverity.High);
+        ProjectInventoryCounts counts = ProjectInventoryCounts.Of(outcome.Dependencies);
         int eolRuntimeCount = RuntimeGrouping.ByName(outcome.Runtimes).Count(FindingRules.IsEol);
 
         return Result<PublicScanResponse>.Success(new PublicScanResponse(
@@ -130,8 +125,8 @@ public class PublicScanService(
             score,
             outcome.Dependencies.Count,
             vulnerableDependencyCount,
-            criticalCount,
-            highCount,
+            counts.CriticalVulnerabilities,
+            counts.HighVulnerabilities,
             eolRuntimeCount));
     }
 }

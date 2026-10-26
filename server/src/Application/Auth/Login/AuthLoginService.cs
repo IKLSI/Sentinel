@@ -1,90 +1,57 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Sentinel.Application.Abstractions;
 using Sentinel.Application.Common;
 using Sentinel.Application.Audit;
-using Sentinel.Application.Security;
 using Sentinel.Domain.Abstractions;
 using Sentinel.Domain.Abstractions.Persistence;
 using Sentinel.Domain.Constants;
 using Sentinel.Domain.Entities;
 using Sentinel.Domain.Repositories;
-using Sentinel.Application.Options;
 
 namespace Sentinel.Application.Auth.Login;
 
-public class AuthLoginService : IService
+public class AuthLoginService(
+    IUserRepository userRepository,
+    IPasswordHasher passwordHasher,
+    ICommitScopeFactory commitScopeFactory,
+    SessionTokenIssuer sessionTokenIssuer,
+    ISystemScope systemScope,
+    IAuditLogService auditLog,
+    IRefreshTokenStore refreshTokenStore,
+    ILogger<AuthLoginService> logger,
+    AuthLoginValidator validator,
+    LoginAttemptTracker loginAttempts,
+    IClientAddressProvider clientAddress) : IService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly ICommitScopeFactory _commitScopeFactory;
-    private readonly TokenService _tokenService;
-    private readonly JwtSettings _jwt;
-    private readonly ISystemScope _systemScope;
-    private readonly IAuditLogService _auditLog;
-    private readonly IRefreshTokenStore _refreshTokenStore;
-    private readonly ILogger<AuthLoginService> _logger;
-    private readonly AuthLoginValidator _validator;
-    private readonly LoginAttemptTracker _loginAttempts;
-    private readonly IClientAddressProvider _clientAddress;
-
-    public AuthLoginService(
-        IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
-        ICommitScopeFactory commitScopeFactory,
-        TokenService tokenService,
-        IOptions<JwtSettings> jwtOptions,
-        ISystemScope systemScope,
-        IAuditLogService auditLog,
-        IRefreshTokenStore refreshTokenStore,
-        ILogger<AuthLoginService> logger,
-        AuthLoginValidator validator,
-        LoginAttemptTracker loginAttempts,
-        IClientAddressProvider clientAddress)
-    {
-        _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
-        _commitScopeFactory = commitScopeFactory;
-        _tokenService = tokenService;
-        _jwt = jwtOptions.Value;
-        _systemScope = systemScope;
-        _auditLog = auditLog;
-        _refreshTokenStore = refreshTokenStore;
-        _logger = logger;
-        _validator = validator;
-        _loginAttempts = loginAttempts;
-        _clientAddress = clientAddress;
-    }
-
     public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest model, CancellationToken cancellationToken)
     {
-        Result validationResult = await _validator.ValidateAsync(model, cancellationToken);
+        Result validationResult = await validator.ValidateAsync(model, cancellationToken);
 
         if (!validationResult.IsSuccess)
             return Result<LoginResponse>.From(validationResult);
 
         string email = model.Email.Trim();
-        string attemptKey = $"{email}|{_clientAddress.Current}";
+        string attemptKey = $"{email}|{clientAddress.Current}";
 
-        if (_loginAttempts.IsLockedOut(attemptKey))
+        if (loginAttempts.IsLockedOut(attemptKey))
             return Result<LoginResponse>.Unauthorized(ErrorCodes.AuthTooManyAttempts);
 
         User? user;
         string accessToken;
         string refreshToken;
 
-        using (_systemScope.Enter())
+        using (systemScope.Enter())
         {
-            IReadOnlyList<User> candidates = await _userRepository
+            IReadOnlyList<User> candidates = await userRepository
                 .ListActiveByEmailAsync(email, QueryTracking.Tracked, cancellationToken);
 
             user = ResolveSingleMatch(candidates, model.Password);
 
             if (user == null)
             {
-                bool lockedOut = _loginAttempts.RecordFailure(attemptKey);
+                bool lockedOut = loginAttempts.RecordFailure(attemptKey);
 
-                await _auditLog.LogAsync(
+                await auditLog.LogAsync(
                     AuditAction.LoginFailed,
                     entityType: AuditEntityTypes.User,
                     organizationId: candidates.Count == 1 ? candidates[0].OrganizationId : null,
@@ -96,26 +63,22 @@ public class AuthLoginService : IService
                     : ErrorCodes.AuthInvalidCredentials);
             }
 
-            _loginAttempts.Reset(attemptKey);
+            loginAttempts.Reset(attemptKey);
 
             if (!user.IsEmailVerified)
                 return Result<LoginResponse>.Forbidden(ErrorCodes.AuthEmailNotVerified);
 
-            accessToken = _tokenService.GenerateAccessToken(user);
-            refreshToken = _tokenService.GenerateRefreshToken();
+            using ICommitScope commitScope = commitScopeFactory.Begin();
 
-            using ICommitScope commitScope = _commitScopeFactory.Begin();
-
-            user.RefreshToken = _tokenService.HashRefreshToken(refreshToken);
-            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenLifetime.DaysFor(_jwt));
+            (accessToken, refreshToken) = sessionTokenIssuer.Issue(user);
             user.LastLoginAt = DateTime.UtcNow;
 
             await commitScope.CommitAsync(cancellationToken);
         }
 
-        _refreshTokenStore.Write(refreshToken);
+        refreshTokenStore.Write(refreshToken);
 
-        await _auditLog.LogAsync(
+        await auditLog.LogAsync(
             AuditAction.Login,
             entityType: AuditEntityTypes.User,
             organizationId: user.OrganizationId,
@@ -133,7 +96,7 @@ public class AuthLoginService : IService
     {
         if (candidates.Count == 0)
         {
-            _passwordHasher.VerifyAgainstDecoy(password);
+            passwordHasher.VerifyAgainstDecoy(password);
             return null;
         }
 
@@ -141,11 +104,11 @@ public class AuthLoginService : IService
 
         foreach (User candidate in candidates)
         {
-            if (!_passwordHasher.Verify(password, candidate.PasswordHash)) continue;
+            if (!passwordHasher.Verify(password, candidate.PasswordHash)) continue;
 
             if (match != null)
             {
-                _logger.LogWarning(
+                logger.LogWarning(
                     "Several accounts match login {Email} — sign-in refused as ambiguous",
                     candidate.Email);
                 return null;
