@@ -118,6 +118,9 @@ export const ROUTES_API = {
         options: {
           __path: "/api/tech-health/projects/options",
         },
+        search: {
+          __path: "/api/tech-health/projects/search",
+        },
         ":id": {
           __path: "/api/tech-health/projects/:id",
           badge: {

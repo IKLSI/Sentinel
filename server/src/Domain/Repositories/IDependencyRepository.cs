@@ -11,4 +11,7 @@ public interface IDependencyRepository : ICrudEntityWithIdRepository<Dependency>
 
     Task<IReadOnlyList<PackageMetadataRow>> ListPackageMetadataByProjectAsync(Guid projectId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DependencyMatchRow>> SearchByNameAsync(Guid organizationId, string nameTerm, int take,
+        CancellationToken cancellationToken);
 }

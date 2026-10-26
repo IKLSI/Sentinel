@@ -5,7 +5,10 @@ import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import KeyboardArrowDownOutlined from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useT } from "@/contexts/I18nContext";
-import type { ProjectSummary } from "@/domains/projects/types";
+import type {
+  ProjectSearchMatch,
+  ProjectSummary,
+} from "@/domains/projects/types";
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import {
   GRADE_VISUAL,
@@ -29,6 +32,7 @@ interface Props {
   collapsed: boolean;
   onToggleCollapsed: () => void;
   scanningId: string | null;
+  matchesById?: Map<string, ProjectSearchMatch>;
   onEdit: (project: ProjectSummary) => void;
   onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
@@ -40,6 +44,7 @@ export const ProjectsSection: React.FC<Props> = ({
   collapsed,
   onToggleCollapsed,
   scanningId,
+  matchesById,
   onEdit,
   onDelete,
   onScan,
@@ -277,6 +282,7 @@ export const ProjectsSection: React.FC<Props> = ({
                   onDelete={onDelete}
                   onScan={onScan}
                   isScanning={scanningId === project.id}
+                  dependencyMatch={matchesById?.get(project.id)}
                 />
               ))}
             </Box>

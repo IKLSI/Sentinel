@@ -7,6 +7,7 @@ import type {
   Project,
   ProjectOption,
   ProjectRepositoryOptions,
+  ProjectSearchMatch,
   ProjectSummary,
 } from "@/domains/projects/types";
 
@@ -30,6 +31,19 @@ export const useProjectsQuery = (enabled = true) =>
       queryKey: projectKeys.list(),
       enabled,
     },
+  );
+
+export const useProjectSearchQuery = (query: string) =>
+  useGetQuery<ProjectSearchMatch[]>(
+    ROUTES_API.api.techHealth.projects.search.__path,
+    {},
+    {
+      queryKey: projectKeys.search(query),
+      enabled: query.length > 0,
+      placeholderData: keepPreviousData,
+      retry: false,
+    },
+    { q: query },
   );
 
 export const useProjectOptionsQuery = () =>

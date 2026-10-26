@@ -762,6 +762,8 @@
   "projects.modal.save": "Save",
   "projects.modal.saving": "Saving...",
   "projects.modal.scope_help": "Branch or folder changed: a full analysis will run on the next scan.",
+  "projects.search.error": "Invalid search",
+  "projects.search.more_matches": "+{count}",
   "projects.search_placeholder": "Search...",
   "projects.section.collapse": "Collapse section",
   "projects.section.expand": "Expand section",

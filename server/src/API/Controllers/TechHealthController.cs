@@ -13,6 +13,7 @@ using Sentinel.Application.TechHealth.ExportExcel;
 using Sentinel.Application.TechHealth.ExportSbom;
 using Sentinel.Application.TechHealth.GetProject;
 using Sentinel.Application.TechHealth.ProjectOptions;
+using Sentinel.Application.TechHealth.ProjectSearch;
 using Sentinel.Application.TechHealth.ProjectBadge;
 using Sentinel.Application.TechHealth.Projects;
 using Sentinel.Application.TechHealth.Remediation;
@@ -78,6 +79,15 @@ public class TechHealthController : BaseController
         [FromServices] ProjectListService service,
         CancellationToken cancellationToken) =>
         ToActionResult(await service.ExecuteAsync(cancellationToken));
+
+    [HttpGet("projects/search")]
+    [AllowApiKey]
+    [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
+    public async Task<ActionResult<List<ProjectSearchMatchDto>>> SearchProjects(
+        [FromQuery] ProjectSearchModel query,
+        [FromServices] ProjectSearchService service,
+        CancellationToken cancellationToken) =>
+        ToActionResult(await service.ExecuteAsync(query, cancellationToken));
 
     [HttpGet("projects/options")]
     [AllowApiKey]

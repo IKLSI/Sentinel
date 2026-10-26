@@ -747,6 +747,25 @@ export interface paths {
       };
     };
   };
+  "/api/tech-health/projects/search": {
+    get: {
+      parameters: {
+        query?: {
+          Q?: string;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProjectSearchMatchDto"][];
+            "text/json": components["schemas"]["ProjectSearchMatchDto"][];
+            "text/plain": components["schemas"]["ProjectSearchMatchDto"][];
+          };
+        };
+      };
+    };
+  };
   "/api/tickets": {
     get: {
       parameters: {
@@ -1353,6 +1372,28 @@ export interface components {
       type: "Prod" | "Dev";
       vulnerabilities: components["schemas"]["VulnerabilityDto"][];
     };
+    DependencyMatchDto: {
+      /** @enum {string} */
+      ecosystem:
+        | "Npm"
+        | "PyPI"
+        | "Composer"
+        | "Gem"
+        | "Maven"
+        | "NuGet"
+        | "Go"
+        | "Cargo"
+        | "Hex"
+        | "Pub"
+        | "Swift"
+        | "CocoaPods"
+        | "GitHubActions";
+      isDirect: boolean;
+      name: string;
+      /** @enum {string} */
+      status: "UpToDate" | "MinorUpdate" | "MajorUpdate" | "EOL" | "Vulnerable";
+      version: string;
+    };
     /** @enum {string} */
     FindingKind: "Vulnerability" | "OutdatedDependency" | "EolRuntime";
     FindingTicketDto: {
@@ -1521,6 +1562,13 @@ export interface components {
       rootPath: string | null;
       /** @enum {string} */
       scanFrequency: "Daily" | "Weekly" | "Monthly" | "Manual";
+    };
+    ProjectSearchMatchDto: {
+      dependencies: components["schemas"]["DependencyMatchDto"][];
+      /** Format: int32 */
+      dependencyMatchCount: number;
+      /** Format: uuid */
+      projectId: string;
     };
     ProjectSummaryDto: {
       branch: string | null;

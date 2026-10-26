@@ -39,12 +39,14 @@ export const resolveInvalidatedKeys = ({
         DASHBOARD_QUERY_KEY,
         projectKeys.availableRepos(),
         projectKeys.options(),
+        projectKeys.searches(),
       ];
     case REALTIME_RESOURCES.Project:
       return [
         projectKeys.list(),
         DASHBOARD_QUERY_KEY,
         projectKeys.options(),
+        projectKeys.searches(),
         ...(id ? [projectKeys.detail(id)] : []),
       ];
     case REALTIME_RESOURCES.Tickets:

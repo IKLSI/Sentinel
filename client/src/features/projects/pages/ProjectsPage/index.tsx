@@ -3,7 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useExportProjectsExcelMutation } from "@/domains/projects/downloads";
 import { useDeleteProjectMutation } from "@/domains/projects/mutations";
-import { useProjectsQuery } from "@/domains/projects/queries";
+import {
+  useProjectSearchQuery,
+  useProjectsQuery,
+} from "@/domains/projects/queries";
 import Box from "@mui/material/Box";
 import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
@@ -11,7 +14,12 @@ import { EmptyState } from "@/components/ui/common/EmptyState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/contexts/I18nContext";
-import type { ProjectSummary } from "@/domains/projects/types";
+import type {
+  ProjectSearchMatch,
+  ProjectSummary,
+} from "@/domains/projects/types";
+import { useApiError } from "@/hooks/useApiError";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   SECTION_ORDER,
   type SectionKey,
@@ -30,9 +38,12 @@ import { useScanFeedback } from "@/features/projects/pages/ProjectsPage/hooks";
 
 const routeApi = getRouteApi("/_authenticated/projects/");
 
+const SEARCH_DEBOUNCE_MS = 250;
+
 export const ProjectsPage: React.FC = () => {
   const { showToast } = useToast();
   const t = useT();
+  const apiError = useApiError();
   const onDeleteError = useApiErrorToast("projects.toast.delete_error");
   const { openImport } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
@@ -96,13 +107,28 @@ export const ProjectsPage: React.FC = () => {
     );
   };
 
-  const filtered = useMemo(
+  const searchQuery = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
+  const { data: searchMatches, error: searchFailure } =
+    useProjectSearchQuery(searchQuery);
+  const searchError = searchFailure
+    ? apiError(searchFailure, t("projects.search.error"))
+    : null;
+
+  const matchesById = useMemo(
     () =>
-      projects.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()),
+      new Map<string, ProjectSearchMatch>(
+        (searchMatches ?? []).map((match) => [match.projectId, match]),
       ),
-    [projects, search],
+    [searchMatches],
   );
+
+  const filtered = useMemo(() => {
+    if (!searchQuery) return projects;
+    if (searchFailure) return [];
+    return searchMatches
+      ? projects.filter((project) => matchesById.has(project.id))
+      : projects;
+  }, [projects, searchQuery, searchMatches, searchFailure, matchesById]);
 
   const grouped = useMemo(() => {
     const map: Record<SectionKey, ProjectSummary[]> = {
@@ -187,9 +213,10 @@ export const ProjectsPage: React.FC = () => {
                   icon={AccountTreeOutlined}
                   title={t("projects.empty.title")}
                   subtitle={
-                    projects.length === 0
+                    searchError ??
+                    (projects.length === 0
                       ? t("projects.empty.create_first")
-                      : t("projects.empty.adjust_search")
+                      : t("projects.empty.adjust_search"))
                   }
                   iconSize={40}
                 />
@@ -215,6 +242,7 @@ export const ProjectsPage: React.FC = () => {
                       }))
                     }
                     scanningId={scanningId}
+                    matchesById={searchQuery ? matchesById : undefined}
                     onEdit={setEditTarget}
                     onDelete={setDeleteTarget}
                     onScan={handleScan}

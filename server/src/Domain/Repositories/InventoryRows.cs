@@ -10,4 +10,12 @@ public sealed record PackageMetadataRow(
     string? License,
     bool IsDeprecated);
 
+public sealed record DependencyMatchRow(
+    Guid ProjectId,
+    string Name,
+    string Version,
+    DependencyEcosystem Ecosystem,
+    DependencyStatus Status,
+    bool IsDirect);
+
 public sealed record RuntimeLifecycleRow(string Name, string Version, bool? IsEol, DateTime? EolDate);

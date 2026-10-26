@@ -762,6 +762,8 @@
   "projects.modal.save": "Enregistrer",
   "projects.modal.saving": "Enregistrement...",
   "projects.modal.scope_help": "Branche ou dossier modifié : une analyse complète sera relancée au prochain scan.",
+  "projects.search.error": "Recherche invalide",
+  "projects.search.more_matches": "+{count}",
   "projects.search_placeholder": "Rechercher...",
   "projects.section.collapse": "Replier la section",
   "projects.section.expand": "Déplier la section",

@@ -7,7 +7,11 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import { RowActions } from "@/components/ui/common/RowActions";
 import { gradeToneOf } from "@/constants/grades";
 import { useT } from "@/contexts/I18nContext";
-import type { ProjectSummary } from "@/domains/projects/types";
+import type {
+  ProjectSearchMatch,
+  ProjectSummary,
+} from "@/domains/projects/types";
+import { DependencyMatchList } from "@/features/projects/pages/ProjectsPage/components/DependencyMatchList";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { spin } from "@/styles/keyframes";
 
@@ -17,10 +21,11 @@ interface Props {
   onDelete: (project: ProjectSummary) => void;
   onScan: (id: string) => void;
   isScanning: boolean;
+  dependencyMatch?: ProjectSearchMatch;
 }
 
 export const ProjectRow: React.FC<Props> = React.memo(
-  ({ project, onEdit, onDelete, onScan, isScanning }) => {
+  ({ project, onEdit, onDelete, onScan, isScanning, dependencyMatch }) => {
     const navigate = useNavigate();
     const router = useRouter();
     const t = useT();
@@ -104,9 +109,13 @@ export const ProjectRow: React.FC<Props> = React.memo(
                   whiteSpace: "nowrap",
                 }}
               >
-                {project.lastScanAt
-                  ? `${project.totalDependencies} ${project.totalDependencies > 1 ? t("projects.dependencies_plural") : t("projects.dependency_singular")}`
-                  : "—"}
+                {dependencyMatch && dependencyMatch.dependencies.length > 0 ? (
+                  <DependencyMatchList match={dependencyMatch} />
+                ) : project.lastScanAt ? (
+                  `${project.totalDependencies} ${project.totalDependencies > 1 ? t("projects.dependencies_plural") : t("projects.dependency_singular")}`
+                ) : (
+                  "—"
+                )}
               </Box>
             </Box>
           </Box>

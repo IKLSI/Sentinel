@@ -2,6 +2,8 @@ export const projectKeys = {
   all: ["projects"] as const,
   list: () => [...projectKeys.all, "list"] as const,
   options: () => [...projectKeys.all, "options"] as const,
+  searches: () => [...projectKeys.all, "search"] as const,
+  search: (query: string) => [...projectKeys.searches(), query] as const,
   availableRepos: () => [...projectKeys.all, "available-repos"] as const,
   details: () => [...projectKeys.all, "detail"] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,

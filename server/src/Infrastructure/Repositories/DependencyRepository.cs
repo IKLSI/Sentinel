@@ -32,4 +32,23 @@ public class DependencyRepository : CrudEntityWithIdRepository<Dependency>, IDep
             .Select(d => new PackageMetadataRow(d.Ecosystem, d.Name, d.LatestVersion, d.Publisher, d.License,
                 d.IsDeprecated))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<DependencyMatchRow>> SearchByNameAsync(Guid organizationId,
+        string nameTerm, int take, CancellationToken cancellationToken) =>
+        await SearchByName(organizationId, nameTerm, take).ToListAsync(cancellationToken);
+
+    internal IQueryable<DependencyMatchRow> SearchByName(Guid organizationId, string nameTerm, int take)
+    {
+        string loweredTerm = nameTerm.ToLowerInvariant();
+
+        return Query(QueryTracking.NoTracking)
+            .Where(d => d.OrganizationId == organizationId && d.Name.ToLower().Contains(loweredTerm))
+            .OrderBy(d => d.ProjectId)
+            .ThenByDescending(d => d.Status == DependencyStatus.Vulnerable)
+            .ThenByDescending(d => d.IsDirect)
+            .ThenBy(d => d.Name)
+            .Take(take)
+            .Select(d => new DependencyMatchRow(d.ProjectId, d.Name, d.CurrentVersion, d.Ecosystem, d.Status,
+                d.IsDirect));
+    }
 }

@@ -6,6 +6,8 @@ export type ProjectSummary = components["schemas"]["ProjectSummaryDto"];
 
 export type ProjectOption = components["schemas"]["ProjectOptionDto"];
 
+export type ProjectSearchMatch = components["schemas"]["ProjectSearchMatchDto"];
+
 export type Dependency = components["schemas"]["DependencyDto"];
 
 export type Runtime = components["schemas"]["RuntimeDto"];
