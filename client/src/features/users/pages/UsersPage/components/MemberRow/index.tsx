@@ -42,7 +42,7 @@ export const MemberRow: React.FC<Props> = ({
         transition: "background 0.1s",
       }}
     >
-      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px" }}>
         <Box
           sx={{
             display: "flex",
@@ -103,7 +103,7 @@ export const MemberRow: React.FC<Props> = ({
           </TextField>
         )}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px" }}>
         <Box
           sx={{
             fontWeight: 400,
@@ -120,7 +120,7 @@ export const MemberRow: React.FC<Props> = ({
         component="td"
         sx={{
           px: "16px",
-          py: "10px",
+          py: "8px",
           color: "var(--muted2)",
           fontSize: "11px",
         }}
@@ -129,7 +129,7 @@ export const MemberRow: React.FC<Props> = ({
           ? formatRelativeToNow(member.lastLoginAt, culture)
           : "—"}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px", textAlign: "center" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px", textAlign: "center" }}>
         {!isCurrentUser &&
           (busy ? (
             <CircularProgress size={13} />

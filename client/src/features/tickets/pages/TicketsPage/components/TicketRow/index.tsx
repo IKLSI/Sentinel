@@ -50,7 +50,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       <Box
         component="td"
         sx={{
-          padding: "11px 16px",
+          padding: "9px 16px",
           borderBottom: "1px solid var(--border)",
           verticalAlign: "middle",
         }}
@@ -108,7 +108,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       <Box
         component="td"
         sx={{
-          padding: "11px 16px",
+          padding: "9px 16px",
           borderBottom: "1px solid var(--border)",
           verticalAlign: "middle",
         }}
@@ -130,7 +130,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       <Box
         component="td"
         sx={{
-          padding: "11px 16px",
+          padding: "9px 16px",
           borderBottom: "1px solid var(--border)",
           verticalAlign: "middle",
         }}
@@ -152,7 +152,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       <Box
         component="td"
         sx={{
-          padding: "11px 16px",
+          padding: "9px 16px",
           borderBottom: "1px solid var(--border)",
           verticalAlign: "middle",
         }}
@@ -173,7 +173,7 @@ const TicketRowComponent: React.FC<Props> = ({ ticket, onEdit, onDelete }) => {
       <Box
         component="td"
         sx={{
-          padding: "11px 16px",
+          padding: "9px 16px",
           borderBottom: "1px solid var(--border)",
           verticalAlign: "middle",
           textAlign: "center",

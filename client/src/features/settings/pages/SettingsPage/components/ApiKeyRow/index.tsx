@@ -51,14 +51,14 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
         component="td"
         sx={{
           px: "16px",
-          py: "10px",
+          py: "8px",
           fontWeight: 500,
           color: "var(--text)",
         }}
       >
         {apiKey.name}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px" }}>
         <Box
           component="span"
           sx={{
@@ -81,7 +81,7 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
         component="td"
         sx={{
           px: "16px",
-          py: "10px",
+          py: "8px",
           color: "var(--text-secondary)",
         }}
       >
@@ -91,20 +91,20 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
         component="td"
         sx={{
           px: "16px",
-          py: "10px",
+          py: "8px",
           color: "var(--text-secondary)",
         }}
       >
         {fmtDate(apiKey.createdAt, culture)}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px" }}>
         {renderExpiry()}
       </Box>
       <Box
         component="td"
         sx={{
           px: "16px",
-          py: "10px",
+          py: "8px",
           color: apiKey.lastUsedAt ? "var(--text-secondary)" : "var(--muted)",
           fontSize: "11px",
         }}
@@ -113,7 +113,7 @@ export const ApiKeyRow: React.FC<Props> = ({ apiKey, onRevoke }) => {
           ? fmtDate(apiKey.lastUsedAt, culture)
           : t("settings.api_keys.never_used")}
       </Box>
-      <Box component="td" sx={{ px: "16px", py: "10px", textAlign: "right" }}>
+      <Box component="td" sx={{ px: "16px", py: "8px", textAlign: "right" }}>
         <RowActions
           actions={[
             {

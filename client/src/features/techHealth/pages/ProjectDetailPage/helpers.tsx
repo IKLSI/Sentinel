@@ -16,7 +16,7 @@ export type StatusVariant =
   | "yellow"
   | "slate";
 
-export const GRID_ROW_HEIGHT = 44;
+export const GRID_ROW_HEIGHT = 40;
 
 export const EMPTY_STATE_SX = {
   flex: 1,

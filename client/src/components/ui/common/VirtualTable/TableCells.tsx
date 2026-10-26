@@ -15,7 +15,7 @@ export const TD: React.FC<{
   <Box
     component="td"
     sx={{
-      padding: "11px 16px",
+      padding: "9px 16px",
       borderBottom: "1px solid var(--border)",
       fontSize: "12px",
       fontFamily: mono ? "var(--font-mono)" : "inherit",

@@ -95,7 +95,7 @@ export const ProjectsSkeleton: React.FC = () => {
                 <TableSkeletonRows
                   cells={SKELETON_CELLS}
                   rows={rows}
-                  cellPadding="8px 12px"
+                  cellPadding="6px 12px"
                 />
               </Box>
             </Box>

@@ -63,7 +63,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         <Box
           component="td"
           sx={{
-            padding: "8px 12px",
+            padding: "6px 12px",
             borderBottom: "1px solid var(--border)",
             fontSize: "12px",
           }}
@@ -124,7 +124,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         <Box
           component="td"
           sx={{
-            padding: "8px 12px",
+            padding: "6px 12px",
             borderBottom: "1px solid var(--border)",
             textAlign: "center",
           }}
@@ -148,7 +148,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         <Box
           component="td"
           sx={{
-            padding: "8px 12px",
+            padding: "6px 12px",
             borderBottom: "1px solid var(--border)",
             textAlign: "center",
           }}
@@ -181,7 +181,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         <Box
           component="td"
           sx={{
-            padding: "8px 12px",
+            padding: "6px 12px",
             borderBottom: "1px solid var(--border)",
             textAlign: "center",
           }}
@@ -214,7 +214,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
         <Box
           component="td"
           sx={{
-            padding: "8px 12px",
+            padding: "6px 12px",
             borderBottom: "1px solid var(--border)",
             textAlign: "center",
           }}
@@ -236,7 +236,7 @@ export const ProjectRow: React.FC<Props> = React.memo(
           component="td"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           sx={{
-            padding: "8px 20px 8px 0",
+            padding: "6px 20px 6px 0",
             borderBottom: "1px solid var(--border)",
             whiteSpace: "nowrap",
             overflow: "visible",

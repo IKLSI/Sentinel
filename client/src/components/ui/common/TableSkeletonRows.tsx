@@ -90,7 +90,7 @@ const CellShape: React.FC<{ cell: SkeletonCell; position: number }> = ({
 export const TableSkeletonRows: React.FC<Props> = ({
   cells,
   rows = 6,
-  cellPadding = "11px 16px",
+  cellPadding = "9px 16px",
 }) => {
   const columns = cells.map((cell, offset) => ({
     cell,
