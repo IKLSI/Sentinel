@@ -17,16 +17,6 @@ public static class BadgeSvgRenderer
     private const int HorizontalPadding = 10;
     private const int MaximumLabelLength = 24;
 
-    private static readonly Dictionary<string, string> GradeColors = new()
-    {
-        ["A"] = "#16a34a",
-        ["B"] = "#0d9488",
-        ["C"] = "#d97706",
-        ["D"] = "#ea580c",
-        ["E"] = "#dc2626",
-        ["F"] = "#dc2626"
-    };
-
     public static VersionedContent RenderContent(string label, string? grade, int? score) =>
         VersionedContent.FromBytes(Encoding.UTF8.GetBytes(Render(label, grade, score)), "image/svg+xml");
 
@@ -34,9 +24,10 @@ public static class BadgeSvgRenderer
     {
         string displayedLabel = DisplayedLabel(label);
 
-        bool isKnown = grade != null && score != null && GradeColors.ContainsKey(grade);
+        PaletteTone? gradeTone = HealthPalette.ForGrade(grade);
+        bool isKnown = gradeTone != null && score != null;
         string value = isKnown ? $"{grade} · {score!.Value.ToString(CultureInfo.InvariantCulture)}" : UnknownValue;
-        string valueColor = isKnown ? GradeColors[grade!] : UnknownColor;
+        string valueColor = isKnown ? gradeTone!.Value.Solid : UnknownColor;
 
         int labelWidth = displayedLabel.Length * CharacterWidth + HorizontalPadding * 2;
         int valueWidth = value.Length * CharacterWidth + HorizontalPadding * 2;

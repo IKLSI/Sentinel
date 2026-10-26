@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.Exports;
@@ -16,20 +17,18 @@ public partial class ExportService
     private static readonly XLColor AltRowColor = XLColor.FromHtml("#F1F3FD");
     private static readonly XLColor BorderColor = XLColor.FromHtml("#E2E8F0");
 
-    private static readonly XLColor GreenBg = XLColor.FromHtml("#DCFCE7");
-    private static readonly XLColor GreenFg = XLColor.FromHtml("#15803D");
+    private static readonly XLColor GreenBg = XLColor.FromHtml(HealthPalette.Green.Soft);
+    private static readonly XLColor GreenFg = XLColor.FromHtml(HealthPalette.Green.Ink);
     private static readonly XLColor GreenBg2 = XLColor.FromHtml("#D1FAE5");
-    private static readonly XLColor GreenFg2 = XLColor.FromHtml("#16A34A");
-    private static readonly XLColor TealBg = XLColor.FromHtml("#CCFBF1");
-    private static readonly XLColor TealFg = XLColor.FromHtml("#0F766E");
-    private static readonly XLColor GrayBg = XLColor.FromHtml("#F1F5F9");
-    private static readonly XLColor GrayFg = XLColor.FromHtml("#475569");
-    private static readonly XLColor OrangeBg = XLColor.FromHtml("#FFEDD5");
-    private static readonly XLColor OrangeFg = XLColor.FromHtml("#C2410C");
-    private static readonly XLColor YellowBg = XLColor.FromHtml("#FEF3C7");
-    private static readonly XLColor YellowFg = XLColor.FromHtml("#B45309");
-    private static readonly XLColor RedBg = XLColor.FromHtml("#FEE2E2");
-    private static readonly XLColor RedFg = XLColor.FromHtml("#B91C1C");
+    private static readonly XLColor GreenFg2 = XLColor.FromHtml(HealthPalette.Green.Solid);
+    private static readonly XLColor GrayBg = XLColor.FromHtml(HealthPalette.Slate.Soft);
+    private static readonly XLColor GrayFg = XLColor.FromHtml(HealthPalette.Slate.Ink);
+    private static readonly XLColor OrangeBg = XLColor.FromHtml(HealthPalette.Orange.Soft);
+    private static readonly XLColor OrangeFg = XLColor.FromHtml(HealthPalette.Orange.Ink);
+    private static readonly XLColor YellowBg = XLColor.FromHtml(HealthPalette.Yellow.Soft);
+    private static readonly XLColor YellowFg = XLColor.FromHtml(HealthPalette.Yellow.Ink);
+    private static readonly XLColor RedBg = XLColor.FromHtml(HealthPalette.Red.Soft);
+    private static readonly XLColor RedFg = XLColor.FromHtml(HealthPalette.Red.Ink);
     private static (XLColor bg, XLColor fg) TicketStatusColor(TicketStatus status) => status switch
     {
         TicketStatus.Resolved or TicketStatus.Closed => (GreenBg, GreenFg),
@@ -37,13 +36,11 @@ public partial class ExportService
         _ => (GrayBg, GrayFg),
     };
 
-    private static (XLColor bg, XLColor fg) TicketPriorityColor(string priority) => priority switch
-    {
-        "Critical" => (RedBg, RedFg),
-        "High" => (OrangeBg, OrangeFg),
-        "Medium" => (YellowBg, YellowFg),
-        _ => (GrayBg, GrayFg),
-    };
+    private static (XLColor bg, XLColor fg) ToneColor(PaletteTone tone) =>
+        (XLColor.FromHtml(tone.Soft), XLColor.FromHtml(tone.Ink));
+
+    private static (XLColor bg, XLColor fg) TicketPriorityColor(TicketPriority priority) =>
+        ToneColor(HealthPalette.ForPriority(priority));
 
     private static (string label, XLColor fg) RuntimeStatus(Runtime r, ExportLabels L)
     {
@@ -56,15 +53,8 @@ public partial class ExportService
         return (L.RuntimeActive, GreenFg);
     }
 
-    private static (XLColor bg, XLColor fg) GradeColor(string? grade) => grade switch
-    {
-        null => (GrayBg, GrayFg),
-        "A" => (GreenBg, GreenFg),
-        "B" => (TealBg, TealFg),
-        "C" => (YellowBg, YellowFg),
-        "D" => (OrangeBg, OrangeFg),
-        _ => (RedBg, RedFg),
-    };
+    private static (XLColor bg, XLColor fg) GradeColor(string? grade) =>
+        ToneColor(HealthPalette.ForGrade(grade) ?? HealthPalette.Slate);
 
     private static (XLColor bg, XLColor fg) ScoreColor(int score) => score switch
     {
@@ -84,12 +74,7 @@ public partial class ExportService
         _ => (GrayBg, GrayFg),
     };
 
-    private static (XLColor bg, XLColor fg) SeverityColor(string severity) => severity switch
-    {
-        "Critical" => (RedBg, RedFg),
-        "High" => (OrangeBg, OrangeFg),
-        "Medium" => (YellowBg, YellowFg),
-        _ => (GrayBg, GrayFg),
-    };
+    private static (XLColor bg, XLColor fg) SeverityColor(VulnerabilitySeverity severity) =>
+        ToneColor(HealthPalette.ForSeverity(severity));
 
 }

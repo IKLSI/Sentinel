@@ -264,7 +264,7 @@ public partial class ExportService
                 cvssCell.Value = (double)v.CvssScore;
                 cvssCell.Style.NumberFormat.Format = "0.0";
                 cvssCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                (_, XLColor sevFg) = SeverityColor(v.Severity.ToString());
+                (_, XLColor sevFg) = SeverityColor(v.Severity);
                 cvssCell.Style.Font.FontColor = sevFg;
                 cvssCell.Style.Font.Bold = true;
 

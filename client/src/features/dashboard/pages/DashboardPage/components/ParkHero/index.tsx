@@ -1,6 +1,7 @@
 import type React from "react";
 import Box from "@mui/material/Box";
 import { useI18n } from "@/contexts/I18nContext";
+import { SEVERITY_TONES } from "@/constants/severities";
 import type {
   ParkOverview,
   VulnerabilityFlowPoint,
@@ -89,7 +90,7 @@ export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
       >
         <RiskTile
           value={vulnerabilities.critical}
-          color="var(--red)"
+          color={SEVERITY_TONES.Critical}
           label={t(
             pluralKey("dashboard.hero.critical", vulnerabilities.critical),
           )}
@@ -107,7 +108,7 @@ export const ParkHero: React.FC<Props> = ({ overview, vulnerabilityFlow }) => {
         />
         <RiskTile
           value={vulnerabilities.high}
-          color="var(--orange)"
+          color={SEVERITY_TONES.High}
           trend={flowSeries(vulnerabilityFlow, "detected")}
           label={t(pluralKey("dashboard.hero.high", vulnerabilities.high))}
           hint={t(

@@ -126,7 +126,7 @@ public partial class ExportService(
             (_, XLColor stFg) = TicketStatusColor(t.Status);
             ApplyStatusCell(ws.Cell(row, 3), TranslateTicketStatus(t.Status.ToString(), L), stFg);
 
-            (_, XLColor prFg) = TicketPriorityColor(t.Priority.ToString());
+            (_, XLColor prFg) = TicketPriorityColor(t.Priority);
             ApplyStatusCell(ws.Cell(row, 4), TranslateTicketPriority(t.Priority.ToString(), L), prFg);
 
             ws.Cell(row, 5).Value = TranslateTicketType(t.Type.ToString(), L);

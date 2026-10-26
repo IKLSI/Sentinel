@@ -2,6 +2,7 @@ import type { Ticket, TicketHistory } from "@/domains/tickets/types";
 import type { CommentAttachment } from "@/components/ui/common/AttachmentChip";
 import { statusLabel } from "@/features/tickets/constants";
 import type { Translate } from "@/contexts/I18nContext";
+import { PRIORITY_TONES } from "@/constants/severities";
 
 const ATTACHMENT_SEPARATOR = "<!-- attachments -->";
 const IMAGE_LINK_PATTERN = /^!\[(.+?)\]\((.+?)\)$/;
@@ -110,23 +111,23 @@ export const PRIORITY_CONFIG: Record<
 > = {
   critical: {
     labelKey: "tickets.detail.priority_critical",
-    color: "var(--red)",
-    dot: "var(--red)",
+    color: PRIORITY_TONES.critical,
+    dot: PRIORITY_TONES.critical,
   },
   high: {
     labelKey: "tickets.detail.priority_high",
-    color: "var(--orange)",
-    dot: "var(--orange)",
+    color: PRIORITY_TONES.high,
+    dot: PRIORITY_TONES.high,
   },
   medium: {
     labelKey: "tickets.detail.priority_medium",
-    color: "var(--yellow)",
-    dot: "var(--yellow)",
+    color: PRIORITY_TONES.medium,
+    dot: PRIORITY_TONES.medium,
   },
   low: {
     labelKey: "tickets.detail.priority_low",
-    color: "var(--green)",
-    dot: "var(--green)",
+    color: PRIORITY_TONES.low,
+    dot: PRIORITY_TONES.low,
   },
 };
 

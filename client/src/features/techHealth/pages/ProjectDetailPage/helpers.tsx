@@ -1,4 +1,5 @@
 import type { Runtime } from "@/domains/projects/types";
+import { SEVERITY_TONES } from "@/constants/severities";
 import {
   type DependencyStatus,
   type RiskPriority,
@@ -6,7 +7,14 @@ import {
   RuntimeEolStatus,
 } from "@/enums";
 
-export type StatusVariant = "green" | "blue" | "orange" | "red" | "gray";
+export type StatusVariant =
+  | "green"
+  | "blue"
+  | "orange"
+  | "red"
+  | "gray"
+  | "yellow"
+  | "slate";
 
 export const GRID_ROW_HEIGHT = 44;
 
@@ -56,25 +64,25 @@ export const SEV_CONFIG: Record<
   Critical: {
     labelKey: "tech_health.severity.critical",
     variant: "red",
-    color: "var(--red)",
+    color: SEVERITY_TONES.Critical,
     weight: 4,
   },
   High: {
     labelKey: "tech_health.severity.high",
     variant: "orange",
-    color: "var(--orange)",
+    color: SEVERITY_TONES.High,
     weight: 3,
   },
   Medium: {
     labelKey: "tech_health.severity.medium",
-    variant: "blue",
-    color: "var(--yellow)",
+    variant: "yellow",
+    color: SEVERITY_TONES.Medium,
     weight: 2,
   },
   Low: {
     labelKey: "tech_health.severity.low",
-    variant: "gray",
-    color: "var(--green)",
+    variant: "slate",
+    color: SEVERITY_TONES.Low,
     weight: 1,
   },
 };

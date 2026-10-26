@@ -1,5 +1,6 @@
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
+using Sentinel.Application.Common;
 using Sentinel.Domain.Entities;
 
 namespace Sentinel.Application.TechHealth.ComplianceReport;
@@ -46,11 +47,6 @@ public partial class ComplianceReportService
         _ => labels.SeverityLow
     };
 
-    private static string SeverityColor(VulnerabilitySeverity severity) => severity switch
-    {
-        VulnerabilitySeverity.Critical => Brick,
-        VulnerabilitySeverity.High => Amber,
-        VulnerabilitySeverity.Medium => Muted,
-        _ => Muted
-    };
+    private static string SeverityColor(VulnerabilitySeverity severity) =>
+        HealthPalette.ForSeverity(severity).Ink;
 }

@@ -9,17 +9,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useI18n } from "@/contexts/I18nContext";
 import type { UrgentTicket } from "@/domains/dashboard/types";
+import { PRIORITY_TONES } from "@/constants/severities";
 
 interface Props {
   ticket: UrgentTicket;
 }
-
-const PRIORITY_COLORS: Record<string, string> = {
-  critical: "var(--red)",
-  high: "var(--orange)",
-  medium: "var(--accent)",
-  low: "var(--green)",
-};
 
 const TYPE_ICONS = {
   security: { Icon: SecurityOutlined, color: "var(--red)" },
@@ -47,7 +41,7 @@ const ellipsis = {
 export const UrgentTicketRow: React.FC<Props> = ({ ticket }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const priorityColor = PRIORITY_COLORS[ticket.priority] ?? "var(--muted2)";
+  const priorityColor = PRIORITY_TONES[ticket.priority];
   const { Icon, color: iconColor } =
     TYPE_ICONS[ticket.type as keyof typeof TYPE_ICONS] ?? DEFAULT_TYPE_ICON;
 

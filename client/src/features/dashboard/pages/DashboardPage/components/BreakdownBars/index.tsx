@@ -2,6 +2,7 @@ import type React from "react";
 import Box from "@mui/material/Box";
 import { AppTooltip } from "@/components/ui/common/AppTooltip";
 import { useI18n } from "@/contexts/I18nContext";
+import { SEVERITY_TONES } from "@/constants/severities";
 
 interface Props {
   criticalVulnerabilityCount: number;
@@ -17,8 +18,12 @@ export const BreakdownBars: React.FC<Props> = ({
   const { t } = useI18n();
 
   const axes = [
-    { key: "critical", count: criticalVulnerabilityCount, color: "var(--red)" },
-    { key: "high", count: highVulnerabilityCount, color: "var(--orange)" },
+    {
+      key: "critical",
+      count: criticalVulnerabilityCount,
+      color: SEVERITY_TONES.Critical,
+    },
+    { key: "high", count: highVulnerabilityCount, color: SEVERITY_TONES.High },
     { key: "runtimes", count: eolRuntimeCount, color: "var(--purple)" },
   ].map((axis) => ({
     ...axis,
