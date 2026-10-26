@@ -33,6 +33,7 @@ export const ProjectHeaderCard: React.FC<Props> = ({
   const covered = isCovered(project);
   const grade = covered ? getGrade(project.healthGrade) : UNTRACKED_SECTION;
   const gradeCfg = GRADE_VISUAL[grade];
+  const score = covered ? project.healthScore : null;
 
   const freqLabel = (f: string) => {
     if (f === "Daily") return t("tech_health.scan_frequency.daily");
@@ -87,15 +88,34 @@ export const ProjectHeaderCard: React.FC<Props> = ({
               position: "absolute",
               inset: 0,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               color: gradeCfg.iconColor,
               fontFamily: "var(--font-mono)",
               fontSize: covered ? "18px" : "11px",
               fontWeight: 700,
+              lineHeight: 1,
             }}
           >
             {covered ? grade : GRADE_NOT_AVAILABLE}
+            {score != null && (
+              <Box
+                component="span"
+                aria-label={t("tech_health.score_value", {
+                  score,
+                })}
+                sx={{
+                  mt: "2px",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  color: "var(--muted)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {score}
+              </Box>
+            )}
           </Box>
         </Box>
 
