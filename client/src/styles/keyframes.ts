@@ -84,3 +84,12 @@ export const DELAYED_REVEAL_SX = {
   animation: `${delayedReveal} 0.25s ease-out 0.3s both`,
   [REDUCED_MOTION]: { animationDuration: "0.01s" },
 } as const;
+
+export const toastCountdown = keyframes`
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+`;

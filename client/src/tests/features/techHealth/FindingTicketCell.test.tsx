@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FindingKind } from "@/enums";
 import { FindingTicketCell } from "@/features/techHealth/pages/ProjectDetailPage/components/FindingTicketCell";
 import { FindingActionsProvider } from "@/features/techHealth/pages/ProjectDetailPage/findingActions";
-import { render, screen } from "@/tests/test-utils";
+import { render, screen, within } from "@/tests/test-utils";
 
 const navigate = vi.fn();
 const mutate = vi.fn();
@@ -61,9 +61,9 @@ describe("FindingTicketCell", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("crée le ticket depuis le finding puis ouvre son détail", async () => {
+  it("crée le ticket depuis le finding puis ouvre son détail depuis le toast", async () => {
     mutate.mockImplementation((_variables, options) =>
-      options.onSuccess({ id: "t-2" }),
+      options.onSuccess({ id: "t-2", reference: "TKT-000043" }),
     );
 
     const { user } = render(
@@ -89,6 +89,11 @@ describe("FindingTicketCell", () => {
       },
       expect.any(Object),
     );
+    expect(navigate).not.toHaveBeenCalled();
+
+    const toast = await screen.findByRole("status");
+    await user.click(within(toast).getAllByRole("button")[0]);
+
     expect(navigate).toHaveBeenCalledWith({
       to: "/tickets/$id",
       params: { id: "t-2" },

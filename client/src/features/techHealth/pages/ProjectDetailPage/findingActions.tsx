@@ -5,6 +5,8 @@ import { useRemoveSuppressionMutation } from "@/domains/projects/mutations";
 import { useCreateTicketFromFindingMutation } from "@/domains/tickets/mutations";
 import type { FindingKind } from "@/enums";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
+import { useToast } from "@/hooks/useToast";
+import { useT } from "@/contexts/I18nContext";
 
 interface FindingActions {
   createTicket: (kind: FindingKind, findingKey: string) => void;
@@ -19,7 +21,9 @@ export const FindingActionsProvider: React.FC<{
   projectId: string;
   children: React.ReactNode;
 }> = ({ projectId, children }) => {
+  const t = useT();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const createMutation = useCreateTicketFromFindingMutation();
   const removeMutation = useRemoveSuppressionMutation();
   const onCreateError = useApiErrorToast("tech_health.ticket.create_error");
@@ -34,20 +38,32 @@ export const FindingActionsProvider: React.FC<{
         { data: { projectId, kind, findingKey } },
         {
           onSuccess: (ticket) =>
-            navigate({ to: "/tickets/$id", params: { id: ticket.id } }),
+            showToast(
+              t("tickets.list.create_success", { reference: ticket.reference }),
+              "success",
+              {
+                label: t("common.view"),
+                onClick: () =>
+                  navigate({ to: "/tickets/$id", params: { id: ticket.id } }),
+              },
+            ),
           onError: onCreateError,
         },
       ),
-    [createTicketMutate, projectId, navigate, onCreateError],
+    [createTicketMutate, projectId, navigate, onCreateError, showToast, t],
   );
 
   const removeSuppression = useCallback(
     (suppressionId: string) =>
       removeSuppressionMutate(
         { id: projectId, suppressionId },
-        { onError: onRemoveError },
+        {
+          onSuccess: () =>
+            showToast(t("tech_health.suppression.reactivated"), "success"),
+          onError: onRemoveError,
+        },
       ),
-    [removeSuppressionMutate, projectId, onRemoveError],
+    [removeSuppressionMutate, projectId, onRemoveError, showToast, t],
   );
 
   const creatingFindingKey = createMutation.isPending

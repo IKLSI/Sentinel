@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -53,6 +54,23 @@ export const RemediateAllAction: React.FC<Props> = ({
   const failed = remediation?.status === "Failed";
   const mergeRequestOpened =
     remediation?.status === "Opened" && remediation.mergeRequestUrl != null;
+  const mergeRequestUrl = mergeRequestOpened
+    ? remediation.mergeRequestUrl
+    : null;
+  const previousStatus = useRef(remediation?.status);
+
+  useEffect(() => {
+    const wasInProgress =
+      previousStatus.current != null &&
+      IN_PROGRESS_STATUSES.has(previousStatus.current);
+    previousStatus.current = remediation?.status;
+    if (!wasInProgress || !mergeRequestUrl) return;
+    showToast(t("tech_health.remediation.opened"), "success", {
+      label: t("common.view"),
+      onClick: () =>
+        window.open(mergeRequestUrl, "_blank", "noopener,noreferrer"),
+    });
+  }, [remediation?.status, mergeRequestUrl, showToast, t]);
   const canStart =
     remediationAvailable && remediableVulnerabilities > 0 && !inProgress;
 

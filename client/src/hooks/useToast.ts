@@ -9,14 +9,25 @@ import { ToastSeverity } from "@/enums";
 
 type Severity = ToastSeverity;
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface ToastState {
+  id: number;
   open: boolean;
   message: string;
   severity: Severity;
+  action?: ToastAction;
 }
 
 interface ToastContextValue {
-  showToast: (message: string, severity?: Severity) => void;
+  showToast: (
+    message: string,
+    severity?: Severity,
+    action?: ToastAction,
+  ) => void;
   closeToast: () => void;
 }
 
@@ -34,14 +45,25 @@ export function useToastState(): {
   actions: ToastContextValue;
 } {
   const [toast, setToast] = useState<ToastState>({
+    id: 0,
     open: false,
     message: "",
     severity: ToastSeverity.Info,
   });
 
   const showToast = useCallback(
-    (message: string, severity: Severity = ToastSeverity.Info) => {
-      setToast({ open: true, message, severity });
+    (
+      message: string,
+      severity: Severity = ToastSeverity.Info,
+      action?: ToastAction,
+    ) => {
+      setToast((previous) => ({
+        id: previous.id + 1,
+        open: true,
+        message,
+        severity,
+        action,
+      }));
     },
     [],
   );

@@ -11,7 +11,7 @@ import { useT } from "@/contexts/I18nContext";
 import { useProjectOptionsQuery } from "@/domains/projects/queries";
 import { useExportTicketsExcelMutation } from "@/domains/tickets/downloads";
 import { useTicketsQuery } from "@/domains/tickets/queries";
-import type { Ticket, TicketFilters } from "@/domains/tickets/types";
+import type { TicketFilters } from "@/domains/tickets/types";
 import { useUserOptionsQuery } from "@/domains/users/queries";
 import type { FilterCriterion } from "@/components/ui/forms/FilterBuilder/types";
 import {
@@ -80,9 +80,7 @@ export const TicketsPage: React.FC = () => {
     dir: SortDirection.Desc,
   });
 
-  const createDialog = useCreateTicketDialog((created: Ticket) =>
-    navigate({ to: "/tickets/$id", params: { id: created.id } }),
-  );
+  const createDialog = useCreateTicketDialog();
   const editDialog = useEditTicketDialog();
   const deleteDialog = useDeleteTicketDialog();
   const exportTicketsMutation = useExportTicketsExcelMutation();

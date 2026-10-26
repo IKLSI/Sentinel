@@ -6,6 +6,7 @@ import KeyOutlined from "@mui/icons-material/KeyOutlined";
 import { DeleteModal } from "@/components/ui/common/DeleteModal";
 import { EmptyState } from "@/components/ui/common/EmptyState";
 import { useT } from "@/contexts/I18nContext";
+import { useToast } from "@/hooks/useToast";
 import { useApiErrorToast } from "@/hooks/useApiErrorToast";
 import { useSortState } from "@/hooks/useSortState";
 import { ApiKeySortField, SortDirection } from "@/enums";
@@ -18,6 +19,7 @@ import { ApiKeyTable } from "@/features/settings/pages/SettingsPage/components/A
 
 export const ApiKeysTab: React.FC = () => {
   const t = useT();
+  const { showToast } = useToast();
   const onRevokeError = useApiErrorToast("settings.api_keys.revoke_error");
 
   const [sort, toggleSort] = useSortState<ApiKeySortField>({
@@ -48,7 +50,13 @@ export const ApiKeysTab: React.FC = () => {
     revokeKeyMutation.mutate(
       { id: revokeTarget.id },
       {
-        onSuccess: () => setRevokeTarget(null),
+        onSuccess: () => {
+          setRevokeTarget(null);
+          showToast(
+            t("settings.api_keys.revoke_success", { name: revokeTarget.name }),
+            "success",
+          );
+        },
         onError: onRevokeError,
       },
     );
