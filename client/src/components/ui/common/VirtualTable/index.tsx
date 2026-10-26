@@ -1,5 +1,5 @@
 import type React from "react";
-import { Fragment, useRef } from "react";
+import { Fragment } from "react";
 import Box from "@mui/material/Box";
 import type {
   CellAlign,
@@ -8,6 +8,11 @@ import type {
 import { SortableTh } from "@/components/ui/common/SortableTh";
 import { VirtualRowSpacer } from "@/components/ui/common/VirtualRowSpacer";
 import { useVirtualRows } from "@/hooks/useVirtualRows";
+import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
+import {
+  OVERFLOWING_ATTRIBUTE,
+  STICKY_ACTIONS_COLUMN_SX,
+} from "@/components/ui/common/stickyActionsColumn";
 import { VirtualRowMeasureContext } from "@/components/ui/common/VirtualTable/measureContext";
 
 export interface VirtualTableColumn {
@@ -34,12 +39,16 @@ interface VirtualTableProps<T> {
   onSortChange?: (key: string) => void;
   noResultsLabel?: string;
   footer?: React.ReactNode;
+  minWidth?: string;
 }
+
+const DEFAULT_MIN_WIDTH = "960px";
 
 const tableSx = {
   width: "100%",
   borderCollapse: "collapse",
   tableLayout: "fixed",
+  ...STICKY_ACTIONS_COLUMN_SX,
 } as const;
 
 const noResultsSx = {
@@ -62,14 +71,16 @@ export function VirtualTable<T>({
   onSortChange,
   noResultsLabel,
   footer,
+  minWidth = DEFAULT_MIN_WIDTH,
 }: VirtualTableProps<T>) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { headerRef, bodyRef, body, overflowing, syncHeader } =
+    useHorizontalScrollSync();
   const columnCount = columns.length;
   const showNoResults = rows.length === 0 && Boolean(noResultsLabel);
 
   const { virtualizer, items, paddingTop, paddingBottom } = useVirtualRows({
     count: rows.length,
-    getScrollElement: () => scrollRef.current,
+    getScrollElement: () => body,
     estimateSize: estimateRowHeight,
     overscan,
   });
@@ -84,6 +95,7 @@ export function VirtualTable<T>({
 
   return (
     <Box
+      {...{ [OVERFLOWING_ATTRIBUTE]: overflowing }}
       sx={{
         flex: 1,
         minHeight: 0,
@@ -96,6 +108,7 @@ export function VirtualTable<T>({
       }}
     >
       <Box
+        ref={headerRef}
         sx={{
           flexShrink: 0,
           overflow: "hidden",
@@ -104,7 +117,7 @@ export function VirtualTable<T>({
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <Box component="table" sx={tableSx}>
+        <Box component="table" sx={{ ...tableSx, minWidth }}>
           {columnGroup}
           <Box component="thead">
             <Box component="tr">
@@ -126,12 +139,22 @@ export function VirtualTable<T>({
       </Box>
 
       <Box
-        ref={scrollRef}
-        sx={{ overflowY: "auto", flex: 1, scrollbarGutter: "stable" }}
+        ref={bodyRef}
+        onScroll={syncHeader}
+        sx={{
+          overflowY: "auto",
+          overflowX: "auto",
+          flex: 1,
+          scrollbarGutter: "stable",
+        }}
       >
         <Box
           component="table"
-          sx={{ ...tableSx, height: showNoResults ? "100%" : undefined }}
+          sx={{
+            ...tableSx,
+            minWidth,
+            height: showNoResults ? "100%" : undefined,
+          }}
         >
           {columnGroup}
           <Box component="tbody">

@@ -13,6 +13,11 @@ import {
   TableSkeletonRows,
 } from "@/components/ui/common/TableSkeletonRows";
 import { DELAYED_REVEAL_SX } from "@/styles/keyframes";
+import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
+import {
+  OVERFLOWING_ATTRIBUTE,
+  STICKY_ACTIONS_COLUMN_SX,
+} from "@/components/ui/common/stickyActionsColumn";
 
 export interface SortState {
   col: TicketSortField;
@@ -45,6 +50,14 @@ const SKELETON_CELLS: readonly SkeletonCell[] = [
   "empty",
 ];
 
+const TABLE_SX = {
+  width: "100%",
+  minWidth: "820px",
+  borderCollapse: "collapse",
+  tableLayout: "fixed",
+  ...STICKY_ACTIONS_COLUMN_SX,
+} as const;
+
 const isSortableColumn = (col: TicketColumn["col"]): col is TicketSortField =>
   col !== ACTIONS_COLUMN_KEY;
 
@@ -58,6 +71,8 @@ const TicketsTableComponent: React.FC<Props> = ({
   loading = false,
 }) => {
   const t = useT();
+  const { headerRef, bodyRef, overflowing, syncHeader } =
+    useHorizontalScrollSync();
 
   const columns: TicketColumn[] = [
     { col: TicketSortField.Title, label: t("tickets.list.col_ticket") },
@@ -94,6 +109,7 @@ const TicketsTableComponent: React.FC<Props> = ({
 
   return (
     <Box
+      {...{ [OVERFLOWING_ATTRIBUTE]: overflowing }}
       sx={{
         flex: 1,
         minHeight: 0,
@@ -103,6 +119,7 @@ const TicketsTableComponent: React.FC<Props> = ({
       }}
     >
       <Box
+        ref={headerRef}
         sx={{
           flexShrink: 0,
           overflow: "hidden",
@@ -111,14 +128,7 @@ const TicketsTableComponent: React.FC<Props> = ({
           boxShadow: "inset 0 -1px 0 var(--border)",
         }}
       >
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
+        <Box component="table" sx={TABLE_SX}>
           <Box component="colgroup">
             {COLS.map((w) => (
               <Box key={w} component="col" sx={{ width: w }} />
@@ -147,22 +157,18 @@ const TicketsTableComponent: React.FC<Props> = ({
       </Box>
 
       <Box
+        ref={bodyRef}
+        onScroll={syncHeader}
         aria-busy={loading || undefined}
         sx={{
           position: "relative",
           flex: 1,
+          overflowX: loading ? "hidden" : "auto",
           overflowY: loading ? "hidden" : "auto",
           scrollbarGutter: "stable",
         }}
       >
-        <Box
-          component="table"
-          sx={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
+        <Box component="table" sx={TABLE_SX}>
           <Box component="colgroup">
             {COLS.map((w) => (
               <Box key={w} component="col" sx={{ width: w }} />

@@ -17,6 +17,11 @@ import { ProjectRow } from "@/features/projects/pages/ProjectsPage/components/Pr
 import { PROJECT_COLUMN_WIDTHS } from "@/features/projects/pages/ProjectsPage/constants";
 import { useSortState } from "@/hooks/useSortState";
 import { SortDirection } from "@/enums";
+import { useHorizontalScrollSync } from "@/hooks/useHorizontalScrollSync";
+import {
+  OVERFLOWING_ATTRIBUTE,
+  STICKY_ACTIONS_COLUMN_SX,
+} from "@/components/ui/common/stickyActionsColumn";
 
 interface Props {
   grade: SectionKey;
@@ -40,6 +45,7 @@ export const ProjectsSection: React.FC<Props> = ({
   onScan,
 }) => {
   const t = useT();
+  const { bodyRef, overflowing } = useHorizontalScrollSync();
   const [sort, toggleSort] = useSortState<string>({
     col: "critical",
     dir: SortDirection.Desc,
@@ -193,13 +199,19 @@ export const ProjectsSection: React.FC<Props> = ({
       </ButtonBase>
 
       {!collapsed && (
-        <Box sx={{ overflow: "hidden" }}>
+        <Box
+          ref={bodyRef}
+          {...{ [OVERFLOWING_ATTRIBUTE]: overflowing }}
+          sx={{ overflowX: "auto", overflowY: "hidden" }}
+        >
           <Box
             component="table"
             sx={{
               width: "100%",
+              minWidth: "760px",
               borderCollapse: "collapse",
               tableLayout: "fixed",
+              ...STICKY_ACTIONS_COLUMN_SX,
             }}
           >
             <Box component="colgroup">
