@@ -40,6 +40,7 @@ internal sealed class ExportLabels
     public required string GradeNotAvailable { get; init; }
 
     public required string RuntimeActive { get; init; }
+    public required string RuntimeImminentEol { get; init; }
     public required string RuntimeSoonEol { get; init; }
     public required string RuntimeEol { get; init; }
     public required string RuntimeUnknown { get; init; }
@@ -125,6 +126,7 @@ internal sealed class ExportLabels
             NoVulnerabilities = Text("exports.empty.vulnerabilities"),
             GradeNotAvailable = Text("exports.grade_not_available"),
             RuntimeActive = Text("exports.runtime.active"),
+            RuntimeImminentEol = Text("exports.runtime.imminent_eol"),
             RuntimeSoonEol = Text("exports.runtime.soon_eol"),
             RuntimeEol = Text("exports.runtime.eol"),
             RuntimeUnknown = Text("exports.runtime.unknown")

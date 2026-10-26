@@ -1,6 +1,7 @@
 using ClosedXML.Excel;
 using Sentinel.Application.Common;
 using Sentinel.Domain.Entities;
+using Sentinel.Domain.TechHealth;
 
 namespace Sentinel.Application.Exports;
 public partial class ExportService
@@ -18,7 +19,6 @@ public partial class ExportService
     private static readonly XLColor BorderColor = XLColor.FromHtml("#E2E8F0");
 
     private static readonly XLColor GreenFg = XLColor.FromHtml(HealthPalette.Green.Ink);
-    private static readonly XLColor GreenFg2 = XLColor.FromHtml(HealthPalette.Green.Solid);
     private static readonly XLColor GrayFg = XLColor.FromHtml(HealthPalette.Slate.Ink);
     private static readonly XLColor OrangeFg = XLColor.FromHtml(HealthPalette.Orange.Ink);
     private static readonly XLColor YellowFg = XLColor.FromHtml(HealthPalette.Yellow.Ink);
@@ -35,28 +35,20 @@ public partial class ExportService
     private static XLColor TicketPriorityColor(TicketPriority priority) =>
         ToneColor(HealthPalette.ForPriority(priority));
 
-    private static (string label, XLColor fg) RuntimeStatus(Runtime r, ExportLabels L)
-    {
-        if (r.IsEol == true)
-            return (L.RuntimeEol, RedFg);
-        if (r.EolDate.HasValue && r.EolDate.Value < DateTime.UtcNow.AddMonths(6))
-            return (L.RuntimeSoonEol, OrangeFg);
-        if (r.IsEol == null)
-            return (L.RuntimeUnknown, GrayFg);
-        return (L.RuntimeActive, GreenFg);
-    }
+    private static (string label, XLColor fg) RuntimeStatus(Runtime r, ExportLabels L) =>
+        RuntimeEolAssessment.Of(r, DateTime.UtcNow).Status switch
+        {
+            RuntimeEolStatus.Eol => (L.RuntimeEol, RedFg),
+            RuntimeEolStatus.Danger => (L.RuntimeImminentEol, OrangeFg),
+            RuntimeEolStatus.Warn => (L.RuntimeSoonEol, BrandIndigoDeep),
+            RuntimeEolStatus.Ok => (L.RuntimeActive, GreenFg),
+            _ => (L.RuntimeUnknown, GrayFg),
+        };
 
     private static XLColor GradeColor(string? grade) =>
         ToneColor(HealthPalette.ForGrade(grade) ?? HealthPalette.Slate);
 
-    private static XLColor ScoreColor(int score) => score switch
-    {
-        >= 90 => GreenFg,
-        >= 75 => GreenFg2,
-        >= 60 => YellowFg,
-        >= 45 => OrangeFg,
-        _ => RedFg,
-    };
+    private static XLColor ScoreColor(int score) => GradeColor(HealthScoreCalculator.ToGrade(score));
 
     private static XLColor DepStatusColor(DependencyStatus status) => status switch
     {
