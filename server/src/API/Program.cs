@@ -60,8 +60,6 @@ public static class Program
 
         app.UseResponseCompression();
         app.UseMiddleware<CorrelationIdMiddleware>();
-        app.UseMiddleware<ErrorHandlingMiddleware>();
-        app.UseMiddleware<ETagMiddleware>();
         app.UseSerilogRequestLogging(options =>
         {
             options.GetLevel = GetRequestLoggingLevel;
@@ -76,6 +74,8 @@ public static class Program
                 }
             };
         });
+        app.UseMiddleware<ErrorHandlingMiddleware>();
+        app.UseMiddleware<ETagMiddleware>();
         app.UseRouting();
 
         app.Use(async (context, next) =>
@@ -147,8 +147,7 @@ public static class Program
 
     private static Serilog.Events.LogEventLevel GetRequestLoggingLevel(HttpContext httpContext, double elapsedMs, Exception? exception)
     {
-        bool isClientCancellation = exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested;
-        if (isClientCancellation)
+        if (httpContext.RequestAborted.IsCancellationRequested)
         {
             return Serilog.Events.LogEventLevel.Debug;
         }
