@@ -61,6 +61,7 @@ Au démarrage hors Development, l'API refuse aussi un rôle Postgres superuser o
 | `Jwt__AccessTokenExpirationMinutes` / `Jwt__RefreshTokenExpirationDays` | 15 / 30 | Durées de vie des jetons |
 | `Cookie__Domain`, `Cookie__SameSite` | vide / `Lax` | Cookie du refresh token |
 | `Database__MaxPoolSize`, `Database__CommandTimeoutSeconds`, `Database__RetryCount` | 40 / 30 / 3 | Réglages Npgsql |
+| `Database__MinPoolSize`, `Database__KeepAliveSeconds` | 2 / 30 | Connexions gardées chaudes : évite la poignée de main TCP/TLS vers la base distante au premier appel après une période creuse |
 | `PORT` | 8080 | Port d'écoute dans l'image Docker |
 
 Le cookie du refresh token est `Secure` hors développement. Avec `SameSite=Lax` (défaut), le front et l'API doivent appartenir au même site (domaine parent commun, à renseigner dans `Cookie__Domain`). Si le front et l'API sont sur des sites distincts (par exemple Vercel et Render), définir `Cookie__SameSite=None` et lister l'origine du front dans `Frontend__BaseUrl` / `Cors__AllowedOrigins__0`.

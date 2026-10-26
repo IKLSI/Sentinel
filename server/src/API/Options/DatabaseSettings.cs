@@ -7,6 +7,12 @@ public class DatabaseSettings
     [Range(1, 500, ErrorMessage = "Database:MaxPoolSize must be between 1 and 500")]
     public int MaxPoolSize { get; set; } = 40;
 
+    [Range(0, 50, ErrorMessage = "Database:MinPoolSize must be between 0 and 50")]
+    public int MinPoolSize { get; set; } = 2;
+
+    [Range(0, 600, ErrorMessage = "Database:KeepAliveSeconds must be between 0 and 600")]
+    public int KeepAliveSeconds { get; set; } = 30;
+
     [Range(1, 300, ErrorMessage = "Database:CommandTimeoutSeconds must be between 1 and 300")]
     public int CommandTimeoutSeconds { get; set; } = 30;
 

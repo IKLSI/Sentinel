@@ -82,6 +82,7 @@ public class TechHealthController : BaseController
         ToActionResult(await service.ExecuteAsync(cancellationToken));
 
     [HttpGet("projects/scan-progress")]
+    [SkipConnectionScope]
     [AllowApiKey]
     [AuthorizeRoles(UserRole.Admin, UserRole.Developer)]
     public async Task<ActionResult<List<ScanProgressDto>>> GetScanProgress(

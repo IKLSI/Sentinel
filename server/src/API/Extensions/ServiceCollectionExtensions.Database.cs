@@ -27,7 +27,9 @@ public static partial class ServiceCollectionExtensions
 
         NpgsqlConnectionStringBuilder dbBuilder = new NpgsqlConnectionStringBuilder(connectionString)
         {
-            MaxPoolSize = database.MaxPoolSize
+            MaxPoolSize = database.MaxPoolSize,
+            MinPoolSize = database.MinPoolSize,
+            KeepAlive = database.KeepAliveSeconds
         };
 
         EnsureSessionScopedConnection(dbBuilder);
